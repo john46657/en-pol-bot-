@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotifyService = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -46,14 +47,18 @@ let NotifyService = class NotifyService {
     async usersWith(permission, opts = {}) {
         const users = await this.prisma.user.findMany({ where: { active: true, ...(opts.exceptUserId ? { id: { not: opts.exceptUserId } } : {}) }, select: { id: true }, take: 5000 });
         const ids = users.map((u) => u.id);
-        const g = opts.guildId ?? null;
-        const [direct, groups, overrides, roles] = await Promise.all([
+        // Server der Anfrage (Standard): dort gelten nur dessen Rollen und nur für bestätigte Mitglieder – wie im AuthorizationService
+        const g = opts.guildId !== undefined ? opts.guildId : (0, guild_context_1.currentGuild)();
+        const [direct, groups, overrides, roles, server] = await Promise.all([
             this.prisma.userRole.findMany({ where: { userId: { in: ids } } }),
             this.prisma.groupMember.findMany({ where: { userId: { in: ids } }, select: { userId: true, group: { select: { roles: { select: { roleId: true } } } } } }),
-            this.prisma.userPermissionOverride.findMany({ where: { userId: { in: ids } } }),
-            this.prisma.role.findMany({ where: { active: true, OR: [{ guildId: null }, ...(g ? [{ guildId: g }] : [])] }, select: { id: true } }),
+            this.prisma.userPermissionOverride.findMany({ where: { userId: { in: ids }, guildId: g } }),
+            this.prisma.role.findMany({ where: { active: true, ...(g ? { OR: [{ guildId: g }, { guildId: null, name: 'System Administrator' }] } : { guildId: null }) }, select: { id: true, guildId: true, name: true } }),
+            g ? this.prisma.discordServer.findUnique({ where: { guildId: g }, select: { id: true, memberships: { where: { status: 'MEMBER' }, select: { userId: true } } } }) : null,
         ]);
         const valid = new Set(roles.map((r) => r.id));
+        const adminRole = roles.find((r) => r.guildId === null && r.name === 'System Administrator')?.id;
+        const members = server ? new Set(server.memberships.map((m) => m.userId)) : null;
         const grants = await this.prisma.rolePermission.findMany({ where: { roleId: { in: [...valid] } } });
         const byRole = new Map();
         for (const x of grants)
@@ -61,13 +66,20 @@ let NotifyService = class NotifyService {
         const rolesOf = new Map();
         const add = (u, r) => { if (valid.has(r))
             rolesOf.set(u, (rolesOf.get(u) ?? new Set()).add(r)); };
-        for (const d of direct)
+        for (const d of direct) {
+            if (d.guildIds.length && !(g && d.guildIds.includes(g)))
+                continue; // über Discord vergeben: nur auf diesen Servern
+            if (g && d.roleId === adminRole && d.guildIds.length)
+                continue; // globaler Admin nur manuell
             add(d.userId, d.roleId);
+        }
         for (const m of groups)
             for (const r of m.group.roles)
                 add(m.userId, r.roleId);
         const out = [];
         for (const id of ids) {
+            if (members && !members.has(id) && !(adminRole && rolesOf.get(id)?.has(adminRole)))
+                continue; // nur Mitglieder dieses Servers
             const ctx = { userOverrides: overrides.filter((o) => o.userId === id).map((o) => ({ permission: o.permissionKey, effect: (o.effect === 'DENY' ? 'DENY' : 'ALLOW') })), roleGrants: [...(rolesOf.get(id) ?? [])].flatMap((r) => byRole.get(r) ?? []) };
             if ((0, shared_1.can)(ctx, permission))
                 out.push(id);

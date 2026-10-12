@@ -1,14 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SERVER_SCOPED_MODELS = void 0;
+exports.RELATION_SCOPED_MODELS = exports.GUILD_SCOPED_MODELS = exports.SERVER_SCOPED_MODELS = void 0;
 exports.withServerScope = withServerScope;
 const client_1 = require("@prisma/client");
 const guild_context_1 = require("../common/guild-context");
 /**
- * Daten, die je Discord-Server getrennt sind (Spalte `serverId` = Akten-Bereich wie bei Personen/Fahrzeugen).
- * Die Leitstelle (CAD) bleibt bewusst gemeinsam und steht deshalb nicht hier.
+ * Daten, die je Discord-Server getrennt sind (Spalte `serverId` = Bereich des Servers bzw. einer ausdrücklich eingerichteten
+ * Gruppe im Server-Verbund). Server sind von Grund auf getrennt: auch Leitstelle (CAD), Personalakte/HR, Dienstnummern,
+ * Bußgelder, Tatbestände, SEK, Funk-Freigaben, Academy, Workflows und Kommunikation.
+ * Ausnahmen gibt es nur ausdrücklich: CAD-Querverbindung (CadServerLink) und Datenfreigaben (Serververbindungen).
  */
-exports.SERVER_SCOPED_MODELS = new Set(['Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession']);
+exports.SERVER_SCOPED_MODELS = new Set([
+    'Person', 'Vehicle', 'Weapon', 'Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession', 'Ticket', 'LegalCode',
+    'Incident', 'Unit', 'CadMapObject', 'CadMember',
+    'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'HrAnnouncement', 'HrPoll', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
+    'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
+]);
+/** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */
+exports.GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat']);
+/** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
+exports.RELATION_SCOPED_MODELS = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server' };
 const FILTERED = new Set(['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate', 'groupBy', 'updateMany', 'deleteMany']);
 const delegate = (base, model) => base[model[0].toLowerCase() + model.slice(1)];
 /**
@@ -22,6 +33,10 @@ function withServerScope(base) {
         query: {
             $allModels: {
                 async $allOperations({ model, operation, args, query }) {
+                    if (model === 'SystemSetting')
+                        return scopeSetting(operation, args, query);
+                    if (model && (exports.GUILD_SCOPED_MODELS.has(model) || model in exports.RELATION_SCOPED_MODELS))
+                        return scopeByGuild(base, model, operation, args, query);
                     if (!model || !exports.SERVER_SCOPED_MODELS.has(model))
                         return query(args);
                     const space = (0, guild_context_1.recordSpace)();
@@ -75,5 +90,71 @@ function withServerScope(base) {
             },
         },
     });
+}
+/** `key` → `key@<Server>` für Konfiguration je Server (nur im Kontext eines Servers, nie doppelt). */
+function serverKey(key, g) {
+    return typeof key === 'string' && !key.includes('@') && guild_context_1.PER_SERVER_SETTING_KEYS.includes(key) ? `${key}@${g}` : key;
+}
+async function scopeSetting(operation, args, query) {
+    const g = (0, guild_context_1.settingsGuild)((0, guild_context_1.currentGuild)());
+    if (!g || !args)
+        return query(args);
+    const a = { ...args };
+    const where = a.where;
+    const mapped = new Map();
+    if (where && 'key' in where) {
+        const k = where.key;
+        if (typeof k === 'string')
+            a.where = { ...where, key: serverKey(k, g) };
+        else if (k && typeof k === 'object' && Array.isArray(k.in)) {
+            const list = (k.in).map((x) => { const v = serverKey(x, g); if (v !== x)
+                mapped.set(v, x); return v; });
+            a.where = { ...where, key: { ...k, in: list } };
+        }
+    }
+    for (const f of ['data', 'create']) {
+        const d = a[f];
+        if (d && typeof d === 'object' && !Array.isArray(d) && 'key' in d)
+            a[f] = { ...d, key: serverKey(d.key, g) };
+    }
+    const r = await query(a);
+    // Liste: Schlüssel wie angefragt zurückgeben (ohne @Server), damit Aufrufer nichts merken
+    if (operation === 'findMany' && Array.isArray(r) && mapped.size)
+        return r.map((row) => (mapped.has(row.key) ? { ...row, key: mapped.get(row.key) } : row));
+    return r;
+}
+/**
+ * Wie oben, aber über die Discord-Server-ID: direkt (`guildId`) bzw. über den ER:LC-Server (`server.guildId`).
+ * Ohne Server (Hintergrund-Abgleich mit ER:LC, „Alle Server“) kein Filter.
+ */
+async function scopeByGuild(base, model, operation, args, query) {
+    const g = (0, guild_context_1.currentGuild)();
+    if (!g)
+        return query(args);
+    const rel = exports.RELATION_SCOPED_MODELS[model];
+    const filter = rel ? { [rel]: { guildId: g } } : { guildId: g };
+    const a = { ...(args ?? {}) };
+    if (FILTERED.has(operation)) {
+        a.where = a.where ? { AND: [a.where, filter] } : filter;
+        return query(a);
+    }
+    if (operation === 'create' && !rel) {
+        const data = (a.data ?? {});
+        if (data.guildId === undefined)
+            a.data = { ...data, guildId: g };
+        return query(a);
+    }
+    if (operation === 'findUnique' || operation === 'findUniqueOrThrow' || operation === 'update' || operation === 'delete' || operation === 'upsert') {
+        // Einzelzugriff per ID: nur, wenn der Eintrag zu diesem Server gehört
+        const d = base[model[0].toLowerCase() + model.slice(1)];
+        const own = a.where ? await d.findFirst({ where: { AND: [a.where, filter] }, select: { id: true } }) : null;
+        const exists = a.where ? await d.findFirst({ where: a.where, select: { id: true } }) : null;
+        if (exists && !own) {
+            if (operation === 'findUnique')
+                return null;
+            throw new client_1.Prisma.PrismaClientKnownRequestError('Datensatz gehört zu einem anderen Server.', { code: 'P2025', clientVersion: client_1.Prisma.prismaVersion.client });
+        }
+    }
+    return query(a);
 }
 //# sourceMappingURL=server-scope.js.map

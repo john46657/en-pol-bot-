@@ -1,11 +1,23 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
-import { recordSpace } from '../common/guild-context';
+import { currentGuild, PER_SERVER_SETTING_KEYS, recordSpace, settingsGuild } from '../common/guild-context';
 
 /**
- * Daten, die je Discord-Server getrennt sind (Spalte `serverId` = Akten-Bereich wie bei Personen/Fahrzeugen).
- * Die Leitstelle (CAD) bleibt bewusst gemeinsam und steht deshalb nicht hier.
+ * Daten, die je Discord-Server getrennt sind (Spalte `serverId` = Bereich des Servers bzw. einer ausdrücklich eingerichteten
+ * Gruppe im Server-Verbund). Server sind von Grund auf getrennt: auch Leitstelle (CAD), Personalakte/HR, Dienstnummern,
+ * Bußgelder, Tatbestände, SEK, Funk-Freigaben, Academy, Workflows und Kommunikation.
+ * Ausnahmen gibt es nur ausdrücklich: CAD-Querverbindung (CadServerLink) und Datenfreigaben (Serververbindungen).
  */
-export const SERVER_SCOPED_MODELS = new Set(['Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession']);
+export const SERVER_SCOPED_MODELS = new Set([
+  'Person', 'Vehicle', 'Weapon', 'Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession', 'Ticket', 'LegalCode',
+  'Incident', 'Unit', 'CadMapObject', 'CadMember',
+  'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'HrAnnouncement', 'HrPoll', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
+  'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
+]);
+
+/** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */
+export const GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat']);
+/** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
+export const RELATION_SCOPED_MODELS: Record<string, string> = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server' };
 
 const FILTERED = new Set(['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate', 'groupBy', 'updateMany', 'deleteMany']);
 const delegate = (base: PrismaClient, model: string) => (base as unknown as Record<string, { findUnique: (a: unknown) => Promise<{ serverId: string | null } | null> }>)[model[0]!.toLowerCase() + model.slice(1)]!;
@@ -21,6 +33,8 @@ export function withServerScope(base: PrismaClient) {
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
+          if (model === 'SystemSetting') return scopeSetting(operation, args as Record<string, unknown>, query as (a: unknown) => Promise<unknown>);
+          if (model && (GUILD_SCOPED_MODELS.has(model) || model in RELATION_SCOPED_MODELS)) return scopeByGuild(base, model, operation, args as Record<string, unknown>, query as (a: unknown) => Promise<unknown>);
           if (!model || !SERVER_SCOPED_MODELS.has(model)) return query(args);
           const space = recordSpace();
           if (space === undefined) return query(args); // kein Server gewählt
@@ -63,4 +77,64 @@ export function withServerScope(base: PrismaClient) {
       },
     },
   });
+}
+
+/** `key` → `key@<Server>` für Konfiguration je Server (nur im Kontext eines Servers, nie doppelt). */
+function serverKey(key: unknown, g: string): unknown {
+  return typeof key === 'string' && !key.includes('@') && PER_SERVER_SETTING_KEYS.includes(key) ? `${key}@${g}` : key;
+}
+async function scopeSetting(operation: string, args: Record<string, unknown> | undefined, query: (a: unknown) => Promise<unknown>) {
+  const g = settingsGuild(currentGuild());
+  if (!g || !args) return query(args);
+  const a = { ...args };
+  const where = a.where as Record<string, unknown> | undefined;
+  const mapped = new Map<string, string>();
+  if (where && 'key' in where) {
+    const k = where.key;
+    if (typeof k === 'string') a.where = { ...where, key: serverKey(k, g) };
+    else if (k && typeof k === 'object' && Array.isArray((k as { in?: unknown }).in)) {
+      const list = ((k as { in: unknown[] }).in).map((x) => { const v = serverKey(x, g); if (v !== x) mapped.set(v as string, x as string); return v; });
+      a.where = { ...where, key: { ...(k as object), in: list } };
+    }
+  }
+  for (const f of ['data', 'create'] as const) {
+    const d = a[f] as Record<string, unknown> | undefined;
+    if (d && typeof d === 'object' && !Array.isArray(d) && 'key' in d) a[f] = { ...d, key: serverKey(d.key, g) };
+  }
+  const r = await query(a);
+  // Liste: Schlüssel wie angefragt zurückgeben (ohne @Server), damit Aufrufer nichts merken
+  if (operation === 'findMany' && Array.isArray(r) && mapped.size) return r.map((row: { key: string }) => (mapped.has(row.key) ? { ...row, key: mapped.get(row.key) } : row));
+  return r;
+}
+
+/**
+ * Wie oben, aber über die Discord-Server-ID: direkt (`guildId`) bzw. über den ER:LC-Server (`server.guildId`).
+ * Ohne Server (Hintergrund-Abgleich mit ER:LC, „Alle Server“) kein Filter.
+ */
+async function scopeByGuild(base: PrismaClient, model: string, operation: string, args: Record<string, unknown> | undefined, query: (a: unknown) => Promise<unknown>) {
+  const g = currentGuild();
+  if (!g) return query(args);
+  const rel = RELATION_SCOPED_MODELS[model];
+  const filter = rel ? { [rel]: { guildId: g } } : { guildId: g };
+  const a = { ...(args ?? {}) };
+  if (FILTERED.has(operation)) {
+    a.where = a.where ? { AND: [a.where, filter] } : filter;
+    return query(a);
+  }
+  if (operation === 'create' && !rel) {
+    const data = (a.data ?? {}) as Record<string, unknown>;
+    if (data.guildId === undefined) a.data = { ...data, guildId: g };
+    return query(a);
+  }
+  if (operation === 'findUnique' || operation === 'findUniqueOrThrow' || operation === 'update' || operation === 'delete' || operation === 'upsert') {
+    // Einzelzugriff per ID: nur, wenn der Eintrag zu diesem Server gehört
+    const d = (base as unknown as Record<string, { findFirst: (x: unknown) => Promise<unknown> }>)[model[0]!.toLowerCase() + model.slice(1)]!;
+    const own = a.where ? await d.findFirst({ where: { AND: [a.where, filter] }, select: { id: true } }) : null;
+    const exists = a.where ? await d.findFirst({ where: a.where, select: { id: true } }) : null;
+    if (exists && !own) {
+      if (operation === 'findUnique') return null;
+      throw new Prisma.PrismaClientKnownRequestError('Datensatz gehört zu einem anderen Server.', { code: 'P2025', clientVersion: Prisma.prismaVersion.client });
+    }
+  }
+  return query(a);
 }

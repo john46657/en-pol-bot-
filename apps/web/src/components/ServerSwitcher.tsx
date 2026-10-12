@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Globe, Shield } from 'lucide-react';
 import { useGuilds, useServer } from '../lib/guilds';
+import { useOptionalAuth } from '../lib/auth';
 
 const Icon = ({ icon, name }: { icon: string | null; name: string }) => (icon
   ? <img src={icon} alt="" className="h-6 w-6 shrink-0 rounded-full" />
@@ -19,7 +20,9 @@ export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicke
     document.addEventListener('mousedown', close); document.addEventListener('keydown', esc);
     return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc); };
   }, [open]);
-  const list = guilds.data ?? [];
+  const user = useOptionalAuth()?.user;
+  // nur Server, die man wählen darf (registriert + bestätigtes Mitglied); globale Systemadministratoren: alle
+  const list = (guilds.data ?? []).filter((g) => user?.globalAdmin || !user?.servers || user.servers.includes(g.id));
   const sel = list.find((g) => g.id === server);
   // nur ein (oder kein) Server: einfach der Name wie bisher
   if (list.length < 2) return <div className="flex min-w-0 items-center gap-2"><Shield size={18} className="text-primary" aria-hidden /><span className="min-w-0 truncate">{orgName}</span></div>;

@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
+import { currentGuild } from '../common/guild-context';
 import { makeNumber } from '../common/numbering';
 import { webUrl } from '../common/web-url';
 import { appSettingsSchema, configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
@@ -186,9 +187,9 @@ export class QualificationsService {
       const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
       if (claimed.count === 0) throw new AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
       if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
-        await tx.sekMember.upsert({ where: { userId: a.userId }, create: { userId: a.userId, addedById: actor.userId }, update: {} });
-        // System-Rolle „SEK“ (Einsatzberichte schreiben), falls vorhanden
-        const role = await tx.role.findUnique({ where: { name: 'SEK' } });
+        // SEK-Mitglied und Rolle „SEK“ des Servers der Bewerbung (je Server getrennt)
+        if (!(await tx.sekMember.findFirst({ where: { userId: a.userId } }))) await tx.sekMember.create({ data: { userId: a.userId, addedById: actor.userId } });
+        const role = await tx.role.findFirst({ where: { guildId: a.guildId ?? currentGuild(), name: 'SEK' } });
         if (role) await tx.userRole.upsert({ where: { userId_roleId: { userId: a.userId, roleId: role.id } }, create: { userId: a.userId, roleId: role.id }, update: {} });
         addedToSek = true;
       }

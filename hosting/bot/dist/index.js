@@ -604,15 +604,26 @@ function wireReady(client0) {
         catch (e) {
             console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
         } // keine doppelten (global + Server)
-        const register = async (g, name) => {
+        // Je Server nur Befehle der dort aktivierten Module (Komfort – die API prüft Modul und Rechte bei JEDER Ausführung erneut)
+        const registered = new Map();
+        const register = async (g, name, quiet = false) => {
+            const mods = await api.service('GET', `/bot/servers/${g}/modules`).catch(() => null);
+            const list = mods ? json.filter((j) => (0, shared_1.commandsForServer)([{ name: j.name }], mods.disabled).length) : json;
+            const sig = list.map((j) => j.name).sort().join(',');
+            if (quiet && registered.get(g) === sig)
+                return;
             try {
-                await c.application.commands.set(json, g);
-                console.log(`${json.length} slash commands registered for ${name ?? g}`);
+                await c.application.commands.set(list, g);
+                registered.set(g, sig);
+                console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(', ')})` : ''}`);
             }
             catch (e) {
                 console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
             }
         };
+        // Moduländerungen im Dashboard: Befehlsliste alle 2 Minuten abgleichen (nur bei Änderung neu registrieren)
+        setInterval(() => { for (const [id, gname] of c.guilds.cache.map((x) => [x.id, x.name]))
+            void register(id, gname, true); }, 120_000).unref();
         const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
         for (const g of (0, config_1.guildIds)(cfg))
             if (!all.has(g))

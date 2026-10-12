@@ -12,13 +12,14 @@ import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { LocksService } from '../locks/locks.service';
+import { SyncService } from '../multi-server/sync.service';
 
 const stable = (v: unknown): string => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
 export const hashContent = (c: unknown) => createHash('sha256').update(stable(c)).digest('hex');
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly perms: PermissionService, private readonly locks: LocksService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly perms: PermissionService, private readonly locks: LocksService, private readonly sync: SyncService) {}
 
   /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
   private async canSeeAll(userId: string) { return (await this.perms.has(userId, 'reports.review')) || (await this.perms.has(userId, 'reports.approve')); }
@@ -91,6 +92,11 @@ export class ReportsService {
       const after = await tx.report.update({ where: { id }, data: { status: to, version: { increment: 1 } } });
       await this.timeline.add(tx, { entityType: 'Report', entityId: id, action: `report.${to.toLowerCase()}`, summary: `Bericht ${r.number}: ${statusLabel(to)}`, actorId: userId });
       await this.audit.record(actor, { action: `report.${to.toLowerCase()}`, module: 'reports', entityType: 'Report', entityId: id, before: { status: r.status }, after: { status: to }, reason }, tx);
+      // eingereichte/geprüfte Berichte an verbundene Server (nur mit aktiver Freigabe „reports“; Kopie ist dort nur lesbar)
+      if (to !== 'DRAFT') {
+        const author = await tx.user.findUnique({ where: { id: after.authorId }, select: { displayName: true } });
+        await this.sync.emit(tx, { dataType: 'reports', eventType: `report.${to.toLowerCase()}`, recordId: id, version: after.version, payload: { number: after.number, type: after.type, title: after.title, status: after.status, author: author?.displayName ?? null, updatedAt: after.updatedAt.toISOString() } });
+      }
       if (to === 'APPROVED' || to === 'REJECTED' || to === 'UNDER_REVIEW') {
         await tx.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title: `Bericht ${r.number}: ${statusLabel(to)}`, body: reason, entityType: 'Report', entityId: id } });
       }

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { DEFAULT_CONFIG } from '../src/qualifications/qualifications.config';
 
@@ -19,6 +19,8 @@ beforeAll(async () => {
   await prisma.systemSetting.deleteMany({ where: { key: { startsWith: 'qualifications.config' } } });
   await makeUser(prisma, 'ban_admin', ['System Administrator']);
   await makeUser(prisma, 'ban_member', ['Police Member']);
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [GUILD_A, GUILD_B]) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => { delete process.env.BOT_API_TOKEN; await app.close(); });
 

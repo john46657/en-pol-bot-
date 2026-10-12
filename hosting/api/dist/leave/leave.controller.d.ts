@@ -31,11 +31,11 @@ declare const listQ: z.ZodObject<{
     mine: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
     discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status?: "PENDING" | "APPROVED" | "DENIED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
     discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }, {
-    status?: "PENDING" | "APPROVED" | "DENIED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
     discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }>;
@@ -43,10 +43,10 @@ declare const decision: z.ZodObject<{
     status: z.ZodEnum<["APPROVED", "DENIED"]>;
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "APPROVED" | "DENIED";
+    status: "DENIED" | "APPROVED";
     reason?: string | undefined;
 }, {
-    status: "APPROVED" | "DENIED";
+    status: "DENIED" | "APPROVED";
     reason?: string | undefined;
 }>;
 /** Abmeldungen (Leave of Absences). Beantragen: leave.request · alle sehen: leave.view · entscheiden: leave.manage. */

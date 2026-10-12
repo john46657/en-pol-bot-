@@ -16,17 +16,17 @@ afterAll(async () => {
 
 describe('Startrollen', () => {
   it('a deleted starter role does not come back on the next start; System Administrator always does', async () => {
-    await prisma.role.delete({ where: { name: 'Investigator' } });
-    await prisma.role.delete({ where: { name: 'System Administrator' } });
+    await prisma.role.deleteMany({ where: { guildId: null, name: 'Investigator' } });
+    await prisma.role.deleteMany({ where: { guildId: null, name: 'System Administrator' } });
     await seedBase(prisma); // = Serverstart
-    expect(await prisma.role.findUnique({ where: { name: 'Investigator' } })).toBeNull();
-    const sa = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' }, include: { permissions: true } });
+    expect(await prisma.role.findFirst({ where: { guildId: null, name: 'Investigator' } })).toBeNull();
+    const sa = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' }, include: { permissions: true } });
     expect(sa.permissions.map((p) => p.permissionKey)).toEqual(['*']);
   });
 
   it('installs from before the marker keep their deleted roles deleted', async () => {
     await prisma.systemSetting.delete({ where: { key: 'roles.starterSeeded' } });
     await seedBase(prisma);
-    expect(await prisma.role.findUnique({ where: { name: 'Investigator' } })).toBeNull();
+    expect(await prisma.role.findFirst({ where: { guildId: null, name: 'Investigator' } })).toBeNull();
   });
 });

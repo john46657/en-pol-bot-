@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { DiscordAccessService } from '../src/authz/discord-access.service';
 
@@ -31,9 +31,11 @@ beforeAll(async () => {
   ({ app, prisma } = await createTestApp());
   for (const [n, roles] of Object.entries({ r_admin: ['System Administrator'], r_lead: ['Police Administration'], r_sup: ['Supervisor'], r_off: ['Police Member'] })) id[n] = (await makeUser(prisma, n, roles)).id;
   // Leitung darf Rollen verwalten (Rang 10), aber besitzt z. B. kein ticket.delete
-  const lead = await prisma.role.findUniqueOrThrow({ where: { name: 'Police Administration' } });
+  const lead = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Police Administration' } });
   await prisma.rolePermission.createMany({ data: [{ roleId: lead.id, permissionKey: 'roles.manage', effect: 'ALLOW' }, { roleId: lead.id, permissionKey: 'users.manage', effect: 'ALLOW' }], skipDuplicates: true });
   await prisma.rolePermission.deleteMany({ where: { roleId: lead.id, permissionKey: { in: ['ticket.delete', 'ticket.*'] } } });
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [GUILD, '800000000000000001', '800000000000000002']) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => {
   vi.restoreAllMocks();
@@ -61,7 +63,7 @@ describe('roles & permissions editor', () => {
     expect((await adm.patch(`/api/v1/roles/${dup.body.id}`).send({ active: false })).body.active).toBe(false);
     expect((await adm.delete(`/api/v1/roles/${dup.body.id}`)).status).toBe(204);
     // Systemadministrator (Serverbesitzer) ist im Dashboard nicht änderbar
-    const sa = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+    const sa = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' } });
     expect((await adm.patch(`/api/v1/roles/${sa.id}/permissions`).send({ permission: 'audit.view', effect: 'DENY' })).status).toBe(403);
     expect((await adm.delete(`/api/v1/roles/${sa.id}`)).status).toBe(403);
   });
@@ -91,8 +93,8 @@ describe('roles & permissions editor', () => {
 
   it('no self-escalation: only roles below the own rank, only permissions one has, never own roles', async () => {
     const lead = (await login(app, 'r_lead')).agent;
-    const roles = (await lead.get('/api/v1/roles')).body as { id: string; name: string }[];
-    const byName = (n: string) => roles.find((r) => r.name === n)!.id;
+    const roles = (await lead.get('/api/v1/roles')).body as { id: string; name: string; guildId: string | null }[];
+    const byName = (n: string) => roles.find((r) => r.name === n && !r.guildId)!.id; // serverübergreifende Rollen („Alle Server“)
     // eigene Rolle und höhere Rollen: nicht bearbeitbar
     expect((await lead.patch(`/api/v1/roles/${byName('Police Administration')}/permissions`).send({ permission: 'audit.export', effect: 'ALLOW' })).status).toBe(403);
     expect((await lead.patch(`/api/v1/roles/${byName('Police Administration')}`).send({ priority: 1 })).status).toBe(403);
@@ -128,7 +130,7 @@ describe('roles & permissions editor', () => {
     const before = (await off.get('/api/v1/auth/me')).body.permissions as string[];
     expect(before).toContain('dashboard.team.view');
     expect(before).not.toContain('dashboard.settings.view');
-    const pm = await prisma.role.findUniqueOrThrow({ where: { name: 'Police Member' } });
+    const pm = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Police Member' } });
     await prisma.role.update({ where: { id: pm.id }, data: { active: false } });
     expect((await off.get('/api/v1/auth/me')).body.permissions).not.toContain('dashboard.team.view');
     await prisma.role.update({ where: { id: pm.id }, data: { active: true } });
@@ -141,21 +143,24 @@ describe('Discord role sync after login', () => {
     const user = await makeUser(prisma, 'r_discord');
     await prisma.discordLink.create({ data: { userId: user.id, discordId: D.mod } });
     members.set(D.mod, [ACCESS_ROLE, MOD_ROLE]);
+    // Über Discord vergeben werden nur Rollen des jeweiligen Servers: „Moderator“ als Server-Rolle von GUILD
+    const tpl = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Moderator' }, include: { permissions: true } });
+    await prisma.role.create({ data: { guildId: GUILD, name: 'Moderator', priority: tpl.priority, discordRoleIds: [MOD_ROLE], permissions: { create: tpl.permissions.map((p) => ({ permissionKey: p.permissionKey, effect: p.effect })) } } });
     const access = app.get(DiscordAccessService);
     access.forget();
     const agent = (await login(app, 'r_discord')).agent;
-    const me = await agent.get('/api/v1/auth/me');
+    const me = await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD);
     expect(me.status).toBe(200);
     expect(me.body.roles).toContain('Moderator'); // verknüpft über Rolle „Moderator“ → MOD_ROLE
     expect(me.body.permissions).toContain('ticket.close');
     // Moderator-Rolle auf Discord weg → Dashboard-Rolle weg
     members.set(D.mod, [ACCESS_ROLE]);
     access.forget(user.id);
-    expect((await agent.get('/api/v1/auth/me')).body.roles).not.toContain('Moderator');
+    expect((await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).not.toContain('Moderator');
     // Zugangsrolle weg → Session sofort ungültig, auch für spätere Anfragen
     members.set(D.mod, []);
     access.forget(user.id);
-    const denied = await agent.get('/api/v1/auth/me');
+    const denied = await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD);
     expect(denied.status).toBe(401);
     expect(denied.body.details).toMatchObject({ reason: 'NO_ACCESS' });
     expect(await prisma.session.count({ where: { userId: user.id, revokedAt: null } })).toBe(0);
@@ -195,7 +200,7 @@ describe('team list, voice and personal settings', () => {
     // Voice getrennt
     const v = (await off.get('/api/v1/team/voice')).body;
     expect(v.channels[0]).toMatchObject({ name: 'Funk 1', members: [{ displayName: 'Max', selfMute: true, streaming: true }] });
-    const pm = await prisma.role.findUniqueOrThrow({ where: { name: 'Police Member' } });
+    const pm = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Police Member' } });
     await prisma.rolePermission.deleteMany({ where: { roleId: pm.id, permissionKey: 'dashboard.voice.view' } });
     expect((await off.get('/api/v1/team/voice')).status).toBe(403);
     // Änderungen werden erkannt (Status, Austritt)
@@ -242,6 +247,7 @@ describe('servers run separately', () => {
     expect(role.guildId).toBe(A);
     await adm.patch(`/api/v1/roles/${role.id}/permissions`).set('X-Guild-Id', A).send({ permission: 'audit.view', effect: 'ALLOW' });
     const u = await makeUser(prisma, 'r_server');
+    await registerServer(prisma, A, [u.id]); // bestätigtes Mitglied nur auf Server A
     await adm.put(`/api/v1/users/${u.id}/roles`).set('X-Guild-Id', A).send({ roleIds: [role.id] });
     const agent = (await login(app, 'r_server')).agent;
     const inA = (await agent.get('/api/v1/auth/me').set('X-Guild-Id', A)).body;

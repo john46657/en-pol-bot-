@@ -5,7 +5,7 @@ import { initAutosave, resetAutosave } from './autosave';
 import { useRealtimeEvent } from './realtime';
 import { getServer, setServer, subscribeServer } from './server';
 
-export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[] }
+export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[]; globalAdmin?: boolean }
 interface AuthCtx { user: Profile | null; loading: boolean; can: (p: string) => boolean; login: (u: string, p: string) => Promise<{ ticket: string } | void>; loginTwoFactor: (ticket: string, code: string) => Promise<void>; logout: () => Promise<void> }
 const Ctx = createContext<AuthCtx | null>(null);
 
@@ -28,9 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Serverwechsel: alle Daten des anderen Servers verwerfen und neu laden
   useEffect(() => { void qc.invalidateQueries(); }, [server, qc]);
   useEffect(() => { if (user) initAutosave(user.id); }, [user?.id]);
-  // Nur Rollen auf einem Server (keine serverübergreifenden): direkt diesen Server wählen
+  // Nur Rollen auf einem Server (keine serverübergreifenden): direkt diesen Server wählen.
+  // Gewählter Server, auf dem man (nicht mehr) Mitglied ist: auf einen erlaubten Server wechseln (die API sperrt ihn ohnehin).
   useEffect(() => {
-    if (user && !server && !user.permissions.includes('dashboard.view') && user.servers?.length) setServer(user.servers[0]!);
+    if (!user) return;
+    if (!server && !user.permissions.includes('dashboard.view') && user.servers?.length) setServer(user.servers[0]!);
+    else if (server && !user.globalAdmin && user.servers && !user.servers.includes(server)) setServer(user.servers[0] ?? '');
   }, [user, server]);
   useRealtimeEvent('permissions.changed', () => void qc.invalidateQueries({ queryKey: ['me'] }), !!user);
   useRealtimeEvent('session.revoked', () => location.assign('/login?discord=no_access'), !!user);

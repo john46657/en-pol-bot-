@@ -27,6 +27,7 @@ __export(index_exports, {
   AREA_PERMISSIONS: () => AREA_PERMISSIONS,
   BACKUP_PARTS: () => BACKUP_PARTS,
   BACKUP_PART_LABEL: () => BACKUP_PART_LABEL,
+  BOT_COMMAND_MODULES: () => BOT_COMMAND_MODULES,
   CAD_EVENTS: () => CAD_EVENTS,
   CAD_EVENT_LABELS: () => CAD_EVENT_LABELS,
   CAD_EVENT_SEND_TYPE: () => CAD_EVENT_SEND_TYPE,
@@ -84,6 +85,8 @@ __export(index_exports, {
   LOG_TYPES: () => LOG_TYPES,
   MAX_FORM_OPTIONS: () => MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS: () => MAX_FORM_QUESTIONS,
+  MODULES: () => MODULES,
+  MODULE_KEYS: () => MODULE_KEYS,
   MUSIC_TRACKS: () => MUSIC_TRACKS,
   PERIOD_LABEL: () => PERIOD_LABEL,
   PERMISSION_CATALOG: () => PERMISSION_CATALOG,
@@ -108,6 +111,8 @@ __export(index_exports, {
   ROBLOX_VERIFICATION_STATUSES: () => ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS: () => STATUS_KINDS,
   STATUS_LABEL: () => STATUS_LABEL,
+  SYNC_DATA_TYPES: () => SYNC_DATA_TYPES,
+  SYNC_DIRECTIONS: () => SYNC_DIRECTIONS,
   TICKET_ACTIONS: () => TICKET_ACTIONS,
   TICKET_ACTION_KEYS: () => TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS: () => TICKET_PLACEHOLDERS,
@@ -122,6 +127,8 @@ __export(index_exports, {
   WEAPON_STATUSES: () => WEAPON_STATUSES,
   WEAPON_STATUS_KEYS: () => WEAPON_STATUS_KEYS,
   WEEKDAYS: () => WEEKDAYS,
+  WEEK_COUNTED_STATUSES: () => WEEK_COUNTED_STATUSES,
+  WEEK_TIMEZONE: () => WEEK_TIMEZONE,
   WELCOME_VARIABLES: () => WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS: () => WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS: () => WORKFLOW_OPS,
@@ -139,6 +146,7 @@ __export(index_exports, {
   canTransition: () => canTransition,
   checkAnswer: () => checkAnswer,
   cleanReportValues: () => cleanReportValues,
+  commandsForServer: () => commandsForServer,
   conditionMatches: () => conditionMatches,
   dangerLevelOf: () => dangerLevelOf,
   defaultTicketButtons: () => defaultTicketButtons,
@@ -174,6 +182,7 @@ __export(index_exports, {
   isSupportOpen: () => isSupportOpen,
   isValidRobloxUserId: () => isValidRobloxUserId,
   isoWeek: () => isoWeek,
+  localMidnight: () => localMidnight,
   localTime: () => localTime,
   logCategoryOf: () => logCategoryOf,
   logChannelFor: () => logChannelFor,
@@ -181,7 +190,11 @@ __export(index_exports, {
   loggingConfigSchema: () => loggingConfigSchema,
   matchingBinds: () => matchingBinds,
   mdtConfigSchema: () => mdtConfigSchema,
+  moduleDef: () => moduleDef,
+  moduleDependencyError: () => moduleDependencyError,
+  moduleOfPermission: () => moduleOfPermission,
   newVoiceRoom: () => newVoiceRoom,
+  nextWeekStart: () => nextWeekStart,
   normalizeField: () => normalizeField,
   notifyRuleSchema: () => notifyRuleSchema,
   panelFieldSchema: () => panelFieldSchema,
@@ -191,6 +204,7 @@ __export(index_exports, {
   periodStart: () => periodStart,
   personDetailsSchema: () => personDetailsSchema,
   pixelToGame: () => pixelToGame,
+  policyAllowsFlow: () => policyAllowsFlow,
   questionSchema: () => questionSchema,
   rangeSchema: () => rangeSchema,
   rankSchema: () => rankSchema,
@@ -217,6 +231,11 @@ __export(index_exports, {
   ticketNumber: () => ticketNumber,
   triggerMatches: () => triggerMatches,
   verifyActions: () => verifyActions,
+  weekIso: () => weekIso,
+  weekKey: () => weekKey,
+  weekLabel: () => weekLabel,
+  weekStartOf: () => weekStartOf,
+  weekTotals: () => weekTotals,
   withHrDefaults: () => withHrDefaults
 });
 module.exports = __toCommonJS(index_exports);
@@ -278,7 +297,15 @@ var PERMISSION_CATALOG = {
   studio: ["view", "manage"],
   settings: ["view", "manage"],
   users: ["view", "manage"],
-  roles: ["view", "manage"]
+  roles: ["view", "manage"],
+  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
+  servers: ["view", "manage"],
+  /** Module je Server an/aus und deren Einstellungen */
+  modules: ["view", "manage"],
+  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
+  connections: ["view", "manage"],
+  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
+  sync: ["view", "retry"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -1333,6 +1360,155 @@ function reportMessage(t, r, id2) {
   ] };
 }
 
+// src/duty-week.ts
+var WEEK_TIMEZONE = "Europe/Berlin";
+function localParts(at, timeZone) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23", weekday: "short" }).formatToParts(at).map((x) => [x.type, x.value]));
+  const wd = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.weekday) + 1;
+  return { y: Number(p.year), m: Number(p.month), d: Number(p.day), h: Number(p.hour), min: Number(p.minute), s: Number(p.second), wd };
+}
+function offsetMs(at, timeZone) {
+  const l = localParts(at, timeZone);
+  return Date.UTC(l.y, l.m - 1, l.d, l.h, l.min, l.s) - Math.floor(at.getTime() / 1e3) * 1e3;
+}
+function localMidnight(y, m, d, timeZone = WEEK_TIMEZONE) {
+  const guess = Date.UTC(y, m - 1, d);
+  let t = guess - offsetMs(new Date(guess), timeZone);
+  t = guess - offsetMs(new Date(t), timeZone);
+  return new Date(t);
+}
+function weekStartOf(at, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(at, timeZone);
+  return localMidnight(l.y, l.m, l.d - (l.wd - 1), timeZone);
+}
+function nextWeekStart(weekStart, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(new Date(weekStart.getTime() + 84 * 36e5), timeZone);
+  return localMidnight(l.y, l.m, l.d - (l.wd - 1) + 7, timeZone);
+}
+function weekIso(weekStart, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(new Date(weekStart.getTime() + 84 * 36e5), timeZone);
+  const date = new Date(Date.UTC(l.y, l.m - 1, l.d));
+  date.setUTCDate(date.getUTCDate() + 4 - l.wd);
+  const year = date.getUTCFullYear();
+  return { year, week: Math.ceil(((date.getTime() - Date.UTC(year, 0, 1)) / 864e5 + 1) / 7) };
+}
+function weekKey(weekStart, timeZone = WEEK_TIMEZONE) {
+  const l = localParts(new Date(weekStart.getTime() + 84 * 36e5), timeZone);
+  const mon = new Date(Date.UTC(l.y, l.m - 1, l.d - (l.wd - 1)));
+  return mon.toISOString().slice(0, 10);
+}
+function weekLabel(weekStart, timeZone = WEEK_TIMEZONE) {
+  const { year, week } = weekIso(weekStart, timeZone);
+  const [y, m, d] = weekKey(weekStart, timeZone).split("-").map(Number);
+  const f = (x, withYear = false) => x.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", ...withYear ? { year: "numeric" } : {} });
+  return `KW ${week}/${year} \xB7 ${f(new Date(Date.UTC(y, m - 1, d)))}\u2013${f(new Date(Date.UTC(y, m - 1, d + 6)), true)}`;
+}
+var WEEK_COUNTED_STATUSES = ["ON_DUTY", "TRAINING", "ADMINISTRATIVE"];
+function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
+  const rows = /* @__PURE__ */ new Map();
+  const counted = new Set(WEEK_COUNTED_STATUSES);
+  for (const s of sessions) {
+    const a = Math.max(s.startedAt.getTime(), from.getTime());
+    const b = Math.min((s.endedAt ?? now).getTime(), to.getTime());
+    if (b <= a) continue;
+    const r = rows.get(s.userId) ?? { userId: s.userId, minutes: 0, breakMinutes: 0, byStatus: {}, sessions: 0 };
+    const min = (b - a) / 6e4;
+    r.byStatus[s.status] = (r.byStatus[s.status] ?? 0) + min;
+    if (counted.has(s.status)) r.minutes += min;
+    if (s.status === "BREAK") r.breakMinutes += min;
+    r.sessions++;
+    rows.set(s.userId, r);
+  }
+  return [...rows.values()].map((r) => ({ ...r, minutes: Math.round(r.minutes), breakMinutes: Math.round(r.breakMinutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) })).filter((r) => r.minutes > 0 || r.breakMinutes > 0).sort((x, y) => y.minutes - x.minutes || y.sessions - x.sessions);
+}
+
+// src/modules.ts
+var MODULES = [
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
+  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
+  { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
+  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
+  { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
+  { key: "investigations", name: "Ermittlungen", description: "Beschwerden, Ermittlungen, Beweismittel", permissionPrefixes: ["complaints", "investigations", "evidence"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
+  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
+  { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes", permissionPrefixes: ["communication", "announcements", "polls", "radio"] }
+];
+var MODULE_KEYS = MODULES.map((m) => m.key);
+var moduleDef = (key3) => MODULES.find((m) => m.key === key3);
+function moduleOfPermission(permission) {
+  const prefix = permission.split(".")[0] ?? "";
+  return MODULES.find((m) => m.permissionPrefixes.includes(prefix))?.key ?? "core";
+}
+function moduleDependencyError(key3, enabled, state) {
+  const def = moduleDef(key3);
+  if (!def) return "Unbekanntes Modul.";
+  if (def.system && !enabled) return `\u201E${def.name}\u201C ist ein Systemmodul und kann nicht deaktiviert werden.`;
+  if (enabled) {
+    const missing = (def.dependsOn ?? []).filter((d) => state[d] === false);
+    if (missing.length) return `\u201E${def.name}\u201C braucht: ${missing.map((m) => moduleDef(m)?.name ?? m).join(", ")}.`;
+  } else {
+    const users = MODULES.filter((m) => (m.dependsOn ?? []).includes(key3) && state[m.key] !== false);
+    if (users.length) return `\u201E${def.name}\u201C wird noch gebraucht von: ${users.map((m) => m.name).join(", ")}.`;
+  }
+  return null;
+}
+var SYNC_DATA_TYPES = [
+  { key: "reports", module: "reports", label: "Berichte (eingereicht/freigegeben)", source: "reports" },
+  { key: "unit_status", module: "shift_logs", label: "Dienststatus der Beamten", source: "duty" },
+  { key: "shift_statistics", module: "shift_logs", label: "Wochenstatistik (Shift Logs)", source: "weekly-reset" },
+  { key: "team_overview", module: "shift_logs", label: "Team\xFCbersicht (wer ist im Dienst)", source: "duty" },
+  { key: "incidents", module: "cad", label: "Eins\xE4tze", source: null },
+  { key: "incident_status", module: "cad", label: "Einsatzstatus", source: null },
+  { key: "radio_messages", module: "cad", label: "Funkspr\xFCche", source: null }
+];
+var SYNC_DIRECTIONS = ["A_TO_B", "B_TO_A", "BIDIRECTIONAL", "NONE"];
+function policyAllowsFlow(p, from, to) {
+  if (!p.enabled || p.direction === "NONE") return false;
+  const forward = p.sourceServerId === from && p.targetServerId === to;
+  const backward = p.sourceServerId === to && p.targetServerId === from;
+  return forward && (p.direction === "A_TO_B" || p.direction === "BIDIRECTIONAL") || backward && (p.direction === "B_TO_A" || p.direction === "BIDIRECTIONAL");
+}
+var BOT_COMMAND_MODULES = {
+  cad: "cad",
+  bericht: "reports",
+  dienstbericht: "reports",
+  person: "mdt",
+  kennzeichen: "mdt",
+  fahndungen: "mdt",
+  fahndung: "mdt",
+  dienst: "shift_logs",
+  dienststunden: "shift_logs",
+  team: "shift_logs",
+  dienstpanel: "shift_logs",
+  teamliste: "shift_logs",
+  einheiten: "dispatch",
+  einheitstatus: "dispatch",
+  einsaetze: "dispatch",
+  einsatz: "dispatch",
+  einsatzinfo: "dispatch",
+  einsatzstatus: "dispatch",
+  einsatzzuweisen: "dispatch",
+  beschwerde: "investigations",
+  ermittlung: "investigations",
+  beweis: "investigations",
+  abmeldung: "personnel",
+  leave: "personnel",
+  ausbildung: "personnel",
+  verwarnen: "personnel",
+  teamchance: "applications",
+  bewerbung: "applications",
+  bewerbungspanel: "applications",
+  qualipanel: "applications",
+  support: "support",
+  funkcode: "communication",
+  funk: "communication"
+};
+var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
+
 // src/hr.ts
 var import_zod3 = require("zod");
 var sf3 = import_zod3.z.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
@@ -2095,6 +2271,7 @@ var fleetInternalSchema = import_zod7.z.object({
   AREA_PERMISSIONS,
   BACKUP_PARTS,
   BACKUP_PART_LABEL,
+  BOT_COMMAND_MODULES,
   CAD_EVENTS,
   CAD_EVENT_LABELS,
   CAD_EVENT_SEND_TYPE,
@@ -2152,6 +2329,8 @@ var fleetInternalSchema = import_zod7.z.object({
   LOG_TYPES,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
+  MODULES,
+  MODULE_KEYS,
   MUSIC_TRACKS,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
@@ -2176,6 +2355,8 @@ var fleetInternalSchema = import_zod7.z.object({
   ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS,
   STATUS_LABEL,
+  SYNC_DATA_TYPES,
+  SYNC_DIRECTIONS,
   TICKET_ACTIONS,
   TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS,
@@ -2190,6 +2371,8 @@ var fleetInternalSchema = import_zod7.z.object({
   WEAPON_STATUSES,
   WEAPON_STATUS_KEYS,
   WEEKDAYS,
+  WEEK_COUNTED_STATUSES,
+  WEEK_TIMEZONE,
   WELCOME_VARIABLES,
   WORKFLOW_ACTION_LABELS,
   WORKFLOW_OPS,
@@ -2207,6 +2390,7 @@ var fleetInternalSchema = import_zod7.z.object({
   canTransition,
   checkAnswer,
   cleanReportValues,
+  commandsForServer,
   conditionMatches,
   dangerLevelOf,
   defaultTicketButtons,
@@ -2242,6 +2426,7 @@ var fleetInternalSchema = import_zod7.z.object({
   isSupportOpen,
   isValidRobloxUserId,
   isoWeek,
+  localMidnight,
   localTime,
   logCategoryOf,
   logChannelFor,
@@ -2249,7 +2434,11 @@ var fleetInternalSchema = import_zod7.z.object({
   loggingConfigSchema,
   matchingBinds,
   mdtConfigSchema,
+  moduleDef,
+  moduleDependencyError,
+  moduleOfPermission,
   newVoiceRoom,
+  nextWeekStart,
   normalizeField,
   notifyRuleSchema,
   panelFieldSchema,
@@ -2259,6 +2448,7 @@ var fleetInternalSchema = import_zod7.z.object({
   periodStart,
   personDetailsSchema,
   pixelToGame,
+  policyAllowsFlow,
   questionSchema,
   rangeSchema,
   rankSchema,
@@ -2285,5 +2475,10 @@ var fleetInternalSchema = import_zod7.z.object({
   ticketNumber,
   triggerMatches,
   verifyActions,
+  weekIso,
+  weekKey,
+  weekLabel,
+  weekStartOf,
+  weekTotals,
   withHrDefaults
 });

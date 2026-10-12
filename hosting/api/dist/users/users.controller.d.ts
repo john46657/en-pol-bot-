@@ -20,14 +20,14 @@ declare const createUser: z.ZodObject<{
     username: string;
     displayName: string;
     password: string;
-    email?: string | undefined;
     roleIds?: string[] | undefined;
+    email?: string | undefined;
 }, {
     username: string;
     displayName: string;
     password: string;
-    email?: string | undefined;
     roleIds?: string[] | undefined;
+    email?: string | undefined;
 }>;
 declare const roblox: z.ZodObject<{
     robloxUserId: z.ZodNullable<z.ZodString>;
@@ -76,26 +76,28 @@ export declare class UsersController {
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             id: string;
+            robloxUserId: string | null;
+            robloxUsername: string | null;
             createdAt: Date;
             updatedAt: Date;
+            active: boolean;
             username: string;
             displayName: string;
             email: string | null;
-            robloxUserId: string | null;
-            robloxUsername: string | null;
             robloxStatus: string;
             robloxVerifiedAt: Date | null;
-            active: boolean;
             lastLogin: Date | null;
             totpEnabledAt: Date | null;
             roles: {
                 role: {
                     id: string;
+                    guildId: string | null;
                     name: string;
                 };
             }[];
             overrides: {
                 reason: string | null;
+                guildId: string | null;
                 permissionKey: string;
                 effect: string;
             }[];
@@ -110,104 +112,112 @@ export declare class UsersController {
             linkedAt: Date;
         } | null;
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof createUser>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
     setRoblox(a: Actor, id: string, b: z.infer<typeof roblox>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
     setActive(a: Actor, id: string, b: z.infer<typeof active>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -217,62 +227,67 @@ export declare class UsersController {
     remove(a: Actor, id: string): Promise<void>;
     setName(a: Actor, id: string, b: z.infer<typeof nameBody>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
     setOverride(a: Actor, id: string, b: z.infer<typeof override>): Promise<{
         id: string;
+        createdById: string | null;
         createdAt: Date;
         reason: string | null;
-        createdById: string | null;
         userId: string;
+        guildId: string | null;
         permissionKey: string;
         effect: string;
     }>;

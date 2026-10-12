@@ -32,6 +32,7 @@ const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default
 const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
 const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
+const MultiServer = lazy(() => import('./pages/admin/MultiServer').then((m) => ({ default: m.MultiServer })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
@@ -205,6 +206,7 @@ export function App() {
           <Route path="admin/audit" element={<Guard perm="audit.view" area="dashboard.logs.view"><Audit /></Guard>} />
           <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
           <Route path="admin/servers" element={<Guard perm="settings.view"><ServerLinks /></Guard>} />
+          <Route path="admin/multi-server" element={<MultiServer />} />
           <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="admin/embeds" element={<Guard perm="settings.view"><Embeds /></Guard>} />

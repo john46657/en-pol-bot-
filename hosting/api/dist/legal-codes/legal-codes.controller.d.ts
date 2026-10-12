@@ -41,25 +41,27 @@ export declare class LegalCodesController {
     private readonly audit;
     constructor(prisma: PrismaService, audit: AuditService);
     list(): import("@prisma/client").Prisma.PrismaPromise<{
+        serverId: string | null;
         id: string;
         title: string;
         category: string;
         description: string | null;
         expiresAt: Date | null;
-        active: boolean;
         code: string;
         penalty: import("@prisma/client/runtime/library").JsonValue;
+        active: boolean;
         effectiveDate: Date;
     }[]>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        serverId: string | null;
         id: string;
         title: string;
         category: string;
         description: string | null;
         expiresAt: Date | null;
-        active: boolean;
         code: string;
         penalty: import("@prisma/client/runtime/library").JsonValue;
+        active: boolean;
         effectiveDate: Date;
     }>;
 }

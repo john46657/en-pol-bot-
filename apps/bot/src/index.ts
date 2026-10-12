@@ -26,7 +26,7 @@ import { captureGuild, restoreGuild } from './backup';
 import { createVoiceSupport } from './voice-support';
 import { createVerify, type VerifyActions } from './verify';
 import { dutyReminderDm } from './format';
-import { hexColor, type VerifyPanel } from '@enrp/shared';
+import { commandsForServer, hexColor, type VerifyPanel } from '@enrp/shared';
 
 loadDotEnv();
 const cfg = loadConfig();
@@ -522,10 +522,18 @@ function wireReady(client0: Client) {
   // Befehle auf JEDEM Server des Bots registrieren (sofort sichtbar) – auch auf neuen Servern, sobald der Bot eingeladen wird.
   // DISCORD_GUILD_ID wird zusätzlich berücksichtigt (falls der Bot dort noch nicht im Cache ist).
   try { await c.application.commands.set([]); } catch (e) { console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`); } // keine doppelten (global + Server)
-  const register = async (g: string, name?: string) => {
-    try { await c.application.commands.set(json, g); console.log(`${json.length} slash commands registered for ${name ?? g}`); }
+  // Je Server nur Befehle der dort aktivierten Module (Komfort – die API prüft Modul und Rechte bei JEDER Ausführung erneut)
+  const registered = new Map<string, string>();
+  const register = async (g: string, name?: string, quiet = false) => {
+    const mods = await api.service<{ disabled: string[] }>('GET', `/bot/servers/${g}/modules`).catch(() => null);
+    const list = mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json;
+    const sig = list.map((j) => j.name).sort().join(',');
+    if (quiet && registered.get(g) === sig) return;
+    try { await c.application.commands.set(list, g); registered.set(g, sig); console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(', ')})` : ''}`); }
     catch (e) { console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`); }
   };
+  // Moduländerungen im Dashboard: Befehlsliste alle 2 Minuten abgleichen (nur bei Änderung neu registrieren)
+  setInterval(() => { for (const [id, gname] of c.guilds.cache.map((x) => [x.id, x.name] as const)) void register(id, gname, true); }, 120_000).unref();
   const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
   for (const g of guildIds(cfg)) if (!all.has(g)) all.set(g, g);
   for (const [id, name] of all) await register(id, name);

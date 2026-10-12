@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
 import { DiscordAccessService } from '../authz/discord-access.service';
+import { AuthorizationService } from '../authz/authorization.service';
 import { currentGuild } from '../common/guild-context';
 import { hashToken } from '../authz/guards';
 import { DUMMY_HASH, verifyPassword } from './password';
@@ -17,7 +18,7 @@ const LOCK_MS = 15 * 60 * 1000;
 @Injectable()
 export class AuthService {
   private readonly env = loadEnv();
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly access: DiscordAccessService, private readonly twoFactor: TwoFactorService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly access: DiscordAccessService, private readonly twoFactor: TwoFactorService, private readonly authz: AuthorizationService) {}
 
   async login(username: string, password: string, meta: { ip?: string; userAgent?: string; requestId?: string }) {
     const user = await this.prisma.user.findUnique({ where: { username: username.toLowerCase() } });
@@ -89,11 +90,14 @@ export class AuthService {
   async profile(userId: string) {
     const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: { include: { role: true } } } });
     const active = new Set(await this.perms.roleIdsFor(userId));
+    // Server, die man wählen darf: registriert, nicht archiviert, bestätigte Mitgliedschaft (globale Systemadministratoren: alle)
+    const owner = await this.perms.isOwner(userId);
+    const servers = await this.prisma.discordServer.findMany({ where: { archivedAt: null, ...(owner ? {} : { memberships: { some: { userId, status: 'MEMBER' } } }) }, select: { guildId: true }, orderBy: { name: 'asc' } });
     return {
       id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
       // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
-      roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.perms.effective(userId), lastLogin: u.lastLogin,
-      twoFactor: !!u.totpEnabledAt, guildId: currentGuild(), servers: [...new Set(u.roles.map((r) => r.role.guildId).filter((g): g is string => !!g))],
+      roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.authz.effective(userId), lastLogin: u.lastLogin,
+      twoFactor: !!u.totpEnabledAt, guildId: currentGuild(), servers: servers.map((s) => s.guildId), globalAdmin: owner,
     };
   }
 }

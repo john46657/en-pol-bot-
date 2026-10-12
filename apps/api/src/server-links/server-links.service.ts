@@ -25,6 +25,14 @@ export const linksSchema = z.object({
 });
 export type ServerLinks = z.infer<typeof linksSchema>;
 
+/** Tabellen, die seit der vollständigen Trennung je Server gelten, mit ihren Eindeutigkeiten je Server. */
+const LEGACY_TABLES: [string, string[]][] = [
+  ['Incident', []], ['Unit', ['callsign']], ['CadMapObject', []], ['CadMember', ['userId', 'discordId']], ['Ticket', []], ['LegalCode', ['code']],
+  ['Personnel', ['userId', 'callsign', 'serviceNumber']], ['HrRank', ['name']], ['HrRequest', []], ['HrTraining', []], ['HrExam', []], ['HrAnnouncement', []], ['HrPoll', []],
+  ['ServiceNumberRange', []], ['ServiceNumber', ['display']], ['HireQueue', []], ['AcademyCourse', []], ['SekMember', ['userId']], ['SekReport', []],
+  ['RadioWhitelist', ['userId']], ['Workflow', []], ['Conversation', []],
+];
+
 /** Eigener Akten-Bereich eines einzelnen Servers als feste UUID (aus der Server-ID abgeleitet). */
 export function ownSpace(guildId: string) {
   const h = createHash('sha256').update(`records:${guildId}`).digest('hex');
@@ -58,7 +66,11 @@ export class ServerLinksService implements OnModuleInit {
       this.prisma.systemSetting.findUnique({ where: { key: 'discord.guilds' } }),
     ]);
     const guilds = (Array.isArray(known?.value) ? (known.value as { id?: unknown }[]) : []).map((g) => String(g.id ?? '')).filter((id) => /^\d{15,25}$/.test(id));
-    const home = ((cad?.value as { homeGuildId?: string | null } | null)?.homeGuildId ?? null) || (guilds.length === 1 ? guilds[0]! : null);
+    // Heimat-Server: Leitstelle → eingestellter Haupt-Server → einziger bekannter bzw. registrierter Server
+    const channels = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.channels' } }))?.value as { guildId?: string } | undefined;
+    const configured = [channels?.guildId, process.env.DISCORD_GUILD_ID].join(',').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g)) ?? null;
+    const registered = await this.prisma.discordServer.findMany({ where: { archivedAt: null }, select: { guildId: true }, take: 2 });
+    const home = ((cad?.value as { homeGuildId?: string | null } | null)?.homeGuildId ?? null) || configured || (guilds.length === 1 ? guilds[0]! : null) || (registered.length === 1 ? registered[0]!.guildId : null);
     if (!home) return null;
     const space = this.space(home);
     if (space === null) return null; // Heimat-Server nutzt den gemeinsamen Bestand – dort sind die Einträge schon
@@ -67,7 +79,15 @@ export class ServerLinksService implements OnModuleInit {
       this.prisma.report.updateMany({ where, data }), this.prisma.complaint.updateMany({ where, data }), this.prisma.investigation.updateMany({ where, data }),
       this.prisma.wantedRecord.updateMany({ where, data }), this.prisma.evidence.updateMany({ where, data }), this.prisma.dutySession.updateMany({ where, data }),
     ]);
-    const moved = r.reduce((n, x) => n + x.count, 0);
+    let moved = r.reduce((n, x) => n + x.count, 0);
+    // Seit der vollständigen Trennung ebenfalls je Server: bisher gemeinsame Einträge gehören dem Heimat-Server.
+    // Bei Eindeutigkeiten je Server (z. B. eine Personalakte je Benutzer) bleibt ein Eintrag stehen, wenn es im Ziel schon einen gibt.
+    for (const [table, uniques] of LEGACY_TABLES) {
+      const guard = uniques.map((u) => `AND NOT EXISTS (SELECT 1 FROM "${table}" o WHERE o."serverId" = $1::uuid AND o."${u}" IS NOT NULL AND o."${u}" = t."${u}")`).join(' ');
+      moved += await this.prisma.$executeRawUnsafe(`UPDATE "${table}" t SET "serverId" = $1::uuid WHERE t."serverId" IS NULL ${guard}`, space);
+    }
+    // CAD/ER:LC-Daten über die Discord-Server-ID: ohne Server → Heimat-Server
+    for (const table of ['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat']) moved += await this.prisma.$executeRawUnsafe(`UPDATE "${table}" SET "guildId" = $1 WHERE "guildId" IS NULL`, home);
     if (moved) this.log.log(`${moved} bestehende Einträge dem Server ${home} zugeordnet`);
     return moved;
   }

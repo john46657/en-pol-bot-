@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { resolvePermission } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
-import { PermissionService } from './permission.service';
 import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from './decorators';
 import { DiscordService } from '../discord/discord.service';
 import { DiscordAccessService } from './discord-access.service';
+import { AuthorizationService } from './authorization.service';
+import { currentGuild } from '../common/guild-context';
 import { loadEnv } from '../config/env';
 import { AppError } from '../common/errors';
 import type { AppRequest } from '../common/request-context';
@@ -45,7 +45,7 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly botToken = loadEnv().BOT_API_TOKEN;
-  constructor(private readonly reflector: Reflector, private readonly prisma: PrismaService, private readonly discord: DiscordService, private readonly access: DiscordAccessService) {}
+  constructor(private readonly reflector: Reflector, private readonly prisma: PrismaService, private readonly discord: DiscordService, private readonly access: DiscordAccessService, private readonly authz: AuthorizationService) {}
 
   private validBotToken(header: unknown): boolean {
     if (!this.botToken || typeof header !== 'string' || !header.startsWith('Bot ')) return false;
@@ -77,6 +77,17 @@ export class AuthGuard implements CanActivate {
       const user = await this.discord.resolveUser(discordId);
       if (!user) throw new AppError('UNAUTHENTICATED', 'Dein Discord-Konto ist nicht verknüpft.', { reason: 'NOT_LINKED' });
       req.user = { id: user.id, username: user.username, displayName: user.displayName, robloxUserId: user.robloxUserId, sessionId: 'bot' };
+      // Discord-Befehl auf einem Server: die Interaktion belegt die aktuelle Mitgliedschaft und Rollen auf GENAU diesem Server
+      const guildId = currentGuild();
+      if (guildId) {
+        const server = await this.authz.server(guildId);
+        if (server) {
+          const raw = req.headers['x-discord-roles'];
+          const roles = typeof raw === 'string' ? raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
+          await this.access.recordMemberships(user.id, { [guildId]: roles }, [guildId]);
+          await this.access.syncRoles(user.id, { [guildId]: roles }, undefined, [guildId]).catch(() => undefined);
+        }
+      }
       return true;
     }
     const token = req.cookies?.[SESSION_COOKIE];
@@ -93,9 +104,14 @@ export class AuthGuard implements CanActivate {
   }
 }
 
+/**
+ * Jede Route mit `@RequirePermission` läuft über den zentralen AuthorizationService: Server der Anfrage (X-Guild-Id)
+ * registriert und aktiv, bestätigte Mitgliedschaft, Modul an, Berechtigung. Routen unter `/servers/:serverId/…` prüfen
+ * zusätzlich gegen den Pfad-Server (siehe ServersController) – der Header kann den Pfad nie übersteuern.
+ */
 @Injectable()
 export class PermissionGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector, private readonly perms: PermissionService, private readonly prisma: PrismaService) {}
+  constructor(private readonly reflector: Reflector, private readonly authz: AuthorizationService) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     if (ctx.getType() !== 'http') return true;
@@ -103,14 +119,7 @@ export class PermissionGuard implements CanActivate {
     if (!required?.length) return true;
     const req = ctx.switchToHttp().getRequest<AppRequest>();
     if (!req.user) throw new AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
-    const pctx = await this.perms.contextFor(req.user.id);
-    
-    for (const p of required) {
-      if (!resolvePermission(pctx, p).allowed) {
-        await this.prisma.securityEvent.create({ data: { type: 'PERMISSION_DENIED', userId: req.user.id, detail: p, requestId: req.requestId, ip: req.ip } }).catch(() => undefined);
-        throw new AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
-      }
-    }
+    for (const p of required) await this.authz.assert(req.user.id, currentGuild(), p, {}, { requestId: req.requestId, ip: req.ip });
     return true;
   }
 }

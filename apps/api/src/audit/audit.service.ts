@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService, Tx } from '../prisma/prisma.service';
+import { currentGuild } from '../common/guild-context';
 
 export interface Actor {
   userId: string | null;
@@ -16,6 +17,10 @@ export interface AuditEntry {
   before?: unknown;
   after?: unknown;
   reason?: string;
+  /** Discord-Server (Guild-ID) der Aktion; Standard: Server der Anfrage */
+  serverId?: string | null;
+  /** SUCCESS (Standard) | DENIED | FAILED */
+  result?: 'SUCCESS' | 'DENIED' | 'FAILED';
 }
 
 const SENSITIVE = /password|secret|token|apikey|api_key|hash/i;
@@ -49,6 +54,8 @@ export class AuditService {
         before: redact(entry.before),
         after: redact(entry.after),
         reason: entry.reason,
+        serverId: entry.serverId === undefined ? currentGuild() : entry.serverId,
+        result: entry.result ?? 'SUCCESS',
       },
     });
     if (sink) await sink(db, actor, { ...entry, before: redact(entry.before), after: redact(entry.after) }).catch((e) => console.error(`logging failed for ${entry.action}: ${e instanceof Error ? e.message : e}`));

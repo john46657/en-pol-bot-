@@ -4,7 +4,7 @@ import { DiscoveryService, Reflector } from '@nestjs/core';
 import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from '../src/authz/decorators';
+import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY, SERVICE_AUTHORIZED_KEY } from '../src/authz/decorators';
 
 let app: INestApplication; let prisma: PrismaService;
 beforeAll(async () => {
@@ -39,8 +39,9 @@ describe('route authorization coverage', () => {
         const perms = reflector.getAllAndOverride<string[]>(PERMISSION_KEY, [handler, w.metatype!]);
         const bot = reflector.getAllAndOverride<boolean>(BOT_SERVICE_KEY, [handler, w.metatype!]);
         const pub = reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [handler, w.metatype!]);
+        const inService = reflector.getAllAndOverride<boolean>(SERVICE_AUTHORIZED_KEY, [handler, w.metatype!]);
         const key = `${w.metatype!.name}.${name}`;
-        if (!perms?.length && !pub && !bot && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
+        if (!perms?.length && !pub && !bot && !inService && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
       }
     }
     expect(missing).toEqual([]);
@@ -50,7 +51,7 @@ describe('route authorization coverage', () => {
 describe('privilege escalation', () => {
   it('users.manage alone cannot assign roles when creating a user', async () => {
     const hr = (await login(app, 's_hr')).agent;
-    const admin = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+    const admin = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' } });
     const r = await hr.post('/api/v1/users').send({ username: 'sneaky', displayName: 'Sneaky', password: 'a-very-long-password', roleIds: [admin.id] });
     expect(r.status).toBe(403);
     expect(await prisma.user.count({ where: { username: 'sneaky' } })).toBe(0);
@@ -66,7 +67,7 @@ describe('privilege escalation', () => {
   it('the last active system administrator cannot be disabled or stripped of the role', async () => {
     const adm = (await login(app, 's_admin')).agent;
     const me = await prisma.user.findUniqueOrThrow({ where: { username: 's_admin' } });
-    const role = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+    const role = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' } });
     // s_admin soll der einzige Admin sein; ein zweiter Admin entsteht, wird entfernt, und der letzte ist geschützt
     await prisma.userRole.deleteMany({ where: { roleId: role.id, user: { username: { not: 's_admin' } } } });
     const second = await makeUser(prisma, 's_second', ['Police Member']);

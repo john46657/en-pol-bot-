@@ -145,8 +145,10 @@ let DiscordOAuthService = class DiscordOAuthService {
         }
         if (owner)
             await this.ensureAdmin(user.id);
-        if (member && member !== 'unknown')
-            await this.access.syncRoles(user.id, member.roles, settings);
+        if (member && member !== 'unknown') {
+            await this.access.recordMemberships(user.id, member.byGuild, member.checked);
+            await this.access.syncRoles(user.id, member.byGuild, settings, member.checked);
+        }
         this.access.remember(user.id, true);
         await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });
         return { kind: 'login', ...(await this.auth.startSession(user, meta, 'auth.login.discord')) };
@@ -204,7 +206,7 @@ let DiscordOAuthService = class DiscordOAuthService {
         return user;
     }
     async ensureAdmin(userId) {
-        const role = await this.prisma.role.findUnique({ where: { name: 'System Administrator' } });
+        const role = await this.prisma.role.findFirst({ where: { guildId: null, name: 'System Administrator' } });
         if (!role || (await this.prisma.userRole.findUnique({ where: { userId_roleId: { userId, roleId: role.id } } })))
             return;
         await this.prisma.userRole.create({ data: { userId, roleId: role.id } });

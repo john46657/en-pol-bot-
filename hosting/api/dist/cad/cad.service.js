@@ -19,6 +19,7 @@ const permission_service_1 = require("../authz/permission.service");
 const realtime_service_1 = require("../realtime/realtime.service");
 const timeline_service_1 = require("../timeline/timeline.service");
 const errors_1 = require("../common/errors");
+const guild_context_1 = require("../common/guild-context");
 const web_url_1 = require("../common/web-url");
 const cad_config_service_1 = require("./cad-config.service");
 const cad_notify_service_1 = require("./cad-notify.service");
@@ -119,7 +120,8 @@ let CadService = class CadService {
     /** Fortlaufende Einsatznummer, z. B. E-2026-00421 (Präfix in den CAD-Einstellungen). */
     async nextNumber(tx, prefix) {
         const head = `${prefix}-${new Date().getUTCFullYear()}-`;
-        const last = await tx.incident.findFirst({ where: { number: { startsWith: head } }, orderBy: { number: 'desc' }, select: { number: true } });
+        // Einsatznummern sind global eindeutig → über alle Server zählen (nur die Nummer, keine Inhalte)
+        const last = await (0, guild_context_1.unscoped)(() => tx.incident.findFirst({ where: { number: { startsWith: head } }, orderBy: { number: 'desc' }, select: { number: true } }));
         const n = last ? Number(last.number.slice(head.length)) || 0 : 0;
         return `${head}${String(n + 1).padStart(5, '0')}`;
     }
@@ -620,7 +622,8 @@ let CadService = class CadService {
             incidentId = (await this.prisma.incidentUnit.findFirst({ where: { unitId: unit.id, clearedAt: null }, orderBy: { assignedAt: 'desc' } }))?.incidentId ?? null;
         const callsign = (dispatcher ? d.callsign : null) ?? unit?.callsign ?? member?.callsign ?? null;
         const msg = await this.prisma.$transaction(async (tx) => {
-            const row = await tx.cadRadioMessage.create({ data: { text: d.text, callsign, unitId: unit?.id ?? null, incidentId, authorId: actor.userId, discordId: actor.discordId ?? null, guildId: actor.guildId ?? null } });
+            // Funkmeldung gehört zur Leitstelle, in deren Bereich sie läuft (bei Querverbindung: Leitstelle, nicht der sendende Server)
+            const row = await tx.cadRadioMessage.create({ data: { text: d.text, callsign, unitId: unit?.id ?? null, incidentId, authorId: actor.userId, discordId: actor.discordId ?? null, guildId: (0, guild_context_1.currentGuild)() ?? actor.guildId ?? null } });
             if (incidentId)
                 await this.log(tx, incidentId, 'RADIO', `${callsign ?? 'Funk'}: „${d.text}“`, actor, unit?.id);
             await this.audit.record(actor, { action: 'cad.radio', module: 'cad', entityType: 'CadRadioMessage', entityId: row.id, after: { callsign, incidentId, crossServer: !!actor.guildId } }, tx);

@@ -40,35 +40,42 @@ model User {
   sessions      Session[]
   loginHistory  LoginHistory[]
   notifications Notification[]
-  personnel     Personnel?
+  /// je Server eine eigene Personalakte
+  personnel     Personnel[]
   dutySessions  DutySession[]
   leaveRequests LeaveRequest[]
   settings      UserSettings?
   editLocks     EditLock[]
   dutyReports   DutyReport[]             @relation("DutyReportAuthor")
+  memberships   ServerMembership[]
 
   @@index([robloxUsername])
 }
 
 model Role {
-  id             String           @id @default(uuid()) @db.Uuid
-  name           String           @unique
-  description    String?
-  system         Boolean          @default(false)
+  id              String               @id @default(uuid()) @db.Uuid
+  /// eindeutig je Server (`guildId`); serverübergreifende Rollen (guildId null) zusätzlich per Teil-Index eindeutig
+  name            String
+  description     String?
+  system          Boolean              @default(false)
   /// Rang in der Hierarchie: kleiner = höher (1 = Serverbesitzer). Nur Rollen unterhalb der eigenen dürfen verwaltet werden.
-  priority       Int              @default(100)
-  color          String?
-  icon           String?
+  priority        Int                  @default(100)
+  color           String?
+  icon            String?
   /// Deaktivierte Rollen verleihen keine Rechte (bleiben aber zugewiesen).
-  active         Boolean          @default(true)
+  active          Boolean              @default(true)
   /// Discord-Rollen, die diese Dashboard-Rolle automatisch verleihen (Abgleich bei Login und regelmäßig).
-  discordRoleIds String[]         @default([])
+  discordRoleIds  String[]             @default([])
   /// Discord-Server, auf dem die Rolle gilt (null = alle Server). Server laufen getrennt.
-  guildId        String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  users          UserRole[]
-  permissions    RolePermission[]
+  guildId         String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  users           UserRole[]
+  permissions     RolePermission[]
+  discordMappings DiscordRoleMapping[]
+
+  @@unique([guildId, name])
+  @@index([name])
 }
 
 model Permission {
@@ -80,10 +87,12 @@ model Permission {
 }
 
 model UserRole {
-  userId String @db.Uuid
-  roleId String @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  userId   String   @db.Uuid
+  roleId   String   @db.Uuid
+  /// Leer = manuell vergeben (gilt überall, wo die Rolle gilt). Sonst über Discord-Rollen vergeben und NUR auf diesen Servern gültig.
+  guildIds String[] @default([])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
 }
@@ -126,6 +135,8 @@ model GroupMember {
 model UserPermissionOverride {
   id            String     @id @default(uuid()) @db.Uuid
   userId        String     @db.Uuid
+  /// Server, auf dem die Ausnahme gilt; null = nur unter „Alle Server“
+  guildId       String?
   permissionKey String
   effect        String // ALLOW | DENY
   reason        String?
@@ -134,7 +145,7 @@ model UserPermissionOverride {
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
 
-  @@unique([userId, permissionKey])
+  @@unique([userId, guildId, permissionKey])
 }
 
 model Session {
@@ -276,7 +287,9 @@ model RecordLink {
 
 model LegalCode {
   id            String    @id @default(uuid()) @db.Uuid
-  code          String    @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?   @db.Uuid
+  code          String
   title         String
   description   String?
   category      String
@@ -285,10 +298,14 @@ model LegalCode {
   effectiveDate DateTime  @default(now())
   expiresAt     DateTime?
   tickets       Ticket[]
+
+  @@unique([serverId, code])
 }
 
 model Ticket {
   id          String     @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?    @db.Uuid
   number      String     @unique
   personId    String     @db.Uuid
   officerId   String     @db.Uuid
@@ -308,11 +325,14 @@ model Ticket {
 
   @@index([personId])
   @@index([officerId])
+  @@index([serverId])
 }
 
 model Unit {
   id            String         @id @default(uuid()) @db.Uuid
-  callsign      String         @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?        @db.Uuid
+  callsign      String
   status        String         @default("OFF_DUTY")
   vehicle       String?
   notes         String?
@@ -334,6 +354,8 @@ model Unit {
   members       UnitMember[]
   incidents     IncidentUnit[]
   updatedAt     DateTime       @updatedAt
+
+  @@unique([serverId, callsign])
 }
 
 model UnitMember {
@@ -376,6 +398,7 @@ model Incident {
   log             CadIncidentLog[]
 
   @@index([status, priority])
+  @@index([serverId])
 }
 
 model IncidentUnit {
@@ -514,14 +537,16 @@ model EvidenceTransfer {
 
 model Personnel {
   id                 String               @id @default(uuid()) @db.Uuid
-  userId             String               @unique @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId           String?              @db.Uuid
+  userId             String               @db.Uuid
   rank               String?
   team               String?
-  callsign           String?              @unique
+  callsign           String?
   /// Büro (Liste unter Einstellungen → Teamstruktur)
   office             String?
   /// Dienstnummer
-  serviceNumber      String?              @unique
+  serviceNumber      String?
   employmentStatus   String               @default("ACTIVE")
   joinDate           DateTime             @default(now())
   qualifications     String[]             @default([])
@@ -536,6 +561,10 @@ model Personnel {
   user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   academyEnrollments AcademyEnrollment[]
   records            PersonnelRecord[]
+
+  @@unique([serverId, userId])
+  @@unique([serverId, callsign])
+  @@unique([serverId, serviceNumber])
 }
 
 /// Beförderungen, Auszeichnungen, Disziplinarmaßnahmen (nur mit personnel.* sichtbar).
@@ -581,6 +610,37 @@ model DutySession {
 
   @@index([userId, endedAt])
   @@index([serverId])
+}
+
+/// Wochenarchiv des automatischen Wochen-Resets (Montag 00:00 Europe/Berlin): Rangliste + alle Dienstzeiten der Woche als Momentaufnahme.
+/// Unveränderlich (DB-Trigger verbietet UPDATE/DELETE/TRUNCATE); `weekStart` eindeutig → ein Archiv und eine Discord-Meldung je Woche.
+model DutyWeekArchive {
+  id               String   @id @default(uuid()) @db.Uuid
+  /// Bereich: `global` (Gesamtstatistik aller Server) oder `space:<Akten-Bereich>` (Server bzw. gemeinsame Shift-Log-Gruppe)
+  scope            String   @default("global")
+  /// Montag 00:00 der archivierten Woche (als UTC-Zeitpunkt)
+  weekStart        DateTime
+  /// folgender Montag 00:00 (exklusiv)
+  weekEnd          DateTime
+  /// lokales Datum des Montags, z. B. 2026-10-05
+  weekKey          String
+  label            String
+  timezone         String
+  totalMinutes     Int
+  activeUsers      Int
+  shiftCount       Int
+  /// Rangliste: [{ place, userId, name, rank, callsign, discordId, minutes, breakMinutes, byStatus, sessions }]
+  ranking          Json
+  /// alle Dienst-Sitzungen der Woche (an den Wochengrenzen abgeschnitten)
+  sessions         Json
+  /// Discord-Kanal der Rangliste; null = nicht veröffentlicht (kein Kanal, aus oder nachgeholte ältere Woche)
+  discordChannelId String?
+  /// nach einem Neustart nachgeholt
+  catchUp          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@unique([scope, weekStart])
+  @@index([createdAt])
 }
 
 /// Abmeldung (Leave of Absence): Antrag → Freigabe → Rolle „abgemeldet“ von Beginn bis Ende.
@@ -635,11 +695,15 @@ model Application {
 
 model AcademyCourse {
   id           String              @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId     String?             @db.Uuid
   title        String
   description  String?
   passScore    Int                 @default(70)
   instructorId String?             @db.Uuid
   enrollments  AcademyEnrollment[]
+
+  @@index([serverId])
 }
 
 model AcademyEnrollment {
@@ -668,10 +732,14 @@ model AcademyResult {
 
 model Conversation {
   id       String    @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId String?   @db.Uuid
   channel  String // TEAM | DISPATCH | INCIDENT | SUPERVISOR | ANNOUNCEMENT
   title    String?
   entityId String?
   messages Message[]
+
+  @@index([serverId])
 }
 
 model Message {
@@ -742,6 +810,10 @@ model TimelineEvent {
 model AuditLog {
   id                String   @id @default(uuid()) @db.Uuid
   actorUserId       String?  @db.Uuid
+  /// Discord-Server der Aktion (Guild-ID), sofern anwendbar
+  serverId          String?
+  /// SUCCESS | DENIED | FAILED
+  result            String   @default("SUCCESS")
   actorRobloxUserId String?
   action            String
   module            String
@@ -756,6 +828,7 @@ model AuditLog {
   @@index([module, createdAt])
   @@index([entityType, entityId])
   @@index([actorUserId, createdAt])
+  @@index([serverId, createdAt])
 }
 
 model SecurityEvent {
@@ -815,9 +888,13 @@ model DiscordOutbox {
 /// Funk-Freigabe (Whitelist): nur freigegebene Mitglieder gelten als funkberechtigt.
 model RadioWhitelist {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId  String?  @db.Uuid
+  userId    String   @db.Uuid
   addedById String?  @db.Uuid
   createdAt DateTime @default(now())
+
+  @@unique([serverId, userId])
 }
 
 /**
@@ -825,13 +902,19 @@ model RadioWhitelist {
  */
 model SekMember {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId  String?  @db.Uuid
+  userId    String   @db.Uuid
   addedById String?  @db.Uuid
   createdAt DateTime @default(now())
+
+  @@unique([serverId, userId])
 }
 
 model SekReport {
   id          String   @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?  @db.Uuid
   number      String   @unique
   authorId    String   @db.Uuid
   occurredAt  DateTime
@@ -840,6 +923,7 @@ model SekReport {
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
+  @@index([serverId])
 }
 
 /// Bewerbungssperre: Person (Discord-ID und/oder Roblox-ID) darf sich für bestimmte Bewerbungen nicht bewerben.
@@ -1251,6 +1335,8 @@ model ErlcCommandLog {
 /// Eigene Kartenobjekte: POI (Punkt) oder Zone (Polygon). Koordinaten in ER:LC-Spielkoordinaten (unabhängig vom Kartenbild).
 model CadMapObject {
   id           String   @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId     String?  @db.Uuid
   kind         String // POI | ZONE
   name         String
   description  String?
@@ -1271,6 +1357,7 @@ model CadMapObject {
   updatedAt    DateTime @updatedAt
 
   @@index([layer])
+  @@index([serverId])
 }
 
 /// Chronik eines Einsatzes: Funkmeldungen, Statuswechsel, Zuweisungen, Notizen, Notruf-Verknüpfungen.
@@ -1306,8 +1393,10 @@ model CadRadioMessage {
 /// Zuordnung Discord ↔ Roblox ↔ ER:LC ↔ Team ↔ Einheit, plus Funk-Benutzerdaten (Zello, Funkrufname, Abteilung, Rang).
 model CadMember {
   id          String   @id @default(uuid()) @db.Uuid
-  userId      String?  @unique @db.Uuid
-  discordId   String?  @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?  @db.Uuid
+  userId      String?  @db.Uuid
+  discordId   String?
   discordName String?
   robloxName  String?
   robloxId    String?
@@ -1323,6 +1412,8 @@ model CadMember {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@unique([serverId, userId])
+  @@unique([serverId, discordId])
   @@index([erlcName])
 }
 
@@ -1368,6 +1459,8 @@ model EditLock {
 /// „Wenn <Audit-Ereignis> (und Bedingungen) → Aktionen“. Wirkt nur auf Ereignisse ab `activeSince`.
 model Workflow {
   id          String        @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?       @db.Uuid
   name        String
   enabled     Boolean       @default(true)
   trigger     String
@@ -1378,6 +1471,8 @@ model Workflow {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   runs        WorkflowRun[]
+
+  @@index([serverId])
 }
 
 /// Jede Ausführung (einmal je Workflow und Audit-Eintrag).
@@ -1517,7 +1612,9 @@ model DutyReport {
 /// Rang (frei anlegbar, Reihenfolge = position; kleiner = höher). Personalakten speichern den Rangnamen.
 model HrRank {
   id               String   @id @default(uuid()) @db.Uuid
-  name             String   @unique
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId         String?  @db.Uuid
+  name             String
   position         Int      @default(0)
   description      String?
   icon             String?
@@ -1535,11 +1632,15 @@ model HrRank {
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@unique([serverId, name])
 }
 
 /// Antrag: Beförderung oder Versetzung, mit konfigurierbaren Genehmigungsstufen.
 model HrRequest {
   id           String    @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId     String?   @db.Uuid
   number       String    @unique
   kind         String // PROMOTION | TRANSFER
   personnelId  String    @db.Uuid
@@ -1563,10 +1664,13 @@ model HrRequest {
 
   @@index([kind, status])
   @@index([personnelId])
+  @@index([serverId])
 }
 
 model HrTraining {
   id             String               @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId       String?              @db.Uuid
   name           String
   description    String?
   requirements   String?
@@ -1584,6 +1688,8 @@ model HrTraining {
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
   progress       HrTrainingProgress[]
+
+  @@index([serverId])
 }
 
 model HrTrainingProgress {
@@ -1607,6 +1713,8 @@ model HrTrainingProgress {
 
 model HrExam {
   id            String          @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?         @db.Uuid
   title         String
   description   String?
   /// [{ id, type: SINGLE|MULTI|YESNO|TEXT|NUMBER, text, options[], correct[], points }]
@@ -1625,6 +1733,8 @@ model HrExam {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   attempts      HrExamAttempt[]
+
+  @@index([serverId])
 }
 
 model HrExamAttempt {
@@ -1652,6 +1762,8 @@ model HrExamAttempt {
 /// Interne Meldung (z. B. neue Dienstanweisung) mit optionaler Lesebestätigung.
 model HrAnnouncement {
   id               String               @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId         String?              @db.Uuid
   title            String
   body             String
   priority         String               @default("NORMAL") // LOW | NORMAL | HIGH | CRITICAL
@@ -1668,6 +1780,7 @@ model HrAnnouncement {
   reads            HrAnnouncementRead[]
 
   @@index([publishAt])
+  @@index([serverId])
 }
 
 model HrAnnouncementRead {
@@ -1681,6 +1794,8 @@ model HrAnnouncementRead {
 
 model HrPoll {
   id              String       @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId        String?      @db.Uuid
   title           String
   description     String?
   /// [{ id, label }]
@@ -1696,6 +1811,8 @@ model HrPoll {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   votes           HrPollVote[]
+
+  @@index([serverId])
 }
 
 model HrPollVote {
@@ -1713,6 +1830,8 @@ model HrPollVote {
 /// Nummernkreis, z. B. 1000–1999 oder LS-001–LS-999.
 model ServiceNumberRange {
   id         String          @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId   String?         @db.Uuid
   name       String
   prefix     String          @default("")
   suffix     String          @default("")
@@ -1734,13 +1853,17 @@ model ServiceNumberRange {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   numbers    ServiceNumber[]
+
+  @@index([serverId])
 }
 
 model ServiceNumber {
   id          String             @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId    String?            @db.Uuid
   rangeId     String             @db.Uuid
   value       Int
-  display     String             @unique
+  display     String
   status      String             @default("FREE") // ACTIVE | RESERVED | FREE | BLOCKED | FORMER
   userId      String?            @db.Uuid
   personnelId String?            @db.Uuid
@@ -1751,6 +1874,7 @@ model ServiceNumber {
   range       ServiceNumberRange @relation(fields: [rangeId], references: [id], onDelete: Restrict)
 
   @@unique([rangeId, value])
+  @@unique([serverId, display])
   @@index([status])
   @@index([userId])
 }
@@ -1775,6 +1899,8 @@ model ServiceNumberEvent {
 /// Einstellung nach angenommener Bewerbung, die noch auf eine Dienstnummer wartet („⚠️ Dienstnummer ausstehend“).
 model HireQueue {
   id            String   @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
+  serverId      String?  @db.Uuid
   applicationId String   @unique
   kind          String
   userId        String   @db.Uuid
@@ -1783,6 +1909,8 @@ model HireQueue {
   status        String   @default("PENDING") // PENDING | DONE
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([serverId])
 }
 
 /// Discord-Server-Backup (wie Xenon): Rollen, Kanäle, Rechte, Servereinstellungen. Der Bot liest bzw. stellt wieder her.
@@ -1945,4 +2073,181 @@ model PoliceVehicleModel {
   department   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ───────────── Multi-Server: Server, Mitgliedschaften, Module, Verbindungen, Synchronisierung ─────────────
+
+/// Registrierter Discord-Server (Mandant). Deaktivieren/Archivieren löscht nie Fachdaten.
+model DiscordServer {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  guildId            String                   @unique
+  name               String
+  /// ACTIVE | DISABLED | ERROR (Verbindungsfehler)
+  status             String                   @default("ACTIVE")
+  /// archiviert („gelöscht“) – Daten bleiben, Server ist nicht mehr wählbar
+  archivedAt         DateTime?
+  /// Rollen dieses Servers angelegt (Startrollen bzw. bei der Migration übernommene bisherige Rollen)
+  rolesInitializedAt DateTime?
+  version            Int                      @default(1)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  memberships        ServerMembership[]
+  modules            ServerModuleSetting[]
+  roleMappings       DiscordRoleMapping[]
+  connections        ServerConnectionMember[]
+}
+
+/// Mitgliedschaft eines Benutzers auf einem Server. Nur MEMBER berechtigt zum Zugriff auf diesen Server.
+model ServerMembership {
+  id             String        @id @default(uuid()) @db.Uuid
+  serverId       String        @db.Uuid
+  userId         String        @db.Uuid
+  /// MEMBER | LEFT | UNKNOWN
+  status         String        @default("UNKNOWN")
+  /// DISCORD (vom Bot/Discord geprüft) | MANUAL (vom Administrator für Konten ohne Discord)
+  source         String        @default("DISCORD")
+  /// Discord-Rollen des Mitglieds auf diesem Server (letzter Abgleich)
+  discordRoleIds String[]      @default([])
+  lastVerifiedAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  server         DiscordServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, userId])
+  @@index([userId])
+}
+
+/// Modul-Katalog (aus dem Code gepflegt: packages/shared/src/modules.ts)
+model AppModule {
+  key         String                @id
+  name        String
+  description String?
+  isSystem    Boolean               @default(false)
+  dependsOn   String[]              @default([])
+  settings    ServerModuleSetting[]
+}
+
+/// Modul je Server: an/aus + validierte Einstellungen. Ohne Zeile gilt der Standard (an). `version` für optimistisches Sperren.
+model ServerModuleSetting {
+  id          String        @id @default(uuid()) @db.Uuid
+  serverId    String        @db.Uuid
+  moduleKey   String
+  enabled     Boolean       @default(true)
+  settings    Json          @default("{}")
+  version     Int           @default(1)
+  updatedById String?       @db.Uuid
+  updatedAt   DateTime      @updatedAt
+  server      DiscordServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  module      AppModule     @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+
+  @@unique([serverId, moduleKey])
+}
+
+/// Discord-Rolle (eines bestimmten Servers) → interne Rolle. Verleiht die interne Rolle nur auf diesem Server.
+model DiscordRoleMapping {
+  id            String        @id @default(uuid()) @db.Uuid
+  serverId      String        @db.Uuid
+  discordRoleId String
+  roleId        String        @db.Uuid
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  server        DiscordServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  role          Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, discordRoleId, roleId])
+  @@index([roleId])
+}
+
+/// Verbindung mehrerer Server. Eine Verbindung allein erlaubt keinen Datenaustausch – dafür braucht es Datenfreigaben.
+model ServerConnection {
+  id          String                   @id @default(uuid()) @db.Uuid
+  name        String
+  /// ACTIVE | DISABLED
+  status      String                   @default("ACTIVE")
+  version     Int                      @default(1)
+  createdById String?                  @db.Uuid
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  members     ServerConnectionMember[]
+  policies    ConnectionDataPolicy[]
+  events      SyncEvent[]
+}
+
+model ServerConnectionMember {
+  id           String                 @id @default(uuid()) @db.Uuid
+  connectionId String                 @db.Uuid
+  serverId     String                 @db.Uuid
+  createdAt    DateTime               @default(now())
+  connection   ServerConnection       @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  server       DiscordServer          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  asSource     ConnectionDataPolicy[] @relation("PolicySource")
+  asTarget     ConnectionDataPolicy[] @relation("PolicyTarget")
+
+  @@unique([connectionId, serverId])
+  @@index([serverId])
+}
+
+/// Datenfreigabe zwischen zwei Mitgliedern einer Verbindung. Richtung: A_TO_B (Quelle→Ziel), B_TO_A, BIDIRECTIONAL, NONE.
+/// Freigaben übertragen nur lesende Kopien – nie Bearbeitungsrechte.
+model ConnectionDataPolicy {
+  id             String                 @id @default(uuid()) @db.Uuid
+  connectionId   String                 @db.Uuid
+  sourceServerId String                 @db.Uuid
+  targetServerId String                 @db.Uuid
+  dataType       String
+  direction      String                 @default("A_TO_B")
+  enabled        Boolean                @default(true)
+  settings       Json                   @default("{}")
+  version        Int                    @default(1)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  connection     ServerConnection       @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  source         ServerConnectionMember @relation("PolicySource", fields: [connectionId, sourceServerId], references: [connectionId, serverId], onDelete: Cascade, map: "ConnectionDataPolicy_source_member_fkey")
+  target         ServerConnectionMember @relation("PolicyTarget", fields: [connectionId, targetServerId], references: [connectionId, serverId], onDelete: Cascade, map: "ConnectionDataPolicy_target_member_fkey")
+
+  @@unique([connectionId, sourceServerId, targetServerId, dataType])
+}
+
+/// Outbox der serverübergreifenden Synchronisierung. `idempotencyKey` verhindert doppelte Verarbeitung.
+model SyncEvent {
+  id             String           @id @default(uuid()) @db.Uuid
+  connectionId   String           @db.Uuid
+  policyId       String           @db.Uuid
+  sourceServerId String           @db.Uuid
+  targetServerId String           @db.Uuid
+  dataType       String
+  eventType      String
+  sourceRecordId String
+  sourceVersion  Int              @default(1)
+  idempotencyKey String           @unique
+  payload        Json
+  /// PENDING | DONE | SKIPPED (veraltet/Konflikt) | FAILED (endgültig, manuell wiederholbar) | CANCELLED (Verbindung/Freigabe aus)
+  status         String           @default("PENDING")
+  attemptCount   Int              @default(0)
+  nextAttemptAt  DateTime         @default(now())
+  lastError      String?
+  createdAt      DateTime         @default(now())
+  processedAt    DateTime?
+  connection     ServerConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([connectionId, createdAt])
+}
+
+/// Nur lesend synchronisierte Kopie eines Datensatzes eines anderen Servers (Zielseite).
+model SyncedRecord {
+  id             String   @id @default(uuid()) @db.Uuid
+  targetServerId String   @db.Uuid
+  sourceServerId String   @db.Uuid
+  connectionId   String   @db.Uuid
+  dataType       String
+  sourceRecordId String
+  sourceVersion  Int
+  data           Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([targetServerId, dataType, sourceRecordId])
+  @@index([targetServerId, dataType, updatedAt])
 }

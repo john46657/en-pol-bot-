@@ -15,6 +15,7 @@ import { CadService, type CadActor } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
 import { CadHandoverService } from './cad-handover.service';
 import { CadStatsService } from './cad-stats.service';
+import { CadLinkInterceptor } from './cad-link.interceptor';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
@@ -29,7 +30,9 @@ const Cad = createParamDecorator((_d: unknown, ctx: ExecutionContext): CadActor 
   const bot = isBot(r);
   const discordId = bot && typeof r.headers['x-discord-user'] === 'string' ? r.headers['x-discord-user'] : null;
   const roles = bot && typeof r.headers['x-discord-roles'] === 'string' ? r.headers['x-discord-roles'].split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
-  return { userId: r.user?.id ?? null, robloxUserId: r.user?.robloxUserId ?? null, requestId: r.requestId, guildId: currentGuild(), discordId, roles };
+  // Server, von dem der Befehl kommt – auch wenn er per Querverbindung im Bereich der Leitstelle läuft (CadLinkInterceptor)
+  const origin = (r as AppRequest & { originGuildId?: string | null }).originGuildId;
+  return { userId: r.user?.id ?? null, robloxUserId: r.user?.robloxUserId ?? null, requestId: r.requestId, guildId: origin !== undefined ? origin : currentGuild(), discordId, roles };
 });
 
 const opt = (s: z.ZodTypeAny) => s.nullish();
@@ -66,6 +69,7 @@ const feedbackBody = z.object({ kind: z.enum(CAD_FEEDBACK_KEYS), incidentId: opt
 const radioBody = z.object({ text: z.string().trim().min(1).max(500), unitId: opt(z.string().uuid()), incidentId: opt(z.string().uuid()), incidentNumber: opt(text(32)), callsign: opt(text(24)) });
 
 @ApiTags('cad')
+@UseInterceptors(CadLinkInterceptor)
 @Controller('cad')
 export class CadController {
   constructor(

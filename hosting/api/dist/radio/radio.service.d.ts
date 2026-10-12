@@ -1,7 +1,6 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
-/** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
 export declare class RadioService {
     private readonly prisma;
     private readonly audit;

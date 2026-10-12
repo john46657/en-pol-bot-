@@ -6,6 +6,7 @@ import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Actor } from '../audit/audit.service';
+import { ServersService } from '../multi-server/servers.service';
 declare const guildsBody: z.ZodObject<{
     guilds: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
@@ -229,24 +230,24 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }, {
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
@@ -257,13 +258,13 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
@@ -276,13 +277,13 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
@@ -297,13 +298,13 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
@@ -318,13 +319,13 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
@@ -395,7 +396,8 @@ export declare class BotController {
     private readonly danger;
     private readonly applications;
     private readonly prisma;
-    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService);
+    private readonly servers;
+    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService, servers: ServersService);
     redeem(b: z.infer<typeof redeem>): Promise<{
         displayName: string;
         username: string;

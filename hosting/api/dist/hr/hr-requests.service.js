@@ -80,7 +80,7 @@ let HrRequestsService = class HrRequestsService {
         const kind = r.kind;
         if (!(await this.perms.has(userId, `${P(kind)}.approve`)))
             return { ok: false, why: 'Recht fehlt' };
-        const me = await this.prisma.personnel.findUnique({ where: { userId } });
+        const me = await this.prisma.personnel.findFirst({ where: { userId } });
         if (me?.id === r.personnelId)
             return { ok: false, why: 'Eigener Antrag' };
         const approvals = r.approvals;

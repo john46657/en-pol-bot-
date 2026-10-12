@@ -45,7 +45,7 @@ export declare class DutyController {
             personnel: {
                 callsign: string | null;
                 rank: string | null;
-            } | null;
+            }[];
             id: string;
             displayName: string;
         };
@@ -83,8 +83,8 @@ export declare class DutyController {
         currentIncident: {
             number: string;
             id: string;
-            title: string;
             status: string;
+            title: string;
             priority: string;
         } | null;
     }[]>;

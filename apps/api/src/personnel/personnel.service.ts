@@ -33,7 +33,7 @@ export class PersonnelService {
   async create(actor: Actor, d: { userId: string; rank?: string; team?: string; office?: string; serviceNumber?: string; callsign?: string; qualifications?: string[] }) {
     return this.prisma.$transaction(async (tx) => {
       if (!(await tx.user.findUnique({ where: { id: d.userId } }))) throw new AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
-      if (await tx.personnel.findUnique({ where: { userId: d.userId } })) throw new AppError('CONFLICT', 'Für diesen Benutzer gibt es schon eine Personalakte.');
+      if (await tx.personnel.findFirst({ where: { userId: d.userId } })) throw new AppError('CONFLICT', 'Für diesen Benutzer gibt es schon eine Personalakte.');
       const p = await tx.personnel.create({ data: { ...d, callsign: d.callsign?.toUpperCase() } });
       await this.timeline.add(tx, { entityType: 'Personnel', entityId: p.id, action: 'personnel.created', summary: 'Personalakte angelegt', actorId: actor.userId });
       await this.audit.record(actor, { action: 'personnel.create', module: 'personnel', entityType: 'Personnel', entityId: p.id, after: p }, tx);

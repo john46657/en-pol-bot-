@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
 import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { Toggle } from '../../components/ApplicationSettings';
+import { WeeklyResetSettings } from '../../components/WeeklyRanking';
 import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Modal, Select, SkeletonRows, StatusBadge } from '../../components/ui';
 
 export interface ShiftType { id: string; name: string; isDefault: boolean; onShiftRoleIds: string[]; onBreakRoleIds: string[]; logChannelId?: string | null }
@@ -83,6 +84,7 @@ export function Shifts() {
         )}
       </Card>
       <ReminderCard value={cfg.reminder ?? { enabled: false, afterMinutes: 30, autoOffMinutes: 0 }} manage={manage} busy={save.isPending} onSave={(r) => put(cfg.types, cfg.enabled, r)} />
+      <WeeklyResetSettings manage={manage} />
       {can('team.manage') && <ShiftLog types={cfg.types} />}
       {edit && <ShiftTypeModal value={edit.type} isNew={edit.isNew} busy={save.isPending} error={save.error ? errText(save.error) : undefined} onClose={() => { setEdit(undefined); save.reset(); }}
         onSave={(t) => {

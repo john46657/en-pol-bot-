@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.scopedKey = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.runInGuild = exports.currentGuild = void 0;
+exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.runInGuild = exports.currentGuild = void 0;
 exports.setServerLinkResolvers = setServerLinkResolvers;
 const node_async_hooks_1 = require("node:async_hooks");
 const common_1 = require("@nestjs/common");
@@ -33,6 +33,16 @@ exports.GuildContextMiddleware = GuildContextMiddleware = __decorate([
 ], GuildContextMiddleware);
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
 exports.SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'];
+/**
+ * Konfiguration, die von Grund auf JE SERVER gilt: im Kontext eines Servers liest und schreibt jede Abfrage automatisch
+ * `<Schlüssel>@<Server>` (server-scope.ts) – ohne Rückgriff auf die Werte anderer Server. Unter „Alle Server“ bzw. in
+ * Hintergrund-Aufgaben ohne Server gilt der Grundwert. Anmeldung, Backups, Server-Verbund und Bot-Zustand bleiben global.
+ */
+exports.PER_SERVER_SETTING_KEYS = [
+    ...exports.SERVER_SCOPED_SETTINGS, 'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
+    'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
+    'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
+];
 const scopedKey = (key, guildId) => { const g = (0, exports.settingsGuild)(guildId); return g && exports.SERVER_SCOPED_SETTINGS.includes(key) ? `${key}@${g}` : key; };
 exports.scopedKey = scopedKey;
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
@@ -51,4 +61,13 @@ exports.recordSpace = recordSpace;
 /** Prisma-Filter für Akten des gewählten Servers (ohne Server: alle). */
 const recordWhere = (guildId = (0, exports.currentGuild)()) => { const s = (0, exports.recordSpace)(guildId); return s === undefined ? {} : { serverId: s }; };
 exports.recordWhere = recordWhere;
+/**
+ * Personalakte des aktuellen Servers in verschachtelten Abfragen (Benutzer → Akte; es gibt je Server eine eigene Akte):
+ * `personnel: { ...onePersonnel(), select: {…} }` und danach `user.personnel[0]`. Ohne Server: irgendeine Akte.
+ */
+const onePersonnel = (space = (0, exports.recordSpace)()) => ({ where: space === undefined ? {} : { serverId: space }, take: 1 });
+exports.onePersonnel = onePersonnel;
+/** Ausnahmsweise ohne Server-Filter (z. B. global eindeutige, fortlaufende Nummern). Nur für Zähler – nie für Inhalte. */
+const unscoped = (fn) => (0, exports.runInGuild)(null, async () => await fn()); // Prisma-Abfragen laufen erst beim await → im Kontext abwarten
+exports.unscoped = unscoped;
 //# sourceMappingURL=guild-context.js.map

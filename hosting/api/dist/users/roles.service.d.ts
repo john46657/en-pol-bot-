@@ -29,7 +29,7 @@ export declare class RolesService {
     constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService);
     /** Nach jeder Änderung: alle Dashboards laden ihre Rechte neu (die API prüft ohnehin bei jeder Anfrage). */
     private changed;
-    /** Im Server-Kontext: Rollen dieses Servers und serverübergreifende; unter „Alle Server“: alle. */
+    /** Im Server-Kontext nur die Rollen dieses Servers; unter „Alle Server“: alle (serverübergreifende = Vorlagen für neue Server). */
     list(): import("@prisma/client").Prisma.PrismaPromise<({
         _count: {
             users: number;
@@ -42,15 +42,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     })[]>;
     catalog(): readonly import("@enrp/shared").PermissionKey[];
     /** Eigener Rang (für die Oberfläche: welche Rollen sind bearbeitbar). */
@@ -60,6 +60,7 @@ export declare class RolesService {
     private load;
     private guard;
     private assertPriority;
+    /** Rollennamen sind je Server eindeutig (gleicher Name auf zwei Servern = zwei verschiedene Rollen). */
     private uniqueName;
     create(actor: Actor, d: RoleInput & {
         name: string;
@@ -75,15 +76,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     update(actor: Actor, id: string, d: RoleInput): Promise<{
         _count: {
@@ -97,15 +98,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     remove(actor: Actor, id: string): Promise<void>;
     /** Kopie einer Rolle (ohne Mitglieder und ohne Discord-Verknüpfung), direkt unterhalb des Originals. */
@@ -121,15 +122,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     /** Reihenfolge der eigenen, verwaltbaren Rollen setzen (oberste zuerst). Nicht genannte Rollen bleiben, wie sie sind. */
     reorder(actor: Actor, ids: string[]): Promise<({
@@ -144,15 +145,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     })[]>;
     /** Alle Rechte einer Rolle auf einmal (Rollen-Editor). Geändert wird nur der Unterschied; jede Änderung einzeln protokolliert. */
     setPermissions(actor: Actor, id: string, grants: {
@@ -170,15 +171,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     /** Ein einzelnes Recht setzen (Matrix, automatisches Speichern). `NONE` = nicht gesetzt. */
     setPermission(actor: Actor, id: string, permission: string, effect: Effect | 'NONE'): Promise<{
@@ -193,15 +194,15 @@ export declare class RolesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        color: string | null;
         description: string | null;
         priority: number;
         active: boolean;
+        guildId: string | null;
         name: string;
-        system: boolean;
-        color: string | null;
         icon: string | null;
         discordRoleIds: string[];
-        guildId: string | null;
+        system: boolean;
     }>;
     private apply;
 }

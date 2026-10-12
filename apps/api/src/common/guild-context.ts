@@ -22,6 +22,16 @@ export class GuildContextMiddleware implements NestMiddleware {
 
 /** Zentrale Einstellungen, die je Server überschrieben werden können (`<key>@<guildId>`, sonst gilt der gemeinsame Wert). */
 export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dashboard.defaultLayout', 'theme.accent', 'theme.customAccents', 'org.name', 'teamchance'] as const;
+/**
+ * Konfiguration, die von Grund auf JE SERVER gilt: im Kontext eines Servers liest und schreibt jede Abfrage automatisch
+ * `<Schlüssel>@<Server>` (server-scope.ts) – ohne Rückgriff auf die Werte anderer Server. Unter „Alle Server“ bzw. in
+ * Hintergrund-Aufgaben ohne Server gilt der Grundwert. Anmeldung, Backups, Server-Verbund und Bot-Zustand bleiben global.
+ */
+export const PER_SERVER_SETTING_KEYS: readonly string[] = [
+  ...SERVER_SCOPED_SETTINGS, 'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
+  'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
+  'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
+];
 export const scopedKey = (key: string, guildId: string | null) => { const g = settingsGuild(guildId); return g && (SERVER_SCOPED_SETTINGS as readonly string[]).includes(key) ? `${key}@${g}` : key; };
 
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
@@ -37,3 +47,11 @@ export const settingsGuild = (guildId: string | null | undefined): string | null
 export const recordSpace = (guildId: string | null | undefined = currentGuild()): string | null | undefined => (guildId ? spaceOf(guildId) : undefined);
 /** Prisma-Filter für Akten des gewählten Servers (ohne Server: alle). */
 export const recordWhere = (guildId: string | null | undefined = currentGuild()) => { const s = recordSpace(guildId); return s === undefined ? {} : { serverId: s }; };
+
+/**
+ * Personalakte des aktuellen Servers in verschachtelten Abfragen (Benutzer → Akte; es gibt je Server eine eigene Akte):
+ * `personnel: { ...onePersonnel(), select: {…} }` und danach `user.personnel[0]`. Ohne Server: irgendeine Akte.
+ */
+export const onePersonnel = (space: string | null | undefined = recordSpace()) => ({ where: space === undefined ? {} : { serverId: space }, take: 1 });
+/** Ausnahmsweise ohne Server-Filter (z. B. global eindeutige, fortlaufende Nummern). Nur für Zähler – nie für Inhalte. */
+export const unscoped = <T>(fn: () => PromiseLike<T> | T): Promise<T> => runInGuild(null, async () => await fn()); // Prisma-Abfragen laufen erst beim await → im Kontext abwarten

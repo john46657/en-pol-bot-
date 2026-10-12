@@ -58,6 +58,14 @@ declare const PERMISSION_CATALOG: {
     readonly settings: readonly ["view", "manage"];
     readonly users: readonly ["view", "manage"];
     readonly roles: readonly ["view", "manage"];
+    /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
+    readonly servers: readonly ["view", "manage"];
+    /** Module je Server an/aus und deren Einstellungen */
+    readonly modules: readonly ["view", "manage"];
+    /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
+    readonly connections: readonly ["view", "manage"];
+    /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
+    readonly sync: readonly ["view", "retry"];
 };
 type Catalog = typeof PERMISSION_CATALOG;
 type PermissionKey = {
@@ -1502,6 +1510,188 @@ interface ReportView {
 declare const REPORT_STATUS_LABEL: Record<string, string>;
 /** Bericht als Discord-Nachricht (mit „Bearbeiten“-Button). */
 declare function reportMessage(t: ReportTemplate, r: ReportView, id: string): MessageSpec;
+
+/**
+ * Dienstwoche für den automatischen Wochen-Reset: Montag 00:00 bis zum folgenden Montag 00:00 in einer Zeitzone
+ * (Standard Europe/Berlin, Sommer-/Winterzeit automatisch – eine Woche hat dann 167 bzw. 169 Stunden).
+ */
+declare const WEEK_TIMEZONE = "Europe/Berlin";
+/** Zeitpunkt von lokal 00:00 am Tag (y, m, d) in `timeZone`. Tagesüberlauf (d = 32 …) ist erlaubt. */
+declare function localMidnight(y: number, m: number, d: number, timeZone?: string): Date;
+/** Beginn der Woche (Montag 00:00 lokal), in der `at` liegt. */
+declare function weekStartOf(at: Date, timeZone?: string): Date;
+/** Beginn der folgenden Woche (nächster Montag 00:00 lokal) – zugleich das Ende der Woche ab `weekStart`. */
+declare function nextWeekStart(weekStart: Date, timeZone?: string): Date;
+/** ISO-Kalenderwoche des lokalen Montags. */
+declare function weekIso(weekStart: Date, timeZone?: string): {
+    year: number;
+    week: number;
+};
+/** Schlüssel einer Woche: lokales Datum des Montags, z. B. „2026-10-05“. */
+declare function weekKey(weekStart: Date, timeZone?: string): string;
+/** „KW 41/2026 · 05.10.–11.10.2026“ */
+declare function weekLabel(weekStart: Date, timeZone?: string): string;
+interface WeekSpan {
+    userId: string;
+    status: string;
+    startedAt: Date;
+    endedAt: Date | null;
+}
+/** Statuswerte, die in der Wochenrangliste als Dienstzeit zählen (Pause zählt nicht). */
+declare const WEEK_COUNTED_STATUSES: readonly ["ON_DUTY", "TRAINING", "ADMINISTRATIVE"];
+/**
+ * Dienstzeit je Benutzer in [from, to): Sitzungen werden an den Wochengrenzen abgeschnitten (eine über Mitternacht
+ * laufende Schicht zählt anteilig in beide Wochen). `minutes` = gezählte Dienstzeit ohne Pause.
+ */
+declare function weekTotals(sessions: WeekSpan[], from: Date, to: Date, now?: Date): {
+    minutes: number;
+    breakMinutes: number;
+    byStatus: {
+        [k: string]: number;
+    };
+    userId: string;
+    sessions: number;
+}[];
+
+/**
+ * Modul-Katalog für den Multi-Server-Betrieb: jedes Modul kann je Discord-Server an- oder ausgeschaltet werden.
+ * Die Zuordnung Recht → Modul läuft über das Präfix des Rechts (`cad.view` → Modul `cad`). Systemmodule sind immer an.
+ * Abhängigkeiten nur dort, wo es fachlich wirklich eine gibt (MDT funktioniert ohne CAD).
+ */
+interface ModuleDef {
+    key: string;
+    name: string;
+    description: string;
+    system?: boolean;
+    dependsOn?: string[];
+    permissionPrefixes: string[];
+}
+declare const MODULES: readonly [{
+    readonly key: "core";
+    readonly name: "Grundsystem";
+    readonly description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen";
+    readonly system: true;
+    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"];
+}, {
+    readonly key: "cad";
+    readonly name: "CAD-Leitstelle";
+    readonly description: "Einsätze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge";
+    readonly permissionPrefixes: ["cad", "fleet"];
+}, {
+    readonly key: "mdt";
+    readonly name: "MDT";
+    readonly description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bußgelder";
+    readonly permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"];
+}, {
+    readonly key: "dispatch";
+    readonly name: "Dispatch";
+    readonly description: "Einsatzverwaltung und Einheiten-Board";
+    readonly permissionPrefixes: ["dispatch", "incidents"];
+}, {
+    readonly key: "reports";
+    readonly name: "Berichte";
+    readonly description: "Einsatzberichte, Tages-/Wochenberichte";
+    readonly permissionPrefixes: ["reports", "dutyreports"];
+}, {
+    readonly key: "shift_logs";
+    readonly name: "Shift Logs";
+    readonly description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten";
+    readonly permissionPrefixes: ["team"];
+}, {
+    readonly key: "investigations";
+    readonly name: "Ermittlungen";
+    readonly description: "Beschwerden, Ermittlungen, Beweismittel";
+    readonly permissionPrefixes: ["complaints", "investigations", "evidence"];
+}, {
+    readonly key: "personnel";
+    readonly name: "Personal";
+    readonly description: "Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern";
+    readonly permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"];
+}, {
+    readonly key: "applications";
+    readonly name: "Bewerbungen";
+    readonly description: "Bewerbungen, Qualifikationen, Academy, Team-Chance";
+    readonly permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"];
+}, {
+    readonly key: "support";
+    readonly name: "Support-Tickets";
+    readonly description: "Ticket-System für Discord";
+    readonly permissionPrefixes: ["ticket"];
+}, {
+    readonly key: "sek";
+    readonly name: "SEK";
+    readonly description: "Spezialeinsatzkommando";
+    readonly permissionPrefixes: ["sek"];
+}, {
+    readonly key: "communication";
+    readonly name: "Kommunikation";
+    readonly description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes";
+    readonly permissionPrefixes: ["communication", "announcements", "polls", "radio"];
+}];
+type ModuleKey = (typeof MODULES)[number]['key'];
+declare const MODULE_KEYS: readonly string[];
+declare const moduleDef: (key: string) => ModuleDef | undefined;
+/** Modul eines Rechts (`*`/unbekannt → core). */
+declare function moduleOfPermission(permission: string): string;
+/** Abhängigkeitsprüfung: Fehlermeldung oder null. `enabled` = Zielzustand aller Module des Servers. */
+declare function moduleDependencyError(key: string, enabled: boolean, state: Record<string, boolean>): string | null;
+/** Arten serverübergreifend freigebbarer Daten. `source` = woher die Ereignisse kommen (null = noch keine Quelle angebunden). */
+declare const SYNC_DATA_TYPES: readonly [{
+    readonly key: "reports";
+    readonly module: "reports";
+    readonly label: "Berichte (eingereicht/freigegeben)";
+    readonly source: "reports";
+}, {
+    readonly key: "unit_status";
+    readonly module: "shift_logs";
+    readonly label: "Dienststatus der Beamten";
+    readonly source: "duty";
+}, {
+    readonly key: "shift_statistics";
+    readonly module: "shift_logs";
+    readonly label: "Wochenstatistik (Shift Logs)";
+    readonly source: "weekly-reset";
+}, {
+    readonly key: "team_overview";
+    readonly module: "shift_logs";
+    readonly label: "Teamübersicht (wer ist im Dienst)";
+    readonly source: "duty";
+}, {
+    readonly key: "incidents";
+    readonly module: "cad";
+    readonly label: "Einsätze";
+    readonly source: null;
+}, {
+    readonly key: "incident_status";
+    readonly module: "cad";
+    readonly label: "Einsatzstatus";
+    readonly source: null;
+}, {
+    readonly key: "radio_messages";
+    readonly module: "cad";
+    readonly label: "Funksprüche";
+    readonly source: null;
+}];
+type SyncDataType = (typeof SYNC_DATA_TYPES)[number]['key'];
+declare const SYNC_DIRECTIONS: readonly ["A_TO_B", "B_TO_A", "BIDIRECTIONAL", "NONE"];
+type SyncDirection = (typeof SYNC_DIRECTIONS)[number];
+/** Fließen Daten von `from` nach `to` laut Freigabe (source→target mit Richtung)? */
+declare function policyAllowsFlow(p: {
+    sourceServerId: string;
+    targetServerId: string;
+    direction: string;
+    enabled: boolean;
+}, from: string, to: string): boolean;
+/**
+ * Discord-Slash-Befehl → Modul. Der Bot registriert je Server nur Befehle aktivierter Module (Komfort). Maßgeblich bleibt
+ * die Prüfung im Backend bei JEDER Ausführung – ein sichtbarer Befehl umgeht nie die Rechte- und Modulprüfung.
+ * Nicht aufgeführte Befehle gehören zum Grundsystem.
+ */
+declare const BOT_COMMAND_MODULES: Record<string, string>;
+/** Befehle, die auf einem Server mit diesen abgeschalteten Modulen registriert werden. */
+declare const commandsForServer: <T extends {
+    name: string;
+}>(all: T[], disabledModules: readonly string[]) => T[];
 
 declare const hrStatusSchema: z.ZodObject<{
     key: z.ZodString;
@@ -3056,4 +3246,4 @@ declare const fleetInternalSchema: z.ZodObject<{
 }>;
 type FleetInternalInput = z.infer<typeof fleetInternalSchema>;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MUSIC_TRACKS, type MdtConfig, type MessageSpec, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WeaponStatus, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, isoWeek, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, mdtConfigSchema, newVoiceRoom, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, withHrDefaults };
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, SYNC_DATA_TYPES, SYNC_DIRECTIONS, type StaffList, type StaffMember, type StatusKind, type SupportTime, type SyncDataType, type SyncDirection, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, commandsForServer, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, mdtConfigSchema, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, policyAllowsFlow, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

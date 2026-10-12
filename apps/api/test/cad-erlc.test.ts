@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { generateKeyPairSync, sign } from 'node:crypto';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { ErlcService } from '../src/cad/erlc.service';
 import { CadService } from '../src/cad/cad.service';
@@ -50,6 +50,8 @@ beforeAll(async () => {
   await makeUser(prisma, 'cad_member', ['Police Member']);
   const sek = await makeUser(prisma, 'cad_sek', ['SEK']);
   await prisma.discordLink.create({ data: { userId: sek.id, discordId: SEK_D } });
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [HOME, SEK_GUILD]) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => { delete process.env.BOT_API_TOKEN; await app.close(); });
 
@@ -226,9 +228,15 @@ describe('CAD', () => {
     const admin = (await login(app, 'cad_admin')).agent;
     const sekUser = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: SEK_D } });
     await admin.post('/api/v1/cad/members').send({ userId: sekUser.userId, discordId: SEK_D, erlcName: 'MaxMustermann123', team: 'SEK', unitId, callsign: 'SEK-01', zelloName: 'max_zello' });
-    // ohne Verbindung: vom SEK-Server verboten
+    // Server sind getrennt: die Leitstelle dieses Tests läuft im gemeinsamen Bestand (HOME nutzt ihn ausdrücklich), SEK hat einen eigenen Bereich
+    expect((await admin.put('/api/v1/server-links').send({ groups: [], sharedRecords: [HOME] })).status).toBe(200);
+    // ohne Querverbindung: der SEK-Server sieht die Einheit der Leitstelle gar nicht
     const denied = await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' });
-    expect(denied.status).toBe(403);
+    expect(denied.status).toBe(404);
+    // Querverbindung ausdrücklich auf beiden Seiten: SEK nennt die Leitstelle als Heimat-Server, die Leitstelle legt die Verbindung an
+    expect((await admin.put('/api/v1/cad/config').set('X-Guild-Id', SEK_GUILD).send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await admin.put('/api/v1/cad/config').set('X-Guild-Id', HOME).send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' })).status).toBe(404); // Heimat-Server allein reicht nicht
     const link = await admin.post('/api/v1/cad/links').send({ name: 'Leitstelle ↔ SEK/K9', sourceGuildId: HOME, targetGuildId: SEK_GUILD, sendTypes: ['incidents', 'unit_requests'], allowActions: ['status_report', 'radio'], channels: { incidents: [CH.sek] } });
     expect(link.status).toBe(201);
     expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' })).status).toBe(200);
@@ -276,7 +284,7 @@ describe('CAD', () => {
     const disp = (await login(app, 'cad_disp')).agent;
     expect((await disp.post('/api/v1/cad/map/objects').send({ kind: 'POI', name: 'Bank', layer: 'pois', x: 1, z: 2 })).status).toBe(403);
     expect((await admin.post('/api/v1/cad/map/objects').send({ kind: 'ZONE', name: 'Sperr', layer: 'restricted', points: [[0, 0], [1, 1]] })).status).toBe(400);
-    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+    const adminRole = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' } });
     await admin.post('/api/v1/cad/map/objects').send({ kind: 'POI', name: 'Bank', layer: 'pois', x: 1, z: 2 });
     await admin.post('/api/v1/cad/map/objects').send({ kind: 'ZONE', name: 'Nur Admins', layer: 'restricted', points: [[0, 0], [10, 0], [10, 10]], roleIds: [adminRole.id] });
     expect((await disp.get('/api/v1/cad/map/objects')).body.map((o: { name: string }) => o.name)).toEqual(['Bank']);
@@ -303,7 +311,7 @@ describe('CAD – Rechte pro Einsatz und pro Einheit', () => {
   it('vertrauliche Einsätze sehen nur freigegebene Rollen, die Verwaltung und der Disponent; keine Discord-Meldung', async () => {
     const admin = (await login(app, 'cad_admin')).agent;
     const disp = (await login(app, 'cad_disp')).agent;
-    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'System Administrator' } });
+    const adminRole = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'System Administrator' } });
     const before = await prisma.discordOutbox.count({ where: { type: 'cad.incident.created' } });
     const secret = await admin.post('/api/v1/cad/incidents').send({ title: 'Verdeckte Ermittlung', restrictRoleIds: [adminRole.id] });
     expect(secret.status).toBe(201);
@@ -313,7 +321,7 @@ describe('CAD – Rechte pro Einsatz und pro Einheit', () => {
     expect((await disp.post(`/api/v1/cad/incidents/${secret.body.id}/status`).send({ status: 'ON_SCENE' })).status).toBe(404);
     expect((await admin.get(`/api/v1/cad/incidents/${secret.body.id}`)).status).toBe(200);
     // Disponent mit Leitstellen-Rolle freigeben → sichtbar
-    const dispRole = await prisma.role.findUniqueOrThrow({ where: { name: 'Dispatch' } });
+    const dispRole = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Dispatch' } });
     await admin.patch(`/api/v1/cad/incidents/${secret.body.id}`).send({ restrictRoleIds: [dispRole.id] });
     expect((await disp.get(`/api/v1/cad/incidents/${secret.body.id}`)).status).toBe(200);
   });

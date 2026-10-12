@@ -60,13 +60,13 @@ declare const prefsBody: z.ZodObject<{
                 status: z.ZodOptional<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             }, {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             }>>;
         }, "strip", z.ZodTypeAny, {
@@ -74,8 +74,8 @@ declare const prefsBody: z.ZodObject<{
             search?: string | undefined;
             filters?: {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             } | undefined;
         }, {
@@ -83,8 +83,8 @@ declare const prefsBody: z.ZodObject<{
             search?: string | undefined;
             filters?: {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             } | undefined;
         }>>;
@@ -149,15 +149,15 @@ declare const prefsBody: z.ZodObject<{
             }, "strip", z.ZodTypeAny, {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             }, {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             }>>;
@@ -181,8 +181,8 @@ declare const prefsBody: z.ZodObject<{
             filters?: {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             } | undefined;
@@ -196,8 +196,8 @@ declare const prefsBody: z.ZodObject<{
             filters?: {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             } | undefined;
@@ -268,8 +268,8 @@ declare const prefsBody: z.ZodObject<{
             filters?: {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             } | undefined;
@@ -300,8 +300,8 @@ declare const prefsBody: z.ZodObject<{
             search?: string | undefined;
             filters?: {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             } | undefined;
         } | undefined;
@@ -345,8 +345,8 @@ declare const prefsBody: z.ZodObject<{
             filters?: {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             } | undefined;
@@ -377,8 +377,8 @@ declare const prefsBody: z.ZodObject<{
             search?: string | undefined;
             filters?: {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             } | undefined;
         } | undefined;
@@ -424,8 +424,8 @@ declare const prefsBody: z.ZodObject<{
             filters?: {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             } | undefined;
@@ -456,8 +456,8 @@ declare const prefsBody: z.ZodObject<{
             search?: string | undefined;
             filters?: {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             } | undefined;
         } | undefined;
@@ -503,8 +503,8 @@ declare const prefsBody: z.ZodObject<{
             filters?: {
                 model?: string | undefined;
                 unit?: string | undefined;
-                active?: "active" | "inactive" | "all" | undefined;
                 color?: string | undefined;
+                active?: "active" | "inactive" | "all" | undefined;
                 owner?: string | undefined;
                 online?: "all" | "yes" | "no" | undefined;
             } | undefined;
@@ -535,8 +535,8 @@ declare const prefsBody: z.ZodObject<{
             search?: string | undefined;
             filters?: {
                 status?: string | undefined;
-                rank?: string | undefined;
                 team?: string | undefined;
+                rank?: string | undefined;
                 office?: string | undefined;
             } | undefined;
         } | undefined;
@@ -739,8 +739,8 @@ export declare class MeController {
                 filters?: {
                     model?: string | undefined;
                     unit?: string | undefined;
-                    active?: "active" | "inactive" | "all" | undefined;
                     color?: string | undefined;
+                    active?: "active" | "inactive" | "all" | undefined;
                     owner?: string | undefined;
                     online?: "all" | "yes" | "no" | undefined;
                 } | undefined;
@@ -771,8 +771,8 @@ export declare class MeController {
                 search?: string | undefined;
                 filters?: {
                     status?: string | undefined;
-                    rank?: string | undefined;
                     team?: string | undefined;
+                    rank?: string | undefined;
                     office?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -782,26 +782,28 @@ export declare class MeController {
     /** Eigenen Anzeigenamen ändern (steht in Teamliste, Dienst-Übersicht, Einsätzen …). */
     setName(a: Actor, b: z.infer<typeof nameBody>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
-        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
         roles: {
             role: {
                 id: string;
+                guildId: string | null;
                 name: string;
             };
         }[];
         overrides: {
             reason: string | null;
+            guildId: string | null;
             permissionKey: string;
             effect: string;
         }[];
