@@ -13,11 +13,10 @@ export interface DiscordLoginSettings {
     teamRoleIds: string[];
 }
 export declare const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings;
-/** `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server. */
+/** `roles` = Discord-Rollen auf dem Server (Zugangsprüfung), `byGuild` = dieselben Rollen mit Server-ID (für den Rollenabgleich). */
 export type Membership = {
     roles: string[];
     byGuild: Record<string, string[]>;
-    checked: string[];
 } | null | 'unknown';
 export type AccessVerdict = 'ok' | 'not_member' | 'no_team_role';
 /**
@@ -40,11 +39,14 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     onModuleDestroy(): void;
     isOwnerId(discordId: string): boolean;
     settings(): Promise<DiscordLoginSettings>;
-    /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
+    /** Mitglied auf dem Discord-Server dieses Systems? `null` = nein, `unknown` = nicht prüfbar. */
     membership(discordId: string): Promise<Membership>;
     private bot;
-    /** Eingestellte und registrierte Server bzw. alle Server des Bots (max. 20); `null` = Discord nicht erreichbar. */
-    private guildIds;
+    /**
+     * Discord-Server dieses Systems. Ist noch keiner eingerichtet, gilt der Server des Bots – aber nur, wenn es genau einer ist
+     * (sonst wäre unklar, wo geprüft wird). `null` = Discord nicht erreichbar bzw. kein eindeutiger Server.
+     */
+    private guildId;
     /** Server-Mitglieder per Name suchen (Discord: Benutzer- oder Servername beginnt mit `query`). Ohne Token/Discord: leer. */
     searchMembers(query: string, limit?: number): Promise<{
         id: string;
@@ -60,22 +62,12 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
         roles: string[];
     } | null, s: DiscordLoginSettings): AccessVerdict;
     /**
-     * Mitgliedschaften je registriertem Server festhalten: geprüft und Mitglied → MEMBER (mit Discord-Rollen), geprüft und
-     * nicht Mitglied → LEFT. Manuelle Mitgliedschaften (Konten ohne Discord) bleiben unangetastet.
+     * Discord-Rolle → Dashboard-Rolle: verknüpfte Rollen (Rollen-Editor `discordRoleIds`, ältere Zuordnungsliste der
+     * Einstellungen). Über Discord vergebene Zuweisungen merken sich den Discord-Server (`UserRole.guildIds`), damit der Abgleich
+     * sie wieder entziehen kann; manuell vergebene Rollen (ohne Server) und „System Administrator“ bleiben unangetastet.
+     * `byGuild` enthält höchstens den Discord-Server dieses Systems (Rollen anderer Server werden ignoriert).
      */
-    recordMemberships(userId: string, byGuild: Record<string, string[]>, checked: string[]): Promise<void>;
-    /**
-     * Discord-Rolle → Dashboard-Rolle, JE SERVER: verknüpfte Rollen (Rollen-Editor `discordRoleIds`, Zuordnungstabelle
-     * `DiscordRoleMapping`, ältere Zuordnungsliste der Einstellungen). Die Zuweisung merkt sich, auf welchen Servern sie gilt
-     * (`UserRole.guildIds`) – eine Discord-Rolle auf Server A verleiht nie Rechte auf Server B. Nur die in `byGuild`/`checked`
-     * geprüften Server werden geändert; Rollen ohne Discord-Verknüpfung und „System Administrator“ bleiben unangetastet.
-     */
-    syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked?: string[]): Promise<void>;
-    /**
-     * Vom Administrator ausdrücklich eingestellte Haupt-Server (DISCORD_GUILD_ID bzw. Einstellung „Discord-Server-ID“) sind
-     * automatisch registriert und aktiv – andere vom Bot entdeckte Server müssen ein globaler Systemadministrator freischalten.
-     */
-    ensureConfiguredServers(): Promise<void>;
+    syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings): Promise<void>;
     /** Abgleich nach dem Login merken (kein zweiter Discord-Aufruf direkt danach). */
     remember(userId: string, ok: boolean): void;
     forget(userId?: string): void;

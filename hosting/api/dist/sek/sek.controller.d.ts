@@ -73,21 +73,21 @@ export declare class SekController {
         authorName: string;
         authorCallsign: string | null;
         number: string;
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
-        authorId: string;
         description: string;
+        authorId: string;
         occurredAt: Date;
         missionType: string;
     }[]>;
     createReport(a: Actor, b: z.infer<typeof report>): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
-        authorId: string;
         description: string;
+        authorId: string;
         occurredAt: Date;
         missionType: string;
     }>;

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { useGuilds, useServer } from '../lib/guilds';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, PageHeader, Select, SkeletonRows, Textarea } from '../components/ui';
 
 interface Ban { id: string; discordId: string | null; robloxUserId: string | null; name: string; scopes: string[]; reason: string; expiresAt: string | null; createdByName: string | null; createdAt: string; liftedAt: string | null }
@@ -17,11 +16,8 @@ export function ApplicationBans() {
   const { can } = useAuth();
   const qc = useQueryClient();
   const [all, setAll] = useState(false);
-  const [server] = useServer();
-  const guilds = useGuilds();
-  const serverName = guilds.data?.find((g) => g.id === server)?.name;
-  const q = useQuery({ queryKey: ['application-bans', all, server], queryFn: () => api<Ban[]>('/application-bans', { query: { all: all ? 'true' : undefined } }) });
-  const quali = useQuery({ queryKey: ['quali-config', server], queryFn: () => api<QualiConfig>('/qualifications/config', { query: { guildId: server || undefined } }), enabled: can('qualifications.view'), retry: false, staleTime: 60_000 });
+  const q = useQuery({ queryKey: ['application-bans', all], queryFn: () => api<Ban[]>('/application-bans', { query: { all: all ? 'true' : undefined } }) });
+  const quali = useQuery({ queryKey: ['quali-config'], queryFn: () => api<QualiConfig>('/qualifications/config'), enabled: can('qualifications.view'), retry: false, staleTime: 60_000 });
   const scopes = [{ key: '*', label: 'Alle Bewerbungen' }, { key: 'police', label: quali.data?.police?.name ? `Bewerbung – ${quali.data.police.name}` : 'Polizei-Bewerbung' }, ...(quali.data?.units ?? []).map((u) => ({ key: u.key, label: u.name }))];
   const label = (k: string) => scopes.find((s) => s.key === k)?.label ?? k;
 
@@ -44,7 +40,7 @@ export function ApplicationBans() {
 
   return (
     <>
-      <PageHeader title="⛔ Bewerbungssperren" subtitle={`${serverName ? `Sperrliste für ${serverName} – jeder Server hat seine eigene (oben links umschalten).` : 'Kein Server gewählt: Sperren hier gelten auf allen Servern. Für eine Server-eigene Liste oben links einen Server wählen.'} Gesperrte können die gewählten Bewerbungen nicht starten – weder über das Discord-Panel noch über /bewerbung.`} />
+      <PageHeader title="⛔ Bewerbungssperren" subtitle={`Gesperrte können die gewählten Bewerbungen nicht starten – weder über das Discord-Panel noch über /bewerbung.`} />
       <div className="grid gap-3 lg:grid-cols-[minmax(0,26rem)_1fr]">
         {manage && <Card title="Neue Sperre">
           <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); create.mutate(); }}>

@@ -1,6 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { withServerScope } from './server-scope';
 
 export type Tx = Prisma.TransactionClient;
 
@@ -12,8 +11,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    */
   constructor() {
     super({ transactionOptions: { timeout: 30_000, maxWait: 15_000 } });
-    // Je Discord-Server getrennte Daten (Berichte, Fahndungen, …) – siehe server-scope.ts. Nest bekommt den erweiterten Client.
-    return withServerScope(this) as unknown as PrismaService;
   }
   async onModuleInit() { await this.$connect(); }
   async onModuleDestroy() { await this.$disconnect(); }

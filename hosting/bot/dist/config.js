@@ -12,7 +12,7 @@ const node_path_1 = __importDefault(require("node:path"));
 const zod_1 = require("zod");
 const schema = zod_1.z.object({
     DISCORD_TOKEN: zod_1.z.string().min(20, 'DISCORD_TOKEN missing'),
-    /** Optional: eine oder MEHRERE Server-IDs (mit Komma getrennt). Mit Wert werden Slash-Commands sofort (nur dort) registriert, sonst global (dauert bis zu 1 h). */
+    /** Discord-Server der EN Polizei. Maßgeblich ist, was das System meldet; dieser Wert gilt, bis das System erreichbar ist. Ältere Einträge mit mehreren IDs: nur die erste zählt. */
     DISCORD_GUILD_ID: zod_1.z.string().regex(/^\d{15,25}([\s,;]+\d{15,25})*$/, 'one or more server IDs, separated by comma').optional(),
     API_URL: zod_1.z.string().url().default('http://localhost:3000'),
     BOT_API_TOKEN: zod_1.z.string().min(32, 'BOT_API_TOKEN must be at least 32 characters (same value as in the API)'),

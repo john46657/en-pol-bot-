@@ -31,8 +31,6 @@ export declare class AuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
-            servers: string[];
-            globalAdmin: boolean;
         };
     } | {
         twoFactorRequired: true;
@@ -57,8 +55,6 @@ export declare class AuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
-            servers: string[];
-            globalAdmin: boolean;
         };
     }>;
     /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
@@ -83,8 +79,6 @@ export declare class AuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
-            servers: string[];
-            globalAdmin: boolean;
         };
     }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
@@ -101,7 +95,5 @@ export declare class AuthService {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
-        servers: string[];
-        globalAdmin: boolean;
     }>;
 }

@@ -30,8 +30,8 @@ exports.DEFAULT_RADIO_CODES = [
     { code: '10-99', meaning: 'Beamter in Not', category: 'Notfall' }, { code: 'Code 3', meaning: 'Einsatzfahrt mit Sonderrechten', category: 'Einsatz' },
 ];
 /**
- * Funk-Codes je Server (Server getrennt) oder für alle Server. Im Server-Kontext sieht man die Codes dieses Servers
- * und die gemeinsamen; ein Server-Code überdeckt einen gemeinsamen mit gleichem Code.
+ * Funk-Codes. Neue Codes gelten zentral (`guildId` = null). Codes, die früher eigens für den Discord-Server angelegt wurden,
+ * bleiben gültig und bearbeitbar; sie überdecken einen gleichnamigen zentralen Code (wie bisher auf dem Server).
  */
 let RadioCodesService = class RadioCodesService {
     prisma;
@@ -42,14 +42,22 @@ let RadioCodesService = class RadioCodesService {
         this.audit = audit;
         this.discord = discord;
     }
-    cfgKey(g = (0, guild_context_1.currentGuild)()) { return `radio.discord${g ? `@${g}` : ''}`; }
-    stateKey(g = (0, guild_context_1.currentGuild)()) { return `radio-${g ?? 'all'}`; }
+    cfgKey = 'radio.discord';
+    /** Wo die Liste in Discord steht: `radio-all`; früher auf dem Server gepostet (`radio-<Server-ID>`) → dieselbe Nachricht weiter bearbeiten. */
+    async stateKey() {
+        if (await this.discord.posted('radio-all'))
+            return 'radio-all';
+        const home = (0, guild_context_1.homeGuild)();
+        return home && (await this.discord.posted(`radio-${home}`)) ? `radio-${home}` : 'radio-all';
+    }
+    /** Codes dieses Systems: zentrale und die früher eigens für den Discord-Server angelegten. */
+    scope() { const home = (0, guild_context_1.homeGuild)(); return { OR: [{ guildId: null }, ...(home ? [{ guildId: home }] : [])] }; }
     async discordConfig() {
-        const v = (await this.prisma.systemSetting.findUnique({ where: { key: this.cfgKey() } }))?.value;
-        return { ...exports.DEFAULT_RADIO_DISCORD, ...(v ?? {}), posted: await this.discord.posted(this.stateKey()) };
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: this.cfgKey } }))?.value;
+        return { ...exports.DEFAULT_RADIO_DISCORD, ...(v ?? {}), posted: await this.discord.posted(await this.stateKey()) };
     }
     async saveDiscordConfig(actor, c) {
-        const key = this.cfgKey();
+        const key = this.cfgKey;
         await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: c }, update: { value: c } });
         await this.audit.record(actor, { action: 'radiocode.discord.config', module: 'radio', entityType: 'SystemSetting', entityId: key, after: c });
         return this.discordConfig();
@@ -97,7 +105,7 @@ let RadioCodesService = class RadioCodesService {
         const c = await this.discordConfig();
         if (!c.channelId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal.');
-        await this.discord.postMessage(this.stateKey(), c.channelId, this.message(await this.list(), c), { forceNew: mode === 'new' });
+        await this.discord.postMessage(await this.stateKey(), c.channelId, this.message(await this.list(), c), { forceNew: mode === 'new' });
         if (actor)
             await this.audit.record(actor, { action: 'radiocode.discord.send', module: 'radio', after: { channelId: c.channelId, mode } });
         return { queued: true };
@@ -108,19 +116,18 @@ let RadioCodesService = class RadioCodesService {
         if (c?.autoUpdate && c.channelId && c.posted?.channelId === c.channelId)
             await this.sendToDiscord(null, 'update').catch(() => undefined);
     }
-    async list(q, guildId = (0, guild_context_1.currentGuild)()) {
+    async list(q) {
         const t = q?.trim();
         const rows = await this.prisma.radioCode.findMany({
-            where: { AND: [{ OR: [{ guildId: null }, ...(guildId ? [{ guildId }] : [])] }, t ? { OR: [{ code: { contains: t, mode: 'insensitive' } }, { meaning: { contains: t, mode: 'insensitive' } }, { category: { contains: t, mode: 'insensitive' } }] } : {}] },
+            where: { AND: [this.scope(), t ? { OR: [{ code: { contains: t, mode: 'insensitive' } }, { meaning: { contains: t, mode: 'insensitive' } }, { category: { contains: t, mode: 'insensitive' } }] } : {}] },
             orderBy: [{ position: 'asc' }, { code: 'asc' }], take: 500,
         });
         const own = new Set(rows.filter((r) => r.guildId).map((r) => r.code.toLowerCase()));
         return rows.filter((r) => r.guildId || !own.has(r.code.toLowerCase()));
     }
     async load(id) {
-        const r = await this.prisma.radioCode.findUnique({ where: { id } });
-        const g = (0, guild_context_1.currentGuild)();
-        if (!r || (g && r.guildId && r.guildId !== g))
+        const r = await this.prisma.radioCode.findFirst({ where: { id, ...this.scope() } });
+        if (!r)
             throw new errors_1.AppError('NOT_FOUND', 'Funk-Code nicht gefunden.');
         return r;
     }
@@ -129,26 +136,25 @@ let RadioCodesService = class RadioCodesService {
             throw new errors_1.AppError('CONFLICT', 'Diesen Funk-Code gibt es hier schon.');
         throw e;
     }
-    /** (gemeinsame Codes haben guildId = null – dafür greift der Datenbank-Index nicht, daher selbst prüfen) */
-    async assertFree(guildId, code, exceptId) {
-        const dup = await this.prisma.radioCode.findFirst({ where: { guildId, code: { equals: code, mode: 'insensitive' }, ...(exceptId ? { id: { not: exceptId } } : {}) } });
+    /** (zentrale Codes haben guildId = null – dafür greift der Datenbank-Index nicht, daher selbst prüfen) */
+    async assertFree(code, exceptId) {
+        const dup = await this.prisma.radioCode.findFirst({ where: { ...this.scope(), code: { equals: code, mode: 'insensitive' }, ...(exceptId ? { id: { not: exceptId } } : {}) } });
         if (dup)
             throw new errors_1.AppError('CONFLICT', 'Diesen Funk-Code gibt es hier schon.');
     }
     async create(actor, d) {
-        const guildId = d.guildId === undefined ? (0, guild_context_1.currentGuild)() : d.guildId;
-        await this.assertFree(guildId, d.code);
-        const position = ((await this.prisma.radioCode.aggregate({ where: { guildId }, _max: { position: true } }))._max.position ?? 0) + 1;
-        const r = await this.prisma.radioCode.create({ data: { code: d.code, meaning: d.meaning, category: d.category ?? null, description: d.description ?? null, guildId, position } }).catch((e) => this.uniq(e));
+        await this.assertFree(d.code);
+        const position = ((await this.prisma.radioCode.aggregate({ where: this.scope(), _max: { position: true } }))._max.position ?? 0) + 1;
+        const r = await this.prisma.radioCode.create({ data: { code: d.code, meaning: d.meaning, category: d.category ?? null, description: d.description ?? null, guildId: null, position } }).catch((e) => this.uniq(e));
         await this.audit.record(actor, { action: 'radiocode.create', module: 'radio', entityType: 'RadioCode', entityId: r.id, after: r });
         void this.autoUpdate();
         return r;
     }
     async update(actor, id, d) {
         const before = await this.load(id);
-        const data = { code: d.code, meaning: d.meaning, category: d.category, description: d.description }; // Server-Zugehörigkeit bleibt
+        const data = { code: d.code, meaning: d.meaning, category: d.category, description: d.description };
         if (data.code)
-            await this.assertFree(before.guildId, data.code, id);
+            await this.assertFree(data.code, id);
         const r = await this.prisma.radioCode.update({ where: { id }, data }).catch((e) => this.uniq(e));
         await this.audit.record(actor, { action: 'radiocode.update', module: 'radio', entityType: 'RadioCode', entityId: id, before, after: r });
         void this.autoUpdate();
@@ -168,15 +174,14 @@ let RadioCodesService = class RadioCodesService {
         void this.autoUpdate();
         return this.list();
     }
-    /** Standard-Codes für den gewählten Server (bzw. alle Server) einfügen – vorhandene Codes bleiben unverändert. */
+    /** Standard-Codes einfügen – vorhandene Codes bleiben unverändert. */
     async insertDefaults(actor) {
-        const guildId = (0, guild_context_1.currentGuild)();
-        const existing = new Set((await this.prisma.radioCode.findMany({ where: { guildId }, select: { code: true } })).map((r) => r.code.toLowerCase()));
+        const existing = new Set((await this.prisma.radioCode.findMany({ where: this.scope(), select: { code: true } })).map((r) => r.code.toLowerCase()));
         const add = exports.DEFAULT_RADIO_CODES.filter((c) => !existing.has(c.code.toLowerCase()));
-        const base = ((await this.prisma.radioCode.aggregate({ where: { guildId }, _max: { position: true } }))._max.position ?? 0) + 1;
+        const base = ((await this.prisma.radioCode.aggregate({ where: this.scope(), _max: { position: true } }))._max.position ?? 0) + 1;
         if (add.length)
-            await this.prisma.radioCode.createMany({ data: add.map((c, i) => ({ ...c, guildId, position: base + i })) });
-        await this.audit.record(actor, { action: 'radiocode.defaults', module: 'radio', after: { added: add.length, guildId } });
+            await this.prisma.radioCode.createMany({ data: add.map((c, i) => ({ ...c, guildId: null, position: base + i })) });
+        await this.audit.record(actor, { action: 'radiocode.defaults', module: 'radio', after: { added: add.length } });
         void this.autoUpdate();
         return { added: add.length };
     }

@@ -19,15 +19,15 @@ export declare class StudioService {
         };
         customFields: {
             persons: {
-                type: "number" | "select" | "text" | "date";
                 key: string;
+                type: "number" | "select" | "text" | "date";
                 label: string;
                 required: boolean;
                 options?: string[] | undefined;
             }[];
             vehicles: {
-                type: "number" | "select" | "text" | "date";
                 key: string;
+                type: "number" | "select" | "text" | "date";
                 label: string;
                 required: boolean;
                 options?: string[] | undefined;

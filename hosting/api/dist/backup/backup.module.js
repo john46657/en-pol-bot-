@@ -14,6 +14,6 @@ let BackupModule = class BackupModule {
 };
 exports.BackupModule = BackupModule;
 exports.BackupModule = BackupModule = __decorate([
-    (0, common_1.Module)({ controllers: [backup_controller_1.BackupController, backup_controller_1.BotBackupController], providers: [backup_service_1.BackupService] })
+    (0, common_1.Module)({ controllers: [backup_controller_1.BackupController, backup_controller_1.BotBackupController], providers: [backup_service_1.BackupService], exports: [backup_service_1.BackupService] })
 ], BackupModule);
 //# sourceMappingURL=backup.module.js.map

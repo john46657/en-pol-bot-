@@ -80099,7 +80099,7 @@ var PERMISSION_CATALOG = {
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
   /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio", "handover", "view_stats"],
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "view_logs", "manage_settings", "radio", "handover", "view_stats"],
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
@@ -80150,14 +80150,8 @@ var PERMISSION_CATALOG = {
   settings: ["view", "manage"],
   users: ["view", "manage"],
   roles: ["view", "manage"],
-  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
-  servers: ["view", "manage"],
-  /** Module je Server an/aus und deren Einstellungen */
-  modules: ["view", "manage"],
-  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
-  connections: ["view", "manage"],
-  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
-  sync: ["view", "retry"]
+  /** Module an/aus (Administration → Module) */
+  modules: ["view", "manage"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -80253,7 +80247,6 @@ var CAD_FEEDBACK = [
 var CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f2) => f2.key);
 var ERLC_MAP_SIZE = 5355;
 var DEFAULT_CAD_CONFIG = {
-  homeGuildId: null,
   incidentNumberPrefix: "E",
   incidentTypes: [
     { key: "ROBBERY", label: "Raub", emoji: "\u{1F4B0}" },
@@ -80545,7 +80538,7 @@ function periodLabel(period, start2) {
 var LINE_LONG = "\u23AF".repeat(20);
 var LINE_SHORT = "\u23AF".repeat(12);
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Module", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "modules"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
@@ -80594,7 +80587,7 @@ var BOT_COMMAND_MODULES = {
   funkcode: "communication",
   funk: "communication"
 };
-var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
+var commandsForModules = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
 var sf3 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var color2 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/);
 var key = external_exports.string().regex(/^[A-Z0-9_]{1,32}$/, "Schl\xFCssel: A\u2013Z, 0\u20139, _");
@@ -80850,13 +80843,21 @@ var fleetInternalSchema = external_exports.object({
   tags: external_exports.array(external_exports.string().trim().min(1).max(30)).max(20).optional()
 });
 
+// apps/bot/src/home.ts
+var home = null;
+var setHomeGuild = (guildId) => {
+  if (guildId && /^\d{15,25}$/.test(guildId)) home = guildId;
+};
+var isHomeGuild = (guildId) => !home || guildId === home;
+var ownGuilds = (c) => [...c.guilds.cache.values()].filter((g) => isHomeGuild(g.id));
+
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
   const last = /* @__PURE__ */ new Map();
   let timer;
   async function render(l) {
     const c = client2();
-    const guilds = l.guildId ? [c.guilds.cache.get(l.guildId)].filter((g) => !!g) : [...c.guilds.cache.values()];
+    const guilds = ownGuilds(c).filter((g) => !l.guildId || g.id === l.guildId);
     const members = /* @__PURE__ */ new Map();
     for (const g of guilds) {
       for (const s of l.sections) {
@@ -80920,7 +80921,7 @@ function guildInfo(g) {
 function startGuildDirectory(client2, api2, log = console.log) {
   let timer;
   const push = async () => {
-    const guilds = [...client2().guilds.cache.values()].slice(0, 50).map(guildInfo);
+    const guilds = ownGuilds(client2()).slice(0, 50).map(guildInfo);
     await api2.service("PUT", "/bot/guilds", { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
   };
   const soon = () => {
@@ -80989,7 +80990,7 @@ function startPresenceReporter(client2, api2, opts, log = console.log) {
   const since = /* @__PURE__ */ new Map();
   let teamRoles = [];
   let lastError;
-  const guilds = () => [...client2().guilds.cache.values()].slice(0, 50);
+  const guilds = () => ownGuilds(client2()).slice(0, 50);
   const fail3 = (what) => (e) => {
     const msg = `${what}: ${e instanceof Error ? e.message : e}`;
     if (msg !== lastError) {
@@ -83673,7 +83674,7 @@ var import_node_fs = require("node:fs");
 var import_node_path = __toESM(require("node:path"));
 var schema = external_exports.object({
   DISCORD_TOKEN: external_exports.string().min(20, "DISCORD_TOKEN missing"),
-  /** Optional: eine oder MEHRERE Server-IDs (mit Komma getrennt). Mit Wert werden Slash-Commands sofort (nur dort) registriert, sonst global (dauert bis zu 1 h). */
+  /** Discord-Server der EN Polizei. Maßgeblich ist, was das System meldet; dieser Wert gilt, bis das System erreichbar ist. Ältere Einträge mit mehreren IDs: nur die erste zählt. */
   DISCORD_GUILD_ID: external_exports.string().regex(/^\d{15,25}([\s,;]+\d{15,25})*$/, "one or more server IDs, separated by comma").optional(),
   API_URL: external_exports.string().url().default("http://localhost:3000"),
   BOT_API_TOKEN: external_exports.string().min(32, "BOT_API_TOKEN must be at least 32 characters (same value as in the API)"),
@@ -84260,7 +84261,7 @@ function createVerify(api2, ops, log = console.error) {
       });
       if (r?.problems.length) log(`verify on join (${m.guildId}): ${r.problems.join("; ")}`);
     },
-    /** Nach Entfernen/Ändern im Dashboard: auf allen Servern neu setzen. */
+    /** Nach Entfernen/Ändern im Dashboard: auf dem Server neu setzen. */
     async refreshEverywhere(userId) {
       for (const g of await ops.guildsOf(userId)) {
         const r = await sync(g.guildId, userId, g.displayName).catch((e) => {
@@ -84487,7 +84488,7 @@ var verify = createVerify(api, {
   apply: applyVerify,
   async guildsOf(userId) {
     const out = [];
-    for (const g of client.guilds.cache.values()) {
+    for (const g of ownGuilds(client)) {
       const m = await g.members.fetch(userId).catch(() => null);
       if (m) out.push({ guildId: g.id, displayName: m.user.username });
     }
@@ -84722,34 +84723,40 @@ function wire(c) {
   c.on("error", (e) => console.error("discord client error:", e.message));
   c.on("shardError", (e, id2) => console.error(`discord shard ${id2} error:`, e.message));
   c.on("interactionCreate", (i) => {
+    if (i.guildId && !isHomeGuild(i.guildId)) {
+      if (i.isRepliable()) void i.reply({ content: "Dieser Bot ist nur auf dem Discord-Server der EN Polizei aktiv.", flags: import_discord6.MessageFlags.Ephemeral }).catch(() => void 0);
+      return;
+    }
     const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
   });
   c.on("voiceStateUpdate", (o, n) => {
     const user = n.member?.user ?? o.member?.user;
-    if (!user) return;
+    if (!user || !isHomeGuild(n.guild.id)) return;
     void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId }).catch((x) => console.error("voice support failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberAdd", (m) => {
+    if (!isHomeGuild(m.guild.id)) return;
     const e = memberEvent(m);
     if (!e) return;
     void welcome.joined(e).catch((x) => console.error("member join failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberRemove", (m) => {
+    if (!isHomeGuild(m.guild.id)) return;
     staffLists.changed();
     const e = memberEvent(m);
     if (e) void welcome.left(e).catch((x) => console.error("member leave failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberUpdate", (o, n) => {
-    if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed();
+    if (isHomeGuild(n.guild.id) && (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r)))) staffLists.changed();
   });
   c.on("messageDelete", (m) => {
-    if (m.partial || !m.inGuild() || !m.author) return;
+    if (m.partial || !m.inGuild() || !m.author || !isHomeGuild(m.guildId)) return;
     void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? "", createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
   });
   c.on("messageCreate", (m) => {
     if (m.inGuild()) {
-      void tickets.onMessage(m);
+      if (isHomeGuild(m.guildId)) void tickets.onMessage(m);
       return;
     }
     if (m.author.bot) return;
@@ -84757,8 +84764,8 @@ function wire(c) {
   });
 }
 setInterval(() => sweepSessions(), 10 * 6e4).unref();
-async function syncRolesEverywhere(userId, add, remove) {
-  for (const g of client.guilds.cache.values()) {
+async function syncMemberRoles(userId, add, remove) {
+  for (const g of ownGuilds(client)) {
     const present = [...add, ...remove].filter((r) => g.roles.cache.has(r));
     if (!present.length) continue;
     const member = await g.members.fetch(userId).catch(() => null);
@@ -84769,16 +84776,16 @@ async function syncRolesEverywhere(userId, add, remove) {
     if (toAdd.length) await member.roles.add(toAdd, "EN Polizei: Dienststatus");
   }
 }
-async function grantRoleEverywhere(userId, roleId) {
+async function grantMemberRole(userId, roleId) {
   let found = false;
-  for (const g of client.guilds.cache.values()) {
+  for (const g of ownGuilds(client)) {
     const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
     if (!role) continue;
     found = true;
     const member = await g.members.fetch(userId).catch(() => null);
     if (member) await member.roles.add(roleId, "EN Polizei: Bewerbung angenommen");
   }
-  if (!found) throw new Error("role not found on any server");
+  if (!found) throw new Error("role not found on the server");
 }
 async function checkApi() {
   try {
@@ -84800,29 +84807,33 @@ function wireReady(client0) {
     } catch (e) {
       console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
     }
+    setHomeGuild(guildIds(cfg)[0]);
     const registered = /* @__PURE__ */ new Map();
-    const register = async (g, name, quiet = false) => {
-      const mods = await api.service("GET", `/bot/servers/${g}/modules`).catch(() => null);
-      const list = mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json;
+    const register = async (g, name, list, quiet = false, note2 = "") => {
       const sig = list.map((j) => j.name).sort().join(",");
       if (quiet && registered.get(g) === sig) return;
       try {
         await c.application.commands.set(list, g);
         registered.set(g, sig);
-        console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(", ")})` : ""}`);
+        console.log(`${list.length} slash commands registered for ${name ?? g}${note2}`);
       } catch (e) {
         console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
       }
     };
-    setInterval(() => {
-      for (const [id2, gname] of c.guilds.cache.map((x) => [x.id, x.name])) void register(id2, gname, true);
-    }, 12e4).unref();
-    const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
-    for (const g of guildIds(cfg)) if (!all.has(g)) all.set(g, g);
-    for (const [id2, name] of all) await register(id2, name);
+    const syncCommands = async (quiet = false) => {
+      const s = await api.service("GET", "/bot/server").catch(() => null);
+      setHomeGuild(s?.guildId);
+      const list = s ? json.filter((j) => commandsForModules([{ name: j.name }], s.disabled).length) : json;
+      const servers = new Map(ownGuilds(c).map((g) => [g.id, g.name]));
+      for (const g of guildIds(cfg).slice(0, 1)) if (isHomeGuild(g) && !servers.has(g)) servers.set(g, g);
+      for (const [id2, name] of servers) await register(id2, name, list, quiet, s?.disabled.length ? ` (Module aus: ${s.disabled.join(", ")})` : "");
+      for (const g of c.guilds.cache.values()) if (!isHomeGuild(g.id)) await register(g.id, g.name, [], true, " (nicht der Server der EN Polizei \u2013 keine Befehle)");
+    };
+    setInterval(() => void syncCommands(true), 12e4).unref();
+    await syncCommands();
     c.on("guildCreate", (g) => {
-      console.log(`added to server ${g.name}`);
-      void register(g.id, g.name);
+      console.log(`added to server ${g.name}${isHomeGuild(g.id) ? "" : " (nicht der Server der EN Polizei \u2013 der Bot bleibt dort inaktiv)"}`);
+      void syncCommands(true);
     });
     const presence = startPresenceReporter(() => client, api, { members: intents.members, presences: intents.presences });
     startOutboxLoop(
@@ -84855,8 +84866,8 @@ function wireReady(client0) {
       cfg.OUTBOX_POLL_SECONDS,
       console.log,
       (userId, msg) => typeof msg === "string" ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => void 0),
-      grantRoleEverywhere,
-      syncRolesEverywhere,
+      grantMemberRole,
+      syncMemberRoles,
       () => void live.refresh("teamlist").catch(() => void 0),
       (effects) => tickets.apply(effects).then(() => void 0, (e) => console.error("ticket effects failed:", e instanceof Error ? e.message : e)),
       () => void presence.sync().catch((e) => console.error("team/voice sync failed:", e instanceof Error ? e.message : e)),
@@ -84927,11 +84938,11 @@ function wireReady(client0) {
           const userId = String(p.discordId ?? ""), nick = String(p.nickname ?? "").slice(0, 32);
           if (!/^\d{15,25}$/.test(userId) || !nick) throw new Error("invalid nickname task");
           let done = 0;
-          for (const g of client.guilds.cache.values()) {
+          for (const g of ownGuilds(client)) {
             const m = await g.members.fetch(userId).catch(() => null);
             if (m && m.id !== g.ownerId && await m.setNickname(nick, "EN Polizei: Dienstnummer").then(() => true, () => false)) done++;
           }
-          if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
+          if (!done) console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on the server)`);
           return true;
         }
         if (type === "bot.backup.create") {

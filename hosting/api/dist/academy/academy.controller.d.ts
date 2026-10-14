@@ -12,38 +12,38 @@ declare const course: z.ZodObject<{
         when: z.ZodOptional<z.ZodDate>;
         location: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        location?: string | undefined;
         channelId?: string | null | undefined;
         pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
         when?: Date | undefined;
     }, {
-        location?: string | undefined;
         channelId?: string | null | undefined;
         pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
         when?: Date | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     description?: string | undefined;
-    passScore?: number | undefined;
-    instructorId?: string | undefined;
     announce?: {
-        location?: string | undefined;
         channelId?: string | null | undefined;
         pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
         when?: Date | undefined;
     } | undefined;
+    passScore?: number | undefined;
+    instructorId?: string | undefined;
 }, {
     title: string;
     description?: string | undefined;
-    passScore?: number | undefined;
-    instructorId?: string | undefined;
     announce?: {
-        location?: string | undefined;
         channelId?: string | null | undefined;
         pingRoleIds?: string[] | undefined;
+        location?: string | undefined;
         when?: Date | undefined;
     } | undefined;
+    passScore?: number | undefined;
+    instructorId?: string | undefined;
 }>;
 export declare class AcademyController {
     private readonly a;
@@ -53,10 +53,10 @@ export declare class AcademyController {
             enrollments: number;
         };
     } & {
-        serverId: string | null;
         id: string;
-        title: string;
+        serverId: string | null;
         description: string | null;
+        title: string;
         passScore: number;
         instructorId: string | null;
     })[]>;
@@ -79,10 +79,10 @@ export declare class AcademyController {
             createdAt: Date;
             courseId: string;
         }[];
-        serverId: string | null;
         id: string;
-        title: string;
+        serverId: string | null;
         description: string | null;
+        title: string;
         passScore: number;
         instructorId: string | null;
     }>;
@@ -91,10 +91,10 @@ export declare class AcademyController {
             channelId: string | null;
             pingRoleIds: string[];
         } | null;
-        serverId: string | null;
         id: string;
-        title: string;
+        serverId: string | null;
         description: string | null;
+        title: string;
         passScore: number;
         instructorId: string | null;
     }>;

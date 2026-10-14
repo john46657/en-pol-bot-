@@ -15,6 +15,7 @@ import { AppError } from '../common/errors';
 import { loadEnv } from '../config/env';
 import { webUrl } from '../common/web-url';
 import { TicketConfigService } from './config.service';
+import { homeGuild } from '../common/guild-context';
 import { renderTranscript, type TranscriptData } from './transcript';
 import type { TicketSettings } from './config.schemas';
 
@@ -238,10 +239,9 @@ export class SupportTicketsService {
   /** Ticket aus dem Dashboard für einen Discord-Benutzer öffnen (Recht ticket.create). */
   async openFromDashboard(actor: TicketActor, d: { categoryId: string; discordId: string; discordName?: string; guildId?: string }) {
     if (actor.userId) await this.perms.assert(actor.userId, 'ticket.create');
-    const ch = await this.discord.channels();
-    // aus Discord (/ticket mitglied:…): der Server, auf dem der Befehl kam – sonst der eingestellte Server
+    // der Discord-Server dieses Systems (ohne Einrichtung: der des Befehls bzw. der Ticket-Art)
     const cat = await this.config.category(d.categoryId);
-    const guildId = d.guildId ?? cat.guildId ?? (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
+    const guildId = homeGuild() ?? d.guildId ?? cat.guildId ?? undefined;
     if (!guildId) throw new AppError('VALIDATION_FAILED', 'Trage zuerst die Discord-Server-ID unter Einstellungen → Discord-Bot-Kanäle ein.');
     return this.open({ categoryId: d.categoryId, guildId, discordId: d.discordId, discordName: d.discordName || d.discordId, memberRoleIds: [] }, actor, true);
   }

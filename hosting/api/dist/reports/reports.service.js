@@ -23,7 +23,6 @@ const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
 const locks_service_1 = require("../locks/locks.service");
-const sync_service_1 = require("../multi-server/sync.service");
 const stable = (v) => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
 const hashContent = (c) => (0, node_crypto_1.createHash)('sha256').update(stable(c)).digest('hex');
 exports.hashContent = hashContent;
@@ -33,14 +32,12 @@ let ReportsService = class ReportsService {
     timeline;
     perms;
     locks;
-    sync;
-    constructor(prisma, audit, timeline, perms, locks, sync) {
+    constructor(prisma, audit, timeline, perms, locks) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.perms = perms;
         this.locks = locks;
-        this.sync = sync;
     }
     /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
     async canSeeAll(userId) { return (await this.perms.has(userId, 'reports.review')) || (await this.perms.has(userId, 'reports.approve')); }
@@ -116,11 +113,6 @@ let ReportsService = class ReportsService {
             const after = await tx.report.update({ where: { id }, data: { status: to, version: { increment: 1 } } });
             await this.timeline.add(tx, { entityType: 'Report', entityId: id, action: `report.${to.toLowerCase()}`, summary: `Bericht ${r.number}: ${(0, shared_1.statusLabel)(to)}`, actorId: userId });
             await this.audit.record(actor, { action: `report.${to.toLowerCase()}`, module: 'reports', entityType: 'Report', entityId: id, before: { status: r.status }, after: { status: to }, reason }, tx);
-            // eingereichte/geprüfte Berichte an verbundene Server (nur mit aktiver Freigabe „reports“; Kopie ist dort nur lesbar)
-            if (to !== 'DRAFT') {
-                const author = await tx.user.findUnique({ where: { id: after.authorId }, select: { displayName: true } });
-                await this.sync.emit(tx, { dataType: 'reports', eventType: `report.${to.toLowerCase()}`, recordId: id, version: after.version, payload: { number: after.number, type: after.type, title: after.title, status: after.status, author: author?.displayName ?? null, updatedAt: after.updatedAt.toISOString() } });
-            }
             if (to === 'APPROVED' || to === 'REJECTED' || to === 'UNDER_REVIEW') {
                 await tx.notification.create({ data: { userId: r.authorId, type: 'REPORT_REVIEW', title: `Bericht ${r.number}: ${(0, shared_1.statusLabel)(to)}`, body: reason, entityType: 'Report', entityId: id } });
             }
@@ -131,6 +123,6 @@ let ReportsService = class ReportsService {
 exports.ReportsService = ReportsService;
 exports.ReportsService = ReportsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, permission_service_1.PermissionService, locks_service_1.LocksService, sync_service_1.SyncService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, permission_service_1.PermissionService, locks_service_1.LocksService])
 ], ReportsService);
 //# sourceMappingURL=reports.service.js.map

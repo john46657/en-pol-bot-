@@ -1,4 +1,3 @@
-import { currentGuild, scopedKey } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppError } from '../common/errors';
@@ -12,9 +11,7 @@ export class StudioService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async setting<T>(key: string, fallback: T): Promise<T> {
-    const g = currentGuild(); // Server-eigener Wert (z. B. Name, Akzentfarbe) vor dem gemeinsamen
-    const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: scopedKey(key, g) } }) : null;
-    const v = (own ?? (await this.prisma.systemSetting.findUnique({ where: { key } })))?.value;
+    const v = (await this.prisma.systemSetting.findUnique({ where: { key } }))?.value;
     // gespeicherter Wert mit falschem Typ (altes Format, kaputt) → Standardwert statt Absturz im Dashboard
     return v !== undefined && v !== null && typeof v === typeof fallback && Array.isArray(v) === Array.isArray(fallback) ? v as T : fallback;
   }

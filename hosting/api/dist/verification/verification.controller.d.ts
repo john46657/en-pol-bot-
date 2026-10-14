@@ -4,13 +4,6 @@ import type { VerifyConfig } from '@enrp/shared';
 import { VerificationService } from './verification.service';
 import { RobloxOAuthService, type OAuthSettings } from './roblox-oauth.service';
 import type { Actor } from '../audit/audit.service';
-declare const guildQ: z.ZodObject<{
-    guildId: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    guildId?: string | undefined;
-}, {
-    guildId?: string | undefined;
-}>;
 declare const listQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
     page: z.ZodDefault<z.ZodNumber>;
@@ -58,15 +51,15 @@ export declare class VerificationController {
         allowCode: boolean;
         redirectUri: string;
     }>;
-    config(q: z.infer<typeof guildQ>): Promise<VerifyConfig & {
+    config(): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
-    save(a: Actor, q: z.infer<typeof guildQ>, b: VerifyConfig): Promise<VerifyConfig & {
+    save(a: Actor, b: VerifyConfig): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
-    panel(a: Actor, q: z.infer<typeof guildQ>): Promise<{
+    panel(a: Actor): Promise<{
         queued: boolean;
     }>;
     list(q: z.infer<typeof listQ>): Promise<{
@@ -105,9 +98,7 @@ export declare class BotVerificationController {
         enabled: boolean;
         allowCode: boolean;
     }>;
-    config(q: {
-        guildId: string;
-    }): Promise<VerifyConfig & {
+    config(): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;

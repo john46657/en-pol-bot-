@@ -21,30 +21,17 @@ export declare class QualificationsService {
     private readonly roblox;
     private readonly bans;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService, bans: ApplicationBansService);
-    /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
-    private keyOf;
     private read;
-    config(guildId?: string | null): Promise<QualificationConfig>;
+    config(): Promise<QualificationConfig>;
     /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
-    policeForm(guildId?: string | null): Promise<FormField[]>;
-    /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
-    setup(guildId?: string | null): Promise<{
+    policeForm(): Promise<FormField[]>;
+    /** Alles für „Setup“ an einem Ort. */
+    setup(): Promise<{
         policeForm: FormField[];
-        own: boolean;
         title: string;
         units: {
-            description: string;
             name: string;
-            questions: FormField[];
-            enabled: boolean;
             settings: {
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -63,30 +50,30 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 mode: "DM" | "WEB";
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 staffThreads: boolean;
+                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
+            description: string;
+            enabled: boolean;
             pingRoleIds: string[];
-            roleId?: string | undefined;
+            questions: FormField[];
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
         police: {
-            title: string;
-            description: string;
             name: string;
-            enabled: boolean;
             settings: {
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -105,10 +92,20 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 mode: "DM" | "WEB";
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 staffThreads: boolean;
+                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
+            description: string;
+            enabled: boolean;
+            title: string;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -118,23 +115,12 @@ export declare class QualificationsService {
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
         policeForm?: FormField[];
-    }, guildId?: string | null): Promise<{
+    }): Promise<{
         policeForm: FormField[];
-        own: boolean;
         title: string;
         units: {
-            description: string;
             name: string;
-            questions: FormField[];
-            enabled: boolean;
             settings: {
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -153,119 +139,30 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 mode: "DM" | "WEB";
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 staffThreads: boolean;
+                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
             key: string;
-            pingRoleIds: string[];
-            roleId?: string | undefined;
-            channelId?: string | undefined;
-            acceptedChannelId?: string | undefined;
-            deniedChannelId?: string | undefined;
-        }[];
-        police: {
-            title: string;
             description: string;
-            name: string;
             enabled: boolean;
-            settings: {
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
-                roles: {
-                    denied: string[];
-                    accepted: string[];
-                    required: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    restricted: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    acceptedRemove: string[];
-                    deniedRemove: string[];
-                    pending: string[];
-                    removeOnSubmit: string[];
-                    managers: string[];
-                };
-                mode: "DM" | "WEB";
-                staffThreads: boolean;
-                timeLimitMinutes: number;
-                onLeave: "DENY" | "NONE" | "WITHDRAW";
-            };
             pingRoleIds: string[];
-            channelId?: string | undefined;
-            acceptedChannelId?: string | undefined;
-            deniedChannelId?: string | undefined;
-        };
-        intro: string;
-    }>;
-    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
-    resetGuild(actor: Actor, guildId: string): Promise<{
-        policeForm: FormField[];
-        own: boolean;
-        title: string;
-        units: {
-            description: string;
-            name: string;
             questions: FormField[];
-            enabled: boolean;
-            settings: {
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
-                roles: {
-                    denied: string[];
-                    accepted: string[];
-                    required: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    restricted: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    acceptedRemove: string[];
-                    deniedRemove: string[];
-                    pending: string[];
-                    removeOnSubmit: string[];
-                    managers: string[];
-                };
-                mode: "DM" | "WEB";
-                staffThreads: boolean;
-                timeLimitMinutes: number;
-                onLeave: "DENY" | "NONE" | "WITHDRAW";
-            };
-            key: string;
-            pingRoleIds: string[];
-            roleId?: string | undefined;
             channelId?: string | undefined;
+            roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
         }[];
         police: {
-            title: string;
-            description: string;
             name: string;
-            enabled: boolean;
             settings: {
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -284,10 +181,20 @@ export declare class QualificationsService {
                     managers: string[];
                 };
                 mode: "DM" | "WEB";
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
                 staffThreads: boolean;
+                cooldownMinutes: number;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
+            description: string;
+            enabled: boolean;
+            title: string;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -317,46 +224,45 @@ export declare class QualificationsService {
     list(f: {
         unit?: string;
         status?: string;
-        guildId?: string;
     }): Promise<{
         linkedName: string | null;
         decidedByName: string | null;
         number: string;
         unit: string;
         id: string;
-        status: string;
         createdAt: Date;
         userId: string | null;
-        guildId: string | null;
         discordId: string;
-        discordName: string;
-        decidedAt: Date | null;
+        guildId: string | null;
+        unitName: string;
+        status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
+        discordName: string;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
         joinedAt: Date | null;
-        unitName: string;
     }[]>;
     get(id: string): Promise<{
         number: string;
         unit: string;
         id: string;
-        status: string;
         createdAt: Date;
         userId: string | null;
-        guildId: string | null;
         discordId: string;
-        discordName: string;
-        decidedAt: Date | null;
+        guildId: string | null;
+        unitName: string;
+        status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
+        discordName: string;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
         joinedAt: Date | null;
-        unitName: string;
     }>;
     /** Bewerbung endgültig löschen (qualifications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
     remove(actor: Actor, id: string): Promise<void>;
@@ -368,10 +274,10 @@ export declare class QualificationsService {
     history(discordId: string): Prisma.PrismaPromise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
-        decisionReason: string | null;
         unitName: string;
+        status: string;
+        decisionReason: string | null;
     }[]>;
     /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
     memberLeft(guildId: string, discordId: string): Promise<{

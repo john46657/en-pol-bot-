@@ -11,7 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
-import { ServersService } from '../multi-server/servers.service';
+import { HomeServerService } from '../server/home-server.service';
 
 const sf = z.string().regex(/^\d{15,25}$/);
 const guildsBody = z.object({ guilds: z.array(z.object({
@@ -59,13 +59,13 @@ export class DiscordController {
 @ApiTags('bot')
 @Controller('bot')
 export class BotController {
-  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService, private readonly servers: ServersService) {}
+  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService, private readonly home: HomeServerService) {}
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('link') @HttpCode(200)
   redeem(@Body(zodBody(redeem)) b: z.infer<typeof redeem>) { return this.d.redeem(b.code, b.discordId); }
   @BotService() @Get('config') config() { return this.d.channels(); }
   /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot); ohne Eintrag an. */
   @BotService() @Get('ghost-ping') async ghostPing() { const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.ghostPing' } }))?.value as { enabled?: boolean } | undefined; return { enabled: v?.enabled !== false }; }
-  @BotService() @Put('guilds') @HttpCode(204) async guilds(@Body(zodBody(guildsBody)) b: z.infer<typeof guildsBody>) { await this.d.saveGuilds(b.guilds); await this.servers.syncFromBot(b.guilds); }
+  @BotService() @Put('guilds') @HttpCode(204) async guilds(@Body(zodBody(guildsBody)) b: z.infer<typeof guildsBody>) { await this.d.saveGuilds(b.guilds); await this.home.refresh(); }
   @BotService() @Get('outbox') outbox(@Query(zodBody(outboxQ)) q: z.infer<typeof outboxQ>) { return this.d.pending(q.limit); }
   @BotService() @Post('outbox/:id/ack') @HttpCode(204)
   ack(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(ack)) b: z.infer<typeof ack>) { return this.d.ack(id, b.ok, b.error); }

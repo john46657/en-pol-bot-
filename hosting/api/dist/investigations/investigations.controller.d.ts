@@ -18,19 +18,19 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title: string;
     description?: string | undefined;
-    leadId?: string | undefined;
     persons?: {
         role: "SUSPECT" | "WITNESS" | "VICTIM" | "PERSON_OF_INTEREST";
         personId: string;
     }[] | undefined;
+    leadId?: string | undefined;
 }, {
     title: string;
     description?: string | undefined;
-    leadId?: string | undefined;
     persons?: {
         role: "SUSPECT" | "WITNESS" | "VICTIM" | "PERSON_OF_INTEREST";
         personId: string;
     }[] | undefined;
+    leadId?: string | undefined;
 }>;
 declare const addPerson: z.ZodObject<{
     personId: z.ZodString;
@@ -74,14 +74,14 @@ export declare class InvestigationsController {
     constructor(i: InvestigationsService);
     list(q: z.infer<typeof listQ>): Promise<{
         items: {
-            serverId: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            title: string;
             description: string | null;
+            status: string;
+            title: string;
             caseNumber: string;
             leadId: string | null;
         }[];
@@ -91,14 +91,14 @@ export declare class InvestigationsController {
     }>;
     get(id: string): Promise<{
         investigation: {
-            serverId: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            title: string;
             description: string | null;
+            status: string;
+            title: string;
             caseNumber: string;
             leadId: string | null;
         };
@@ -110,11 +110,11 @@ export declare class InvestigationsController {
         } & {
             role: string;
             id: string;
-            createdAt: Date;
-            personId: string | null;
-            vehicleId: string | null;
-            entityId: string;
             entityType: string;
+            entityId: string;
+            createdAt: Date;
+            vehicleId: string | null;
+            personId: string | null;
         })[];
         evidence: {
             number: string;
@@ -124,50 +124,50 @@ export declare class InvestigationsController {
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
-            entityId: string;
-            entityType: string;
-            summary: string;
             action: string;
+            entityType: string;
+            entityId: string;
+            createdAt: Date;
+            summary: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        title: string;
         description: string | null;
+        status: string;
+        title: string;
         caseNumber: string;
         leadId: string | null;
     }>;
     addPerson(a: Actor, id: string, b: z.infer<typeof addPerson>): Promise<void>;
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        title: string;
         description: string | null;
+        status: string;
+        title: string;
         caseNumber: string;
         leadId: string | null;
     }>;
     close(a: Actor, id: string, b: {
         reason: string;
     }): Promise<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        title: string;
         description: string | null;
+        status: string;
+        title: string;
         caseNumber: string;
         leadId: string | null;
     }>;

@@ -17,8 +17,7 @@ const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const discord_service_1 = require("../discord/discord.service");
 const shifts_1 = require("./shifts");
-const guild_context_1 = require("../common/guild-context");
-const sync_service_1 = require("../multi-server/sync.service");
+const personnel_ref_1 = require("../common/personnel-ref");
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 let DutyService = class DutyService {
     prisma;
@@ -26,14 +25,12 @@ let DutyService = class DutyService {
     rt;
     discord;
     shifts;
-    sync;
-    constructor(prisma, audit, rt, discord, shifts, sync) {
+    constructor(prisma, audit, rt, discord, shifts) {
         this.prisma = prisma;
         this.audit = audit;
         this.rt = rt;
         this.discord = discord;
         this.shifts = shifts;
-        this.sync = sync;
     }
     async setStatus(actor, status, d, targetUserId) {
         const userId = targetUserId ?? actor.userId;
@@ -57,15 +54,7 @@ let DutyService = class DutyService {
             let created = null;
             if (status !== 'OFF_DUTY') {
                 const pers = await tx.personnel.findFirst({ where: { userId } });
-                // servereigene Dienstzeit: Akten-Bereich des Servers (bzw. der gemeinsamen Shift-Log-Gruppe); ohne Server gemeinsamer Bestand
-                created = await tx.dutySession.create({ data: { userId, serverId: (0, guild_context_1.recordSpace)() ?? null, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
-            }
-            // Dienststatus an verbundene Server (nur bei aktiver Freigabe „unit_status“ bzw. „team_overview“; Outbox in derselben Transaktion)
-            if ((0, guild_context_1.currentGuild)()) {
-                const who = await tx.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { callsign: true, rank: true } } } });
-                const payload = { userId, name: who?.displayName ?? '—', callsign: who?.personnel[0]?.callsign ?? null, rank: who?.personnel[0]?.rank ?? null, status, since: at.toISOString() };
-                for (const dataType of ['unit_status', 'team_overview'])
-                    await this.sync.emit(tx, { dataType, eventType: 'duty.status', recordId: userId, version: (0, sync_service_1.versionAt)(at), payload });
+                created = await tx.dutySession.create({ data: { userId, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
             }
             await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
             return created ?? { status: 'OFF_DUTY' };
@@ -91,7 +80,7 @@ let DutyService = class DutyService {
             if (!ch.duty && !roles && !shift?.channelId)
                 return;
             const [user, link] = await Promise.all([
-                this.prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { callsign: true, rank: true } } } }),
+                this.prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { ...(0, personnel_ref_1.onePersonnel)(), select: { callsign: true, rank: true } } } }),
                 this.prisma.discordLink.findUnique({ where: { userId } }),
             ]);
             const by = actor.userId && actor.userId !== userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
@@ -159,8 +148,8 @@ let DutyService = class DutyService {
     }
     team() {
         return this.prisma.dutySession.findMany({
-            where: { endedAt: null, ...(0, guild_context_1.recordWhere)() },
-            include: { user: { select: { id: true, displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { rank: true, callsign: true } } } } },
+            where: { endedAt: null },
+            include: { user: { select: { id: true, displayName: true, personnel: { ...(0, personnel_ref_1.onePersonnel)(), select: { rank: true, callsign: true } } } } },
             orderBy: { startedAt: 'asc' },
         });
     }
@@ -173,8 +162,8 @@ let DutyService = class DutyService {
         const now = new Date();
         const since = new Date(now.getTime() - days * 86_400_000);
         const sessions = await this.prisma.dutySession.findMany({
-            where: { ...(userId ? { userId } : {}), ...(0, guild_context_1.recordWhere)(), OR: [{ endedAt: null }, { endedAt: { gt: since } }] },
-            include: { user: { select: { displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { rank: true, callsign: true } } } } },
+            where: { ...(userId ? { userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: since } }] },
+            include: { user: { select: { displayName: true, personnel: { ...(0, personnel_ref_1.onePersonnel)(), select: { rank: true, callsign: true } } } } },
         });
         const rows = new Map();
         for (const s of sessions) {
@@ -202,8 +191,8 @@ let DutyService = class DutyService {
         const since = new Date(now.getTime() - f.days * 86_400_000);
         // Sitzungen etwas vor dem Zeitraum mitnehmen, damit Schichten über die Grenze vollständig sind
         const sessions = await this.prisma.dutySession.findMany({
-            where: { ...(f.userId ? { userId: f.userId } : {}), ...(0, guild_context_1.recordWhere)(), OR: [{ endedAt: null }, { endedAt: { gt: new Date(since.getTime() - 86_400_000) } }] },
-            include: { user: { select: { displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { rank: true, callsign: true } } } } },
+            where: { ...(f.userId ? { userId: f.userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: new Date(since.getTime() - 86_400_000) } }] },
+            include: { user: { select: { displayName: true, personnel: { ...(0, personnel_ref_1.onePersonnel)(), select: { rank: true, callsign: true } } } } },
             orderBy: [{ userId: 'asc' }, { startedAt: 'asc' }],
         });
         const groups = [];
@@ -258,7 +247,7 @@ let DutyService = class DutyService {
     async overview() {
         const [people, open, units, assignments, cfg] = await Promise.all([
             this.prisma.personnel.findMany({ where: { employmentStatus: 'ACTIVE' }, include: { user: { select: { id: true, displayName: true, active: true } } }, orderBy: { callsign: 'asc' } }),
-            this.prisma.dutySession.findMany({ where: { endedAt: null, ...(0, guild_context_1.recordWhere)() } }),
+            this.prisma.dutySession.findMany({ where: { endedAt: null } }),
             this.prisma.unit.findMany({ include: { members: true } }),
             this.prisma.incidentUnit.findMany({ where: { clearedAt: null, incident: { status: { notIn: ['CLOSED', 'CANCELLED'] } } }, include: { incident: { select: { id: true, number: true, title: true, status: true, priority: true } } } }),
             this.shifts.config(),
@@ -287,6 +276,6 @@ let DutyService = class DutyService {
 exports.DutyService = DutyService;
 exports.DutyService = DutyService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, shifts_1.ShiftsService, sync_service_1.SyncService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, shifts_1.ShiftsService])
 ], DutyService);
 //# sourceMappingURL=duty.service.js.map

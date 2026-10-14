@@ -6,13 +6,12 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { DiscordService } from '../discord/discord.service';
 import { ShiftsService, type ShiftsConfig, type ShiftType } from './shifts';
-import { currentGuild, recordSpace, recordWhere, onePersonnel } from '../common/guild-context';
-import { SyncService, versionAt } from '../multi-server/sync.service';
+import { onePersonnel } from '../common/personnel-ref';
 
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 @Injectable()
 export class DutyService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly shifts: ShiftsService, private readonly sync: SyncService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly shifts: ShiftsService) {}
 
   async setStatus(actor: Actor, status: DutyStatus, d: { unitId?: string; callsign?: string; shiftType?: string }, targetUserId?: string) {
     const userId = targetUserId ?? actor.userId!;
@@ -32,14 +31,7 @@ export class DutyService {
       let created = null;
       if (status !== 'OFF_DUTY') {
         const pers = await tx.personnel.findFirst({ where: { userId } });
-        // servereigene Dienstzeit: Akten-Bereich des Servers (bzw. der gemeinsamen Shift-Log-Gruppe); ohne Server gemeinsamer Bestand
-        created = await tx.dutySession.create({ data: { userId, serverId: recordSpace() ?? null, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
-      }
-      // Dienststatus an verbundene Server (nur bei aktiver Freigabe „unit_status“ bzw. „team_overview“; Outbox in derselben Transaktion)
-      if (currentGuild()) {
-        const who = await tx.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { ...onePersonnel(), select: { callsign: true, rank: true } } } });
-        const payload = { userId, name: who?.displayName ?? '—', callsign: who?.personnel[0]?.callsign ?? null, rank: who?.personnel[0]?.rank ?? null, status, since: at.toISOString() };
-        for (const dataType of ['unit_status', 'team_overview']) await this.sync.emit(tx, { dataType, eventType: 'duty.status', recordId: userId, version: versionAt(at), payload });
+        created = await tx.dutySession.create({ data: { userId, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
       }
       await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
       return created ?? { status: 'OFF_DUTY' };
@@ -129,7 +121,7 @@ export class DutyService {
 
   team() {
     return this.prisma.dutySession.findMany({
-      where: { endedAt: null, ...recordWhere() },
+      where: { endedAt: null },
       include: { user: { select: { id: true, displayName: true, personnel: { ...onePersonnel(), select: { rank: true, callsign: true } } } } },
       orderBy: { startedAt: 'asc' },
     });
@@ -145,7 +137,7 @@ export class DutyService {
     const now = new Date();
     const since = new Date(now.getTime() - days * 86_400_000);
     const sessions = await this.prisma.dutySession.findMany({
-      where: { ...(userId ? { userId } : {}), ...recordWhere(), OR: [{ endedAt: null }, { endedAt: { gt: since } }] },
+      where: { ...(userId ? { userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: since } }] },
       include: { user: { select: { displayName: true, personnel: { ...onePersonnel(), select: { rank: true, callsign: true } } } } },
     });
     const rows = new Map<string, { userId: string; name: string; rank: string | null; callsign: string | null; minutes: number; byStatus: Record<string, number>; sessions: number }>();
@@ -172,7 +164,7 @@ export class DutyService {
     const since = new Date(now.getTime() - f.days * 86_400_000);
     // Sitzungen etwas vor dem Zeitraum mitnehmen, damit Schichten über die Grenze vollständig sind
     const sessions = await this.prisma.dutySession.findMany({
-      where: { ...(f.userId ? { userId: f.userId } : {}), ...recordWhere(), OR: [{ endedAt: null }, { endedAt: { gt: new Date(since.getTime() - 86_400_000) } }] },
+      where: { ...(f.userId ? { userId: f.userId } : {}), OR: [{ endedAt: null }, { endedAt: { gt: new Date(since.getTime() - 86_400_000) } }] },
       include: { user: { select: { displayName: true, personnel: { ...onePersonnel(), select: { rank: true, callsign: true } } } } },
       orderBy: [{ userId: 'asc' }, { startedAt: 'asc' }],
     });
@@ -224,7 +216,7 @@ export class DutyService {
   async overview() {
     const [people, open, units, assignments, cfg] = await Promise.all([
       this.prisma.personnel.findMany({ where: { employmentStatus: 'ACTIVE' }, include: { user: { select: { id: true, displayName: true, active: true } } }, orderBy: { callsign: 'asc' } }),
-      this.prisma.dutySession.findMany({ where: { endedAt: null, ...recordWhere() } }),
+      this.prisma.dutySession.findMany({ where: { endedAt: null } }),
       this.prisma.unit.findMany({ include: { members: true } }),
       this.prisma.incidentUnit.findMany({ where: { clearedAt: null, incident: { status: { notIn: ['CLOSED', 'CANCELLED'] } } }, include: { incident: { select: { id: true, number: true, title: true, status: true, priority: true } } } }),
       this.shifts.config(),

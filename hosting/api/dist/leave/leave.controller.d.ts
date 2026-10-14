@@ -13,16 +13,16 @@ declare const requestBody: z.ZodObject<{
     reason: string;
     startsAt: Date;
     endsAt: Date;
-    type?: string | undefined;
     guildId?: string | undefined;
+    type?: string | undefined;
     comment?: string | undefined;
     forDiscordId?: string | undefined;
 }, {
     reason: string;
     startsAt: Date;
     endsAt: Date;
-    type?: string | undefined;
     guildId?: string | undefined;
+    type?: string | undefined;
     comment?: string | undefined;
     forDiscordId?: string | undefined;
 }>;
@@ -31,12 +31,12 @@ declare const listQ: z.ZodObject<{
     mine: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
     discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
     discordId?: string | undefined;
+    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
     mine?: "true" | "false" | undefined;
 }, {
-    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
     discordId?: string | undefined;
+    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
     mine?: "true" | "false" | undefined;
 }>;
 declare const decision: z.ZodObject<{

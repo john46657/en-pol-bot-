@@ -4,6 +4,8 @@ import { type BackupConfig, type BackupPart, type BackupRestoreResult, type Disc
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
+export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung';
+export declare const setAfterRestore: (fn: (() => Promise<unknown>) | null) => void;
 /**
  * Backups: Dashboard-Daten (alle Tabellen als komprimierte JSON-Datei im Speicherordner, herunterladbar und wieder einspielbar)
  * und Discord-Server (wie Xenon – der Bot liest Rollen/Kanäle/Rechte/Einstellungen und stellt sie wieder her).
@@ -24,16 +26,16 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         discordAuto: boolean;
         keep: number;
     }>;
-    /** Täglich: Daten-Backup und (falls an) Discord-Backup je Server; alte automatische Backups aufräumen. */
+    /** Täglich: Daten-Backup und (falls an) Discord-Backup; alte automatische Backups aufräumen. */
     autoTick(now?: Date): Promise<void>;
     listData(): Promise<{
         name: string;
-        kind: "auto" | "manuell" | "vor-wiederherstellung";
+        kind: DataBackupKind;
         size: number;
         createdAt: string;
     }[]>;
     /** Alle Tabellen als JSON (gzip) in den Speicherordner; automatische werden auf „keep“ begrenzt. */
-    createData(actor: Actor | null, kind?: 'auto' | 'manuell' | 'vor-wiederherstellung'): Promise<{
+    createData(actor: Actor | null, kind?: DataBackupKind): Promise<{
         name: string;
         rows: number;
         size: number;
@@ -55,50 +57,50 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
     listDiscord(guildId?: string): Prisma.PrismaPromise<{
         error: string | null;
         id: string;
-        status: string;
-        createdById: string | null;
         createdAt: Date;
-        guildId: string;
         name: string;
+        guildId: string;
+        createdById: string | null;
+        status: string;
         guildName: string;
-        auto: boolean;
         stats: Prisma.JsonValue;
+        auto: boolean;
         restoredAt: Date | null;
         restoreResult: Prisma.JsonValue;
     }[]>;
     getDiscord(id: string): Promise<{
         error: string | null;
-        id: string;
-        status: string;
-        createdById: string | null;
-        createdAt: Date;
-        guildId: string;
-        name: string;
         data: Prisma.JsonValue | null;
+        id: string;
+        createdAt: Date;
+        name: string;
+        guildId: string;
+        createdById: string | null;
+        status: string;
         guildName: string;
-        auto: boolean;
         stats: Prisma.JsonValue | null;
+        auto: boolean;
         restoredAt: Date | null;
         restoreResult: Prisma.JsonValue | null;
     }>;
     /** Backup anlegen – der Bot liest den Server aus und schickt die Daten (Status PENDING → READY). */
     createDiscord(actor: Actor | null, guildId: string, name?: string, auto?: boolean): Promise<{
         error: string | null;
-        id: string;
-        status: string;
-        createdById: string | null;
-        createdAt: Date;
-        guildId: string;
-        name: string;
         data: Prisma.JsonValue | null;
+        id: string;
+        createdAt: Date;
+        name: string;
+        guildId: string;
+        createdById: string | null;
+        status: string;
         guildName: string;
-        auto: boolean;
         stats: Prisma.JsonValue | null;
+        auto: boolean;
         restoredAt: Date | null;
         restoreResult: Prisma.JsonValue | null;
     }>;
     deleteDiscord(actor: Actor, id: string): Promise<void>;
-    /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). Ziel kann ein anderer Server sein. */
+    /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). */
     restoreDiscord(actor: Actor, id: string, d: {
         guildId?: string;
         parts: BackupPart[];

@@ -20,9 +20,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
-        title: string;
-        enabled: boolean;
         channelId: string | null;
+        enabled: boolean;
+        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -30,9 +30,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
-        enabled?: boolean | undefined;
         channelId?: string | null | undefined;
+        enabled?: boolean | undefined;
+        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -62,9 +62,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
-        title: string;
-        enabled: boolean;
         channelId: string | null;
+        enabled: boolean;
+        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -72,9 +72,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
-        enabled?: boolean | undefined;
         channelId?: string | null | undefined;
+        enabled?: boolean | undefined;
+        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -88,9 +88,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome: {
         message: string;
         color: string;
-        title: string;
-        enabled: boolean;
         channelId: string | null;
+        enabled: boolean;
+        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -100,9 +100,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye: {
         message: string;
         color: string;
-        title: string;
-        enabled: boolean;
         channelId: string | null;
+        enabled: boolean;
+        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -116,9 +116,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome?: {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
-        enabled?: boolean | undefined;
         channelId?: string | null | undefined;
+        enabled?: boolean | undefined;
+        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -128,9 +128,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye?: {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
-        enabled?: boolean | undefined;
         channelId?: string | null | undefined;
+        enabled?: boolean | undefined;
+        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -144,9 +144,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome: {
         message: string;
         color: string;
-        title: string;
-        enabled: boolean;
         channelId: string | null;
+        enabled: boolean;
+        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -156,9 +156,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye: {
         message: string;
         color: string;
-        title: string;
-        enabled: boolean;
         channelId: string | null;
+        enabled: boolean;
+        title: string;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -172,9 +172,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome?: {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
-        enabled?: boolean | undefined;
         channelId?: string | null | undefined;
+        enabled?: boolean | undefined;
+        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -184,16 +184,16 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye?: {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
-        enabled?: boolean | undefined;
         channelId?: string | null | undefined;
+        enabled?: boolean | undefined;
+        title?: string | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
         imageMediaId?: string | undefined;
     } | undefined;
 }>;
-/** Willkommen & Abschied je Discord-Server (`welcome.config@<guildId>`, sonst die gemeinsame Grundeinstellung) und was beim Verlassen passiert. */
+/** Willkommen & Abschied (`welcome.config`) und was beim Verlassen passiert. */
 export declare class WelcomeService {
     private readonly prisma;
     private readonly audit;
@@ -203,16 +203,10 @@ export declare class WelcomeService {
     private readonly media;
     private readonly log;
     constructor(prisma: PrismaService, audit: AuditService, applications: ApplicationsService, qualifications: QualificationsService, tickets: SupportTicketsService, media: MediaService);
-    private keyOf;
-    /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
-    config(guildId?: string | null): Promise<WelcomeConfig & {
+    config(): Promise<WelcomeConfig & {
         own: boolean;
     }>;
-    save(actor: Actor, input: WelcomeConfig, guildId?: string | null): Promise<WelcomeConfig & {
-        own: boolean;
-    }>;
-    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame. */
-    reset(actor: Actor, guildId: string): Promise<WelcomeConfig & {
+    save(actor: Actor, input: WelcomeConfig): Promise<WelcomeConfig & {
         own: boolean;
     }>;
     /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
@@ -220,7 +214,7 @@ export declare class WelcomeService {
      * Test-Nachricht: der Bot schickt die gespeicherte Willkommens-/Abschiedsnachricht bzw. DM so, als wärst du gerade
      * beigetreten/gegangen (mit deinem Discord-Profil) – ohne Rollen oder Aktionen beim Verlassen.
      */
-    test(actor: Actor, guildId: string | null, kind: 'welcome' | 'goodbye' | 'dm'): Promise<{
+    test(actor: Actor, kind: 'welcome' | 'goodbye' | 'dm'): Promise<{
         queued: boolean;
     }>;
     banner(id: string): Promise<{

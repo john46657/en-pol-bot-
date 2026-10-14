@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { ShiftsService } from './shifts';
-import { SyncService } from '../multi-server/sync.service';
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 export declare class DutyService {
     private readonly prisma;
@@ -12,22 +11,21 @@ export declare class DutyService {
     private readonly rt;
     private readonly discord;
     private readonly shifts;
-    private readonly sync;
-    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService, shifts: ShiftsService, sync: SyncService);
+    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService, shifts: ShiftsService);
     setStatus(actor: Actor, status: DutyStatus, d: {
         unitId?: string;
         callsign?: string;
         shiftType?: string;
     }, targetUserId?: string): Promise<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         userId: string;
-        unitId: string | null;
-        callsign: string | null;
-        shiftType: string | null;
-        startedAt: Date;
+        status: string;
         endedAt: Date | null;
+        callsign: string | null;
+        startedAt: Date;
+        unitId: string | null;
+        shiftType: string | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {
@@ -57,35 +55,35 @@ export declare class DutyService {
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
-                callsign: string | null;
                 rank: string | null;
+                callsign: string | null;
             }[];
             id: string;
             displayName: string;
         };
     } & {
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         userId: string;
-        unitId: string | null;
-        callsign: string | null;
-        shiftType: string | null;
-        startedAt: Date;
+        status: string;
         endedAt: Date | null;
+        callsign: string | null;
+        startedAt: Date;
+        unitId: string | null;
+        shiftType: string | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     })[]>;
     mine(userId: string): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         userId: string;
-        unitId: string | null;
-        callsign: string | null;
-        shiftType: string | null;
-        startedAt: Date;
+        status: string;
         endedAt: Date | null;
+        callsign: string | null;
+        startedAt: Date;
+        unitId: string | null;
+        shiftType: string | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
@@ -155,9 +153,9 @@ export declare class DutyService {
         currentIncident: {
             number: string;
             id: string;
+            priority: string;
             status: string;
             title: string;
-            priority: string;
         } | null;
     }[]>;
 }

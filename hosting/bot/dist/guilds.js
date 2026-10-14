@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.guildInfo = guildInfo;
 exports.startGuildDirectory = startGuildDirectory;
 const discord_js_1 = require("discord.js");
+const home_1 = require("./home");
 const kind = (t) => t === discord_js_1.ChannelType.GuildText || t === discord_js_1.ChannelType.GuildAnnouncement ? 'text' : t === discord_js_1.ChannelType.GuildCategory ? 'category' : t === discord_js_1.ChannelType.GuildVoice || t === discord_js_1.ChannelType.GuildStageVoice ? 'voice' : 'other';
 function guildInfo(g) {
     return {
@@ -14,11 +15,11 @@ function guildInfo(g) {
             .map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.color, position: r.position })),
     };
 }
-/** Meldet alle Server des Bots an das System (beim Start, bei Änderungen und regelmäßig). */
+/** Meldet den Discord-Server des Systems an das System (beim Start, bei Änderungen und regelmäßig). */
 function startGuildDirectory(client, api, log = console.log) {
     let timer;
     const push = async () => {
-        const guilds = [...client().guilds.cache.values()].slice(0, 50).map(guildInfo);
+        const guilds = (0, home_1.ownGuilds)(client()).slice(0, 50).map(guildInfo);
         await api.service('PUT', '/bot/guilds', { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
     };
     // mehrere Änderungen kurz hintereinander nur einmal melden

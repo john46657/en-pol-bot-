@@ -20,14 +20,14 @@ declare const createUser: z.ZodObject<{
     username: string;
     displayName: string;
     password: string;
-    roleIds?: string[] | undefined;
     email?: string | undefined;
+    roleIds?: string[] | undefined;
 }, {
     username: string;
     displayName: string;
     password: string;
-    roleIds?: string[] | undefined;
     email?: string | undefined;
+    roleIds?: string[] | undefined;
 }>;
 declare const roblox: z.ZodObject<{
     robloxUserId: z.ZodNullable<z.ZodString>;
@@ -76,23 +76,23 @@ export declare class UsersController {
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             id: string;
-            robloxUserId: string | null;
-            robloxUsername: string | null;
             createdAt: Date;
-            updatedAt: Date;
-            active: boolean;
             username: string;
-            displayName: string;
             email: string | null;
+            robloxUserId: string | null;
+            displayName: string;
+            robloxUsername: string | null;
             robloxStatus: string;
             robloxVerifiedAt: Date | null;
+            active: boolean;
             lastLogin: Date | null;
             totpEnabledAt: Date | null;
+            updatedAt: Date;
             roles: {
                 role: {
                     id: string;
-                    guildId: string | null;
                     name: string;
+                    guildId: string | null;
                 };
             }[];
             overrides: {
@@ -112,23 +112,23 @@ export declare class UsersController {
             linkedAt: Date;
         } | null;
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
+        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
+        updatedAt: Date;
         roles: {
             role: {
                 id: string;
-                guildId: string | null;
                 name: string;
+                guildId: string | null;
             };
         }[];
         overrides: {
@@ -140,23 +140,23 @@ export declare class UsersController {
     }>;
     create(a: Actor, b: z.infer<typeof createUser>): Promise<{
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
+        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
+        updatedAt: Date;
         roles: {
             role: {
                 id: string;
-                guildId: string | null;
                 name: string;
+                guildId: string | null;
             };
         }[];
         overrides: {
@@ -168,23 +168,23 @@ export declare class UsersController {
     }>;
     setRoblox(a: Actor, id: string, b: z.infer<typeof roblox>): Promise<{
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
+        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
+        updatedAt: Date;
         roles: {
             role: {
                 id: string;
-                guildId: string | null;
                 name: string;
+                guildId: string | null;
             };
         }[];
         overrides: {
@@ -196,23 +196,23 @@ export declare class UsersController {
     }>;
     setActive(a: Actor, id: string, b: z.infer<typeof active>): Promise<{
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
+        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
+        updatedAt: Date;
         roles: {
             role: {
                 id: string;
-                guildId: string | null;
                 name: string;
+                guildId: string | null;
             };
         }[];
         overrides: {
@@ -227,23 +227,23 @@ export declare class UsersController {
     remove(a: Actor, id: string): Promise<void>;
     setName(a: Actor, id: string, b: z.infer<typeof nameBody>): Promise<{
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
+        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
+        updatedAt: Date;
         roles: {
             role: {
                 id: string;
-                guildId: string | null;
                 name: string;
+                guildId: string | null;
             };
         }[];
         overrides: {
@@ -255,23 +255,23 @@ export declare class UsersController {
     }>;
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
+        active: boolean;
         lastLogin: Date | null;
         totpEnabledAt: Date | null;
+        updatedAt: Date;
         roles: {
             role: {
                 id: string;
-                guildId: string | null;
                 name: string;
+                guildId: string | null;
             };
         }[];
         overrides: {
@@ -283,13 +283,13 @@ export declare class UsersController {
     }>;
     setOverride(a: Actor, id: string, b: z.infer<typeof override>): Promise<{
         id: string;
-        createdById: string | null;
-        createdAt: Date;
         reason: string | null;
+        createdAt: Date;
         userId: string;
         guildId: string | null;
         permissionKey: string;
         effect: string;
+        createdById: string | null;
     }>;
     removeOverride(a: Actor, id: string, p: string): Promise<void>;
 }

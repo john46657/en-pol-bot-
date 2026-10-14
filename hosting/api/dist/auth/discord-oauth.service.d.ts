@@ -64,8 +64,6 @@ export declare class DiscordOAuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
-            servers: string[];
-            globalAdmin: boolean;
         };
         kind: "login";
         guildName?: undefined;

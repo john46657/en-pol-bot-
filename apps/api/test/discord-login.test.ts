@@ -111,12 +111,10 @@ describe('login with Discord', () => {
     expect((await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [{ discordRoleId: ROLE_POLICE, role: 'Police Member' }] } })).status).toBe(200);
     discord.members.set(discord.user.id, [ROLE_POLICE]);
     const a = await discordLogin();
-    // über Discord vergebene Rollen gelten nur auf dem Server, auf dem die Discord-Rolle besteht
-    expect((await a.agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).toEqual(['Police Member']);
-    expect((await a.agent.get('/api/v1/auth/me')).body.roles).toEqual([]);
+    expect((await a.agent.get('/api/v1/auth/me')).body.roles).toEqual(['Police Member']);
     discord.members.set(discord.user.id, []);
     const b = await discordLogin();
-    expect((await b.agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).toEqual([]);
+    expect((await b.agent.get('/api/v1/auth/me')).body.roles).toEqual([]);
     const oscar = await prisma.user.findUniqueOrThrow({ where: { username: 'oscar.officer' } });
     expect(await prisma.auditLog.count({ where: { action: 'auth.discord.roles_synced', entityId: oscar.id } })).toBe(2);
   });

@@ -66,19 +66,17 @@ export declare class DiscordService {
     /** Auflösung Discord-ID → aktiver Benutzer (für die Bot-Authentifizierung). */
     resolveUser(discordId: string): Promise<{
         id: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        active: boolean;
         username: string;
-        displayName: string;
         email: string | null;
+        robloxUserId: string | null;
+        displayName: string;
         passwordHash: string;
+        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         robloxVerifiedById: string | null;
+        active: boolean;
         failedLogins: number;
         lockedUntil: Date | null;
         lastLogin: Date | null;
@@ -87,6 +85,8 @@ export declare class DiscordService {
         totpEnabledAt: Date | null;
         totpLastStep: number | null;
         totpRecovery: string[];
+        updatedAt: Date;
+        version: number;
     } | null>;
     channels(): Promise<DiscordChannels>;
     /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
@@ -114,7 +114,10 @@ export declare class DiscordService {
         queued: boolean;
         linked: boolean;
     }>;
-    /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
+    /**
+     * Der Discord-Server dieses Systems mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im
+     * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
+     */
     guilds(): Promise<DiscordGuildInfo[]>;
     saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;
     /**
@@ -137,10 +140,10 @@ export declare class DiscordService {
         id: string;
         createdAt: Date;
         type: string;
-        lastError: string | null;
         channelKey: string;
         payload: Prisma.JsonValue;
         attempts: number;
+        lastError: string | null;
         sentAt: Date | null;
     }[]>;
     ack(id: string, ok: boolean, error?: string): Promise<void>;

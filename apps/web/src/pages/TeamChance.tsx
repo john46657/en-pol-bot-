@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { onSaved, useAutosaveDraft } from '../lib/autosave';
-import { guildName, useGuilds, useServer } from '../lib/guilds';
 import { fmt } from '../components/ui';
 import { Badge, Card, ErrorState, Field, Input, PageHeader, SkeletonRows, Textarea } from '../components/ui';
 import { ChannelPicker, RolePicker } from '../components/DiscordPickers';
@@ -38,29 +37,26 @@ export function TeamChanceSummary() {
 const toLocal = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : '');
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 
-/** 📣 Team-Chance: Bewerbungsphase fürs Team öffnen/schließen – je Server; Änderungen werden automatisch gespeichert. */
+/** 📣 Team-Chance: Bewerbungsphase fürs Team öffnen/schließen; Änderungen werden automatisch gespeichert. */
 export function TeamChance() {
-  const [server] = useServer();
   const q = useTeamChance();
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (!q.data) return <SkeletonRows />;
-  // je Server ein eigener Entwurf (Server getrennt)
-  return <TeamChanceEditor key={server} s={q.data} server={server} />;
+  return <TeamChanceEditor s={q.data} />;
 }
 
-function TeamChanceEditor({ s: initial, server }: { s: Status; server: string }) {
+function TeamChanceEditor({ s: initial }: { s: Status }) {
   const { can } = useAuth();
   const qc = useQueryClient();
   const s = useTeamChance().data ?? initial; // Status immer aktuell (nach dem Speichern neu geladen)
   useEffect(() => onSaved('teamchance:', () => void qc.invalidateQueries({ queryKey: ['teamchance'] })), [qc]);
-  const guilds = useGuilds();
   const manage = can('teamchance.manage');
   const [d, setD] = useState<TeamChanceCfg>({ open: initial.open, title: initial.title, description: initial.description, opensAt: initial.opensAt, closesAt: initial.closesAt, slots: initial.slots, channelId: initial.channelId, pingRoleIds: initial.pingRoleIds, restrictApplications: initial.restrictApplications });
-  useAutosaveDraft(manage ? `teamchance:${server || 'all'}` : null, d, (c) => (c.title.trim() && (!c.opensAt || !c.closesAt || c.opensAt < c.closesAt) ? { method: 'PUT', path: '/teamchance', body: c, label: 'Team-Chance' } : null), 800);
+  useAutosaveDraft(manage ? 'teamchance:config' : null, d, (c) => (c.title.trim() && (!c.opensAt || !c.closesAt || c.opensAt < c.closesAt) ? { method: 'PUT', path: '/teamchance', body: c, label: 'Team-Chance' } : null), 800);
   const set = (p: Partial<TeamChanceCfg>) => setD({ ...d, ...p });
   return (
     <>
-      <PageHeader title="📣 Team-Chance" subtitle={`Bewerbungsphase für das Team${server ? ` – ${guildName(guilds.data, server)}` : ''}. ${manage ? 'Änderungen werden automatisch gespeichert.' : ''} In Discord: /teamchance`} />
+      <PageHeader title="📣 Team-Chance" subtitle={`Bewerbungsphase für das Team. ${manage ? 'Änderungen werden automatisch gespeichert.' : ''} In Discord: /teamchance`} />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card title="Einstellungen">
           <div className="grid gap-3">

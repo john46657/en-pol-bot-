@@ -89,8 +89,8 @@ export declare class FleetController {
                 unitId: string | null;
                 unit: {
                     id: string;
-                    callsign: string;
                     name: string | null;
+                    callsign: string;
                 } | null;
                 status: string;
                 internalCode: string | null;
@@ -103,11 +103,11 @@ export declare class FleetController {
         servers: {
             vehiclesEnabled: boolean;
             id: string;
-            status: string;
             name: string;
+            lastError: string | null;
+            status: string;
             features: string[];
             lastSyncAt: Date | null;
-            lastError: string | null;
         }[];
     }>;
     get(a: Actor, id: string): Promise<{
@@ -129,11 +129,11 @@ export declare class FleetController {
             actorName: string | null;
             id: string;
             createdAt: Date;
+            text: string;
+            actorId: string | null;
             incidentId: string | null;
             vehicleId: string;
             kind: string;
-            text: string;
-            actorId: string | null;
         }[];
         id: string;
         erlcServerId: string;
@@ -185,8 +185,8 @@ export declare class FleetController {
             unitId: string | null;
             unit: {
                 id: string;
-                callsign: string;
                 name: string | null;
+                callsign: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -218,11 +218,11 @@ export declare class FleetController {
             actorName: string | null;
             id: string;
             createdAt: Date;
+            text: string;
+            actorId: string | null;
             incidentId: string | null;
             vehicleId: string;
             kind: string;
-            text: string;
-            actorId: string | null;
         }[];
         id: string;
         erlcServerId: string;
@@ -274,8 +274,8 @@ export declare class FleetController {
             unitId: string | null;
             unit: {
                 id: string;
-                callsign: string;
                 name: string | null;
+                callsign: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -297,16 +297,16 @@ export declare class FleetController {
         liveCount: number;
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string;
-        description: string | null;
-        active: boolean;
         name: string;
-        erlcName: string;
-        department: string | null;
+        category: string;
+        active: boolean;
+        updatedAt: Date;
+        description: string | null;
         internalCode: string | null;
         tags: string[];
+        erlcName: string;
         imageId: string | null;
+        department: string | null;
     }[]>;
     suggestions(): Promise<{
         erlcName: string;
@@ -315,30 +315,30 @@ export declare class FleetController {
     createModel(a: Actor, b: FleetModelInput): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string;
-        description: string | null;
-        active: boolean;
         name: string;
-        erlcName: string;
-        department: string | null;
+        category: string;
+        active: boolean;
+        updatedAt: Date;
+        description: string | null;
         internalCode: string | null;
         tags: string[];
+        erlcName: string;
         imageId: string | null;
+        department: string | null;
     }>;
     updateModel(a: Actor, id: string, b: Partial<FleetModelInput>): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string;
-        description: string | null;
-        active: boolean;
         name: string;
-        erlcName: string;
-        department: string | null;
+        category: string;
+        active: boolean;
+        updatedAt: Date;
+        description: string | null;
         internalCode: string | null;
         tags: string[];
+        erlcName: string;
         imageId: string | null;
+        department: string | null;
     }>;
     deleteModel(a: Actor, id: string): Promise<void>;
     image(a: Actor, id: string, file: Express.Multer.File | undefined): Promise<{

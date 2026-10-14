@@ -23,14 +23,14 @@ export declare const announceSchema: z.ZodObject<{
     when: z.ZodOptional<z.ZodDate>;
     location: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    location?: string | undefined;
     channelId?: string | null | undefined;
     pingRoleIds?: string[] | undefined;
+    location?: string | undefined;
     when?: Date | undefined;
 }, {
-    location?: string | undefined;
     channelId?: string | null | undefined;
     pingRoleIds?: string[] | undefined;
+    location?: string | undefined;
     when?: Date | undefined;
 }>;
 export type Announce = z.infer<typeof announceSchema>;
@@ -45,10 +45,10 @@ export declare class AcademyService {
             enrollments: number;
         };
     } & {
-        serverId: string | null;
         id: string;
-        title: string;
+        serverId: string | null;
         description: string | null;
+        title: string;
         passScore: number;
         instructorId: string | null;
     })[]>;
@@ -72,10 +72,10 @@ export declare class AcademyService {
             createdAt: Date;
             courseId: string;
         }[];
-        serverId: string | null;
         id: string;
-        title: string;
+        serverId: string | null;
         description: string | null;
+        title: string;
         passScore: number;
         instructorId: string | null;
     }>;
@@ -94,10 +94,10 @@ export declare class AcademyService {
             channelId: string | null;
             pingRoleIds: string[];
         } | null;
-        serverId: string | null;
         id: string;
-        title: string;
+        serverId: string | null;
         description: string | null;
+        title: string;
         passScore: number;
         instructorId: string | null;
     }>;

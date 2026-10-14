@@ -58,10 +58,10 @@ export declare class CadHandoverService {
         createdByName: string | null;
         acknowledgedByName: string | null;
         id: string;
-        notes: string;
-        createdById: string | null;
         createdAt: Date;
         guildId: string | null;
+        createdById: string | null;
+        notes: string;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;
         ackNote: string | null;
@@ -74,10 +74,10 @@ export declare class CadHandoverService {
             createdByName: string | null;
             acknowledgedByName: string | null;
             id: string;
-            notes: string;
-            createdById: string | null;
             createdAt: Date;
             guildId: string | null;
+            createdById: string | null;
+            notes: string;
             acknowledgedById: string | null;
             acknowledgedAt: Date | null;
             ackNote: string | null;
@@ -85,10 +85,10 @@ export declare class CadHandoverService {
     }>;
     create(actor: CadActor, notes: string): Promise<{
         id: string;
-        notes: string;
-        createdById: string | null;
         createdAt: Date;
         guildId: string | null;
+        createdById: string | null;
+        notes: string;
         snapshot: Prisma.JsonValue;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;
@@ -97,10 +97,10 @@ export declare class CadHandoverService {
     /** Übernahme bestätigen: einmal und nur von jemand anderem als dem abgebenden Disponenten. */
     acknowledge(actor: CadActor, id: string, note?: string | null): Promise<{
         id: string;
-        notes: string;
-        createdById: string | null;
         createdAt: Date;
         guildId: string | null;
+        createdById: string | null;
+        notes: string;
         snapshot: Prisma.JsonValue;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;

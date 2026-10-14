@@ -20,7 +20,6 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
 const audit_service_1 = require("../audit/audit.service");
 const notify_service_1 = require("./notify.service");
-const guild_context_1 = require("../common/guild-context");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
 const systemBody = zod_1.z.object({ title: zod_1.z.string().trim().min(3).max(200), body: zod_1.z.string().trim().max(1000).optional() });
@@ -35,9 +34,9 @@ let NotificationsController = class NotificationsController {
         this.notify = notify;
         this.audit = audit;
     }
-    /** ⚠️ Systemhinweis an alle Dashboard-Benutzer (des gewählten Servers). */
+    /** ⚠️ Systemhinweis an alle Dashboard-Benutzer. */
     async system(a, b) {
-        const ids = await this.notify.usersWith('dashboard.view', { guildId: (0, guild_context_1.currentGuild)() });
+        const ids = await this.notify.usersWith('dashboard.view');
         await this.notify.notify(ids, { type: 'SYSTEM', title: `⚠️ ${b.title}`, body: b.body });
         await this.audit.record(a, { action: 'notification.system', module: 'settings', after: { title: b.title, recipients: ids.length } });
         return { recipients: ids.length };

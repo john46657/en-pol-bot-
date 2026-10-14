@@ -35,16 +35,16 @@ describe('automatischer Wochen-Reset (Montag 00:00 Europe/Berlin)', () => {
 
   it('archiviert die Woche, veröffentlicht die Rangliste einmal, setzt danach nur den Zähler zurück', async () => {
     await prisma.systemSetting.deleteMany({ where: { key: 'duty.weeklyReset.state' } });
-    expect(await svc.tick(new Date(W1.getTime() + 2 * H), ['global'])).toEqual({ archived: [], posted: 0 }); // erster Start: Zähler ab dieser Woche
+    expect(await svc.tick(new Date(W1.getTime() + 2 * H))).toEqual({ archived: [], posted: 0 }); // erster Start: Zähler ab dieser Woche
     const sessions = await prisma.dutySession.createManyAndReturn({ data: [
       { userId: a, status: 'ON_DUTY', startedAt: new Date(W1.getTime() + 10 * H), endedAt: new Date(W1.getTime() + 13 * H) },
       { userId: a, status: 'BREAK', startedAt: new Date(W1.getTime() + 13 * H), endedAt: new Date(W1.getTime() + 14 * H) },
       { userId: b, status: 'ON_DUTY', startedAt: new Date(W2.getTime() - 1 * H), endedAt: new Date(W2.getTime() + 2 * H) }, // über Mitternacht
     ] });
     expect((await svc.current(new Date(W2.getTime() - 60_000))).nextResetAt?.toISOString()).toBe(W2.toISOString());
-    expect((await svc.tick(new Date(W2.getTime() - 60_000), ['global'])).archived).toEqual([]); // So 23:59 – noch nicht
+    expect((await svc.tick(new Date(W2.getTime() - 60_000))).archived).toEqual([]); // So 23:59 – noch nicht
     // zwei Instanzen gleichzeitig → genau ein Archiv, eine Discord-Nachricht
-    const [r1, r2] = await Promise.all([svc.tick(new Date(W2.getTime() + 30_000), ['global']), svc.tick(new Date(W2.getTime() + 31_000), ['global'])]);
+    const [r1, r2] = await Promise.all([svc.tick(new Date(W2.getTime() + 30_000)), svc.tick(new Date(W2.getTime() + 31_000))]);
     expect([...r1.archived, ...r2.archived]).toEqual(['2030-10-21']);
     expect(r1.posted + r2.posted).toBe(1);
     const arch = await prisma.dutyWeekArchive.findUniqueOrThrow({ where: { scope_weekStart: { scope: 'global', weekStart: W1 } } });
@@ -58,7 +58,7 @@ describe('automatischer Wochen-Reset (Montag 00:00 Europe/Berlin)', () => {
     expect(p[0]!.payload).toMatchObject({ channelId: CH, stateKey: 'week-rank-2030-10-21', forceNew: false });
     expect(JSON.stringify(p[0]!.payload)).toContain(`<@${D}>`);
     // Neustart / erneuter Lauf: nichts doppelt
-    expect(await svc.tick(new Date(W2.getTime() + 5 * 60_000), ['global'])).toEqual({ archived: [], posted: 0 });
+    expect(await svc.tick(new Date(W2.getTime() + 5 * 60_000))).toEqual({ archived: [], posted: 0 });
     expect(await posts()).toHaveLength(1);
     // Schichten bleiben unverändert erhalten; neue Woche zählt ab Montag 00:00
     expect(await prisma.dutySession.count({ where: { id: { in: sessions.map((s) => s.id) } } })).toBe(3);
@@ -69,12 +69,12 @@ describe('automatischer Wochen-Reset (Montag 00:00 Europe/Berlin)', () => {
   });
 
   it('holt verpasste Resets nach einem Neustart nach – ältere Wochen still, nur die letzte in Discord', async () => {
-    const r = await svc.tick(new Date('2030-11-20T12:00:00Z'), ['global']); // Bot war drei Wochenwechsel aus
+    const r = await svc.tick(new Date('2030-11-20T12:00:00Z')); // Bot war drei Wochenwechsel aus
     expect(r).toEqual({ archived: ['2030-10-28', '2030-11-04', '2030-11-11'], posted: 1 });
     const weeks = await prisma.dutyWeekArchive.findMany({ where: { weekKey: { in: r.archived } }, orderBy: { weekStart: 'asc' } });
     expect(weeks.map((w) => [w.discordChannelId, w.catchUp])).toEqual([[null, true], [null, true], [CH, true]]);
     expect((await posts()).map((o) => (o.payload as { stateKey: string }).stateKey).sort()).toEqual(['week-rank-2030-10-21', 'week-rank-2030-11-11']);
-    expect((await svc.tick(new Date('2030-11-20T12:01:00Z'), ['global'])).archived).toEqual([]);
+    expect((await svc.tick(new Date('2030-11-20T12:01:00Z'))).archived).toEqual([]);
   });
 
   it('Wochenarchive sind unlöschbar und unveränderlich; Abruf im Dashboard', async () => {
@@ -95,7 +95,7 @@ describe('automatischer Wochen-Reset (Montag 00:00 Europe/Berlin)', () => {
   it('ausgeschaltet: kein Reset', async () => {
     const admin = (await login(app, 'wr_admin')).agent;
     await admin.put('/api/v1/team/week/config').send({ enabled: false, channelId: CH, topN: 5, mention: true });
-    expect(await svc.tick(new Date('2030-12-20T12:00:00Z'), ['global'])).toEqual({ archived: [], posted: 0 });
+    expect(await svc.tick(new Date('2030-12-20T12:00:00Z'))).toEqual({ archived: [], posted: 0 });
     expect((await admin.get('/api/v1/team/week')).body).toMatchObject({ enabled: false, nextResetAt: null });
   });
 });

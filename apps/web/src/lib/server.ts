@@ -1,12 +1,14 @@
-/** Gewählter Discord-Server (Dropdown oben links). '' = alle Server. Wird bei jeder API-Anfrage als `X-Guild-Id` mitgeschickt. */
-const KEY = 'enrp.server';
+/**
+ * Der Discord-Server dieses Systems – fest eingerichtet (kommt mit dem Profil von der API), keine Auswahl.
+ * '' = noch nicht eingerichtet.
+ */
 const listeners = new Set<() => void>();
-let current = (() => { try { return localStorage.getItem(KEY) ?? ''; } catch { return ''; } })();
+let current = '';
 export const getServer = () => current;
-export function setServer(id: string) {
-  if (id === current) return;
-  current = id;
-  try { if (id) localStorage.setItem(KEY, id); else localStorage.removeItem(KEY); } catch { /* privater Modus */ }
+export function setHomeServer(id: string | null | undefined) {
+  const next = id ?? '';
+  if (next === current) return;
+  current = next;
   listeners.forEach((l) => l());
 }
 export function subscribeServer(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; }

@@ -264,7 +264,7 @@ export function CadRadio() {
           )}
         </Card>
         {can('cad.create_incident') && <Card title="Wichtige Leitstellenmeldung">
-          <p className="mb-2 text-xs text-muted">Geht an alle Discord-Kanäle, die unter Einstellungen → Discord für „Wichtige Leitstellenmeldung“ eingetragen sind (inkl. verbundener Server).</p>
+          <p className="mb-2 text-xs text-muted">Geht an alle Discord-Kanäle, die unter Einstellungen → Discord für „Wichtige Leitstellenmeldung“ eingetragen sind.</p>
           <Textarea aria-label="Meldung" rows={4} maxLength={1500} value={announce} onChange={(e) => setAnnounce(e.target.value)} />
           <Button className="mt-2" disabled={announce.trim().length < 3 || ann.isPending} onClick={() => ann.mutate()}>Senden</Button>
         </Card>}

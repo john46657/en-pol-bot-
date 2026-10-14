@@ -20,7 +20,6 @@ const shared_1 = require("@enrp/shared");
 const duty_reports_service_1 = require("./duty-reports.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 const values = zod_1.z.record(zod_1.z.string().max(40), zod_1.z.union([zod_1.z.string().max(4000), zod_1.z.number()]));
 const create = zod_1.z.object({ templateId: zod_1.z.string().uuid(), periodStart: zod_1.z.string().date().optional(), values, guildId: zod_1.z.string().regex(/^\d{15,25}$/).nullable().optional(), source: zod_1.z.enum(['WEB', 'DISCORD']).optional() });
@@ -33,7 +32,7 @@ let DutyReportsController = class DutyReportsController {
     constructor(s) {
         this.s = s;
     }
-    templates(active) { return this.s.listTemplates((0, guild_context_1.currentGuild)(), active === '1'); }
+    templates(active) { return this.s.listTemplates(null, active === '1'); }
     saveTemplate(a, id, b) { if (b.id !== id)
         throw new errors_1.AppError('VALIDATION_FAILED', 'ID passt nicht.'); return this.s.saveTemplate(a, b); }
     /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */

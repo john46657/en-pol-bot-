@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DEFAULT_WELCOME_CONFIG, hexColor, renderWelcomeText, WELCOME_VARIABLES, type WelcomeConfig, type WelcomeMessageDef } from '@enrp/shared';
 import { useAutosaveDraft } from '../../lib/autosave';
-import { api, apiHeaders } from '../../lib/api';
+import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
 import { guildName, useGuilds, useServer } from '../../lib/guilds';
@@ -22,7 +22,7 @@ function useMediaPreview(id: string) {
   useEffect(() => {
     if (!id) { setUrl(undefined); return; }
     let u: string | undefined, gone = false;
-    void fetch(`/api/v1/media/${id}`, { credentials: 'include', headers: apiHeaders() }).then((r) => (r.ok ? r.blob() : null)).then((b) => { if (b && !gone) { u = URL.createObjectURL(b); setUrl(u); } });
+    void fetch(`/api/v1/media/${id}`, { credentials: 'include' }).then((r) => (r.ok ? r.blob() : null)).then((b) => { if (b && !gone) { u = URL.createObjectURL(b); setUrl(u); } });
     return () => { gone = true; if (u) URL.revokeObjectURL(u); };
   }, [id]);
   return url;
@@ -81,7 +81,7 @@ function MessageEditor({ label, value, onChange, disabled, server, guildId, test
   );
 }
 
-/** Admin → Welcome & Goodbye: je Server (oben links gewählt) oder gemeinsam für alle Server. */
+/** Admin → Welcome & Goodbye. */
 export function WelcomeSettings() {
   const { can } = useAuth();
   const manage = can('settings.manage');
@@ -91,14 +91,13 @@ export function WelcomeSettings() {
   const key = ['welcome-config', server];
   const q = useQuery({ queryKey: key, queryFn: () => api<Cfg>('/welcome/config') });
   const [cfg, setCfg] = useState<Cfg>();
-  // aus welchem geladenen Stand der Entwurf stammt – nach dem Server-Wechsel nicht den alten Stand beim neuen Server speichern
+  // aus welchem geladenen Stand der Entwurf stammt – nach dem Neuladen nicht einen veralteten Stand speichern
   const [loadedFrom, setLoadedFrom] = useState<Cfg>();
   useEffect(() => { if (q.data) { setCfg(q.data); setLoadedFrom(q.data); } }, [q.data]);
   const body = (c: Cfg): WelcomeConfig => ({ welcome: c.welcome, dm: c.dm, autoRoleIds: c.autoRoleIds, goodbye: c.goodbye });
   const url = (x: string) => !x || /^https:\/\/\S+$/.test(x);
   const valid = (c: Cfg) => (!c.welcome.enabled || !!c.welcome.channelId) && (!c.goodbye.enabled || !!c.goodbye.channelId) && url(c.welcome.image) && url(c.goodbye.image);
   const save = useMutation({ mutationFn: (c: Cfg) => api<Cfg>('/welcome/config', { method: 'PUT', body: body(c) }), onSuccess: (r) => qc.setQueryData(key, r) });
-  const reset = useMutation({ mutationFn: () => api<Cfg>('/welcome/config', { method: 'DELETE' }), onSuccess: (r) => { qc.setQueryData(key, r); setCfg(r); } });
   // Test-Nachricht: erst den aktuellen Stand speichern, dann schickt der Bot die Nachricht mit deinem Profil
   const [tested, setTested] = useState<{ kind: string; ok: boolean; text: string }>();
   const test = useMutation({
@@ -106,7 +105,7 @@ export function WelcomeSettings() {
     onSuccess: (_r, kind) => setTested({ kind, ok: true, text: kind === 'dm' ? 'Test-DM ist unterwegs – schau in deine Direktnachrichten.' : 'Test-Nachricht ist unterwegs – schau in den Kanal (dauert ein paar Sekunden).' }),
     onError: (e, kind) => setTested({ kind, ok: false, text: errText(e) }),
   });
-  useAutosaveDraft(manage ? `welcome:${server || 'all'}` : null, q.data && loadedFrom === q.data ? cfg : undefined, (c) => (valid(c) ? { method: 'PUT', path: '/welcome/config', body: body(c), label: 'Willkommen & Abschied' } : null));
+  useAutosaveDraft(manage ? 'welcome:config' : null, q.data && loadedFrom === q.data ? cfg : undefined, (c) => (valid(c) ? { method: 'PUT', path: '/welcome/config', body: body(c), label: 'Willkommen & Abschied' } : null));
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (!cfg) return <SkeletonRows />;
   const set = (p: Partial<Cfg>) => setCfg({ ...cfg, ...p });
@@ -114,17 +113,15 @@ export function WelcomeSettings() {
   const dirty = JSON.stringify(cfg) !== JSON.stringify(q.data);
   const testButton = (kind: 'welcome' | 'goodbye' | 'dm', can: boolean) => manage && (
     <div className="flex flex-wrap items-center gap-2">
-      <Button size="sm" variant="secondary" disabled={!server || !can || test.isPending} title={!server ? 'Oben links einen Server wählen' : undefined} onClick={() => test.mutate(kind)}>🧪 Test senden</Button>
-      {!server ? <span className="text-xs text-muted">Oben links einen Server wählen.</span> : tested?.kind === kind && <span role={tested.ok ? 'status' : 'alert'} className={`text-xs ${tested.ok ? 'text-success' : 'text-danger'}`}>{tested.text}</span>}
+      <Button size="sm" variant="secondary" disabled={!server || !can || test.isPending} title={!server ? 'Zuerst den Discord-Server einrichten (Einstellungen → Discord-Bot)' : undefined} onClick={() => test.mutate(kind)}>🧪 Test senden</Button>
+      {!server ? <span className="text-xs text-muted">Zuerst den Discord-Server einrichten (Einstellungen → Discord-Bot).</span> : tested?.kind === kind && <span role={tested.ok ? 'status' : 'alert'} className={`text-xs ${tested.ok ? 'text-success' : 'text-danger'}`}>{tested.text}</span>}
     </div>
   );
   return (
     <>
       <PageHeader title="Willkommen & Abschied" subtitle="Nachrichten, wenn jemand dem Discord-Server beitritt oder ihn verlässt, eine Willkommens-DM und automatische Rollen." />
       <p className="mb-4 rounded-lg border border-line bg-panel-2/40 p-3 text-sm text-muted">
-        {server ? (cfg.own ? <>Eigene Einstellungen für <b>{serverName}</b>.</> : <>{serverName} nutzt die gemeinsamen Einstellungen – beim Speichern entstehen eigene für diesen Server.</>) : <>Gemeinsame Einstellungen für alle Server ohne eigene.</>}
-        {' '}Der Bot braucht den privilegierten <b>Server Members</b>-Intent (Developer Portal → Bot → Privileged Gateway Intents).
-        {server && cfg.own && manage && <Button size="sm" variant="ghost" className="ml-2" disabled={reset.isPending} onClick={() => reset.mutate()}>Gemeinsame Einstellungen nutzen</Button>}
+        Der Bot braucht den privilegierten <b>Server Members</b>-Intent (Developer Portal → Bot → Privileged Gateway Intents).
       </p>
       <div className="grid gap-4">
         <MessageEditor label="Willkommensnachricht" value={cfg.welcome} onChange={(v) => set({ welcome: v })} disabled={!manage} server={serverName} guildId={server} test={testButton('welcome', !!cfg.welcome.channelId)} />
@@ -144,7 +141,7 @@ export function WelcomeSettings() {
           <p className="mt-3 text-xs text-muted">Verlässt jemand den Server, werden offene Bewerbungen nach <b>Aktion beim Verlassen</b> (Qualifikationen → Einrichtung) und offene Support-Tickets nach Tickets → Allgemein behandelt.</p>
         </Card>
       </div>
-      {(save.error || reset.error) && <p role="alert" className="mt-3 text-sm text-danger">{errText(save.error ?? reset.error)}</p>}
+      {save.error && <p role="alert" className="mt-3 text-sm text-danger">{errText(save.error)}</p>}
       {!valid(cfg) && <p role="alert" className="mt-3 text-sm text-warning">Wähle für jede eingeschaltete Nachricht einen Kanal – bis dahin wird nichts gespeichert.</p>}
       {manage && (
         <div className="sticky bottom-2 mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-panel p-2">

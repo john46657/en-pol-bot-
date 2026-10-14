@@ -11,14 +11,14 @@ export declare class InvestigationsService {
     constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService);
     list(p: PageQuery, status?: string): Promise<{
         items: {
-            serverId: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            title: string;
             description: string | null;
+            status: string;
+            title: string;
             caseNumber: string;
             leadId: string | null;
         }[];
@@ -28,14 +28,14 @@ export declare class InvestigationsService {
     }>;
     get(id: string): Promise<{
         investigation: {
-            serverId: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            title: string;
             description: string | null;
+            status: string;
+            title: string;
             caseNumber: string;
             leadId: string | null;
         };
@@ -47,11 +47,11 @@ export declare class InvestigationsService {
         } & {
             role: string;
             id: string;
-            createdAt: Date;
-            personId: string | null;
-            vehicleId: string | null;
-            entityId: string;
             entityType: string;
+            entityId: string;
+            createdAt: Date;
+            vehicleId: string | null;
+            personId: string | null;
         })[];
         evidence: {
             number: string;
@@ -61,11 +61,11 @@ export declare class InvestigationsService {
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
-            entityId: string;
-            entityType: string;
-            summary: string;
             action: string;
+            entityType: string;
+            entityId: string;
+            createdAt: Date;
+            summary: string;
             actorId: string | null;
         }[];
     }>;
@@ -78,27 +78,27 @@ export declare class InvestigationsService {
             role: (typeof INVESTIGATION_ROLES)[number];
         }[];
     }): Promise<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        title: string;
         description: string | null;
+        status: string;
+        title: string;
         caseNumber: string;
         leadId: string | null;
     }>;
     addPerson(actor: Actor, id: string, personId: string, role: (typeof INVESTIGATION_ROLES)[number]): Promise<void>;
     setStatus(actor: Actor, id: string, to: InvestigationStatus, reason?: string): Promise<{
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        title: string;
         description: string | null;
+        status: string;
+        title: string;
         caseNumber: string;
         leadId: string | null;
     }>;

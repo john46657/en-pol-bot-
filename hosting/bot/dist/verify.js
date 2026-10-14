@@ -33,7 +33,7 @@ function createVerify(api, ops, log = console.error) {
             if (r?.problems.length)
                 log(`verify on join (${m.guildId}): ${r.problems.join('; ')}`);
         },
-        /** Nach Entfernen/Ändern im Dashboard: auf allen Servern neu setzen. */
+        /** Nach Entfernen/Ändern im Dashboard: auf dem Server neu setzen. */
         async refreshEverywhere(userId) {
             for (const g of await ops.guildsOf(userId)) {
                 const r = await sync(g.guildId, userId, g.displayName).catch((e) => { log(`verify refresh failed (${g.guildId}): ${e instanceof Error ? e.message : e}`); return null; });

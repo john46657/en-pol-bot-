@@ -9,23 +9,20 @@ declare const createRole: z.ZodObject<{
     priority: z.ZodOptional<z.ZodNumber>;
     discordRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     name: z.ZodString;
-    guildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
+    active?: boolean | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    active?: boolean | undefined;
-    guildId?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
     name: string;
+    active?: boolean | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    active?: boolean | undefined;
-    guildId?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -38,19 +35,19 @@ declare const updateRole: z.ZodObject<{
     discordRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     name: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    name?: string | undefined;
+    active?: boolean | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    active?: boolean | undefined;
-    name?: string | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
+    name?: string | undefined;
+    active?: boolean | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
-    active?: boolean | undefined;
-    name?: string | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -114,16 +111,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     })[]>;
     myRank(a: Actor): Promise<{
         rank: number;
@@ -140,16 +137,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     }>;
     reorder(a: Actor, b: z.infer<typeof order>): Promise<({
         _count: {
@@ -162,16 +159,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     })[]>;
     update(a: Actor, id: string, b: z.infer<typeof updateRole>): Promise<{
         _count: {
@@ -184,16 +181,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     }>;
     remove(a: Actor, id: string): Promise<void>;
     duplicate(a: Actor, id: string, b: z.infer<typeof dup>): Promise<{
@@ -207,16 +204,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     }>;
     setPermissions(a: Actor, id: string, b: z.infer<typeof grants>): Promise<{
         _count: {
@@ -229,16 +226,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     }>;
     setPermission(a: Actor, id: string, b: z.infer<typeof single>): Promise<{
         _count: {
@@ -251,16 +248,16 @@ export declare class RolesController {
     } & {
         id: string;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
+        guildId: string | null;
         color: string | null;
         description: string | null;
+        system: boolean;
         priority: number;
-        active: boolean;
-        guildId: string | null;
-        name: string;
         icon: string | null;
         discordRoleIds: string[];
-        system: boolean;
     }>;
 }
 export {};

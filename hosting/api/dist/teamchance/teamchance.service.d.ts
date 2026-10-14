@@ -17,9 +17,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     /** Bewerbungen nur während einer offenen Team-Chance annehmen */
     restrictApplications: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
-    title: string;
-    description: string;
     channelId: string | null;
+    description: string;
+    title: string;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -27,9 +27,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
-    title: string;
-    description: string;
     channelId: string | null;
+    description: string;
+    title: string;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -37,9 +37,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }>, {
-    title: string;
-    description: string;
     channelId: string | null;
+    description: string;
+    title: string;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -47,9 +47,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
-    title: string;
-    description: string;
     channelId: string | null;
+    description: string;
+    title: string;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -62,7 +62,7 @@ export type TeamChanceCfg = z.infer<typeof teamChanceSchema> & {
 };
 export declare const DEFAULT_TEAMCHANCE: TeamChanceCfg;
 /**
- * Team-Chance: Die Leitung öffnet/schließt eine Bewerbungsphase für das Team (je Server getrennt), optional mit
+ * Team-Chance: Die Leitung öffnet/schließt eine Bewerbungsphase für das Team, optional mit
  * Zeitfenster und Platzzahl. Beim Öffnen/Schließen: Ankündigung in Discord und Benachrichtigung im Dashboard.
  */
 export declare class TeamChanceService {
@@ -71,16 +71,16 @@ export declare class TeamChanceService {
     private readonly discord;
     private readonly notify;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService);
-    config(guildId?: string | null): Promise<TeamChanceCfg>;
+    config(): Promise<TeamChanceCfg>;
     /** Ist die Team-Chance gerade offen? (Schalter + Zeitfenster + freie Plätze) */
-    status(guildId?: string | null): Promise<{
+    status(): Promise<{
         isOpen: boolean;
         reason: string | null;
         used: number;
         remaining: number | null;
-        title: string;
-        description: string;
         channelId: string | null;
+        description: string;
+        title: string;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
@@ -90,15 +90,15 @@ export declare class TeamChanceService {
         openedAt?: string | null;
     }>;
     /** Für Bewerbungen: wenn eingestellt, nur während einer offenen Team-Chance. */
-    assertApplicationsAllowed(guildId: string | null): Promise<void>;
+    assertApplicationsAllowed(): Promise<void>;
     save(actor: Actor, input: z.infer<typeof teamChanceSchema>): Promise<{
         isOpen: boolean;
         reason: string | null;
         used: number;
         remaining: number | null;
-        title: string;
-        description: string;
         channelId: string | null;
+        description: string;
+        title: string;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;

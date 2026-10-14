@@ -36,19 +36,16 @@ declare const inboxQ: z.ZodObject<{
     type: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "ACCEPTED", "REJECTED", "WITHDRAWN"]>>;
     order: z.ZodOptional<z.ZodEnum<["newest", "oldest"]>>;
-    guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     type?: string | undefined;
-    guildId?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     type?: string | undefined;
-    guildId?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     order?: "newest" | "oldest" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -60,29 +57,19 @@ declare const listQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
 } & {
     status: z.ZodOptional<z.ZodUnion<[z.ZodEnum<["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"]>, z.ZodLiteral<"OPEN">]>>;
-    guildId: z.ZodOptional<z.ZodString>;
     order: z.ZodOptional<z.ZodEnum<["newest", "oldest"]>>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
-    guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
-    guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
-}>;
-declare const guildQ: z.ZodObject<{
-    guildId: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    guildId?: string | undefined;
-}, {
-    guildId?: string | undefined;
 }>;
 declare const analyticsQ: z.ZodObject<{
     type: z.ZodOptional<z.ZodString>;
@@ -91,12 +78,12 @@ declare const analyticsQ: z.ZodObject<{
     days: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     days: number;
-    status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
     type?: string | undefined;
+    status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
     reviewer?: string | undefined;
 }, {
-    status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
     type?: string | undefined;
+    status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
     days?: number | undefined;
     reviewer?: string | undefined;
 }>;
@@ -106,7 +93,6 @@ export declare class ApplicationsController {
     private readonly roblox;
     private readonly perms;
     constructor(a: ApplicationsService, stats: ApplicationsAnalyticsService, roblox: RobloxService, perms: PermissionService);
-    /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
     /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
     robloxLookup(q: {
         q: string;
@@ -118,7 +104,7 @@ export declare class ApplicationsController {
             avatarUrl: string | null;
         } | null;
     }>;
-    form(q: z.infer<typeof guildQ>): Promise<import("@enrp/shared").FormField[]>;
+    form(): Promise<import("@enrp/shared").FormField[]>;
     submit(b: z.infer<typeof submit>): Promise<{
         number: string;
         status: string;
@@ -128,19 +114,19 @@ export declare class ApplicationsController {
             decidedByName: string | null;
             number: string;
             id: string;
+            createdAt: Date;
+            discordId: string | null;
             robloxUserId: string | null;
             robloxUsername: string;
-            status: string;
-            createdAt: Date;
             updatedAt: Date;
             version: number;
-            source: string;
             guildId: string | null;
-            discordId: string | null;
-            discordName: string | null;
-            decidedAt: Date | null;
+            status: string;
             decidedById: string | null;
+            decidedAt: Date | null;
             decisionReason: string | null;
+            source: string;
+            discordName: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
             durationSec: number | null;
@@ -150,7 +136,7 @@ export declare class ApplicationsController {
         page: number;
         pageSize: number;
     }>;
-    /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
+    /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). */
     analytics(q: z.infer<typeof analyticsQ>): Promise<{
         days: number;
         kpis: {
@@ -195,8 +181,8 @@ export declare class ApplicationsController {
     }): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
+        status: string;
         decisionReason: string | null;
     }[]>;
     /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
@@ -235,19 +221,19 @@ export declare class ApplicationsController {
     get(id: string): Promise<{
         number: string;
         id: string;
+        createdAt: Date;
+        discordId: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
-        status: string;
-        createdAt: Date;
         updatedAt: Date;
         version: number;
-        source: string;
         guildId: string | null;
-        discordId: string | null;
-        discordName: string | null;
-        decidedAt: Date | null;
+        status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
+        source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
@@ -257,19 +243,19 @@ export declare class ApplicationsController {
     move(a: Actor, id: string, b: z.infer<typeof move>): Promise<{
         number: string;
         id: string;
+        createdAt: Date;
+        discordId: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
-        status: string;
-        createdAt: Date;
         updatedAt: Date;
         version: number;
-        source: string;
         guildId: string | null;
-        discordId: string | null;
-        discordName: string | null;
-        decidedAt: Date | null;
+        status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
+        source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
@@ -281,19 +267,19 @@ export declare class ApplicationsController {
     }): Promise<{
         number: string;
         id: string;
+        createdAt: Date;
+        discordId: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
-        status: string;
-        createdAt: Date;
         updatedAt: Date;
         version: number;
-        source: string;
         guildId: string | null;
-        discordId: string | null;
-        discordName: string | null;
-        decidedAt: Date | null;
+        status: string;
         decidedById: string | null;
+        decidedAt: Date | null;
         decisionReason: string | null;
+        source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;

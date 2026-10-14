@@ -19,14 +19,14 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
-        title: string;
         channelId: string | null;
+        title: string;
         buttonLabel: string;
     }, {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
         channelId?: string | null | undefined;
+        title?: string | undefined;
         buttonLabel?: string | undefined;
     }>>;
     binds: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -37,14 +37,14 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         roleIds: z.ZodArray<z.ZodString, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        roleIds: string[];
         groupId: string;
+        roleIds: string[];
         minRank: number;
         maxRank: number;
     }, {
         id: string;
-        roleIds: string[];
         groupId: string;
+        roleIds: string[];
         minRank: number;
         maxRank: number;
     }>, "many">>;
@@ -54,8 +54,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel: {
         message: string;
         color: string;
-        title: string;
         channelId: string | null;
+        title: string;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -64,8 +64,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin: boolean;
     binds: {
         id: string;
-        roleIds: string[];
         groupId: string;
+        roleIds: string[];
         minRank: number;
         maxRank: number;
     }[];
@@ -75,8 +75,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel?: {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
         channelId?: string | null | undefined;
+        title?: string | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -85,8 +85,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
-        roleIds: string[];
         groupId: string;
+        roleIds: string[];
         minRank: number;
         maxRank: number;
     }[] | undefined;
@@ -96,8 +96,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel: {
         message: string;
         color: string;
-        title: string;
         channelId: string | null;
+        title: string;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -106,8 +106,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin: boolean;
     binds: {
         id: string;
-        roleIds: string[];
         groupId: string;
+        roleIds: string[];
         minRank: number;
         maxRank: number;
     }[];
@@ -117,8 +117,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel?: {
         message?: string | undefined;
         color?: string | undefined;
-        title?: string | undefined;
         channelId?: string | null | undefined;
+        title?: string | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -127,8 +127,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
-        roleIds: string[];
         groupId: string;
+        roleIds: string[];
         minRank: number;
         maxRank: number;
     }[] | undefined;
@@ -142,20 +142,19 @@ export declare class VerificationService {
     private readonly audit;
     private readonly roblox;
     constructor(prisma: PrismaService, audit: AuditService, roblox: RobloxService);
-    private keyOf;
-    config(guildId?: string | null): Promise<VerifyConfig & {
+    config(): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
-    save(actor: Actor, input: VerifyConfig, guildId?: string | null): Promise<VerifyConfig & {
+    save(actor: Actor, input: VerifyConfig): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
     /** Panel („Verifizieren“-Button) posten bzw. aktualisieren. */
-    postPanel(actor: Actor, guildId: string | null): Promise<{
+    postPanel(actor: Actor): Promise<{
         queued: boolean;
     }>;
-    panelPosted(guildId: string | null, channelId: string, messageId: string): Promise<{
+    panelPosted(channelId: string, messageId: string): Promise<{
         ok: boolean;
     }>;
     /** Schritt 1: Roblox-Konto nennen → Code. */
@@ -194,12 +193,12 @@ export declare class VerificationService {
         name: string;
         displayName: string;
     }, method: string): Promise<{
-        updatedAt: Date;
         discordId: string;
+        displayName: string;
+        updatedAt: Date;
         discordName: string | null;
         robloxName: string;
         robloxId: string;
-        displayName: string;
         verifiedAt: Date;
     }>;
     /** Verknüpfung + was der Bot auf diesem Server tun soll (Rollen, Nickname). */

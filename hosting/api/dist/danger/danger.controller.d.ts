@@ -31,7 +31,7 @@ export declare class DangerController {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
         }[];
         panel: {
             title: string;
@@ -51,7 +51,7 @@ export declare class DangerController {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
         }[];
         panel: {
             title: string;

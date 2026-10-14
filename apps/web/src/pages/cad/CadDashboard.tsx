@@ -93,28 +93,25 @@ function Tile({ label, value, hint, to, tone = 'success' }: { label: string; val
 }
 
 /**
- * Einrichtungs-Assistent für Administratoren: prüft die Schritte nach dem Update (Leitstellen-Server, ER:LC,
- * Einheiten, Zuordnungen, Discord-Kanäle, Server-Verbindung) und führt direkt zur passenden Einstellung.
+ * Einrichtungs-Assistent für Administratoren: prüft die Schritte nach dem Update (ER:LC, Einheiten, Zuordnungen,
+ * Discord-Kanäle) und führt direkt zur passenden Einstellung.
  * Verschwindet, sobald alles erledigt ist (oder wenn man ihn ausblendet).
  */
 function SetupChecklist({ d }: { d: CadOverview }) {
   const { can } = useAuth();
   const { cad, set } = useCadPrefs();
   const admin = can('cad.manage_settings') || can('cad.manage_erlc') || can('cad.manage_map');
-  const links = useQuery({ queryKey: ['cad-links'], queryFn: () => api<{ id: string; active: boolean }[]>('/cad/links'), enabled: admin });
   const members = useQuery({ queryKey: ['cad-members'], queryFn: () => api<{ id: string; erlcName: string | null }[]>('/cad/members'), enabled: admin });
   if (!admin || cad.setupHidden) return null;
   const cfg = d.config;
   const steps = [
-    { done: !!cfg.homeGuildId, text: 'Discord-Server der Leitstelle auswählen', to: '/cad/settings?tab=Allgemein', hint: 'Einstellungen → Allgemein', perm: 'cad.manage_settings' },
     { done: d.erlc.length > 0, text: 'ER:LC-Server mit Server-Key verbinden', to: '/cad/settings?tab=ER%3ALC+Integration', hint: 'Einstellungen → ER:LC Integration', perm: 'cad.manage_erlc' },
     { done: d.erlc.some((s) => s.status === 'CONNECTED'), text: 'ER:LC-Verbindung erfolgreich getestet', to: '/cad/settings?tab=ER%3ALC+Integration', hint: '„Verbindung testen“ – Status 🟢 Verbunden', perm: 'cad.manage_erlc' },
     { done: d.units.length > 0, text: 'Einheiten anlegen (z. B. SEK-01, K9-01)', to: '/cad/units', hint: 'Einheiten → Neue Einheit', perm: 'cad.manage_units' },
     { done: (members.data ?? []).some((m) => m.erlcName), text: 'Mitglieder zuordnen (Discord ↔ ER:LC ↔ Einheit)', to: '/cad/team', hint: 'Teamübersicht – dann erscheinen Einheiten live auf der Karte', perm: 'cad.manage_units' },
     { done: cfg.routes.some((r) => r.enabled && r.channelIds.length), text: 'Discord-Kanäle für Meldungen festlegen', to: '/cad/settings?tab=Discord-Kan%C3%A4le', hint: 'Einstellungen → Discord-Kanäle', perm: 'cad.manage_settings' },
-    { done: (links.data ?? []).some((l) => l.active), text: 'Server-Verbindung Leitstelle ↔ SEK/K9 anlegen', to: '/cad/cross-server', hint: 'Nur nötig, wenn SEK/K9 auf einem eigenen Discord-Server sind', perm: 'cad.manage_cross_server', optional: true },
   ];
-  const open = steps.filter((s) => !s.done && !s.optional);
+  const open = steps.filter((s) => !s.done);
   if (!open.length) return null;
   const doneCount = steps.filter((s) => s.done).length;
   const next = open[0]!;
@@ -129,7 +126,7 @@ function SetupChecklist({ d }: { d: CadOverview }) {
           <>
             <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${s.done ? 'bg-success/20 text-success' : s === next ? 'bg-primary text-white' : 'border border-line text-muted'}`}>{s.done ? '✓' : i + 1}</span>
             <span className="min-w-0 flex-1">
-              <span className={`block font-medium ${s.done ? 'text-muted line-through' : 'text-fg'}`}>{s.text}{s.optional && <span className="ml-1 text-xs font-normal text-muted">(optional)</span>}</span>
+              <span className={`block font-medium ${s.done ? 'text-muted line-through' : 'text-fg'}`}>{s.text}</span>
               {!s.done && <span className="block text-xs text-muted">{s.hint}{!can(s.perm) ? ' – dafür fehlt dir das Recht' : ''}</span>}
             </span>
             {go && <span aria-hidden className="self-center text-muted">›</span>}

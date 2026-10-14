@@ -23,12 +23,12 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
         to: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }>, "many">>;
     rating: z.ZodDefault<z.ZodBoolean>;
     music: z.ZodDefault<z.ZodObject<{
@@ -47,22 +47,22 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     primary: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     id: string;
-    notes: boolean;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
-    rating: boolean;
+    notes: boolean;
     primary: boolean;
+    rating: boolean;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     channelPrefix: string;
     ownChannels: boolean;
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -71,22 +71,22 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     };
 }, {
     id: string;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     notes?: boolean | undefined;
-    rating?: boolean | undefined;
     primary?: boolean | undefined;
+    rating?: boolean | undefined;
     channelPrefix?: string | undefined;
     ownChannels?: boolean | undefined;
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -95,22 +95,22 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
 }>, {
     id: string;
-    notes: boolean;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
-    rating: boolean;
+    notes: boolean;
     primary: boolean;
+    rating: boolean;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     channelPrefix: string;
     ownChannels: boolean;
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -119,22 +119,22 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     };
 }, {
     id: string;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     notes?: boolean | undefined;
-    rating?: boolean | undefined;
     primary?: boolean | undefined;
+    rating?: boolean | undefined;
     channelPrefix?: string | undefined;
     ownChannels?: boolean | undefined;
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -160,12 +160,12 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         to: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }, {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }>, "many">>;
     rating: z.ZodDefault<z.ZodBoolean>;
     music: z.ZodDefault<z.ZodObject<{
@@ -184,22 +184,22 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     primary: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     id: string;
-    notes: boolean;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
-    rating: boolean;
+    notes: boolean;
     primary: boolean;
+    rating: boolean;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     channelPrefix: string;
     ownChannels: boolean;
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -208,22 +208,22 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     };
 }, {
     id: string;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     notes?: boolean | undefined;
-    rating?: boolean | undefined;
     primary?: boolean | undefined;
+    rating?: boolean | undefined;
     channelPrefix?: string | undefined;
     ownChannels?: boolean | undefined;
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -232,22 +232,22 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     } | undefined;
 }>, {
     id: string;
-    notes: boolean;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
-    rating: boolean;
+    notes: boolean;
     primary: boolean;
+    rating: boolean;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     channelPrefix: string;
     ownChannels: boolean;
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -256,22 +256,22 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     };
 }, {
     id: string;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     notes?: boolean | undefined;
-    rating?: boolean | undefined;
     primary?: boolean | undefined;
+    rating?: boolean | undefined;
     channelPrefix?: string | undefined;
     ownChannels?: boolean | undefined;
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -280,22 +280,22 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     } | undefined;
 }>, "many">, {
     id: string;
-    notes: boolean;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
-    rating: boolean;
+    notes: boolean;
     primary: boolean;
+    rating: boolean;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     channelPrefix: string;
     ownChannels: boolean;
     ownChannelIds: string[];
     times: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[];
     music: {
         enabled: boolean;
@@ -304,22 +304,22 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     };
 }[], {
     id: string;
-    guildId: string;
     name: string;
+    guildId: string;
     enabled: boolean;
-    notifyChannelId: string;
     waitingChannelId: string;
+    notifyChannelId: string;
     teamRoleId: string;
     notes?: boolean | undefined;
-    rating?: boolean | undefined;
     primary?: boolean | undefined;
+    rating?: boolean | undefined;
     channelPrefix?: string | undefined;
     ownChannels?: boolean | undefined;
     ownChannelIds?: string[] | undefined;
     times?: {
         from: string;
-        to: string;
         days: number[];
+        to: string;
     }[] | undefined;
     music?: {
         enabled?: boolean | undefined;
@@ -348,8 +348,7 @@ export declare class VoiceSupportService {
     /** Dashboard sofort aktualisieren (Liste der Fälle). */
     private changed;
     rooms(guildId?: string | null): Promise<VoiceSupportRoom[]>;
-    /** `guildId`: nur die Räume dieses Servers ersetzen (Server-Ansicht), sonst alle. */
-    saveRooms(actor: Actor, input: VoiceSupportRoom[], guildId?: string | null): Promise<VoiceSupportRoom[]>;
+    saveRooms(actor: Actor, input: VoiceSupportRoom[]): Promise<VoiceSupportRoom[]>;
     private room;
     cases(f: {
         guildId?: string | null;
@@ -357,27 +356,27 @@ export declare class VoiceSupportService {
     }): Promise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
         userId: string;
-        closedAt: Date | null;
         guildId: string;
-        claimedById: string | null;
         channelId: string | null;
+        userName: string;
+        status: string;
+        claimedById: string | null;
+        closedAt: Date | null;
+        messages: number;
+        rating: number | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
+        notifyChannelId: string | null;
         roomId: string;
         roomName: string;
-        userName: string;
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
-        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
-        messages: number;
-        rating: number | null;
     }[]>;
     message(c: Case, room?: VoiceSupportRoom): MessageSpec;
     private edit;
@@ -445,7 +444,7 @@ export declare class VoiceSupportService {
             buttons: {
                 id: string;
                 label: string;
-                style: "success" | "danger" | "secondary";
+                style: "danger" | "success" | "secondary";
             }[];
         } | null;
         closed: boolean;
@@ -539,7 +538,7 @@ export declare class VoiceSupportService {
             buttons: {
                 id: string;
                 label: string;
-                style: "success" | "danger" | "secondary";
+                style: "danger" | "success" | "secondary";
             }[];
         } | null;
     }>;
@@ -566,27 +565,27 @@ export declare class VoiceSupportService {
     }): Promise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
         userId: string;
-        closedAt: Date | null;
         guildId: string;
-        claimedById: string | null;
         channelId: string | null;
+        userName: string;
+        status: string;
+        claimedById: string | null;
+        closedAt: Date | null;
+        messages: number;
+        rating: number | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
+        notifyChannelId: string | null;
         roomId: string;
         roomName: string;
-        userName: string;
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
-        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
-        messages: number;
-        rating: number | null;
     }>;
 }
 export {};

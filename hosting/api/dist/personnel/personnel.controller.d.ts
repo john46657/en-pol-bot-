@@ -13,19 +13,19 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     userId: string;
     serviceNumber?: string | undefined;
-    callsign?: string | undefined;
+    qualifications?: string[] | undefined;
     team?: string | undefined;
     rank?: string | undefined;
+    callsign?: string | undefined;
     office?: string | undefined;
-    qualifications?: string[] | undefined;
 }, {
     userId: string;
     serviceNumber?: string | undefined;
-    callsign?: string | undefined;
+    qualifications?: string[] | undefined;
     team?: string | undefined;
     rank?: string | undefined;
+    callsign?: string | undefined;
     office?: string | undefined;
-    qualifications?: string[] | undefined;
 }>;
 declare const update: z.ZodObject<{
     team: z.ZodOptional<z.ZodString>;
@@ -36,18 +36,18 @@ declare const update: z.ZodObject<{
     qualifications: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     serviceNumber?: string | null | undefined;
-    callsign?: string | undefined;
+    qualifications?: string[] | undefined;
     team?: string | undefined;
+    callsign?: string | undefined;
     office?: string | null | undefined;
     employmentStatus?: "LOA" | "ACTIVE" | "RESIGNED" | "TERMINATED" | "SUSPENDED" | undefined;
-    qualifications?: string[] | undefined;
 }, {
     serviceNumber?: string | null | undefined;
-    callsign?: string | undefined;
+    qualifications?: string[] | undefined;
     team?: string | undefined;
+    callsign?: string | undefined;
     office?: string | null | undefined;
     employmentStatus?: "LOA" | "ACTIVE" | "RESIGNED" | "TERMINATED" | "SUSPENDED" | undefined;
-    qualifications?: string[] | undefined;
 }>;
 declare const promote: z.ZodObject<{
     rank: z.ZodString;
@@ -83,18 +83,18 @@ export declare class PersonnelController {
                 displayName: string;
             };
         } & {
-            serverId: string | null;
             serviceNumber: string | null;
             id: string;
-            updatedAt: Date;
+            serverId: string | null;
+            qualifications: string[];
             userId: string;
-            callsign: string | null;
+            updatedAt: Date;
             team: string | null;
             rank: string | null;
+            callsign: string | null;
             office: string | null;
             employmentStatus: string;
             joinDate: Date;
-            qualifications: string[];
             rankSince: Date;
             customChecks: import("@prisma/client/runtime/library").JsonValue;
         })[];
@@ -106,16 +106,16 @@ export declare class PersonnelController {
         user: {
             id: string;
             robloxUserId: string | null;
-            robloxUsername: string | null;
             displayName: string;
+            robloxUsername: string | null;
             lastLogin: Date | null;
         };
         academyEnrollments: ({
             course: {
-                serverId: string | null;
                 id: string;
-                title: string;
+                serverId: string | null;
                 description: string | null;
+                title: string;
                 passScore: number;
                 instructorId: string | null;
             };
@@ -134,98 +134,98 @@ export declare class PersonnelController {
             courseId: string;
         })[];
         records: {
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             id: string;
-            status: string | null;
-            createdById: string;
             createdAt: Date;
+            details: string | null;
+            expiresAt: Date | null;
             updatedAt: Date;
             type: string;
-            expiresAt: Date | null;
-            personnelId: string;
-            attachments: string[];
+            createdById: string;
+            status: string | null;
             summary: string;
-            details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            attachments: string[];
             deletedAt: Date | null;
+            personnelId: string;
         }[];
     } & {
-        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        updatedAt: Date;
+        serverId: string | null;
+        qualifications: string[];
         userId: string;
-        callsign: string | null;
+        updatedAt: Date;
         team: string | null;
         rank: string | null;
+        callsign: string | null;
         office: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
         rankSince: Date;
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
-        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        updatedAt: Date;
+        serverId: string | null;
+        qualifications: string[];
         userId: string;
-        callsign: string | null;
+        updatedAt: Date;
         team: string | null;
         rank: string | null;
+        callsign: string | null;
         office: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
         rankSince: Date;
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
-        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        updatedAt: Date;
+        serverId: string | null;
+        qualifications: string[];
         userId: string;
-        callsign: string | null;
+        updatedAt: Date;
         team: string | null;
         rank: string | null;
+        callsign: string | null;
         office: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
         rankSince: Date;
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     promote(a: Actor, id: string, b: z.infer<typeof promote>): Promise<{
-        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        updatedAt: Date;
+        serverId: string | null;
+        qualifications: string[];
         userId: string;
-        callsign: string | null;
+        updatedAt: Date;
         team: string | null;
         rank: string | null;
+        callsign: string | null;
         office: string | null;
         employmentStatus: string;
         joinDate: Date;
-        qualifications: string[];
         rankSince: Date;
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     record(a: Actor, id: string, b: z.infer<typeof record>): Promise<{
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
-        status: string | null;
-        createdById: string;
         createdAt: Date;
+        details: string | null;
+        expiresAt: Date | null;
         updatedAt: Date;
         type: string;
-        expiresAt: Date | null;
-        personnelId: string;
-        attachments: string[];
+        createdById: string;
+        status: string | null;
         summary: string;
-        details: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
+        attachments: string[];
         deletedAt: Date | null;
+        personnelId: string;
     }>;
 }
 export {};

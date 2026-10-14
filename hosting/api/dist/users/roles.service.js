@@ -17,7 +17,6 @@ const audit_service_1 = require("../audit/audit.service");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const realtime_service_1 = require("../realtime/realtime.service");
-const guild_context_1 = require("../common/guild-context");
 exports.ADMIN_ROLE = 'System Administrator';
 const include = { permissions: { select: { permissionKey: true, effect: true } }, _count: { select: { users: true } } };
 const validPermission = (p) => (0, shared_1.isPermissionKey)(p) || p === '*' || (p.endsWith('.*') && shared_1.ALL_PERMISSIONS.some((k) => k.startsWith(p.slice(0, -1))));
@@ -41,10 +40,12 @@ let RolesService = class RolesService {
     }
     /** Nach jeder Änderung: alle Dashboards laden ihre Rechte neu (die API prüft ohnehin bei jeder Anfrage). */
     changed(v) { this.rt.broadcast('permissions.changed'); return v; }
-    /** Im Server-Kontext nur die Rollen dieses Servers; unter „Alle Server“: alle (serverübergreifende = Vorlagen für neue Server). */
+    /**
+     * Alle Rollen. Rollen, die früher nur für einen bestimmten Discord-Server galten (`guildId` gesetzt), wurden bei der
+     * Umstellung auf einen Server zusammengeführt und bleiben nur als Archiv in der Datenbank – sie erscheinen hier nicht.
+     */
     list() {
-        const g = (0, guild_context_1.currentGuild)();
-        return this.prisma.role.findMany({ where: g ? { guildId: g } : {}, orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
+        return this.prisma.role.findMany({ where: { guildId: null }, orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
     }
     catalog() { return shared_1.ALL_PERMISSIONS; }
     /** Eigener Rang (für die Oberfläche: welche Rollen sind bearbeitbar). */
@@ -56,9 +57,8 @@ let RolesService = class RolesService {
         return role;
     }
     async guard(actor, role) {
-        const g = (0, guild_context_1.currentGuild)();
-        if (g && role.guildId !== g)
-            throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Rollen anderer Server (und Vorlagen) sind hier unsichtbar
+        if (role.guildId)
+            throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // archivierte Server-Rolle
         if (role.name === exports.ADMIN_ROLE)
             throw new errors_1.AppError('PERMISSION_DENIED', 'Die Rolle „System Administrator“ kann im Dashboard nicht geändert werden.');
         await this.perms.assertOutranksRole(actor.userId, role.priority, role.name);
@@ -67,28 +67,22 @@ let RolesService = class RolesService {
         if ((await this.perms.rankOf(actor.userId)) >= priority)
             throw new errors_1.AppError('PERMISSION_DENIED', 'Eine Rolle muss unter deinem eigenen Rang bleiben.');
     }
-    /** Rollennamen sind je Server eindeutig (gleicher Name auf zwei Servern = zwei verschiedene Rollen). */
-    async uniqueName(tx, name, guildId, exceptId) {
-        // reservierter Name: sonst könnte eine Server-Rolle als globaler Systemadministrator gelten
+    /** Rollennamen sind eindeutig. */
+    async uniqueName(tx, name, exceptId) {
         if (name.trim().toLowerCase() === exports.ADMIN_ROLE.toLowerCase())
             throw new errors_1.AppError('CONFLICT', `Der Name „${exports.ADMIN_ROLE}“ ist reserviert.`);
-        const other = await tx.role.findFirst({ where: { guildId, name } });
+        const other = await tx.role.findFirst({ where: { guildId: null, name } });
         if (other && other.id !== exceptId)
-            throw new errors_1.AppError('CONFLICT', `Es gibt schon eine Rolle namens „${name}“${guildId ? ' auf diesem Server' : ''}.`);
+            throw new errors_1.AppError('CONFLICT', `Es gibt schon eine Rolle namens „${name}“.`);
     }
     async create(actor, d) {
         const rank = await this.perms.rankOf(actor.userId);
         const priority = d.priority ?? Math.max(100, rank + 1);
         await this.assertPriority(actor, priority);
         return this.changed(await this.prisma.$transaction(async (tx) => {
-            // Server-Rolle: gilt nur auf ihrem Server (Standard: der gerade gewählte Server)
-            const guildId = d.guildId === undefined ? (0, guild_context_1.currentGuild)() : d.guildId;
-            await this.uniqueName(tx, d.name, guildId);
-            // Rollen für andere Server oder alle Server: nur der Serverbesitzer bzw. aus „Alle Server“ heraus
-            if ((0, guild_context_1.currentGuild)() && guildId !== (0, guild_context_1.currentGuild)() && !(await this.perms.isOwner(actor.userId)))
-                throw new errors_1.AppError('PERMISSION_DENIED', 'In der Server-Ansicht kannst du nur Rollen für diesen Server anlegen.');
-            const r = await tx.role.create({ data: { guildId, name: d.name, description: d.description ?? null, color: d.color ?? null, icon: d.icon ?? null, active: d.active ?? true, priority, discordRoleIds: d.discordRoleIds ?? [] }, include });
-            await this.audit.record(actor, { action: 'role.create', module: 'permissions', entityType: 'Role', entityId: r.id, after: { name: r.name, guildId: r.guildId, priority: r.priority, discordRoleIds: r.discordRoleIds } }, tx);
+            await this.uniqueName(tx, d.name);
+            const r = await tx.role.create({ data: { name: d.name, description: d.description ?? null, color: d.color ?? null, icon: d.icon ?? null, active: d.active ?? true, priority, discordRoleIds: d.discordRoleIds ?? [] }, include });
+            await this.audit.record(actor, { action: 'role.create', module: 'permissions', entityType: 'Role', entityId: r.id, after: { name: r.name, priority: r.priority, discordRoleIds: r.discordRoleIds } }, tx);
             return r;
         }));
     }
@@ -99,7 +93,7 @@ let RolesService = class RolesService {
             await this.assertPriority(actor, d.priority);
         return this.changed(await this.prisma.$transaction(async (tx) => {
             if (d.name && d.name !== before.name)
-                await this.uniqueName(tx, d.name, before.guildId, id);
+                await this.uniqueName(tx, d.name, id);
             const r = await tx.role.update({ where: { id }, data: d, include });
             const changed = Object.keys(d).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(r[k]));
             if (changed.length) {
@@ -124,6 +118,8 @@ let RolesService = class RolesService {
     /** Kopie einer Rolle (ohne Mitglieder und ohne Discord-Verknüpfung), direkt unterhalb des Originals. */
     async duplicate(actor, id, name) {
         const src = await this.load(id);
+        if (src.guildId)
+            throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // archivierte Server-Rolle
         if (src.name === exports.ADMIN_ROLE)
             throw new errors_1.AppError('PERMISSION_DENIED', 'Die Rolle „System Administrator“ kann nicht dupliziert werden.');
         await this.perms.assertCanDelegate(actor.userId, src.permissions.filter((p) => p.effect === 'ALLOW').map((p) => p.permissionKey));
@@ -131,10 +127,10 @@ let RolesService = class RolesService {
         const priority = Math.max(src.priority, rank + 1);
         return this.changed(await this.prisma.$transaction(async (tx) => {
             let n = (name ?? `${src.name} (Kopie)`).slice(0, 64);
-            for (let i = 2; !name && (await tx.role.findFirst({ where: { guildId: src.guildId, name: n } })); i++)
+            for (let i = 2; !name && (await tx.role.findFirst({ where: { guildId: null, name: n } })); i++)
                 n = `${src.name} (Kopie ${i})`.slice(0, 64);
-            await this.uniqueName(tx, n, src.guildId);
-            const r = await tx.role.create({ data: { name: n, guildId: src.guildId, description: src.description, color: src.color, icon: src.icon, priority, permissions: { create: src.permissions.map((p) => ({ permissionKey: p.permissionKey, effect: p.effect })) } }, include });
+            await this.uniqueName(tx, n);
+            const r = await tx.role.create({ data: { name: n, description: src.description, color: src.color, icon: src.icon, priority, permissions: { create: src.permissions.map((p) => ({ permissionKey: p.permissionKey, effect: p.effect })) } }, include });
             await this.audit.record(actor, { action: 'role.duplicate', module: 'permissions', entityType: 'Role', entityId: r.id, after: { name: r.name, from: src.name } }, tx);
             return r;
         }));
@@ -159,7 +155,7 @@ let RolesService = class RolesService {
             for (const [i, id] of ids.entries())
                 await tx.role.update({ where: { id }, data: { priority: slots[i] } });
             await this.audit.record(actor, { action: 'role.reorder', module: 'permissions', entityType: 'Role', before, after: ids.map((id, i) => ({ name: roles.find((r) => r.id === id).name, priority: slots[i] })) }, tx);
-            return tx.role.findMany({ orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
+            return tx.role.findMany({ where: { guildId: null }, orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
         }));
     }
     /** Alle Rechte einer Rolle auf einmal (Rollen-Editor). Geändert wird nur der Unterschied; jede Änderung einzeln protokolliert. */
@@ -182,7 +178,7 @@ let RolesService = class RolesService {
             await tx.rolePermission.deleteMany({ where: { roleId: id, permissionKey: { in: changes.map((c) => c.permission) } } });
             await tx.rolePermission.createMany({ data: set.map((c) => ({ roleId: id, permissionKey: c.permission, effect: c.to })) });
             await tx.auditLog.createMany({ data: changes.map((c) => ({
-                    actorUserId: actor.userId, actorRobloxUserId: actor.robloxUserId ?? null, requestId: actor.requestId, module: 'permissions', entityType: 'Role', entityId: id, serverId: (0, guild_context_1.currentGuild)(),
+                    actorUserId: actor.userId, actorRobloxUserId: actor.robloxUserId ?? null, requestId: actor.requestId, module: 'permissions', entityType: 'Role', entityId: id,
                     action: c.to === 'ALLOW' ? 'role.permission.allow' : c.to === 'DENY' ? 'role.permission.deny' : 'role.permission.remove',
                     before: { role: role.name, permission: c.permission, effect: c.from }, after: { role: role.name, permission: c.permission, effect: c.to },
                 })) });

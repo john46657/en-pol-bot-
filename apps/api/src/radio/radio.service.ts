@@ -5,7 +5,7 @@ import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 
 /** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
-import { onePersonnel } from '../common/guild-context';
+import { onePersonnel } from '../common/personnel-ref';
 @Injectable()
 export class RadioService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}

@@ -121,34 +121,34 @@ export declare class HrCoreService {
         };
     }>;
     ranks(includeInactive?: boolean): Prisma.PrismaPromise<{
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
         color: string;
         description: string | null;
-        active: boolean;
-        name: string;
         icon: string | null;
-        position: number;
         discordRoleIds: string[];
+        position: number;
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
     }[]>;
     rankByName(name: string | null | undefined, tx?: Tx | PrismaService): Promise<{
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
         color: string;
         description: string | null;
-        active: boolean;
-        name: string;
         icon: string | null;
-        position: number;
         discordRoleIds: string[];
+        position: number;
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
@@ -157,34 +157,34 @@ export declare class HrCoreService {
     /** Rangreihenfolge auch für Teamliste/Embeds (team.rankOrder). */
     private syncRankOrder;
     saveRank(actor: Actor, d: RankInput, id?: string): Promise<{
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
         color: string;
         description: string | null;
-        active: boolean;
-        name: string;
         icon: string | null;
-        position: number;
         discordRoleIds: string[];
+        position: number;
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
         requirements: Prisma.JsonValue;
     }>;
     reorderRanks(actor: Actor, ids: string[]): Promise<{
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
         color: string;
         description: string | null;
-        active: boolean;
-        name: string;
         icon: string | null;
-        position: number;
         discordRoleIds: string[];
+        position: number;
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
@@ -193,17 +193,17 @@ export declare class HrCoreService {
     deleteRank(actor: Actor, id: string): Promise<void>;
     /** Mögliche nächste Ränge: eingestellte Ziele, sonst der nächsthöhere aktive Rang. */
     nextRanks(current: HrRank | null): Promise<{
-        serverId: string | null;
         id: string;
+        serverId: string | null;
         createdAt: Date;
+        name: string;
+        active: boolean;
         updatedAt: Date;
         color: string;
         description: string | null;
-        active: boolean;
-        name: string;
         icon: string | null;
-        position: number;
         discordRoleIds: string[];
+        position: number;
         dashboardRoleIds: string[];
         nextRankIds: string[];
         approverRankIds: string[];
@@ -236,18 +236,18 @@ export declare class HrCoreService {
         team?: string | null;
     }, tx: Tx): Promise<{
         personnel: {
-            serverId: string | null;
             serviceNumber: string | null;
             id: string;
-            updatedAt: Date;
+            serverId: string | null;
+            qualifications: string[];
             userId: string;
-            callsign: string | null;
+            updatedAt: Date;
             team: string | null;
             rank: string | null;
+            callsign: string | null;
             office: string | null;
             employmentStatus: string;
             joinDate: Date;
-            qualifications: string[];
             rankSince: Date;
             customChecks: Prisma.JsonValue;
         };

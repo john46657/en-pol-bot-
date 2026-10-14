@@ -8,7 +8,7 @@ import { ChannelPicker } from './DiscordPickers';
 import { Toggle } from './ApplicationSettings';
 import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Select, SkeletonRows } from './ui';
 
-export interface WeeklyResetConfig { enabled: boolean; channelId: string | null; topN: number; mention: boolean; scope?: 'global' | 'server'; version?: number }
+export interface WeeklyResetConfig { enabled: boolean; channelId: string | null; topN: number; mention: boolean }
 interface RankRow { place: number; userId: string; name: string; rank: string | null; callsign: string | null; minutes: number; breakMinutes: number; sessions: number }
 interface CurrentWeek {
   enabled: boolean; timezone: string; weekStart: string; weekKey: string; label: string; nextResetAt: string | null; overdue: boolean; lastResetAt: string | null;
@@ -97,13 +97,12 @@ export function WeeklyResetSettings({ manage }: { manage: boolean }) {
         <div className="grid content-start gap-2 rounded-lg border border-line bg-panel-2/40 p-3">
           <p className="font-semibold">Wochen-Reset</p>
           <p className="text-xs text-muted">Jeden Montag 00:00 (Europe/Berlin, Sommer-/Winterzeit automatisch): Woche archivieren, Rangliste veröffentlichen, dann Wochenzähler zurücksetzen.</p>
-          <p className="text-xs"><Badge tone="info">{c.scope === 'server' ? 'Gilt für den gewählten Server' : 'Gesamtstatistik aller Server'}</Badge></p>
           <div className="flex items-center gap-2">{manage ? <Toggle label="Wochen-Reset aktiv" checked={c.enabled} onChange={(v) => setC({ ...c, enabled: v })} /> : <Badge tone={c.enabled ? 'success' : 'neutral'}>{c.enabled ? 'An' : 'Aus'}</Badge>}<span className="text-sm">{c.enabled ? 'An' : 'Aus'}</span></div>
           {week.data?.nextResetAt && <p className="text-sm">Nächster Reset: <b>{at(week.data.nextResetAt, week.data.timezone)}</b></p>}
         </div>
         <div className="grid content-start gap-2 rounded-lg border border-line bg-panel-2/40 p-3">
           <p className="font-semibold">Discord-Kanal der Rangliste</p>
-          <p className="text-xs text-muted">{c.scope === 'server' ? 'Kanal dieses Servers. Ohne Kanal wird nur archiviert.' : 'Leer = Dienst-Kanal aus den Einstellungen. Ohne Kanal wird nur archiviert.'}</p>
+          <p className="text-xs text-muted">Leer = Dienst-Kanal aus den Einstellungen. Ohne Kanal wird nur archiviert.</p>
           <ChannelPicker ariaLabel="Kanal der Wochenrangliste" value={c.channelId} disabled={!manage} onChange={(id) => setC({ ...c, channelId: id })} />
         </div>
         <div className="grid content-start gap-2 rounded-lg border border-line bg-panel-2/40 p-3">

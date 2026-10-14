@@ -19,10 +19,9 @@ const zod_1 = require("zod");
 const voice_support_service_1 = require("./voice-support.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const guild_context_1 = require("../common/guild-context");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const guildQ = zod_1.z.object({ guildId: sf.optional() });
-const casesQ = zod_1.z.object({ guildId: sf.optional(), status: zod_1.z.enum(['OPEN', 'WAITING', 'CLAIMED', 'DECLINED', 'ABANDONED', 'CLOSED']).optional() });
+const casesQ = zod_1.z.object({ status: zod_1.z.enum(['OPEN', 'WAITING', 'CLAIMED', 'DECLINED', 'ABANDONED', 'CLOSED']).optional() });
 const voice = zod_1.z.object({ guildId: sf, channelId: sf, discordId: sf, userName: zod_1.z.string().trim().min(1).max(100).default('?') });
 const webAction = zod_1.z.discriminatedUnion('action', [
     zod_1.z.object({ action: zod_1.z.literal('claim') }), zod_1.z.object({ action: zod_1.z.literal('close') }),
@@ -36,9 +35,9 @@ let VoiceSupportController = class VoiceSupportController {
     constructor(s) {
         this.s = s;
     }
-    rooms(q) { return this.s.rooms(q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    save(a, q, b) { return this.s.saveRooms(a, b, q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    cases(q) { return this.s.cases({ guildId: q.guildId ?? (0, guild_context_1.currentGuild)(), status: q.status }); }
+    rooms() { return this.s.rooms(); }
+    save(a, b) { return this.s.saveRooms(a, b); }
+    cases(q) { return this.s.cases({ status: q.status }); }
     /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
     action(a, id, b) { return this.s.webAction(a, id, b); }
 };
@@ -46,19 +45,17 @@ exports.VoiceSupportController = VoiceSupportController;
 __decorate([
     (0, common_1.Get)('rooms'),
     (0, decorators_1.RequirePermission)('ticket.view'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], VoiceSupportController.prototype, "rooms", null);
 __decorate([
     (0, common_1.Put)('rooms'),
     (0, decorators_1.RequirePermission)('ticket.settings'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(voice_support_service_1.roomsSchema))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(voice_support_service_1.roomsSchema))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0, Array]),
+    __metadata("design:paramtypes", [Object, Array]),
     __metadata("design:returntype", void 0)
 ], VoiceSupportController.prototype, "save", null);
 __decorate([

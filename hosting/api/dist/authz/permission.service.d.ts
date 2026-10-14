@@ -7,24 +7,20 @@ export declare class PermissionService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     /**
-     * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen), die im Server der Anfrage gelten.
-     * Server sind von Grund auf getrennt: auf einem Server zählen NUR die Rollen dieses Servers (`guildId`) – plus der globale
-     * Systemadministrator. Serverübergreifende Rollen (Vorlagen) gelten nur unter „Alle Server“ (ohne Server).
-     * Über Discord vergebene Zuweisungen (`UserRole.guildIds`) gelten nur auf den Servern, auf denen die Discord-Rolle besteht.
-     * Deaktivierte Rollen verleihen nichts.
+     * IDs aller aktiven Rollen des Benutzers (direkt und über Gruppen). Deaktivierte Rollen verleihen nichts.
+     * Über Discord vergebene Zuweisungen (`UserRole.guildIds` = Server der Discord-Rolle) zählen nur, wenn sie vom Discord-Server
+     * dieses Systems stammen – eine Rolle auf einem fremden Discord-Server verleiht nie Rechte.
+     * Server-Rollen aus der früheren Multi-Server-Zeit (`guildId` gesetzt) sind nach der Zusammenführung nur noch Archiv und gelten nicht.
      */
-    roleIdsFor(userId: string, guildId?: string | null): Promise<string[]>;
-    contextFor(userId: string, guildId?: string | null): Promise<PermissionContext>;
+    roleIdsFor(userId: string): Promise<string[]>;
+    contextFor(userId: string): Promise<PermissionContext>;
     check(userId: string, permission: string): Promise<import("@enrp/shared").Resolution>;
     has(userId: string, permission: string): Promise<boolean>;
     assert(userId: string, permission: string): Promise<void>;
-    effective(userId: string, guildId?: string | null): Promise<import("@enrp/shared").PermissionKey[]>;
+    effective(userId: string): Promise<import("@enrp/shared").PermissionKey[]>;
     /** Höchster Rang des Benutzers = kleinste Priorität seiner aktiven Rollen. */
     rankOf(userId: string): Promise<number>;
-    /**
-     * Globaler Systemadministrator (Serverbesitzer) = serverübergreifende, aktive Rolle „System Administrator“, MANUELL vergeben
-     * (bzw. beim Discord-Login über ADMIN_DISCORD_IDS). Server-Administratoren (Rechte nur auf einem Server) sind das ausdrücklich nicht.
-     */
+    /** Systemadministrator (Serverbesitzer) = aktive Rolle „System Administrator“, MANUELL vergeben (bzw. beim Discord-Login über ADMIN_DISCORD_IDS). */
     isOwner(userId: string): Promise<boolean>;
     /** Nur Rollen strikt unterhalb des eigenen Rangs dürfen verwaltet, vergeben oder entzogen werden (Besitzer: alle). */
     assertOutranksRole(actorId: string, rolePriority: number, roleName?: string): Promise<void>;

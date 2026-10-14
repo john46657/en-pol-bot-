@@ -1,13 +1,11 @@
 import { ApplicationBansService } from '../application-bans/application-bans.service';
 import { hireEvents } from '../common/hire-events';
-import { settingsGuild } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
-import { currentGuild } from '../common/guild-context';
 import { makeNumber } from '../common/numbering';
 import { webUrl } from '../common/web-url';
 import { appSettingsSchema, configSchema, DEFAULT_CONFIG, formSchema, type QualificationConfig } from './qualifications.config';
@@ -29,52 +27,36 @@ export interface Answer { question: string; answer: string | string[] | null }
 export class QualificationsService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService) {}
 
-  /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
-  private keyOf(base: string, guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
-  private async read(base: string, guildId?: string | null) {
-    if (guildId) { const own = await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(base, guildId) } }); if (own) return { value: own.value, own: true }; }
-    return { value: (await this.prisma.systemSetting.findUnique({ where: { key: base } }))?.value, own: false };
-  }
+  private async read(key: string) { return (await this.prisma.systemSetting.findUnique({ where: { key } }))?.value; }
 
-  async config(guildId?: string | null): Promise<QualificationConfig> {
-    const row = await this.read(KEY, guildId);
-    const parsed = row.value ? configSchema.safeParse(row.value) : null;
+  async config(): Promise<QualificationConfig> {
+    const value = await this.read(KEY);
+    const parsed = value ? configSchema.safeParse(value) : null;
     return parsed?.success ? parsed.data : DEFAULT_CONFIG;
   }
 
   /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
-  async policeForm(guildId?: string | null): Promise<FormField[]> {
-    const p = formSchema.safeParse((await this.read(FORM_KEY, guildId)).value);
+  async policeForm(): Promise<FormField[]> {
+    const p = formSchema.safeParse(await this.read(FORM_KEY));
     return p.success ? p.data as FormField[] : DEFAULT_FORM; // ungültig gespeichert → Standardformular
   }
 
-  /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
-  async setup(guildId?: string | null) {
-    const own = guildId ? (await this.read(KEY, guildId)).own : true;
-    return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own };
+  /** Alles für „Setup“ an einem Ort. */
+  async setup() {
+    return { ...(await this.config()), policeForm: await this.policeForm() };
   }
 
-  async saveConfig(actor: Actor, input: QualificationConfig & { policeForm?: FormField[] }, guildId?: string | null) {
-    const { policeForm, ...c } = input;
-    const key = this.keyOf(KEY, guildId), formKey = this.keyOf(FORM_KEY, guildId);
-    // eigener Server ohne eigenes Formular: das gemeinsame Formular übernehmen, damit Server-Einstellungen vollständig sind
-    const form = policeForm ?? (guildId && !(await this.prisma.systemSetting.findUnique({ where: { key: formKey } })) ? await this.policeForm(null) : undefined);
+  async saveConfig(actor: Actor, input: QualificationConfig & { policeForm?: FormField[] }) {
+    const { policeForm: form, ...c } = input;
     await this.prisma.$transaction(async (tx) => {
-      await tx.systemSetting.upsert({ where: { key }, create: { key, value: c as unknown as Prisma.InputJsonValue }, update: { value: c as unknown as Prisma.InputJsonValue } });
-      await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: key, after: { units: c.units.map((u) => u.key), guildId: guildId ?? null } }, tx);
+      await tx.systemSetting.upsert({ where: { key: KEY }, create: { key: KEY, value: c as unknown as Prisma.InputJsonValue }, update: { value: c as unknown as Prisma.InputJsonValue } });
+      await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: KEY, after: { units: c.units.map((u) => u.key) } }, tx);
       if (form) {
-        await tx.systemSetting.upsert({ where: { key: formKey }, create: { key: formKey, value: form as unknown as Prisma.InputJsonValue }, update: { value: form as unknown as Prisma.InputJsonValue } });
-        await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: formKey, after: form as unknown as Prisma.InputJsonValue }, tx);
+        await tx.systemSetting.upsert({ where: { key: FORM_KEY }, create: { key: FORM_KEY, value: form as unknown as Prisma.InputJsonValue }, update: { value: form as unknown as Prisma.InputJsonValue } });
+        await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: FORM_KEY, after: form as unknown as Prisma.InputJsonValue }, tx);
       }
     });
-    return this.setup(guildId);
-  }
-
-  /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
-  async resetGuild(actor: Actor, guildId: string) {
-    await this.prisma.systemSetting.deleteMany({ where: { key: { in: [this.keyOf(KEY, guildId), this.keyOf(FORM_KEY, guildId)] } } });
-    await this.audit.record(actor, { action: 'qualifications.config.reset', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId) });
-    return this.setup(guildId);
+    return this.setup();
   }
 
   /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
@@ -84,7 +66,7 @@ export class QualificationsService {
   }
 
   async submit(d: { unit: string; discordId: string; discordName: string; answers: Answer[]; durationSec?: number; joinedAt?: Date; guildId?: string }) {
-    const cfg = await this.config(d.guildId);
+    const cfg = await this.config();
     const unit = cfg.units.find((u) => u.key === d.unit);
     if (!unit) throw new AppError('NOT_FOUND', 'Unbekannte Einheit.');
     if (!unit.enabled) throw new AppError('CONFLICT', `Bewerbungen für ${unit.name} sind derzeit geschlossen.`);
@@ -104,7 +86,7 @@ export class QualificationsService {
       answers.push({ question: q.label, answer: text || '—' });
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     }
-    await this.bans.assertAllowed({ discordId: d.discordId }, unit.key, unit.name, d.guildId ?? null);
+    await this.bans.assertAllowed({ discordId: d.discordId }, unit.key, unit.name);
     if ((await this.openFor(d.discordId, unit.key)).open) throw new AppError('CONFLICT', `Für ${unit.name} gibt es schon eine offene Bewerbung.`);
     const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
     const wait = cooldownLeft(unit.settings, last?.createdAt);
@@ -126,8 +108,8 @@ export class QualificationsService {
     return { id: a.id, number: a.number, unitName: a.unitName };
   }
 
-  async list(f: { unit?: string; status?: string; guildId?: string }) {
-    const rows = await this.prisma.qualificationApplication.findMany({ where: { ...(f.unit ? { unit: f.unit } : {}), ...(f.status ? { status: f.status } : {}), ...(f.guildId ? { guildId: f.guildId } : {}) }, orderBy: { createdAt: 'desc' }, take: 200 });
+  async list(f: { unit?: string; status?: string }) {
+    const rows = await this.prisma.qualificationApplication.findMany({ where: { ...(f.unit ? { unit: f.unit } : {}), ...(f.status ? { status: f.status } : {}) }, orderBy: { createdAt: 'desc' }, take: 200 });
     const ids = [...new Set(rows.flatMap((r) => [r.userId, r.decidedById]).filter((x): x is string => !!x))];
     const users = new Map((await this.prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
     return rows.map((r) => ({ ...r, linkedName: r.userId ? users.get(r.userId) ?? null : null, decidedByName: r.decidedById ? users.get(r.decidedById) ?? '—' : null }));
@@ -162,7 +144,7 @@ export class QualificationsService {
     const open = await this.prisma.qualificationApplication.findMany({ where: { discordId, status: 'OPEN', OR: [{ guildId }, { guildId: null }] } });
     let denied = 0, withdrawn = 0;
     for (const a of open) {
-      const action = (await this.config(a.guildId)).units.find((u) => u.key === a.unit)?.settings.onLeave ?? 'NONE';
+      const action = (await this.config()).units.find((u) => u.key === a.unit)?.settings.onLeave ?? 'NONE';
       if (action === 'DENY') { await this.decide(LEFT_ACTOR, a.id, 'REJECTED', LEFT_REASON).then(() => denied++, () => undefined); continue; }
       if (action !== 'WITHDRAW') continue;
       const claimed = await this.prisma.$transaction(async (tx) => {
@@ -182,15 +164,15 @@ export class QualificationsService {
     if (a.status !== 'OPEN') throw new AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
     const ownLink = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
     if ((a.userId && a.userId === actor.userId) || ownLink?.discordId === a.discordId) throw new AppError('PERMISSION_DENIED', 'Über deine eigene Bewerbung kannst du nicht entscheiden.');
-    const unit = (await this.config(a.guildId)).units.find((u) => u.key === a.unit);
+    const unit = (await this.config()).units.find((u) => u.key === a.unit);
     let addedToSek = false;
     await this.prisma.$transaction(async (tx) => {
       const claimed = await tx.qualificationApplication.updateMany({ where: { id, status: 'OPEN' }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
       if (claimed.count === 0) throw new AppError('CONFLICT', 'Über diese Bewerbung wurde schon entschieden.');
       if (status === 'ACCEPTED' && a.unit === 'sek' && a.userId) {
-        // SEK-Mitglied und Rolle „SEK“ des Servers der Bewerbung (je Server getrennt)
+        // SEK-Mitglied und Rolle „SEK“
         if (!(await tx.sekMember.findFirst({ where: { userId: a.userId } }))) await tx.sekMember.create({ data: { userId: a.userId, addedById: actor.userId } });
-        const role = await tx.role.findFirst({ where: { guildId: a.guildId ?? currentGuild(), name: 'SEK' } });
+        const role = await tx.role.findFirst({ where: { guildId: null, name: 'SEK' } });
         if (role) await tx.userRole.upsert({ where: { userId_roleId: { userId: a.userId, roleId: role.id } }, create: { userId: a.userId, roleId: role.id }, update: {} });
         addedToSek = true;
       }

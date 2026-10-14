@@ -6,7 +6,7 @@ import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Actor } from '../audit/audit.service';
-import { ServersService } from '../multi-server/servers.service';
+import { HomeServerService } from '../server/home-server.service';
 declare const guildsBody: z.ZodObject<{
     guilds: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
@@ -20,14 +20,14 @@ declare const guildsBody: z.ZodObject<{
             position: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             id: string;
-            type: "other" | "category" | "text" | "voice";
             name: string;
+            type: "text" | "category" | "voice" | "other";
             position: number;
             parentId: string | null;
         }, {
             id: string;
-            type: "other" | "category" | "text" | "voice";
             name: string;
+            type: "text" | "category" | "voice" | "other";
             position: number;
             parentId: string | null;
         }>, "many">;
@@ -38,86 +38,86 @@ declare const guildsBody: z.ZodObject<{
             position: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             id: string;
-            color: number;
             name: string;
+            color: number;
             position: number;
         }, {
             id: string;
-            color: number;
             name: string;
+            color: number;
             position: number;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
         icon: string | null;
         channels: {
             id: string;
-            type: "other" | "category" | "text" | "voice";
             name: string;
+            type: "text" | "category" | "voice" | "other";
             position: number;
             parentId: string | null;
-        }[];
-        roles: {
-            id: string;
-            color: number;
-            name: string;
-            position: number;
         }[];
     }, {
         id: string;
         name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
         icon: string | null;
         channels: {
             id: string;
-            type: "other" | "category" | "text" | "voice";
             name: string;
+            type: "text" | "category" | "voice" | "other";
             position: number;
             parentId: string | null;
-        }[];
-        roles: {
-            id: string;
-            color: number;
-            name: string;
-            position: number;
         }[];
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
         id: string;
         name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
         icon: string | null;
         channels: {
             id: string;
-            type: "other" | "category" | "text" | "voice";
             name: string;
+            type: "text" | "category" | "voice" | "other";
             position: number;
             parentId: string | null;
-        }[];
-        roles: {
-            id: string;
-            color: number;
-            name: string;
-            position: number;
         }[];
     }[];
 }, {
     guilds: {
         id: string;
         name: string;
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
         icon: string | null;
         channels: {
             id: string;
-            type: "other" | "category" | "text" | "voice";
             name: string;
+            type: "text" | "category" | "voice" | "other";
             position: number;
             parentId: string | null;
-        }[];
-        roles: {
-            id: string;
-            color: number;
-            name: string;
-            position: number;
         }[];
     }[];
 }>;
@@ -167,44 +167,44 @@ declare const membersBody: z.ZodObject<{
         joinedAt: z.ZodNullable<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        guildId: string;
-        roleIds: string[];
         username: string;
         displayName: string;
-        joinedAt: string | null;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         avatar: string | null;
+        joinedAt: string | null;
     }, {
         id: string;
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        guildId: string;
-        roleIds: string[];
         username: string;
         displayName: string;
-        joinedAt: string | null;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         avatar: string | null;
+        joinedAt: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     members: {
         id: string;
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        guildId: string;
-        roleIds: string[];
         username: string;
         displayName: string;
-        joinedAt: string | null;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         avatar: string | null;
+        joinedAt: string | null;
     }[];
 }, {
     members: {
         id: string;
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        guildId: string;
-        roleIds: string[];
         username: string;
         displayName: string;
-        joinedAt: string | null;
+        guildId: string;
+        roleIds: string[];
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         avatar: string | null;
+        joinedAt: string | null;
     }[];
 }>;
 declare const voiceBody: z.ZodObject<{
@@ -230,103 +230,103 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
-            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
+            since: string | null;
         }, {
             id: string;
             displayName: string;
             avatar: string | null;
-            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
+            since: string | null;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        guildId: string;
         name: string;
-        position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
-            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
+            since: string | null;
         }[];
+        position: number;
         parentId: string | null;
         parentName: string | null;
     }, {
         id: string;
-        guildId: string;
         name: string;
-        position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
-            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
+            since: string | null;
         }[];
+        position: number;
         parentId: string | null;
         parentName: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     channels: {
         id: string;
-        guildId: string;
         name: string;
-        position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
-            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
+            since: string | null;
         }[];
+        position: number;
         parentId: string | null;
         parentName: string | null;
     }[];
 }, {
     channels: {
         id: string;
-        guildId: string;
         name: string;
-        position: number;
+        guildId: string;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
-            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
+            since: string | null;
         }[];
+        position: number;
         parentId: string | null;
         parentName: string | null;
     }[];
@@ -348,8 +348,8 @@ declare const application: z.ZodObject<{
     joinedAt: z.ZodOptional<z.ZodDate>;
     answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
 }, "strip", z.ZodTypeAny, {
-    robloxUsername: string;
     discordId: string;
+    robloxUsername: string;
     answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
@@ -357,8 +357,8 @@ declare const application: z.ZodObject<{
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
-    robloxUsername: string;
     discordId: string;
+    robloxUsername: string;
     answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
@@ -396,8 +396,8 @@ export declare class BotController {
     private readonly danger;
     private readonly applications;
     private readonly prisma;
-    private readonly servers;
-    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService, servers: ServersService);
+    private readonly home;
+    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService, home: HomeServerService);
     redeem(b: z.infer<typeof redeem>): Promise<{
         displayName: string;
         username: string;
@@ -412,10 +412,10 @@ export declare class BotController {
         id: string;
         createdAt: Date;
         type: string;
-        lastError: string | null;
         channelKey: string;
         payload: import("@prisma/client/runtime/library").JsonValue;
         attempts: number;
+        lastError: string | null;
         sentAt: Date | null;
     }[]>;
     ack(id: string, b: z.infer<typeof ack>): Promise<void>;
@@ -447,7 +447,7 @@ export declare class BotController {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
         }[];
         panel: {
             title: string;

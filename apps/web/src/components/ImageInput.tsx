@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { api, apiHeaders } from '../lib/api';
+import { api } from '../lib/api';
 import { errText } from '../lib/tickets';
 import { Button, Input } from './ui';
 
@@ -11,7 +11,7 @@ const blobs = new Map<string, Promise<string | null>>();
 export function previewUrl(ref: string): Promise<string | null> {
   const id = MEDIA.exec(ref)?.[1];
   if (!id) return Promise.resolve(/^https:\/\//.test(ref) ? ref : null);
-  if (!blobs.has(id)) blobs.set(id, fetch(`/api/v1/media/${id}`, { credentials: 'include', headers: apiHeaders() }).then((r) => (r.ok ? r.blob() : null)).then((b) => (b ? URL.createObjectURL(b) : null), () => null));
+  if (!blobs.has(id)) blobs.set(id, fetch(`/api/v1/media/${id}`, { credentials: 'include' }).then((r) => (r.ok ? r.blob() : null)).then((b) => (b ? URL.createObjectURL(b) : null), () => null));
   return blobs.get(id)!;
 }
 

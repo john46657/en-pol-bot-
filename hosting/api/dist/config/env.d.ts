@@ -46,6 +46,7 @@ declare const schema: z.ZodObject<{
     SESSION_TTL_HOURS: number;
     WEB_ORIGIN: string;
     STORAGE_DIR: string;
+    DISCORD_GUILD_ID?: string | undefined;
     SERVER_PORT?: number | undefined;
     ENABLE_SWAGGER?: "true" | "false" | undefined;
     BOT_API_TOKEN?: string | undefined;
@@ -56,12 +57,12 @@ declare const schema: z.ZodObject<{
     ROBLOX_CLIENT_ID?: string | undefined;
     ROBLOX_CLIENT_SECRET?: string | undefined;
     DISCORD_TOKEN?: string | undefined;
-    DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
     ERLC_SECRET_KEY?: string | undefined;
     ERLC_POLLING?: "true" | "false" | undefined;
 }, {
     DATABASE_URL: string;
+    DISCORD_GUILD_ID?: string | undefined;
     NODE_ENV?: "development" | "test" | "production" | undefined;
     PORT?: number | undefined;
     SERVER_PORT?: number | undefined;
@@ -80,7 +81,6 @@ declare const schema: z.ZodObject<{
     ROBLOX_CLIENT_ID?: string | undefined;
     ROBLOX_CLIENT_SECRET?: string | undefined;
     DISCORD_TOKEN?: string | undefined;
-    DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
     ERLC_SECRET_KEY?: string | undefined;
     ERLC_POLLING?: "true" | "false" | undefined;

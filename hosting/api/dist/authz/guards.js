@@ -56,14 +56,12 @@ let AuthGuard = class AuthGuard {
     prisma;
     discord;
     access;
-    authz;
     botToken = (0, env_1.loadEnv)().BOT_API_TOKEN;
-    constructor(reflector, prisma, discord, access, authz) {
+    constructor(reflector, prisma, discord, access) {
         this.reflector = reflector;
         this.prisma = prisma;
         this.discord = discord;
         this.access = access;
-        this.authz = authz;
     }
     validBotToken(header) {
         if (!this.botToken || typeof header !== 'string' || !header.startsWith('Bot '))
@@ -102,16 +100,15 @@ let AuthGuard = class AuthGuard {
             if (!user)
                 throw new errors_1.AppError('UNAUTHENTICATED', 'Dein Discord-Konto ist nicht verknüpft.', { reason: 'NOT_LINKED' });
             req.user = { id: user.id, username: user.username, displayName: user.displayName, robloxUserId: user.robloxUserId, sessionId: 'bot' };
-            // Discord-Befehl auf einem Server: die Interaktion belegt die aktuelle Mitgliedschaft und Rollen auf GENAU diesem Server
-            const guildId = (0, guild_context_1.currentGuild)();
+            // Discord-Befehl: nur vom Discord-Server dieses Systems. Die Interaktion belegt die aktuelle Mitgliedschaft und Rollen dort.
+            const h = req.headers['x-guild-id'];
+            const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
             if (guildId) {
-                const server = await this.authz.server(guildId);
-                if (server) {
-                    const raw = req.headers['x-discord-roles'];
-                    const roles = typeof raw === 'string' ? raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
-                    await this.access.recordMemberships(user.id, { [guildId]: roles }, [guildId]);
-                    await this.access.syncRoles(user.id, { [guildId]: roles }, undefined, [guildId]).catch(() => undefined);
-                }
+                if (!(0, guild_context_1.isHomeGuild)(guildId))
+                    throw new errors_1.AppError('PERMISSION_DENIED', 'Dieser Bot ist nur auf dem Discord-Server der EN Polizei aktiv.', { reason: 'FOREIGN_GUILD' });
+                const raw = req.headers['x-discord-roles'];
+                const roles = typeof raw === 'string' ? raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
+                await this.access.syncRoles(user.id, { [guildId]: roles }).catch(() => undefined);
             }
             return true;
         }
@@ -133,13 +130,9 @@ let AuthGuard = class AuthGuard {
 exports.AuthGuard = AuthGuard;
 exports.AuthGuard = AuthGuard = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [core_1.Reflector, prisma_service_1.PrismaService, discord_service_1.DiscordService, discord_access_service_1.DiscordAccessService, authorization_service_1.AuthorizationService])
+    __metadata("design:paramtypes", [core_1.Reflector, prisma_service_1.PrismaService, discord_service_1.DiscordService, discord_access_service_1.DiscordAccessService])
 ], AuthGuard);
-/**
- * Jede Route mit `@RequirePermission` läuft über den zentralen AuthorizationService: Server der Anfrage (X-Guild-Id)
- * registriert und aktiv, bestätigte Mitgliedschaft, Modul an, Berechtigung. Routen unter `/servers/:serverId/…` prüfen
- * zusätzlich gegen den Pfad-Server (siehe ServersController) – der Header kann den Pfad nie übersteuern.
- */
+/** Jede Route mit `@RequirePermission` läuft über den zentralen AuthorizationService (Modul an, Berechtigung). */
 let PermissionGuard = class PermissionGuard {
     reflector;
     authz;
@@ -157,7 +150,7 @@ let PermissionGuard = class PermissionGuard {
         if (!req.user)
             throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
         for (const p of required)
-            await this.authz.assert(req.user.id, (0, guild_context_1.currentGuild)(), p, {}, { requestId: req.requestId, ip: req.ip });
+            await this.authz.assert(req.user.id, p, { requestId: req.requestId, ip: req.ip });
         return true;
     }
 };

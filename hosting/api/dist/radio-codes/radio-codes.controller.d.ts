@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { RadioCodesService } from './radio-codes.service';
 import type { Actor } from '../audit/audit.service';
 declare const create: z.ZodObject<{
-    guildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     meaning: z.ZodString;
     category: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -12,13 +11,11 @@ declare const create: z.ZodObject<{
     meaning: string;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    guildId?: string | null | undefined;
 }, {
     code: string;
     meaning: string;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    guildId?: string | null | undefined;
 }>;
 declare const update: z.ZodObject<{
     code: z.ZodOptional<z.ZodString>;
@@ -26,14 +23,14 @@ declare const update: z.ZodObject<{
     category: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
+    code?: string | undefined;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    code?: string | undefined;
     meaning?: string | undefined;
 }, {
+    code?: string | undefined;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    code?: string | undefined;
     meaning?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -53,17 +50,17 @@ declare const discordCfg: z.ZodObject<{
     autoUpdate: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
     color: string;
-    title: string;
-    description: string;
     channelId: string | null;
+    description: string;
+    title: string;
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
 }, {
     color: string;
-    title: string;
-    description: string;
     channelId: string | null;
+    description: string;
+    title: string;
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
@@ -81,11 +78,11 @@ export declare class RadioCodesController {
     list(q: z.infer<typeof listQ>): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string | null;
-        description: string | null;
         code: string;
+        category: string | null;
+        updatedAt: Date;
         guildId: string | null;
+        description: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -123,11 +120,11 @@ export declare class RadioCodesController {
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string | null;
-        description: string | null;
         code: string;
+        category: string | null;
+        updatedAt: Date;
         guildId: string | null;
+        description: string | null;
         position: number;
         meaning: string;
     }>;
@@ -137,22 +134,22 @@ export declare class RadioCodesController {
     reorder(a: Actor, b: z.infer<typeof order>): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string | null;
-        description: string | null;
         code: string;
+        category: string | null;
+        updatedAt: Date;
         guildId: string | null;
+        description: string | null;
         position: number;
         meaning: string;
     }[]>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        category: string | null;
-        description: string | null;
         code: string;
+        category: string | null;
+        updatedAt: Date;
         guildId: string | null;
+        description: string | null;
         position: number;
         meaning: string;
     }>;
