@@ -77,7 +77,7 @@ export class HrRequestsController {
 }
 
 // ───────────── Ausbildungen & Prüfungen ─────────────
-const progress = z.object({ trainingId: uuid, personnelId: uuid, status: z.enum(TRAINING_STATUSES), progress: z.number().int().min(0).max(100).optional(), note: z.string().max(1000).nullable().optional() });
+const progress = z.object({ trainingId: uuid, personnelId: uuid, status: z.enum(TRAINING_STATUSES), progress: z.number().int().min(0).max(100).optional(), doneModules: z.array(z.string().max(100)).max(50).optional(), note: z.string().max(1000).nullable().optional() });
 
 @ApiTags('hr')
 @Controller('hr')

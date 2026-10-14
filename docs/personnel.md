@@ -11,7 +11,7 @@ Alles Organisatorische wird im Dashboard eingestellt – nichts davon ist im Cod
 | Personal-Übersicht (Karten/Tabelle, Suche nach Discord/Roblox/Rang/Abteilung/Status/Dienstnummer, Filter aktiv/inaktiv/abwesend) | `/personnel` | `personnel.view` |
 | Personalakte (Übersicht, Rang, Beförderungen, Ausbildungen, Prüfungen, Auszeichnungen, Verwarnungen, Abwesenheiten, Versetzungen, Dienstnummern, Notizen, Historie) | `/personnel/:id` | `personnel.view`, geschützte Bereiche `personnel.view_sensitive`, Verwarnungen `warning.view` |
 | 🎖️ Beförderungen: Anträge, Genehmigungsstufen, Durchführung, Ränge mit Voraussetzungen, Workflow & Benachrichtigungen | `/promotions` | `promotion.*`, `transfer.*` |
-| 🎓 Ausbildungen & Prüfungen (Fortschritt, Fragetypen, Zeitlimit, Versuche, Wartezeit, automatische/manuelle Bewertung, Zertifikate `/certificates/:nr`) | `/trainings` | `training.*`, `exam.*` |
+| 🎓 Ausbildungen & Prüfungen (Fortschritt, Modul-Checkliste pro Rekrut, Fragetypen, Zeitlimit, Versuche, Wartezeit, automatische/manuelle Bewertung, Zertifikate `/certificates/:nr`) | `/trainings` | `training.*`, `exam.*` |
 | 📢 Interne Meldungen (Zielgruppe, Priorität, Zeitraum, Lesebestätigung „47 von 52 gelesen“, optional Discord) und 🗳️ Abstimmungen | `/announcements` | `announcements.*`, `polls.*` |
 | 🪪 Dienstnummern (Nummernkreise, Status, manuelle Vergabe, Änderung, Freigabe, Sperre, Historie, Automatik) | `/service-numbers` | `dienstnummer.*` |
 | Personal-Einstellungen (Status, Abteilungen, Abwesenheitsarten, Schweregrade, Kategorien, Auszeichnungen, sichtbare/geschützte Felder, Zertifikat) | `/admin/personnel` | `promotion.manage_settings` |
@@ -28,3 +28,11 @@ Bewerbung angenommen (Polizei oder Qualifikation, je Zuordnung) → Benutzer/Per
 
 ### Datenschutz
 Verwarnungen, interne Notizen, Abwesenheitsgründe und die Historie sind geschützt; nach Discord gehen nur neutrale Texte (z. B. „X wurde befördert“), nie Verwarnungsinhalte.
+
+## Modul-Checkliste pro Rekrut
+Eine Ausbildung kann **Module** haben (*Ausbildungen → Bearbeiten → Module*, in Reihenfolge, bis 50). In der Fortschrittstabelle haken Ausbilder der Ausbildung (oder `training.manage`) die Module pro Person ab:
+- Der Fortschritt in Prozent ergibt sich aus den abgehakten Modulen; das erste Häkchen setzt „Nicht begonnen“ auf „In Bearbeitung“.
+- **Bestanden** geht erst, wenn alle Module abgehakt sind (sonst Hinweis „Erst alle Module abhaken (x/y erledigt)“).
+- Wird ein Modul gelöscht, zählt es bei laufenden Ausbildungen nicht mehr; der Fortschritt wird neu berechnet. Bestandene Ausbildungen bleiben unverändert.
+- Ohne Module funktioniert alles wie bisher (Fortschritt in Prozent von Hand).
+

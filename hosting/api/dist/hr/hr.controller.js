@@ -338,7 +338,7 @@ exports.HrRequestsController = HrRequestsController = __decorate([
     __metadata("design:paramtypes", [hr_requests_service_1.HrRequestsService])
 ], HrRequestsController);
 // ───────────── Ausbildungen & Prüfungen ─────────────
-const progress = zod_1.z.object({ trainingId: uuid, personnelId: uuid, status: zod_1.z.enum(hr_training_service_1.TRAINING_STATUSES), progress: zod_1.z.number().int().min(0).max(100).optional(), note: zod_1.z.string().max(1000).nullable().optional() });
+const progress = zod_1.z.object({ trainingId: uuid, personnelId: uuid, status: zod_1.z.enum(hr_training_service_1.TRAINING_STATUSES), progress: zod_1.z.number().int().min(0).max(100).optional(), doneModules: zod_1.z.array(zod_1.z.string().max(100)).max(50).optional(), note: zod_1.z.string().max(1000).nullable().optional() });
 let HrTrainingController = class HrTrainingController {
     s;
     constructor(s) {

@@ -1684,6 +1684,8 @@ model HrTraining {
   requiredRoleId String?
   /// Gültigkeit in Tagen (leer = unbegrenzt)
   validDays      Int?
+  /// Module der Ausbildung (Checkliste, in Reihenfolge); leer = Fortschritt in Prozent von Hand
+  modules        String[]             @default([])
   position       Int                  @default(0)
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
@@ -1698,6 +1700,8 @@ model HrTrainingProgress {
   personnelId   String     @db.Uuid
   status        String     @default("NOT_STARTED") // NOT_STARTED | IN_PROGRESS | PASSED | FAILED | ABORTED | EXPIRED
   progress      Int        @default(0)
+  /// abgehakte Module (Namen aus HrTraining.modules)
+  doneModules   String[]   @default([])
   examinerId    String?    @db.Uuid
   note          String?
   startedAt     DateTime?

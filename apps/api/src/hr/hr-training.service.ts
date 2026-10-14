@@ -13,6 +13,7 @@ export const trainingSchema = z.object({
   instructorIds: z.array(z.string().uuid()).max(30).default([]), duration: z.string().max(60).nullable().default(null), active: z.boolean().default(true), examRequired: z.boolean().default(false),
   examId: z.string().uuid().nullable().default(null), certificate: z.boolean().default(true), audience: z.string().max(200).nullable().default(null), requiredRoleId: z.string().regex(/^\d{15,25}$/).nullable().default(null),
   validDays: z.number().int().min(1).max(3650).nullable().default(null),
+  modules: z.array(z.string().trim().min(1).max(100)).max(50).default([]).refine((m) => new Set(m).size === m.length, 'Jedes Modul darf nur einmal vorkommen.'),
 });
 export const examSchema = z.object({
   title: z.string().trim().min(1).max(120), description: z.string().max(3000).nullable().default(null), questions: z.array(questionSchema).max(200).default([]),
@@ -22,6 +23,11 @@ export const examSchema = z.object({
 });
 export const TRAINING_STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'PASSED', 'FAILED', 'ABORTED', 'EXPIRED'] as const;
 const CERT = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+/** Fortschritt in Prozent aus den abgehakten Modulen (nur Module, die es in der Ausbildung noch gibt). */
+const moduleState = (modules: string[], done: string[]) => {
+  const d = modules.filter((m) => done.includes(m));
+  return { doneModules: d, progress: modules.length ? Math.round((d.length / modules.length) * 100) : 0 };
+};
 const certNo = () => `Z-${new Date().getUTCFullYear()}-${Array.from({ length: 6 }, () => CERT[randomInt(CERT.length)]).join('')}`;
 
 /** Ausbildungen (mit Fortschritt und Zertifikat) und Prüfungen (Fragen, Versuche, automatische/manuelle Bewertung). */
@@ -37,6 +43,13 @@ export class HrTrainingService {
   }
   async saveTraining(actor: Actor, d: z.infer<typeof trainingSchema>, id?: string) {
     const t = id ? await this.prisma.hrTraining.update({ where: { id }, data: d }) : await this.prisma.hrTraining.create({ data: { ...d, position: ((await this.prisma.hrTraining.aggregate({ _max: { position: true } }))._max.position ?? 0) + 1 } });
+    // Module geändert → Fortschritt der laufenden Ausbildungen neu berechnen (gelöschte Module zählen nicht mehr)
+    if (id && t.modules.length) {
+      for (const r of await this.prisma.hrTrainingProgress.findMany({ where: { trainingId: id, status: { notIn: ['PASSED', 'EXPIRED'] } } })) {
+        const m = moduleState(t.modules, r.doneModules);
+        if (m.progress !== r.progress || m.doneModules.length !== r.doneModules.length) await this.prisma.hrTrainingProgress.update({ where: { id: r.id }, data: m });
+      }
+    }
     await this.core.audit.record(actor, { action: id ? 'training.update' : 'training.create', module: 'training', entityType: 'HrTraining', entityId: t.id, after: t });
     return t;
   }
@@ -50,7 +63,7 @@ export class HrTrainingService {
     return this.prisma.hrTrainingProgress.findMany({ where: { trainingId }, include: { personnel: { select: { id: true, rank: true, user: { select: { displayName: true } } } } }, orderBy: { updatedAt: 'desc' } });
   }
   /** Fortschritt setzen (Ausbilder oder training.manage); bei „bestanden“ ggf. Zertifikat und Ablaufdatum. */
-  async setProgress(actor: Actor, d: { trainingId: string; personnelId: string; status: (typeof TRAINING_STATUSES)[number]; progress?: number; note?: string | null }) {
+  async setProgress(actor: Actor, d: { trainingId: string; personnelId: string; status: (typeof TRAINING_STATUSES)[number]; progress?: number; doneModules?: string[]; note?: string | null }) {
     const t = await this.prisma.hrTraining.findUnique({ where: { id: d.trainingId } });
     if (!t) throw new AppError('NOT_FOUND', 'Ausbildung nicht gefunden.');
     if (!t.instructorIds.includes(actor.userId!) && !(await this.perms.has(actor.userId!, 'training.manage'))) throw new AppError('PERMISSION_DENIED', 'Nur Ausbilder dieser Ausbildung oder Verwalter können den Fortschritt setzen.');
@@ -59,9 +72,12 @@ export class HrTrainingService {
     if (d.status === 'PASSED' && t.examRequired && t.examId && !(await this.prisma.hrExamAttempt.count({ where: { examId: t.examId, personnelId: p.id, passed: true } }))) throw new AppError('CONFLICT', 'Für diese Ausbildung muss zuerst die Prüfung bestanden sein.');
     const before = await this.prisma.hrTrainingProgress.findUnique({ where: { trainingId_personnelId: { trainingId: t.id, personnelId: p.id } } });
     const passed = d.status === 'PASSED';
-    const progress = passed ? 100 : d.progress ?? before?.progress ?? (d.status === 'NOT_STARTED' ? 0 : 0);
+    // mit Modulen: Fortschritt kommt aus der Checkliste, „bestanden“ erst wenn alle Module abgehakt sind
+    const mods = t.modules.length ? moduleState(t.modules, d.doneModules ?? before?.doneModules ?? []) : null;
+    if (passed && mods && mods.doneModules.length < t.modules.length) throw new AppError('CONFLICT', `Erst alle Module abhaken (${mods.doneModules.length}/${t.modules.length} erledigt).`);
+    const progress = passed ? 100 : mods ? mods.progress : d.progress ?? before?.progress ?? 0;
     const data = {
-      status: d.status, progress: Math.max(0, Math.min(100, progress)), note: d.note ?? before?.note ?? null, examinerId: actor.userId,
+      status: d.status, progress: Math.max(0, Math.min(100, progress)), ...(mods ? { doneModules: mods.doneModules } : {}), note: d.note ?? before?.note ?? null, examinerId: actor.userId,
       ...(d.status !== 'NOT_STARTED' && !before?.startedAt ? { startedAt: new Date() } : {}),
       ...(passed ? { completedAt: new Date(), expiresAt: t.validDays ? new Date(Date.now() + t.validDays * 86_400_000) : null, certificateNo: before?.certificateNo ?? (t.certificate ? certNo() : null) } : {}),
     };
@@ -206,7 +222,10 @@ export class HrTrainingService {
       await this.core.notify('exam.passed', { memberUserId: a.personnel.userId, title: `📝 Prüfung bestanden: ${a.exam.title}`, entityType: 'Personnel', entityId: a.personnelId, publicText: `**${a.personnel.user.displayName}** hat die Prüfung **${a.exam.title}** bestanden.`, dmText: `Glückwunsch! Du hast die Prüfung **${a.exam.title}** bestanden (${pct} %).`, color: 0x22c55e });
       if (a.exam.trainingId) {
         const t = await this.prisma.hrTrainingProgress.findUnique({ where: { trainingId_personnelId: { trainingId: a.exam.trainingId, personnelId: a.personnelId } } });
-        if (!t || t.status === 'NOT_STARTED') await this.prisma.hrTrainingProgress.upsert({ where: { trainingId_personnelId: { trainingId: a.exam.trainingId, personnelId: a.personnelId } }, create: { trainingId: a.exam.trainingId, personnelId: a.personnelId, status: 'IN_PROGRESS', progress: 80, startedAt: new Date() }, update: { status: 'IN_PROGRESS', progress: Math.max(t?.progress ?? 0, 80) } });
+        // ohne Module gilt die Prüfung als großer Teil des Fortschritts; mit Modulen zählt nur die Checkliste
+        const withModules = !!(await this.prisma.hrTraining.findUnique({ where: { id: a.exam.trainingId }, select: { modules: true } }))?.modules.length;
+        const progress = withModules ? t?.progress ?? 0 : Math.max(t?.progress ?? 0, 80);
+        if (!t || t.status === 'NOT_STARTED') await this.prisma.hrTrainingProgress.upsert({ where: { trainingId_personnelId: { trainingId: a.exam.trainingId, personnelId: a.personnelId } }, create: { trainingId: a.exam.trainingId, personnelId: a.personnelId, status: 'IN_PROGRESS', progress, startedAt: new Date() }, update: { status: 'IN_PROGRESS', progress } });
       }
     }
   }

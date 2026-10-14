@@ -583,6 +583,7 @@ export declare class HrController {
             personnelId: string;
             trainingId: string;
             progress: number;
+            doneModules: string[];
             examinerId: string | null;
             completedAt: Date | null;
             certificateNo: string | null;
@@ -1093,6 +1094,7 @@ declare const progress: z.ZodObject<{
     personnelId: z.ZodString;
     status: z.ZodEnum<["NOT_STARTED", "IN_PROGRESS", "PASSED", "FAILED", "ABORTED", "EXPIRED"]>;
     progress: z.ZodOptional<z.ZodNumber>;
+    doneModules: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     status: "FAILED" | "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
@@ -1100,12 +1102,14 @@ declare const progress: z.ZodObject<{
     trainingId: string;
     note?: string | null | undefined;
     progress?: number | undefined;
+    doneModules?: string[] | undefined;
 }, {
     status: "FAILED" | "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
     personnelId: string;
     trainingId: string;
     note?: string | null | undefined;
     progress?: number | undefined;
+    doneModules?: string[] | undefined;
 }>;
 export declare class HrTrainingController {
     private readonly s;
@@ -1119,6 +1123,7 @@ export declare class HrTrainingController {
         active: boolean;
         updatedAt: Date;
         description: string | null;
+        modules: string[];
         duration: string | null;
         position: number;
         requirements: string | null;
@@ -1138,6 +1143,7 @@ export declare class HrTrainingController {
         active: boolean;
         updatedAt: Date;
         description: string | null;
+        modules: string[];
         duration: string | null;
         position: number;
         requirements: string | null;
@@ -1157,6 +1163,7 @@ export declare class HrTrainingController {
         active: boolean;
         updatedAt: Date;
         description: string | null;
+        modules: string[];
         duration: string | null;
         position: number;
         requirements: string | null;
@@ -1187,6 +1194,7 @@ export declare class HrTrainingController {
         personnelId: string;
         trainingId: string;
         progress: number;
+        doneModules: string[];
         examinerId: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
@@ -1201,6 +1209,7 @@ export declare class HrTrainingController {
         personnelId: string;
         trainingId: string;
         progress: number;
+        doneModules: string[];
         examinerId: string | null;
         completedAt: Date | null;
         certificateNo: string | null;

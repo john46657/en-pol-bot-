@@ -8,7 +8,7 @@ Der frühere Bot (Emden RP Bot) wurde entfernt (liegt in der Git-Historie). Hier
 | `dienst.py` | `/dienst start/ende`, Stunden | **Dienststatus**: Team-Dashboard, Discord `/dienst an\|pause\|aus`; Dienststunden in *Analytics* und per `/dienststunden` (eigene bzw. mit `alle` das ganze Team) | ✅ |
 | `dienstberichte.py` | `/dienstbericht` Formular | **Berichte** (versioniert, Prüf-Workflow), Discord `/bericht` | ✅ |
 | `fahndung.py` | Fahndung erstellen/beenden/Liste | **Fahndungen** (Person/Fahrzeug, Ablauf, Aufheben mit Begründung), Discord `/fahndung` + `/fahndungen`, Alarm-Channel | ✅ · Aufheben nur im Web |
-| `ausbildung.py` | Ausbilder, Modul-Checkliste, Abschluss | **Academy**: Kurse, Einschreibung, Benotung → Qualifikation | ✅ teilweise (keine Modul-Checkliste pro Rekrut) |
+| `ausbildung.py` | Ausbilder, Modul-Checkliste, Abschluss | **Academy**: Kurse, Einschreibung, Benotung → Qualifikation | ✅ inkl. Modul-Checkliste pro Rekrut (*Ausbildungen*, [personnel.md](personnel.md)) |
 | `teamliste.py` | automatisch aktualisierte Teamliste in Discord | **Team-Dashboard** (Web) + `/team` | ✅ inkl. selbst aktualisierender Teamliste (`/teamliste`) |
 | `roblox.py` | Discord ↔ Roblox verknüpfen/suchen | Roblox-ID am Benutzer (manuell, Admin) + Discord-Verknüpfung per Einmal-Code | ✅ inkl. Roblox-Namenssuche `/roblox` |
 | `funk.py` | Funk-Whitelist | **Funk-Freigabe** im System + `/funkfreigabe` (optional mit Discord-Rolle) | ✅ |
@@ -16,7 +16,7 @@ Der frühere Bot (Emden RP Bot) wurde entfernt (liegt in der Git-Historie). Hier
 | `gsg9.py` | eigenes Roster + Einsatzberichte | **entfernt** (SEK-Seite und `/sek`-Befehle gibt es nicht mehr, [sek.md](sek.md)); Bewerbung über das Qualifikations-Panel `/qualipanel` ([qualifications.md](qualifications.md)) | ✅ |
 | `tickets.py` | Support-Ticket-Channels (Button) | Vollständiges Ticket-System, eingerichtet im Dashboard ([support-tickets.md](support-tickets.md)); *Tickets* im System sind weiterhin Strafzettel | ✅ |
 | `app.py`, `*.html`, `api_server.py`, `dashboard_config.py` | Web-Dashboard für die Leitung | komplettes neues Web (Dashboard, MDT, Team, Admin, Studio) | ✅ ersetzt |
-| `config.py`, `settings.py`, `checks.py`, `database.py`, `discord_oauth.py` | Rollen-Checks, Einstellungen, Datenbank, Discord-Login | Rollen/Berechtigungen, Admin-Settings, PostgreSQL, eigener Login (kein Discord-OAuth) | ✅ ersetzt · ❌ Discord-Login |
+| `config.py`, `settings.py`, `checks.py`, `database.py`, `discord_oauth.py` | Rollen-Checks, Einstellungen, Datenbank, Discord-Login | Rollen/Berechtigungen, Admin-Settings, PostgreSQL, eigener Login und „Mit Discord anmelden“ (OAuth2, [dashboard.md](dashboard.md)) | ✅ ersetzt |
 
-## Noch offen (nach Bedarf)
-Modul-Checkliste pro Rekrut (Academy), Discord-OAuth-Login. Die Struktur dafür steht (siehe [extending.md](extending.md) und [discord-bot.md](discord-bot.md)).
+## Noch offen
+Nichts – alle Funktionen des alten Bots sind abgedeckt.
