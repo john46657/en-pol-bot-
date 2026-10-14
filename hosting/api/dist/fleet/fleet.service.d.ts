@@ -122,9 +122,9 @@ export declare class FleetService {
             id: string;
             status: string;
             name: string;
-            lastError: string | null;
             features: string[];
             lastSyncAt: Date | null;
+            lastError: string | null;
         }[];
     }>;
     get(actor: Actor, id: string): Promise<{
@@ -139,18 +139,18 @@ export declare class FleetService {
         incidents: never[] | {
             number: string;
             id: string;
-            title: string;
             status: string;
+            title: string;
         }[];
         events: {
             actorName: string | null;
             id: string;
-            incidentId: string | null;
             createdAt: Date;
+            incidentId: string | null;
             vehicleId: string;
-            actorId: string | null;
             kind: string;
             text: string;
+            actorId: string | null;
         }[];
         id: string;
         erlcServerId: string;
@@ -243,18 +243,18 @@ export declare class FleetService {
         incidents: never[] | {
             number: string;
             id: string;
-            title: string;
             status: string;
+            title: string;
         }[];
         events: {
             actorName: string | null;
             id: string;
-            incidentId: string | null;
             createdAt: Date;
+            incidentId: string | null;
             vehicleId: string;
-            actorId: string | null;
             kind: string;
             text: string;
+            actorId: string | null;
         }[];
         id: string;
         erlcServerId: string;

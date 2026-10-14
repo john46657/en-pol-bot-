@@ -280,6 +280,9 @@ let ServiceNumbersService = class ServiceNumbersService {
     async assignManual(actor, d) {
         if (!d.display && !d.rangeId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Nummer oder Nummernkreis angeben.');
+        // Nummer zuerst prüfen, damit bei belegter Nummer keine leere Personalakte entsteht (atomar prüft `allocate`)
+        if (d.display && !d.personnelId)
+            await this.checkFree(d.display);
         const p = d.personnelId ? await this.prisma.personnel.findUnique({ where: { id: d.personnelId } }) : d.discordId ? await this.personnelForDiscord(actor, d.discordId, d.name) : null;
         if (!p)
             throw new errors_1.AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
@@ -287,6 +290,15 @@ let ServiceNumbersService = class ServiceNumbersService {
         await this.prisma.hireQueue.updateMany({ where: { userId: p.userId, status: 'PENDING' }, data: { status: 'DONE' } });
         await this.afterAssign(actor, p.userId, r.display, { applicationName: null });
         return r;
+    }
+    /** Vorabprüfung einer bestimmten Nummer (die eigentliche, atomare Prüfung macht `allocate`). */
+    async checkFree(display) {
+        const p = await this.parse(display.trim());
+        if (!p)
+            throw new errors_1.AppError('VALIDATION_FAILED', `„${display}“ gehört zu keinem Nummernkreis.`);
+        const row = await this.prisma.serviceNumber.findUnique({ where: { rangeId_value: { rangeId: p.range.id, value: p.value } } });
+        if (!p.range.active || !p.range.manual || (row && row.status !== 'FREE'))
+            throw new errors_1.AppError('CONFLICT', `Die Nummer ${row?.display ?? display} ist nicht frei vergebbar.`);
     }
     /** Personalakte zu einem Discord-Mitglied – vorhandene oder neu angelegt (Benutzer wird bei Bedarf mit angelegt). */
     async personnelForDiscord(actor, discordId, name) {

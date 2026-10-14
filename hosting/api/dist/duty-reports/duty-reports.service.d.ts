@@ -39,12 +39,14 @@ export declare class DutyReportsService {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }[]>;
     saveTemplate(actor: Actor, t: ReportTemplate): Promise<{
         description: string;
@@ -63,12 +65,14 @@ export declare class DutyReportsService {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }>;
     duplicateTemplate(actor: Actor, id: string): Promise<{
         description: string;
@@ -87,12 +91,14 @@ export declare class DutyReportsService {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }>;
     removeTemplate(actor: Actor, id: string): Promise<void>;
     private template;
@@ -107,10 +113,10 @@ export declare class DutyReportsService {
             number: string;
             id: string;
             status: string;
-            authorId: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            authorId: string;
             source: string;
             guildId: string | null;
             values: Prisma.JsonValue;
@@ -146,12 +152,14 @@ export declare class DutyReportsService {
                 id: string;
                 placeholder: string;
                 inline: boolean;
+                separator: boolean;
             }[];
             pingRoleIds: string[];
             emoji: string;
             period: "DAILY" | "WEEKLY" | "FREE";
             onePerPeriod: boolean;
             authorCanEdit: boolean;
+            layout: "FIELDS" | "LIST";
         } | null;
         posted: {
             channelId: string;
@@ -166,10 +174,10 @@ export declare class DutyReportsService {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -188,10 +196,10 @@ export declare class DutyReportsService {
     dutyTime(userId: string, t: ReportTemplate, date?: string): Promise<string | null>;
     /** Vorbelegung fürs Formular (Dashboard und Discord): Dienstzeit-Felder automatisch. */
     prefill(actor: Actor, templateId: string, date?: string): Promise<{
-        values: {
-            [k: string]: string;
-        };
+        values: Record<string, string>;
     }>;
+    /** Automatisch füllbare Felder: Dienstzeit aus den Dienst-Sitzungen, Roblox-Name aus dem verknüpften Konto. */
+    private autoValues;
     create(actor: Actor, d: {
         templateId: string;
         periodStart?: string;
@@ -203,10 +211,10 @@ export declare class DutyReportsService {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -226,10 +234,10 @@ export declare class DutyReportsService {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -253,10 +261,10 @@ export declare class DutyReportsService {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;

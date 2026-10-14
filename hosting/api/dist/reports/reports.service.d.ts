@@ -23,15 +23,15 @@ export declare class ReportsService {
             number: string;
             serverId: string | null;
             id: string;
-            type: string;
-            title: string;
             status: string;
-            authorId: string;
-            incidentId: string | null;
-            currentVersion: number;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            type: string;
+            title: string;
+            authorId: string;
+            incidentId: string | null;
+            currentVersion: number;
         }[];
         total: number;
         page: number;
@@ -41,9 +41,9 @@ export declare class ReportsService {
         report: {
             versions: {
                 id: string;
-                authorId: string;
                 createdAt: Date;
                 version: number;
+                authorId: string;
                 reportId: string;
                 changeSummary: string;
                 content: Prisma.JsonValue;
@@ -53,21 +53,21 @@ export declare class ReportsService {
             number: string;
             serverId: string | null;
             id: string;
-            type: string;
-            title: string;
             status: string;
-            authorId: string;
-            incidentId: string | null;
-            currentVersion: number;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            type: string;
+            title: string;
+            authorId: string;
+            incidentId: string | null;
+            currentVersion: number;
         };
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -84,15 +84,15 @@ export declare class ReportsService {
         number: string;
         serverId: string | null;
         id: string;
-        type: string;
-        title: string;
         status: string;
-        authorId: string;
-        incidentId: string | null;
-        currentVersion: number;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
+        title: string;
+        authorId: string;
+        incidentId: string | null;
+        currentVersion: number;
     }>;
     /** Jede Änderung erzeugt eine neue unveränderliche Version; ältere werden nie überschrieben. */
     edit(actor: Actor, id: string, d: {
@@ -104,28 +104,28 @@ export declare class ReportsService {
         number: string;
         serverId: string | null;
         id: string;
-        type: string;
-        title: string;
         status: string;
-        authorId: string;
-        incidentId: string | null;
-        currentVersion: number;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
+        title: string;
+        authorId: string;
+        incidentId: string | null;
+        currentVersion: number;
     }>;
     transition(actor: Actor, id: string, to: ReportStatus, reason?: string): Promise<{
         number: string;
         serverId: string | null;
         id: string;
-        type: string;
-        title: string;
         status: string;
-        authorId: string;
-        incidentId: string | null;
-        currentVersion: number;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
+        title: string;
+        authorId: string;
+        incidentId: string | null;
+        currentVersion: number;
     }>;
 }

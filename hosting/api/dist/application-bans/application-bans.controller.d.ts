@@ -30,13 +30,13 @@ export declare class ApplicationBansController {
         all?: string;
     }): Promise<{
         id: string;
+        robloxUserId: string | null;
+        createdById: string | null;
         createdAt: Date;
         reason: string;
-        createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
-        name: string;
         guildId: string | null;
+        name: string;
         discordId: string | null;
         scopes: string[];
         createdByName: string | null;
@@ -45,13 +45,13 @@ export declare class ApplicationBansController {
     }[]>;
     create(a: Actor, b: z.infer<typeof createBody>): Promise<{
         id: string;
+        robloxUserId: string | null;
+        createdById: string | null;
         createdAt: Date;
         reason: string;
-        createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
-        name: string;
         guildId: string | null;
+        name: string;
         discordId: string | null;
         scopes: string[];
         createdByName: string | null;
@@ -60,13 +60,13 @@ export declare class ApplicationBansController {
     }>;
     lift(a: Actor, id: string): Promise<{
         id: string;
+        robloxUserId: string | null;
+        createdById: string | null;
         createdAt: Date;
         reason: string;
-        createdById: string | null;
         expiresAt: Date | null;
-        robloxUserId: string | null;
-        name: string;
         guildId: string | null;
+        name: string;
         discordId: string | null;
         scopes: string[];
         createdByName: string | null;

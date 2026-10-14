@@ -9,6 +9,8 @@ export interface AppSettingsCfg {
   messages: { accepted: string; denied: string; confirmation: string; completion: string };
   roles: { restricted: { ids: string[]; mode: Mode }; required: { ids: string[]; mode: Mode }; accepted: string[]; denied: string[]; acceptedRemove: string[]; deniedRemove: string[]; pending: string[]; removeOnSubmit: string[]; managers: string[] };
   staffThreads: boolean; cooldownMinutes: number; timeLimitMinutes: number; onLeave: 'NONE' | 'DENY' | 'WITHDRAW';
+  /** DM: Fragen per Direktnachricht; WEB: Formular im Browser (Link vom Bot). */
+  mode: 'DM' | 'WEB';
 }
 /** Was jede Bewerbung (Polizei und jede Einheit) gemeinsam hat. */
 export interface AppCommon { enabled: boolean; channelId?: string; acceptedChannelId?: string; deniedChannelId?: string; pingRoleIds: string[]; settings: AppSettingsCfg }
@@ -16,7 +18,7 @@ export interface AppCommon { enabled: boolean; channelId?: string; acceptedChann
 export const defaultAppSettings = (): AppSettingsCfg => ({
   messages: { ...DEFAULT_APPLICATION_MESSAGES },
   roles: { restricted: { ids: [], mode: 'ANY' }, required: { ids: [], mode: 'ANY' }, accepted: [], denied: [], acceptedRemove: [], deniedRemove: [], pending: [], removeOnSubmit: [], managers: [] },
-  staffThreads: false, cooldownMinutes: 0, timeLimitMinutes: 180, onLeave: 'NONE',
+  staffThreads: false, cooldownMinutes: 0, timeLimitMinutes: 180, onLeave: 'NONE', mode: 'DM',
 });
 /** Ältere Einträge ohne Einstellungen mit Standardwerten auffüllen. */
 export const withDefaults = (s: Partial<AppSettingsCfg> | undefined): AppSettingsCfg => {
@@ -96,7 +98,9 @@ export function ApplicationSettingsEditor({ value, onChange, name, onName, quest
       <Section title="Voraussetzungen">
         <Box title="Aktiviert" desc="Bewerbung öffnen oder schließen. Geschlossene Bewerbungen nehmen keine Einsendungen an."><Toggle label="Aktiviert" checked={value.enabled} onChange={(v) => onChange({ enabled: v })} /></Box>
         <Box title="Name der Bewerbung" desc="Der Name der Bewerbung ({applicationName})."><Input aria-label="Name der Bewerbung" maxLength={60} value={name} onChange={(e) => onName(e.target.value)} /></Box>
-        <Box title="Art der Bewerbung" desc="Wie die Person die Bewerbung ausfüllt."><Select aria-label="Art der Bewerbung" value="DM" disabled><option value="DM">Direktnachricht</option></Select></Box>
+        <Box title="Art der Bewerbung" desc={s.mode === 'WEB' ? 'Der Bot schickt beim Klick auf „Bewerben“ einen persönlichen Link – die Fragen werden im Browser ausgefüllt (gültig für das Zeitlimit).' : 'Wie die Person die Bewerbung ausfüllt.'}>
+          <Select aria-label="Art der Bewerbung" value={s.mode} onChange={(e) => set({ mode: e.target.value as AppSettingsCfg['mode'] })}><option value="DM">Direktnachricht</option><option value="WEB">Web (Formular im Browser)</option></Select>
+        </Box>
         <Box title="Kanal für offene Einsendungen" desc={pendingHint}><ChannelPicker ariaLabel="Kanal für offene Einsendungen" value={value.channelId} onChange={(id) => onChange({ channelId: id ?? '' })} /></Box>
         <Box title="Kanal für angenommene Einsendungen" desc="Angenommene Bewerbungen werden hier gepostet (am besten nur fürs Team sichtbar)."><ChannelPicker ariaLabel="Kanal für angenommene Einsendungen" value={value.acceptedChannelId} onChange={(id) => onChange({ acceptedChannelId: id ?? '' })} /></Box>
         <Box title="Kanal für abgelehnte Einsendungen" desc="Abgelehnte Bewerbungen werden hier gepostet (am besten nur fürs Team sichtbar)."><ChannelPicker ariaLabel="Kanal für abgelehnte Einsendungen" value={value.deniedChannelId} onChange={(id) => onChange({ deniedChannelId: id ?? '' })} /></Box>

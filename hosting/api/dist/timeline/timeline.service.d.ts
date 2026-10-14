@@ -12,8 +12,8 @@ export declare class TimelineService {
     list(entityType: string, entityId: string, take?: number): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        entityType: string;
         entityId: string;
+        entityType: string;
         summary: string;
         action: string;
         actorId: string | null;

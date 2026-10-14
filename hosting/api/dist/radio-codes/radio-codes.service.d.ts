@@ -81,8 +81,8 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -96,8 +96,8 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;
@@ -107,8 +107,8 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;
@@ -119,8 +119,8 @@ export declare class RadioCodesService {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;

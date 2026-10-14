@@ -75,8 +75,8 @@ export declare class MdtService {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -120,33 +120,34 @@ export declare class MdtService {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: Prisma.JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
         weapons: {
             serverId: string | null;
             model: string | null;
             id: string;
-            type: string;
             status: string;
+            notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
-            notes: string | null;
             serial: string;
+            type: string;
         }[] | null;
         warrants: {
             serverId: string | null;
             id: string;
             status: string;
+            createdById: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
@@ -155,7 +156,6 @@ export declare class MdtService {
             vehicleId: string | null;
             reason: string;
             priority: string;
-            createdById: string;
             expiresAt: Date | null;
         }[] | null;
     }>;
@@ -218,14 +218,14 @@ export declare class MdtService {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: Prisma.JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         }[];
         total: number;
@@ -246,20 +246,21 @@ export declare class MdtService {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: Prisma.JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         };
         wanted: {
             serverId: string | null;
             id: string;
             status: string;
+            createdById: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
@@ -268,21 +269,20 @@ export declare class MdtService {
             vehicleId: string | null;
             reason: string;
             priority: string;
-            createdById: string;
             expiresAt: Date | null;
         }[] | null;
         incidents: {
             number: string;
             id: string;
-            title: string;
             status: string;
             createdAt: Date;
+            title: string;
         }[];
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -302,14 +302,14 @@ export declare class MdtService {
             serverId: string | null;
             model: string | null;
             id: string;
-            type: string;
             status: string;
+            notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
-            notes: string | null;
             serial: string;
+            type: string;
         })[];
         total: number;
         page: number;
@@ -327,14 +327,14 @@ export declare class MdtService {
         serverId: string | null;
         model: string | null;
         id: string;
-        type: string;
         status: string;
+        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
-        notes: string | null;
         serial: string;
+        type: string;
     }>;
     updateWeapon(actor: Actor, id: string, version: number, d: {
         type?: string;
@@ -346,14 +346,14 @@ export declare class MdtService {
         serverId: string | null;
         model: string | null;
         id: string;
-        type: string;
         status: string;
+        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
-        notes: string | null;
         serial: string;
+        type: string;
     }>;
     warrants(status: 'ACTIVE' | 'ALL'): Promise<{
         person: {
@@ -367,12 +367,13 @@ export declare class MdtService {
         vehicle: {
             model: string | null;
             id: string;
-            color: string | null;
             plate: string;
+            color: string | null;
         } | null;
         serverId: string | null;
         id: string;
         status: string;
+        createdById: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -381,7 +382,6 @@ export declare class MdtService {
         vehicleId: string | null;
         reason: string;
         priority: string;
-        createdById: string;
         expiresAt: Date | null;
     }[]>;
 }

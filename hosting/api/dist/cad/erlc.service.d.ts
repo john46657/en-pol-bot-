@@ -38,19 +38,18 @@ export declare const erlcServerInput: z.ZodObject<{
     webhookEnabled: boolean;
     description?: string | null | undefined;
     guildId?: string | null | undefined;
-    key?: string | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     settings?: {
         criticalCommands?: string[] | undefined;
         blockedCommands?: string[] | undefined;
     } | undefined;
+    key?: string | undefined;
 }, {
     name: string;
     description?: string | null | undefined;
     active?: boolean | undefined;
     guildId?: string | null | undefined;
-    key?: string | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     pollSeconds?: number | undefined;
@@ -60,6 +59,7 @@ export declare const erlcServerInput: z.ZodObject<{
         criticalCommands?: string[] | undefined;
         blockedCommands?: string[] | undefined;
     } | undefined;
+    key?: string | undefined;
 }>;
 export type ErlcServerInput = z.infer<typeof erlcServerInput>;
 export interface ErlcPlayer {

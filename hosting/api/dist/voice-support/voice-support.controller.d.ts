@@ -60,11 +60,11 @@ declare const webAction: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"message">;
     text: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "message";
     text: string;
+    action: "message";
 }, {
-    action: "message";
     text: string;
+    action: "message";
 }>]>;
 declare const staff: z.ZodObject<{
     discordId: z.ZodString;
@@ -73,8 +73,8 @@ declare const staff: z.ZodObject<{
     admin: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     name: string;
-    discordId: string;
     roleIds: string[];
+    discordId: string;
     admin: boolean;
 }, {
     name: string;
@@ -94,13 +94,13 @@ export declare class VoiceSupportController {
         status: string;
         createdAt: Date;
         userId: string;
-        guildId: string;
         closedAt: Date | null;
+        guildId: string;
+        claimedById: string | null;
         channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        claimedById: string | null;
         roomId: string;
         roomName: string;
         userName: string;
@@ -120,13 +120,13 @@ export declare class VoiceSupportController {
         status: string;
         createdAt: Date;
         userId: string;
-        guildId: string;
         closedAt: Date | null;
+        guildId: string;
+        claimedById: string | null;
         channelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        claimedById: string | null;
         roomId: string;
         roomName: string;
         userName: string;

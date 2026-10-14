@@ -66,19 +66,19 @@ export declare class DiscordService {
     /** Auflösung Discord-ID → aktiver Benutzer (für die Bot-Authentifizierung). */
     resolveUser(discordId: string): Promise<{
         id: string;
+        robloxUserId: string | null;
+        robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        active: boolean;
         username: string;
         displayName: string;
         email: string | null;
         passwordHash: string;
-        robloxUserId: string | null;
-        robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         robloxVerifiedById: string | null;
-        active: boolean;
         failedLogins: number;
         lockedUntil: Date | null;
         lastLogin: Date | null;
@@ -135,12 +135,12 @@ export declare class DiscordService {
     setState(key: string, value: unknown): Promise<void>;
     pending(limit: number): Prisma.PrismaPromise<{
         id: string;
-        type: string;
         createdAt: Date;
+        type: string;
+        lastError: string | null;
         channelKey: string;
         payload: Prisma.JsonValue;
         attempts: number;
-        lastError: string | null;
         sentAt: Date | null;
     }[]>;
     ack(id: string, ok: boolean, error?: string): Promise<void>;

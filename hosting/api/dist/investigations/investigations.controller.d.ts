@@ -76,11 +76,11 @@ export declare class InvestigationsController {
         items: {
             serverId: string | null;
             id: string;
-            title: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            title: string;
             description: string | null;
             caseNumber: string;
             leadId: string | null;
@@ -93,11 +93,11 @@ export declare class InvestigationsController {
         investigation: {
             serverId: string | null;
             id: string;
-            title: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            title: string;
             description: string | null;
             caseNumber: string;
             leadId: string | null;
@@ -113,8 +113,8 @@ export declare class InvestigationsController {
             createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
-            entityType: string;
             entityId: string;
+            entityType: string;
         })[];
         evidence: {
             number: string;
@@ -125,8 +125,8 @@ export declare class InvestigationsController {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -135,11 +135,11 @@ export declare class InvestigationsController {
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         serverId: string | null;
         id: string;
-        title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        title: string;
         description: string | null;
         caseNumber: string;
         leadId: string | null;
@@ -148,11 +148,11 @@ export declare class InvestigationsController {
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
         serverId: string | null;
         id: string;
-        title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        title: string;
         description: string | null;
         caseNumber: string;
         leadId: string | null;
@@ -162,11 +162,11 @@ export declare class InvestigationsController {
     }): Promise<{
         serverId: string | null;
         id: string;
-        title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        title: string;
         description: string | null;
         caseNumber: string;
         leadId: string | null;

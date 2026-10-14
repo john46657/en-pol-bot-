@@ -21,12 +21,12 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     multiple: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -45,12 +45,12 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
     maxLength?: number | undefined;
 }>, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -88,12 +88,12 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     multiple: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -112,12 +112,12 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     maxLength?: number | undefined;
 }>, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -136,12 +136,12 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
     maxLength?: number | undefined;
 }>, "many">, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-    key: string;
     options: {
         label: string;
         roleId?: string | undefined;
     }[];
     multiple: boolean;
+    key: string;
     label: string;
     required: boolean;
     minLength: number;
@@ -244,6 +244,8 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
     /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
     onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+    /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+    mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
 }, "strip", z.ZodTypeAny, {
     cooldownMinutes: number;
     messages: {
@@ -269,6 +271,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit: string[];
         managers: string[];
     };
+    mode: "DM" | "WEB";
     staffThreads: boolean;
     timeLimitMinutes: number;
     onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -297,6 +300,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit?: string[] | undefined;
         managers?: string[] | undefined;
     } | undefined;
+    mode?: "DM" | "WEB" | undefined;
     staffThreads?: boolean | undefined;
     timeLimitMinutes?: number | undefined;
     onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -324,12 +328,12 @@ export declare const unitSchema: z.ZodObject<{
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -348,12 +352,12 @@ export declare const unitSchema: z.ZodObject<{
         maxLength?: number | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -484,6 +488,8 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
         onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+        /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+        mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         cooldownMinutes: number;
         messages: {
@@ -509,6 +515,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -537,6 +544,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -551,8 +559,8 @@ export declare const unitSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     description: string;
     name: string;
-    key: string;
     questions: FormField[];
+    enabled: boolean;
     settings: {
         cooldownMinutes: number;
         messages: {
@@ -578,11 +586,12 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
     };
-    enabled: boolean;
+    key: string;
     pingRoleIds: string[];
     roleId?: string | undefined;
     channelId?: string | undefined;
@@ -590,7 +599,6 @@ export declare const unitSchema: z.ZodObject<{
     deniedChannelId?: string | undefined;
 }, {
     name: string;
-    key: string;
     questions: (string | {
         key: string;
         label: string;
@@ -604,9 +612,9 @@ export declare const unitSchema: z.ZodObject<{
         minLength?: number | undefined;
         maxLength?: number | undefined;
     })[];
+    key: string;
     description?: string | undefined;
-    roleId?: string | undefined;
-    channelId?: string | undefined;
+    enabled?: boolean | undefined;
     settings?: {
         cooldownMinutes?: number | undefined;
         messages?: {
@@ -632,11 +640,13 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
-    enabled?: boolean | undefined;
+    roleId?: string | undefined;
+    channelId?: string | undefined;
     pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
@@ -736,6 +746,8 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
         onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+        /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+        mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         cooldownMinutes: number;
         messages: {
@@ -761,6 +773,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -789,6 +802,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -797,6 +811,7 @@ export declare const policeSchema: z.ZodObject<{
     title: string;
     description: string;
     name: string;
+    enabled: boolean;
     settings: {
         cooldownMinutes: number;
         messages: {
@@ -822,11 +837,11 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         staffThreads: boolean;
         timeLimitMinutes: number;
         onLeave: "DENY" | "NONE" | "WITHDRAW";
     };
-    enabled: boolean;
     pingRoleIds: string[];
     channelId?: string | undefined;
     acceptedChannelId?: string | undefined;
@@ -835,7 +850,7 @@ export declare const policeSchema: z.ZodObject<{
     title?: string | undefined;
     description?: string | undefined;
     name?: string | undefined;
-    channelId?: string | undefined;
+    enabled?: boolean | undefined;
     settings?: {
         cooldownMinutes?: number | undefined;
         messages?: {
@@ -861,11 +876,12 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         staffThreads?: boolean | undefined;
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
-    enabled?: boolean | undefined;
+    channelId?: string | undefined;
     pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
@@ -894,12 +910,12 @@ export declare const configSchema: z.ZodObject<{
             multiple: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -918,12 +934,12 @@ export declare const configSchema: z.ZodObject<{
             maxLength?: number | undefined;
         }>, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -1054,6 +1070,8 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -1079,6 +1097,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1107,6 +1126,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1121,8 +1141,8 @@ export declare const configSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1148,11 +1168,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
+        key: string;
         pingRoleIds: string[];
         roleId?: string | undefined;
         channelId?: string | undefined;
@@ -1160,7 +1181,6 @@ export declare const configSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
     }, {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -1174,9 +1194,9 @@ export declare const configSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1202,19 +1222,21 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        roleId?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1240,11 +1262,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
+        key: string;
         pingRoleIds: string[];
         roleId?: string | undefined;
         channelId?: string | undefined;
@@ -1252,7 +1275,6 @@ export declare const configSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
     }[], {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -1266,9 +1288,9 @@ export declare const configSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1294,11 +1316,13 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        roleId?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1397,6 +1421,8 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -1422,6 +1448,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1450,6 +1477,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1458,6 +1486,7 @@ export declare const configSchema: z.ZodObject<{
         title: string;
         description: string;
         name: string;
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1483,11 +1512,11 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
         pingRoleIds: string[];
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1496,7 +1525,7 @@ export declare const configSchema: z.ZodObject<{
         title?: string | undefined;
         description?: string | undefined;
         name?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1522,11 +1551,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1536,8 +1566,8 @@ export declare const configSchema: z.ZodObject<{
     units: {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1563,11 +1593,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
+        key: string;
         pingRoleIds: string[];
         roleId?: string | undefined;
         channelId?: string | undefined;
@@ -1578,6 +1609,7 @@ export declare const configSchema: z.ZodObject<{
         title: string;
         description: string;
         name: string;
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1603,11 +1635,11 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
         pingRoleIds: string[];
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1617,7 +1649,6 @@ export declare const configSchema: z.ZodObject<{
 }, {
     units: {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -1631,9 +1662,9 @@ export declare const configSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1659,11 +1690,13 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        roleId?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1673,7 +1706,7 @@ export declare const configSchema: z.ZodObject<{
         title?: string | undefined;
         description?: string | undefined;
         name?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -1699,11 +1732,12 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1735,12 +1769,12 @@ export declare const saveSchema: z.ZodObject<{
             multiple: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -1759,12 +1793,12 @@ export declare const saveSchema: z.ZodObject<{
             maxLength?: number | undefined;
         }>, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-            key: string;
             options: {
                 label: string;
                 roleId?: string | undefined;
             }[];
             multiple: boolean;
+            key: string;
             label: string;
             required: boolean;
             minLength: number;
@@ -1895,6 +1929,8 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -1920,6 +1956,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -1948,6 +1985,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -1962,8 +2000,8 @@ export declare const saveSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -1989,11 +2027,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
+        key: string;
         pingRoleIds: string[];
         roleId?: string | undefined;
         channelId?: string | undefined;
@@ -2001,7 +2040,6 @@ export declare const saveSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
     }, {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -2015,9 +2053,9 @@ export declare const saveSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2043,19 +2081,21 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        roleId?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -2081,11 +2121,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
+        key: string;
         pingRoleIds: string[];
         roleId?: string | undefined;
         channelId?: string | undefined;
@@ -2093,7 +2134,6 @@ export declare const saveSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
     }[], {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -2107,9 +2147,9 @@ export declare const saveSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2135,11 +2175,13 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        roleId?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2238,6 +2280,8 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             cooldownMinutes: number;
             messages: {
@@ -2263,6 +2307,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -2291,6 +2336,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
@@ -2299,6 +2345,7 @@ export declare const saveSchema: z.ZodObject<{
         title: string;
         description: string;
         name: string;
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -2324,11 +2371,11 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
         pingRoleIds: string[];
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2337,7 +2384,7 @@ export declare const saveSchema: z.ZodObject<{
         title?: string | undefined;
         description?: string | undefined;
         name?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2363,11 +2410,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2393,12 +2441,12 @@ export declare const saveSchema: z.ZodObject<{
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2417,12 +2465,12 @@ export declare const saveSchema: z.ZodObject<{
         maxLength?: number | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2441,12 +2489,12 @@ export declare const saveSchema: z.ZodObject<{
         maxLength?: number | undefined;
     }>, "many">, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2469,8 +2517,8 @@ export declare const saveSchema: z.ZodObject<{
     units: {
         description: string;
         name: string;
-        key: string;
         questions: FormField[];
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -2496,11 +2544,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
+        key: string;
         pingRoleIds: string[];
         roleId?: string | undefined;
         channelId?: string | undefined;
@@ -2511,6 +2560,7 @@ export declare const saveSchema: z.ZodObject<{
         title: string;
         description: string;
         name: string;
+        enabled: boolean;
         settings: {
             cooldownMinutes: number;
             messages: {
@@ -2536,11 +2586,11 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        enabled: boolean;
         pingRoleIds: string[];
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2549,12 +2599,12 @@ export declare const saveSchema: z.ZodObject<{
     intro: string;
     policeForm?: {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
-        key: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
+        key: string;
         label: string;
         required: boolean;
         minLength: number;
@@ -2563,7 +2613,6 @@ export declare const saveSchema: z.ZodObject<{
 }, {
     units: {
         name: string;
-        key: string;
         questions: (string | {
             key: string;
             label: string;
@@ -2577,9 +2626,9 @@ export declare const saveSchema: z.ZodObject<{
             minLength?: number | undefined;
             maxLength?: number | undefined;
         })[];
+        key: string;
         description?: string | undefined;
-        roleId?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2605,11 +2654,13 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        roleId?: string | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2619,7 +2670,7 @@ export declare const saveSchema: z.ZodObject<{
         title?: string | undefined;
         description?: string | undefined;
         name?: string | undefined;
-        channelId?: string | undefined;
+        enabled?: boolean | undefined;
         settings?: {
             cooldownMinutes?: number | undefined;
             messages?: {
@@ -2645,11 +2696,12 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             staffThreads?: boolean | undefined;
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        enabled?: boolean | undefined;
+        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;

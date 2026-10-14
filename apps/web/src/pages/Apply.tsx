@@ -57,7 +57,7 @@ export function Apply() {
 }
 
 /** Eine Frage: Text (Textfeld), Auswahl oder Rollen-Auswahl (Optionen zum Anklicken). */
-function Question({ f: raw }: { f: FormField }) {
+export function Question({ f: raw }: { f: FormField }) {
   const f = normalizeField(raw);
   const label = `${f.label}${f.required ? ' *' : ''}`;
   if (f.type === 'ROBLOX') return <Field label={label} hint="Such dein Roblox-Konto und wähle es aus.">{(id) => <RobloxPicker id={id} name={`a_${f.key}`} required={f.required} />}</Field>;

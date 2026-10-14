@@ -38,13 +38,13 @@ declare const guildsBody: z.ZodObject<{
             position: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             id: string;
-            name: string;
             color: number;
+            name: string;
             position: number;
         }, {
             id: string;
-            name: string;
             color: number;
+            name: string;
             position: number;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
@@ -60,8 +60,8 @@ declare const guildsBody: z.ZodObject<{
         }[];
         roles: {
             id: string;
-            name: string;
             color: number;
+            name: string;
             position: number;
         }[];
     }, {
@@ -77,8 +77,8 @@ declare const guildsBody: z.ZodObject<{
         }[];
         roles: {
             id: string;
-            name: string;
             color: number;
+            name: string;
             position: number;
         }[];
     }>, "many">;
@@ -96,8 +96,8 @@ declare const guildsBody: z.ZodObject<{
         }[];
         roles: {
             id: string;
-            name: string;
             color: number;
+            name: string;
             position: number;
         }[];
     }[];
@@ -115,8 +115,8 @@ declare const guildsBody: z.ZodObject<{
         }[];
         roles: {
             id: string;
-            name: string;
             color: number;
+            name: string;
             position: number;
         }[];
     }[];
@@ -149,9 +149,9 @@ declare const outboxQ: z.ZodObject<{
     limit?: number | undefined;
 }>;
 declare const stateBody: z.ZodObject<{
-    value: z.ZodUnknown;
+    value: z.ZodEffects<z.ZodUnknown, {} | null, unknown>;
 }, "strip", z.ZodTypeAny, {
-    value?: unknown;
+    value: {} | null;
 }, {
     value?: unknown;
 }>;
@@ -168,42 +168,42 @@ declare const membersBody: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
+        roleIds: string[];
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
-        roleIds: string[];
         avatar: string | null;
     }, {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
+        roleIds: string[];
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
-        roleIds: string[];
         avatar: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     members: {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
+        roleIds: string[];
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
-        roleIds: string[];
         avatar: string | null;
     }[];
 }, {
     members: {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
+        guildId: string;
+        roleIds: string[];
         username: string;
         displayName: string;
-        guildId: string;
         joinedAt: string | null;
-        roleIds: string[];
         avatar: string | null;
     }[];
 }>;
@@ -251,8 +251,8 @@ declare const voiceBody: z.ZodObject<{
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        name: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
@@ -270,8 +270,8 @@ declare const voiceBody: z.ZodObject<{
         parentName: string | null;
     }, {
         id: string;
-        name: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
@@ -291,8 +291,8 @@ declare const voiceBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     channels: {
         id: string;
-        name: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
@@ -312,8 +312,8 @@ declare const voiceBody: z.ZodObject<{
 }, {
     channels: {
         id: string;
-        name: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
@@ -349,8 +349,8 @@ declare const application: z.ZodObject<{
     answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
 }, "strip", z.ZodTypeAny, {
     robloxUsername: string;
-    answers: Record<string, string | string[]>;
     discordId: string;
+    answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
     discordName?: string | undefined;
@@ -358,8 +358,8 @@ declare const application: z.ZodObject<{
     joinedAt?: Date | undefined;
 }, {
     robloxUsername: string;
-    answers: Record<string, string | string[]>;
     discordId: string;
+    answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
     discordName?: string | undefined;
@@ -410,12 +410,12 @@ export declare class BotController {
     guilds(b: z.infer<typeof guildsBody>): Promise<void>;
     outbox(q: z.infer<typeof outboxQ>): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
-        type: string;
         createdAt: Date;
+        type: string;
+        lastError: string | null;
         channelKey: string;
         payload: import("@prisma/client/runtime/library").JsonValue;
         attempts: number;
-        lastError: string | null;
         sentAt: Date | null;
     }[]>;
     ack(id: string, b: z.infer<typeof ack>): Promise<void>;

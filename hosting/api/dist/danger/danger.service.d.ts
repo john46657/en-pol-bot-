@@ -31,43 +31,43 @@ export declare const dangerConfigSchema: z.ZodObject<{
         /** nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
         allowRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
+        color: string;
         title: string;
         name: string;
-        color: string;
+        text: string;
         key: string;
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
-        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }, {
+        color: string;
         title: string;
         name: string;
-        color: string;
+        text: string;
         key: string;
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
-        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }>, "many">, {
+        color: string;
         title: string;
         name: string;
-        color: string;
+        text: string;
         key: string;
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
-        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[], {
+        color: string;
         title: string;
         name: string;
-        color: string;
+        text: string;
         key: string;
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
-        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[]>;
@@ -77,13 +77,13 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: string;
     buttonEmoji: string;
     levels: {
+        color: string;
         title: string;
         name: string;
-        color: string;
+        text: string;
         key: string;
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
-        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -94,13 +94,13 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: string;
     buttonEmoji: string;
     levels: {
+        color: string;
         title: string;
         name: string;
-        color: string;
+        text: string;
         key: string;
         emoji: string;
         buttonStyle: "success" | "danger" | "primary" | "secondary";
-        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];

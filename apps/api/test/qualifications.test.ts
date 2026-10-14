@@ -314,3 +314,44 @@ describe('application analytics', () => {
     expect((await admin.get('/api/v1/applications/analytics').query({ status: 'REJECTED', type: 'SEK-Bewerbung' })).body.kpis[0].value).toBe(0);
   });
 });
+
+describe('Bewerbungsart „Web“', () => {
+  const WEB = '300000000000000009';
+  it('bot issues a signed link; the form is filled out in the browser and lands like a DM application', async () => {
+    const unit = (await http().get('/api/v1/bot/qualifications').set(bot())).body.units.find((u: { enabled?: boolean }) => u.enabled !== false) as { key: string; name: string };
+    expect((await http().post('/api/v1/bot/qualifications/web-link').send({ unit: unit.key, discordId: WEB, discordName: 'webby' })).status).toBe(401);
+    const l = await http().post('/api/v1/bot/qualifications/web-link').set(bot()).send({ unit: unit.key, discordId: WEB, discordName: 'webby' });
+    expect(l.status).toBe(200);
+    const token = String(l.body.url).split('/bewerbung/')[1]!;
+    expect(token).toBeTruthy();
+    const f = await http().get(`/api/v1/web-apply/${token}`);
+    expect(f.status).toBe(200);
+    expect(f.body).toMatchObject({ name: unit.name, discordName: 'webby', robloxField: false });
+    const qs = f.body.questions as { key: string; options?: { label: string }[] }[];
+    // manipulierter Link (andere Discord-ID) wird abgelehnt
+    expect(token).not.toContain('.'); // Punkt im Pfad: Webserver hielte den Link für eine Datei
+    const body = token.slice(0, -43), sig = token.slice(-43);
+    const forged = Buffer.from(Buffer.from(body, 'base64url').toString().replace(WEB, APPLICANT)).toString('base64url');
+    expect((await http().get(`/api/v1/web-apply/${forged}${sig}`)).status).toBe(404);
+    expect((await http().get('/api/v1/web-apply/kaputt')).status).toBe(400);
+    // Pflichtfragen werden wie bei der DM-Bewerbung geprüft
+    expect((await http().post(`/api/v1/web-apply/${token}`).send({ answers: {} })).status).toBe(400);
+    const r = await http().post(`/api/v1/web-apply/${token}`).send({ answers: Object.fromEntries(qs.map((q) => [q.key, q.options?.length ? q.options[0]!.label : 'Meine Antwort für die Bewerbung'])) });
+    expect(r.status).toBe(201);
+    expect(r.body.number).toMatch(/^Q/);
+    const row = await prisma.qualificationApplication.findFirstOrThrow({ where: { number: r.body.number } });
+    expect(row).toMatchObject({ discordId: WEB, discordName: 'webby', unit: unit.key });
+    expect(row.answers).toHaveLength(qs.length);
+    // zweite Einsendung: es gibt schon eine offene Bewerbung
+    expect((await http().post(`/api/v1/web-apply/${token}`).send({ answers: Object.fromEntries(qs.map((q) => [q.key, 'Nochmal'])) })).status).toBe(409);
+  });
+
+  it('police application form via link; unknown units are rejected', async () => {
+    const l = await http().post('/api/v1/bot/qualifications/web-link').set(bot()).send({ unit: '@polizei', discordId: WEB, discordName: 'webby' });
+    expect(l.status).toBe(200);
+    const f = await http().get(`/api/v1/web-apply/${String(l.body.url).split('/bewerbung/')[1]}`);
+    expect(f.status).toBe(200);
+    expect(f.body.questions.length).toBeGreaterThan(0);
+    expect((await http().post('/api/v1/bot/qualifications/web-link').set(bot()).send({ unit: 'gibtsnicht', discordId: WEB, discordName: 'webby' })).status).toBe(404);
+  });
+});

@@ -58,19 +58,19 @@ declare const listQ: z.ZodObject<{
     authorId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
-    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
+    q?: string | undefined;
 }, {
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     authorId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
+    from?: string | undefined;
+    to?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
-    from?: string | undefined;
-    to?: string | undefined;
 }>;
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 export declare class DutyReportsController {
@@ -93,12 +93,14 @@ export declare class DutyReportsController {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }[]>;
     saveTemplate(a: Actor, id: string, b: ReportTemplate): Promise<{
         description: string;
@@ -117,18 +119,18 @@ export declare class DutyReportsController {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }>;
     /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */
     prefill(a: Actor, id: string, date?: string): Promise<{
-        values: {
-            [k: string]: string;
-        };
+        values: Record<string, string>;
     }>;
     dup(a: Actor, id: string): Promise<{
         description: string;
@@ -147,12 +149,14 @@ export declare class DutyReportsController {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }>;
     removeTemplate(a: Actor, id: string): Promise<void>;
     list(a: Actor, q: z.infer<typeof listQ>): Promise<{
@@ -165,10 +169,10 @@ export declare class DutyReportsController {
             number: string;
             id: string;
             status: string;
-            authorId: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            authorId: string;
             source: string;
             guildId: string | null;
             values: import("@prisma/client/runtime/library").JsonValue;
@@ -204,12 +208,14 @@ export declare class DutyReportsController {
                 id: string;
                 placeholder: string;
                 inline: boolean;
+                separator: boolean;
             }[];
             pingRoleIds: string[];
             emoji: string;
             period: "DAILY" | "WEEKLY" | "FREE";
             onePerPeriod: boolean;
             authorCanEdit: boolean;
+            layout: "FIELDS" | "LIST";
         } | null;
         posted: {
             channelId: string;
@@ -224,10 +230,10 @@ export declare class DutyReportsController {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
@@ -245,10 +251,10 @@ export declare class DutyReportsController {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
@@ -265,10 +271,10 @@ export declare class DutyReportsController {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;
@@ -285,10 +291,10 @@ export declare class DutyReportsController {
         number: string;
         id: string;
         status: string;
-        authorId: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        authorId: string;
         source: string;
         guildId: string | null;
         values: import("@prisma/client/runtime/library").JsonValue;

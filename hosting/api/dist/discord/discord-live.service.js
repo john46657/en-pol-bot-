@@ -71,7 +71,7 @@ let DiscordLiveService = class DiscordLiveService {
             this.rt.publish('team', 'team.roster', { changes: found.length });
             // 👥 Teamänderung (neu im Team / nicht mehr im Team) → Teamleitung des jeweiligen Servers
             for (const c of found.filter((x) => x.kind === 'joined' || x.kind === 'left').slice(0, 20)) {
-                void this.notify.notifyPermission('team.manage', { type: 'TEAM_CHANGE', title: c.kind === 'joined' ? `👥 ${c.name} ist neu im Team` : `👥 ${c.name} ist nicht mehr im Team`, entityType: 'DiscordMember', entityId: c.discordId }, { guildId: c.guildId });
+                void this.notify.notifyPermission('team.manage', { type: 'TEAM_CHANGE', title: c.kind === 'joined' ? `👥 ${c.name} ist neu im Team` : `👥 ${c.name} ist nicht mehr im Team`, entityType: 'DiscordMember', entityId: c.discordId }, { guildId: c.guildId }).catch(() => undefined);
             }
         }
     }

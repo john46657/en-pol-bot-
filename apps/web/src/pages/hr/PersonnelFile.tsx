@@ -364,6 +364,7 @@ function PromotionModal({ p, ranks, onClose }: { p: Profile; ranks: HrRank[]; on
           {nextIds.size > 0 && <optgroup label="Nächste Ränge">{active.filter((r) => nextIds.has(r.id)).map((r) => <option key={r.id} value={r.id}>{r.icon ? `${r.icon} ` : ''}{r.name}</option>)}</optgroup>}
           <optgroup label={nextIds.size ? 'Weitere Ränge' : 'Ränge'}>{active.filter((r) => !nextIds.has(r.id)).map((r) => <option key={r.id} value={r.id}>{r.icon ? `${r.icon} ` : ''}{r.name}</option>)}</optgroup>
         </Select></label>
+        {!active.length && <p role="alert" className="rounded-md border border-warning/40 bg-warning/10 p-2 text-sm text-warning">Es sind noch keine Ränge angelegt. Lege sie unter <Link className="underline" to="/promotions?tab=Ränge">Beförderungen → Ränge</Link> an – dort kannst du sie auch mit einem Klick aus den Dashboard-Rollen übernehmen.</p>}
         {check && <p className={`text-xs ${check.eligible ? 'text-success' : 'text-warning'}`}>{check.eligible ? '🟢' : '🟡'} {check.met}/{check.total} Voraussetzungen erfüllt</p>}
         <label className="grid gap-1 text-sm">Begründung *<Textarea aria-label="Begründung" required maxLength={2000} value={d.reason} onChange={(e) => setD({ ...d, reason: e.target.value })} /></label>
         <label className="grid gap-1 text-sm">Leistungen<Textarea aria-label="Leistungen" rows={3} maxLength={4000} value={d.achievements} onChange={(e) => setD({ ...d, achievements: e.target.value })} /></label>

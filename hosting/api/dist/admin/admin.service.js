@@ -52,6 +52,8 @@ exports.SETTING_SCHEMAS = {
         teamRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(20).default([]),
     }),
 };
+/** Ungültige gespeicherte Werte (altes Format, unvollständig) weglassen – dann gelten im Dashboard die Standardwerte. */
+const valid = (rows) => rows.filter((r) => { const schema = exports.SETTING_SCHEMAS[r.key.split('@')[0]]; return !schema || schema.safeParse(r.value).success; });
 let AdminService = class AdminService {
     prisma;
     audit;
@@ -66,11 +68,11 @@ let AdminService = class AdminService {
     async getSettings() {
         const g = (0, guild_context_1.settingsGuild)((0, guild_context_1.currentGuild)());
         if (!g) {
-            const rows = await this.prisma.systemSetting.findMany();
+            const rows = valid(await this.prisma.systemSetting.findMany());
             return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.PER_SERVER_SETTING_KEYS };
         }
         const keys = Object.keys(exports.SETTING_SCHEMAS);
-        const rows = await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } }); // je Server umgeleitet (server-scope.ts)
+        const rows = valid(await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } })); // je Server umgeleitet (server-scope.ts)
         const settings = {};
         for (const r of rows) {
             settings[r.key] = r.value;
