@@ -227,16 +227,16 @@ export declare class PanelsController {
         queued: boolean;
     }>;
     subs(id: string): import("@prisma/client").Prisma.PrismaPromise<{
+        discordId: string;
         id: string;
         createdAt: Date;
-        discordId: string;
         updatedAt: Date;
         guildId: string | null;
-        values: import("@prisma/client/runtime/library").JsonValue;
         channelId: string | null;
         messageId: string | null;
-        userName: string;
         panelId: string;
+        userName: string;
+        values: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     removeSub(a: Actor, id: string): Promise<void>;
 }
@@ -249,14 +249,14 @@ declare const submit: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     discordId: string;
     guildId: string | null;
-    values: Record<string, string>;
     userName: string;
+    values: Record<string, string>;
     avatar?: string | undefined;
 }, {
     discordId: string;
     guildId: string | null;
-    values: Record<string, string>;
     userName: string;
+    values: Record<string, string>;
     avatar?: string | undefined;
 }>;
 export declare class BotPanelsController {

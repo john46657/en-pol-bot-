@@ -19,14 +19,14 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
-        channelId: string | null;
         title: string;
+        channelId: string | null;
         buttonLabel: string;
     }, {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
         title?: string | undefined;
+        channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     }>>;
     binds: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -37,14 +37,14 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         roleIds: z.ZodArray<z.ZodString, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }, {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }>, "many">>;
@@ -54,8 +54,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel: {
         message: string;
         color: string;
-        channelId: string | null;
         title: string;
+        channelId: string | null;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -64,8 +64,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin: boolean;
     binds: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[];
@@ -75,8 +75,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel?: {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
         title?: string | undefined;
+        channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -85,8 +85,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[] | undefined;
@@ -96,8 +96,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel: {
         message: string;
         color: string;
-        channelId: string | null;
         title: string;
+        channelId: string | null;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -106,8 +106,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin: boolean;
     binds: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[];
@@ -117,8 +117,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     panel?: {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
         title?: string | undefined;
+        channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -127,8 +127,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[] | undefined;
@@ -194,11 +194,11 @@ export declare class VerificationService {
         displayName: string;
     }, method: string): Promise<{
         discordId: string;
-        displayName: string;
         updatedAt: Date;
         discordName: string | null;
         robloxName: string;
         robloxId: string;
+        displayName: string;
         verifiedAt: Date;
     }>;
     /** Verknüpfung + was der Bot auf diesem Server tun soll (Rollen, Nickname). */

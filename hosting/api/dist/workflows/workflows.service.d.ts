@@ -43,13 +43,13 @@ export declare const workflowInput: z.ZodObject<{
         body: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         type: "notify_role";
-        roleId: string;
         title: string;
+        roleId: string;
         body?: string | undefined;
     }, {
         type: "notify_role";
-        roleId: string;
         title: string;
+        roleId: string;
         body?: string | undefined;
     }>, z.ZodObject<{
         type: z.ZodLiteral<"discord">;
@@ -62,15 +62,15 @@ export declare const workflowInput: z.ZodObject<{
         type: "discord";
         title: string;
         channelIds: string[];
-        text?: string | undefined;
         color?: string | undefined;
+        text?: string | undefined;
         pingRoleIds?: string[] | undefined;
     }, {
         type: "discord";
         title: string;
         channelIds: string[];
-        text?: string | undefined;
         color?: string | undefined;
+        text?: string | undefined;
         pingRoleIds?: string[] | undefined;
     }>]>, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -89,15 +89,15 @@ export declare const workflowInput: z.ZodObject<{
         body?: string | undefined;
     } | {
         type: "notify_role";
-        roleId: string;
         title: string;
+        roleId: string;
         body?: string | undefined;
     } | {
         type: "discord";
         title: string;
         channelIds: string[];
-        text?: string | undefined;
         color?: string | undefined;
+        text?: string | undefined;
         pingRoleIds?: string[] | undefined;
     })[];
 }, {
@@ -110,15 +110,15 @@ export declare const workflowInput: z.ZodObject<{
         body?: string | undefined;
     } | {
         type: "notify_role";
-        roleId: string;
         title: string;
+        roleId: string;
         body?: string | undefined;
     } | {
         type: "discord";
         title: string;
         channelIds: string[];
-        text?: string | undefined;
         color?: string | undefined;
+        text?: string | undefined;
         pingRoleIds?: string[] | undefined;
     })[];
     enabled?: boolean | undefined;
@@ -149,12 +149,12 @@ export declare class WorkflowsService {
             ok: boolean;
         }[];
     } & {
+        name: string;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
         createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         enabled: boolean;
         trigger: string;
         conditions: Prisma.JsonValue;
@@ -164,21 +164,21 @@ export declare class WorkflowsService {
     runs(id: string): Prisma.PrismaPromise<{
         error: string | null;
         id: string;
-        action: string;
-        entityId: string | null;
         createdAt: Date;
+        entityId: string | null;
+        action: string;
         ok: boolean;
         workflowId: string;
         auditId: string;
     }[]>;
     private checkRoles;
     create(actor: Actor, d: WorkflowInput): Promise<{
+        name: string;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
         createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         enabled: boolean;
         trigger: string;
         conditions: Prisma.JsonValue;
@@ -186,12 +186,12 @@ export declare class WorkflowsService {
         activeSince: Date;
     }>;
     update(actor: Actor, id: string, d: WorkflowInput): Promise<{
+        name: string;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
         createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         enabled: boolean;
         trigger: string;
         conditions: Prisma.JsonValue;

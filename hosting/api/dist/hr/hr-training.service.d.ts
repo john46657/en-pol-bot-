@@ -19,32 +19,32 @@ export declare const trainingSchema: z.ZodObject<{
     modules: z.ZodEffects<z.ZodDefault<z.ZodArray<z.ZodString, "many">>, string[], string[] | undefined>;
 }, "strip", z.ZodTypeAny, {
     name: string;
-    active: boolean;
     description: string | null;
-    modules: string[];
-    duration: string | null;
+    active: boolean;
     requirements: string | null;
     instructorIds: string[];
+    duration: string | null;
     examRequired: boolean;
     examId: string | null;
     certificate: boolean;
     audience: string | null;
     requiredRoleId: string | null;
     validDays: number | null;
+    modules: string[];
 }, {
     name: string;
-    active?: boolean | undefined;
     description?: string | null | undefined;
-    modules?: string[] | undefined;
-    duration?: string | null | undefined;
+    active?: boolean | undefined;
     requirements?: string | null | undefined;
     instructorIds?: string[] | undefined;
+    duration?: string | null | undefined;
     examRequired?: boolean | undefined;
     examId?: string | null | undefined;
     certificate?: boolean | undefined;
     audience?: string | null | undefined;
     requiredRoleId?: string | null | undefined;
     validDays?: number | null | undefined;
+    modules?: string[] | undefined;
 }>;
 export declare const examSchema: z.ZodObject<{
     title: z.ZodString;
@@ -82,9 +82,9 @@ export declare const examSchema: z.ZodObject<{
     trainingId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     active: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    active: boolean;
-    description: string | null;
     title: string;
+    description: string | null;
+    active: boolean;
     questions: {
         options: string[];
         type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
@@ -93,7 +93,6 @@ export declare const examSchema: z.ZodObject<{
         correct: string[];
         points: number;
     }[];
-    trainingId: string | null;
     questionCount: number;
     passPercent: number;
     timeLimitMin: number | null;
@@ -102,10 +101,11 @@ export declare const examSchema: z.ZodObject<{
     autoGrade: boolean;
     showResult: boolean;
     examinerIds: string[];
+    trainingId: string | null;
 }, {
     title: string;
-    active?: boolean | undefined;
     description?: string | null | undefined;
+    active?: boolean | undefined;
     questions?: {
         type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
         text: string;
@@ -114,7 +114,6 @@ export declare const examSchema: z.ZodObject<{
         correct?: string[] | undefined;
         points?: number | undefined;
     }[] | undefined;
-    trainingId?: string | null | undefined;
     questionCount?: number | undefined;
     passPercent?: number | undefined;
     timeLimitMin?: number | null | undefined;
@@ -123,6 +122,7 @@ export declare const examSchema: z.ZodObject<{
     autoGrade?: boolean | undefined;
     showResult?: boolean | undefined;
     examinerIds?: string[] | undefined;
+    trainingId?: string | null | undefined;
 }>;
 export declare const TRAINING_STATUSES: readonly ["NOT_STARTED", "IN_PROGRESS", "PASSED", "FAILED", "ABORTED", "EXPIRED"];
 /** Ausbildungen (mit Fortschritt und Zertifikat) und Prüfungen (Fragen, Versuche, automatische/manuelle Bewertung). */
@@ -133,44 +133,44 @@ export declare class HrTrainingService {
     private get prisma();
     trainings(): Promise<{
         passed: number;
+        name: string;
         id: string;
         serverId: string | null;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
         description: string | null;
-        modules: string[];
-        duration: string | null;
+        active: boolean;
         position: number;
         requirements: string | null;
         instructorIds: string[];
+        duration: string | null;
         examRequired: boolean;
         examId: string | null;
         certificate: boolean;
         audience: string | null;
         requiredRoleId: string | null;
         validDays: number | null;
+        modules: string[];
     }[]>;
     saveTraining(actor: Actor, d: z.infer<typeof trainingSchema>, id?: string): Promise<{
+        name: string;
         id: string;
         serverId: string | null;
         createdAt: Date;
-        name: string;
-        active: boolean;
         updatedAt: Date;
         description: string | null;
-        modules: string[];
-        duration: string | null;
+        active: boolean;
         position: number;
         requirements: string | null;
         instructorIds: string[];
+        duration: string | null;
         examRequired: boolean;
         examId: string | null;
         certificate: boolean;
         audience: string | null;
         requiredRoleId: string | null;
         validDays: number | null;
+        modules: string[];
     }>;
     deleteTraining(actor: Actor, id: string): Promise<void>;
     /** Fortschritt aller Personen in einer Ausbildung (Matrix). */
@@ -184,13 +184,13 @@ export declare class HrTrainingService {
         };
     } & {
         id: string;
-        expiresAt: Date | null;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
+        expiresAt: Date | null;
         startedAt: Date | null;
-        note: string | null;
         personnelId: string;
         trainingId: string;
+        note: string | null;
         progress: number;
         doneModules: string[];
         examinerId: string | null;
@@ -207,13 +207,13 @@ export declare class HrTrainingService {
         note?: string | null;
     }): Promise<{
         id: string;
-        expiresAt: Date | null;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
+        expiresAt: Date | null;
         startedAt: Date | null;
-        note: string | null;
         personnelId: string;
         trainingId: string;
+        note: string | null;
         progress: number;
         doneModules: string[];
         examinerId: string | null;
@@ -244,20 +244,19 @@ export declare class HrTrainingService {
         myAttempts: {
             status: string;
             startedAt: Date;
+            examId: string;
             score: number | null;
             passed: boolean | null;
-            examId: string;
             maxScore: number | null;
             submittedAt: Date | null;
         }[];
         id: string;
         serverId: string | null;
         createdAt: Date;
-        active: boolean;
         updatedAt: Date;
-        description: string | null;
         title: string;
-        trainingId: string | null;
+        description: string | null;
+        active: boolean;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -266,17 +265,17 @@ export declare class HrTrainingService {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }[]>;
     saveExam(actor: Actor, d: z.infer<typeof examSchema>, id?: string): Promise<{
         id: string;
         serverId: string | null;
         createdAt: Date;
-        active: boolean;
         updatedAt: Date;
-        description: string | null;
         title: string;
+        description: string | null;
+        active: boolean;
         questions: Prisma.JsonValue;
-        trainingId: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -285,6 +284,7 @@ export declare class HrTrainingService {
         autoGrade: boolean;
         showResult: boolean;
         examinerIds: string[];
+        trainingId: string | null;
     }>;
     deleteExam(actor: Actor, id: string): Promise<void>;
     /** Prüfung starten: prüft Versuche, Wartezeit; zieht ggf. zufällige Fragen. Liefert Fragen OHNE Lösungen. */
@@ -479,15 +479,15 @@ export declare class HrTrainingService {
         id: string;
         status: string;
         startedAt: Date;
-        feedback: string | null;
         personnelId: string;
+        examId: string;
         score: number | null;
         passed: boolean | null;
         gradedById: string | null;
-        examId: string;
         questionIds: string[];
         maxScore: number | null;
         gradedAt: Date | null;
+        feedback: string | null;
         submittedAt: Date | null;
     }[]>;
 }

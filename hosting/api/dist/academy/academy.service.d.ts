@@ -23,14 +23,14 @@ export declare const announceSchema: z.ZodObject<{
     when: z.ZodOptional<z.ZodDate>;
     location: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    location?: string | undefined;
     channelId?: string | null | undefined;
     pingRoleIds?: string[] | undefined;
-    location?: string | undefined;
     when?: Date | undefined;
 }, {
+    location?: string | undefined;
     channelId?: string | null | undefined;
     pingRoleIds?: string[] | undefined;
-    location?: string | undefined;
     when?: Date | undefined;
 }>;
 export type Announce = z.infer<typeof announceSchema>;
@@ -47,8 +47,8 @@ export declare class AcademyService {
     } & {
         id: string;
         serverId: string | null;
-        description: string | null;
         title: string;
+        description: string | null;
         passScore: number;
         instructorId: string | null;
     })[]>;
@@ -74,8 +74,8 @@ export declare class AcademyService {
         }[];
         id: string;
         serverId: string | null;
-        description: string | null;
         title: string;
+        description: string | null;
         passScore: number;
         instructorId: string | null;
     }>;
@@ -96,8 +96,8 @@ export declare class AcademyService {
         } | null;
         id: string;
         serverId: string | null;
-        description: string | null;
         title: string;
+        description: string | null;
         passScore: number;
         instructorId: string | null;
     }>;

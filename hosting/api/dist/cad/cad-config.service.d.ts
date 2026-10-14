@@ -14,26 +14,26 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[]>;
     priorities: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -45,26 +45,26 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[]>;
     incidentStatuses: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -78,43 +78,43 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }[]>, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }[]>;
     unitStatuses: z.ZodEffects<z.ZodArray<z.ZodObject<{
@@ -127,26 +127,26 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[]>;
     unitTypes: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -160,30 +160,30 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
+        emoji?: string | undefined;
     }, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
+        emoji?: string | undefined;
     }>, "many">, {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
+        emoji?: string | undefined;
     }[], {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
-        order?: number | undefined;
         layer?: string | undefined;
+        order?: number | undefined;
+        emoji?: string | undefined;
     }[]>;
     layers: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -217,25 +217,25 @@ export declare const cadConfigSchema: z.ZodObject<{
         emoji: z.ZodString;
         color: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        key: string;
         color: string;
-        emoji: string;
+        key: string;
         label: string;
+        emoji: string;
     }, {
-        key: string;
         color: string;
-        emoji: string;
+        key: string;
         label: string;
+        emoji: string;
     }>, "many">, {
-        key: string;
         color: string;
-        emoji: string;
+        key: string;
         label: string;
+        emoji: string;
     }[], {
-        key: string;
         color: string;
-        emoji: string;
+        key: string;
         label: string;
+        emoji: string;
     }[]>;
     map: z.ZodObject<{
         imageUrl: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
@@ -280,13 +280,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement";
+        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received";
         channelIds: string[];
         pingRoleIds: string[];
     }, {
         id: string;
         guildId: string;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement";
+        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received";
         channelIds: string[];
         enabled?: boolean | undefined;
         pingRoleIds?: string[] | undefined;
@@ -297,28 +297,36 @@ export declare const cadConfigSchema: z.ZodObject<{
         type: z.ZodEnum<["text", "number", "select"]>;
         options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }, {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }>, "many">, {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[], {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[]>;
-    widgets: z.ZodPipeline<z.ZodEffects<z.ZodArray<z.ZodString, "many">, ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "units" | "dutyActivity")[], string[]>, z.ZodArray<z.ZodEnum<["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"]>, "many">>;
+    widgets: z.ZodPipeline<z.ZodEffects<z.ZodArray<z.ZodString, "many">, ("vehicles" | "units" | "map" | "persons" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "dutyActivity")[], string[]>, z.ZodArray<z.ZodEnum<["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"]>, "many">>;
 }, "strip", z.ZodTypeAny, {
+    unitTypes: {
+        key: string;
+        label: string;
+        color?: string | undefined;
+        layer?: string | undefined;
+        order?: number | undefined;
+        emoji?: string | undefined;
+    }[];
     map: {
         width: number;
         height: number;
@@ -327,44 +335,36 @@ export declare const cadConfigSchema: z.ZodObject<{
         scale: number;
         imageUrl?: string | null | undefined;
     };
-    widgets: ("map" | "persons" | "vehicles" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "units" | "dutyActivity")[];
+    widgets: ("vehicles" | "units" | "map" | "persons" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "dutyActivity")[];
     incidentNumberPrefix: string;
     incidentTypes: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[];
     priorities: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[];
     incidentStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }[];
     unitStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
-    }[];
-    unitTypes: {
-        key: string;
-        label: string;
-        color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
-        layer?: string | undefined;
     }[];
     layers: {
         key: string;
@@ -373,26 +373,34 @@ export declare const cadConfigSchema: z.ZodObject<{
         enabledByDefault?: boolean | undefined;
     }[];
     markers: {
-        key: string;
         color: string;
-        emoji: string;
+        key: string;
         label: string;
+        emoji: string;
     }[];
     routes: {
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement";
+        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received";
         channelIds: string[];
         pingRoleIds: string[];
     }[];
     memberFields: {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[];
 }, {
+    unitTypes: {
+        key: string;
+        label: string;
+        color?: string | undefined;
+        layer?: string | undefined;
+        order?: number | undefined;
+        emoji?: string | undefined;
+    }[];
     map: {
         width: number;
         height: number;
@@ -406,38 +414,30 @@ export declare const cadConfigSchema: z.ZodObject<{
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[];
     priorities: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
     }[];
     incidentStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
+        emoji?: string | undefined;
         closed?: boolean | undefined;
     }[];
     unitStatuses: {
         key: string;
         label: string;
         color?: string | undefined;
-        emoji?: string | undefined;
         order?: number | undefined;
-    }[];
-    unitTypes: {
-        key: string;
-        label: string;
-        color?: string | undefined;
         emoji?: string | undefined;
-        order?: number | undefined;
-        layer?: string | undefined;
     }[];
     layers: {
         key: string;
@@ -446,17 +446,17 @@ export declare const cadConfigSchema: z.ZodObject<{
         enabledByDefault?: boolean | undefined;
     }[];
     markers: {
-        key: string;
         color: string;
-        emoji: string;
+        key: string;
         label: string;
+        emoji: string;
     }[];
     routes: z.objectInputType<{
         event: z.ZodString;
     }, z.ZodTypeAny, "passthrough">[];
     memberFields: {
-        key: string;
         type: "number" | "select" | "text";
+        key: string;
         label: string;
         options?: string[] | undefined;
     }[];

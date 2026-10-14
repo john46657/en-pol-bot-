@@ -11,11 +11,11 @@ export declare class TimelineService {
     }): Promise<void>;
     list(entityType: string, entityId: string, take?: number): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
-        action: string;
-        entityType: string;
-        entityId: string;
         createdAt: Date;
+        entityId: string;
+        entityType: string;
         summary: string;
+        action: string;
         actorId: string | null;
     }[]>;
 }

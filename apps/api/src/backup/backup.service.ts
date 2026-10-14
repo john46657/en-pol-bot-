@@ -5,6 +5,7 @@ import path from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { backupConfigSchema, BACKUP_PARTS, type BackupConfig, type BackupPart, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { withArchived } from '../prisma/archive-scope';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
@@ -104,7 +105,8 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     const tables: Record<string, unknown[]> = {};
     let rows = 0;
     for (const m of modelOrder()) {
-      const list = await (this.prisma as unknown as Record<string, { findMany(): Promise<unknown[]> }>)[delegate(m.name)]!.findMany();
+      // vollständiger Bestand inkl. Archiv-Einträgen aus der Umstellung auf einen Server
+      const list = await withArchived(() => (this.prisma as unknown as Record<string, { findMany(): Promise<unknown[]> }>)[delegate(m.name)]!.findMany());
       tables[m.name] = list;
       rows += list.length;
     }

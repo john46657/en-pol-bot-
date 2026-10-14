@@ -52,7 +52,7 @@ Es gibt **keine** Schema-Migration. Alle Tabellen und Spalten bleiben erhalten, 
 4. **Persönliche Ausnahmen** des Servers werden zentral. Widersprechen sie einer zentralen Ausnahme, gewinnt das **Verbot**. Niemand gewinnt durch die Umstellung Rechte.
 5. **Module**: Auf dem Server abgeschaltete Module bleiben abgeschaltet, jetzt zentral (`modules.config`). War der zentrale Wochen-Reset aus, der des Servers aber an, wird dessen Einstellung übernommen.
 6. **Fachdaten** (Personen, Fahrzeuge, Waffen, Berichte, Einsätze, Einheiten, Personalakten, HR, Dienstzeiten, SEK, Funk-Freigaben, Tatbestände …): Alle früheren Datenbereiche werden **ein** Bestand (`serverId` = NULL).
-   - Würde dabei eine Eindeutigkeit verletzt (z. B. zwei Personalakten derselben Person oder zwei Einheiten mit gleichem Rufnamen), bleibt der weniger aktuelle Eintrag in seinem Bereich stehen. Er bleibt sichtbar und wird nicht gelöscht.
+   - Würde dabei eine Eindeutigkeit verletzt (z. B. zwei Personalakten derselben Person oder zwei Einheiten mit gleichem Rufnamen), bleibt der weniger aktuelle Eintrag als **Archiv** in seinem Bereich stehen. Er wird nicht gelöscht, erscheint aber nicht mehr in Listen (Teamliste, Personal, Einheiten …), damit niemand doppelt auftaucht. Backups enthalten ihn weiterhin; über ein Backup lässt er sich jederzeit wiederherstellen.
    - Vorrang hat der Bereich des Servers, dann der bisherige gemeinsame Bestand, dann andere frühere Server.
 
 Gibt es Daten **mehrerer** Server, aber keinen eingerichteten Server, wartet die Umstellung. Es bleibt dann alles, wie es ist, und im Log steht ein Hinweis. In diesem Fall `DISCORD_GUILD_ID` setzen und neu starten.

@@ -16,11 +16,11 @@ export declare class EvidenceService {
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            ownerId: string | null;
             type: string;
             description: string;
-            ownerId: string | null;
-            source: string | null;
             caseRef: string | null;
+            source: string | null;
             storageLocation: string | null;
             custodyState: string;
         }[];
@@ -31,14 +31,14 @@ export declare class EvidenceService {
     get(id: string): Promise<{
         transfers: {
             id: string;
-            reason: string;
             createdAt: Date;
-            confirmed: boolean;
+            reason: string;
+            evidenceId: string;
             fromUserId: string | null;
             toUserId: string | null;
             fromState: string;
             toState: string;
-            evidenceId: string;
+            confirmed: boolean;
         }[];
     } & {
         number: string;
@@ -47,11 +47,11 @@ export declare class EvidenceService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        ownerId: string | null;
         type: string;
         description: string;
-        ownerId: string | null;
-        source: string | null;
         caseRef: string | null;
+        source: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
@@ -69,11 +69,11 @@ export declare class EvidenceService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        ownerId: string | null;
         type: string;
         description: string;
-        ownerId: string | null;
-        source: string | null;
         caseRef: string | null;
+        source: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
@@ -90,11 +90,11 @@ export declare class EvidenceService {
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        ownerId: string | null;
         type: string;
         description: string;
-        ownerId: string | null;
-        source: string | null;
         caseRef: string | null;
+        source: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;

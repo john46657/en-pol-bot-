@@ -7,11 +7,11 @@ declare const create: z.ZodObject<{
         serverId: z.ZodString;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        serverId: string;
         name: string;
+        serverId: string;
     }, {
-        serverId: string;
         name: string;
+        serverId: string;
     }>>;
     notifyInGame: z.ZodOptional<z.ZodBoolean>;
     legalCodeId: z.ZodOptional<z.ZodString>;
@@ -27,8 +27,8 @@ declare const create: z.ZodObject<{
     amount?: number | undefined;
     reportId?: string | undefined;
     erlcPlayer?: {
-        serverId: string;
         name: string;
+        serverId: string;
     } | undefined;
     notifyInGame?: boolean | undefined;
 }, {
@@ -39,8 +39,8 @@ declare const create: z.ZodObject<{
     amount?: number | undefined;
     reportId?: string | undefined;
     erlcPlayer?: {
-        serverId: string;
         name: string;
+        serverId: string;
     } | undefined;
     notifyInGame?: boolean | undefined;
 }>;
@@ -60,13 +60,13 @@ declare const listQuery: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    q?: string | undefined;
     personId?: string | undefined;
+    q?: string | undefined;
 }, {
+    personId?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
-    personId?: string | undefined;
 }>;
 export declare class TicketsController {
     private readonly tickets;
@@ -81,13 +81,13 @@ export declare class TicketsController {
             number: string;
             id: string;
             serverId: string | null;
-            reason: string;
-            updatedAt: Date;
-            version: number;
             status: string;
             notes: string | null;
-            personId: string;
+            updatedAt: Date;
+            version: number;
             officerId: string;
+            personId: string;
+            reason: string;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -114,18 +114,14 @@ export declare class TicketsController {
     get(id: string): Promise<{
         ticket: {
             person: {
+                robloxUserId: string | null;
                 id: string;
                 serverId: string | null;
-                createdAt: Date;
-                robloxUserId: string | null;
                 robloxUsername: string;
-                updatedAt: Date;
-                version: number;
-                createdById: string | null;
-                status: string;
-                custom: import("@prisma/client/runtime/library").JsonValue | null;
                 aliases: string[];
+                status: string;
                 notes: string | null;
+                custom: import("@prisma/client/runtime/library").JsonValue | null;
                 fullName: string | null;
                 dateOfBirth: Date | null;
                 gender: string | null;
@@ -137,30 +133,34 @@ export declare class TicketsController {
                 licenses: string[];
                 flags: string[];
                 photoId: string | null;
+                createdById: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                version: number;
             };
             legalCode: {
+                code: string;
                 id: string;
                 serverId: string | null;
-                code: string;
-                category: string;
-                expiresAt: Date | null;
-                active: boolean;
-                description: string | null;
                 title: string;
+                category: string;
+                description: string | null;
+                expiresAt: Date | null;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
+                active: boolean;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
             id: string;
             serverId: string | null;
-            reason: string;
-            updatedAt: Date;
-            version: number;
             status: string;
             notes: string | null;
-            personId: string;
+            updatedAt: Date;
+            version: number;
             officerId: string;
+            personId: string;
+            reason: string;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -170,11 +170,11 @@ export declare class TicketsController {
         };
         timeline: {
             id: string;
-            action: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
+            entityId: string;
+            entityType: string;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -186,13 +186,13 @@ export declare class TicketsController {
         number: string;
         id: string;
         serverId: string | null;
-        reason: string;
-        updatedAt: Date;
-        version: number;
         status: string;
         notes: string | null;
-        personId: string;
+        updatedAt: Date;
+        version: number;
         officerId: string;
+        personId: string;
+        reason: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -204,13 +204,13 @@ export declare class TicketsController {
         number: string;
         id: string;
         serverId: string | null;
-        reason: string;
-        updatedAt: Date;
-        version: number;
         status: string;
         notes: string | null;
-        personId: string;
+        updatedAt: Date;
+        version: number;
         officerId: string;
+        personId: string;
+        reason: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;

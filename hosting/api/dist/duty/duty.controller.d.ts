@@ -43,22 +43,22 @@ export declare class DutyController {
     team(): import("@prisma/client").Prisma.PrismaPromise<({
         user: {
             personnel: {
-                rank: string | null;
                 callsign: string | null;
+                rank: string | null;
             }[];
             id: string;
             displayName: string;
         };
     } & {
+        callsign: string | null;
+        userId: string;
         id: string;
         serverId: string | null;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     })[]>;
@@ -83,21 +83,21 @@ export declare class DutyController {
         currentIncident: {
             number: string;
             id: string;
-            priority: string;
             status: string;
             title: string;
+            priority: string;
         } | null;
     }[]>;
     mine(a: Actor): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
+        callsign: string | null;
+        userId: string;
         id: string;
         serverId: string | null;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
@@ -152,15 +152,15 @@ export declare class DutyController {
         status: string;
     }>;
     set(a: Actor, b: z.infer<typeof body>): Promise<{
+        callsign: string | null;
+        userId: string;
         id: string;
         serverId: string | null;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {
@@ -168,15 +168,15 @@ export declare class DutyController {
     }>;
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a: Actor, userId: string, b: z.infer<typeof body>): Promise<{
+        callsign: string | null;
+        userId: string;
         id: string;
         serverId: string | null;
-        userId: string;
         status: string;
-        endedAt: Date | null;
-        callsign: string | null;
-        startedAt: Date;
         unitId: string | null;
         shiftType: string | null;
+        startedAt: Date;
+        endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {

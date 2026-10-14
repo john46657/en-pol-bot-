@@ -19,15 +19,15 @@ declare const guildsBody: z.ZodObject<{
             parentId: z.ZodNullable<z.ZodString>;
             position: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            id: string;
             name: string;
-            type: "text" | "category" | "voice" | "other";
+            id: string;
+            type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
         }, {
-            id: string;
             name: string;
-            type: "text" | "category" | "voice" | "other";
+            id: string;
+            type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
         }>, "many">;
@@ -37,87 +37,87 @@ declare const guildsBody: z.ZodObject<{
             color: z.ZodNumber;
             position: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            id: string;
             name: string;
+            id: string;
             color: number;
             position: number;
         }, {
-            id: string;
             name: string;
+            id: string;
             color: number;
             position: number;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        id: string;
         name: string;
-        roles: {
-            id: string;
-            name: string;
-            color: number;
-            position: number;
-        }[];
+        id: string;
         icon: string | null;
         channels: {
-            id: string;
             name: string;
-            type: "text" | "category" | "voice" | "other";
+            id: string;
+            type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+        }[];
+        roles: {
+            name: string;
+            id: string;
+            color: number;
+            position: number;
         }[];
     }, {
-        id: string;
         name: string;
-        roles: {
-            id: string;
-            name: string;
-            color: number;
-            position: number;
-        }[];
+        id: string;
         icon: string | null;
         channels: {
-            id: string;
             name: string;
-            type: "text" | "category" | "voice" | "other";
+            id: string;
+            type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+        }[];
+        roles: {
+            name: string;
+            id: string;
+            color: number;
+            position: number;
         }[];
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
-        id: string;
         name: string;
-        roles: {
-            id: string;
-            name: string;
-            color: number;
-            position: number;
-        }[];
+        id: string;
         icon: string | null;
         channels: {
-            id: string;
             name: string;
-            type: "text" | "category" | "voice" | "other";
+            id: string;
+            type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+        }[];
+        roles: {
+            name: string;
+            id: string;
+            color: number;
+            position: number;
         }[];
     }[];
 }, {
     guilds: {
-        id: string;
         name: string;
-        roles: {
-            id: string;
-            name: string;
-            color: number;
-            position: number;
-        }[];
+        id: string;
         icon: string | null;
         channels: {
-            id: string;
             name: string;
-            type: "text" | "category" | "voice" | "other";
+            id: string;
+            type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+        }[];
+        roles: {
+            name: string;
+            id: string;
+            color: number;
+            position: number;
         }[];
     }[];
 }>;
@@ -167,44 +167,44 @@ declare const membersBody: z.ZodObject<{
         joinedAt: z.ZodNullable<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        username: string;
-        displayName: string;
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        avatar: string | null;
+        username: string;
+        displayName: string;
         joinedAt: string | null;
+        avatar: string | null;
     }, {
         id: string;
-        username: string;
-        displayName: string;
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        avatar: string | null;
+        username: string;
+        displayName: string;
         joinedAt: string | null;
+        avatar: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     members: {
         id: string;
-        username: string;
-        displayName: string;
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        avatar: string | null;
+        username: string;
+        displayName: string;
         joinedAt: string | null;
+        avatar: string | null;
     }[];
 }, {
     members: {
         id: string;
-        username: string;
-        displayName: string;
+        status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
-        status: "unknown" | "online" | "idle" | "dnd" | "offline";
-        avatar: string | null;
+        username: string;
+        displayName: string;
         joinedAt: string | null;
+        avatar: string | null;
     }[];
 }>;
 declare const voiceBody: z.ZodObject<{
@@ -250,9 +250,10 @@ declare const voiceBody: z.ZodObject<{
             since: string | null;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        id: string;
         name: string;
+        id: string;
         guildId: string;
+        position: number;
         members: {
             id: string;
             displayName: string;
@@ -265,13 +266,13 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        position: number;
         parentId: string | null;
         parentName: string | null;
     }, {
-        id: string;
         name: string;
+        id: string;
         guildId: string;
+        position: number;
         members: {
             id: string;
             displayName: string;
@@ -284,15 +285,15 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        position: number;
         parentId: string | null;
         parentName: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     channels: {
-        id: string;
         name: string;
+        id: string;
         guildId: string;
+        position: number;
         members: {
             id: string;
             displayName: string;
@@ -305,15 +306,15 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        position: number;
         parentId: string | null;
         parentName: string | null;
     }[];
 }, {
     channels: {
-        id: string;
         name: string;
+        id: string;
         guildId: string;
+        position: number;
         members: {
             id: string;
             displayName: string;
@@ -326,7 +327,6 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        position: number;
         parentId: string | null;
         parentName: string | null;
     }[];
@@ -447,7 +447,7 @@ export declare class BotController {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "danger" | "success" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "primary" | "secondary";
         }[];
         panel: {
             title: string;

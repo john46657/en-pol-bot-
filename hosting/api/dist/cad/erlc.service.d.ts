@@ -36,30 +36,30 @@ export declare const erlcServerInput: z.ZodObject<{
     pollSeconds: number;
     features: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[];
     webhookEnabled: boolean;
-    settings?: {
-        criticalCommands?: string[] | undefined;
-        blockedCommands?: string[] | undefined;
-    } | undefined;
-    key?: string | undefined;
-    guildId?: string | null | undefined;
     description?: string | null | undefined;
+    guildId?: string | null | undefined;
+    key?: string | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
-}, {
-    name: string;
-    active?: boolean | undefined;
     settings?: {
         criticalCommands?: string[] | undefined;
         blockedCommands?: string[] | undefined;
     } | undefined;
-    key?: string | undefined;
-    guildId?: string | null | undefined;
+}, {
+    name: string;
     description?: string | null | undefined;
+    active?: boolean | undefined;
+    guildId?: string | null | undefined;
+    key?: string | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     pollSeconds?: number | undefined;
     features?: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[] | undefined;
     webhookEnabled?: boolean | undefined;
+    settings?: {
+        criticalCommands?: string[] | undefined;
+        blockedCommands?: string[] | undefined;
+    } | undefined;
 }>;
 export type ErlcServerInput = z.infer<typeof erlcServerInput>;
 export interface ErlcPlayer {
@@ -405,16 +405,16 @@ export declare class ErlcService {
     }>;
     commandLog(id: string, take?: number): Promise<{
         userName: string | null;
-        error: string | null;
-        id: string;
-        serverId: string;
-        result: string | null;
-        createdAt: Date;
         userId: string | null;
         discordId: string | null;
-        ok: boolean;
+        error: string | null;
+        result: string | null;
+        id: string;
+        serverId: string;
+        createdAt: Date;
         command: string;
         critical: boolean;
+        ok: boolean;
     }[]>;
     verifySignature(raw: Buffer, timestamp: string | undefined, sigHex: string | undefined): boolean;
     /** Webhook-Ereignis: Notrufe sofort ins CAD, sonst als Ereignis vermerken; danach zeitnah normal abrufen. */

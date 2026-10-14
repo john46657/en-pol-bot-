@@ -17,9 +17,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     /** Bewerbungen nur während einer offenen Team-Chance annehmen */
     restrictApplications: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
-    channelId: string | null;
-    description: string;
     title: string;
+    description: string;
+    channelId: string | null;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -27,9 +27,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
-    channelId: string | null;
-    description: string;
     title: string;
+    description: string;
+    channelId: string | null;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -37,9 +37,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }>, {
-    channelId: string | null;
-    description: string;
     title: string;
+    description: string;
+    channelId: string | null;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -47,9 +47,9 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
-    channelId: string | null;
-    description: string;
     title: string;
+    description: string;
+    channelId: string | null;
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
@@ -78,9 +78,9 @@ export declare class TeamChanceService {
         reason: string | null;
         used: number;
         remaining: number | null;
-        channelId: string | null;
-        description: string;
         title: string;
+        description: string;
+        channelId: string | null;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
@@ -96,9 +96,9 @@ export declare class TeamChanceService {
         reason: string | null;
         used: number;
         remaining: number | null;
-        channelId: string | null;
-        description: string;
         title: string;
+        description: string;
+        channelId: string | null;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;

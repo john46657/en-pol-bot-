@@ -47,14 +47,14 @@ export declare class NotificationsController {
     list(u: AuthUser, f: z.infer<typeof q>): Promise<{
         unread: number;
         items: {
-            id: string;
-            entityType: string | null;
-            entityId: string | null;
-            createdAt: Date;
             userId: string;
+            id: string;
+            createdAt: Date;
             type: string;
             title: string;
             body: string | null;
+            entityId: string | null;
+            entityType: string | null;
             readAt: Date | null;
             archivedAt: Date | null;
         }[];

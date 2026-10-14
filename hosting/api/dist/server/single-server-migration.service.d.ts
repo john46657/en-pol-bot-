@@ -31,7 +31,8 @@ export interface MigrationResult {
  *  - Persönliche Ausnahmen des Servers werden zentral; widersprechen sie einer zentralen Ausnahme, gewinnt das Verbot.
  *  - Abgeschaltete Module des Servers bleiben abgeschaltet (jetzt zentral). Wochen-Reset des Servers → zentraler Wochen-Reset, falls dieser aus war.
  *  - Fachdaten aller früheren Bereiche gehören zum einen Bestand. Würde ein Eintrag dabei eine Eindeutigkeit verletzen (z. B. zwei
- *    Personalakten desselben Benutzers), bleibt der weniger aktuelle in seinem Bereich stehen (sichtbar, nur nicht eindeutig).
+ *    Personalakten desselben Benutzers), bleibt der weniger aktuelle als Archiv in seinem Bereich stehen (nicht in Listen,
+ *    nur im Backup; siehe archive-scope.ts).
  */
 export declare class SingleServerMigrationService implements OnModuleInit {
     private readonly prisma;
@@ -45,6 +46,7 @@ export declare class SingleServerMigrationService implements OnModuleInit {
     /** Server, dessen Werte zentral werden: der eingerichtete – sonst der einzige, der in den Daten vorkommt. */
     private target;
     run(): Promise<MigrationResult>;
+    private migrate;
     /** Jeweils der zuletzt gespeicherte Wert (zentral oder der des Servers bzw. seiner früheren Einstellungs-Gruppe) wird zentral. */
     private mergeSettings;
     /** Letzte Änderung einer Rolle laut Audit-Log (Rechte, Name, Discord-Rollen …). */

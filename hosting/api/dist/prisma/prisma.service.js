@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
+const archive_scope_1 = require("./archive-scope");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     /**
      * Längere Zeitlimits für Transaktionen: bei gehosteten Datenbanken (z. B. bot-hosting.net) dauert jede Abfrage spürbar;
@@ -19,6 +20,8 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
      */
     constructor() {
         super({ transactionOptions: { timeout: 30_000, maxWait: 15_000 } });
+        // Listen ohne die bei der Umstellung auf einen Server separat belassenen Doppel – siehe archive-scope.ts
+        return (0, archive_scope_1.withoutArchived)(this);
     }
     async onModuleInit() { await this.$connect(); }
     async onModuleDestroy() { await this.$disconnect(); }

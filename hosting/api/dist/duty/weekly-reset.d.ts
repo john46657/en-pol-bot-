@@ -14,13 +14,13 @@ export declare const weeklyResetConfigSchema: z.ZodObject<{
     /** Beamte in der Rangliste mit Discord-Erwähnung (ohne Ping) */
     mention: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    channelId: string | null;
     enabled: boolean;
+    channelId: string | null;
     topN: number;
     mention: boolean;
 }, {
-    channelId?: string | null | undefined;
     enabled?: boolean | undefined;
+    channelId?: string | null | undefined;
     topN?: number | undefined;
     mention?: boolean | undefined;
 }>;
@@ -60,8 +60,8 @@ export declare class WeeklyResetService {
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, rt: RealtimeService);
     config(): Promise<WeeklyResetConfig>;
     saveConfig(actor: Actor, input: WeeklyResetConfig): Promise<{
-        channelId: string | null;
         enabled: boolean;
+        channelId: string | null;
         topN: number;
         mention: boolean;
     }>;
@@ -97,9 +97,9 @@ export declare class WeeklyResetService {
         lastArchive: {
             id: string;
             createdAt: Date;
-            label: string;
-            weekKey: string;
             discordChannelId: string | null;
+            weekKey: string;
+            label: string;
             catchUp: boolean;
         } | null;
         totalMinutes: number;
@@ -119,34 +119,34 @@ export declare class WeeklyResetService {
     archives(): Promise<{
         id: string;
         createdAt: Date;
+        discordChannelId: string | null;
         timezone: string;
         scope: string;
-        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
+        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
-        discordChannelId: string | null;
         catchUp: boolean;
     }[]>;
     archive(id: string): Promise<{
         id: string;
         createdAt: Date;
-        sessions: Prisma.JsonValue;
+        discordChannelId: string | null;
         timezone: string;
         scope: string;
-        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
+        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
-        discordChannelId: string | null;
+        sessions: Prisma.JsonValue;
         catchUp: boolean;
     }>;
 }
@@ -167,9 +167,9 @@ export declare class WeeklyResetController {
         lastArchive: {
             id: string;
             createdAt: Date;
-            label: string;
-            weekKey: string;
             discordChannelId: string | null;
+            weekKey: string;
+            label: string;
             catchUp: boolean;
         } | null;
         totalMinutes: number;
@@ -187,15 +187,15 @@ export declare class WeeklyResetController {
     }>;
     /** Einstellungen des Wochen-Resets. */
     config(): Promise<{
-        channelId: string | null;
         enabled: boolean;
+        channelId: string | null;
         topN: number;
         mention: boolean;
         scope: "global";
     }>;
     save(a: Actor, b: WeeklyResetConfig): Promise<{
-        channelId: string | null;
         enabled: boolean;
+        channelId: string | null;
         topN: number;
         mention: boolean;
         scope: "global";
@@ -204,35 +204,35 @@ export declare class WeeklyResetController {
     archives(): Promise<{
         id: string;
         createdAt: Date;
+        discordChannelId: string | null;
         timezone: string;
         scope: string;
-        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
+        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
-        discordChannelId: string | null;
         catchUp: boolean;
     }[]>;
     /** Vollständiges Archiv inkl. aller Dienst-Sitzungen der Woche (Schichtleitung). */
     archive(id: string): Promise<{
         id: string;
         createdAt: Date;
-        sessions: Prisma.JsonValue;
+        discordChannelId: string | null;
         timezone: string;
         scope: string;
-        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
+        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
-        discordChannelId: string | null;
+        sessions: Prisma.JsonValue;
         catchUp: boolean;
     }>;
 }

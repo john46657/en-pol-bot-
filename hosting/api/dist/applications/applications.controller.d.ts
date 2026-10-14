@@ -39,13 +39,13 @@ declare const inboxQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    type?: string | undefined;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
+    type?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
-    type?: string | undefined;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
+    type?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -78,12 +78,12 @@ declare const analyticsQ: z.ZodObject<{
     days: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     days: number;
-    type?: string | undefined;
     status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
+    type?: string | undefined;
     reviewer?: string | undefined;
 }, {
-    type?: string | undefined;
     status?: "REJECTED" | "PENDING" | "APPROVED" | undefined;
+    type?: string | undefined;
     days?: number | undefined;
     reviewer?: string | undefined;
 }>;
@@ -113,20 +113,20 @@ export declare class ApplicationsController {
         items: {
             decidedByName: string | null;
             number: string;
-            id: string;
-            createdAt: Date;
-            discordId: string | null;
             robloxUserId: string | null;
+            discordId: string | null;
+            id: string;
             robloxUsername: string;
+            status: string;
+            createdAt: Date;
             updatedAt: Date;
             version: number;
-            guildId: string | null;
-            status: string;
-            decidedById: string | null;
-            decidedAt: Date | null;
-            decisionReason: string | null;
             source: string;
+            guildId: string | null;
             discordName: string | null;
+            decidedAt: Date | null;
+            decidedById: string | null;
+            decisionReason: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
             durationSec: number | null;
@@ -181,8 +181,8 @@ export declare class ApplicationsController {
     }): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
         id: string;
-        createdAt: Date;
         status: string;
+        createdAt: Date;
         decisionReason: string | null;
     }[]>;
     /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
@@ -220,20 +220,20 @@ export declare class ApplicationsController {
     remove(a: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
         robloxUserId: string | null;
+        discordId: string | null;
+        id: string;
         robloxUsername: string;
+        status: string;
+        createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string | null;
-        status: string;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
         source: string;
+        guildId: string | null;
         discordName: string | null;
+        decidedAt: Date | null;
+        decidedById: string | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
@@ -242,20 +242,20 @@ export declare class ApplicationsController {
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a: Actor, id: string, b: z.infer<typeof move>): Promise<{
         number: string;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
         robloxUserId: string | null;
+        discordId: string | null;
+        id: string;
         robloxUsername: string;
+        status: string;
+        createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string | null;
-        status: string;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
         source: string;
+        guildId: string | null;
         discordName: string | null;
+        decidedAt: Date | null;
+        decidedById: string | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
@@ -266,20 +266,20 @@ export declare class ApplicationsController {
         reason: string;
     }): Promise<{
         number: string;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
         robloxUserId: string | null;
+        discordId: string | null;
+        id: string;
         robloxUsername: string;
+        status: string;
+        createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string | null;
-        status: string;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
         source: string;
+        guildId: string | null;
         discordName: string | null;
+        decidedAt: Date | null;
+        decidedById: string | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;

@@ -51,7 +51,17 @@ export declare class ApplicationsService {
     /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
     police(): Promise<{
         name: string;
+        title: string;
+        description: string;
+        enabled: boolean;
         settings: {
+            cooldownMinutes: number;
+            messages: {
+                denied: string;
+                accepted: string;
+                confirmation: string;
+                completion: string;
+            };
             roles: {
                 denied: string[];
                 accepted: string[];
@@ -70,20 +80,10 @@ export declare class ApplicationsService {
                 managers: string[];
             };
             mode: "DM" | "WEB";
-            messages: {
-                denied: string;
-                accepted: string;
-                confirmation: string;
-                completion: string;
-            };
             staffThreads: boolean;
-            cooldownMinutes: number;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
-        description: string;
-        enabled: boolean;
-        title: string;
         pingRoleIds: string[];
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -106,8 +106,8 @@ export declare class ApplicationsService {
     history(discordId: string): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
         id: string;
-        createdAt: Date;
         status: string;
+        createdAt: Date;
         decisionReason: string | null;
     }[]>;
     /**
@@ -132,20 +132,20 @@ export declare class ApplicationsService {
         items: {
             decidedByName: string | null;
             number: string;
-            id: string;
-            createdAt: Date;
-            discordId: string | null;
             robloxUserId: string | null;
+            discordId: string | null;
+            id: string;
             robloxUsername: string;
+            status: string;
+            createdAt: Date;
             updatedAt: Date;
             version: number;
-            guildId: string | null;
-            status: string;
-            decidedById: string | null;
-            decidedAt: Date | null;
-            decisionReason: string | null;
             source: string;
+            guildId: string | null;
             discordName: string | null;
+            decidedAt: Date | null;
+            decidedById: string | null;
+            decisionReason: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
             durationSec: number | null;
@@ -197,20 +197,20 @@ export declare class ApplicationsService {
     remove(actor: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
         robloxUserId: string | null;
+        discordId: string | null;
+        id: string;
         robloxUsername: string;
+        status: string;
+        createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string | null;
-        status: string;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
         source: string;
+        guildId: string | null;
         discordName: string | null;
+        decidedAt: Date | null;
+        decidedById: string | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
@@ -218,20 +218,20 @@ export declare class ApplicationsService {
     }>;
     transition(actor: Actor, id: string, to: ApplicationStatus, reason?: string): Promise<{
         number: string;
-        id: string;
-        createdAt: Date;
-        discordId: string | null;
         robloxUserId: string | null;
+        discordId: string | null;
+        id: string;
         robloxUsername: string;
+        status: string;
+        createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string | null;
-        status: string;
-        decidedById: string | null;
-        decidedAt: Date | null;
-        decisionReason: string | null;
         source: string;
+        guildId: string | null;
         discordName: string | null;
+        decidedAt: Date | null;
+        decidedById: string | null;
+        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;

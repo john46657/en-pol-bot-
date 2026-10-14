@@ -6,6 +6,7 @@ import { BackupService, setAfterRestore } from '../backup/backup.service';
 import { homeGuild } from '../common/guild-context';
 import { HomeServerService } from './home-server.service';
 import { MODULES_KEY } from './modules.service';
+import { DATA_TABLES, setArchiveFilter } from '../prisma/archive-scope';
 
 export const SINGLE_SERVER_FLAG = 'migration.singleServer';
 
@@ -15,18 +16,6 @@ export const FORMER_PER_SERVER_SETTINGS: readonly string[] = [
   'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
   'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
   'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
-];
-
-/**
- * Tabellen mit früherem Datenbereich je Server (`serverId`) und ihren Eindeutigkeiten. Nach der Umstellung gehört alles zum
- * einen Bestand (`serverId` = NULL); die Spalte bleibt (keine Strukturänderung, alte Backups bleiben einspielbar).
- */
-const DATA_TABLES: [string, string[]][] = [
-  ['Person', ['robloxUserId']], ['Vehicle', ['plate']], ['Weapon', ['serial']], ['Report', []], ['Complaint', []], ['Investigation', []], ['WantedRecord', []],
-  ['Evidence', []], ['DutySession', []], ['Ticket', []], ['LegalCode', ['code']], ['Incident', []], ['Unit', ['callsign']], ['CadMapObject', []],
-  ['CadMember', ['userId', 'discordId']], ['Personnel', ['userId', 'callsign', 'serviceNumber']], ['HrRank', ['name']], ['HrRequest', []], ['HrTraining', []],
-  ['HrExam', []], ['HrAnnouncement', []], ['HrPoll', []], ['ServiceNumberRange', []], ['ServiceNumber', ['display']], ['HireQueue', []], ['AcademyCourse', []],
-  ['SekMember', ['userId']], ['SekReport', []], ['RadioWhitelist', ['userId']], ['Workflow', []], ['Conversation', []],
 ];
 
 /** Früherer eigener Datenbereich eines Servers (wie im alten Server-Verbund aus der Server-ID abgeleitet). */
@@ -58,7 +47,8 @@ export interface MigrationResult {
  *  - Persönliche Ausnahmen des Servers werden zentral; widersprechen sie einer zentralen Ausnahme, gewinnt das Verbot.
  *  - Abgeschaltete Module des Servers bleiben abgeschaltet (jetzt zentral). Wochen-Reset des Servers → zentraler Wochen-Reset, falls dieser aus war.
  *  - Fachdaten aller früheren Bereiche gehören zum einen Bestand. Würde ein Eintrag dabei eine Eindeutigkeit verletzen (z. B. zwei
- *    Personalakten desselben Benutzers), bleibt der weniger aktuelle in seinem Bereich stehen (sichtbar, nur nicht eindeutig).
+ *    Personalakten desselben Benutzers), bleibt der weniger aktuelle als Archiv in seinem Bereich stehen (nicht in Listen,
+ *    nur im Backup; siehe archive-scope.ts).
  */
 @Injectable()
 export class SingleServerMigrationService implements OnModuleInit {
@@ -96,6 +86,12 @@ export class SingleServerMigrationService implements OnModuleInit {
   }
 
   async run(): Promise<MigrationResult> {
+    const r = await this.migrate();
+    setArchiveFilter(r.status !== 'postponed'); // Doppel aus der Umstellung erst danach ausblenden
+    return r;
+  }
+
+  private async migrate(): Promise<MigrationResult> {
     if (await this.prisma.systemSetting.findUnique({ where: { key: SINGLE_SERVER_FLAG } })) return { status: 'nothing', guildId: homeGuild() };
     if (!(await this.pending())) {
       await this.prisma.systemSetting.upsert({ where: { key: SINGLE_SERVER_FLAG }, create: { key: SINGLE_SERVER_FLAG, value: { at: new Date().toISOString(), guildId: homeGuild(), nothingToDo: true } }, update: {} });
