@@ -12,7 +12,7 @@ import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { webUrl } from '../common/web-url';
-import { policeSchema } from '../qualifications/qualifications.config';
+import { formSchema, policeSchema } from '../qualifications/qualifications.config';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from '../qualifications/decision';
 import { RobloxService } from '../persons/roblox.service';
 import { formatMinutes } from '@enrp/shared';
@@ -39,7 +39,9 @@ export class ApplicationsService {
   /** Bewerbungsformular (Administration → Studio). */
   async form(): Promise<FormField[]> {
     const s = await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
-    return (s?.value as unknown as FormField[] | undefined) ?? DEFAULT_FORM;
+    // ungültig gespeichertes Formular (altes Format, kaputt) → Standardformular
+    const p = formSchema.safeParse(s?.value);
+    return p.success ? p.data as FormField[] : DEFAULT_FORM;
   }
 
   /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */

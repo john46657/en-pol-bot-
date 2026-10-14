@@ -22,7 +22,9 @@ let StudioService = class StudioService {
         this.prisma = prisma;
     }
     async setting(key, fallback) {
-        return (await this.prisma.systemSetting.findUnique({ where: { key } }))?.value ?? fallback;
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key } }))?.value;
+        // gespeicherter Wert mit falschem Typ (altes Format, kaputt) → Standardwert statt Absturz im Dashboard
+        return v !== undefined && v !== null && typeof v === typeof fallback && Array.isArray(v) === Array.isArray(fallback) ? v : fallback;
     }
     async config() {
         const [customFields, accent, name, customAccents] = await Promise.all([
@@ -31,10 +33,12 @@ let StudioService = class StudioService {
             this.setting('org.name', 'EN Polizei'),
             this.setting('theme.customAccents', []),
         ]);
-        return { org: { name }, theme: { accent, customAccents }, customFields };
+        const list = (x) => (Array.isArray(x) ? x : []);
+        return { org: { name }, theme: { accent, customAccents: list(customAccents).filter((a) => typeof a?.name === 'string' && typeof a?.hex === 'string') }, customFields: { ...customFields, persons: list(customFields.persons), vehicles: list(customFields.vehicles) } };
     }
     async defs(entity) {
-        return (await this.setting('studio.customFields', { persons: [], vehicles: [] }))[entity] ?? [];
+        const d = (await this.setting('studio.customFields', { persons: [], vehicles: [] }))[entity];
+        return Array.isArray(d) ? d : [];
     }
     /** Liefert bereinigte Custom-Werte oder wirft 400 mit allen Fehlern. */
     async check(entity, values, existing) {

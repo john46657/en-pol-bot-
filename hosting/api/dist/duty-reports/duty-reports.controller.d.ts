@@ -93,12 +93,14 @@ export declare class DutyReportsController {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }[]>;
     saveTemplate(a: Actor, id: string, b: ReportTemplate): Promise<{
         description: string;
@@ -117,18 +119,18 @@ export declare class DutyReportsController {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }>;
     /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */
     prefill(a: Actor, id: string, date?: string): Promise<{
-        values: {
-            [k: string]: string;
-        };
+        values: Record<string, string>;
     }>;
     dup(a: Actor, id: string): Promise<{
         description: string;
@@ -147,12 +149,14 @@ export declare class DutyReportsController {
             id: string;
             placeholder: string;
             inline: boolean;
+            separator: boolean;
         }[];
         pingRoleIds: string[];
         emoji: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
+        layout: "FIELDS" | "LIST";
     }>;
     removeTemplate(a: Actor, id: string): Promise<void>;
     list(a: Actor, q: z.infer<typeof listQ>): Promise<{
@@ -204,12 +208,14 @@ export declare class DutyReportsController {
                 id: string;
                 placeholder: string;
                 inline: boolean;
+                separator: boolean;
             }[];
             pingRoleIds: string[];
             emoji: string;
             period: "DAILY" | "WEEKLY" | "FREE";
             onePerPeriod: boolean;
             authorCanEdit: boolean;
+            layout: "FIELDS" | "LIST";
         } | null;
         posted: {
             channelId: string;

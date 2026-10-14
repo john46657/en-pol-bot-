@@ -80495,7 +80495,9 @@ var reportFieldSchema = external_exports.object({
   options: external_exports.array(external_exports.string().trim().min(1).max(100)).max(25).default([]),
   maxLength: external_exports.number().int().min(1).max(4e3).default(1e3),
   /** in Discord nebeneinander anzeigen */
-  inline: external_exports.boolean().default(false)
+  inline: external_exports.boolean().default(false),
+  /** Trennlinie vor diesem Feld (nur Listen-Darstellung) */
+  separator: external_exports.boolean().default(false)
 });
 var reportTemplateSchema = external_exports.object({
   id: external_exports.string().uuid(),
@@ -80514,7 +80516,9 @@ var reportTemplateSchema = external_exports.object({
   /** Verfasser darf nach dem Einreichen noch bearbeiten */
   authorCanEdit: external_exports.boolean().default(true),
   /** Rollen, die beim neuen Bericht erwähnt werden */
-  pingRoleIds: external_exports.array(sf2).max(10).default([])
+  pingRoleIds: external_exports.array(sf2).max(10).default([]),
+  /** Darstellung in Discord: FIELDS = Embed-Felder, LIST = „➣ **Feld:** Wert“-Liste mit Trennlinien */
+  layout: external_exports.enum(["FIELDS", "LIST"]).default("FIELDS")
 });
 var dd = (d) => d.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 function isoWeek(d) {
@@ -80531,6 +80535,8 @@ function periodLabel(period, start2) {
   }
   return dd(s);
 }
+var LINE_LONG = "\u23AF".repeat(20);
+var LINE_SHORT = "\u23AF".repeat(12);
 var MODULES = [
   { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Module", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "modules"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
@@ -81570,6 +81576,10 @@ async function offer(c, key4) {
   if (ban?.banned) return errorReply(`\u26D4 ${ban.message ?? "Du bist f\xFCr diese Bewerbung gesperrt."}`);
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+  if (flow.settings.mode === "WEB") {
+    const link = await c.api.service("POST", "/bot/qualifications/web-link", { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...c.guildId ? { guildId: c.guildId } : {}, ...c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {} });
+    return { ephemeral: true, embeds: [{ title: clip(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung f\xFCllst du im **Browser** aus. Der Link gilt nur f\xFCr dich und ist **${link.timeLimit}** g\xFCltig \u2013 teile ihn mit niemandem.` }], buttons: [{ id: "quali:web", label: "Bewerbung \xF6ffnen", style: "secondary", url: link.url }] };
+  }
   if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
   if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
   if (c.guildId) guildOf.set(c.discordId, c.guildId);
@@ -84710,6 +84720,8 @@ async function handleComponent(i) {
   if (reply.update && source) await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error("could not update message:", e instanceof Error ? e.message : e));
 }
 function wire(c) {
+  c.on("error", (e) => console.error("discord client error:", e.message));
+  c.on("shardError", (e, id2) => console.error(`discord shard ${id2} error:`, e.message));
   c.on("interactionCreate", (i) => {
     if (i.guildId && !isHomeGuild(i.guildId)) {
       if (i.isRepliable()) void i.reply({ content: "Dieser Bot ist nur auf dem Discord-Server der EN Polizei aktiv.", flags: import_discord6.MessageFlags.Ephemeral }).catch(() => void 0);
@@ -84988,6 +85000,15 @@ for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => {
   void client.destroy().finally(() => process.exit(0));
 });
 process.on("unhandledRejection", (e) => console.error("unhandledRejection:", e instanceof Error ? e.message : e));
+var crashes = [];
+process.on("uncaughtException", (e) => {
+  console.error("uncaughtException:", e instanceof Error ? e.stack ?? e.message : e);
+  crashes = [...crashes.filter((t) => Date.now() - t < 6e4), Date.now()];
+  if (crashes.length > 20) {
+    console.error("zu viele Fehler in kurzer Zeit \u2013 Bot wird neu gestartet");
+    process.exit(1);
+  }
+});
 async function start() {
   for (const [n, step] of INTENT_STEPS.entries()) {
     if (n > 0) {

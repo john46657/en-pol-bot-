@@ -222,12 +222,22 @@ export class ServiceNumbersService implements OnModuleInit {
 
   async assignManual(actor: Actor, d: { personnelId?: string; discordId?: string; name?: string; display?: string; rangeId?: string; reason?: string }) {
     if (!d.display && !d.rangeId) throw new AppError('VALIDATION_FAILED', 'Nummer oder Nummernkreis angeben.');
+    // Nummer zuerst prüfen, damit bei belegter Nummer keine leere Personalakte entsteht (atomar prüft `allocate`)
+    if (d.display && !d.personnelId) await this.checkFree(d.display);
     const p = d.personnelId ? await this.prisma.personnel.findUnique({ where: { id: d.personnelId } }) : d.discordId ? await this.personnelForDiscord(actor, d.discordId, d.name) : null;
     if (!p) throw new AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
     const r = await this.allocate(actor, { userId: p.userId, personnelId: p.id, display: d.display, rangeId: d.rangeId, reason: d.reason, manual: true });
     await this.prisma.hireQueue.updateMany({ where: { userId: p.userId, status: 'PENDING' }, data: { status: 'DONE' } });
     await this.afterAssign(actor, p.userId, r.display, { applicationName: null });
     return r;
+  }
+
+  /** Vorabprüfung einer bestimmten Nummer (die eigentliche, atomare Prüfung macht `allocate`). */
+  private async checkFree(display: string) {
+    const p = await this.parse(display.trim());
+    if (!p) throw new AppError('VALIDATION_FAILED', `„${display}“ gehört zu keinem Nummernkreis.`);
+    const row = await this.prisma.serviceNumber.findUnique({ where: { rangeId_value: { rangeId: p.range.id, value: p.value } } });
+    if (!p.range.active || !p.range.manual || (row && row.status !== 'FREE')) throw new AppError('CONFLICT', `Die Nummer ${row?.display ?? display} ist nicht frei vergebbar.`);
   }
 
   /** Personalakte zu einem Discord-Mitglied – vorhandene oder neu angelegt (Benutzer wird bei Bedarf mit angelegt). */

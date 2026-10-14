@@ -244,6 +244,8 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
     /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
     onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+    /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+    mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
 }, "strip", z.ZodTypeAny, {
     roles: {
         denied: string[];
@@ -262,6 +264,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit: string[];
         managers: string[];
     };
+    mode: "DM" | "WEB";
     messages: {
         denied: string;
         accepted: string;
@@ -290,6 +293,7 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         removeOnSubmit?: string[] | undefined;
         managers?: string[] | undefined;
     } | undefined;
+    mode?: "DM" | "WEB" | undefined;
     messages?: {
         denied?: string | undefined;
         accepted?: string | undefined;
@@ -484,6 +488,8 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
         onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+        /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+        mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         roles: {
             denied: string[];
@@ -502,6 +508,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         messages: {
             denied: string;
             accepted: string;
@@ -530,6 +537,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
@@ -568,6 +576,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         messages: {
             denied: string;
             accepted: string;
@@ -622,6 +631,7 @@ export declare const unitSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
@@ -736,6 +746,8 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
         /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
         onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+        /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+        mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         roles: {
             denied: string[];
@@ -754,6 +766,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         messages: {
             denied: string;
             accepted: string;
@@ -782,6 +795,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
@@ -813,6 +827,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit: string[];
             managers: string[];
         };
+        mode: "DM" | "WEB";
         messages: {
             denied: string;
             accepted: string;
@@ -851,6 +866,7 @@ export declare const policeSchema: z.ZodObject<{
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
+        mode?: "DM" | "WEB" | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
@@ -1054,6 +1070,8 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -1072,6 +1090,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1100,6 +1119,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1138,6 +1158,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1192,6 +1213,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1230,6 +1252,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1284,6 +1307,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1397,6 +1421,8 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -1415,6 +1441,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1443,6 +1470,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1474,6 +1502,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1512,6 +1541,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1553,6 +1583,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1594,6 +1625,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1649,6 +1681,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1689,6 +1722,7 @@ export declare const configSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1895,6 +1929,8 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -1913,6 +1949,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -1941,6 +1978,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -1979,6 +2017,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -2033,6 +2072,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -2071,6 +2111,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -2125,6 +2166,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -2238,6 +2280,8 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes: z.ZodDefault<z.ZodNumber>;
             /** Wie bei Appy „Action On User Leave“: offene Bewerbung, wenn die Person den Discord-Server verlässt (braucht den Server Members Intent). */
             onLeave: z.ZodDefault<z.ZodEnum<["NONE", "DENY", "WITHDRAW"]>>;
+            /** Art der Bewerbung: Fragen per Direktnachricht oder als Formular im Browser (Link vom Bot). */
+            mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             roles: {
                 denied: string[];
@@ -2256,6 +2300,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -2284,6 +2329,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -2315,6 +2361,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -2353,6 +2400,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -2486,6 +2534,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -2527,6 +2576,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;
@@ -2595,6 +2645,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
@@ -2635,6 +2686,7 @@ export declare const saveSchema: z.ZodObject<{
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
+            mode?: "DM" | "WEB" | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;

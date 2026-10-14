@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { QualificationsService } from './qualifications.service';
 import { saveSchema } from './qualifications.config';
+import { WebApplyService } from './web-apply.service';
 import type { Actor } from '../audit/audit.service';
 declare const list: z.ZodObject<{
     unit: z.ZodOptional<z.ZodString>;
@@ -79,6 +80,35 @@ declare const openQ: z.ZodObject<{
     discordId: string;
     unit?: string | undefined;
 }>;
+declare const webLink: z.ZodObject<{
+    unit: z.ZodString;
+    discordId: z.ZodString;
+    discordName: z.ZodString;
+    guildId: z.ZodOptional<z.ZodString>;
+    joinedAt: z.ZodOptional<z.ZodDate>;
+}, "strip", z.ZodTypeAny, {
+    unit: string;
+    discordId: string;
+    discordName: string;
+    guildId?: string | undefined;
+    joinedAt?: Date | undefined;
+}, {
+    unit: string;
+    discordId: string;
+    discordName: string;
+    guildId?: string | undefined;
+    joinedAt?: Date | undefined;
+}>;
+declare const webSubmit: z.ZodObject<{
+    robloxUsername: z.ZodOptional<z.ZodString>;
+    answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
+}, "strip", z.ZodTypeAny, {
+    answers: Record<string, string | string[]>;
+    robloxUsername?: string | undefined;
+}, {
+    answers: Record<string, string | string[]>;
+    robloxUsername?: string | undefined;
+}>;
 export declare class QualificationsController {
     private readonly q;
     constructor(q: QualificationsService);
@@ -106,6 +136,7 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -147,6 +178,7 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -191,6 +223,7 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -232,6 +265,7 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -321,7 +355,8 @@ export declare class QualificationsController {
 /** Dienst-Endpunkte für das Discord-Panel – Bewerben geht auch ohne verknüpftes Konto. */
 export declare class BotQualificationsController {
     private readonly q;
-    constructor(q: QualificationsService);
+    private readonly web;
+    constructor(q: QualificationsService, web: WebApplyService);
     config(): Promise<{
         title: string;
         units: {
@@ -344,6 +379,7 @@ export declare class BotQualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -385,6 +421,7 @@ export declare class BotQualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -415,6 +452,29 @@ export declare class BotQualificationsController {
         id: string;
         number: string;
         unitName: string;
+    }>;
+    /** Bewerbungsart „Web“: persönlicher, signierter Link zum Formular im Browser. */
+    webLink(b: z.infer<typeof webLink>): Promise<{
+        url: string;
+        expiresAt: string;
+        timeLimit: string;
+    }>;
+}
+/** Öffentliches Bewerbungsformular zu einem Link aus dem Bot (Bewerbungsart „Web“) – ohne Konto. */
+export declare class WebApplyController {
+    private readonly web;
+    constructor(web: WebApplyService);
+    open(t: string): Promise<{
+        title: string;
+        name: string;
+        discordName: string;
+        expiresAt: string;
+        questions: import("@enrp/shared").FormField[];
+        robloxField: boolean;
+    }>;
+    submit(t: string, b: z.infer<typeof webSubmit>): Promise<{
+        number: string;
+        message: string;
     }>;
 }
 export {};

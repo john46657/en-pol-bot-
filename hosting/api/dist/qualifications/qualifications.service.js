@@ -52,7 +52,8 @@ let QualificationsService = class QualificationsService {
     }
     /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
     async policeForm() {
-        return (await this.read(FORM_KEY)) ?? applications_service_1.DEFAULT_FORM;
+        const p = qualifications_config_1.formSchema.safeParse(await this.read(FORM_KEY));
+        return p.success ? p.data : applications_service_1.DEFAULT_FORM; // ungültig gespeichert → Standardformular
     }
     /** Alles für „Setup“ an einem Ort. */
     async setup() {

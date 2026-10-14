@@ -8,7 +8,7 @@ import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { makeNumber } from '../common/numbering';
 import { webUrl } from '../common/web-url';
-import { appSettingsSchema, configSchema, DEFAULT_CONFIG, type QualificationConfig } from './qualifications.config';
+import { appSettingsSchema, configSchema, DEFAULT_CONFIG, formSchema, type QualificationConfig } from './qualifications.config';
 import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
@@ -37,7 +37,8 @@ export class QualificationsService {
 
   /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
   async policeForm(): Promise<FormField[]> {
-    return ((await this.read(FORM_KEY)) as unknown as FormField[] | undefined) ?? DEFAULT_FORM;
+    const p = formSchema.safeParse(await this.read(FORM_KEY));
+    return p.success ? p.data as FormField[] : DEFAULT_FORM; // ungültig gespeichert → Standardformular
   }
 
   /** Alles für „Setup“ an einem Ort. */

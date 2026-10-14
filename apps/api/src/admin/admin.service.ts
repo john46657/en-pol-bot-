@@ -43,6 +43,10 @@ export const SETTING_SCHEMAS = {
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
 
+/** Ungültige gespeicherte Werte (altes Format, unvollständig) weglassen – dann gelten im Dashboard die Standardwerte. */
+const valid = <T extends { key: string; value: unknown }>(rows: T[]) =>
+  rows.filter((r) => { const schema = SETTING_SCHEMAS[r.key.split('@')[0] as SettingKey]; return !schema || schema.safeParse(r.value).success; });
+
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly home: HomeServerService) {}
@@ -52,7 +56,7 @@ export class AdminService {
    * der Datenbank, werden aber nicht mehr angezeigt oder verwendet.
    */
   async getSettings() {
-    const rows = await this.prisma.systemSetting.findMany({ where: { NOT: { key: { contains: '@' } } } });
+    const rows = valid(await this.prisma.systemSetting.findMany({ where: { NOT: { key: { contains: '@' } } } }));
     return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS) };
   }
 

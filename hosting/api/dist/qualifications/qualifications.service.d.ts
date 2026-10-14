@@ -49,6 +49,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -90,6 +91,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -136,6 +138,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;
@@ -177,6 +180,7 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 messages: {
                     denied: string;
                     accepted: string;

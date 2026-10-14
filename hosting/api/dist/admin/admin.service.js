@@ -52,6 +52,8 @@ exports.SETTING_SCHEMAS = {
         teamRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(20).default([]),
     }),
 };
+/** Ungültige gespeicherte Werte (altes Format, unvollständig) weglassen – dann gelten im Dashboard die Standardwerte. */
+const valid = (rows) => rows.filter((r) => { const schema = exports.SETTING_SCHEMAS[r.key.split('@')[0]]; return !schema || schema.safeParse(r.value).success; });
 let AdminService = class AdminService {
     prisma;
     audit;
@@ -66,7 +68,7 @@ let AdminService = class AdminService {
      * der Datenbank, werden aber nicht mehr angezeigt oder verwendet.
      */
     async getSettings() {
-        const rows = await this.prisma.systemSetting.findMany({ where: { NOT: { key: { contains: '@' } } } });
+        const rows = valid(await this.prisma.systemSetting.findMany({ where: { NOT: { key: { contains: '@' } } } }));
         return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS) };
     }
     async setSetting(actor, key, value) {

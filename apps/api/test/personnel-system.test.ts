@@ -138,6 +138,9 @@ describe('Dienstnummern', () => {
 
   it('assigns directly to a Discord member – the profile is created on the fly', async () => {
     expect((await admin.post('/api/v1/dienstnummern/assign').send({ display: '1008' })).status).toBe(400);
+    // gesperrte Nummer: abgelehnt, und es entsteht keine leere Personalakte
+    expect((await admin.post('/api/v1/dienstnummern/assign').send({ discordId: '490000000000000009', display: '1009' })).status).toBe(409);
+    expect(await prisma.discordLink.findUnique({ where: { discordId: '490000000000000009' } })).toBeNull();
     const r = await admin.post('/api/v1/dienstnummern/assign').send({ discordId: '490000000000000009', name: 'hr_discordneu', display: '1008' });
     expect(r.status).toBe(200);
     const link = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: '490000000000000009' } });

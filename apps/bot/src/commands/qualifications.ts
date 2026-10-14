@@ -11,6 +11,8 @@ export interface AppSettings {
   messages?: { confirmation?: string; completion?: string };
   roles?: { required?: { ids: string[]; mode: 'ALL' | 'ANY' }; restricted?: { ids: string[]; mode: 'ALL' | 'ANY' }; managers?: string[] };
   timeLimitMinutes?: number;
+  /** Art der Bewerbung: Fragen per Direktnachricht (Standard) oder als Formular im Browser. */
+  mode?: 'DM' | 'WEB';
 }
 export interface QualiUnit { key: string; name: string; description: string; questions: (string | FormField)[]; enabled?: boolean; settings?: AppSettings }
 export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string; name?: string; enabled?: boolean; settings?: AppSettings } }
@@ -129,6 +131,11 @@ async function offer(c: Ctx, key: string | undefined): Promise<Reply> {
   if (ban?.banned) return errorReply(`⛔ ${ban.message ?? 'Du bist für diese Bewerbung gesperrt.'}`);
   const open = await openApplication(c.api, flow.key, c.discordId);
   if (open.open) return errorReply(`Du hast für **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+  // Bewerbungsart „Web“: persönlicher Link zum Formular im Browser statt Fragen per DM
+  if (flow.settings.mode === 'WEB') {
+    const link = await c.api.service<{ url: string; timeLimit: string }>('POST', '/bot/qualifications/web-link', { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...(c.guildId ? { guildId: c.guildId } : {}), ...(c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {}) });
+    return { ephemeral: true, embeds: [{ title: clip(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung füllst du im **Browser** aus. Der Link gilt nur für dich und ist **${link.timeLimit}** gültig – teile ihn mit niemandem.` }], buttons: [{ id: 'quali:web', label: 'Bewerbung öffnen', style: 'secondary', url: link.url }] };
+  }
   if (!c.platform) return errorReply('Direktnachrichten sind hier nicht verfügbar.');
   if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
   if (c.guildId) guildOf.set(c.discordId, c.guildId);

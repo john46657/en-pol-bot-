@@ -1339,6 +1339,8 @@ declare const reportFieldSchema: z.ZodObject<{
     maxLength: z.ZodDefault<z.ZodNumber>;
     /** in Discord nebeneinander anzeigen */
     inline: z.ZodDefault<z.ZodBoolean>;
+    /** Trennlinie vor diesem Feld (nur Listen-Darstellung) */
+    separator: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     options: string[];
     label: string;
@@ -1348,6 +1350,7 @@ declare const reportFieldSchema: z.ZodObject<{
     id: string;
     placeholder: string;
     inline: boolean;
+    separator: boolean;
 }, {
     label: string;
     id: string;
@@ -1357,6 +1360,7 @@ declare const reportFieldSchema: z.ZodObject<{
     type?: "number" | "select" | "long" | "short" | undefined;
     placeholder?: string | undefined;
     inline?: boolean | undefined;
+    separator?: boolean | undefined;
 }>;
 declare const reportTemplateSchema: z.ZodObject<{
     id: z.ZodString;
@@ -1380,6 +1384,8 @@ declare const reportTemplateSchema: z.ZodObject<{
         maxLength: z.ZodDefault<z.ZodNumber>;
         /** in Discord nebeneinander anzeigen */
         inline: z.ZodDefault<z.ZodBoolean>;
+        /** Trennlinie vor diesem Feld (nur Listen-Darstellung) */
+        separator: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         options: string[];
         label: string;
@@ -1389,6 +1395,7 @@ declare const reportTemplateSchema: z.ZodObject<{
         id: string;
         placeholder: string;
         inline: boolean;
+        separator: boolean;
     }, {
         label: string;
         id: string;
@@ -1398,6 +1405,7 @@ declare const reportTemplateSchema: z.ZodObject<{
         type?: "number" | "select" | "long" | "short" | undefined;
         placeholder?: string | undefined;
         inline?: boolean | undefined;
+        separator?: boolean | undefined;
     }>, "many">;
     /** pro Person und Zeitraum nur ein Bericht (erneutes Ausfüllen bearbeitet den vorhandenen) */
     onePerPeriod: z.ZodDefault<z.ZodBoolean>;
@@ -1405,6 +1413,8 @@ declare const reportTemplateSchema: z.ZodObject<{
     authorCanEdit: z.ZodDefault<z.ZodBoolean>;
     /** Rollen, die beim neuen Bericht erwähnt werden */
     pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Darstellung in Discord: FIELDS = Embed-Felder, LIST = „➣ **Feld:** Wert“-Liste mit Trennlinien */
+    layout: z.ZodDefault<z.ZodEnum<["FIELDS", "LIST"]>>;
 }, "strip", z.ZodTypeAny, {
     description: string;
     id: string;
@@ -1422,12 +1432,14 @@ declare const reportTemplateSchema: z.ZodObject<{
         id: string;
         placeholder: string;
         inline: boolean;
+        separator: boolean;
     }[];
     pingRoleIds: string[];
     emoji: string;
     period: "DAILY" | "WEEKLY" | "FREE";
     onePerPeriod: boolean;
     authorCanEdit: boolean;
+    layout: "FIELDS" | "LIST";
 }, {
     id: string;
     name: string;
@@ -1440,6 +1452,7 @@ declare const reportTemplateSchema: z.ZodObject<{
         type?: "number" | "select" | "long" | "short" | undefined;
         placeholder?: string | undefined;
         inline?: boolean | undefined;
+        separator?: boolean | undefined;
     }[];
     description?: string | undefined;
     guildId?: string | null | undefined;
@@ -1451,6 +1464,7 @@ declare const reportTemplateSchema: z.ZodObject<{
     period?: "DAILY" | "WEEKLY" | "FREE" | undefined;
     onePerPeriod?: boolean | undefined;
     authorCanEdit?: boolean | undefined;
+    layout?: "FIELDS" | "LIST" | undefined;
 }>;
 type ReportTemplate = z.infer<typeof reportTemplateSchema>;
 type ReportField = z.infer<typeof reportFieldSchema>;
@@ -1462,6 +1476,10 @@ declare function isoWeek(d: Date): number;
 declare function periodLabel(period: ReportTemplate['period'], start: Date | string): string;
 /** Felder, die automatisch mit der Dienstzeit gefüllt werden (Kürzel oder Beschriftung). */
 declare const isDutyTimeField: (f: Pick<ReportField, "id" | "label" | "type">) => boolean;
+/** Felder des Polizei-Tages-/Wochenberichts (Listen-Darstellung mit Trennlinien). */
+declare function policeReportFields(): ReportField[];
+/** Felder, die automatisch mit dem verknüpften Roblox-Namen gefüllt werden. */
+declare const isRobloxField: (f: Pick<ReportField, "id" | "label" | "type">) => boolean;
 /** Ende des Zeitraums (exklusiv). */
 declare function periodEnd(period: ReportTemplate['period'], start: Date): Date;
 interface DutySpan {
@@ -3185,4 +3203,4 @@ declare const fleetInternalSchema: z.ZodObject<{
 }>;
 type FleetInternalInput = z.infer<typeof fleetInternalSchema>;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, commandsForModules, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isSupportOpen, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, mdtConfigSchema, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, commandsForModules, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isRobloxField, isSupportOpen, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, mdtConfigSchema, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, policeReportFields, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

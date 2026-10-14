@@ -69,6 +69,7 @@ export declare class ApplicationsService {
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            mode: "DM" | "WEB";
             messages: {
                 denied: string;
                 accepted: string;

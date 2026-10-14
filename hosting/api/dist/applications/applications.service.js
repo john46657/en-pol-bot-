@@ -64,7 +64,9 @@ let ApplicationsService = class ApplicationsService {
     /** Bewerbungsformular (Administration → Studio). */
     async form() {
         const s = await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
-        return s?.value ?? exports.DEFAULT_FORM;
+        // ungültig gespeichertes Formular (altes Format, kaputt) → Standardformular
+        const p = qualifications_config_1.formSchema.safeParse(s?.value);
+        return p.success ? p.data : exports.DEFAULT_FORM;
     }
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
     async submit(d, meta = {}) {
