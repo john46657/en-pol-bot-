@@ -15,7 +15,7 @@ export interface BanInput {
 /**
  * Bewerbungssperren: Wer gesperrt ist, kann die betroffenen Bewerbungen gar nicht erst starten (Discord-Panel,
  * /bewerbung) und wird beim Absenden (Discord und Web /apply) abgewiesen. Erkannt wird per Discord-ID oder Roblox-ID.
- * Jeder Discord-Server hat seine eigene Sperrliste; Sperren ohne Server gelten überall.
+ * Es gibt eine Sperrliste; auch ältere Sperren, die früher nur für einen bestimmten Discord-Server angelegt wurden, gelten.
  */
 export declare class ApplicationBansService {
     private readonly prisma;
@@ -27,16 +27,16 @@ export declare class ApplicationBansService {
     find(who: {
         discordId?: string | null;
         robloxUserId?: string | null;
-    }, scope: string, guildId: string | null): Promise<{
+    }, scope: string): Promise<{
         id: string;
-        createdAt: Date;
         reason: string;
-        createdById: string | null;
+        createdAt: Date;
+        name: string;
+        discordId: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
-        name: string;
         guildId: string | null;
-        discordId: string | null;
+        createdById: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -50,26 +50,26 @@ export declare class ApplicationBansService {
     assertAllowed(who: {
         discordId?: string | null;
         robloxUserId?: string | null;
-    }, scope: string, what: string, guildId: string | null): Promise<void>;
+    }, scope: string, what: string): Promise<void>;
     /** Für den Bot vor dem Start einer Bewerbung. */
-    check(discordId: string, scope: string, what: string, guildId: string | null): Promise<{
+    check(discordId: string, scope: string, what: string): Promise<{
         banned: boolean;
         message: string;
     } | {
         banned: boolean;
         message: null;
     }>;
-    /** Sperrliste des gewählten Servers (ohne Server: die übergreifenden). */
+    /** Sperrliste. */
     list(includeInactive: boolean): Promise<{
         id: string;
-        createdAt: Date;
         reason: string;
-        createdById: string | null;
+        createdAt: Date;
+        name: string;
+        discordId: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
-        name: string;
         guildId: string | null;
-        discordId: string | null;
+        createdById: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -77,14 +77,14 @@ export declare class ApplicationBansService {
     }[]>;
     create(actor: Actor, d: BanInput): Promise<{
         id: string;
-        createdAt: Date;
         reason: string;
-        createdById: string | null;
+        createdAt: Date;
+        name: string;
+        discordId: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
-        name: string;
         guildId: string | null;
-        discordId: string | null;
+        createdById: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
@@ -92,14 +92,14 @@ export declare class ApplicationBansService {
     }>;
     lift(actor: Actor, id: string): Promise<{
         id: string;
-        createdAt: Date;
         reason: string;
-        createdById: string | null;
+        createdAt: Date;
+        name: string;
+        discordId: string | null;
         expiresAt: Date | null;
         robloxUserId: string | null;
-        name: string;
         guildId: string | null;
-        discordId: string | null;
+        createdById: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;

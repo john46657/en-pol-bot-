@@ -12,15 +12,15 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     type: string;
     description: string;
-    caseRef?: string | undefined;
     source?: string | undefined;
+    caseRef?: string | undefined;
     storageLocation?: string | undefined;
     personIds?: string[] | undefined;
 }, {
     type: string;
     description: string;
-    caseRef?: string | undefined;
     source?: string | undefined;
+    caseRef?: string | undefined;
     storageLocation?: string | undefined;
     personIds?: string[] | undefined;
 }>;
@@ -46,16 +46,16 @@ export declare class EvidenceController {
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             number: string;
-            serverId: string | null;
             id: string;
-            type: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            type: string;
             description: string;
-            caseRef: string | null;
-            source: string | null;
             ownerId: string | null;
+            source: string | null;
+            caseRef: string | null;
             storageLocation: string | null;
             custodyState: string;
         }[];
@@ -66,57 +66,57 @@ export declare class EvidenceController {
     get(id: string): Promise<{
         transfers: {
             id: string;
-            createdAt: Date;
             reason: string;
-            evidenceId: string;
+            createdAt: Date;
+            confirmed: boolean;
             fromUserId: string | null;
             toUserId: string | null;
             fromState: string;
             toState: string;
-            confirmed: boolean;
+            evidenceId: string;
         }[];
     } & {
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
     transfer(a: Actor, id: string, b: z.infer<typeof transfer>): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
@@ -124,16 +124,16 @@ export declare class EvidenceController {
         reason: string;
     }): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;

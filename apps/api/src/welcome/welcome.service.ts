@@ -1,4 +1,4 @@
-import { settingsGuild } from '../common/guild-context';
+import { homeGuild } from '../common/guild-context';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
@@ -34,37 +34,26 @@ export const welcomeConfigSchema = z.object({
   if (c.goodbye.enabled && !c.goodbye.channelId) ctx.addIssue({ code: 'custom', path: ['goodbye', 'channelId'], message: 'Wähle einen Kanal für die Abschiedsnachricht.' });
 });
 
-/** Willkommen & Abschied je Discord-Server (`welcome.config@<guildId>`, sonst die gemeinsame Grundeinstellung) und was beim Verlassen passiert. */
+/** Willkommen & Abschied (`welcome.config`) und was beim Verlassen passiert. */
 @Injectable()
 export class WelcomeService {
   private readonly log = new Logger('Welcome');
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly applications: ApplicationsService, private readonly qualifications: QualificationsService, private readonly tickets: SupportTicketsService, private readonly media: MediaService) {}
 
-  private keyOf(guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${KEY}@${g}` : KEY; } // Gruppe mit geteilten Einstellungen → Haupt-Server
-
-  /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
-  async config(guildId?: string | null): Promise<WelcomeConfig & { own: boolean }> {
-    const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(guildId) } }) : null;
-    const row = own ?? await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
+  async config(): Promise<WelcomeConfig & { own: boolean }> {
+    const row = await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
     const parsed = row ? welcomeConfigSchema.safeParse(row.value) : null;
-    return { ...(parsed?.success ? parsed.data : welcomeConfigSchema.parse({})), own: !guildId || !!own };
+    return { ...(parsed?.success ? parsed.data : welcomeConfigSchema.parse({})), own: true };
   }
 
-  async save(actor: Actor, input: WelcomeConfig, guildId?: string | null) {
-    const key = this.keyOf(guildId);
+  async save(actor: Actor, input: WelcomeConfig) {
+    const key = KEY;
     const value = input as unknown as Prisma.InputJsonValue;
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
       await this.audit.record(actor, { action: 'welcome.config', module: 'settings', entityType: 'SystemSetting', entityId: key, after: value as Record<string, unknown> }, tx);
     });
-    return this.config(guildId);
-  }
-
-  /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame. */
-  async reset(actor: Actor, guildId: string) {
-    await this.prisma.systemSetting.deleteMany({ where: { key: this.keyOf(guildId) } });
-    await this.audit.record(actor, { action: 'welcome.config.reset', module: 'settings', entityType: 'SystemSetting', entityId: this.keyOf(guildId) });
-    return this.config(guildId);
+    return this.config();
   }
 
   /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
@@ -72,11 +61,12 @@ export class WelcomeService {
    * Test-Nachricht: der Bot schickt die gespeicherte Willkommens-/Abschiedsnachricht bzw. DM so, als wärst du gerade
    * beigetreten/gegangen (mit deinem Discord-Profil) – ohne Rollen oder Aktionen beim Verlassen.
    */
-  async test(actor: Actor, guildId: string | null, kind: 'welcome' | 'goodbye' | 'dm') {
-    if (!guildId) throw new AppError('VALIDATION_FAILED', 'Wähle oben links zuerst einen Server.');
+  async test(actor: Actor, kind: 'welcome' | 'goodbye' | 'dm') {
+    const guildId = homeGuild();
+    if (!guildId) throw new AppError('VALIDATION_FAILED', 'Trage zuerst die Discord-Server-ID ein (Einstellungen → Discord-Bot).');
     const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
     if (!link) throw new AppError('VALIDATION_FAILED', 'Verknüpfe zuerst dein Konto mit Discord – die Test-Nachricht nutzt dein Profil.');
-    const cfg = await this.config(guildId);
+    const cfg = await this.config();
     if (kind !== 'dm' && !cfg[kind].channelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für diese Nachricht.');
     if (kind === 'dm' && !cfg.dm.message.trim()) throw new AppError('VALIDATION_FAILED', 'Die Willkommens-DM ist leer.');
     await this.prisma.discordOutbox.create({ data: { type: 'bot.welcome-test', channelKey: 'announcements', payload: { guildId, discordId: link.discordId, kind } } });

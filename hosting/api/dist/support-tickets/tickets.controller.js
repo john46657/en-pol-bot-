@@ -13,7 +13,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BotSupportTicketsController = exports.SupportTicketsController = void 0;
-const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -38,7 +37,7 @@ const actionSchema = zod_1.z.discriminatedUnion('action', [
 const listQ = zod_1.z.object({
     kind: zod_1.z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: zod_1.z.string().uuid().optional(), priorityId: zod_1.z.string().uuid().optional(), categoryId: zod_1.z.string().uuid().optional(),
     claimer: zod_1.z.union([snowflake, zod_1.z.literal('me')]).optional(), creator: zod_1.z.string().trim().max(100).optional(), from: zod_1.z.coerce.date().optional(), to: zod_1.z.coerce.date().optional(),
-    q: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25),
+    q: zod_1.z.string().trim().max(100).optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25),
 });
 const transcriptQ = zod_1.z.object({
     q: zod_1.z.string().trim().max(100).optional(), categoryName: zod_1.z.string().max(80).optional(), creator: zod_1.z.string().max(100).optional(), staff: snowflake.optional(), status: zod_1.z.string().max(60).optional(),
@@ -79,7 +78,7 @@ let SupportTicketsController = class SupportTicketsController {
     updateReason(u, id, b) { return this.cfg.saveReason(actor(u), id, b); }
     delReason(u, id) { return this.cfg.deleteReason(actor(u), id); }
     // ---- Tickets ----
-    list(u, q) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
+    list(u, q) { return this.s.list(u.id, { ...q, kind: q.kind === 'all' ? undefined : q.kind }); }
     async create(u, b) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
     stats(u) { return this.s.stats(u.id); }
     ratings(u, q) { return this.s.ratings(u.id, q); }

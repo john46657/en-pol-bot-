@@ -34,6 +34,8 @@ services:
       WEB_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
       STORAGE_DIR: /app/uploads
       BOT_API_TOKEN: ${BOT_API_TOKEN:-}
+      # der eine Discord-Server der EN Polizei (siehe docs/single-server.md)
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
     volumes:
       - uploads:/app/uploads
 

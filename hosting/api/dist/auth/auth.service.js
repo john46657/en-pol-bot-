@@ -106,14 +106,10 @@ let AuthService = class AuthService {
     async profile(userId) {
         const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: { include: { role: true } } } });
         const active = new Set(await this.perms.roleIdsFor(userId));
-        // Server, die man wählen darf: registriert, nicht archiviert, bestätigte Mitgliedschaft (globale Systemadministratoren: alle)
-        const owner = await this.perms.isOwner(userId);
-        const servers = await this.prisma.discordServer.findMany({ where: { archivedAt: null, ...(owner ? {} : { memberships: { some: { userId, status: 'MEMBER' } } }) }, select: { guildId: true }, orderBy: { name: 'asc' } });
         return {
             id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
-            // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
             roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.authz.effective(userId), lastLogin: u.lastLogin,
-            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.currentGuild)(), servers: servers.map((s) => s.guildId), globalAdmin: owner,
+            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.homeGuild)(),
         };
     }
 };

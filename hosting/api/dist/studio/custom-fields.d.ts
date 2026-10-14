@@ -8,26 +8,26 @@ export declare const customFieldDef: z.ZodEffects<z.ZodObject<{
     required: z.ZodDefault<z.ZodBoolean>;
     options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    type: "number" | "select" | "text" | "date";
     key: string;
+    type: "number" | "select" | "text" | "date";
     label: string;
     required: boolean;
     options?: string[] | undefined;
 }, {
-    type: "number" | "select" | "text" | "date";
     key: string;
+    type: "number" | "select" | "text" | "date";
     label: string;
     options?: string[] | undefined;
     required?: boolean | undefined;
 }>, {
-    type: "number" | "select" | "text" | "date";
     key: string;
+    type: "number" | "select" | "text" | "date";
     label: string;
     required: boolean;
     options?: string[] | undefined;
 }, {
-    type: "number" | "select" | "text" | "date";
     key: string;
+    type: "number" | "select" | "text" | "date";
     label: string;
     options?: string[] | undefined;
     required?: boolean | undefined;
@@ -41,26 +41,26 @@ export declare const customFieldsConfig: z.ZodEffects<z.ZodObject<{
         required: z.ZodDefault<z.ZodBoolean>;
         options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
     }>, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
@@ -72,86 +72,86 @@ export declare const customFieldsConfig: z.ZodEffects<z.ZodObject<{
         required: z.ZodDefault<z.ZodBoolean>;
         options: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
     }>, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }, {
-        type: "number" | "select" | "text" | "date";
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
-    vehicles: {
-        type: "number" | "select" | "text" | "date";
+    persons: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }[];
-    persons: {
-        type: "number" | "select" | "text" | "date";
+    vehicles: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }[];
 }, {
-    vehicles?: {
-        type: "number" | "select" | "text" | "date";
+    persons?: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
     }[] | undefined;
-    persons?: {
-        type: "number" | "select" | "text" | "date";
+    vehicles?: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
     }[] | undefined;
 }>, {
-    vehicles: {
-        type: "number" | "select" | "text" | "date";
+    persons: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }[];
-    persons: {
-        type: "number" | "select" | "text" | "date";
+    vehicles: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         required: boolean;
         options?: string[] | undefined;
     }[];
 }, {
-    vehicles?: {
-        type: "number" | "select" | "text" | "date";
+    persons?: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;
     }[] | undefined;
-    persons?: {
-        type: "number" | "select" | "text" | "date";
+    vehicles?: {
         key: string;
+        type: "number" | "select" | "text" | "date";
         label: string;
         options?: string[] | undefined;
         required?: boolean | undefined;

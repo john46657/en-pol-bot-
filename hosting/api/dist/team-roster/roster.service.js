@@ -39,11 +39,7 @@ let RosterService = class RosterService {
         this.perms = perms;
     }
     /** Teams, Dienstgrade und Büros: aus den Einstellungen, ergänzt um Werte, die in Personalakten vorkommen. */
-    /** Server-Einstellung, sonst die gemeinsame. */
-    async setting(key) {
-        const g = (0, guild_context_1.currentGuild)();
-        return (g ? await this.prisma.systemSetting.findUnique({ where: { key: (0, guild_context_1.scopedKey)(key, g) } }) : null) ?? this.prisma.systemSetting.findUnique({ where: { key } });
-    }
+    setting(key) { return this.prisma.systemSetting.findUnique({ where: { key } }); }
     async structure() {
         const [cfg, order, used] = await Promise.all([
             this.setting('team.structure'),
@@ -64,8 +60,8 @@ let RosterService = class RosterService {
             this.structure(),
             this.discord.guilds(),
         ]);
-        // Server getrennt: nur Mitglieder des gewählten Servers (Personalakten nur, wenn die Person dort Teammitglied ist)
-        const g = (0, guild_context_1.currentGuild)();
+        // nur Mitglieder des Discord-Servers dieses Systems (Personalakten nur, wenn die Person dort Teammitglied ist)
+        const g = (0, guild_context_1.homeGuild)();
         const { members: all, updatedAt } = this.live.getMembers();
         const live = g ? all.filter((m) => m.guildId === g) : [...new Map(all.map((m) => [m.id, m])).values()];
         const roleName = new Map(guilds.flatMap((x) => x.roles.map((r) => [r.id, r.name])));
@@ -116,11 +112,11 @@ let RosterService = class RosterService {
     }
     /** Voice-Channels mit Personen (eigenes Widget, getrennt von der Teamliste). */
     voice() {
-        const g = (0, guild_context_1.currentGuild)();
+        const g = (0, guild_context_1.homeGuild)();
         const v = this.live.getVoice();
         return { ...v, channels: g ? v.channels.filter((c) => c.guildId === g) : v.channels };
     }
-    activity(limit) { return this.live.getChanges(limit, (0, guild_context_1.currentGuild)()); }
+    activity(limit) { return this.live.getChanges(limit, (0, guild_context_1.homeGuild)()); }
     /** „Jetzt aktualisieren“: den Bot um einen sofortigen Bericht bitten (er meldet sonst ohnehin alle 60 Sekunden). */
     async requestSync() { await this.discord.enqueue('duty', 'members.sync', {}, { always: true }); }
 };

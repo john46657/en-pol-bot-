@@ -6,7 +6,7 @@ import { DEFAULT_VERIFY_CONFIG, verifyActions, type VerifyConfig } from '@enrp/s
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
-import { settingsGuild } from '../common/guild-context';
+import { homeGuild } from '../common/guild-context';
 import { RobloxService } from '../persons/roblox.service';
 
 const KEY = 'verify.config';
@@ -55,37 +55,34 @@ type Link = { discordId: string; discordName: string | null; robloxId: string; r
 export class VerificationService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly roblox: RobloxService) {}
 
-  private keyOf(guildId?: string | null, key = KEY) { const g = settingsGuild(guildId); return g ? `${key}@${g}` : key; }
-
-  async config(guildId?: string | null): Promise<VerifyConfig & { own: boolean; panelMessageId: string | null }> {
-    const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(guildId) } }) : null;
-    const row = own ?? await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
+  async config(): Promise<VerifyConfig & { own: boolean; panelMessageId: string | null }> {
+    const row = await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
     const parsed = row ? verifyConfigSchema.safeParse(row.value) : null;
-    const panel = (await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(guildId, PANEL_KEY) } }))?.value as { messageId?: string } | undefined;
-    return { ...(parsed?.success ? parsed.data : verifyConfigSchema.parse({})), own: !guildId || !!own, panelMessageId: panel?.messageId ?? null };
+    const panel = (await this.prisma.systemSetting.findUnique({ where: { key: PANEL_KEY } }))?.value as { messageId?: string } | undefined;
+    return { ...(parsed?.success ? parsed.data : verifyConfigSchema.parse({})), own: true, panelMessageId: panel?.messageId ?? null };
   }
 
-  async save(actor: Actor, input: VerifyConfig, guildId?: string | null) {
-    const key = this.keyOf(guildId);
+  async save(actor: Actor, input: VerifyConfig) {
+    const key = KEY;
     const value = input as unknown as Prisma.InputJsonValue;
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
       await this.audit.record(actor, { action: 'verification.config', module: 'settings', entityType: 'SystemSetting', entityId: key, after: value as Record<string, unknown> }, tx);
     });
-    return this.config(guildId);
+    return this.config();
   }
 
   /** Panel („Verifizieren“-Button) posten bzw. aktualisieren. */
-  async postPanel(actor: Actor, guildId: string | null) {
-    const cfg = await this.config(guildId);
+  async postPanel(actor: Actor) {
+    const cfg = await this.config();
     if (!cfg.panel.channelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
-    await this.prisma.discordOutbox.create({ data: { type: 'verify.panel', channelKey: 'announcements', payload: { guildId, channelId: cfg.panel.channelId, messageId: cfg.panelMessageId, panel: cfg.panel } as unknown as Prisma.InputJsonValue } });
-    await this.audit.record(actor, { action: 'verification.panel', module: 'settings', entityType: 'SystemSetting', entityId: this.keyOf(guildId) });
+    await this.prisma.discordOutbox.create({ data: { type: 'verify.panel', channelKey: 'announcements', payload: { guildId: homeGuild(), channelId: cfg.panel.channelId, messageId: cfg.panelMessageId, panel: cfg.panel } as unknown as Prisma.InputJsonValue } });
+    await this.audit.record(actor, { action: 'verification.panel', module: 'settings', entityType: 'SystemSetting', entityId: KEY });
     return { queued: true };
   }
 
-  async panelPosted(guildId: string | null, channelId: string, messageId: string) {
-    const key = this.keyOf(guildId, PANEL_KEY);
+  async panelPosted(channelId: string, messageId: string) {
+    const key = PANEL_KEY;
     const value = { channelId, messageId };
     await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
     return { ok: true };
@@ -93,7 +90,7 @@ export class VerificationService {
 
   /** Schritt 1: Roblox-Konto nennen → Code. */
   async start(guildId: string | undefined, discordId: string, input: string) {
-    if (guildId && !(await this.config(guildId)).enabled) throw new AppError('CONFLICT', 'Die Roblox-Verifizierung ist auf diesem Server nicht aktiviert.');
+    if (guildId && !(await this.config()).enabled) throw new AppError('CONFLICT', 'Die Roblox-Verifizierung ist auf diesem Server nicht aktiviert.');
     if (!RobloxService.parse(input)) throw new AppError('VALIDATION_FAILED', 'Das ist kein gültiger Roblox-Name (3–20 Zeichen: Buchstaben, Ziffern, _).');
     const p = await this.roblox.lookup(input);
     if (!p) throw new AppError('NOT_FOUND', `Kein Roblox-Konto „${input.trim()}“ gefunden (oder Roblox ist gerade nicht erreichbar).`);
@@ -133,7 +130,7 @@ export class VerificationService {
 
   /** Verknüpfung + was der Bot auf diesem Server tun soll (Rollen, Nickname). */
   async status(guildId: string | undefined, discordId: string, discordName?: string) {
-    const [cfg, link] = await Promise.all([this.config(guildId), this.prisma.robloxLink.findUnique({ where: { discordId } })]);
+    const [cfg, link] = await Promise.all([this.config(), this.prisma.robloxLink.findUnique({ where: { discordId } })]);
     if (link && discordName && link.discordName !== discordName) await this.prisma.robloxLink.update({ where: { discordId }, data: { discordName } }).catch(() => undefined);
     const ranks = link && cfg.binds.length ? await this.roblox.groupRanks(link.robloxId) : {};
     const actions = cfg.enabled ? verifyActions(cfg, link ? { robloxName: link.robloxName, displayName: link.displayName, discordName: discordName ?? link.discordName ?? '', robloxId: link.robloxId, ranks } : null) : null;
@@ -187,7 +184,7 @@ export class VerificationService {
   }
 
   private async log(guildId: string | null | undefined, text: string, color: number, robloxId?: string) {
-    const cfg = await this.config(guildId ?? null);
+    const cfg = await this.config();
     if (!cfg.logChannelId) return;
     await this.prisma.discordOutbox.create({ data: { type: 'verify.log', channelKey: 'announcements', payload: { channelId: cfg.logChannelId, text, color, ...(robloxId ? { profileUrl: `https://www.roblox.com/users/${robloxId}/profile` } : {}) } } }).catch(() => undefined);
   }

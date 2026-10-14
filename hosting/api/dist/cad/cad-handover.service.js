@@ -47,7 +47,7 @@ let CadHandoverService = class CadHandoverService {
             this.prisma.incident.findMany({ where: { status: { notIn: closed } }, orderBy: { createdAt: 'asc' }, take: 100, include: { units: { where: { clearedAt: null }, include: { unit: { select: { callsign: true } } } } } }),
             this.prisma.unit.findMany({ where: { operational: true, status: { notIn: ['OFF_DUTY'] } }, orderBy: { callsign: 'asc' }, include: { incidents: { where: { clearedAt: null }, include: { incident: { select: { number: true, restrictRoleIds: true } } } } } }),
             this.prisma.erlcEmergencyCall.findMany({ where: { status: { in: ['OPEN', 'CLAIMED'] }, incidentId: null }, orderBy: { startedAt: 'asc' }, take: 50 }),
-            this.prisma.cadIncidentLog.findMany({ where: { kind: { in: ['STATUS', 'FEEDBACK'] }, createdAt: { gte: since }, incident: { restrictRoleIds: { isEmpty: true }, ...(0, guild_context_1.recordWhere)() } }, orderBy: { createdAt: 'desc' }, take: 25, include: { incident: { select: { number: true } } } }),
+            this.prisma.cadIncidentLog.findMany({ where: { kind: { in: ['STATUS', 'FEEDBACK'] }, createdAt: { gte: since }, incident: { restrictRoleIds: { isEmpty: true } } }, orderBy: { createdAt: 'desc' }, take: 25, include: { incident: { select: { number: true } } } }),
         ]);
         // vertrauliche Einsätze stehen nur als Anzahl in der Übergabe – sie ist für alle mit cad.view sichtbar
         const visible = open.filter((i) => !i.restrictRoleIds.length);
@@ -80,9 +80,8 @@ let CadHandoverService = class CadHandoverService {
         return { snapshot, previous: previous ?? null };
     }
     async create(actor, notes) {
-        const cfg = await this.cfg.get();
         const snapshot = await this.snapshot();
-        const guildId = actor.guildId ?? cfg.homeGuildId ?? null;
+        const guildId = (0, guild_context_1.homeGuild)();
         const row = await this.prisma.$transaction(async (tx) => {
             const h = await tx.cadHandover.create({ data: { notes, snapshot: snapshot, createdById: actor.userId, guildId } });
             await this.audit.record(actor, { action: 'cad.handover.create', module: 'cad', entityType: 'CadHandover', entityId: h.id, after: { notes, incidents: snapshot.incidents.length, units: snapshot.units.length, calls: snapshot.calls.length } }, tx);
@@ -93,7 +92,7 @@ let CadHandoverService = class CadHandoverService {
         await this.notify.emit('handover', {
             id: row.id, by, notes: notes.slice(0, 1500), openIncidents: snapshot.incidents.length + snapshot.confidentialIncidents, activeUnits: snapshot.units.filter((u) => u.incident).length,
             openCalls: snapshot.calls.length, incidents: snapshot.incidents.slice(0, 10).map((i) => `${i.number} · ${i.title} (${i.status})`), dashboardUrl: (0, web_url_1.webUrl)('/cad/handover'),
-        }, guildId);
+        });
         return row;
     }
     /** Übernahme bestätigen: einmal und nur von jemand anderem als dem abgebenden Disponenten. */

@@ -17,8 +17,6 @@ export interface CadMapConfig {
 export interface CadRoute { id: string; guildId: string; event: CadEvent; channelIds: string[]; pingRoleIds: string[]; enabled: boolean }
 export interface CadField { key: string; label: string; type: 'text' | 'number' | 'select'; options?: string[] }
 export interface CadConfig {
-  /** Discord-Server der Leitstelle (Heimat der Einsätze). */
-  homeGuildId?: string | null;
   incidentNumberPrefix: string;
   incidentTypes: CadOption[];
   priorities: CadOption[];
@@ -58,19 +56,6 @@ export const CAD_FEEDBACK = [
 export type CadFeedbackKey = (typeof CAD_FEEDBACK)[number]['key'];
 export const CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f) => f.key) as [CadFeedbackKey, ...CadFeedbackKey[]];
 
-/** Datenarten, die eine Server-Verbindung senden darf, und Aktionen, die der verbundene Server zurück ausführen darf. */
-export const CAD_LINK_SEND_TYPES = ['incidents', 'incident_status', 'unit_requests', 'calls', 'announcements', 'radio'] as const;
-export const CAD_LINK_ACTIONS = ['status_report', 'radio', 'view_incidents', 'dispatch'] as const;
-export const CAD_LINK_LABELS: Record<string, string> = {
-  incidents: 'Einsätze senden', incident_status: 'Einsatzstatus senden', unit_requests: 'Einheiten anfordern', calls: 'Notrufe senden', announcements: 'Leitstellenmeldungen senden', radio: 'Funkmeldungen senden',
-  status_report: 'Status zurückmelden', view_incidents: 'Einsatzstatus sehen', dispatch: 'Notrufe/Einsätze bearbeiten (Übernehmen, Einsatz erstellen, Einheit zuweisen)',
-};
-/** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
-export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]> = {
-  'incident.created': 'incidents', 'incident.status': 'incident_status', 'incident.assigned': 'unit_requests', 'incident.closed': 'incident_status',
-  'incident.feedback': 'incident_status', 'incident.support': 'incident_status', 'call.received': 'calls', announcement: 'announcements', radio: 'radio', handover: 'announcements',
-};
-
 export const CAD_WIDGETS = ['activeIncidents', 'availableUnits', 'activeCalls', 'erlcStatus', 'map', 'units', 'radio', 'persons', 'vehicles', 'dutyActivity'] as const;
 export const CAD_WIDGET_LABELS: Record<string, string> = {
   activeIncidents: 'Aktive Einsätze', availableUnits: 'Verfügbare Einheiten', activeCalls: 'Aktive Notrufe',
@@ -83,7 +68,6 @@ export const ERLC_MAP_SIZE = 5355;
 export const ERLC_BUILTIN_MAP = '/maps/erlc-map.webp';
 
 export const DEFAULT_CAD_CONFIG: CadConfig = {
-  homeGuildId: null,
   incidentNumberPrefix: 'E',
   incidentTypes: [
     { key: 'ROBBERY', label: 'Raub', emoji: '💰' }, { key: 'SHOTS', label: 'Schussabgabe', emoji: '🔫' }, { key: 'TRAFFIC', label: 'Verkehrsunfall', emoji: '🚗' },

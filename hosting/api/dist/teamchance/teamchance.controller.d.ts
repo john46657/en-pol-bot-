@@ -1,13 +1,6 @@
 import { z } from 'zod';
 import { TeamChanceService, teamChanceSchema } from './teamchance.service';
 import type { Actor } from '../audit/audit.service';
-declare const guildQ: z.ZodObject<{
-    guildId: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    guildId?: string | undefined;
-}, {
-    guildId?: string | undefined;
-}>;
 export declare class TeamChanceController {
     private readonly s;
     constructor(s: TeamChanceService);
@@ -16,9 +9,9 @@ export declare class TeamChanceController {
         reason: string | null;
         used: number;
         remaining: number | null;
-        title: string;
-        description: string;
         channelId: string | null;
+        description: string;
+        title: string;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
@@ -32,9 +25,9 @@ export declare class TeamChanceController {
         reason: string | null;
         used: number;
         remaining: number | null;
-        title: string;
-        description: string;
         channelId: string | null;
+        description: string;
+        title: string;
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
@@ -43,7 +36,7 @@ export declare class TeamChanceController {
         restrictApplications: boolean;
         openedAt?: string | null;
     }>;
-    pub(q: z.infer<typeof guildQ>): Promise<{
+    pub(): Promise<{
         isOpen: boolean;
         reason: string | null;
         title: string;
@@ -53,7 +46,7 @@ export declare class TeamChanceController {
         remaining: number | null;
         restrictApplications: boolean;
     }>;
-    bot(q: z.infer<typeof guildQ>): Promise<{
+    bot(): Promise<{
         isOpen: boolean;
         reason: string | null;
         title: string;
@@ -64,4 +57,3 @@ export declare class TeamChanceController {
         restrictApplications: boolean;
     }>;
 }
-export {};

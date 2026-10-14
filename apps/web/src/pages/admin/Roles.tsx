@@ -5,7 +5,6 @@ import { PERMISSION_CATALOG } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { hasPending, onSaved, pendingBody, queueSave } from '../../lib/autosave';
-import { guildName, useGuilds, useServer } from '../../lib/guilds';
 import { ACTION_LABELS, MODULE_LABELS } from '../../lib/permLabels';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, PageHeader, SkeletonRows, Tabs, Textarea } from '../../components/ui';
 import { RolePicker } from '../../components/DiscordPickers';
@@ -24,8 +23,6 @@ const NO_RANK = Number.MAX_SAFE_INTEGER;
 export function Roles() {
   const { can, user } = useAuth();
   const qc = useQueryClient();
-  const [server] = useServer();
-  const guilds = useGuilds();
   const q = useQuery({ queryKey: KEY, queryFn: () => api<Role[]>('/roles') });
   const rank = useQuery({ queryKey: ['my-rank'], queryFn: () => api<{ rank: number }>('/roles/my-rank') });
   const [tab, setTab] = useState('Rollen');
@@ -83,14 +80,13 @@ export function Roles() {
   const onError = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen');
   // neue Rolle sofort anzeigen und auswählen (nicht erst nach dem Neuladen der Liste)
   const added = (r: Role) => { setErr(undefined); qc.setQueryData<Role[]>(KEY, (l) => [...(l ?? []).filter((x) => x.id !== r.id), r].sort((a, b) => a.priority - b.priority)); setSel(r.id); void qc.invalidateQueries({ queryKey: KEY }); };
-  const create = useMutation({ mutationFn: () => api<Role>('/roles', { body: { name: uniqueName('Neue Rolle', roles), guildId: server || null } }), onSuccess: added, onError });
+  const create = useMutation({ mutationFn: () => api<Role>('/roles', { body: { name: uniqueName('Neue Rolle', roles) } }), onSuccess: added, onError });
   const duplicate = useMutation({ mutationFn: (r: Role) => api<Role>(`/roles/${r.id}/duplicate`, { body: {} }), onSuccess: added, onError });
   const remove = useMutation({ mutationFn: (r: Role) => api(`/roles/${r.id}`, { method: 'DELETE' }), onSuccess: () => { setConfirmDelete(undefined); setSel(undefined); void qc.invalidateQueries({ queryKey: KEY }); }, onError });
 
-  const scope = (r: Role) => (r.guildId ? guildName(guilds.data, r.guildId) : (guilds.data?.length ?? 0) > 1 ? 'Alle Server' : null);
   return (
     <>
-      <PageHeader title="Rollen & Rechte" subtitle={`Änderungen werden automatisch gespeichert.${server ? ` Server: ${guildName(guilds.data, server)} – Rollen dieses Servers gelten nur hier.` : ''}`}
+      <PageHeader title="Rollen & Rechte" subtitle="Änderungen werden automatisch gespeichert."
         actions={manage && <Button onClick={() => create.mutate()} disabled={create.isPending}><Plus size={14} />Neue Rolle</Button>} />
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       <Tabs tabs={['Rollen', 'Berechtigungsmatrix']} active={tab} onChange={setTab} />
@@ -121,7 +117,7 @@ export function Roles() {
               </ol>
               <p className="mt-3 text-xs text-muted">Ziehen oder Pfeile zum Sortieren. Du kannst nur Rollen unterhalb deines eigenen Rangs ändern und nur Rechte vergeben, die du selbst hast.</p>
             </Card>
-            {role && <RoleEditor key={role.id} role={role} editable={editable(role)} scope={scope(role)} onMeta={(m) => setMeta(role, m)} onPerm={(k, e) => setPerm(role, k, e)}
+            {role && <RoleEditor key={role.id} role={role} editable={editable(role)} onMeta={(m) => setMeta(role, m)} onPerm={(k, e) => setPerm(role, k, e)}
               onDuplicate={() => duplicate.mutate(role)} onDelete={() => setConfirmDelete(role)} canCreate={manage} />}
           </div>
         )}
@@ -138,13 +134,13 @@ const next = (e: Eff): Eff => (e === 'NONE' ? 'ALLOW' : e === 'ALLOW' ? 'DENY' :
 const EFF_LABEL: Record<Eff, string> = { ALLOW: 'erlaubt', DENY: 'verweigert', NONE: 'nicht gesetzt' };
 const cellCls = (e: Eff) => (e === 'ALLOW' ? 'border-success/40 bg-success/15 text-success' : e === 'DENY' ? 'border-danger/40 bg-danger/15 text-danger' : 'border-line text-muted');
 
-function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDelete, canCreate }: { role: Role; editable: boolean; scope: string | null; onMeta: (m: Meta) => void; onPerm: (k: string, e: Eff) => void; onDuplicate: () => void; onDelete: () => void; canCreate: boolean }) {
+function RoleEditor({ role, editable, onMeta, onPerm, onDuplicate, onDelete, canCreate }: { role: Role; editable: boolean; onMeta: (m: Meta) => void; onPerm: (k: string, e: Eff) => void; onDuplicate: () => void; onDelete: () => void; canCreate: boolean }) {
   // Texteingaben lokal halten, damit der Cursor beim automatischen Speichern nicht springt
   const [name, setName] = useState(role.name);
   const [desc, setDesc] = useState(role.description ?? '');
   const wildcard = effectOf(role, '*') === 'ALLOW';
   return (
-    <Card title={<span className="flex items-center gap-2">{role.icon && <span aria-hidden>{role.icon}</span>}{role.name}{scope && <Badge>{scope}</Badge>}{!role.active && <Badge tone="warning">deaktiviert</Badge>}</span>}
+    <Card title={<span className="flex items-center gap-2">{role.icon && <span aria-hidden>{role.icon}</span>}{role.name}{!role.active && <Badge tone="warning">deaktiviert</Badge>}</span>}
       actions={<span className="flex gap-1">{canCreate && role.name !== ADMIN && <Button size="sm" variant="secondary" onClick={onDuplicate}><Copy size={12} />Duplizieren</Button>}{editable && <Button size="sm" variant="danger" onClick={onDelete}><Trash2 size={12} />Löschen</Button>}</span>}>
       {!editable && <p className="mb-3 rounded bg-panel-2 p-2 text-xs text-muted">{role.name === ADMIN ? 'Die Serverbesitzer-Rolle hat alle Rechte und ist im Dashboard nicht änderbar.' : 'Nur ansehen: Diese Rolle steht nicht unter deinem Rang (oder dir fehlt „roles.manage“).'}</p>}
       <div className="grid gap-3 md:grid-cols-2">

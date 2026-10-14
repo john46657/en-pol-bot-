@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService, Tx } from '../prisma/prisma.service';
-import { currentGuild } from '../common/guild-context';
 
 export interface Actor {
   userId: string | null;
@@ -17,8 +16,6 @@ export interface AuditEntry {
   before?: unknown;
   after?: unknown;
   reason?: string;
-  /** Discord-Server (Guild-ID) der Aktion; Standard: Server der Anfrage */
-  serverId?: string | null;
   /** SUCCESS (Standard) | DENIED | FAILED */
   result?: 'SUCCESS' | 'DENIED' | 'FAILED';
 }
@@ -54,7 +51,6 @@ export class AuditService {
         before: redact(entry.before),
         after: redact(entry.after),
         reason: entry.reason,
-        serverId: entry.serverId === undefined ? currentGuild() : entry.serverId,
         result: entry.result ?? 'SUCCESS',
       },
     });

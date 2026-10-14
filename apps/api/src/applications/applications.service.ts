@@ -1,6 +1,5 @@
 import { ApplicationBansService, BAN_POLICE } from '../application-bans/application-bans.service';
 import { hireEvents } from '../common/hire-events';
-import { settingsGuild } from '../common/guild-context';
 import { TeamChanceService } from '../teamchance/teamchance.service';
 import { NotifyService } from '../notifications/notify.service';
 import { Injectable } from '@nestjs/common';
@@ -30,27 +29,25 @@ export const DEFAULT_FORM: FormField[] = [
   { key: 'erlcKnowledge', label: 'Wie gut kennst du ER:LC (Steuerung, Fahrzeuge, Regeln)?', required: false, maxLength: 3000 },
   { key: 'communication', label: 'Wie gehst du im Funk und mit Kollegen mit Konflikten um?', required: false, maxLength: 2000 },
 ];
-export interface InboxQuery { page: number; pageSize: number; q?: string; type?: string; status?: string; order?: 'newest' | 'oldest'; guildId?: string }
+export interface InboxQuery { page: number; pageSize: number; q?: string; type?: string; status?: string; order?: 'newest' | 'oldest' }
 const OPEN_STATUSES = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION'];
 
 @Injectable()
 export class ApplicationsService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly notify: NotifyService, private readonly teamchance: TeamChanceService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService, private readonly access: DiscordAccessService, private readonly live: DiscordLiveService) {}
 
-  /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
-  async form(guildId?: string | null): Promise<FormField[]> {
-    const g = settingsGuild(guildId);
-    const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `application.form@${g}` } }) : null;
-    const s = own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
+  /** Bewerbungsformular (Administration → Studio). */
+  async form(): Promise<FormField[]> {
+    const s = await this.prisma.systemSetting.findUnique({ where: { key: 'application.form' } });
     return (s?.value as unknown as FormField[] | undefined) ?? DEFAULT_FORM;
   }
 
   /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
   async submit(d: { robloxUsername: string; robloxUserId?: string; answers: Record<string, string | string[]> }, meta: { discordId?: string; discordName?: string; durationSec?: number; joinedAt?: Date; guildId?: string } = {}) {
     if (d.robloxUserId && !isValidRobloxUserId(d.robloxUserId)) throw new AppError('VALIDATION_FAILED', 'Ungültige Roblox-Benutzer-ID.');
-    const [form, police] = await Promise.all([this.form(meta.guildId), this.police(meta.guildId)]);
+    const [form, police] = await Promise.all([this.form(), this.police()]);
     if (!police.enabled) throw new AppError('CONFLICT', 'Bewerbungen sind derzeit geschlossen.');
-    await this.teamchance.assertApplicationsAllowed(meta.guildId ?? null); // Team-Chance: ggf. nur während offener Phase
+    await this.teamchance.assertApplicationsAllowed(); // Team-Chance: ggf. nur während offener Phase
     const answers: Record<string, string> = {};
     const grantRoleIds = new Set<string>();
     for (const f of form) {
@@ -70,7 +67,7 @@ export class ApplicationsService {
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     }
     // Bewerbungssperre (Discord-ID oder Roblox-ID)
-    await this.bans.assertAllowed({ discordId: meta.discordId, robloxUserId: d.robloxUserId }, BAN_POLICE, 'die Polizei-Bewerbung', meta.guildId ?? null);
+    await this.bans.assertAllowed({ discordId: meta.discordId, robloxUserId: d.robloxUserId }, BAN_POLICE, 'die Polizei-Bewerbung');
     if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
       throw new AppError('CONFLICT', 'Für diesen Roblox-Benutzer gibt es schon eine offene Bewerbung.');
     }
@@ -82,7 +79,7 @@ export class ApplicationsService {
     }
     const a = await this.prisma.application.create({ data: { number: makeNumber('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], guildId: meta.guildId ?? null, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
     // 🔔 Neue Bewerbung → alle, die Bewerbungen prüfen dürfen (im Server der Bewerbung)
-    await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🔔 Neue Bewerbung ${a.number}`, body: `${d.robloxUsername}${meta.discordName ? ` · ${meta.discordName}` : ''}`, entityType: 'Application', entityId: a.id }, { guildId: meta.guildId ?? null });
+    await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🔔 Neue Bewerbung ${a.number}`, body: `${d.robloxUsername}${meta.discordName ? ` · ${meta.discordName}` : ''}`, entityType: 'Application', entityId: a.id });
     await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
     await this.discord.enqueue('applications', 'application.submitted', {
       id: a.id, pingRoleIds: police.pingRoleIds, ...(police.channelId ? { channelId: police.channelId } : {}), guildName: meta.guildId ? (await this.discord.guilds()).find((g) => g.id === meta.guildId)?.name ?? null : null, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId ?? null, discordId: meta.discordId ?? null, discordName: meta.discordName ?? null, source: a.source,
@@ -96,10 +93,8 @@ export class ApplicationsService {
   }
 
   /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
-  async police(guildId?: string | null) {
-    const g = settingsGuild(guildId);
-    const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: `qualifications.config@${g}` } }) : null;
-    const v = (own ?? await this.prisma.systemSetting.findUnique({ where: { key: 'qualifications.config' } }))?.value as { police?: unknown } | undefined;
+  async police() {
+    const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'qualifications.config' } }))?.value as { police?: unknown } | undefined;
     const p = policeSchema.safeParse(v?.police ?? {});
     return p.success ? p.data : policeSchema.parse({});
   }
@@ -107,7 +102,7 @@ export class ApplicationsService {
   /** Entscheidungs-DM mit Text und Rollen aus den Einstellungen. */
   private async decided(actor: Actor, a: { discordId: string | null; number: string; grantRoleIds: string[]; guildId: string | null }, to: 'ACCEPTED' | 'REJECTED', reason: string | null) {
     if (!a.discordId) return;
-    const police = await this.police(a.guildId);
+    const police = await this.police();
     const roles = decisionRoles(police.settings, to === 'ACCEPTED', a.grantRoleIds);
     const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
     const by = !link && actor.userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
@@ -120,12 +115,12 @@ export class ApplicationsService {
 
   /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten (nur ohne Original-Nachricht in Discord). */
   private async archive(a: { id: string; number: string; robloxUsername: string; robloxUserId: string | null; discordId: string | null; discordName: string | null; guildId: string | null; answers: unknown; durationSec: number | null; joinedAt: Date | null; createdAt: Date; source: string }, to: 'ACCEPTED' | 'REJECTED', reason: string | null, decidedByName: string | null) {
-    const police = await this.police(a.guildId);
+    const police = await this.police();
     const channelId = to === 'ACCEPTED' ? police.acceptedChannelId : police.deniedChannelId;
     if (!channelId) return;
     // Gibt es die Bewerbungs-Nachricht in Discord, wird nur sie aktualisiert (markDecided) – keine zweite Nachricht
     if (await this.discord.hasTrackedMessage(`msg-a-${a.id}`)) return;
-    const form = await this.form(a.guildId);
+    const form = await this.form();
     const answers = (a.answers ?? {}) as Record<string, string>;
     await this.discord.enqueue('applications', 'application.archived', {
       id: a.id, number: a.number, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId, discordId: a.discordId, discordName: a.discordName, source: a.source,
@@ -181,15 +176,15 @@ export class ApplicationsService {
     const open = await this.prisma.application.findMany({ where: { discordId, status: { in: OPEN_STATUSES }, OR: [{ guildId }, { guildId: null }] }, select: { id: true, guildId: true } });
     let denied = 0, withdrawn = 0;
     for (const a of open) {
-      const action = (await this.police(a.guildId)).settings.onLeave;
+      const action = (await this.police()).settings.onLeave;
       if (action === 'DENY') await this.discordDecide(LEFT_ACTOR, a.id, 'REJECTED', LEFT_REASON).then(() => denied++, () => undefined);
       else if (action === 'WITHDRAW') await this.transition(LEFT_ACTOR, a.id, 'WITHDRAWN', LEFT_REASON).then(() => withdrawn++, () => undefined);
     }
     return { denied, withdrawn };
   }
 
-  async list(p: PageQuery, status?: string, guildId?: string, order: 'newest' | 'oldest' = 'newest') {
-    const where = { ...(guildId ? { guildId } : {}), ...(status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' as const } }] } : {}) };
+  async list(p: PageQuery, status?: string, order: 'newest' | 'oldest' = 'newest') {
+    const where = { ...(status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : status ? { status } : {}), ...(p.q ? { OR: [{ number: { contains: p.q.toUpperCase() } }, { robloxUsername: { contains: p.q, mode: 'insensitive' as const } }] } : {}) };
     const [items, total] = await Promise.all([this.prisma.application.findMany({ where, orderBy: { createdAt: order === 'oldest' ? 'asc' : 'desc' }, ...skipTake(p) }), this.prisma.application.count({ where })]);
     // wer entschieden hat (Name) – für die Karten-Ansicht
     const ids = [...new Set(items.map((a) => a.decidedById).filter((x): x is string => !!x))];
@@ -208,10 +203,9 @@ export class ApplicationsService {
     const wantPolice = allowed.police && (!f.type || f.type === 'police');
     const wantQuali = allowed.quali && (!f.type || f.type.startsWith('q:'));
     const unit = f.type?.startsWith('q:') ? f.type.slice(2) : undefined;
-    const guild = f.guildId ? { guildId: f.guildId } : {};
-    const pWhere = { ...guild, ...(f.status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : f.status ? { status: f.status } : {}),
+    const pWhere = { ...(f.status === 'OPEN' ? { status: { in: OPEN_STATUSES } } : f.status ? { status: f.status } : {}),
       ...(q ? { OR: [{ number: { contains: q.toUpperCase() } }, { robloxUsername: { contains: q, mode: 'insensitive' as const } }, { discordName: { contains: q, mode: 'insensitive' as const } }, { discordId: q }] } : {}) };
-    const qWhere = { ...guild, ...(unit ? { unit } : {}), ...(f.status ? { status: f.status } : {}),
+    const qWhere = { ...(unit ? { unit } : {}), ...(f.status ? { status: f.status } : {}),
       ...(q ? { OR: [{ number: { contains: q.toUpperCase() } }, { discordName: { contains: q, mode: 'insensitive' as const } }, { discordId: q }] } : {}) };
     const order = { createdAt: asc ? 'asc' as const : 'desc' as const };
     const [police, pTotal, quali, qTotal, units, pName] = await Promise.all([
@@ -220,20 +214,14 @@ export class ApplicationsService {
       wantQuali ? this.prisma.qualificationApplication.findMany({ where: qWhere, orderBy: order, take }) : [],
       wantQuali ? this.prisma.qualificationApplication.count({ where: qWhere }) : 0,
       allowed.quali ? this.prisma.qualificationApplication.groupBy({ by: ['unit', 'unitName'], orderBy: { unitName: 'asc' } }) : [],
-      this.police(f.guildId ?? null).then((p) => p.name),
+      this.police().then((p) => p.name),
     ]);
-    const forms = new Map<string, Map<string, string>>();
-    const labels = async (g: string | null) => {
-      const k = g ?? '';
-      if (!forms.has(k)) forms.set(k, new Map((await this.form(g)).map((x) => [x.key, x.label])));
-      return forms.get(k)!;
-    };
+    const formLabels = new Map((await this.form()).map((x) => [x.key, x.label]));
     type Row = { kind: 'police' | 'qualification'; id: string; number: string; typeKey: string; typeName: string; status: string; discordId: string | null; discordName: string | null; robloxUsername: string | null; robloxUserId: string | null; answers: { label: string; value: string }[]; createdAt: Date; durationSec: number | null; decisionReason: string | null; decidedById: string | null; guildId: string | null };
     const rows: Row[] = [
       ...await Promise.all(police.map(async (a): Promise<Row> => {
-        const l = await labels(a.guildId);
         return { kind: 'police', id: a.id, number: a.number, typeKey: 'police', typeName: pName, status: a.status, discordId: a.discordId, discordName: a.discordName, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId,
-          answers: Object.entries((a.answers ?? {}) as Record<string, unknown>).map(([k, v]) => ({ label: l.get(k) ?? k, value: String(v ?? '') })), createdAt: a.createdAt, durationSec: a.durationSec, decisionReason: a.decisionReason, decidedById: a.decidedById, guildId: a.guildId };
+          answers: Object.entries((a.answers ?? {}) as Record<string, unknown>).map(([k, v]) => ({ label: formLabels.get(k) ?? k, value: String(v ?? '') })), createdAt: a.createdAt, durationSec: a.durationSec, decisionReason: a.decisionReason, decidedById: a.decidedById, guildId: a.guildId };
       })),
       ...quali.map((a): Row => ({ kind: 'qualification', id: a.id, number: a.number, typeKey: `q:${a.unit}`, typeName: a.unitName, status: a.status, discordId: a.discordId, discordName: a.discordName, robloxUsername: null, robloxUserId: null,
         answers: (Array.isArray(a.answers) ? a.answers as { question?: string; answer?: string }[] : []).map((x) => ({ label: String(x.question ?? ''), value: String(x.answer ?? '') })), createdAt: a.createdAt, durationSec: a.durationSec, decisionReason: a.decisionReason, decidedById: a.decidedById, guildId: a.guildId })),

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Lock } from 'lucide-react';
-import { api, apiHeaders, ApiError } from './api';
+import { api, ApiError } from './api';
 import { onRealtime } from './realtime';
 import { Button } from '../components/ui';
 
@@ -28,7 +28,7 @@ export function useEditLock(type: LockType, id: string | undefined, active: bool
     void acquire();
     const t = setInterval(() => void acquire(), HEARTBEAT_MS);
     const off = onRealtime('lock.taken', (p) => { const x = p as { entityType?: string; entityId?: string }; if (x.entityType === type && x.entityId === id) void acquire(); });
-    const release = () => { void fetch(`/api/v1/locks/${type}/${id}`, { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: apiHeaders() }).catch(() => undefined); };
+    const release = () => { void fetch(`/api/v1/locks/${type}/${id}`, { method: 'DELETE', credentials: 'same-origin', keepalive: true }).catch(() => undefined); };
     window.addEventListener('pagehide', release);
     return () => { live.current = false; clearInterval(t); off(); window.removeEventListener('pagehide', release); release(); };
   }, [active, id, type, acquire]);

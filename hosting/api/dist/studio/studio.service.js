@@ -10,7 +10,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StudioService = exports.ACCENTS = void 0;
-const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const errors_1 = require("../common/errors");
@@ -23,9 +22,7 @@ let StudioService = class StudioService {
         this.prisma = prisma;
     }
     async setting(key, fallback) {
-        const g = (0, guild_context_1.currentGuild)(); // Server-eigener Wert (z. B. Name, Akzentfarbe) vor dem gemeinsamen
-        const own = g ? await this.prisma.systemSetting.findUnique({ where: { key: (0, guild_context_1.scopedKey)(key, g) } }) : null;
-        return (own ?? (await this.prisma.systemSetting.findUnique({ where: { key } })))?.value ?? fallback;
+        return (await this.prisma.systemSetting.findUnique({ where: { key } }))?.value ?? fallback;
     }
     async config() {
         const [customFields, accent, name, customAccents] = await Promise.all([

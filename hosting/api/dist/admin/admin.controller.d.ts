@@ -15,16 +15,17 @@ declare const evQ: z.ZodObject<{
     take: number;
     type?: string | undefined;
 }, {
-    take?: number | undefined;
     type?: string | undefined;
+    take?: number | undefined;
 }>;
 export declare class AdminController {
     private readonly a;
     constructor(a: AdminService);
     settings(): Promise<{
-        settings: Record<string, unknown>;
+        settings: {
+            [k: string]: import("@prisma/client/runtime/library").JsonValue;
+        };
         allowedKeys: string[];
-        serverScoped: readonly string[];
     }>;
     set(ac: Actor, key: string, b: {
         value: unknown;
@@ -34,11 +35,11 @@ export declare class AdminController {
     }>;
     events(q: z.infer<typeof evQ>): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        type: string;
-        userId: string | null;
-        ip: string | null;
         requestId: string | null;
+        createdAt: Date;
+        userId: string | null;
+        type: string;
+        ip: string | null;
         detail: string | null;
     }[]>;
     retention(ac: Actor): Promise<{

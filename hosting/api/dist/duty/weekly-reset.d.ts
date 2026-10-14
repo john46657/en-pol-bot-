@@ -4,8 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { RealtimeService } from '../realtime/realtime.service';
-import { ServersService } from '../multi-server/servers.service';
-import { SyncService } from '../multi-server/sync.service';
 export declare const weeklyResetConfigSchema: z.ZodObject<{
     /** Wochen-Reset aktiv (Archiv + Rangliste + Zähler auf null) */
     enabled: z.ZodDefault<z.ZodBoolean>;
@@ -39,37 +37,27 @@ export interface RankingEntry {
     byStatus: Record<string, number>;
     sessions: number;
 }
-/** Ein Bereich mit eigener Woche: `global` (alle Server) oder Akten-Bereich eines Servers bzw. einer gemeinsamen Shift-Log-Gruppe. */
+/**
+ * Bereich des Wochen-Resets (`DutyWeekArchive.scope`). Es gibt nur noch `global`; Archive anderer Bereiche aus der früheren
+ * Multi-Server-Zeit (`space:…`) bleiben unverändert erhalten und erscheinen weiter in der Archivliste.
+ */
 interface Scope {
-    key: string;
-    /** Filter auf `DutySession.serverId`: undefined = alle, null = gemeinsamer Bestand, sonst der Bereich */
-    space: string | null | undefined;
+    key: 'global';
     cfg: WeeklyResetConfig;
-    /** Discord-Ausgabe je Server des Bereichs (global: guildId null) */
-    posts: {
-        guildId: string | null;
-        channelId: string;
-    }[];
-    /** registrierte Server des Bereichs (für die Synchronisierung der Wochenstatistik) */
-    guildIds: string[];
+    channelId: string | null;
 }
-export declare const scopeOfSpace: (space: string | null) => string;
 /**
  * Automatischer Wochen-Reset: jeden Montag 00:00 (Europe/Berlin, Sommer-/Winterzeit automatisch) wird die abgelaufene Woche
  * archiviert, die Rangliste in Discord veröffentlicht und erst danach der Wochenzähler auf die neue Woche gesetzt.
- * Je Bereich getrennt: `global` (Gesamtstatistik, Einstellungen unter „Alle Server“) und je Server bzw. gemeinsamer
- * Shift-Log-Gruppe (Server-Verbund mit geteilten Akten; Einstellungen im Modul `shift_logs` des Servers, eigener Kanal).
  * Gelöscht wird dabei nichts – der Zähler ist nur der Beginn der laufenden Woche; alle Schichten bleiben in `DutySession`.
- * Doppelte Resets verhindern Advisory-Lock je Bereich + eindeutiges (Bereich, Woche) + Archiv/Discord/Zähler in EINER Transaktion.
+ * Doppelte Resets verhindern Advisory-Lock + eindeutiges (Bereich, Woche) + Archiv/Discord/Zähler in EINER Transaktion.
  */
 export declare class WeeklyResetService {
     private readonly prisma;
     private readonly audit;
     private readonly discord;
     private readonly rt;
-    private readonly servers;
-    private readonly sync;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, rt: RealtimeService, servers: ServersService, sync: SyncService);
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, rt: RealtimeService);
     config(): Promise<WeeklyResetConfig>;
     saveConfig(actor: Actor, input: WeeklyResetConfig): Promise<{
         channelId: string | null;
@@ -77,49 +65,16 @@ export declare class WeeklyResetService {
         topN: number;
         mention: boolean;
     }>;
-    /** Einstellungen im aktuellen Kontext: mit Server = Modul `shift_logs` dieses Servers (mit Version), sonst global. */
-    contextConfig(actor: Actor): Promise<{
-        channelId: string | null;
-        enabled: boolean;
-        topN: number;
-        mention: boolean;
-        scope: "global";
-    } | {
-        channelId: string | null;
-        enabled: boolean;
-        topN: number;
-        mention: boolean;
-        scope: "server";
-        serverId: string;
-        version: number;
-    }>;
-    saveContextConfig(actor: Actor, input: WeeklyResetConfig & {
-        version?: number;
-    }): Promise<{
-        channelId: string | null;
-        enabled: boolean;
-        topN: number;
-        mention: boolean;
-        scope: "global";
-    } | {
-        channelId: string | null;
-        enabled: boolean;
-        topN: number;
-        mention: boolean;
-        scope: "server";
-        serverId: string;
-        version: number;
-    }>;
     private state;
     private setState;
-    /** Alle aktiven Bereiche: global (wenn an) + je aktivem Server mit Modul `shift_logs` und eingeschaltetem Wochen-Reset. */
+    /** Der Wochen-Reset (wenn an), mit Discord-Ausgabe in den eingestellten Kanal bzw. den Dienst-Kanal. */
     scopes(): Promise<Scope[]>;
     /**
      * Prüft (jede halbe Minute und beim Start), ob ein Montag 00:00 überschritten ist, und holt jeden fälligen Reset genau einmal nach.
      * Ältere verpasste Wochen werden still archiviert; nur die zuletzt abgeschlossene Woche wird in Discord veröffentlicht.
-     * `archived` enthält je Woche den Schlüssel (global: „2026-10-05“, sonst „<Bereich>|2026-10-05“).
+     * `archived` enthält je Woche den Schlüssel (z. B. „2026-10-05“).
      */
-    tick(now?: Date, only?: string[]): Promise<{
+    tick(now?: Date): Promise<{
         archived: string[];
         posted: number;
     }>;
@@ -128,8 +83,6 @@ export declare class WeeklyResetService {
     private archiveWeek;
     private rank;
     private message;
-    /** Bereich der Anfrage: mit Server dessen Akten-Bereich (bzw. gemeinsame Gruppe), ohne Server die Gesamtstatistik. */
-    private contextScope;
     /** Laufende Woche fürs Dashboard: Zähler seit dem letzten Reset und der nächste Reset-Zeitpunkt (je Bereich). */
     current(now?: Date): Promise<{
         scope: string;
@@ -144,8 +97,8 @@ export declare class WeeklyResetService {
         lastArchive: {
             id: string;
             createdAt: Date;
-            weekKey: string;
             label: string;
+            weekKey: string;
             discordChannelId: string | null;
             catchUp: boolean;
         } | null;
@@ -162,15 +115,16 @@ export declare class WeeklyResetService {
             sessions: number;
         }[];
     }>;
+    /** Alle Archive (auch die früheren je Server – nichts geht verloren). */
     archives(): Promise<{
         id: string;
         createdAt: Date;
         timezone: string;
         scope: string;
+        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
-        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
@@ -178,21 +132,20 @@ export declare class WeeklyResetService {
         discordChannelId: string | null;
         catchUp: boolean;
     }[]>;
-    /** Archive anderer Bereiche (Server) sind hier nicht vorhanden – auch nicht über eine geratene ID. */
     archive(id: string): Promise<{
         id: string;
         createdAt: Date;
+        sessions: Prisma.JsonValue;
         timezone: string;
         scope: string;
+        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
-        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
-        sessions: Prisma.JsonValue;
         discordChannelId: string | null;
         catchUp: boolean;
     }>;
@@ -214,8 +167,8 @@ export declare class WeeklyResetController {
         lastArchive: {
             id: string;
             createdAt: Date;
-            weekKey: string;
             label: string;
+            weekKey: string;
             discordChannelId: string | null;
             catchUp: boolean;
         } | null;
@@ -232,38 +185,20 @@ export declare class WeeklyResetController {
             sessions: number;
         }[];
     }>;
-    /** Einstellungen: mit gewähltem Server die des Servers (Modul shift_logs, mit Version), unter „Alle Server“ die globalen. */
-    config(a: Actor): Promise<{
+    /** Einstellungen des Wochen-Resets. */
+    config(): Promise<{
         channelId: string | null;
         enabled: boolean;
         topN: number;
         mention: boolean;
         scope: "global";
-    } | {
-        channelId: string | null;
-        enabled: boolean;
-        topN: number;
-        mention: boolean;
-        scope: "server";
-        serverId: string;
-        version: number;
     }>;
-    save(a: Actor, b: WeeklyResetConfig & {
-        version?: number;
-    }): Promise<{
+    save(a: Actor, b: WeeklyResetConfig): Promise<{
         channelId: string | null;
         enabled: boolean;
         topN: number;
         mention: boolean;
         scope: "global";
-    } | {
-        channelId: string | null;
-        enabled: boolean;
-        topN: number;
-        mention: boolean;
-        scope: "server";
-        serverId: string;
-        version: number;
     }>;
     /** Abgeschlossene Wochen (Rangliste je Woche); nie gelöscht. */
     archives(): Promise<{
@@ -271,10 +206,10 @@ export declare class WeeklyResetController {
         createdAt: Date;
         timezone: string;
         scope: string;
+        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
-        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
@@ -286,17 +221,17 @@ export declare class WeeklyResetController {
     archive(id: string): Promise<{
         id: string;
         createdAt: Date;
+        sessions: Prisma.JsonValue;
         timezone: string;
         scope: string;
+        label: string;
         weekStart: Date;
         weekEnd: Date;
         weekKey: string;
-        label: string;
         totalMinutes: number;
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
-        sessions: Prisma.JsonValue;
         discordChannelId: string | null;
         catchUp: boolean;
     }>;

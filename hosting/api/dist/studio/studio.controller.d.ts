@@ -15,16 +15,16 @@ export declare class StudioController {
             }[];
         };
         customFields: {
-            vehicles: {
-                type: "number" | "select" | "text" | "date";
+            persons: {
                 key: string;
+                type: "number" | "select" | "text" | "date";
                 label: string;
                 required: boolean;
                 options?: string[] | undefined;
             }[];
-            persons: {
-                type: "number" | "select" | "text" | "date";
+            vehicles: {
                 key: string;
+                type: "number" | "select" | "text" | "date";
                 label: string;
                 required: boolean;
                 options?: string[] | undefined;

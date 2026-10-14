@@ -15,7 +15,7 @@ const fields = {
   priority: z.number().int().min(1).max(100_000).optional(),
   discordRoleIds: z.array(discordId).max(25).optional(),
 };
-const createRole = z.object({ name: z.string().trim().min(2).max(64), guildId: z.string().regex(/^\d{15,25}$/).nullable().optional(), ...fields });
+const createRole = z.object({ name: z.string().trim().min(2).max(64), ...fields });
 const updateRole = z.object({ name: z.string().trim().min(2).max(64).optional(), ...fields });
 const grants = z.object({ grants: z.array(z.object({ permission: z.string(), effect: z.enum(['ALLOW', 'DENY']) })).max(500) });
 const single = z.object({ permission: z.string().max(80), effect: z.enum(['ALLOW', 'DENY', 'NONE']) });

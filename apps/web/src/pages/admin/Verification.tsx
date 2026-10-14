@@ -6,7 +6,7 @@ import { useAutosaveDraft } from '../../lib/autosave';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
-import { guildName, useGuilds, useServer } from '../../lib/guilds';
+import { useServer } from '../../lib/guilds';
 import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { DiscordPreview } from '../../components/DiscordPreview';
 import { Toggle } from '../../components/ApplicationSettings';
@@ -27,13 +27,12 @@ const problems = (c: Cfg) => [
 const newBind = (used: string[]): VerifyBind => { let n = used.length + 1; while (used.includes(`bind-${n}`)) n++; return { id: `bind-${n}`, groupId: '', minRank: 1, maxRank: 255, roleIds: [] }; };
 const rank = (v: string) => Math.max(0, Math.min(255, Math.floor(Number(v) || 0)));
 
-/** Administration → Roblox-Verifizierung (wie RoVer): je Server (oben links gewählt) oder gemeinsam. */
+/** Administration → Roblox-Verifizierung (wie RoVer). */
 export function Verification() {
   const { can } = useAuth();
   const manage = can('settings.manage');
   const qc = useQueryClient();
   const [server] = useServer();
-  const guilds = useGuilds();
   const key = ['verify-config', server];
   const q = useQuery({ queryKey: key, queryFn: () => api<Cfg>('/verification/config') });
   const [cfg, setCfg] = useState<Cfg>();
@@ -50,21 +49,19 @@ export function Verification() {
     mutationFn: async (c: Cfg) => { await api('/verification/config', { method: 'PUT', body: body(c) }); return api('/verification/panel', { method: 'POST' }); },
     onSuccess: () => { setMsg({ ok: true, text: 'Das Panel geht gleich in Discord raus.' }); void q.refetch(); }, onError: (e) => setMsg({ ok: false, text: errText(e) }),
   });
-  useAutosaveDraft(manage ? `verify:${server || 'all'}` : null, cfg ? body(cfg) : undefined, (c) => (cfg && !problems(cfg).length ? { method: 'PUT', path: '/verification/config', body: c, label: 'Roblox-Verifizierung' } : null));
+  useAutosaveDraft(manage ? 'verify:config' : null, cfg ? body(cfg) : undefined, (c) => (cfg && !problems(cfg).length ? { method: 'PUT', path: '/verification/config', body: c, label: 'Roblox-Verifizierung' } : null));
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (!cfg) return <SkeletonRows />;
   const set = (p: Partial<Cfg>) => setCfg({ ...cfg, ...p });
   const setPanel = (p: Partial<Cfg['panel']>) => set({ panel: { ...cfg.panel, ...p } });
   const setBind = (i: number, p: Partial<VerifyBind>) => set({ binds: cfg.binds.map((b, j) => (j === i ? { ...b, ...p } : b)) });
-  const serverName = guildName(guilds.data, server) ?? 'EN Polizei';
   const issues = problems(cfg);
   const nick = renderVerifyNickname(cfg.nickname, SAMPLE);
   return (
     <>
       <PageHeader title="Roblox-Verifizierung" subtitle="Wie bei RoVer: Mitglieder verknüpfen ihr Roblox-Konto mit Discord und bekommen automatisch Rollen und ihren Roblox-Namen als Nickname." />
       <p className="mb-4 rounded-lg border border-line bg-panel-2/40 p-3 text-sm text-muted">
-        {server ? (cfg.own ? <>Eigene Einstellungen für <b>{serverName}</b>.</> : <>{serverName} nutzt die gemeinsamen Einstellungen – beim Speichern entstehen eigene für diesen Server.</>) : <>Gemeinsame Einstellungen für alle Server ohne eigene.</>}
-        {' '}So läuft es: Mitglied klickt <b>Verifizieren</b> (Panel oder <code>/verifizieren</code>) → <b>Mit Roblox anmelden</b> → meldet sich direkt bei Roblox an → bekommt Rollen und Nickname. Eine Verifizierung gilt auf allen Servern.
+        So läuft es: Mitglied klickt <b>Verifizieren</b> (Panel oder <code>/verifizieren</code>) → <b>Mit Roblox anmelden</b> → meldet sich direkt bei Roblox an → bekommt Rollen und Nickname.
       </p>
       {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mb-3 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
       <div className="grid gap-4">

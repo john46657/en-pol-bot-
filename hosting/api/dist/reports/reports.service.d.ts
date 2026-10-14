@@ -6,7 +6,6 @@ import { TimelineService } from '../timeline/timeline.service';
 import { PermissionService } from '../authz/permission.service';
 import { PageQuery } from '../common/pagination';
 import { LocksService } from '../locks/locks.service';
-import { SyncService } from '../multi-server/sync.service';
 export declare const hashContent: (c: unknown) => string;
 export declare class ReportsService {
     private readonly prisma;
@@ -14,24 +13,23 @@ export declare class ReportsService {
     private readonly timeline;
     private readonly perms;
     private readonly locks;
-    private readonly sync;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, perms: PermissionService, locks: LocksService, sync: SyncService);
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, perms: PermissionService, locks: LocksService);
     /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
     private canSeeAll;
     list(actor: Actor, p: PageQuery, status?: string): Promise<{
         items: {
             number: string;
-            serverId: string | null;
             id: string;
-            type: string;
-            title: string;
-            status: string;
-            authorId: string;
-            incidentId: string | null;
-            currentVersion: number;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            type: string;
+            status: string;
+            title: string;
+            incidentId: string | null;
+            authorId: string;
+            currentVersion: number;
         }[];
         total: number;
         page: number;
@@ -41,9 +39,9 @@ export declare class ReportsService {
         report: {
             versions: {
                 id: string;
-                authorId: string;
                 createdAt: Date;
                 version: number;
+                authorId: string;
                 reportId: string;
                 changeSummary: string;
                 content: Prisma.JsonValue;
@@ -51,25 +49,25 @@ export declare class ReportsService {
             }[];
         } & {
             number: string;
-            serverId: string | null;
             id: string;
-            type: string;
-            title: string;
-            status: string;
-            authorId: string;
-            incidentId: string | null;
-            currentVersion: number;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            type: string;
+            status: string;
+            title: string;
+            incidentId: string | null;
+            authorId: string;
+            currentVersion: number;
         };
         timeline: {
             id: string;
-            createdAt: Date;
+            action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
-            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -82,17 +80,17 @@ export declare class ReportsService {
         personIds?: string[];
     }): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
-        title: string;
-        status: string;
-        authorId: string;
-        incidentId: string | null;
-        currentVersion: number;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
+        status: string;
+        title: string;
+        incidentId: string | null;
+        authorId: string;
+        currentVersion: number;
     }>;
     /** Jede Änderung erzeugt eine neue unveränderliche Version; ältere werden nie überschrieben. */
     edit(actor: Actor, id: string, d: {
@@ -102,30 +100,30 @@ export declare class ReportsService {
         changeSummary: string;
     }): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
-        title: string;
-        status: string;
-        authorId: string;
-        incidentId: string | null;
-        currentVersion: number;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
+        status: string;
+        title: string;
+        incidentId: string | null;
+        authorId: string;
+        currentVersion: number;
     }>;
     transition(actor: Actor, id: string, to: ReportStatus, reason?: string): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
-        title: string;
-        status: string;
-        authorId: string;
-        incidentId: string | null;
-        currentVersion: number;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
+        status: string;
+        title: string;
+        incidentId: string | null;
+        authorId: string;
+        currentVersion: number;
     }>;
 }

@@ -1,22 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError, setUnauthenticatedHandler } from './api';
 import { initAutosave, resetAutosave } from './autosave';
 import { useRealtimeEvent } from './realtime';
-import { getServer, setServer, subscribeServer } from './server';
+import { setHomeServer } from './server';
 
-export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[]; globalAdmin?: boolean }
+export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null }
 interface AuthCtx { user: Profile | null; loading: boolean; can: (p: string) => boolean; login: (u: string, p: string) => Promise<{ ticket: string } | void>; loginTwoFactor: (ticket: string, code: string) => Promise<void>; logout: () => Promise<void> }
 const Ctx = createContext<AuthCtx | null>(null);
 
 /**
  * Frontend-Checks dienen nur der UI. Die verbindliche Prüfung erfolgt immer im Backend.
- * Rechte gelten je Discord-Server: beim Serverwechsel wird alles neu geladen. Geänderte Rechte (Rollen-Editor,
- * Discord-Rollenabgleich) kommen per Echtzeit-Ereignis und spätestens nach 5 Sekunden an.
+ * Geänderte Rechte (Rollen-Editor, Discord-Rollenabgleich) kommen per Echtzeit-Ereignis und spätestens nach 5 Sekunden an.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
-  const server = useSyncExternalStore(subscribeServer, getServer, getServer);
   const q = useQuery({ queryKey: ['me'], queryFn: () => api<Profile>('/auth/me'), retry: false, staleTime: 30_000, refetchInterval: 5_000 });
   const user = q.data ?? null;
   useEffect(() => {
@@ -25,16 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (reason === 'NO_ACCESS' && !location.pathname.startsWith('/login')) location.assign('/login?discord=no_access');
     });
   }, [qc]);
-  // Serverwechsel: alle Daten des anderen Servers verwerfen und neu laden
-  useEffect(() => { void qc.invalidateQueries(); }, [server, qc]);
   useEffect(() => { if (user) initAutosave(user.id); }, [user?.id]);
-  // Nur Rollen auf einem Server (keine serverübergreifenden): direkt diesen Server wählen.
-  // Gewählter Server, auf dem man (nicht mehr) Mitglied ist: auf einen erlaubten Server wechseln (die API sperrt ihn ohnehin).
-  useEffect(() => {
-    if (!user) return;
-    if (!server && !user.permissions.includes('dashboard.view') && user.servers?.length) setServer(user.servers[0]!);
-    else if (server && !user.globalAdmin && user.servers && !user.servers.includes(server)) setServer(user.servers[0] ?? '');
-  }, [user, server]);
+  // der eine Discord-Server dieses Systems (für Discord-Auswahllisten, Kanäle, Rollen)
+  useEffect(() => { setHomeServer(user?.guildId); }, [user?.guildId]);
   useRealtimeEvent('permissions.changed', () => void qc.invalidateQueries({ queryKey: ['me'] }), !!user);
   useRealtimeEvent('session.revoked', () => location.assign('/login?discord=no_access'), !!user);
   const login = useCallback(async (username: string, password: string) => {

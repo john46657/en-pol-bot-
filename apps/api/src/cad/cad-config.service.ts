@@ -15,7 +15,6 @@ const uniqueKeys = <T extends { key: string }>(xs: T[]) => new Set(xs.map((x) =>
 const list = <T extends z.ZodTypeAny>(item: T, min = 0, max = 50) => z.array(item).min(min).max(max).refine((xs) => uniqueKeys(xs as { key: string }[]), 'Schlüssel müssen eindeutig sein');
 
 export const cadConfigSchema = z.object({
-  homeGuildId: sf.nullish(),
   incidentNumberPrefix: z.string().trim().regex(/^[A-Z0-9]{1,6}$/).default('E'),
   incidentTypes: list(option, 0, 60),
   priorities: list(option, 1, 12),

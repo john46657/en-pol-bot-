@@ -8,7 +8,7 @@ import type { PrismaService } from '../src/prisma/prisma.service';
 
 const TOKEN = 'test-bot-token-voice-support-0123456789abcd';
 const bot = () => ({ Authorization: `Bot ${TOKEN}` });
-const GUILD = '330000000000000001', OTHER_GUILD = '330000000000000002';
+const GUILD = '330000000000000001';
 const WAIT = '430000000000000001', NOTIFY = '430000000000000002', TEAM = '530000000000000001';
 const USER = '340000000000000001', SUP = '340000000000000002', RANDOM = '340000000000000003';
 let app: INestApplication; let prisma: PrismaService;
@@ -28,7 +28,7 @@ afterAll(async () => {
 });
 
 describe('voice support rooms', () => {
-  it('are validated, saved per server and only with ticket.settings', async () => {
+  it('are validated, saved and only with ticket.settings', async () => {
     const admin = (await login(app, 'vs_admin')).agent;
     const off = (await login(app, 'vs_off')).agent;
     expect((await off.put('/api/v1/voice-support/rooms').send([room])).status).toBe(403);
@@ -36,12 +36,7 @@ describe('voice support rooms', () => {
     expect((await admin.put('/api/v1/voice-support/rooms').send([room, { ...room, id: randomUUID() }])).status).toBe(400); // gleicher Warteraum
     expect((await admin.put('/api/v1/voice-support/rooms').send([{ ...room, times: [{ days: [1], from: '25:00', to: '10:00' }] }])).status).toBe(400);
     expect((await admin.put('/api/v1/voice-support/rooms').send([room])).status).toBe(200);
-    const other = { ...room, id: randomUUID(), guildId: OTHER_GUILD, waitingChannelId: '430000000000000009' };
-    // Server-Ansicht: nur Räume dieses Servers
-    expect((await admin.put(`/api/v1/voice-support/rooms?guildId=${OTHER_GUILD}`).send([room])).status).toBe(400);
-    expect((await admin.put(`/api/v1/voice-support/rooms?guildId=${OTHER_GUILD}`).send([other])).status).toBe(200);
-    expect((await admin.get('/api/v1/voice-support/rooms')).body).toHaveLength(2);
-    expect((await admin.get(`/api/v1/voice-support/rooms?guildId=${GUILD}`)).body.map((r: { id: string }) => r.id)).toEqual([room.id]);
+    expect((await admin.get('/api/v1/voice-support/rooms')).body.map((r: { id: string }) => r.id)).toEqual([room.id]);
   });
 });
 
@@ -98,7 +93,7 @@ describe('voice support cases', () => {
     expect(l.body.edits[0].message.embeds[0].description).toContain('Warteraum verlassen');
     expect(l.body.edits[0].message.buttons).toEqual([]);
     const admin = (await login(app, 'vs_admin')).agent;
-    const list = (await admin.get(`/api/v1/voice-support/cases?guildId=${GUILD}`)).body as { status: string }[];
+    const list = (await admin.get(`/api/v1/voice-support/cases`)).body as { status: string }[];
     expect(list.map((x) => x.status).sort()).toEqual(['ABANDONED', 'CLOSED', 'DECLINED']);
   });
 
@@ -106,7 +101,7 @@ describe('voice support cases', () => {
     const admin = (await login(app, 'vs_admin')).agent;
     const now = new Date();
     const day = (now.getUTCDay() + 3) % 7; // ein anderer Tag → sicher geschlossen
-    expect((await admin.put(`/api/v1/voice-support/rooms?guildId=${GUILD}`).send([{ ...room, times: [{ days: [day], from: '00:00', to: '23:59' }] }])).status).toBe(200);
+    expect((await admin.put(`/api/v1/voice-support/rooms`).send([{ ...room, times: [{ days: [day], from: '00:00', to: '23:59' }] }])).status).toBe(200);
     const r = await http().post('/api/v1/bot/voice-support/join').set(bot()).send({ guildId: GUILD, channelId: WAIT, discordId: RANDOM, userName: 'late' });
     expect(r.body.action).toBe('closed');
     expect(r.body.dm.embeds[0].description).toContain('Supportzeiten');
@@ -116,7 +111,7 @@ describe('voice support cases', () => {
   it('the team acts from the dashboard (ticket.claim); the bot gets the Discord part via the outbox', async () => {
     const admin = (await login(app, 'vs_admin')).agent;
     const off = (await login(app, 'vs_off')).agent;
-    await admin.put(`/api/v1/voice-support/rooms?guildId=${GUILD}`).send([room]); // wieder immer geöffnet
+    await admin.put(`/api/v1/voice-support/rooms`).send([room]); // wieder immer geöffnet
     const j = await http().post('/api/v1/bot/voice-support/join').set(bot()).send({ guildId: GUILD, channelId: WAIT, discordId: '340000000000000077', userName: 'web' });
     const id = j.body.caseId as string;
     await http().post(`/api/v1/bot/voice-support/cases/${id}/posted`).set(bot()).send({ messageId: '440000000000000077' });

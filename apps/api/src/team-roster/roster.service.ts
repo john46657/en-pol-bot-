@@ -5,7 +5,7 @@ import { PermissionService } from '../authz/permission.service';
 import { DiscordLiveService, type LiveMember } from '../discord/discord-live.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
-import { currentGuild, scopedKey } from '../common/guild-context';
+import { homeGuild } from '../common/guild-context';
 
 export interface TeamStructure { teams: string[]; ranks: string[]; offices: string[] }
 export interface RosterMember {
@@ -29,11 +29,7 @@ export class RosterService {
   constructor(private readonly prisma: PrismaService, private readonly live: DiscordLiveService, private readonly discord: DiscordService, private readonly perms: PermissionService) {}
 
   /** Teams, Dienstgrade und Büros: aus den Einstellungen, ergänzt um Werte, die in Personalakten vorkommen. */
-  /** Server-Einstellung, sonst die gemeinsame. */
-  private async setting(key: string) {
-    const g = currentGuild();
-    return (g ? await this.prisma.systemSetting.findUnique({ where: { key: scopedKey(key, g) } }) : null) ?? this.prisma.systemSetting.findUnique({ where: { key } });
-  }
+  private setting(key: string) { return this.prisma.systemSetting.findUnique({ where: { key } }); }
 
   async structure(): Promise<TeamStructure> {
     const [cfg, order, used] = await Promise.all([
@@ -56,8 +52,8 @@ export class RosterService {
       this.structure(),
       this.discord.guilds(),
     ]);
-    // Server getrennt: nur Mitglieder des gewählten Servers (Personalakten nur, wenn die Person dort Teammitglied ist)
-    const g = currentGuild();
+    // nur Mitglieder des Discord-Servers dieses Systems (Personalakten nur, wenn die Person dort Teammitglied ist)
+    const g = homeGuild();
     const { members: all, updatedAt } = this.live.getMembers();
     const live = g ? all.filter((m) => m.guildId === g) : [...new Map(all.map((m) => [m.id, m])).values()];
     const roleName = new Map(guilds.flatMap((x) => x.roles.map((r) => [r.id, r.name] as const)));
@@ -106,12 +102,12 @@ export class RosterService {
 
   /** Voice-Channels mit Personen (eigenes Widget, getrennt von der Teamliste). */
   voice() {
-    const g = currentGuild();
+    const g = homeGuild();
     const v = this.live.getVoice();
     return { ...v, channels: g ? v.channels.filter((c) => c.guildId === g) : v.channels };
   }
 
-  activity(limit: number) { return this.live.getChanges(limit, currentGuild()); }
+  activity(limit: number) { return this.live.getChanges(limit, homeGuild()); }
 
   /** „Jetzt aktualisieren“: den Bot um einen sofortigen Bericht bitten (er meldet sonst ohnehin alle 60 Sekunden). */
   async requestSync() { await this.discord.enqueue('duty', 'members.sync', {}, { always: true }); }

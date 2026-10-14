@@ -16,4 +16,4 @@ Monorepo (pnpm workspaces):
 - Cross-cutting concerns are central: `PermissionService`, `AuditService`, `TimelineService`, `nextStatus` (transitions), `linkPerson` (dedupe-safe links).
 - Critical records are never physically deleted: archive / void / cancel / close.
 - Audit (technical, append-only) and Timeline (operational history) are separate tables.
-- Multi-server groundwork: optional `serverId` columns on persons, vehicles and incidents (unused today).
+- Ein Discord-Server (Single-Server): `serverId`-/`guildId`-Spalten aus der früheren Multi-Server-Zeit bleiben als Archiv bestehen, siehe [single-server.md](single-server.md).

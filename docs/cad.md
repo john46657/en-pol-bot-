@@ -83,7 +83,7 @@ Abgeschlossene Einsätze werden beim Abschluss als Kennzahlen gesichert (`CadInc
 
 ## Discord-Kanäle und Cross-Server
 
-- **Einstellungen → Discord-Kanäle**: je Server und Ereignis (neuer Einsatz, Status, Zuweisung, abgeschlossen, Notruf, Leitstellenmeldung, Funk) Kanäle und Rollen-Pings. Nichts ist fest eingebaut.
+- **Einstellungen → Discord-Kanäle**: je Ereignis (neuer Einsatz, Status, Zuweisung, abgeschlossen, Notruf, Leitstellenmeldung, Funk) Kanäle und Rollen-Pings. Nichts ist fest eingebaut.
 - **Cross-Server**: Verbindung Quelle (Leitstelle) → Ziel (SEK + K9). Je Verbindung: welche Datenarten die Leitstelle schickt (mit eigenen Zielkanälen) und welche Aktionen der Ziel-Server zurück darf (Status melden, Funk, Einsatzstatus sehen, Notrufe/Einsätze bearbeiten), optional nur mit bestimmten Rollen. Ohne Verbindung bleiben die Server vollständig getrennt; Aktionen vom fremden Server werden abgelehnt.
 - Heimat-Server der Leitstelle: Einstellungen → Allgemein. Solange er fehlt und Server-Verbindungen existieren, werden Aktionen aus Discord abgelehnt.
 - Funk aus Discord: wer keine Leitstellen-Rechte hat, funkt immer als eigene Einheit und nur in Einsätze, denen sie zugewiesen ist.

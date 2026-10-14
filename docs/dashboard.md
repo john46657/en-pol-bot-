@@ -14,11 +14,11 @@
 - **Audit**: jede Änderung einzeln (Modul `permissions`) mit Benutzer, Discord-ID, Zeit, alter/neuer Wert, Rolle bzw. betroffener Benutzer und lesbarem Satz („Max hat der Rolle „Moderator“ die Berechtigung ticket.delete entzogen“).
 - Geänderte Rechte wirken sofort (jede API-Anfrage rechnet neu); offene Dashboards laden ihr Profil per Echtzeit-Ereignis neu.
 
-## Server laufen getrennt
-- Die Server-Auswahl oben links gilt für alles: Das Dashboard schickt den Server bei jeder Anfrage mit (`X-Guild-Id`), der Bot bei jeder Interaktion.
-- Rollen gehören einem Server (beim Anlegen im Server-Kontext automatisch) und gelten **nur dort**. Auf einem Server zählen ausschließlich dessen Rollen. Serverübergreifende Rollen sind Vorlagen für neue Server und gelten nur unter „Alle Server“. Siehe [multi-server.md](multi-server.md).
-- Teamliste, Voice-Widget, Team-Aktivität, Support-Tickets und Bewerbungen zeigen nur den gewählten Server.
-- Einstellungen je Server: Teams, Büros, Dienstgrade, Organisationsname, Akzentfarbe, Kanäle und die Konfiguration aller Module (`<key>@<serverId>`). Ohne eigenen Wert gelten die Standardwerte, **nicht** die Werte anderer Server.
+## Ein Discord-Server
+- Das System arbeitet mit genau einem, fest eingerichteten Discord-Server (`DISCORD_GUILD_ID` bzw. Einstellungen → Discord-Bot). Es gibt keine Server-Auswahl.
+- Rollen, Rechte, Einstellungen (Teams, Büros, Dienstgrade, Organisationsname, Akzentfarbe, Kanäle, Konfiguration aller Module) und alle Daten sind zentral.
+- Module lassen sich unter *Administration → Module* an- und ausschalten.
+- Details und die einmalige Umstellung früherer Multi-Server-Daten: [single-server.md](single-server.md).
 
 ## Persönliche Einstellungen (Menü → Persönlich)
 Nur für einen selbst, je Benutzer (Discord-Konto) in der Datenbank – auf PC und Handy gleich: Hell/Dunkel/System, Akzentfarbe, Hintergrund (Farbe, Verlauf, Bild per https-Link), Kartenstil (voll/Glas/Rahmen), Transparenz, Eckenradius, Schatten, Glow, Animationen, Sidebar-Größe und einklappen, Schriftgröße, kompakt/komfortabel, Sprache (Datumsanzeige), Zeitzone, Datumsformat, Benachrichtigungsarten, Favoriten (auch per ☆ im Menü), Schnellaktionen, Teamlisten-Ansicht und -Filter, Voice-Widget.
@@ -44,10 +44,10 @@ Eigener Bereich (`dashboard.voice.view`), getrennt von der Teamliste: Channels m
 ## 📡 Funk-Codes (Menü → Funk-Codes, Widget „📡 Funk-Codes“, Discord `/funkcode`)
 - Ansehen und suchen: `radio.view` (+ Bereich `dashboard.radio.view`); bearbeiten: `radio.manage`. Bestehende Rollen: sehen wie das Team (`team.view`), bearbeiten wie die Einstellungen (`settings.manage`).
 - „Standard-Codes einfügen“ legt gängige 10-Codes an (vorhandene bleiben). Inline bearbeiten (automatisch gespeichert), sortieren per Ziehen, löschen.
-- Je Server getrennt: Codes eines Servers überdecken gemeinsame Codes mit gleichem Namen. Auch in der globalen Suche (Strg+K).
+- Auch in der globalen Suche (Strg+K). Codes, die früher eigens für den Discord-Server angelegt wurden, gelten weiter und überdecken gleichnamige.
 
 ## 📣 Team-Chance (Menü → Team-Chance, Widget, Discord `/teamchance`)
-- Bewerbungsphase fürs Team öffnen/schließen – je Server; optional Start/Ende, Platzzahl, Ankündigungs-Channel mit Rollen-Erwähnung.
+- Bewerbungsphase fürs Team öffnen/schließen; optional Start/Ende, Platzzahl, Ankündigungs-Channel mit Rollen-Erwähnung.
 - Beim Öffnen: Ankündigung in Discord + Benachrichtigung an alle mit `teamchance.view`; beim Schließen: Ankündigung „geschlossen“. Alles im Audit-Log.
 - Option „Bewerbungen nur während der Team-Chance“: Discord-Bewerbungen und `/apply` werden außerhalb abgelehnt (auch wenn alle Plätze vergeben sind). `/apply` zeigt den Status an.
 - Rechte: `teamchance.view` (wer Bewerbungen sieht), `teamchance.manage` (wer Bewerbungen entscheidet).
@@ -63,14 +63,3 @@ Persönlich → Sprache: Deutsch (Standard) oder Englisch für Menü und Navigat
 
 ## Bot-Voraussetzungen
 Developer Portal → Bot → Privileged Gateway Intents: **Server Members** (vollständige Teamliste) und **Presence** (Online-Status). Fehlen sie, startet der Bot trotzdem (Teamliste dann nur mit bekannten Mitgliedern bzw. Status „unbekannt“). Voice braucht kein privilegiertes Recht.
-
-## Server-Verbund (mehrere Discord-Server)
-*Administration → Server-Verbund* (ansehen `settings.view`, ändern `settings.manage`): Discord-Server **können zusammen sein, müssen aber nicht**.
-
-**Je Server getrennt** (Akten-Bereich `serverId`, wie Personen/Fahrzeuge): Personen, Fahrzeuge, **Berichte, Fahndungen, Ermittlungen, Beschwerden, Beweismittel und Dienstzeiten**. Die Trennung sitzt zentral im Datenbankzugriff (`apps/api/src/prisma/server-scope.ts`): Jede Anfrage mit gewähltem Server (Dashboard oben links bzw. Discord-Server der Bot-Interaktion) sieht und ändert nur Einträge dieses Servers; neue Einträge bekommen ihn automatisch. Ohne gewählten Server („Alle Server“) sieht man alles. Bestehende Einträge von vor der Trennung ordnet die API beim Start einmalig dem Heimat-Server der Leitstelle zu (bzw. dem einzigen bekannten Discord-Server). **Seit der vollständigen Trennung ebenfalls je Server:** Leitstelle (CAD), Personalakte und HR, Dienstnummern, Tatbestände, Bußgelder, SEK, Funk-Freigaben, Academy, Workflows und Kommunikation. Übersicht: [multi-server.md](multi-server.md).
-- **Gruppe** (z. B. Polizei + SEK): mindestens zwei Server. Je Gruppe wählbar:
-  - **Akten teilen** – alle Server der Gruppe sehen dieselben Personen- und Fahrzeugakten (sonst hat jeder Server eigene).
-  - **Einstellungen teilen** – Bewerbungen/Qualifikationen (Panels, Fragen, Rollen), Willkommen & Abschied, Design (Akzentfarbe), Name und Teamstruktur kommen vom **Haupt-Server** der Gruppe; wer auf einem anderen Server der Gruppe etwas ändert, ändert es für alle.
-- **Server ohne Gruppe**: *eigene Akten* (Standard, getrennt) oder ausdrücklich *gemeinsame Akten* (gemeinsamer Bestand). „Gemeinsame Akten hierher verschieben“ übernimmt den bisherigen gemeinsamen Bestand in die eigenen Akten.
-- Neue Akten – von Hand oder automatisch aus ER:LC – landen im Bereich des Servers, auf dem sie entstehen (bei ER:LC: der Discord-Server, dem der ER:LC-Server zugeordnet ist). Die Roblox-ID ist je Bereich eindeutig. Mit „Alle Server“ oben links sieht man alle Akten.
-- Was schon immer je Server getrennt ist (Rollen/Rechte, Teamliste, Support-Tickets, Sprach-Support-Räume, CAD-Server-Verbindungen), bleibt so.

@@ -19,7 +19,7 @@ const errors_1 = require("../common/errors");
 const custom_fields_1 = require("../studio/custom-fields");
 const studio_service_1 = require("../studio/studio.service");
 const qualifications_config_1 = require("../qualifications/qualifications.config");
-const guild_context_1 = require("../common/guild-context");
+const home_server_service_1 = require("../server/home-server.service");
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => zod_1.z.string().regex(/^\d{15,25}$/).optional();
 const idList = () => zod_1.z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional();
@@ -55,43 +55,22 @@ exports.SETTING_SCHEMAS = {
 let AdminService = class AdminService {
     prisma;
     audit;
-    constructor(prisma, audit) {
+    home;
+    constructor(prisma, audit, home) {
         this.prisma = prisma;
         this.audit = audit;
+        this.home = home;
     }
     /**
-     * Mit gewähltem Server: nur die Werte DIESES Servers (Konfiguration je Server) und die globalen Einstellungen – nie Werte
-     * anderer Server. Unter „Alle Server“: alles (Verwaltung der Grundwerte).
+     * Alle zentralen Einstellungen. Archivierte Werte aus der früheren Multi-Server-Zeit (`<Schlüssel>@<Server-ID>`) bleiben in
+     * der Datenbank, werden aber nicht mehr angezeigt oder verwendet.
      */
     async getSettings() {
-        const g = (0, guild_context_1.settingsGuild)((0, guild_context_1.currentGuild)());
-        if (!g) {
-            const rows = await this.prisma.systemSetting.findMany();
-            return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS), serverScoped: guild_context_1.PER_SERVER_SETTING_KEYS };
-        }
-        const keys = Object.keys(exports.SETTING_SCHEMAS);
-        const rows = await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } }); // je Server umgeleitet (server-scope.ts)
-        const settings = {};
-        for (const r of rows) {
-            settings[r.key] = r.value;
-            if (guild_context_1.PER_SERVER_SETTING_KEYS.includes(r.key))
-                settings[`${r.key}@${g}`] = r.value;
-        }
-        return { settings, allowedKeys: keys, serverScoped: guild_context_1.PER_SERVER_SETTING_KEYS };
+        const rows = await this.prisma.systemSetting.findMany({ where: { NOT: { key: { contains: '@' } } } });
+        return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(exports.SETTING_SCHEMAS) };
     }
-    /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
-    async setSetting(actor, rawKey, value) {
-        const [base, rawGuild] = rawKey.split('@');
-        // Gruppe mit geteilten Einstellungen (Server-Verbund): gespeichert wird beim Haupt-Server der Gruppe
-        const guild = rawGuild !== undefined && /^\d{15,25}$/.test(rawGuild) ? (0, guild_context_1.settingsGuild)(rawGuild) ?? rawGuild : rawGuild;
-        const key = guild !== undefined ? `${base}@${guild}` : base;
-        if (guild !== undefined && (!/^\d{15,25}$/.test(guild) || !guild_context_1.PER_SERVER_SETTING_KEYS.includes(base)))
-            throw new errors_1.AppError('VALIDATION_FAILED', `Die Einstellung „${base}“ kann nicht je Server gesetzt werden.`);
-        // im Kontext eines Servers nie die Einstellungen eines anderen Servers ändern
-        const ctx = (0, guild_context_1.settingsGuild)((0, guild_context_1.currentGuild)());
-        if (ctx && guild !== undefined && guild !== ctx)
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Einstellungen anderer Server kannst du hier nicht ändern.');
-        const schema = exports.SETTING_SCHEMAS[base];
+    async setSetting(actor, key, value) {
+        const schema = exports.SETTING_SCHEMAS[key];
         if (!schema)
             throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Einstellung „${key}“.`);
         const parsed = schema.safeParse(value);
@@ -100,9 +79,10 @@ let AdminService = class AdminService {
         return this.prisma.$transaction(async (tx) => {
             const before = await tx.systemSetting.findUnique({ where: { key } });
             const row = await tx.systemSetting.upsert({ where: { key }, create: { key, value: parsed.data }, update: { value: parsed.data } });
-            await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: ctx && !key.includes('@') && guild_context_1.PER_SERVER_SETTING_KEYS.includes(key) ? `${key}@${ctx}` : key, before: before?.value, after: row.value }, tx);
+            await this.audit.record(actor, { action: /^(application|dashboard|studio|theme|discord|team)\./.test(key) ? 'studio.config.changed' : 'settings.changed', module: 'settings', entityType: 'SystemSetting', entityId: key, before: before?.value, after: row.value }, tx);
             return { key, value: row.value };
-        });
+        }).then(async (r) => { if (key === 'discord.channels')
+            await this.home.refresh(); return r; });
     }
     securityEvents(take = 100, type) {
         return this.prisma.securityEvent.findMany({ where: type ? { type } : {}, orderBy: { createdAt: 'desc' }, take, select: { id: true, type: true, userId: true, ip: true, detail: true, requestId: true, createdAt: true } });
@@ -136,6 +116,6 @@ let AdminService = class AdminService {
 exports.AdminService = AdminService;
 exports.AdminService = AdminService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, home_server_service_1.HomeServerService])
 ], AdminService);
 //# sourceMappingURL=admin.service.js.map

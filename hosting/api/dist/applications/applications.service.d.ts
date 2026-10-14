@@ -19,7 +19,6 @@ export interface InboxQuery {
     type?: string;
     status?: string;
     order?: 'newest' | 'oldest';
-    guildId?: string;
 }
 export declare class ApplicationsService {
     private readonly prisma;
@@ -32,8 +31,8 @@ export declare class ApplicationsService {
     private readonly access;
     private readonly live;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService, access: DiscordAccessService, live: DiscordLiveService);
-    /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
-    form(guildId?: string | null): Promise<FormField[]>;
+    /** Bewerbungsformular (Administration → Studio). */
+    form(): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
     submit(d: {
         robloxUsername: string;
@@ -50,18 +49,9 @@ export declare class ApplicationsService {
         status: string;
     }>;
     /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
-    police(guildId?: string | null): Promise<{
-        title: string;
-        description: string;
+    police(): Promise<{
         name: string;
         settings: {
-            cooldownMinutes: number;
-            messages: {
-                denied: string;
-                accepted: string;
-                confirmation: string;
-                completion: string;
-            };
             roles: {
                 denied: string[];
                 accepted: string[];
@@ -79,11 +69,20 @@ export declare class ApplicationsService {
                 removeOnSubmit: string[];
                 managers: string[];
             };
+            messages: {
+                denied: string;
+                accepted: string;
+                confirmation: string;
+                completion: string;
+            };
             staffThreads: boolean;
+            cooldownMinutes: number;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         };
+        description: string;
         enabled: boolean;
+        title: string;
         pingRoleIds: string[];
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -106,8 +105,8 @@ export declare class ApplicationsService {
     history(discordId: string): import("@prisma/client").Prisma.PrismaPromise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
+        status: string;
         decisionReason: string | null;
     }[]>;
     /**
@@ -128,26 +127,26 @@ export declare class ApplicationsService {
         denied: number;
         withdrawn: number;
     }>;
-    list(p: PageQuery, status?: string, guildId?: string, order?: 'newest' | 'oldest'): Promise<{
+    list(p: PageQuery, status?: string, order?: 'newest' | 'oldest'): Promise<{
         items: {
             decidedByName: string | null;
             number: string;
             id: string;
-            status: string;
             createdAt: Date;
-            updatedAt: Date;
-            version: number;
-            source: string;
+            discordId: string | null;
             robloxUserId: string | null;
             robloxUsername: string;
+            updatedAt: Date;
+            version: number;
             guildId: string | null;
+            status: string;
             decidedById: string | null;
             decidedAt: Date | null;
             decisionReason: string | null;
+            source: string;
+            discordName: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
-            discordId: string | null;
-            discordName: string | null;
             durationSec: number | null;
             joinedAt: Date | null;
         }[];
@@ -198,42 +197,42 @@ export declare class ApplicationsService {
     get(id: string): Promise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        source: string;
+        discordId: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
+        updatedAt: Date;
+        version: number;
         guildId: string | null;
+        status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
+        source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordId: string | null;
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;
     transition(actor: Actor, id: string, to: ApplicationStatus, reason?: string): Promise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        source: string;
+        discordId: string | null;
         robloxUserId: string | null;
         robloxUsername: string;
+        updatedAt: Date;
+        version: number;
         guildId: string | null;
+        status: string;
         decidedById: string | null;
         decidedAt: Date | null;
         decisionReason: string | null;
+        source: string;
+        discordName: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
-        discordId: string | null;
-        discordName: string | null;
         durationSec: number | null;
         joinedAt: Date | null;
     }>;

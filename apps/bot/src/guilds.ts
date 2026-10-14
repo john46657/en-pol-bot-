@@ -1,5 +1,6 @@
 import { ChannelType, type Client, type Guild } from 'discord.js';
 import type { Api } from './api';
+import { ownGuilds } from './home';
 
 /** Server mit Channels und Rollen, wie das Dashboard sie für Namen und Auswahllisten braucht. */
 export interface GuildInfo {
@@ -22,11 +23,11 @@ export function guildInfo(g: Guild): GuildInfo {
   };
 }
 
-/** Meldet alle Server des Bots an das System (beim Start, bei Änderungen und regelmäßig). */
+/** Meldet den Discord-Server des Systems an das System (beim Start, bei Änderungen und regelmäßig). */
 export function startGuildDirectory(client: () => Client, api: Api, log: (m: string) => void = console.log) {
   let timer: NodeJS.Timeout | undefined;
   const push = async () => {
-    const guilds = [...client().guilds.cache.values()].slice(0, 50).map(guildInfo);
+    const guilds = ownGuilds(client()).slice(0, 50).map(guildInfo);
     await api.service('PUT', '/bot/guilds', { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
   };
   // mehrere Änderungen kurz hintereinander nur einmal melden

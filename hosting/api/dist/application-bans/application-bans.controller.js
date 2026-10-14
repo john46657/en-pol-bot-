@@ -73,7 +73,7 @@ let BotApplicationBansController = class BotApplicationBansController {
     constructor(s) {
         this.s = s;
     }
-    check(q) { return this.s.check(q.discordId, q.scope, q.name ?? 'diese Bewerbung', q.guildId ?? null); }
+    check(q) { return this.s.check(q.discordId, q.scope, q.name ?? 'diese Bewerbung'); }
 };
 exports.BotApplicationBansController = BotApplicationBansController;
 __decorate([

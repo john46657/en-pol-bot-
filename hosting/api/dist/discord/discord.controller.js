@@ -25,7 +25,7 @@ const duty_service_1 = require("../duty/duty.service");
 const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const servers_service_1 = require("../multi-server/servers.service");
+const home_server_service_1 = require("../server/home-server.service");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const guildsBody = zod_1.z.object({ guilds: zod_1.z.array(zod_1.z.object({
         id: sf, name: zod_1.z.string().max(100), icon: zod_1.z.string().url().max(300).nullable(),
@@ -125,21 +125,21 @@ let BotController = class BotController {
     danger;
     applications;
     prisma;
-    servers;
-    constructor(d, live, duty, danger, applications, prisma, servers) {
+    home;
+    constructor(d, live, duty, danger, applications, prisma, home) {
         this.d = d;
         this.live = live;
         this.duty = duty;
         this.danger = danger;
         this.applications = applications;
         this.prisma = prisma;
-        this.servers = servers;
+        this.home = home;
     }
     redeem(b) { return this.d.redeem(b.code, b.discordId); }
     config() { return this.d.channels(); }
     /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot); ohne Eintrag an. */
     async ghostPing() { const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.ghostPing' } }))?.value; return { enabled: v?.enabled !== false }; }
-    async guilds(b) { await this.d.saveGuilds(b.guilds); await this.servers.syncFromBot(b.guilds); }
+    async guilds(b) { await this.d.saveGuilds(b.guilds); await this.home.refresh(); }
     outbox(q) { return this.d.pending(q.limit); }
     ack(id, b) { return this.d.ack(id, b.ok, b.error); }
     /** Teamübersicht für die selbst aktualisierende Teamliste in Discord (nur Anzeigefelder). */
@@ -290,6 +290,6 @@ __decorate([
 exports.BotController = BotController = __decorate([
     (0, swagger_1.ApiTags)('bot'),
     (0, common_1.Controller)('bot'),
-    __metadata("design:paramtypes", [discord_service_1.DiscordService, discord_live_service_1.DiscordLiveService, duty_service_1.DutyService, danger_service_1.DangerService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService, servers_service_1.ServersService])
+    __metadata("design:paramtypes", [discord_service_1.DiscordService, discord_live_service_1.DiscordLiveService, duty_service_1.DutyService, danger_service_1.DangerService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService, home_server_service_1.HomeServerService])
 ], BotController);
 //# sourceMappingURL=discord.controller.js.map

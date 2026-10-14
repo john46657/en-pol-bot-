@@ -69,8 +69,6 @@ export declare class AuthController {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
-        servers: string[];
-        globalAdmin: boolean;
     } | {
         twoFactorRequired: true;
         ticket: string;
@@ -87,8 +85,6 @@ export declare class AuthController {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
-        servers: string[];
-        globalAdmin: boolean;
     }>;
     twoFactorStatus(user: AuthUser): Promise<{
         enabled: boolean;
@@ -118,8 +114,6 @@ export declare class AuthController {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
-        servers: string[];
-        globalAdmin: boolean;
     }>;
 }
 export {};

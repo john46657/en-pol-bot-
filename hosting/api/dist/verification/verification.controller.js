@@ -21,10 +21,8 @@ const verification_service_1 = require("./verification.service");
 const roblox_oauth_service_1 = require("./roblox-oauth.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
-const guildQ = zod_1.z.object({ guildId: sf.optional() });
 const listQ = zod_1.z.object({ q: zod_1.z.string().trim().max(64).optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(25) });
 const member = zod_1.z.object({ guildId: sf.optional(), discordId: sf, discordName: zod_1.z.string().trim().max(100).optional() });
 const did = (v) => { if (!/^\d{15,25}$/.test(v))
@@ -40,9 +38,9 @@ let VerificationController = class VerificationController {
     }
     oauthSettings() { return this.oauth.settings(); }
     saveOauth(a, b) { return this.oauth.save(a, b); }
-    config(q) { return this.s.config(q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    save(a, q, b) { return this.s.save(a, b, q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    panel(a, q) { return this.s.postPanel(a, q.guildId ?? (0, guild_context_1.currentGuild)() ?? null); }
+    config() { return this.s.config(); }
+    save(a, b) { return this.s.save(a, b); }
+    panel(a) { return this.s.postPanel(a); }
     list(q) { return this.s.list(q); }
     unlink(a, id) { return this.s.unlink(a, did(id)); }
     refresh(id) { return this.s.refresh(did(id)); }
@@ -67,19 +65,17 @@ __decorate([
 __decorate([
     (0, common_1.Get)('config'),
     (0, decorators_1.RequirePermission)('settings.view'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], VerificationController.prototype, "config", null);
 __decorate([
     (0, common_1.Put)('config'),
     (0, decorators_1.RequirePermission)('settings.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(verification_service_1.verifyConfigSchema))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(verification_service_1.verifyConfigSchema))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0, Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], VerificationController.prototype, "save", null);
 __decorate([
@@ -87,9 +83,8 @@ __decorate([
     (0, common_1.HttpCode)(200),
     (0, decorators_1.RequirePermission)('settings.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], VerificationController.prototype, "panel", null);
 __decorate([
@@ -133,13 +128,13 @@ let BotVerificationController = class BotVerificationController {
     }
     /** „Mit Roblox anmelden“: eingerichtet? Dann Anmelde-Link für dieses Mitglied. */
     async oauthLink(b) { return (await this.oauth.enabled()) ? { enabled: true, allowCode: await this.oauth.allowCode(), ...(await this.oauth.link(b.guildId, b.discordId, b.discordName)) } : { enabled: false, allowCode: true }; }
-    config(q) { return this.s.config(q.guildId); }
+    config() { return this.s.config(); }
     start(b) { return this.s.start(b.guildId, b.discordId, b.roblox); }
     check(b) { return this.s.check(b.guildId, b.discordId, b.discordName); }
     status(b) { return this.s.status(b.guildId, b.discordId, b.discordName); }
     whois(q) { return this.s.whois(q.discordId); }
     unlink(b) { return this.s.unlink(null, b.discordId); }
-    posted(b) { return this.s.panelPosted(b.guildId ?? null, b.channelId, b.messageId); }
+    posted(b) { return this.s.panelPosted(b.channelId, b.messageId); }
 };
 exports.BotVerificationController = BotVerificationController;
 __decorate([
@@ -155,9 +150,8 @@ __decorate([
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Get)('config'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ guildId: sf })))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BotVerificationController.prototype, "config", null);
 __decorate([

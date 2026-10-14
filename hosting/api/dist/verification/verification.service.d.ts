@@ -18,15 +18,15 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         buttonLabel: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         message: string;
-        title: string;
         color: string;
         channelId: string | null;
+        title: string;
         buttonLabel: string;
     }, {
         message?: string | undefined;
-        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
+        title?: string | undefined;
         buttonLabel?: string | undefined;
     }>>;
     binds: z.ZodDefault<z.ZodArray<z.ZodObject<{
@@ -53,9 +53,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId: string | null;
     panel: {
         message: string;
-        title: string;
         color: string;
         channelId: string | null;
+        title: string;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -74,9 +74,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId?: string | null | undefined;
     panel?: {
         message?: string | undefined;
-        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
+        title?: string | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -95,9 +95,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId: string | null;
     panel: {
         message: string;
-        title: string;
         color: string;
         channelId: string | null;
+        title: string;
         buttonLabel: string;
     };
     verifiedRoleIds: string[];
@@ -116,9 +116,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId?: string | null | undefined;
     panel?: {
         message?: string | undefined;
-        title?: string | undefined;
         color?: string | undefined;
         channelId?: string | null | undefined;
+        title?: string | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
     verifiedRoleIds?: string[] | undefined;
@@ -142,20 +142,19 @@ export declare class VerificationService {
     private readonly audit;
     private readonly roblox;
     constructor(prisma: PrismaService, audit: AuditService, roblox: RobloxService);
-    private keyOf;
-    config(guildId?: string | null): Promise<VerifyConfig & {
+    config(): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
-    save(actor: Actor, input: VerifyConfig, guildId?: string | null): Promise<VerifyConfig & {
+    save(actor: Actor, input: VerifyConfig): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
     /** Panel („Verifizieren“-Button) posten bzw. aktualisieren. */
-    postPanel(actor: Actor, guildId: string | null): Promise<{
+    postPanel(actor: Actor): Promise<{
         queued: boolean;
     }>;
-    panelPosted(guildId: string | null, channelId: string, messageId: string): Promise<{
+    panelPosted(channelId: string, messageId: string): Promise<{
         ok: boolean;
     }>;
     /** Schritt 1: Roblox-Konto nennen → Code. */
@@ -194,9 +193,9 @@ export declare class VerificationService {
         name: string;
         displayName: string;
     }, method: string): Promise<{
-        updatedAt: Date;
-        displayName: string;
         discordId: string;
+        displayName: string;
+        updatedAt: Date;
         discordName: string | null;
         robloxName: string;
         robloxId: string;

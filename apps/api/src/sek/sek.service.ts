@@ -8,7 +8,7 @@ import { makeNumber } from '../common/numbering';
 export interface SekTarget { userId?: string; discordId?: string }
 
 /** SEK (Spezialeinsatzkommando): Roster und Einsatzberichte (nur Mitglieder). Bewerbungen laufen über die Qualifikationen. */
-import { onePersonnel } from '../common/guild-context';
+import { onePersonnel } from '../common/personnel-ref';
 @Injectable()
 export class SekService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}

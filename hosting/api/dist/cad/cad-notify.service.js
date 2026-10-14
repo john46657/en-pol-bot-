@@ -11,53 +11,40 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CadNotifyService = void 0;
 const common_1 = require("@nestjs/common");
-const shared_1 = require("@enrp/shared");
-const prisma_service_1 = require("../prisma/prisma.service");
+const guild_context_1 = require("../common/guild-context");
 const discord_service_1 = require("../discord/discord.service");
 const realtime_service_1 = require("../realtime/realtime.service");
 const cad_config_service_1 = require("./cad-config.service");
 /**
- * Überträgt CAD-Ereignisse nach Discord. Zielkanäle kommen ausschließlich aus der Konfiguration:
- * 1. Kanalzuordnungen (CAD-Einstellungen → Discord) des Heimat-Servers des Ereignisses,
- * 2. aktive Server-Verbindungen, deren Datenart das Ereignis erlaubt (Kanäle der Verbindung + Zuordnungen des Ziel-Servers).
- * Nichts ist hartcodiert; ohne Konfiguration wird nichts gesendet.
+ * Überträgt CAD-Ereignisse nach Discord. Zielkanäle kommen ausschließlich aus der Konfiguration (CAD-Einstellungen → Discord).
+ * Nichts ist hartcodiert; ohne Konfiguration wird nichts gesendet. Zuordnungen, die noch auf einen anderen Discord-Server
+ * zeigen (aus der früheren Multi-Server-Zeit), werden nicht mehr bedient.
  */
 let CadNotifyService = class CadNotifyService {
-    prisma;
     discord;
     cfg;
     rt;
-    constructor(prisma, discord, cfg, rt) {
-        this.prisma = prisma;
+    constructor(discord, cfg, rt) {
         this.discord = discord;
         this.cfg = cfg;
         this.rt = rt;
     }
-    async targets(event, guildId) {
+    async targets(event) {
         const cfg = await this.cfg.get();
-        const home = guildId ?? cfg.homeGuildId ?? null;
         const channels = new Set(), pings = new Set();
-        const add = (route) => { route.channelIds.forEach((c) => channels.add(c)); route.pingRoleIds?.forEach((r) => pings.add(r)); };
-        const routesFor = (g) => cfg.routes.filter((r) => r.enabled && r.event === event && (g === null || r.guildId === g));
-        routesFor(home).forEach(add);
-        const linked = [];
-        if (home) {
-            const sendType = shared_1.CAD_EVENT_SEND_TYPE[event];
-            const links = await this.prisma.cadServerLink.findMany({ where: { active: true, notify: true, sourceGuildId: home, sendTypes: { has: sendType } } });
-            for (const l of links) {
-                linked.push(l.targetGuildId);
-                const own = (l.channels ?? {})[sendType] ?? [];
-                own.filter((c) => /^\d{15,25}$/.test(c)).forEach((c) => channels.add(c));
-                routesFor(l.targetGuildId).forEach(add);
-            }
+        for (const r of cfg.routes) {
+            if (!r.enabled || r.event !== event || !(0, guild_context_1.isHomeGuild)(r.guildId))
+                continue;
+            r.channelIds.forEach((c) => channels.add(c));
+            r.pingRoleIds?.forEach((x) => pings.add(x));
         }
-        return { channelIds: [...channels], pingRoleIds: [...pings], linkedGuilds: linked };
+        return { channelIds: [...channels], pingRoleIds: [...pings] };
     }
     /** Best effort: Fehler beim Benachrichtigen stören den Fachprozess nie. */
-    async emit(event, payload, guildId) {
+    async emit(event, payload) {
         this.rt.publish('cad', `cad.${event}`, { id: payload.id ?? null });
         try {
-            const t = await this.targets(event, guildId);
+            const t = await this.targets(event);
             if (!t.channelIds.length)
                 return t;
             await this.discord.enqueue('cad', `cad.${event}`, { ...payload, channelIds: t.channelIds, pingRoleIds: t.pingRoleIds }, { always: true });
@@ -71,6 +58,6 @@ let CadNotifyService = class CadNotifyService {
 exports.CadNotifyService = CadNotifyService;
 exports.CadNotifyService = CadNotifyService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, discord_service_1.DiscordService, cad_config_service_1.CadConfigService, realtime_service_1.RealtimeService])
+    __metadata("design:paramtypes", [discord_service_1.DiscordService, cad_config_service_1.CadConfigService, realtime_service_1.RealtimeService])
 ], CadNotifyService);
 //# sourceMappingURL=cad-notify.service.js.map

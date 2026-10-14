@@ -55,7 +55,6 @@ function Times({ value, onChange }: { value: SupportTime[]; onChange: (t: Suppor
 /** Raum-Einstellungen (Name, Warteraum, Benachrichtigung, Team-Rolle, Prefix, Notizen, eigene Kanäle, Zeiten, Bewertung, Wartemusik). */
 function RoomEditor({ room, onChange, onBack, onDelete, onPrimary, canManage }: { room: VoiceSupportRoom; onChange: (r: VoiceSupportRoom) => void; onBack: () => void; onDelete: () => void; onPrimary: () => void; canManage: boolean }) {
   const set = (p: Partial<VoiceSupportRoom>) => onChange({ ...room, ...p });
-  const guilds = useGuilds().data ?? [];
   const [server] = useServer();
   const track = (key: 'openTrack' | 'closedTrack', label: string) => (
     <div className="grid gap-2">
@@ -71,10 +70,10 @@ function RoomEditor({ room, onChange, onBack, onDelete, onPrimary, canManage }: 
       <Card title={<span className="flex items-center gap-2">Raum-Einstellungen <Badge tone="info">{room.name || 'Neuer Raum'}</Badge><GuildTag id={room.guildId} /></span>}
         actions={<span className="flex gap-1">{canManage && <Button size="sm" variant="danger" aria-label="Raum löschen" onClick={onDelete}><Trash2 size={16} /></Button>}<Button size="sm" variant="secondary" aria-label="Zurück zur Liste" onClick={onBack}><ArrowLeft size={16} /></Button></span>}>
         <div className="grid gap-5 md:grid-cols-2">
-          {!server && (
+          {!room.guildId && (
             <Row title="Server" desc="Discord-Server, auf dem der Raum liegt" required>
-              {guilds.length ? <Select aria-label="Server" value={room.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">— wählen —</option>{guilds.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>
-                : <Input aria-label="Server-ID" inputMode="numeric" placeholder="Discord-Server-ID" value={room.guildId} onChange={(e) => set({ guildId: e.target.value.replace(/\D/g, '') })} />}
+              {server ? <Button size="sm" variant="secondary" onClick={() => set({ guildId: server })}>Discord-Server der EN Polizei übernehmen</Button>
+                : <p className="text-sm text-warning">Zuerst den Discord-Server einrichten (Einstellungen → Discord-Bot).</p>}
             </Row>
           )}
           <Row title="Name des Raums" desc="Name, wie der Raum benannt sein soll" required>

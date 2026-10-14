@@ -45,7 +45,7 @@ exports.welcomeConfigSchema = zod_1.z.object({
     if (c.goodbye.enabled && !c.goodbye.channelId)
         ctx.addIssue({ code: 'custom', path: ['goodbye', 'channelId'], message: 'Wähle einen Kanal für die Abschiedsnachricht.' });
 });
-/** Willkommen & Abschied je Discord-Server (`welcome.config@<guildId>`, sonst die gemeinsame Grundeinstellung) und was beim Verlassen passiert. */
+/** Willkommen & Abschied (`welcome.config`) und was beim Verlassen passiert. */
 let WelcomeService = class WelcomeService {
     prisma;
     audit;
@@ -62,41 +62,33 @@ let WelcomeService = class WelcomeService {
         this.tickets = tickets;
         this.media = media;
     }
-    keyOf(guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${KEY}@${g}` : KEY; } // Gruppe mit geteilten Einstellungen → Haupt-Server
-    /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
-    async config(guildId) {
-        const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: this.keyOf(guildId) } }) : null;
-        const row = own ?? await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
+    async config() {
+        const row = await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
         const parsed = row ? exports.welcomeConfigSchema.safeParse(row.value) : null;
-        return { ...(parsed?.success ? parsed.data : exports.welcomeConfigSchema.parse({})), own: !guildId || !!own };
+        return { ...(parsed?.success ? parsed.data : exports.welcomeConfigSchema.parse({})), own: true };
     }
-    async save(actor, input, guildId) {
-        const key = this.keyOf(guildId);
+    async save(actor, input) {
+        const key = KEY;
         const value = input;
         await this.prisma.$transaction(async (tx) => {
             await tx.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
             await this.audit.record(actor, { action: 'welcome.config', module: 'settings', entityType: 'SystemSetting', entityId: key, after: value }, tx);
         });
-        return this.config(guildId);
-    }
-    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame. */
-    async reset(actor, guildId) {
-        await this.prisma.systemSetting.deleteMany({ where: { key: this.keyOf(guildId) } });
-        await this.audit.record(actor, { action: 'welcome.config.reset', module: 'settings', entityType: 'SystemSetting', entityId: this.keyOf(guildId) });
-        return this.config(guildId);
+        return this.config();
     }
     /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
     /**
      * Test-Nachricht: der Bot schickt die gespeicherte Willkommens-/Abschiedsnachricht bzw. DM so, als wärst du gerade
      * beigetreten/gegangen (mit deinem Discord-Profil) – ohne Rollen oder Aktionen beim Verlassen.
      */
-    async test(actor, guildId, kind) {
+    async test(actor, kind) {
+        const guildId = (0, guild_context_1.homeGuild)();
         if (!guildId)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle oben links zuerst einen Server.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Trage zuerst die Discord-Server-ID ein (Einstellungen → Discord-Bot).');
         const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
         if (!link)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Verknüpfe zuerst dein Konto mit Discord – die Test-Nachricht nutzt dein Profil.');
-        const cfg = await this.config(guildId);
+        const cfg = await this.config();
         if (kind !== 'dm' && !cfg[kind].channelId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für diese Nachricht.');
         if (kind === 'dm' && !cfg.dm.message.trim())

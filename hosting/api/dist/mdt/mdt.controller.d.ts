@@ -102,14 +102,14 @@ declare const weaponQ: z.ZodObject<{
     page: number;
     pageSize: number;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | undefined;
     q?: string | undefined;
+    ownerId?: string | undefined;
 }, {
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
+    ownerId?: string | undefined;
 }>;
 declare const weaponBody: z.ZodObject<{
     serial: z.ZodString;
@@ -121,17 +121,17 @@ declare const weaponBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     type: string;
     serial: string;
-    model?: string | null | undefined;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | null | undefined;
+    model?: string | null | undefined;
     notes?: string | null | undefined;
+    ownerId?: string | null | undefined;
 }, {
     type: string;
     serial: string;
-    model?: string | null | undefined;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | null | undefined;
+    model?: string | null | undefined;
     notes?: string | null | undefined;
+    ownerId?: string | null | undefined;
 }>;
 /** Polizei-MDT (Streifen-Terminal): Bürger, Fahrzeuge, Waffen, Haftbefehle. Gleiche Akten und Rechte wie im Dashboard. */
 export declare class MdtController {
@@ -200,11 +200,11 @@ export declare class MdtController {
     citizen(a: Actor, id: string): Promise<{
         timeline: {
             id: string;
-            createdAt: Date;
+            action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
-            action: string;
             actorId: string | null;
         }[];
         person: {
@@ -242,47 +242,47 @@ export declare class MdtController {
             evidence: number | null;
         };
         vehicles: {
-            serverId: string | null;
-            model: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
             color: string | null;
-            notes: string | null;
+            status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
+            notes: string | null;
             plate: string;
+            ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
         weapons: {
-            serverId: string | null;
-            model: string | null;
             id: string;
-            type: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
+            type: string;
+            status: string;
+            model: string | null;
             notes: string | null;
+            ownerId: string | null;
             serial: string;
         }[] | null;
         warrants: {
-            serverId: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
+            reason: string;
             createdAt: Date;
+            expiresAt: Date | null;
             updatedAt: Date;
             version: number;
             description: string | null;
-            personId: string | null;
-            vehicleId: string | null;
-            reason: string;
             priority: string;
             createdById: string;
-            expiresAt: Date | null;
+            status: string;
+            vehicleId: string | null;
+            personId: string | null;
         }[] | null;
     }>;
     citizenRoblox(a: Actor, id: string): Promise<{
@@ -328,18 +328,18 @@ export declare class MdtController {
                 robloxUsername: string;
                 fullName: string | null;
             } | null;
-            serverId: string | null;
-            model: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
             color: string | null;
-            notes: string | null;
+            status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
+            notes: string | null;
             plate: string;
+            ownerId: string | null;
             erlcReference: string | null;
         }[];
         total: number;
@@ -356,49 +356,49 @@ export declare class MdtController {
                 flags: string[];
                 photoId: string | null;
             } | null;
-            serverId: string | null;
-            model: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
             color: string | null;
-            notes: string | null;
+            status: string;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
+            model: string | null;
+            notes: string | null;
             plate: string;
+            ownerId: string | null;
             erlcReference: string | null;
         };
         wanted: {
-            serverId: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
+            reason: string;
             createdAt: Date;
+            expiresAt: Date | null;
             updatedAt: Date;
             version: number;
             description: string | null;
-            personId: string | null;
-            vehicleId: string | null;
-            reason: string;
             priority: string;
             createdById: string;
-            expiresAt: Date | null;
+            status: string;
+            vehicleId: string | null;
+            personId: string | null;
         }[] | null;
         incidents: {
             number: string;
             id: string;
-            title: string;
-            status: string;
             createdAt: Date;
+            status: string;
+            title: string;
         }[];
         timeline: {
             id: string;
-            createdAt: Date;
+            action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
-            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -410,16 +410,16 @@ export declare class MdtController {
                 fullName: string | null;
             } | null;
         } & {
-            serverId: string | null;
-            model: string | null;
             id: string;
-            type: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
+            type: string;
+            status: string;
+            model: string | null;
             notes: string | null;
+            ownerId: string | null;
             serial: string;
         })[];
         total: number;
@@ -427,31 +427,31 @@ export declare class MdtController {
         pageSize: number;
     }>;
     createWeapon(a: Actor, b: z.infer<typeof weaponBody>): Promise<{
-        serverId: string | null;
-        model: string | null;
         id: string;
-        type: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        ownerId: string | null;
+        type: string;
+        status: string;
+        model: string | null;
         notes: string | null;
+        ownerId: string | null;
         serial: string;
     }>;
     updateWeapon(a: Actor, id: string, b: {
         version: number;
     } & Partial<Omit<z.infer<typeof weaponBody>, 'serial'>>): Promise<{
-        serverId: string | null;
-        model: string | null;
         id: string;
-        type: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        ownerId: string | null;
+        type: string;
+        status: string;
+        model: string | null;
         notes: string | null;
+        ownerId: string | null;
         serial: string;
     }>;
     warrants(q: {
@@ -466,24 +466,24 @@ export declare class MdtController {
             photoId: string | null;
         } | null;
         vehicle: {
-            model: string | null;
             id: string;
             color: string | null;
+            model: string | null;
             plate: string;
         } | null;
-        serverId: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
+        reason: string;
         createdAt: Date;
+        expiresAt: Date | null;
         updatedAt: Date;
         version: number;
         description: string | null;
-        personId: string | null;
-        vehicleId: string | null;
-        reason: string;
         priority: string;
         createdById: string;
-        expiresAt: Date | null;
+        status: string;
+        vehicleId: string | null;
+        personId: string | null;
     }[]>;
 }
 export {};

@@ -5,6 +5,7 @@ exports.teamMembers = teamMembers;
 exports.voiceReport = voiceReport;
 exports.startPresenceReporter = startPresenceReporter;
 const discord_js_1 = require("discord.js");
+const home_1 = require("./home");
 const STATUS = new Set(['online', 'idle', 'dnd', 'offline']);
 function memberReport(m, presences) {
     const raw = m.presence?.status;
@@ -54,7 +55,7 @@ function startPresenceReporter(client, api, opts, log = console.log) {
     const since = new Map(); // Aufenthaltsdauer: seit wann in diesem Channel (ab Bot-Start bekannt)
     let teamRoles = [];
     let lastError;
-    const guilds = () => [...client().guilds.cache.values()].slice(0, 50);
+    const guilds = () => (0, home_1.ownGuilds)(client()).slice(0, 50);
     const fail = (what) => (e) => {
         const msg = `${what}: ${e instanceof Error ? e.message : e}`;
         if (msg !== lastError) {

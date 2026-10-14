@@ -90,14 +90,11 @@ DISCORD_GUILD_ID=<Server-ID>        # optional – Commands kommen automatisch a
 ### 3. Konten verknüpfen
 Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Mit Discord verknüpfen* (Discord-Anmeldung; braucht `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET`). Wer sich mit Discord anmeldet, ist automatisch verknüpft. Lösen: im selben Dialog, oder ein Admin über `DELETE /api/v1/discord/links/:userId` (Benutzerverwaltung). Deaktivierte Benutzer verlieren sofort den Bot-Zugriff.
 
-## Mehrere Discord-Server
-- **Befehle:** Der Bot registriert die Slash-Commands **automatisch auf jedem Server, auf dem er ist** – beim Start und sofort, wenn er auf einen neuen Server eingeladen wird. `DISCORD_GUILD_ID` ist dafür nicht mehr nötig (optional zusätzlich). Schlägt ein Server fehl, steht das im Log, die anderen laufen weiter.
-- **Server-Auswahl im Dashboard (oben links bei „EN Polizei“):** Sobald der Bot auf mindestens 2 Servern ist, erscheint ein Dropdown. *All servers* = gemeinsame Einstellungen und alles sehen; ein Server gewählt = nur dessen Bewerbungen/Tickets, und Einstellungen gelten nur für diesen Server.
-  - **Pro Server** (ohne eigene Einstellungen gelten die gemeinsamen): Polizei-Bewerbung und Qualifikationen (Texte, Fragen, Channels, Rollen), Ticket-Panels und Ticket-Arten, die Bewerbungen und Tickets selbst. „Use shared settings again“ entfernt die eigenen Einstellungen eines Servers.
-  - **Gemeinsam:** MDT, Personen, Berichte, Team, Benutzer und Rechte, Ticket-Status/Prioritäten/Gründe.
-  - Channel- und Rollen-Auswahl zeigen nur den gewählten Server.
-- **Benachrichtigungen:** Unter *Admin → Settings → Discord bot channels* pro Art (Dispatch/Wanted/Announcements) mehrere Channel-IDs mit Komma eintragen, auch auf verschiedenen Servern. Gesendet wird an alle; die Nachricht gilt als zugestellt, sobald mindestens ein Channel erreicht wurde.
-- Die Verknüpfung (Discord-Konto ↔ Benutzer) ist serverübergreifend: ein Konto, alle Server.
+## Ein Discord-Server
+- **Server:** Der Bot arbeitet nur auf dem Discord-Server der EN Polizei (`DISCORD_GUILD_ID` in API und Bot bzw. Einstellungen → Discord-Bot; siehe [single-server.md](single-server.md)).
+- **Befehle:** Die Slash-Commands werden beim Start und alle 2 Minuten auf diesem Server registriert, und zwar nur die Befehle aktivierter Module (*Administration → Module*).
+- **Andere Server:** Ist der Bot noch auf weiteren Servern, entfernt er dort seine Befehle. Interaktionen und Ereignisse von dort ignoriert er, die API weist sie zusätzlich ab (`FOREIGN_GUILD`).
+- **Benachrichtigungen:** Unter *Admin → Settings → Discord bot channels* pro Art (Dispatch/Wanted/Announcements) mehrere Channel-IDs mit Komma eintragen. Gesendet wird an alle; die Nachricht gilt als zugestellt, sobald mindestens ein Channel erreicht wurde.
 
 ## Sicherheitsmodell
 - Der Bot authentifiziert sich mit `Authorization: Bot <BOT_API_TOKEN>` (konstante Zeit verglichen). Ohne gesetztes Token ist **jeder** Bot-Zugang in der API deaktiviert.
@@ -154,7 +151,7 @@ Gelöscht wird dabei **nichts**: Schichten und Dienstzeiten bleiben in `DutySess
 - Discord-Grenzen werden geprüft (6000 Zeichen je Embed, 1024 je Abschnitt).
 
 ## Willkommen & Abschied
-*Administration → Willkommen & Abschied* (je Server – oben links wählen; „Alle Server“ = gemeinsame Grundeinstellung):
+*Administration → Willkommen & Abschied*:
 - **Willkommensnachricht** in einem Kanal (Titel, Text, Farbe, Profilbild, Erwähnung des neuen Mitglieds, **Banner**) mit Vorschau. Banner: Bild hochladen (PNG/JPG/GIF/WebP bis 8 MB – der Bot hängt es an die Nachricht an) oder eine Bild-URL (https://). Die Abschiedsnachricht kann ebenfalls einen Banner haben.
 - **Willkommens-DM** und **automatische Rollen** für neue Mitglieder (keine Bots; die Bot-Rolle muss über diesen Rollen stehen).
 - **Abschiedsnachricht**, wenn jemand den Server verlässt.
@@ -166,8 +163,8 @@ Braucht im Developer Portal den privilegierten **Server Members Intent** (Bot �
 ## Roblox-Verifizierung (wie RoVer)
 > **Vorerst abgeschaltet:** Menüpunkt, Befehle und das Setzen beim Beitritt sind deaktiviert; Code und gespeicherte Verknüpfungen bleiben für später erhalten.
 
-*Administration → Roblox-Verifizierung*, je Server oder gemeinsam:
-- **Ablauf:** Panel-Button **Verifizieren** oder `/verifizieren` → **Mit Roblox anmelden** (offizielle Roblox-Anmeldung, OAuth 2.0) → Rollen und Nickname kommen automatisch. Der Link gilt 10 Minuten und nur für dieses Mitglied. Eine Verifizierung gilt auf allen Servern.
+*Administration → Roblox-Verifizierung*:
+- **Ablauf:** Panel-Button **Verifizieren** oder `/verifizieren` → **Mit Roblox anmelden** (offizielle Roblox-Anmeldung, OAuth 2.0) → Rollen und Nickname kommen automatisch. Der Link gilt 10 Minuten und nur für dieses Mitglied.
 - **Einrichten:** auf [create.roblox.com → Zugangsdaten → OAuth 2.0-Apps](https://create.roblox.com/dashboard/credentials?activeTab=OAuthTab) eine App anlegen, Scopes `openid` und `profile`, Redirect-URL `https://<eure-dashboard-adresse>/api/v1/verify/roblox/callback` (steht im Dashboard zum Kopieren). Client-ID und Secret im Dashboard eintragen oder als `ROBLOX_CLIENT_ID`/`ROBLOX_CLIENT_SECRET` setzen. Solange das fehlt, läuft die Verifizierung über fünf Wörter in „Über mich“ im Roblox-Profil.
 - **Rollen:** *Verifiziert-Rollen* bekommt jeder Verifizierte; *Nicht-verifiziert-Rollen* bekommt, wer es noch nicht ist, und sie fallen danach weg. **Gruppen-Rollen**: Rang in einer Roblox-Gruppe (von–bis, 1–255) → Discord-Rollen.
 - **Nickname:** Vorlage mit `{roblox-name}`, `{display-name}`, `{discord-name}`, `{roblox-id}` (höchstens 32 Zeichen; leer = nicht ändern).

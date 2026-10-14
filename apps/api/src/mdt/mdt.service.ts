@@ -9,7 +9,6 @@ import { MediaService } from '../media/media.service';
 import { LocksService } from '../locks/locks.service';
 import { RobloxService } from '../persons/roblox.service';
 import { AppError } from '../common/errors';
-import { recordSpace, recordWhere } from '../common/guild-context';
 import { pageResult, skipTake, type PageQuery } from '../common/pagination';
 
 const KEY = 'mdt.config';
@@ -77,7 +76,7 @@ export class MdtService {
   async citizens(p: PageQuery & { flag?: string }) {
     const q = p.q?.trim();
     const where: Prisma.PersonWhereInput = {
-      ...recordWhere(), status: 'ACTIVE',
+      status: 'ACTIVE',
       ...(p.flag ? { flags: { has: p.flag } } : {}),
       ...(q ? { OR: [
         { robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }, { robloxUserId: q },
@@ -93,7 +92,7 @@ export class MdtService {
   }
 
   async profile(actor: Actor, id: string) {
-    const p = await this.prisma.person.findFirst({ where: { id, ...recordWhere() } });
+    const p = await this.prisma.person.findFirst({ where: { id } });
     if (!p) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
     const can = async (perm: string) => this.perms.has(actor.userId!, perm);
     const [canVehicles, canWeapons, canWanted] = await Promise.all([can('vehicles.view'), can('weapons.view'), can('wanted.view')]);
@@ -134,7 +133,7 @@ export class MdtService {
 
   async updateCitizen(actor: Actor, id: string, version: number, d: PersonDetails & { notes?: string | null }) {
     await this.locks.assertFree('person', id, actor.userId);
-    const before = await this.prisma.person.findFirst({ where: { id, ...recordWhere() } });
+    const before = await this.prisma.person.findFirst({ where: { id } });
     if (!before) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
     const cfg = await this.config();
     const bad = (list: string[] | undefined, allowed: { key: string }[]) => list?.find((k) => !allowed.some((a) => a.key === k));
@@ -165,7 +164,7 @@ export class MdtService {
    * Ohne gespeicherte Roblox-ID wird sie über den Roblox-Namen gesucht (nur exakter Treffer) und in der Akte nachgetragen.
    */
   async robloxProfile(actor: Actor, id: string) {
-    const p = await this.prisma.person.findFirst({ where: { id, ...recordWhere() }, select: { id: true, robloxUserId: true, robloxUsername: true } });
+    const p = await this.prisma.person.findFirst({ where: { id }, select: { id: true, robloxUserId: true, robloxUsername: true } });
     if (!p) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
     let rid = p.robloxUserId;
     if (!rid) {
@@ -186,7 +185,7 @@ export class MdtService {
   /** Foto hochladen oder mit der Kamera aufnehmen (Bild bis 8 MB); ersetzt das bisherige Foto. */
   async setPhoto(actor: Actor, id: string, file: { originalname: string; mimetype: string; buffer: Buffer; size: number } | undefined) {
     if (!file || !/^image\/(png|jpeg|webp)$/.test(file.mimetype)) throw new AppError('VALIDATION_FAILED', 'Bitte ein Bild (PNG, JPG oder WebP) hochladen.');
-    const p = await this.prisma.person.findFirst({ where: { id, ...recordWhere() } });
+    const p = await this.prisma.person.findFirst({ where: { id } });
     if (!p) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
     const m = await this.media.upload(actor, file, { linkedType: 'Person', linkedId: id }, PHOTO_MAX);
     await this.prisma.$transaction(async (tx) => {
@@ -202,7 +201,7 @@ export class MdtService {
     const q = p.q?.trim();
     const plate = q?.toUpperCase().replace(/\s+/g, '');
     const where: Prisma.VehicleWhereInput = {
-      ...recordWhere(), status: { not: 'ARCHIVED' },
+      status: { not: 'ARCHIVED' },
       ...(q ? { OR: [{ plate: { contains: plate } }, { model: { contains: q, mode: 'insensitive' } }, { owner: { OR: [{ robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }] } }] } : {}),
     };
     const [items, total] = await Promise.all([
@@ -215,7 +214,7 @@ export class MdtService {
   }
 
   async vehicle(actor: Actor, id: string) {
-    const v = await this.prisma.vehicle.findFirst({ where: { id, ...recordWhere() }, include: { owner: { select: { id: true, robloxUsername: true, fullName: true, flags: true, photoId: true } } } });
+    const v = await this.prisma.vehicle.findFirst({ where: { id }, include: { owner: { select: { id: true, robloxUsername: true, fullName: true, flags: true, photoId: true } } } });
     if (!v) throw new AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
     const [wanted, links, timeline] = await Promise.all([
       (await this.perms.has(actor.userId!, 'wanted.view')) ? this.prisma.wantedRecord.findMany({ where: { vehicleId: id }, orderBy: { createdAt: 'desc' }, take: 50 }) : null,
@@ -231,7 +230,7 @@ export class MdtService {
   async weapons(p: PageQuery & { ownerId?: string; status?: string }) {
     const q = p.q?.trim();
     const where: Prisma.WeaponWhereInput = {
-      ...recordWhere(), ...(p.ownerId ? { ownerId: p.ownerId } : {}), ...(p.status ? { status: p.status } : {}),
+      ...(p.ownerId ? { ownerId: p.ownerId } : {}), ...(p.status ? { status: p.status } : {}),
       ...(q ? { OR: [{ serial: { contains: normSerial(q) } }, { model: { contains: q, mode: 'insensitive' } }, { owner: { OR: [{ robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }] } }] } : {}),
     };
     const [items, total] = await Promise.all([
@@ -244,16 +243,15 @@ export class MdtService {
   private async checkWeapon(d: { type?: string; ownerId?: string | null }) {
     const cfg = await this.config();
     if (d.type && !cfg.weaponTypes.some((t) => t.key === d.type)) throw new AppError('VALIDATION_FAILED', `Unbekannte Waffenart „${d.type}“.`);
-    if (d.ownerId && !(await this.prisma.person.findFirst({ where: { id: d.ownerId, ...recordWhere() }, select: { id: true } }))) throw new AppError('NOT_FOUND', 'Besitzer nicht gefunden.');
+    if (d.ownerId && !(await this.prisma.person.findFirst({ where: { id: d.ownerId }, select: { id: true } }))) throw new AppError('NOT_FOUND', 'Besitzer nicht gefunden.');
   }
 
   async createWeapon(actor: Actor, d: { serial: string; type: string; model?: string | null; ownerId?: string | null; status?: string; notes?: string | null }) {
     await this.checkWeapon(d);
     const serial = normSerial(d.serial);
-    const serverId = recordSpace() ?? null;
-    if (await this.prisma.weapon.findFirst({ where: { serial, serverId } })) throw new AppError('CONFLICT', `Die Seriennummer ${serial} ist schon registriert.`);
+    if (await this.prisma.weapon.findFirst({ where: { serial } })) throw new AppError('CONFLICT', `Die Seriennummer ${serial} ist schon registriert.`);
     return this.prisma.$transaction(async (tx) => {
-      const w = await tx.weapon.create({ data: { ...d, serial, serverId } });
+      const w = await tx.weapon.create({ data: { ...d, serial } });
       if (w.ownerId) await this.timeline.add(tx, { entityType: 'Person', entityId: w.ownerId, action: 'weapon.linked', summary: `Waffe ${serial} registriert`, actorId: actor.userId });
       await this.audit.record(actor, { action: 'weapon.create', module: 'weapons', entityType: 'Weapon', entityId: w.id, after: w }, tx);
       return w;
@@ -262,7 +260,7 @@ export class MdtService {
 
   async updateWeapon(actor: Actor, id: string, version: number, d: { type?: string; model?: string | null; ownerId?: string | null; status?: string; notes?: string | null }) {
     await this.checkWeapon(d);
-    const before = await this.prisma.weapon.findFirst({ where: { id, ...recordWhere() } });
+    const before = await this.prisma.weapon.findFirst({ where: { id } });
     if (!before) throw new AppError('NOT_FOUND', 'Waffe nicht gefunden.');
     return this.prisma.$transaction(async (tx) => {
       const r = await tx.weapon.updateMany({ where: { id, version }, data: { ...d, version: { increment: 1 } } });
@@ -278,11 +276,10 @@ export class MdtService {
   async warrants(status: 'ACTIVE' | 'ALL') {
     const rows = await this.prisma.wantedRecord.findMany({ where: status === 'ACTIVE' ? { status: { in: ACTIVE_WANTED } } : {}, orderBy: { createdAt: 'desc' }, take: 200 });
     const [persons, vehicles] = await Promise.all([
-      this.prisma.person.findMany({ where: { id: { in: rows.map((r) => r.personId).filter((x): x is string => !!x) }, ...recordWhere() }, select: { id: true, robloxUsername: true, fullName: true, photoId: true, flags: true } }),
-      this.prisma.vehicle.findMany({ where: { id: { in: rows.map((r) => r.vehicleId).filter((x): x is string => !!x) }, ...recordWhere() }, select: { id: true, plate: true, model: true, color: true } }),
+      this.prisma.person.findMany({ where: { id: { in: rows.map((r) => r.personId).filter((x): x is string => !!x) } }, select: { id: true, robloxUsername: true, fullName: true, photoId: true, flags: true } }),
+      this.prisma.vehicle.findMany({ where: { id: { in: rows.map((r) => r.vehicleId).filter((x): x is string => !!x) } }, select: { id: true, plate: true, model: true, color: true } }),
     ]);
     const pm = new Map(persons.map((p) => [p.id, { ...p, photoUrl: p.photoId ? `/api/v1/media/${p.photoId}` : null }])), vm = new Map(vehicles.map((v) => [v.id, v]));
-    // nur Fahndungen zu Akten im gewählten Server-Bereich
     return rows.filter((r) => (r.personId ? pm.has(r.personId) : r.vehicleId ? vm.has(r.vehicleId) : true))
       .map((r) => ({ ...r, person: r.personId ? pm.get(r.personId) ?? null : null, vehicle: r.vehicleId ? vm.get(r.vehicleId) ?? null : null }));
   }

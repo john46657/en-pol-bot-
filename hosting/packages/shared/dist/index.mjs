@@ -5,7 +5,7 @@ var PERMISSION_CATALOG = {
   team: ["view", "manage"],
   dispatch: ["view", "create", "edit", "assign", "close", "manage"],
   /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "manage_cross_server", "view_logs", "manage_settings", "radio", "handover", "view_stats"],
+  cad: ["view", "create_incident", "edit_incident", "close_incident", "assign_unit", "manage_units", "view_persons", "view_vehicles", "manage_map", "view_erlc", "manage_erlc", "erlc_command", "erlc_command_critical", "view_logs", "manage_settings", "radio", "handover", "view_stats"],
   incidents: ["view", "create", "edit", "close", "delete"],
   persons: ["view", "create", "edit", "archive", "merge"],
   vehicles: ["view", "create", "edit", "archive"],
@@ -56,14 +56,8 @@ var PERMISSION_CATALOG = {
   settings: ["view", "manage"],
   users: ["view", "manage"],
   roles: ["view", "manage"],
-  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
-  servers: ["view", "manage"],
-  /** Module je Server an/aus und deren Einstellungen */
-  modules: ["view", "manage"],
-  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
-  connections: ["view", "manage"],
-  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
-  sync: ["view", "retry"]
+  /** Module an/aus (Administration → Module) */
+  modules: ["view", "manage"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module, actions]) => actions.map((a) => `${module}.${a}`)
@@ -354,31 +348,6 @@ var CAD_FEEDBACK = [
   { key: "completed", label: "Einsatz abgeschlossen (Meldung)", emoji: "\u{1F3C1}" }
 ];
 var CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f) => f.key);
-var CAD_LINK_SEND_TYPES = ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
-var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents", "dispatch"];
-var CAD_LINK_LABELS = {
-  incidents: "Eins\xE4tze senden",
-  incident_status: "Einsatzstatus senden",
-  unit_requests: "Einheiten anfordern",
-  calls: "Notrufe senden",
-  announcements: "Leitstellenmeldungen senden",
-  radio: "Funkmeldungen senden",
-  status_report: "Status zur\xFCckmelden",
-  view_incidents: "Einsatzstatus sehen",
-  dispatch: "Notrufe/Eins\xE4tze bearbeiten (\xDCbernehmen, Einsatz erstellen, Einheit zuweisen)"
-};
-var CAD_EVENT_SEND_TYPE = {
-  "incident.created": "incidents",
-  "incident.status": "incident_status",
-  "incident.assigned": "unit_requests",
-  "incident.closed": "incident_status",
-  "incident.feedback": "incident_status",
-  "incident.support": "incident_status",
-  "call.received": "calls",
-  announcement: "announcements",
-  radio: "radio",
-  handover: "announcements"
-};
 var CAD_WIDGETS = ["activeIncidents", "availableUnits", "activeCalls", "erlcStatus", "map", "units", "radio", "persons", "vehicles", "dutyActivity"];
 var CAD_WIDGET_LABELS = {
   activeIncidents: "Aktive Eins\xE4tze",
@@ -395,7 +364,6 @@ var CAD_WIDGET_LABELS = {
 var ERLC_MAP_SIZE = 5355;
 var ERLC_BUILTIN_MAP = "/maps/erlc-map.webp";
 var DEFAULT_CAD_CONFIG = {
-  homeGuildId: null,
   incidentNumberPrefix: "E",
   incidentTypes: [
     { key: "ROBBERY", label: "Raub", emoji: "\u{1F4B0}" },
@@ -1182,7 +1150,7 @@ function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
 
 // src/modules.ts
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Module", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "modules"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
@@ -1213,22 +1181,6 @@ function moduleDependencyError(key3, enabled, state) {
     if (users.length) return `\u201E${def.name}\u201C wird noch gebraucht von: ${users.map((m) => m.name).join(", ")}.`;
   }
   return null;
-}
-var SYNC_DATA_TYPES = [
-  { key: "reports", module: "reports", label: "Berichte (eingereicht/freigegeben)", source: "reports" },
-  { key: "unit_status", module: "shift_logs", label: "Dienststatus der Beamten", source: "duty" },
-  { key: "shift_statistics", module: "shift_logs", label: "Wochenstatistik (Shift Logs)", source: "weekly-reset" },
-  { key: "team_overview", module: "shift_logs", label: "Team\xFCbersicht (wer ist im Dienst)", source: "duty" },
-  { key: "incidents", module: "cad", label: "Eins\xE4tze", source: null },
-  { key: "incident_status", module: "cad", label: "Einsatzstatus", source: null },
-  { key: "radio_messages", module: "cad", label: "Funkspr\xFCche", source: null }
-];
-var SYNC_DIRECTIONS = ["A_TO_B", "B_TO_A", "BIDIRECTIONAL", "NONE"];
-function policyAllowsFlow(p, from, to) {
-  if (!p.enabled || p.direction === "NONE") return false;
-  const forward = p.sourceServerId === from && p.targetServerId === to;
-  const backward = p.sourceServerId === to && p.targetServerId === from;
-  return forward && (p.direction === "A_TO_B" || p.direction === "BIDIRECTIONAL") || backward && (p.direction === "B_TO_A" || p.direction === "BIDIRECTIONAL");
 }
 var BOT_COMMAND_MODULES = {
   cad: "cad",
@@ -1265,7 +1217,7 @@ var BOT_COMMAND_MODULES = {
   funkcode: "communication",
   funk: "communication"
 };
-var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
+var commandsForModules = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
 
 // src/hr.ts
 import { z as z3 } from "zod";
@@ -2031,12 +1983,8 @@ export {
   BOT_COMMAND_MODULES,
   CAD_EVENTS,
   CAD_EVENT_LABELS,
-  CAD_EVENT_SEND_TYPE,
   CAD_FEEDBACK,
   CAD_FEEDBACK_KEYS,
-  CAD_LINK_ACTIONS,
-  CAD_LINK_LABELS,
-  CAD_LINK_SEND_TYPES,
   CAD_WIDGETS,
   CAD_WIDGET_LABELS,
   CLAIM_MODES,
@@ -2112,8 +2060,6 @@ export {
   ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS,
   STATUS_LABEL,
-  SYNC_DATA_TYPES,
-  SYNC_DIRECTIONS,
   TICKET_ACTIONS,
   TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS,
@@ -2147,7 +2093,7 @@ export {
   canTransition,
   checkAnswer,
   cleanReportValues,
-  commandsForServer,
+  commandsForModules,
   conditionMatches,
   dangerLevelOf,
   defaultTicketButtons,
@@ -2205,7 +2151,6 @@ export {
   periodStart,
   personDetailsSchema,
   pixelToGame,
-  policyAllowsFlow,
   questionSchema,
   rangeSchema,
   rankSchema,

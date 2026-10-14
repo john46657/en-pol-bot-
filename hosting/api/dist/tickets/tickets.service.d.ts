@@ -47,15 +47,15 @@ export declare class TicketsService {
             message: string;
         } | null;
         number: string;
-        serverId: string | null;
         id: string;
-        status: string;
-        notes: string | null;
+        serverId: string | null;
+        reason: string;
         updatedAt: Date;
         version: number;
-        officerId: string;
+        status: string;
+        notes: string | null;
         personId: string;
-        reason: string;
+        officerId: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -71,15 +71,15 @@ export declare class TicketsService {
             };
         } & {
             number: string;
-            serverId: string | null;
             id: string;
-            status: string;
-            notes: string | null;
+            serverId: string | null;
+            reason: string;
             updatedAt: Date;
             version: number;
-            officerId: string;
+            status: string;
+            notes: string | null;
             personId: string;
-            reason: string;
+            officerId: string;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -94,14 +94,18 @@ export declare class TicketsService {
     get(id: string): Promise<{
         ticket: {
             person: {
-                serverId: string | null;
                 id: string;
+                serverId: string | null;
+                createdAt: Date;
                 robloxUserId: string | null;
                 robloxUsername: string;
-                aliases: string[];
+                updatedAt: Date;
+                version: number;
+                createdById: string | null;
                 status: string;
-                notes: string | null;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
+                aliases: string[];
+                notes: string | null;
                 fullName: string | null;
                 dateOfBirth: Date | null;
                 gender: string | null;
@@ -113,34 +117,30 @@ export declare class TicketsService {
                 licenses: string[];
                 flags: string[];
                 photoId: string | null;
-                createdById: string | null;
-                createdAt: Date;
-                updatedAt: Date;
-                version: number;
             };
             legalCode: {
-                serverId: string | null;
                 id: string;
-                title: string;
-                category: string;
-                description: string | null;
-                expiresAt: Date | null;
+                serverId: string | null;
                 code: string;
-                penalty: import("@prisma/client/runtime/library").JsonValue;
+                category: string;
+                expiresAt: Date | null;
                 active: boolean;
+                description: string | null;
+                title: string;
+                penalty: import("@prisma/client/runtime/library").JsonValue;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
-            serverId: string | null;
             id: string;
-            status: string;
-            notes: string | null;
+            serverId: string | null;
+            reason: string;
             updatedAt: Date;
             version: number;
-            officerId: string;
+            status: string;
+            notes: string | null;
             personId: string;
-            reason: string;
+            officerId: string;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -150,11 +150,11 @@ export declare class TicketsService {
         };
         timeline: {
             id: string;
-            createdAt: Date;
-            entityId: string;
-            entityType: string;
-            summary: string;
             action: string;
+            entityType: string;
+            entityId: string;
+            createdAt: Date;
+            summary: string;
             actorId: string | null;
         }[];
     }>;
@@ -168,15 +168,15 @@ export declare class TicketsService {
         reportId?: string;
     }): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        status: string;
-        notes: string | null;
+        serverId: string | null;
+        reason: string;
         updatedAt: Date;
         version: number;
-        officerId: string;
+        status: string;
+        notes: string | null;
         personId: string;
-        reason: string;
+        officerId: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -186,15 +186,15 @@ export declare class TicketsService {
     }>;
     void(actor: Actor, id: string, reason: string): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        status: string;
-        notes: string | null;
+        serverId: string | null;
+        reason: string;
         updatedAt: Date;
         version: number;
-        officerId: string;
+        status: string;
+        notes: string | null;
         personId: string;
-        reason: string;
+        officerId: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;

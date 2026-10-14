@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BackupService = void 0;
+exports.BackupService = exports.setAfterRestore = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const promises_1 = require("node:fs/promises");
@@ -29,8 +29,12 @@ const KEY = 'backup.config';
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
 const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
-const FILE = /^(auto|manuell|vor-wiederherstellung)-(\d{8}-\d{6})\.json\.gz$/;
+const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung)-(\d{8}-\d{6})\.json\.gz$/;
 const delegate = (name) => name.charAt(0).toLowerCase() + name.slice(1);
+/** Nach dem Einspielen (z. B. eines Backups von vor der Umstellung auf einen Server): gesetzt vom SingleServerMigrationService. */
+let afterRestore = null;
+const setAfterRestore = (fn) => { afterRestore = fn; };
+exports.setAfterRestore = setAfterRestore;
 /** Tabellen in einer Reihenfolge, in der jede Tabelle nach denen kommt, auf die sie verweist (zum Einspielen). */
 function modelOrder() {
     const models = client_1.Prisma.dmmf.datamodel.models.filter((m) => !SKIP.has(m.name));
@@ -83,7 +87,7 @@ let BackupService = class BackupService {
         await this.audit.record(actor, { action: 'backup.config', module: 'settings', entityType: 'SystemSetting', entityId: KEY, after: v });
         return v;
     }
-    /** Täglich: Daten-Backup und (falls an) Discord-Backup je Server; alte automatische Backups aufräumen. */
+    /** Täglich: Daten-Backup und (falls an) Discord-Backup; alte automatische Backups aufräumen. */
     async autoTick(now = new Date()) {
         const cfg = await this.config();
         const day = 23 * 60 * 60_000;
@@ -197,6 +201,8 @@ let BackupService = class BackupService {
                 await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
         }, { timeout: 10 * 60_000, maxWait: 30_000 });
         await this.audit.record(actor, { action: 'backup.data.restore', module: 'settings', entityType: 'Backup', entityId: source.name ?? 'upload', after: { rows, safety: safety.name } });
+        if (afterRestore)
+            await afterRestore().catch((e) => this.log.warn(`Nach dem Einspielen: ${e instanceof Error ? e.message : e}`));
         return { rows, safety: safety.name };
     }
     // ───────────── Discord-Server ─────────────
@@ -225,7 +231,7 @@ let BackupService = class BackupService {
         await this.prisma.discordBackup.delete({ where: { id } });
         await this.audit.record(actor, { action: 'backup.discord.delete', module: 'settings', entityType: 'DiscordBackup', entityId: id });
     }
-    /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). Ziel kann ein anderer Server sein. */
+    /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). */
     async restoreDiscord(actor, id, d) {
         const b = await this.getDiscord(id);
         if (b.status !== 'READY')

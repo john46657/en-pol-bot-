@@ -60,13 +60,13 @@ declare const listQuery: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    personId?: string | undefined;
     q?: string | undefined;
-}, {
     personId?: string | undefined;
+}, {
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
+    personId?: string | undefined;
 }>;
 export declare class TicketsController {
     private readonly tickets;
@@ -79,15 +79,15 @@ export declare class TicketsController {
             };
         } & {
             number: string;
-            serverId: string | null;
             id: string;
-            status: string;
-            notes: string | null;
+            serverId: string | null;
+            reason: string;
             updatedAt: Date;
             version: number;
-            officerId: string;
+            status: string;
+            notes: string | null;
             personId: string;
-            reason: string;
+            officerId: string;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -114,14 +114,18 @@ export declare class TicketsController {
     get(id: string): Promise<{
         ticket: {
             person: {
-                serverId: string | null;
                 id: string;
+                serverId: string | null;
+                createdAt: Date;
                 robloxUserId: string | null;
                 robloxUsername: string;
-                aliases: string[];
+                updatedAt: Date;
+                version: number;
+                createdById: string | null;
                 status: string;
-                notes: string | null;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
+                aliases: string[];
+                notes: string | null;
                 fullName: string | null;
                 dateOfBirth: Date | null;
                 gender: string | null;
@@ -133,34 +137,30 @@ export declare class TicketsController {
                 licenses: string[];
                 flags: string[];
                 photoId: string | null;
-                createdById: string | null;
-                createdAt: Date;
-                updatedAt: Date;
-                version: number;
             };
             legalCode: {
-                serverId: string | null;
                 id: string;
-                title: string;
-                category: string;
-                description: string | null;
-                expiresAt: Date | null;
+                serverId: string | null;
                 code: string;
-                penalty: import("@prisma/client/runtime/library").JsonValue;
+                category: string;
+                expiresAt: Date | null;
                 active: boolean;
+                description: string | null;
+                title: string;
+                penalty: import("@prisma/client/runtime/library").JsonValue;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
-            serverId: string | null;
             id: string;
-            status: string;
-            notes: string | null;
+            serverId: string | null;
+            reason: string;
             updatedAt: Date;
             version: number;
-            officerId: string;
+            status: string;
+            notes: string | null;
             personId: string;
-            reason: string;
+            officerId: string;
             legalCodeId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reportId: string | null;
@@ -170,11 +170,11 @@ export declare class TicketsController {
         };
         timeline: {
             id: string;
-            createdAt: Date;
-            entityId: string;
-            entityType: string;
-            summary: string;
             action: string;
+            entityType: string;
+            entityId: string;
+            createdAt: Date;
+            summary: string;
             actorId: string | null;
         }[];
     }>;
@@ -184,15 +184,15 @@ export declare class TicketsController {
             message: string;
         } | null;
         number: string;
-        serverId: string | null;
         id: string;
-        status: string;
-        notes: string | null;
+        serverId: string | null;
+        reason: string;
         updatedAt: Date;
         version: number;
-        officerId: string;
+        status: string;
+        notes: string | null;
         personId: string;
-        reason: string;
+        officerId: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;
@@ -202,15 +202,15 @@ export declare class TicketsController {
     }>;
     void(a: Actor, id: string, b: z.infer<typeof voidSchema>): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        status: string;
-        notes: string | null;
+        serverId: string | null;
+        reason: string;
         updatedAt: Date;
         version: number;
-        officerId: string;
+        status: string;
+        notes: string | null;
         personId: string;
-        reason: string;
+        officerId: string;
         legalCodeId: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         reportId: string | null;

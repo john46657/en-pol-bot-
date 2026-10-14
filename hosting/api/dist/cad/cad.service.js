@@ -95,33 +95,10 @@ let CadService = class CadService {
             })) });
     }
     changed(kind, id) { this.rt.publish('cad', 'cad.changed', { kind, id: id ?? null }); this.rt.publish('dispatch', 'queue.changed', { id: id ?? null }); }
-    /**
-     * Server-übergreifende Aktionen: Vom Heimat-Server (Leitstelle) aus immer erlaubt; von einem anderen Discord-Server
-     * nur, wenn eine aktive Server-Verbindung diese Aktion freigibt (und ggf. die Rolle passt).
-     * Geprüft wird nur, was aus Discord kommt (Bot mit Discord-ID): im Dashboard ist der gewählte Server nur ein Filter.
-     * Ohne eingestellten Heimat-Server ist nur ein Ein-Server-Betrieb (keine Server-Verbindungen) offen.
-     */
-    async assertCrossServer(actor, action, memberRoleIds = []) {
-        const g = actor.discordId ? actor.guildId ?? null : null;
-        const home = (await this.cfg.get()).homeGuildId ?? null;
-        if (!g || g === home)
-            return;
-        if (!home) {
-            if (!(await this.prisma.cadServerLink.count()))
-                return;
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Der Discord-Server der Leitstelle ist noch nicht eingestellt (CAD → Einstellungen → Allgemein).');
-        }
-        const link = await this.prisma.cadServerLink.findFirst({ where: { active: true, sourceGuildId: home, targetGuildId: g, allowActions: { has: action } } });
-        if (!link)
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Dieser Discord-Server ist für diese Aktion nicht mit der Leitstelle verbunden.');
-        if (link.roleIds.length && !memberRoleIds.some((r) => link.roleIds.includes(r)))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Dir fehlt die freigegebene Rolle für diese Server-Verbindung.');
-    }
     /** Fortlaufende Einsatznummer, z. B. E-2026-00421 (Präfix in den CAD-Einstellungen). */
     async nextNumber(tx, prefix) {
         const head = `${prefix}-${new Date().getUTCFullYear()}-`;
-        // Einsatznummern sind global eindeutig → über alle Server zählen (nur die Nummer, keine Inhalte)
-        const last = await (0, guild_context_1.unscoped)(() => tx.incident.findFirst({ where: { number: { startsWith: head } }, orderBy: { number: 'desc' }, select: { number: true } }));
+        const last = await tx.incident.findFirst({ where: { number: { startsWith: head } }, orderBy: { number: 'desc' }, select: { number: true } });
         const n = last ? Number(last.number.slice(head.length)) || 0 : 0;
         return `${head}${String(n + 1).padStart(5, '0')}`;
     }
@@ -193,7 +170,7 @@ let CadService = class CadService {
         const cfg = await this.validateIncident(d);
         const status = d.status ?? cfg.incidentStatuses.find((s) => !s.closed).key;
         const priority = d.priority ?? cfg.priorities[Math.floor(cfg.priorities.length / 2)].key;
-        const guildId = actor.guildId ?? cfg.homeGuildId ?? null;
+        const guildId = (0, guild_context_1.homeGuild)();
         let inc;
         for (let attempt = 0;; attempt++) {
             try {
@@ -231,7 +208,7 @@ let CadService = class CadService {
         this.changed('incident', inc.id);
         this.rt.publish('incidents', 'incident.created', { id: inc.id, number: inc.number });
         if (!inc.restrictRoleIds.length)
-            await this.notify.emit('incident.created', this.incidentPayload(cfg, inc), inc.guildId); // vertrauliche Einsätze nicht nach Discord
+            await this.notify.emit('incident.created', this.incidentPayload(cfg, inc)); // vertrauliche Einsätze nicht nach Discord
         return inc;
     }
     /** Zonen mit automatischer Aktion: Einsatz liegt in der Zone → Hinweis in der Chronik („warn“) bzw. zusätzlich Leitstellenmeldung („notify“). */
@@ -245,7 +222,7 @@ let CadService = class CadService {
                 continue;
             await this.log(this.prisma, inc.id, 'NOTE', `⚠️ Einsatzort liegt in Zone „${z.name}“${z.description ? ` – ${z.description}` : ''}`, actor);
             if (z.autoAction === 'notify')
-                await this.notify.emit('announcement', { text: `Einsatz ${inc.number} (${inc.title}) liegt in der Zone „${z.name}“.`, from: 'CAD' }, inc.guildId);
+                await this.notify.emit('announcement', { text: `Einsatz ${inc.number} (${inc.title}) liegt in der Zone „${z.name}“.`, from: 'CAD' });
         }
     }
     async updateIncident(actor, id, d) {
@@ -307,7 +284,7 @@ let CadService = class CadService {
         this.rt.publish('incidents', 'incident.status', { id, status });
         const event = st.closed ? 'incident.closed' : 'incident.status';
         if (!after.restrictRoleIds.length)
-            await this.notify.emit(event, this.incidentPayload(cfg, after, { previous: this.label(cfg.incidentStatuses, inc.status), note: note ?? null }), after.guildId);
+            await this.notify.emit(event, this.incidentPayload(cfg, after, { previous: this.label(cfg.incidentStatuses, inc.status), note: note ?? null }));
         return after;
     }
     async addNote(actor, id, text) {
@@ -346,7 +323,7 @@ let CadService = class CadService {
         this.changed('incident', id);
         this.rt.publish('dispatch', 'unit.assigned', { incidentId: id, unitId });
         if (!inc.restrictRoleIds.length)
-            await this.notify.emit('incident.assigned', this.incidentPayload(cfg, inc, { callsign: unit.callsign, unitName: unit.name, unitType: unit.type ? this.label(cfg.unitTypes, unit.type) : null, unitRoleId: unit.discordRoleId }), inc.guildId);
+            await this.notify.emit('incident.assigned', this.incidentPayload(cfg, inc, { callsign: unit.callsign, unitName: unit.name, unitType: unit.type ? this.label(cfg.unitTypes, unit.type) : null, unitRoleId: unit.discordRoleId }));
         return { ok: true };
     }
     async clearUnit(actor, id, unitId) {
@@ -441,14 +418,13 @@ let CadService = class CadService {
     /** Für eine Einheit melden darf: die Leitstelle (cad.assign_unit), die Besatzung oder – aus Discord – die Rolle der Einheit bzw. freigegebene Status-Rollen. */
     async assertUnitReporter(actor, u, memberRoleIds) {
         if (await this.perms.has(actor.userId, 'cad.assign_unit'))
-            return this.assertCrossServer(actor, 'dispatch', memberRoleIds);
+            return;
         const crew = u.members.some((m) => m.userId === actor.userId) || !!(await this.prisma.cadMember.findFirst({ where: { unitId: u.id, OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } }));
         const byRole = memberRoleIds.some((r) => r === u.discordRoleId || u.statusRoleIds.includes(r));
         if (!crew && !byRole)
             throw new errors_1.AppError('PERMISSION_DENIED', 'Nur die Leitstelle, die Besatzung oder freigegebene Rollen dürfen für diese Einheit melden.');
-        await this.assertCrossServer(actor, 'status_report', memberRoleIds);
     }
-    /** Status einer Einheit: Leitstelle (cad.assign_unit) oder ein Besatzungsmitglied selbst (auch vom verbundenen SEK/K9-Server). */
+    /** Status einer Einheit: Leitstelle (cad.assign_unit) oder ein Besatzungsmitglied selbst. */
     async setUnitStatus(actor, id, status, memberRoleIds = []) {
         const cfg = await this.validateUnit({ status });
         const u = await this.prisma.unit.findUnique({ where: { id }, include: { members: true, incidents: { where: { clearedAt: null } } } });
@@ -505,7 +481,7 @@ let CadService = class CadService {
         this.changed('incident', incidentId);
         this.rt.publish('dispatch', 'unit.feedback', { unitId, incidentId, kind: fb.key });
         if (!inc.restrictRoleIds.length) {
-            await this.notify.emit(fb.key === 'support' ? 'incident.support' : 'incident.feedback', this.incidentPayload(cfg, inc, { callsign: u.callsign, feedback: `${fb.emoji} ${fb.label}`, feedbackKey: fb.key, note }), inc.guildId);
+            await this.notify.emit(fb.key === 'support' ? 'incident.support' : 'incident.feedback', this.incidentPayload(cfg, inc, { callsign: u.callsign, feedback: `${fb.emoji} ${fb.label}`, feedbackKey: fb.key, note }));
         }
         return { ok: true, incidentId, number: inc.number, callsign: u.callsign, unitStatus };
     }
@@ -598,8 +574,7 @@ let CadService = class CadService {
         const units = await this.prisma.unit.findMany({ where: dispatcher ? {} : { id: member?.unitId ?? '00000000-0000-0000-0000-000000000000' }, select: { id: true, callsign: true, name: true }, orderBy: { callsign: 'asc' } });
         return { units, mine: member?.unitId ?? null, dispatcher };
     }
-    async sendRadio(actor, d, memberRoleIds = []) {
-        await this.assertCrossServer(actor, 'radio', memberRoleIds);
+    async sendRadio(actor, d) {
         // Leitstelle darf für jede Einheit/jeden Einsatz funken; alle anderen nur als eigene Einheit in deren Einsätze
         const dispatcher = await this.perms.has(actor.userId, 'cad.assign_unit');
         const member = await this.prisma.cadMember.findFirst({ where: { OR: [{ userId: actor.userId }, ...(actor.discordId ? [{ discordId: actor.discordId }] : [])] } });
@@ -622,8 +597,7 @@ let CadService = class CadService {
             incidentId = (await this.prisma.incidentUnit.findFirst({ where: { unitId: unit.id, clearedAt: null }, orderBy: { assignedAt: 'desc' } }))?.incidentId ?? null;
         const callsign = (dispatcher ? d.callsign : null) ?? unit?.callsign ?? member?.callsign ?? null;
         const msg = await this.prisma.$transaction(async (tx) => {
-            // Funkmeldung gehört zur Leitstelle, in deren Bereich sie läuft (bei Querverbindung: Leitstelle, nicht der sendende Server)
-            const row = await tx.cadRadioMessage.create({ data: { text: d.text, callsign, unitId: unit?.id ?? null, incidentId, authorId: actor.userId, discordId: actor.discordId ?? null, guildId: (0, guild_context_1.currentGuild)() ?? actor.guildId ?? null } });
+            const row = await tx.cadRadioMessage.create({ data: { text: d.text, callsign, unitId: unit?.id ?? null, incidentId, authorId: actor.userId, discordId: actor.discordId ?? null, guildId: (0, guild_context_1.homeGuild)() } });
             if (incidentId)
                 await this.log(tx, incidentId, 'RADIO', `${callsign ?? 'Funk'}: „${d.text}“`, actor, unit?.id);
             await this.audit.record(actor, { action: 'cad.radio', module: 'cad', entityType: 'CadRadioMessage', entityId: row.id, after: { callsign, incidentId, crossServer: !!actor.guildId } }, tx);
@@ -631,13 +605,13 @@ let CadService = class CadService {
         });
         this.changed('radio', msg.id);
         const inc = incidentId ? await this.prisma.incident.findUnique({ where: { id: incidentId }, select: { number: true, guildId: true } }) : null;
-        await this.notify.emit('radio', { id: msg.id, callsign, text: d.text, incidentNumber: inc?.number ?? null }, inc?.guildId ?? null);
+        await this.notify.emit('radio', { id: msg.id, callsign, text: d.text, incidentNumber: inc?.number ?? null });
         return { ...msg, incidentNumber: inc?.number ?? null };
     }
-    /** Wichtige Leitstellenmeldung an alle konfigurierten Kanäle (inkl. verbundener Server). */
+    /** Wichtige Leitstellenmeldung an alle konfigurierten Kanäle. */
     async announce(actor, text) {
         await this.audit.record(actor, { action: 'cad.announcement', module: 'cad', after: { text } });
-        const t = await this.notify.emit('announcement', { text, from: (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName ?? null }, actor.guildId ?? null);
+        const t = await this.notify.emit('announcement', { text, from: (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName ?? null });
         return { channels: t?.channelIds.length ?? 0 };
     }
     // ───────── Zuordnung Discord ↔ Roblox ↔ ER:LC ↔ Team ↔ Einheit ─────────
@@ -727,41 +701,6 @@ let CadService = class CadService {
             await this.audit.record(actor, { action: `cad.map.${o.kind === 'ZONE' ? 'zone' : 'poi'}.delete`, module: 'cad', entityType: 'CadMapObject', entityId: id, before: o }, tx);
         });
         this.changed('map', id);
-    }
-    // ───────── Server-Verbindungen ─────────
-    listLinks() { return this.prisma.cadServerLink.findMany({ orderBy: { name: 'asc' } }); }
-    async saveLink(actor, id, d) {
-        const before = id ? await this.prisma.cadServerLink.findUnique({ where: { id } }) : null;
-        if (id && !before)
-            throw new errors_1.AppError('NOT_FOUND', 'Server-Verbindung nicht gefunden.');
-        const src = d.sourceGuildId ?? before?.sourceGuildId, dst = d.targetGuildId ?? before?.targetGuildId;
-        if (src && src === dst)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Quelle und Ziel müssen verschiedene Server sein.');
-        const data = { ...d, channels: d.channels === undefined ? undefined : d.channels };
-        try {
-            const row = await this.prisma.$transaction(async (tx) => {
-                const r = id ? await tx.cadServerLink.update({ where: { id }, data }) : await tx.cadServerLink.create({ data: data });
-                await this.audit.record(actor, { action: id ? 'cad.link.update' : 'cad.link.create', module: 'cad', entityType: 'CadServerLink', entityId: r.id, before, after: d }, tx);
-                return r;
-            });
-            this.changed('link', row.id);
-            return row;
-        }
-        catch (e) {
-            if (e instanceof client_1.Prisma.PrismaClientKnownRequestError && e.code === 'P2002')
-                throw new errors_1.AppError('CONFLICT', 'Diese Server-Verbindung gibt es schon (gleiche Richtung).');
-            throw e;
-        }
-    }
-    async deleteLink(actor, id) {
-        const l = await this.prisma.cadServerLink.findUnique({ where: { id } });
-        if (!l)
-            throw new errors_1.AppError('NOT_FOUND', 'Server-Verbindung nicht gefunden.');
-        await this.prisma.$transaction(async (tx) => {
-            await tx.cadServerLink.delete({ where: { id } });
-            await this.audit.record(actor, { action: 'cad.link.delete', module: 'cad', entityType: 'CadServerLink', entityId: id, before: l }, tx);
-        });
-        this.changed('link', id);
     }
     // ───────── Protokolle & Übersicht ─────────
     async logs(take = 200) {

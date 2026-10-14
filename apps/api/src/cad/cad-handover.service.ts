@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { recordWhere } from '../common/guild-context';
+import { homeGuild } from '../common/guild-context';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -39,7 +39,7 @@ export class CadHandoverService {
       this.prisma.incident.findMany({ where: { status: { notIn: closed } }, orderBy: { createdAt: 'asc' }, take: 100, include: { units: { where: { clearedAt: null }, include: { unit: { select: { callsign: true } } } } } }),
       this.prisma.unit.findMany({ where: { operational: true, status: { notIn: ['OFF_DUTY'] } }, orderBy: { callsign: 'asc' }, include: { incidents: { where: { clearedAt: null }, include: { incident: { select: { number: true, restrictRoleIds: true } } } } } }),
       this.prisma.erlcEmergencyCall.findMany({ where: { status: { in: ['OPEN', 'CLAIMED'] }, incidentId: null }, orderBy: { startedAt: 'asc' }, take: 50 }),
-      this.prisma.cadIncidentLog.findMany({ where: { kind: { in: ['STATUS', 'FEEDBACK'] }, createdAt: { gte: since }, incident: { restrictRoleIds: { isEmpty: true }, ...recordWhere() } }, orderBy: { createdAt: 'desc' }, take: 25, include: { incident: { select: { number: true } } } }),
+      this.prisma.cadIncidentLog.findMany({ where: { kind: { in: ['STATUS', 'FEEDBACK'] }, createdAt: { gte: since }, incident: { restrictRoleIds: { isEmpty: true } } }, orderBy: { createdAt: 'desc' }, take: 25, include: { incident: { select: { number: true } } } }),
     ]);
     // vertrauliche Einsätze stehen nur als Anzahl in der Übergabe – sie ist für alle mit cad.view sichtbar
     const visible = open.filter((i) => !i.restrictRoleIds.length);
@@ -75,9 +75,8 @@ export class CadHandoverService {
   }
 
   async create(actor: CadActor, notes: string) {
-    const cfg = await this.cfg.get();
     const snapshot = await this.snapshot();
-    const guildId = actor.guildId ?? cfg.homeGuildId ?? null;
+    const guildId = homeGuild();
     const row = await this.prisma.$transaction(async (tx) => {
       const h = await tx.cadHandover.create({ data: { notes, snapshot: snapshot as unknown as Prisma.InputJsonValue, createdById: actor.userId, guildId } });
       await this.audit.record(actor, { action: 'cad.handover.create', module: 'cad', entityType: 'CadHandover', entityId: h.id, after: { notes, incidents: snapshot.incidents.length, units: snapshot.units.length, calls: snapshot.calls.length } }, tx);
@@ -88,7 +87,7 @@ export class CadHandoverService {
     await this.notify.emit('handover', {
       id: row.id, by, notes: notes.slice(0, 1500), openIncidents: snapshot.incidents.length + snapshot.confidentialIncidents, activeUnits: snapshot.units.filter((u) => u.incident).length,
       openCalls: snapshot.calls.length, incidents: snapshot.incidents.slice(0, 10).map((i) => `${i.number} · ${i.title} (${i.status})`), dashboardUrl: webUrl('/cad/handover'),
-    }, guildId);
+    });
     return row;
   }
 

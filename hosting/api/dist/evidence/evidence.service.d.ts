@@ -11,16 +11,16 @@ export declare class EvidenceService {
     list(p: PageQuery): Promise<{
         items: {
             number: string;
-            serverId: string | null;
             id: string;
-            type: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            type: string;
             description: string;
-            caseRef: string | null;
-            source: string | null;
             ownerId: string | null;
+            source: string | null;
+            caseRef: string | null;
             storageLocation: string | null;
             custodyState: string;
         }[];
@@ -31,27 +31,27 @@ export declare class EvidenceService {
     get(id: string): Promise<{
         transfers: {
             id: string;
-            createdAt: Date;
             reason: string;
-            evidenceId: string;
+            createdAt: Date;
+            confirmed: boolean;
             fromUserId: string | null;
             toUserId: string | null;
             fromState: string;
             toState: string;
-            confirmed: boolean;
+            evidenceId: string;
         }[];
     } & {
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
@@ -64,16 +64,16 @@ export declare class EvidenceService {
         personIds?: string[];
     }): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;
@@ -85,16 +85,16 @@ export declare class EvidenceService {
         storageLocation?: string;
     }): Promise<{
         number: string;
-        serverId: string | null;
         id: string;
-        type: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        type: string;
         description: string;
-        caseRef: string | null;
-        source: string | null;
         ownerId: string | null;
+        source: string | null;
+        caseRef: string | null;
         storageLocation: string | null;
         custodyState: string;
     }>;

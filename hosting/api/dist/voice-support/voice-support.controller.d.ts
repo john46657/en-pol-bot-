@@ -10,14 +10,11 @@ declare const guildQ: z.ZodObject<{
     guildId?: string | undefined;
 }>;
 declare const casesQ: z.ZodObject<{
-    guildId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "WAITING", "CLAIMED", "DECLINED", "ABANDONED", "CLOSED"]>>;
 }, "strip", z.ZodTypeAny, {
     status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
-    guildId?: string | undefined;
 }, {
     status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
-    guildId?: string | undefined;
 }>;
 declare const voice: z.ZodObject<{
     guildId: z.ZodString;
@@ -25,13 +22,13 @@ declare const voice: z.ZodObject<{
     discordId: z.ZodString;
     userName: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    guildId: string;
     discordId: string;
+    guildId: string;
     channelId: string;
     userName: string;
 }, {
-    guildId: string;
     discordId: string;
+    guildId: string;
     channelId: string;
     userName?: string | undefined;
 }>;
@@ -86,58 +83,58 @@ declare const staff: z.ZodObject<{
 export declare class VoiceSupportController {
     private readonly s;
     constructor(s: VoiceSupportService);
-    rooms(q: z.infer<typeof guildQ>): Promise<VoiceSupportRoom[]>;
-    save(a: Actor, q: z.infer<typeof guildQ>, b: VoiceSupportRoom[]): Promise<VoiceSupportRoom[]>;
+    rooms(): Promise<VoiceSupportRoom[]>;
+    save(a: Actor, b: VoiceSupportRoom[]): Promise<VoiceSupportRoom[]>;
     cases(q: z.infer<typeof casesQ>): Promise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
         userId: string;
         guildId: string;
-        closedAt: Date | null;
         channelId: string | null;
+        userName: string;
+        status: string;
+        claimedById: string | null;
+        closedAt: Date | null;
+        messages: number;
+        rating: number | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        claimedById: string | null;
+        notifyChannelId: string | null;
         roomId: string;
         roomName: string;
-        userName: string;
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
-        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
-        messages: number;
-        rating: number | null;
     }[]>;
     /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
     action(a: Actor, id: string, b: z.infer<typeof webAction>): Promise<{
         number: string;
         id: string;
-        status: string;
         createdAt: Date;
         userId: string;
         guildId: string;
-        closedAt: Date | null;
         channelId: string | null;
+        userName: string;
+        status: string;
+        claimedById: string | null;
+        closedAt: Date | null;
+        messages: number;
+        rating: number | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        claimedById: string | null;
+        notifyChannelId: string | null;
         roomId: string;
         roomName: string;
-        userName: string;
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
-        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
-        messages: number;
-        rating: number | null;
     }>;
 }
 /** Dienstweg des Bots. Team-Aktionen tragen Discord-ID, Name und Rollen der klickenden Person (Team-Rolle des Raums). */
@@ -198,7 +195,7 @@ export declare class BotVoiceSupportController {
             buttons: {
                 id: string;
                 label: string;
-                style: "success" | "danger" | "secondary";
+                style: "danger" | "success" | "secondary";
             }[];
         } | null;
         closed: boolean;
@@ -294,7 +291,7 @@ export declare class BotVoiceSupportController {
             buttons: {
                 id: string;
                 label: string;
-                style: "success" | "danger" | "secondary";
+                style: "danger" | "success" | "secondary";
             }[];
         } | null;
     }>;

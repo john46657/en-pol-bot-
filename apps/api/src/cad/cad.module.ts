@@ -2,7 +2,6 @@ import { Logger, Module, type OnApplicationBootstrap, type OnModuleDestroy } fro
 import { MediaModule } from '../media/media.module';
 import { FleetModule } from '../fleet/fleet.module';
 import { CadController, ErlcController } from './cad.controller';
-import { CadLinkInterceptor } from './cad-link.interceptor';
 import { CadService } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
 import { CadConfigService } from './cad-config.service';
@@ -16,7 +15,7 @@ import { ErlcSyncService } from './erlc-sync.service';
 @Module({
   imports: [MediaModule, FleetModule],
   controllers: [CadController, ErlcController],
-  providers: [CadLinkInterceptor, CadService, CadTabletService, CadConfigService, CadNotifyService, CadHandoverService, CadStatsService, ErlcService, ErlcSyncService],
+  providers: [CadService, CadTabletService, CadConfigService, CadNotifyService, CadHandoverService, CadStatsService, ErlcService, ErlcSyncService],
   exports: [CadService, CadConfigService, ErlcService],
 })
 export class CadModule implements OnApplicationBootstrap, OnModuleDestroy {

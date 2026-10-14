@@ -53,4 +53,4 @@ Jeder Menüpunkt erscheint nur mit dem passenden Recht. Die API prüft dieselben
 - `weapons` (GET, POST), `weapons/:id` (PATCH)
 - `warrants`
 
-Bürger, Fahrzeuge und Waffen gelten je gewähltem Discord-Server bzw. Server-Verbund (Akten-Bereich).
+Bürger, Fahrzeuge und Waffen sind ein gemeinsamer Bestand (ein Discord-Server, siehe [single-server.md](single-server.md)).

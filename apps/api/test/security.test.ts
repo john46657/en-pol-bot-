@@ -4,7 +4,7 @@ import { DiscoveryService, Reflector } from '@nestjs/core';
 import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY, SERVICE_AUTHORIZED_KEY } from '../src/authz/decorators';
+import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from '../src/authz/decorators';
 
 let app: INestApplication; let prisma: PrismaService;
 beforeAll(async () => {
@@ -39,9 +39,8 @@ describe('route authorization coverage', () => {
         const perms = reflector.getAllAndOverride<string[]>(PERMISSION_KEY, [handler, w.metatype!]);
         const bot = reflector.getAllAndOverride<boolean>(BOT_SERVICE_KEY, [handler, w.metatype!]);
         const pub = reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [handler, w.metatype!]);
-        const inService = reflector.getAllAndOverride<boolean>(SERVICE_AUTHORIZED_KEY, [handler, w.metatype!]);
         const key = `${w.metatype!.name}.${name}`;
-        if (!perms?.length && !pub && !bot && !inService && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
+        if (!perms?.length && !pub && !bot && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
       }
     }
     expect(missing).toEqual([]);

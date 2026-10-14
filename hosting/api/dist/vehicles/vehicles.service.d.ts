@@ -17,18 +17,18 @@ export declare class VehiclesService {
                 robloxUsername: string;
             } | null;
         } & {
-            serverId: string | null;
-            model: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
             color: string | null;
-            notes: string | null;
+            status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
+            notes: string | null;
             plate: string;
+            ownerId: string | null;
             erlcReference: string | null;
         })[];
         total: number;
@@ -38,18 +38,18 @@ export declare class VehiclesService {
     get(id: string): Promise<{
         vehicle: {
             owner: {
-                serverId: string | null;
                 id: string;
-                status: string;
+                serverId: string | null;
                 createdAt: Date;
+                robloxUserId: string | null;
+                robloxUsername: string;
                 updatedAt: Date;
                 version: number;
                 createdById: string | null;
-                robloxUserId: string | null;
-                robloxUsername: string;
+                status: string;
+                custom: Prisma.JsonValue | null;
                 aliases: string[];
                 notes: string | null;
-                custom: Prisma.JsonValue | null;
                 fullName: string | null;
                 dateOfBirth: Date | null;
                 gender: string | null;
@@ -63,27 +63,27 @@ export declare class VehiclesService {
                 photoId: string | null;
             } | null;
         } & {
-            serverId: string | null;
-            model: string | null;
             id: string;
-            status: string;
+            serverId: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
             color: string | null;
-            notes: string | null;
+            status: string;
             custom: Prisma.JsonValue | null;
+            model: string | null;
+            notes: string | null;
             plate: string;
+            ownerId: string | null;
             erlcReference: string | null;
         };
         timeline: {
             id: string;
-            createdAt: Date;
+            action: string;
             entityType: string;
             entityId: string;
+            createdAt: Date;
             summary: string;
-            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -96,33 +96,33 @@ export declare class VehiclesService {
         erlcReference?: string;
         custom?: Record<string, unknown>;
     }): Promise<{
-        serverId: string | null;
-        model: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        ownerId: string | null;
         color: string | null;
-        notes: string | null;
+        status: string;
         custom: Prisma.JsonValue | null;
+        model: string | null;
+        notes: string | null;
         plate: string;
+        ownerId: string | null;
         erlcReference: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
-        serverId: string | null;
-        model: string | null;
         id: string;
-        status: string;
+        serverId: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        ownerId: string | null;
         color: string | null;
-        notes: string | null;
+        status: string;
         custom: Prisma.JsonValue | null;
+        model: string | null;
+        notes: string | null;
         plate: string;
+        ownerId: string | null;
         erlcReference: string | null;
     }>;
 }

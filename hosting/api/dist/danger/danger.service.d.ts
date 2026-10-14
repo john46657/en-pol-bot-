@@ -31,43 +31,43 @@ export declare const dangerConfigSchema: z.ZodObject<{
         /** nur diese Discord-Rollen dürfen auf diese Stufe schalten (leer = alle mit dispatch.manage) */
         allowRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        title: string;
         name: string;
-        color: string;
-        key: string;
-        emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        key: string;
+        color: string;
+        emoji: string;
+        title: string;
+        buttonStyle: "danger" | "success" | "primary" | "secondary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }, {
-        title: string;
         name: string;
-        color: string;
-        key: string;
-        emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        key: string;
+        color: string;
+        emoji: string;
+        title: string;
+        buttonStyle: "danger" | "success" | "primary" | "secondary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }>, "many">, {
-        title: string;
         name: string;
-        color: string;
-        key: string;
-        emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        key: string;
+        color: string;
+        emoji: string;
+        title: string;
+        buttonStyle: "danger" | "success" | "primary" | "secondary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[], {
-        title: string;
         name: string;
-        color: string;
-        key: string;
-        emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        key: string;
+        color: string;
+        emoji: string;
+        title: string;
+        buttonStyle: "danger" | "success" | "primary" | "secondary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[]>;
@@ -77,13 +77,13 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: string;
     buttonEmoji: string;
     levels: {
-        title: string;
         name: string;
-        color: string;
-        key: string;
-        emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        key: string;
+        color: string;
+        emoji: string;
+        title: string;
+        buttonStyle: "danger" | "success" | "primary" | "secondary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -94,13 +94,13 @@ export declare const dangerConfigSchema: z.ZodObject<{
     panelText: string;
     buttonEmoji: string;
     levels: {
-        title: string;
         name: string;
-        color: string;
-        key: string;
-        emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
         text: string;
+        key: string;
+        color: string;
+        emoji: string;
+        title: string;
+        buttonStyle: "danger" | "success" | "primary" | "secondary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -127,7 +127,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
         }[];
         panel: {
             title: string;
@@ -151,7 +151,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "danger" | "success" | "primary" | "secondary";
         }[];
         panel: {
             title: string;

@@ -67,13 +67,11 @@ export declare class DiscordService {
     resolveUser(discordId: string): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        version: number;
         username: string;
-        displayName: string;
         email: string | null;
-        passwordHash: string;
         robloxUserId: string | null;
+        displayName: string;
+        passwordHash: string;
         robloxUsername: string | null;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
@@ -87,6 +85,8 @@ export declare class DiscordService {
         totpEnabledAt: Date | null;
         totpLastStep: number | null;
         totpRecovery: string[];
+        updatedAt: Date;
+        version: number;
     } | null>;
     channels(): Promise<DiscordChannels>;
     /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
@@ -114,7 +114,10 @@ export declare class DiscordService {
         queued: boolean;
         linked: boolean;
     }>;
-    /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
+    /**
+     * Der Discord-Server dieses Systems mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im
+     * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
+     */
     guilds(): Promise<DiscordGuildInfo[]>;
     saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;
     /**
@@ -135,8 +138,8 @@ export declare class DiscordService {
     setState(key: string, value: unknown): Promise<void>;
     pending(limit: number): Prisma.PrismaPromise<{
         id: string;
-        type: string;
         createdAt: Date;
+        type: string;
         channelKey: string;
         payload: Prisma.JsonValue;
         attempts: number;

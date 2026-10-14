@@ -1,29 +1,24 @@
 import { type CadEvent } from '@enrp/shared';
-import { PrismaService } from '../prisma/prisma.service';
 import { DiscordService } from '../discord/discord.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { CadConfigService } from './cad-config.service';
 /**
- * Überträgt CAD-Ereignisse nach Discord. Zielkanäle kommen ausschließlich aus der Konfiguration:
- * 1. Kanalzuordnungen (CAD-Einstellungen → Discord) des Heimat-Servers des Ereignisses,
- * 2. aktive Server-Verbindungen, deren Datenart das Ereignis erlaubt (Kanäle der Verbindung + Zuordnungen des Ziel-Servers).
- * Nichts ist hartcodiert; ohne Konfiguration wird nichts gesendet.
+ * Überträgt CAD-Ereignisse nach Discord. Zielkanäle kommen ausschließlich aus der Konfiguration (CAD-Einstellungen → Discord).
+ * Nichts ist hartcodiert; ohne Konfiguration wird nichts gesendet. Zuordnungen, die noch auf einen anderen Discord-Server
+ * zeigen (aus der früheren Multi-Server-Zeit), werden nicht mehr bedient.
  */
 export declare class CadNotifyService {
-    private readonly prisma;
     private readonly discord;
     private readonly cfg;
     private readonly rt;
-    constructor(prisma: PrismaService, discord: DiscordService, cfg: CadConfigService, rt: RealtimeService);
-    targets(event: CadEvent, guildId: string | null): Promise<{
+    constructor(discord: DiscordService, cfg: CadConfigService, rt: RealtimeService);
+    targets(event: CadEvent): Promise<{
         channelIds: string[];
         pingRoleIds: string[];
-        linkedGuilds: string[];
     }>;
     /** Best effort: Fehler beim Benachrichtigen stören den Fachprozess nie. */
-    emit(event: CadEvent, payload: Record<string, unknown>, guildId: string | null): Promise<{
+    emit(event: CadEvent, payload: Record<string, unknown>): Promise<{
         channelIds: string[];
         pingRoleIds: string[];
-        linkedGuilds: string[];
     } | null>;
 }

@@ -15,8 +15,12 @@ const KEY = 'backup.config';
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
 const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
-const FILE = /^(auto|manuell|vor-wiederherstellung)-(\d{8}-\d{6})\.json\.gz$/;
+const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung)-(\d{8}-\d{6})\.json\.gz$/;
+export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung';
 const delegate = (name: string) => name.charAt(0).toLowerCase() + name.slice(1);
+/** Nach dem Einspielen (z. B. eines Backups von vor der Umstellung auf einen Server): gesetzt vom SingleServerMigrationService. */
+let afterRestore: (() => Promise<unknown>) | null = null;
+export const setAfterRestore = (fn: (() => Promise<unknown>) | null) => { afterRestore = fn; };
 
 /** Tabellen in einer Reihenfolge, in der jede Tabelle nach denen kommt, auf die sie verweist (zum Einspielen). */
 function modelOrder() {
@@ -63,7 +67,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     return v;
   }
 
-  /** Täglich: Daten-Backup und (falls an) Discord-Backup je Server; alte automatische Backups aufräumen. */
+  /** Täglich: Daten-Backup und (falls an) Discord-Backup; alte automatische Backups aufräumen. */
   async autoTick(now = new Date()) {
     const cfg = await this.config();
     const day = 23 * 60 * 60_000;
@@ -89,13 +93,13 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       const m = FILE.exec(name)!;
       const st = await stat(path.join(this.dir, name));
       const t = m[2]!;
-      return { name, kind: m[1] as 'auto' | 'manuell' | 'vor-wiederherstellung', size: st.size, createdAt: new Date(`${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}T${t.slice(9, 11)}:${t.slice(11, 13)}:${t.slice(13, 15)}Z`).toISOString() };
+      return { name, kind: m[1] as DataBackupKind, size: st.size, createdAt: new Date(`${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}T${t.slice(9, 11)}:${t.slice(11, 13)}:${t.slice(13, 15)}Z`).toISOString() };
     }));
     return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   /** Alle Tabellen als JSON (gzip) in den Speicherordner; automatische werden auf „keep“ begrenzt. */
-  async createData(actor: Actor | null, kind: 'auto' | 'manuell' | 'vor-wiederherstellung' = 'manuell') {
+  async createData(actor: Actor | null, kind: DataBackupKind = 'manuell') {
     await mkdir(this.dir, { recursive: true });
     const tables: Record<string, unknown[]> = {};
     let rows = 0;
@@ -163,6 +167,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       for (let i = 0; i < weeks.length; i += 500) await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
     }, { timeout: 10 * 60_000, maxWait: 30_000 });
     await this.audit.record(actor, { action: 'backup.data.restore', module: 'settings', entityType: 'Backup', entityId: source.name ?? 'upload', after: { rows, safety: safety.name } });
+    if (afterRestore) await afterRestore().catch((e) => this.log.warn(`Nach dem Einspielen: ${e instanceof Error ? e.message : e}`));
     return { rows, safety: safety.name };
   }
 
@@ -189,7 +194,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     await this.prisma.discordBackup.delete({ where: { id } });
     await this.audit.record(actor, { action: 'backup.discord.delete', module: 'settings', entityType: 'DiscordBackup', entityId: id });
   }
-  /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). Ziel kann ein anderer Server sein. */
+  /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). */
   async restoreDiscord(actor: Actor, id: string, d: { guildId?: string; parts: BackupPart[] }) {
     const b = await this.getDiscord(id);
     if (b.status !== 'READY') throw new AppError('CONFLICT', 'Das Backup ist noch nicht fertig.');
