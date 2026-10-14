@@ -9,7 +9,7 @@ import { errText } from '../../lib/tickets';
 import { onSaved, useAutosaveDraft } from '../../lib/autosave';
 import { fmtDate, type Overview } from '../../lib/hr';
 import { Toggle } from '../../components/ApplicationSettings';
-import { RolePicker } from '../../components/DiscordPickers';
+import { RolePicker, TagListEditor } from '../../components/DiscordPickers';
 import { SaveStatus } from '../../components/SaveStatus';
 import { TrainingSessionsTab } from './TrainingSessions';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea, type Tone } from '../../components/ui';
@@ -26,11 +26,11 @@ const statusOf = (s: string) => STATUS_INFO[s as TrainingStatus] ?? { label: s, 
 
 interface TrainingInput {
   name: string; description: string | null; requirements: string | null; instructorIds: string[]; duration: string | null; active: boolean; examRequired: boolean;
-  examId: string | null; certificate: boolean; audience: string | null; requiredRoleId: string | null; validDays: number | null;
+  examId: string | null; certificate: boolean; audience: string | null; requiredRoleId: string | null; validDays: number | null; modules: string[];
 }
 interface Training extends TrainingInput { id: string; position: number; passed: number; createdAt: string; updatedAt: string }
 interface ProgressRow {
-  id: string; trainingId: string; personnelId: string; status: string; progress: number; examinerId: string | null; note: string | null; startedAt: string | null; completedAt: string | null;
+  id: string; trainingId: string; personnelId: string; status: string; progress: number; doneModules: string[]; examinerId: string | null; note: string | null; startedAt: string | null; completedAt: string | null;
   expiresAt: string | null; certificateNo: string | null; updatedAt: string; personnel: { id: string; rank: string | null; user: { displayName: string } };
 }
 interface MyAttempt { examId: string; status: string; passed: boolean | null; score: number | null; maxScore: number | null; submittedAt: string | null; startedAt: string }
@@ -163,6 +163,7 @@ function TrainingsTab() {
                 {t.certificate && <Badge tone="primary" icon="📜">Zertifikat</Badge>}
                 {t.duration && <Badge icon="⏱️">{t.duration}</Badge>}
                 {t.validDays && <Badge tone="warning">{t.validDays} Tage gültig</Badge>}
+                {t.modules.length > 0 && <Badge icon="☑️">{t.modules.length} Module</Badge>}
               </div>
             </li>
           ))}
@@ -173,7 +174,7 @@ function TrainingsTab() {
   );
 }
 
-const emptyTraining = (): TrainingInput => ({ name: '', description: null, requirements: null, instructorIds: [], duration: null, active: true, examRequired: false, examId: null, certificate: true, audience: null, requiredRoleId: null, validDays: null });
+const emptyTraining = (): TrainingInput => ({ name: '', description: null, requirements: null, instructorIds: [], duration: null, active: true, examRequired: false, examId: null, certificate: true, audience: null, requiredRoleId: null, validDays: null, modules: [] });
 const trainingBody = (d: TrainingInput): TrainingInput => ({
   ...d, name: d.name.trim(), description: nullIfEmpty(d.description), requirements: nullIfEmpty(d.requirements), duration: nullIfEmpty(d.duration), audience: nullIfEmpty(d.audience),
   validDays: d.validDays && d.validDays > 0 ? d.validDays : null,
@@ -186,8 +187,8 @@ function TrainingEditor({ value, onClose }: { value: Training | 'new'; onClose: 
   const id = isNew ? null : value.id;
   const [d, setD] = useState<TrainingInput>(() => {
     if (value === 'new') return emptyTraining();
-    const { name, description, requirements, instructorIds, duration, active, examRequired, examId, certificate, audience, requiredRoleId, validDays } = value;
-    return { name, description, requirements, instructorIds, duration, active, examRequired, examId, certificate, audience, requiredRoleId, validDays };
+    const { name, description, requirements, instructorIds, duration, active, examRequired, examId, certificate, audience, requiredRoleId, validDays, modules } = value;
+    return { name, description, requirements, instructorIds, duration, active, examRequired, examId, certificate, audience, requiredRoleId, validDays, modules: modules ?? [] };
   });
   const [err, setErr] = useState<string>();
   const [del, setDel] = useState(false);
@@ -221,6 +222,9 @@ function TrainingEditor({ value, onClose }: { value: Training | 'new'; onClose: 
           <L label="Benötigte Discord-Rolle (optional)"><RolePicker ariaLabel="Benötigte Discord-Rolle" max={1} value={d.requiredRoleId ? [d.requiredRoleId] : []} onChange={(ids) => set({ requiredRoleId: ids[0] ?? null })} /></L>
           <L label="Ablauf in Tagen (optional)" hint="Leer = unbegrenzt gültig"><Input aria-label="Ablauf in Tagen" type="number" min={1} max={3650} value={d.validDays ?? ''} onChange={(e) => set({ validDays: e.target.value ? Number(e.target.value) : null })} /></L>
         </div>
+        <L label="Module (Checkliste)" hint="In der Reihenfolge der Ausbildung. Ausbilder haken sie pro Person ab, der Fortschritt ergibt sich daraus; „Bestanden“ erst, wenn alle Module erledigt sind. Leer = Fortschritt in Prozent von Hand.">
+          <TagListEditor ariaLabel="Modul hinzufügen" ordered value={d.modules} placeholder="z. B. Funkverkehr + Enter" onChange={(v) => set({ modules: v })} />
+        </L>
         <div className="grid gap-3 md:grid-cols-3">
           <Switch label="Aktiv" checked={d.active} onChange={(v) => set({ active: v })} />
           <Switch label="Zertifikat ausstellen" checked={d.certificate} onChange={(v) => set({ certificate: v })} />
@@ -270,7 +274,7 @@ function TrainingDetail({ t, onBack, onEdit, editor }: { t: Training; onBack: ()
   const [err, setErr] = useState<string>();
   const [add, setAdd] = useState('');
   const save = useMutation({
-    mutationFn: (b: { personnelId: string; status: string; progress?: number; note?: string | null }) => api('/hr/training-progress', { method: 'PUT', body: { trainingId: t.id, ...b } }),
+    mutationFn: (b: { personnelId: string; status: string; progress?: number; doneModules?: string[]; note?: string | null }) => api('/hr/training-progress', { method: 'PUT', body: { trainingId: t.id, ...b } }),
     onSuccess: () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['hr-trainings'] }); },
     onError: (e) => setErr(errText(e)),
   });
@@ -299,6 +303,12 @@ function TrainingDetail({ t, onBack, onEdit, editor }: { t: Training; onBack: ()
             <dt className="text-muted">Zertifikat</dt><dd>{t.certificate ? 'ja' : 'nein'}</dd>
           </dl>
         </div>
+        {t.modules.length > 0 && (
+          <div className="mt-3 text-sm">
+            <p className="mb-1 text-xs font-medium text-muted">Module</p>
+            <ol className="list-inside list-decimal grid gap-0.5">{t.modules.map((m) => <li key={m}>{m}</li>)}</ol>
+          </div>
+        )}
       </Card>
       <Card title={`Fortschritt (${rows.length})`} actions={canSet && candidates.length > 0 && (
         <div className="flex items-center gap-2">
@@ -328,7 +338,10 @@ function TrainingDetail({ t, onBack, onEdit, editor }: { t: Training; onBack: ()
                     <td className="p-2">
                       <div className="flex items-center gap-2">
                         <ProgressBar value={r.progress} />
-                        {canSet && r.status !== 'PASSED' && <ProgressInput key={`${r.id}-${r.progress}`} initial={r.progress} label={`Fortschritt von ${r.personnel.user.displayName} in Prozent`} onCommit={(v) => save.mutate({ personnelId: r.personnelId, status: r.status === 'NOT_STARTED' && v > 0 ? 'IN_PROGRESS' : r.status, progress: v })} />}
+                        {t.modules.length > 0 ? (
+                          <ModuleChecklist modules={t.modules} done={r.doneModules ?? []} person={r.personnel.user.displayName} disabled={!canSet || save.isPending || r.status === 'PASSED' || r.status === 'EXPIRED'}
+                            onChange={(next) => save.mutate({ personnelId: r.personnelId, status: r.status === 'NOT_STARTED' && next.length > 0 ? 'IN_PROGRESS' : r.status, doneModules: next })} />
+                        ) : canSet && r.status !== 'PASSED' && <ProgressInput key={`${r.id}-${r.progress}`} initial={r.progress} label={`Fortschritt von ${r.personnel.user.displayName} in Prozent`} onCommit={(v) => save.mutate({ personnelId: r.personnelId, status: r.status === 'NOT_STARTED' && v > 0 ? 'IN_PROGRESS' : r.status, progress: v })} />}
                       </div>
                     </td>
                     <td className="p-2">{fmtDate(r.completedAt)}</td>
@@ -344,6 +357,27 @@ function TrainingDetail({ t, onBack, onEdit, editor }: { t: Training; onBack: ()
       </Card>
       {editor}
     </div>
+  );
+}
+
+/** Modul-Checkliste einer Person (aufklappbar); abhaken nur für Ausbilder/Verwalter. */
+function ModuleChecklist({ modules, done, person, disabled, onChange }: { modules: string[]; done: string[]; person: string; disabled: boolean; onChange: (next: string[]) => void }) {
+  const count = modules.filter((m) => done.includes(m)).length;
+  return (
+    <details className="text-xs">
+      <summary className="cursor-pointer select-none text-muted">{count}/{modules.length} Module</summary>
+      <ul className="mt-1 grid gap-1">
+        {modules.map((m) => (
+          <li key={m}>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" aria-label={`${m} – ${person}`} checked={done.includes(m)} disabled={disabled}
+                onChange={(e) => onChange(modules.filter((x) => (x === m ? e.target.checked : done.includes(x))))} />
+              <span className={done.includes(m) ? 'line-through text-muted' : undefined}>{m}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

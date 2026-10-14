@@ -236,6 +236,7 @@ export declare class HrPeopleService {
             personnelId: string;
             trainingId: string;
             progress: number;
+            doneModules: string[];
             examinerId: string | null;
             completedAt: Date | null;
             certificateNo: string | null;

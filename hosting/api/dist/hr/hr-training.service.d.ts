@@ -16,10 +16,12 @@ export declare const trainingSchema: z.ZodObject<{
     audience: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     requiredRoleId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     validDays: z.ZodDefault<z.ZodNullable<z.ZodNumber>>;
+    modules: z.ZodEffects<z.ZodDefault<z.ZodArray<z.ZodString, "many">>, string[], string[] | undefined>;
 }, "strip", z.ZodTypeAny, {
     name: string;
     active: boolean;
     description: string | null;
+    modules: string[];
     duration: string | null;
     requirements: string | null;
     instructorIds: string[];
@@ -33,6 +35,7 @@ export declare const trainingSchema: z.ZodObject<{
     name: string;
     active?: boolean | undefined;
     description?: string | null | undefined;
+    modules?: string[] | undefined;
     duration?: string | null | undefined;
     requirements?: string | null | undefined;
     instructorIds?: string[] | undefined;
@@ -137,6 +140,7 @@ export declare class HrTrainingService {
         active: boolean;
         updatedAt: Date;
         description: string | null;
+        modules: string[];
         duration: string | null;
         position: number;
         requirements: string | null;
@@ -156,6 +160,7 @@ export declare class HrTrainingService {
         active: boolean;
         updatedAt: Date;
         description: string | null;
+        modules: string[];
         duration: string | null;
         position: number;
         requirements: string | null;
@@ -187,6 +192,7 @@ export declare class HrTrainingService {
         personnelId: string;
         trainingId: string;
         progress: number;
+        doneModules: string[];
         examinerId: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
@@ -197,6 +203,7 @@ export declare class HrTrainingService {
         personnelId: string;
         status: (typeof TRAINING_STATUSES)[number];
         progress?: number;
+        doneModules?: string[];
         note?: string | null;
     }): Promise<{
         id: string;
@@ -208,6 +215,7 @@ export declare class HrTrainingService {
         personnelId: string;
         trainingId: string;
         progress: number;
+        doneModules: string[];
         examinerId: string | null;
         completedAt: Date | null;
         certificateNo: string | null;
