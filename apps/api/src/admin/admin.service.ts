@@ -43,6 +43,10 @@ export const SETTING_SCHEMAS = {
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
 
+/** Ungültige gespeicherte Werte (altes Format, unvollständig) weglassen – dann gelten im Dashboard die Standardwerte. */
+const valid = <T extends { key: string; value: unknown }>(rows: T[]) =>
+  rows.filter((r) => { const schema = SETTING_SCHEMAS[r.key.split('@')[0] as SettingKey]; return !schema || schema.safeParse(r.value).success; });
+
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
@@ -54,11 +58,11 @@ export class AdminService {
   async getSettings() {
     const g = settingsGuild(currentGuild());
     if (!g) {
-      const rows = await this.prisma.systemSetting.findMany();
+      const rows = valid(await this.prisma.systemSetting.findMany());
       return { settings: Object.fromEntries(rows.map((r) => [r.key, r.value])), allowedKeys: Object.keys(SETTING_SCHEMAS), serverScoped: PER_SERVER_SETTING_KEYS };
     }
     const keys = Object.keys(SETTING_SCHEMAS);
-    const rows = await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } }); // je Server umgeleitet (server-scope.ts)
+    const rows = valid(await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } })); // je Server umgeleitet (server-scope.ts)
     const settings: Record<string, unknown> = {};
     for (const r of rows) { settings[r.key] = r.value; if (PER_SERVER_SETTING_KEYS.includes(r.key)) settings[`${r.key}@${g}`] = r.value; }
     return { settings, allowedKeys: keys, serverScoped: PER_SERVER_SETTING_KEYS };
