@@ -13,12 +13,12 @@ export declare class InvestigationsService {
         items: {
             id: string;
             serverId: string | null;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            description: string | null;
-            status: string;
             title: string;
+            description: string | null;
             caseNumber: string;
             leadId: string | null;
         }[];
@@ -30,12 +30,12 @@ export declare class InvestigationsService {
         investigation: {
             id: string;
             serverId: string | null;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            description: string | null;
-            status: string;
             title: string;
+            description: string | null;
             caseNumber: string;
             leadId: string | null;
         };
@@ -47,11 +47,11 @@ export declare class InvestigationsService {
         } & {
             role: string;
             id: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
-            vehicleId: string | null;
             personId: string | null;
+            vehicleId: string | null;
+            entityId: string;
+            entityType: string;
         })[];
         evidence: {
             number: string;
@@ -61,11 +61,11 @@ export declare class InvestigationsService {
         }[];
         timeline: {
             id: string;
-            action: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
+            entityId: string;
+            entityType: string;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
@@ -80,12 +80,12 @@ export declare class InvestigationsService {
     }): Promise<{
         id: string;
         serverId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        description: string | null;
-        status: string;
         title: string;
+        description: string | null;
         caseNumber: string;
         leadId: string | null;
     }>;
@@ -93,12 +93,12 @@ export declare class InvestigationsService {
     setStatus(actor: Actor, id: string, to: InvestigationStatus, reason?: string): Promise<{
         id: string;
         serverId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        description: string | null;
-        status: string;
         title: string;
+        description: string | null;
         caseNumber: string;
         leadId: string | null;
     }>;

@@ -11,15 +11,15 @@ declare const createBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     reason: string;
     scopes: string[];
-    name?: string | null | undefined;
     discordId?: string | null | undefined;
+    name?: string | null | undefined;
     expiresAt?: string | null | undefined;
     roblox?: string | null | undefined;
 }, {
     reason: string;
     scopes: string[];
-    name?: string | null | undefined;
     discordId?: string | null | undefined;
+    name?: string | null | undefined;
     expiresAt?: string | null | undefined;
     roblox?: string | null | undefined;
 }>;
@@ -29,45 +29,45 @@ export declare class ApplicationBansController {
     list(q: {
         all?: string;
     }): Promise<{
-        id: string;
-        reason: string;
-        createdAt: Date;
-        name: string;
-        discordId: string | null;
-        expiresAt: Date | null;
         robloxUserId: string | null;
-        guildId: string | null;
+        discordId: string | null;
+        name: string;
+        id: string;
         createdById: string | null;
+        createdAt: Date;
+        reason: string;
+        expiresAt: Date | null;
+        guildId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
         liftedById: string | null;
     }[]>;
     create(a: Actor, b: z.infer<typeof createBody>): Promise<{
-        id: string;
-        reason: string;
-        createdAt: Date;
-        name: string;
-        discordId: string | null;
-        expiresAt: Date | null;
         robloxUserId: string | null;
-        guildId: string | null;
+        discordId: string | null;
+        name: string;
+        id: string;
         createdById: string | null;
+        createdAt: Date;
+        reason: string;
+        expiresAt: Date | null;
+        guildId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;
         liftedById: string | null;
     }>;
     lift(a: Actor, id: string): Promise<{
-        id: string;
-        reason: string;
-        createdAt: Date;
-        name: string;
-        discordId: string | null;
-        expiresAt: Date | null;
         robloxUserId: string | null;
-        guildId: string | null;
+        discordId: string | null;
+        name: string;
+        id: string;
         createdById: string | null;
+        createdAt: Date;
+        reason: string;
+        expiresAt: Date | null;
+        guildId: string | null;
         scopes: string[];
         createdByName: string | null;
         liftedAt: Date | null;

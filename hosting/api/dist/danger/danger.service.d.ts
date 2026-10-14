@@ -32,42 +32,42 @@ export declare const dangerConfigSchema: z.ZodObject<{
         allowRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        text: string;
-        key: string;
         color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }, {
         name: string;
-        text: string;
-        key: string;
         color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }>, "many">, {
         name: string;
-        text: string;
-        key: string;
         color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[], {
         name: string;
-        text: string;
-        key: string;
         color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[]>;
@@ -78,12 +78,12 @@ export declare const dangerConfigSchema: z.ZodObject<{
     buttonEmoji: string;
     levels: {
         name: string;
-        text: string;
-        key: string;
         color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -95,12 +95,12 @@ export declare const dangerConfigSchema: z.ZodObject<{
     buttonEmoji: string;
     levels: {
         name: string;
-        text: string;
-        key: string;
         color: string;
-        emoji: string;
         title: string;
-        buttonStyle: "danger" | "success" | "primary" | "secondary";
+        key: string;
+        emoji: string;
+        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        text: string;
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -127,7 +127,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "danger" | "success" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "primary" | "secondary";
         }[];
         panel: {
             title: string;
@@ -151,7 +151,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "danger" | "success" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "primary" | "secondary";
         }[];
         panel: {
             title: string;

@@ -88,9 +88,9 @@ export declare class FleetController {
             internal: {
                 unitId: string | null;
                 unit: {
-                    id: string;
-                    name: string | null;
                     callsign: string;
+                    name: string | null;
+                    id: string;
                 } | null;
                 status: string;
                 internalCode: string | null;
@@ -102,10 +102,10 @@ export declare class FleetController {
         }[];
         servers: {
             vehiclesEnabled: boolean;
-            id: string;
             name: string;
-            lastError: string | null;
+            id: string;
             status: string;
+            lastError: string | null;
             features: string[];
             lastSyncAt: Date | null;
         }[];
@@ -129,11 +129,11 @@ export declare class FleetController {
             actorName: string | null;
             id: string;
             createdAt: Date;
-            text: string;
-            actorId: string | null;
             incidentId: string | null;
             vehicleId: string;
             kind: string;
+            actorId: string | null;
+            text: string;
         }[];
         id: string;
         erlcServerId: string;
@@ -184,9 +184,9 @@ export declare class FleetController {
         internal: {
             unitId: string | null;
             unit: {
-                id: string;
-                name: string | null;
                 callsign: string;
+                name: string | null;
+                id: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -218,11 +218,11 @@ export declare class FleetController {
             actorName: string | null;
             id: string;
             createdAt: Date;
-            text: string;
-            actorId: string | null;
             incidentId: string | null;
             vehicleId: string;
             kind: string;
+            actorId: string | null;
+            text: string;
         }[];
         id: string;
         erlcServerId: string;
@@ -273,9 +273,9 @@ export declare class FleetController {
         internal: {
             unitId: string | null;
             unit: {
-                id: string;
-                name: string | null;
                 callsign: string;
+                name: string | null;
+                id: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -295,50 +295,50 @@ export declare class FleetController {
     catalog(): Promise<{
         imageUrl: string | null;
         liveCount: number;
+        name: string;
         id: string;
         createdAt: Date;
-        name: string;
-        category: string;
-        active: boolean;
         updatedAt: Date;
+        category: string;
         description: string | null;
+        active: boolean;
+        erlcName: string;
+        department: string | null;
         internalCode: string | null;
         tags: string[];
-        erlcName: string;
         imageId: string | null;
-        department: string | null;
     }[]>;
     suggestions(): Promise<{
         erlcName: string;
         seen: number;
     }[]>;
     createModel(a: Actor, b: FleetModelInput): Promise<{
+        name: string;
         id: string;
         createdAt: Date;
-        name: string;
-        category: string;
-        active: boolean;
         updatedAt: Date;
+        category: string;
         description: string | null;
+        active: boolean;
+        erlcName: string;
+        department: string | null;
         internalCode: string | null;
         tags: string[];
-        erlcName: string;
         imageId: string | null;
-        department: string | null;
     }>;
     updateModel(a: Actor, id: string, b: Partial<FleetModelInput>): Promise<{
+        name: string;
         id: string;
         createdAt: Date;
-        name: string;
-        category: string;
-        active: boolean;
         updatedAt: Date;
+        category: string;
         description: string | null;
+        active: boolean;
+        erlcName: string;
+        department: string | null;
         internalCode: string | null;
         tags: string[];
-        erlcName: string;
         imageId: string | null;
-        department: string | null;
     }>;
     deleteModel(a: Actor, id: string): Promise<void>;
     image(a: Actor, id: string, file: Express.Multer.File | undefined): Promise<{

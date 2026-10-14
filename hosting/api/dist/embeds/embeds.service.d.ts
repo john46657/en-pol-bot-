@@ -58,23 +58,23 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     }>>>;
 }, "strip", z.ZodTypeAny, {
-    id: string;
     name: string;
-    guildId: string | null;
+    id: string;
     color: string;
-    channelId: string | null;
-    description: string;
-    url: string;
     title: string;
+    description: string;
+    guildId: string | null;
+    content: string;
+    footer: string;
+    channelId: string | null;
+    author: string;
+    url: string;
     image: string;
     posted: {
         at: string;
         channelId: string;
         messageId: string;
     } | null;
-    content: string;
-    footer: string;
-    author: string;
     reactions: string[];
     authorIcon: string;
     thumbnail: string;
@@ -89,23 +89,23 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         inline: boolean;
     }[];
 }, {
-    id: string;
     name: string;
-    guildId?: string | null | undefined;
+    id: string;
     color?: string | undefined;
-    channelId?: string | null | undefined;
-    description?: string | undefined;
-    url?: string | undefined;
     title?: string | undefined;
+    description?: string | undefined;
+    guildId?: string | null | undefined;
+    content?: string | undefined;
+    footer?: string | undefined;
+    channelId?: string | null | undefined;
+    author?: string | undefined;
+    url?: string | undefined;
     image?: string | undefined;
     posted?: {
         at: string;
         channelId: string;
         messageId: string;
     } | null | undefined;
-    content?: string | undefined;
-    footer?: string | undefined;
-    author?: string | undefined;
     reactions?: string[] | undefined;
     authorIcon?: string | undefined;
     thumbnail?: string | undefined;
@@ -120,23 +120,23 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         inline?: boolean | undefined;
     }[] | undefined;
 }>, {
-    id: string;
     name: string;
-    guildId: string | null;
+    id: string;
     color: string;
-    channelId: string | null;
-    description: string;
-    url: string;
     title: string;
+    description: string;
+    guildId: string | null;
+    content: string;
+    footer: string;
+    channelId: string | null;
+    author: string;
+    url: string;
     image: string;
     posted: {
         at: string;
         channelId: string;
         messageId: string;
     } | null;
-    content: string;
-    footer: string;
-    author: string;
     reactions: string[];
     authorIcon: string;
     thumbnail: string;
@@ -151,23 +151,23 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         inline: boolean;
     }[];
 }, {
-    id: string;
     name: string;
-    guildId?: string | null | undefined;
+    id: string;
     color?: string | undefined;
-    channelId?: string | null | undefined;
-    description?: string | undefined;
-    url?: string | undefined;
     title?: string | undefined;
+    description?: string | undefined;
+    guildId?: string | null | undefined;
+    content?: string | undefined;
+    footer?: string | undefined;
+    channelId?: string | null | undefined;
+    author?: string | undefined;
+    url?: string | undefined;
     image?: string | undefined;
     posted?: {
         at: string;
         channelId: string;
         messageId: string;
     } | null | undefined;
-    content?: string | undefined;
-    footer?: string | undefined;
-    author?: string | undefined;
     reactions?: string[] | undefined;
     authorIcon?: string | undefined;
     thumbnail?: string | undefined;
@@ -193,23 +193,23 @@ export declare class EmbedsService {
     save(actor: Actor, e: Omit<EmbedDoc, 'posted'> & {
         posted?: unknown;
     }): Promise<{
-        id: string;
         name: string;
-        guildId: string | null;
+        id: string;
         color: string;
-        channelId: string | null;
-        description: string;
-        url: string;
         title: string;
+        description: string;
+        guildId: string | null;
+        content: string;
+        footer: string;
+        channelId: string | null;
+        author: string;
+        url: string;
         image: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
-        content: string;
-        footer: string;
-        author: string;
         reactions: string[];
         authorIcon: string;
         thumbnail: string;
@@ -225,23 +225,23 @@ export declare class EmbedsService {
         }[];
     }>;
     duplicate(actor: Actor, id: string): Promise<{
-        id: string;
         name: string;
-        guildId: string | null;
+        id: string;
         color: string;
-        channelId: string | null;
-        description: string;
-        url: string;
         title: string;
+        description: string;
+        guildId: string | null;
+        content: string;
+        footer: string;
+        channelId: string | null;
+        author: string;
+        url: string;
         image: string;
         posted: {
             at: string;
             channelId: string;
             messageId: string;
         } | null;
-        content: string;
-        footer: string;
-        author: string;
         reactions: string[];
         authorIcon: string;
         thumbnail: string;

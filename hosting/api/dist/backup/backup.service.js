@@ -20,6 +20,7 @@ const node_path_1 = __importDefault(require("node:path"));
 const node_zlib_1 = require("node:zlib");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
+const archive_scope_1 = require("../prisma/archive-scope");
 const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
@@ -125,7 +126,8 @@ let BackupService = class BackupService {
         const tables = {};
         let rows = 0;
         for (const m of modelOrder()) {
-            const list = await this.prisma[delegate(m.name)].findMany();
+            // vollständiger Bestand inkl. Archiv-Einträgen aus der Umstellung auf einen Server
+            const list = await (0, archive_scope_1.withArchived)(() => this.prisma[delegate(m.name)].findMany());
             tables[m.name] = list;
             rows += list.length;
         }

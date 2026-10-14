@@ -40,31 +40,31 @@ export declare class BackupController {
     listDiscord(q: {
         guildId?: string;
     }): import("@prisma/client").Prisma.PrismaPromise<{
+        name: string;
         error: string | null;
         id: string;
-        createdAt: Date;
-        name: string;
-        guildId: string;
-        createdById: string | null;
         status: string;
+        createdById: string | null;
+        createdAt: Date;
+        guildId: string;
         guildName: string;
-        stats: import("@prisma/client/runtime/library").JsonValue;
         auto: boolean;
+        stats: import("@prisma/client/runtime/library").JsonValue;
         restoredAt: Date | null;
         restoreResult: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     getDiscord(id: string): Promise<{
-        error: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
-        id: string;
-        createdAt: Date;
         name: string;
-        guildId: string;
-        createdById: string | null;
+        error: string | null;
+        id: string;
         status: string;
+        createdById: string | null;
+        createdAt: Date;
+        guildId: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
-        stats: import("@prisma/client/runtime/library").JsonValue | null;
         auto: boolean;
+        stats: import("@prisma/client/runtime/library").JsonValue | null;
         restoredAt: Date | null;
         restoreResult: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
@@ -72,17 +72,17 @@ export declare class BackupController {
         guildId: string;
         name?: string;
     }): Promise<{
-        error: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
-        id: string;
-        createdAt: Date;
         name: string;
-        guildId: string;
-        createdById: string | null;
+        error: string | null;
+        id: string;
         status: string;
+        createdById: string | null;
+        createdAt: Date;
+        guildId: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
-        stats: import("@prisma/client/runtime/library").JsonValue | null;
         auto: boolean;
+        stats: import("@prisma/client/runtime/library").JsonValue | null;
         restoredAt: Date | null;
         restoreResult: import("@prisma/client/runtime/library").JsonValue | null;
     }>;

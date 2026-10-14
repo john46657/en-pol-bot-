@@ -49,8 +49,8 @@ export declare class SekService {
         id: string;
         serverId: string | null;
         createdAt: Date;
-        description: string;
         authorId: string;
+        description: string;
         occurredAt: Date;
         missionType: string;
     }[]>;
@@ -63,8 +63,8 @@ export declare class SekService {
         id: string;
         serverId: string | null;
         createdAt: Date;
-        description: string;
         authorId: string;
+        description: string;
         occurredAt: Date;
         missionType: string;
     }>;

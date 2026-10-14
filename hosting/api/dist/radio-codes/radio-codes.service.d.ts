@@ -78,13 +78,13 @@ export declare class RadioCodesService {
     /** Nach Änderungen: schon gepostete Liste automatisch nachziehen (falls eingestellt). */
     private autoUpdate;
     list(q?: string): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -93,36 +93,36 @@ export declare class RadioCodesService {
     /** (zentrale Codes haben guildId = null – dafür greift der Datenbank-Index nicht, daher selbst prüfen) */
     private assertFree;
     create(actor: Actor, d: Required<Pick<RadioCodeInput, 'code' | 'meaning'>> & RadioCodeInput): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;
     update(actor: Actor, id: string, d: RadioCodeInput): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;
     remove(actor: Actor, id: string): Promise<void>;
     reorder(actor: Actor, ids: string[]): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;

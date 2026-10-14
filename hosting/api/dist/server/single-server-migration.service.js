@@ -17,6 +17,7 @@ const backup_service_1 = require("../backup/backup.service");
 const guild_context_1 = require("../common/guild-context");
 const home_server_service_1 = require("./home-server.service");
 const modules_service_1 = require("./modules.service");
+const archive_scope_1 = require("../prisma/archive-scope");
 exports.SINGLE_SERVER_FLAG = 'migration.singleServer';
 /** Einstellungen, die es früher je Discord-Server gab (`<Schlüssel>@<Server-ID>`); jetzt gibt es nur noch `<Schlüssel>`. */
 exports.FORMER_PER_SERVER_SETTINGS = [
@@ -24,17 +25,6 @@ exports.FORMER_PER_SERVER_SETTINGS = [
     'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
     'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
     'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
-];
-/**
- * Tabellen mit früherem Datenbereich je Server (`serverId`) und ihren Eindeutigkeiten. Nach der Umstellung gehört alles zum
- * einen Bestand (`serverId` = NULL); die Spalte bleibt (keine Strukturänderung, alte Backups bleiben einspielbar).
- */
-const DATA_TABLES = [
-    ['Person', ['robloxUserId']], ['Vehicle', ['plate']], ['Weapon', ['serial']], ['Report', []], ['Complaint', []], ['Investigation', []], ['WantedRecord', []],
-    ['Evidence', []], ['DutySession', []], ['Ticket', []], ['LegalCode', ['code']], ['Incident', []], ['Unit', ['callsign']], ['CadMapObject', []],
-    ['CadMember', ['userId', 'discordId']], ['Personnel', ['userId', 'callsign', 'serviceNumber']], ['HrRank', ['name']], ['HrRequest', []], ['HrTraining', []],
-    ['HrExam', []], ['HrAnnouncement', []], ['HrPoll', []], ['ServiceNumberRange', []], ['ServiceNumber', ['display']], ['HireQueue', []], ['AcademyCourse', []],
-    ['SekMember', ['userId']], ['SekReport', []], ['RadioWhitelist', ['userId']], ['Workflow', []], ['Conversation', []],
 ];
 /** Früherer eigener Datenbereich eines Servers (wie im alten Server-Verbund aus der Server-ID abgeleitet). */
 function formerOwnSpace(guildId) {
@@ -55,7 +45,8 @@ function formerOwnSpace(guildId) {
  *  - Persönliche Ausnahmen des Servers werden zentral; widersprechen sie einer zentralen Ausnahme, gewinnt das Verbot.
  *  - Abgeschaltete Module des Servers bleiben abgeschaltet (jetzt zentral). Wochen-Reset des Servers → zentraler Wochen-Reset, falls dieser aus war.
  *  - Fachdaten aller früheren Bereiche gehören zum einen Bestand. Würde ein Eintrag dabei eine Eindeutigkeit verletzen (z. B. zwei
- *    Personalakten desselben Benutzers), bleibt der weniger aktuelle in seinem Bereich stehen (sichtbar, nur nicht eindeutig).
+ *    Personalakten desselben Benutzers), bleibt der weniger aktuelle als Archiv in seinem Bereich stehen (nicht in Listen,
+ *    nur im Backup; siehe archive-scope.ts).
  */
 let SingleServerMigrationService = class SingleServerMigrationService {
     prisma;
@@ -83,7 +74,7 @@ let SingleServerMigrationService = class SingleServerMigrationService {
         ]);
         if (settings || roles || overrides || modules)
             return true;
-        for (const [table] of DATA_TABLES)
+        for (const [table] of archive_scope_1.DATA_TABLES)
             if ((await this.prisma.$queryRawUnsafe(`SELECT COUNT(*)::int AS n FROM "${table}" WHERE "serverId" IS NOT NULL`))[0].n)
                 return true;
         return false;
@@ -106,6 +97,11 @@ let SingleServerMigrationService = class SingleServerMigrationService {
         return ids.size === 1 ? [...ids][0] : null;
     }
     async run() {
+        const r = await this.migrate();
+        (0, archive_scope_1.setArchiveFilter)(r.status !== 'postponed'); // Doppel aus der Umstellung erst danach ausblenden
+        return r;
+    }
+    async migrate() {
         if (await this.prisma.systemSetting.findUnique({ where: { key: exports.SINGLE_SERVER_FLAG } }))
             return { status: 'nothing', guildId: (0, guild_context_1.homeGuild)() };
         if (!(await this.pending())) {
@@ -248,7 +244,7 @@ let SingleServerMigrationService = class SingleServerMigrationService {
         const group = (links.groups ?? []).find((g) => g.guildIds?.includes(guildId));
         const ownSpace = group ? (group.shareRecords !== false ? group.id ?? null : formerOwnSpace(guildId)) : (links.sharedRecords ?? []).includes(guildId) ? null : formerOwnSpace(guildId);
         let moved = 0, keptApart = 0;
-        for (const [table, uniques] of DATA_TABLES) {
+        for (const [table, uniques] of archive_scope_1.DATA_TABLES) {
             if (!uniques.length) {
                 moved += await tx.$executeRawUnsafe(`UPDATE "${table}" SET "serverId" = NULL WHERE "serverId" IS NOT NULL`);
                 continue;

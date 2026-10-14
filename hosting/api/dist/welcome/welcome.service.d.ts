@@ -20,9 +20,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
-        channelId: string | null;
-        enabled: boolean;
         title: string;
+        enabled: boolean;
+        channelId: string | null;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -30,9 +30,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
-        enabled?: boolean | undefined;
         title?: string | undefined;
+        enabled?: boolean | undefined;
+        channelId?: string | null | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -62,9 +62,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         message: string;
         color: string;
-        channelId: string | null;
-        enabled: boolean;
         title: string;
+        enabled: boolean;
+        channelId: string | null;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -72,9 +72,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     }, {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
-        enabled?: boolean | undefined;
         title?: string | undefined;
+        enabled?: boolean | undefined;
+        channelId?: string | null | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -88,9 +88,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome: {
         message: string;
         color: string;
-        channelId: string | null;
-        enabled: boolean;
         title: string;
+        enabled: boolean;
+        channelId: string | null;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -100,9 +100,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye: {
         message: string;
         color: string;
-        channelId: string | null;
-        enabled: boolean;
         title: string;
+        enabled: boolean;
+        channelId: string | null;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -116,9 +116,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome?: {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
-        enabled?: boolean | undefined;
         title?: string | undefined;
+        enabled?: boolean | undefined;
+        channelId?: string | null | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -128,9 +128,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye?: {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
-        enabled?: boolean | undefined;
         title?: string | undefined;
+        enabled?: boolean | undefined;
+        channelId?: string | null | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -144,9 +144,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome: {
         message: string;
         color: string;
-        channelId: string | null;
-        enabled: boolean;
         title: string;
+        enabled: boolean;
+        channelId: string | null;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -156,9 +156,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye: {
         message: string;
         color: string;
-        channelId: string | null;
-        enabled: boolean;
         title: string;
+        enabled: boolean;
+        channelId: string | null;
         image: string;
         showAvatar: boolean;
         pingUser: boolean;
@@ -172,9 +172,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome?: {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
-        enabled?: boolean | undefined;
         title?: string | undefined;
+        enabled?: boolean | undefined;
+        channelId?: string | null | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;
@@ -184,9 +184,9 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     goodbye?: {
         message?: string | undefined;
         color?: string | undefined;
-        channelId?: string | null | undefined;
-        enabled?: boolean | undefined;
         title?: string | undefined;
+        enabled?: boolean | undefined;
+        channelId?: string | null | undefined;
         image?: string | undefined;
         showAvatar?: boolean | undefined;
         pingUser?: boolean | undefined;

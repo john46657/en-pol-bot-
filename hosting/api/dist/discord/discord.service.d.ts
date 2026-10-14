@@ -65,18 +65,20 @@ export declare class DiscordService {
     }>;
     /** Auflösung Discord-ID → aktiver Benutzer (für die Bot-Authentifizierung). */
     resolveUser(discordId: string): Promise<{
-        id: string;
-        createdAt: Date;
-        username: string;
-        email: string | null;
         robloxUserId: string | null;
-        displayName: string;
-        passwordHash: string;
+        id: string;
         robloxUsername: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        active: boolean;
+        username: string;
+        displayName: string;
+        email: string | null;
+        passwordHash: string;
         robloxStatus: string;
         robloxVerifiedAt: Date | null;
         robloxVerifiedById: string | null;
-        active: boolean;
         failedLogins: number;
         lockedUntil: Date | null;
         lastLogin: Date | null;
@@ -85,8 +87,6 @@ export declare class DiscordService {
         totpEnabledAt: Date | null;
         totpLastStep: number | null;
         totpRecovery: string[];
-        updatedAt: Date;
-        version: number;
     } | null>;
     channels(): Promise<DiscordChannels>;
     /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */

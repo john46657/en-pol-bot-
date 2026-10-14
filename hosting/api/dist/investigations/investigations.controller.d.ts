@@ -18,19 +18,19 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title: string;
     description?: string | undefined;
+    leadId?: string | undefined;
     persons?: {
         role: "SUSPECT" | "WITNESS" | "VICTIM" | "PERSON_OF_INTEREST";
         personId: string;
     }[] | undefined;
-    leadId?: string | undefined;
 }, {
     title: string;
     description?: string | undefined;
+    leadId?: string | undefined;
     persons?: {
         role: "SUSPECT" | "WITNESS" | "VICTIM" | "PERSON_OF_INTEREST";
         personId: string;
     }[] | undefined;
-    leadId?: string | undefined;
 }>;
 declare const addPerson: z.ZodObject<{
     personId: z.ZodString;
@@ -76,12 +76,12 @@ export declare class InvestigationsController {
         items: {
             id: string;
             serverId: string | null;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            description: string | null;
-            status: string;
             title: string;
+            description: string | null;
             caseNumber: string;
             leadId: string | null;
         }[];
@@ -93,12 +93,12 @@ export declare class InvestigationsController {
         investigation: {
             id: string;
             serverId: string | null;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            description: string | null;
-            status: string;
             title: string;
+            description: string | null;
             caseNumber: string;
             leadId: string | null;
         };
@@ -110,11 +110,11 @@ export declare class InvestigationsController {
         } & {
             role: string;
             id: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
-            vehicleId: string | null;
             personId: string | null;
+            vehicleId: string | null;
+            entityId: string;
+            entityType: string;
         })[];
         evidence: {
             number: string;
@@ -124,23 +124,23 @@ export declare class InvestigationsController {
         }[];
         timeline: {
             id: string;
-            action: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
+            entityId: string;
+            entityType: string;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         id: string;
         serverId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        description: string | null;
-        status: string;
         title: string;
+        description: string | null;
         caseNumber: string;
         leadId: string | null;
     }>;
@@ -148,12 +148,12 @@ export declare class InvestigationsController {
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
         id: string;
         serverId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        description: string | null;
-        status: string;
         title: string;
+        description: string | null;
         caseNumber: string;
         leadId: string | null;
     }>;
@@ -162,12 +162,12 @@ export declare class InvestigationsController {
     }): Promise<{
         id: string;
         serverId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        description: string | null;
-        status: string;
         title: string;
+        description: string | null;
         caseNumber: string;
         leadId: string | null;
     }>;

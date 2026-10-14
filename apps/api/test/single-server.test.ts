@@ -9,6 +9,7 @@ import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { SINGLE_SERVER_FLAG, SingleServerMigrationService } from '../src/server/single-server-migration.service';
 import { BackupService } from '../src/backup/backup.service';
+import { withArchived } from '../src/prisma/archive-scope';
 import { loadEnv } from '../src/config/env';
 
 const TOKEN = 'test-bot-token-single-server-0123456789abcd';
@@ -110,7 +111,7 @@ describe('einmalige Umstellung von „mehrere Server“ auf einen Server', () =>
     const author = await prisma.user.findUniqueOrThrow({ where: { username: 'ss_admin' } });
     await prisma.report.createMany({ data: [{ number: 'SS-R-1', type: 'GENERAL', title: 'Home', authorId: author.id, serverId: spaceOf(HOME) }, { number: 'SS-R-2', type: 'GENERAL', title: 'Fremd', authorId: author.id, serverId: spaceOf(OTHER) }] });
 
-    const counts = async () => ({ roles: await prisma.role.count(), userRoles: await prisma.userRole.count(), overrides: await prisma.userPermissionOverride.count(), units: await prisma.unit.count(), reports: await prisma.report.count(), servers: await prisma.discordServer.count() });
+    const counts = () => withArchived(async () => ({ roles: await prisma.role.count(), userRoles: await prisma.userRole.count(), overrides: await prisma.userPermissionOverride.count(), units: await prisma.unit.count(), reports: await prisma.report.count(), servers: await prisma.discordServer.count() })); // inkl. Archiv
     const before = await counts();
     const r = await app.get(SingleServerMigrationService).run();
     expect(r).toMatchObject({ status: 'done', guildId: HOME, modules: ['sek'] });
@@ -142,13 +143,20 @@ describe('einmalige Umstellung von „mehrere Server“ auf einen Server', () =>
     expect(await prisma.userPermissionOverride.findFirst({ where: { userId: ids.u2, guildId: null, permissionKey: 'audit.export' } })).toMatchObject({ effect: 'DENY' });
     // Module
     expect((await prisma.systemSetting.findUniqueOrThrow({ where: { key: 'modules.config' } })).value).toMatchObject({ disabled: ['sek'] });
-    // Daten: ein Bestand; Kollisionen bleiben sichtbar, aber getrennt
+    // Daten: ein Bestand; Kollisionen bleiben als Archiv getrennt erhalten
     const unit = async (id: string) => (await prisma.unit.findUniqueOrThrow({ where: { id } })).serverId;
     expect(await unit(ids.unitHome)).toBeNull();
     expect(await unit(ids.unitOther)).toBeNull();
     expect(await unit(ids.unitLegacy)).not.toBeNull();
     expect(await unit(ids.unitOtherClash)).toBe(spaceOf(OTHER));
     expect(await prisma.report.count({ where: { number: { in: ['SS-R-1', 'SS-R-2'] }, serverId: null } })).toBe(2);
+    // Listen zeigen nur den Bestand, nicht die separat belassenen Doppel (sonst stünde z. B. jede Person doppelt in der Teamliste) …
+    expect((await prisma.unit.findMany({ where: { callsign: 'SS-1' } })).map((u) => u.id)).toEqual([ids.unitHome]);
+    expect(await withArchived(() => prisma.unit.count({ where: { callsign: 'SS-1' } }))).toBe(3);
+    // … ein Backup enthält sie weiterhin
+    const full = await app.get(BackupService).createData(null);
+    const fullBody = JSON.parse(gunzipSync(await app.get(BackupService).readData(full.name)).toString('utf8')) as { tables: Record<string, { id: string }[]> };
+    expect(fullBody.tables.Unit!.map((u) => u.id)).toEqual(expect.arrayContaining([ids.unitHome, ids.unitLegacy, ids.unitOtherClash]));
 
     // im Betrieb: die zusammengeführten Rechte gelten, Rollen fremder Server nicht
     const agent = async (u: string) => (await login(app, u)).agent;

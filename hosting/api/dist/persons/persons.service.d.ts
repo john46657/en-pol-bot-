@@ -16,18 +16,14 @@ export declare class PersonsService {
     constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService, roblox: RobloxService, locks: LocksService);
     list(p: PageQuery, includeArchived?: boolean): Promise<{
         items: {
+            robloxUserId: string | null;
             id: string;
             serverId: string | null;
-            createdAt: Date;
-            robloxUserId: string | null;
             robloxUsername: string;
-            updatedAt: Date;
-            version: number;
-            createdById: string | null;
-            status: string;
-            custom: Prisma.JsonValue | null;
             aliases: string[];
+            status: string;
             notes: string | null;
+            custom: Prisma.JsonValue | null;
             fullName: string | null;
             dateOfBirth: Date | null;
             gender: string | null;
@@ -39,6 +35,10 @@ export declare class PersonsService {
             licenses: string[];
             flags: string[];
             photoId: string | null;
+            createdById: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            version: number;
         }[];
         total: number;
         page: number;
@@ -46,33 +46,29 @@ export declare class PersonsService {
     }>;
     get(id: string): Promise<{
         vehicles: {
+            plate: string;
+            model: string | null;
             id: string;
             serverId: string | null;
+            status: string;
+            notes: string | null;
+            custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             color: string | null;
-            status: string;
-            custom: Prisma.JsonValue | null;
-            model: string | null;
-            notes: string | null;
-            plate: string;
             ownerId: string | null;
             erlcReference: string | null;
         }[];
     } & {
+        robloxUserId: string | null;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        robloxUserId: string | null;
         robloxUsername: string;
-        updatedAt: Date;
-        version: number;
-        createdById: string | null;
-        status: string;
-        custom: Prisma.JsonValue | null;
         aliases: string[];
+        status: string;
         notes: string | null;
+        custom: Prisma.JsonValue | null;
         fullName: string | null;
         dateOfBirth: Date | null;
         gender: string | null;
@@ -84,37 +80,37 @@ export declare class PersonsService {
         licenses: string[];
         flags: string[];
         photoId: string | null;
+        createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
     }>;
     overview(id: string): Promise<{
         person: {
             vehicles: {
+                plate: string;
+                model: string | null;
                 id: string;
                 serverId: string | null;
+                status: string;
+                notes: string | null;
+                custom: Prisma.JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
                 color: string | null;
-                status: string;
-                custom: Prisma.JsonValue | null;
-                model: string | null;
-                notes: string | null;
-                plate: string;
                 ownerId: string | null;
                 erlcReference: string | null;
             }[];
         } & {
+            robloxUserId: string | null;
             id: string;
             serverId: string | null;
-            createdAt: Date;
-            robloxUserId: string | null;
             robloxUsername: string;
-            updatedAt: Date;
-            version: number;
-            createdById: string | null;
-            status: string;
-            custom: Prisma.JsonValue | null;
             aliases: string[];
+            status: string;
             notes: string | null;
+            custom: Prisma.JsonValue | null;
             fullName: string | null;
             dateOfBirth: Date | null;
             gender: string | null;
@@ -126,18 +122,22 @@ export declare class PersonsService {
             licenses: string[];
             flags: string[];
             photoId: string | null;
+            createdById: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            version: number;
         };
         tickets: {
             number: string;
             id: string;
             serverId: string | null;
-            reason: string;
-            updatedAt: Date;
-            version: number;
             status: string;
             notes: string | null;
-            personId: string;
+            updatedAt: Date;
+            version: number;
             officerId: string;
+            personId: string;
+            reason: string;
             legalCodeId: string | null;
             amount: Prisma.Decimal;
             reportId: string | null;
@@ -148,26 +148,26 @@ export declare class PersonsService {
         links: {
             role: string;
             id: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
-            vehicleId: string | null;
             personId: string | null;
+            vehicleId: string | null;
+            entityId: string;
+            entityType: string;
         }[];
         timeline: {
             id: string;
-            action: string;
-            entityType: string;
-            entityId: string;
             createdAt: Date;
+            entityId: string;
+            entityType: string;
             summary: string;
+            action: string;
             actorId: string | null;
         }[];
     }>;
     /** Mögliche Duplikate: gleiche Roblox-ID (hart, Unique) oder gleicher Username (weich → Hinweis, kein Auto-Merge). */
     findDuplicates(robloxUsername: string, robloxUserId?: string | null): Promise<{
-        id: string;
         robloxUserId: string | null;
+        id: string;
         robloxUsername: string;
         status: string;
     }[]>;
@@ -179,18 +179,14 @@ export declare class PersonsService {
         custom?: Record<string, unknown>;
     }): Promise<{
         person: {
+            robloxUserId: string | null;
             id: string;
             serverId: string | null;
-            createdAt: Date;
-            robloxUserId: string | null;
             robloxUsername: string;
-            updatedAt: Date;
-            version: number;
-            createdById: string | null;
-            status: string;
-            custom: Prisma.JsonValue | null;
             aliases: string[];
+            status: string;
             notes: string | null;
+            custom: Prisma.JsonValue | null;
             fullName: string | null;
             dateOfBirth: Date | null;
             gender: string | null;
@@ -202,10 +198,14 @@ export declare class PersonsService {
             licenses: string[];
             flags: string[];
             photoId: string | null;
+            createdById: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            version: number;
         };
         possibleDuplicates: {
-            id: string;
             robloxUserId: string | null;
+            id: string;
             robloxUsername: string;
             status: string;
         }[];
@@ -216,18 +216,14 @@ export declare class PersonsService {
         notes?: string | null;
         custom?: Record<string, unknown>;
     }): Promise<{
+        robloxUserId: string | null;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        robloxUserId: string | null;
         robloxUsername: string;
-        updatedAt: Date;
-        version: number;
-        createdById: string | null;
-        status: string;
-        custom: Prisma.JsonValue | null;
         aliases: string[];
+        status: string;
         notes: string | null;
+        custom: Prisma.JsonValue | null;
         fullName: string | null;
         dateOfBirth: Date | null;
         gender: string | null;
@@ -239,20 +235,20 @@ export declare class PersonsService {
         licenses: string[];
         flags: string[];
         photoId: string | null;
+        createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
+        robloxUserId: string | null;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        robloxUserId: string | null;
         robloxUsername: string;
-        updatedAt: Date;
-        version: number;
-        createdById: string | null;
-        status: string;
-        custom: Prisma.JsonValue | null;
         aliases: string[];
+        status: string;
         notes: string | null;
+        custom: Prisma.JsonValue | null;
         fullName: string | null;
         dateOfBirth: Date | null;
         gender: string | null;
@@ -264,21 +260,21 @@ export declare class PersonsService {
         licenses: string[];
         flags: string[];
         photoId: string | null;
+        createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
     }>;
     /** Merge nur auf ausdrückliche Bestätigung (nie automatisch). Quelle wird archiviert, nichts wird gelöscht. */
     merge(actor: Actor, sourceId: string, targetId: string, reason: string): Promise<{
+        robloxUserId: string | null;
         id: string;
         serverId: string | null;
-        createdAt: Date;
-        robloxUserId: string | null;
         robloxUsername: string;
-        updatedAt: Date;
-        version: number;
-        createdById: string | null;
-        status: string;
-        custom: Prisma.JsonValue | null;
         aliases: string[];
+        status: string;
         notes: string | null;
+        custom: Prisma.JsonValue | null;
         fullName: string | null;
         dateOfBirth: Date | null;
         gender: string | null;
@@ -290,5 +286,9 @@ export declare class PersonsService {
         licenses: string[];
         flags: string[];
         photoId: string | null;
+        createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
     }>;
 }

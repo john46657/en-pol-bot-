@@ -50,17 +50,17 @@ declare const discordCfg: z.ZodObject<{
     autoUpdate: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
     color: string;
-    channelId: string | null;
-    description: string;
     title: string;
+    description: string;
+    channelId: string | null;
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
 }, {
     color: string;
-    channelId: string | null;
-    description: string;
     title: string;
+    description: string;
+    channelId: string | null;
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
@@ -76,13 +76,13 @@ export declare class RadioCodesController {
     private readonly s;
     constructor(s: RadioCodesService);
     list(q: z.infer<typeof listQ>): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -118,13 +118,13 @@ export declare class RadioCodesController {
         queued: boolean;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;
@@ -132,24 +132,24 @@ export declare class RadioCodesController {
         added: number;
     }>;
     reorder(a: Actor, b: z.infer<typeof order>): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
+        code: string;
         id: string;
         createdAt: Date;
-        code: string;
-        category: string | null;
         updatedAt: Date;
-        guildId: string | null;
+        category: string | null;
         description: string | null;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;

@@ -1,5 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { withoutArchived } from './archive-scope';
 
 export type Tx = Prisma.TransactionClient;
 
@@ -11,6 +12,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    */
   constructor() {
     super({ transactionOptions: { timeout: 30_000, maxWait: 15_000 } });
+    // Listen ohne die bei der Umstellung auf einen Server separat belassenen Doppel – siehe archive-scope.ts
+    return withoutArchived(this) as unknown as PrismaService;
   }
   async onModuleInit() { await this.$connect(); }
   async onModuleDestroy() { await this.$disconnect(); }
