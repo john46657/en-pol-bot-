@@ -17,6 +17,7 @@ export const MODULES = [
   { key: 'applications', name: 'Bewerbungen', description: 'Bewerbungen, Qualifikationen, Academy, Team-Chance', permissionPrefixes: ['applications', 'qualifications', 'academy', 'teamchance'] },
   { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },
+  { key: 'message_builder', name: 'Discord Message Builder', description: 'Nachrichten und Embeds bauen, Vorlagen, Versand über den Bot, Versandhistorie', permissionPrefixes: ['messagebuilder'] },
   { key: 'communication', name: 'Kommunikation', description: 'Nachrichten, Meldungen, Abstimmungen, Funk-Codes', permissionPrefixes: ['communication', 'announcements', 'polls', 'radio'] },
 ] as const satisfies readonly ModuleDef[];
 

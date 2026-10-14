@@ -11,6 +11,7 @@ const voice_support_1 = require("../voice-support");
 const leave_1 = require("./leave");
 const cad_1 = require("./cad");
 const panels_1 = require("./panels");
+const message_builder_1 = require("../message-builder");
 const duty_reports_1 = require("./duty-reports");
 const trainings_1 = require("./trainings");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
@@ -248,6 +249,7 @@ exports.INTERACTIONS = [
     },
     panels_1.FORM_PANEL_INTERACTION,
     panels_1.INFO_PANEL_INTERACTION,
+    message_builder_1.MB_INTERACTION,
     duty_reports_1.DUTY_REPORT_INTERACTION,
     trainings_1.TRAINING_INTERACTION,
 ];

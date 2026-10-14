@@ -29,7 +29,9 @@ const home_server_service_1 = require("../server/home-server.service");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const guildsBody = zod_1.z.object({ guilds: zod_1.z.array(zod_1.z.object({
         id: sf, name: zod_1.z.string().max(100), icon: zod_1.z.string().url().max(300).nullable(),
-        channels: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), type: zod_1.z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: zod_1.z.number().int() })).max(500),
+        channels: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), type: zod_1.z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: zod_1.z.number().int(),
+            /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
+            bot: zod_1.z.object({ view: zod_1.z.boolean(), send: zod_1.z.boolean(), embed: zod_1.z.boolean(), mentionEveryone: zod_1.z.boolean().optional() }).optional() })).max(500),
         roles: zod_1.z.array(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), color: zod_1.z.number().int().min(0), position: zod_1.z.number().int() })).max(250),
     })).max(50) });
 const redeem = zod_1.z.object({ code: zod_1.z.string().trim().min(8).max(12), discordId: zod_1.z.string().regex(/^\d{15,25}$/) });

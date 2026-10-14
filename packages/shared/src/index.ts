@@ -19,3 +19,4 @@ export * from './logging';
 export * from './backup';
 export * from './mdt';
 export * from './fleet';
+export * from './message-builder';

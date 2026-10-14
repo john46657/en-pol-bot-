@@ -18,18 +18,47 @@ declare const guildsBody: z.ZodObject<{
             type: z.ZodEnum<["text", "category", "voice", "other"]>;
             parentId: z.ZodNullable<z.ZodString>;
             position: z.ZodNumber;
+            /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
+            bot: z.ZodOptional<z.ZodObject<{
+                view: z.ZodBoolean;
+                send: z.ZodBoolean;
+                embed: z.ZodBoolean;
+                mentionEveryone: z.ZodOptional<z.ZodBoolean>;
+            }, "strip", z.ZodTypeAny, {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            }, {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            }>>;
         }, "strip", z.ZodTypeAny, {
             name: string;
             id: string;
             type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            } | undefined;
         }, {
             name: string;
             id: string;
             type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            } | undefined;
         }>, "many">;
         roles: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -57,6 +86,12 @@ declare const guildsBody: z.ZodObject<{
             type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            } | undefined;
         }[];
         roles: {
             name: string;
@@ -74,6 +109,12 @@ declare const guildsBody: z.ZodObject<{
             type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            } | undefined;
         }[];
         roles: {
             name: string;
@@ -93,6 +134,12 @@ declare const guildsBody: z.ZodObject<{
             type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            } | undefined;
         }[];
         roles: {
             name: string;
@@ -112,6 +159,12 @@ declare const guildsBody: z.ZodObject<{
             type: "other" | "category" | "text" | "voice";
             position: number;
             parentId: string | null;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+            } | undefined;
         }[];
         roles: {
             name: string;

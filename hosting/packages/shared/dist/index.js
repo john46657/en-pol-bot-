@@ -47,6 +47,7 @@ __export(index_exports, {
   DEFAULT_MDT_CONFIG: () => DEFAULT_MDT_CONFIG,
   DEFAULT_VERIFY_CONFIG: () => DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG: () => DEFAULT_WELCOME_CONFIG,
+  DISCORD_LIMITS: () => DISCORD_LIMITS,
   DISPATCH_STATUSES: () => DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS: () => DISPATCH_TRANSITIONS,
   DN_STATUSES: () => DN_STATUSES,
@@ -81,6 +82,9 @@ __export(index_exports, {
   LOG_TYPES: () => LOG_TYPES,
   MAX_FORM_OPTIONS: () => MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS: () => MAX_FORM_QUESTIONS,
+  MB_BUTTON_STYLES: () => MB_BUTTON_STYLES,
+  MB_DEFAULT_CATEGORIES: () => MB_DEFAULT_CATEGORIES,
+  MB_LIMITS: () => MB_LIMITS,
   MODULES: () => MODULES,
   MODULE_KEYS: () => MODULE_KEYS,
   MUSIC_TRACKS: () => MUSIC_TRACKS,
@@ -140,14 +144,20 @@ __export(index_exports, {
   canTransition: () => canTransition,
   checkAnswer: () => checkAnswer,
   cleanReportValues: () => cleanReportValues,
+  cloneWithNewIds: () => cloneWithNewIds,
   commandsForModules: () => commandsForModules,
   conditionMatches: () => conditionMatches,
   dangerLevelOf: () => dangerLevelOf,
   defaultTicketButtons: () => defaultTicketButtons,
   departmentSchema: () => departmentSchema,
+  describeDiscordError: () => describeDiscordError,
   dnSettingsSchema: () => dnSettingsSchema,
   dutyTimeText: () => dutyTimeText,
   effectivePermissions: () => effectivePermissions,
+  embedChars: () => embedChars,
+  emptyMbDocument: () => emptyMbDocument,
+  emptyMbEmbed: () => emptyMbEmbed,
+  emptyMbMessage: () => emptyMbMessage,
   fieldValue: () => fieldValue,
   fillTemplate: () => fillTemplate,
   fleetConfigSchema: () => fleetConfigSchema,
@@ -162,6 +172,7 @@ __export(index_exports, {
   gameToPixel: () => gameToPixel,
   gradeAnswer: () => gradeAnswer,
   grantMatches: () => grantMatches,
+  hasErrors: () => hasErrors,
   hexColor: () => hexColor,
   hireMappingSchema: () => hireMappingSchema,
   hrConfigSchema: () => hrConfigSchema,
@@ -170,11 +181,14 @@ __export(index_exports, {
   infoOptionSchema: () => infoOptionSchema,
   infoPanelMessage: () => infoPanelMessage,
   infoPanelSchema: () => infoPanelSchema,
+  interactiveComponents: () => interactiveComponents,
   isDutyTimeField: () => isDutyTimeField,
+  isHttpUrl: () => isHttpUrl,
   isInputQuestion: () => isInputQuestion,
   isPermissionKey: () => isPermissionKey,
   isRobloxField: () => isRobloxField,
   isSupportOpen: () => isSupportOpen,
+  isValidEmoji: () => isValidEmoji,
   isValidRobloxUserId: () => isValidRobloxUserId,
   isoWeek: () => isoWeek,
   localMidnight: () => localMidnight,
@@ -184,7 +198,18 @@ __export(index_exports, {
   logTypeLabel: () => logTypeLabel,
   loggingConfigSchema: () => loggingConfigSchema,
   matchingBinds: () => matchingBinds,
+  mbActionSchema: () => mbActionSchema,
+  mbButtonSchema: () => mbButtonSchema,
+  mbDocumentDataSchema: () => mbDocumentDataSchema,
+  mbEmbedSchema: () => mbEmbedSchema,
+  mbFieldSchema: () => mbFieldSchema,
+  mbId: () => mbId,
+  mbMessageSchema: () => mbMessageSchema,
+  mbRowSchema: () => mbRowSchema,
+  mbSelectOptionSchema: () => mbSelectOptionSchema,
+  mbSummary: () => mbSummary,
   mdtConfigSchema: () => mdtConfigSchema,
+  missingBotPerms: () => missingBotPerms,
   moduleDef: () => moduleDef,
   moduleDependencyError: () => moduleDependencyError,
   moduleOfPermission: () => moduleOfPermission,
@@ -224,7 +249,11 @@ __export(index_exports, {
   statusLabel: () => statusLabel,
   ticketChannelName: () => ticketChannelName,
   ticketNumber: () => ticketNumber,
+  toDiscordPayload: () => toDiscordPayload,
+  toPartialEmoji: () => toPartialEmoji,
   triggerMatches: () => triggerMatches,
+  validateMbDocument: () => validateMbDocument,
+  validateMbMessage: () => validateMbMessage,
   verifyActions: () => verifyActions,
   weekIso: () => weekIso,
   weekKey: () => weekKey,
@@ -294,7 +323,13 @@ var PERMISSION_CATALOG = {
   users: ["view", "manage"],
   roles: ["view", "manage"],
   /** Module an/aus (Administration → Module) */
-  modules: ["view", "manage"]
+  modules: ["view", "manage"],
+  /**
+   * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
+   * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
+   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+   */
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -666,7 +701,7 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
-var gameToPixel = (m, x, z8) => ({ px: m.originX + x * m.scale, py: m.originY + z8 * m.scale });
+var gameToPixel = (m, x, z9) => ({ px: m.originX + x * m.scale, py: m.originY + z9 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -947,8 +982,8 @@ var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt
 var WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 var MUSIC_TRACKS = { "": "Track w\xE4hlen", lofi: "Lo-Fi", piano: "Klavier", elevator: "Fahrstuhlmusik", custom: "Eigenes Audio" };
 var VOICE_CASE_STATUS = { WAITING: "Wartet", CLAIMED: "\xDCbernommen", DECLINED: "Abgelehnt", ABANDONED: "Warteraum verlassen", CLOSED: "Geschlossen" };
-var newVoiceRoom = (id2, guildId = "") => ({
-  id: id2,
+var newVoiceRoom = (id3, guildId = "") => ({
+  id: id3,
   guildId,
   name: "Support",
   enabled: true,
@@ -1057,7 +1092,7 @@ var staffListSchema = import_zod.z.object({
   autoUpdate: import_zod.z.boolean().default(true),
   image: imageRef
 });
-function renderStaffList(l, members, roleName = (id2) => `<@&${id2}>`, now = /* @__PURE__ */ new Date()) {
+function renderStaffList(l, members, roleName = (id3) => `<@&${id3}>`, now = /* @__PURE__ */ new Date()) {
   const used = /* @__PURE__ */ new Set();
   const blocks = [];
   l.sections.forEach((s, i) => {
@@ -1268,7 +1303,7 @@ function periodLabel(period, start) {
 }
 var isDutyTimeField = (f) => f.type !== "select" && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
 function policeReportFields() {
-  const f = (id2, label, type, o = {}) => ({ id: id2, label, type, placeholder: "", required: false, options: [], maxLength: type === "number" ? 10 : type === "long" ? 1e3 : 100, inline: false, separator: false, ...o });
+  const f = (id3, label, type, o = {}) => ({ id: id3, label, type, placeholder: "", required: false, options: [], maxLength: type === "number" ? 10 : type === "long" ? 1e3 : 100, inline: false, separator: false, ...o });
   return [
     f("roblox", "Roblox-Username", "short", { required: true }),
     f("dienstzeit", "Zeitraum", "short", { placeholder: "wird automatisch aus der Dienstzeit gef\xFCllt" }),
@@ -1345,13 +1380,13 @@ ${status}` : ""}`,
     timestamp: new Date(r.updatedAt).toISOString()
   };
 }
-function reportMessage(t, r, id2) {
+function reportMessage(t, r, id3) {
   const embed = t.layout === "LIST" ? listEmbed(t, r) : fieldsEmbed(t, r);
   embed.color = r.status === "REVIEWED" ? 2278750 : r.status === "RETURNED" ? 16096779 : embed.color;
   return { embeds: [embed], buttons: [
-    { id: `drep:edit:${id2}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" },
-    ...r.status !== "REVIEWED" ? [{ id: `drep:rev:${id2}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
-    ...r.status !== "RETURNED" ? [{ id: `drep:ret:${id2}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
+    { id: `drep:edit:${id3}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" },
+    ...r.status !== "REVIEWED" ? [{ id: `drep:rev:${id3}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
+    ...r.status !== "RETURNED" ? [{ id: `drep:ret:${id3}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
   ] };
 }
 function fieldsEmbed(t, r) {
@@ -1441,6 +1476,7 @@ var MODULES = [
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
+  { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes", permissionPrefixes: ["communication", "announcements", "polls", "radio"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
@@ -2252,6 +2288,328 @@ var fleetInternalSchema = import_zod7.z.object({
   notes: import_zod7.z.string().trim().max(3e3).nullish(),
   tags: import_zod7.z.array(import_zod7.z.string().trim().min(1).max(30)).max(20).optional()
 });
+
+// src/message-builder.ts
+var import_zod8 = require("zod");
+var DISCORD_LIMITS = {
+  content: 2e3,
+  embedsPerMessage: 10,
+  embedTotal: 6e3,
+  title: 256,
+  description: 4096,
+  fields: 25,
+  fieldName: 256,
+  fieldValue: 1024,
+  footerText: 2048,
+  authorName: 256,
+  actionRows: 5,
+  buttonsPerRow: 5,
+  buttonLabel: 80,
+  customId: 100,
+  linkUrl: 512,
+  selectOptions: 25,
+  selectPlaceholder: 150,
+  optionLabel: 100,
+  optionValue: 100,
+  optionDescription: 100,
+  webhookUsername: 80
+};
+var MB_LIMITS = { messagesPerGroup: 10, url: 2048, replyText: 2e3 };
+var str = (max) => import_zod8.z.string().max(max).default("");
+var id2 = import_zod8.z.string().min(1).max(64);
+var MB_BUTTON_STYLES = ["primary", "secondary", "success", "danger"];
+var mbActionSchema = import_zod8.z.discriminatedUnion("type", [
+  /** Antwort nur für die klickende Person sichtbar (ephemeral). */
+  import_zod8.z.object({ type: import_zod8.z.literal("reply"), text: str(4e3) }),
+  /** Discord-Rolle der klickenden Person geben bzw. wieder nehmen (Umschalter). */
+  import_zod8.z.object({ type: import_zod8.z.literal("role"), roleId: str(32), mode: import_zod8.z.enum(["toggle", "add", "remove"]).default("toggle") })
+]);
+var mbButtonSchema = import_zod8.z.object({
+  id: id2,
+  /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
+  kind: import_zod8.z.enum(["link", "action"]).default("link"),
+  label: str(500),
+  emoji: str(100),
+  style: import_zod8.z.enum(MB_BUTTON_STYLES).default("primary"),
+  url: str(4e3),
+  disabled: import_zod8.z.boolean().default(false),
+  action: mbActionSchema.default({ type: "reply", text: "" })
+});
+var mbSelectOptionSchema = import_zod8.z.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
+var mbRowSchema = import_zod8.z.discriminatedUnion("type", [
+  import_zod8.z.object({ id: id2, type: import_zod8.z.literal("buttons"), buttons: import_zod8.z.array(mbButtonSchema).max(25).default([]) }),
+  import_zod8.z.object({ id: id2, type: import_zod8.z.literal("select"), placeholder: str(500), disabled: import_zod8.z.boolean().default(false), options: import_zod8.z.array(mbSelectOptionSchema).max(50).default([]) })
+]);
+var mbFieldSchema = import_zod8.z.object({ id: id2, name: str(2e3), value: str(4e3), inline: import_zod8.z.boolean().default(false) });
+var mbEmbedSchema = import_zod8.z.object({
+  id: id2,
+  title: str(2e3),
+  url: str(4e3),
+  description: str(1e4),
+  /** `#rrggbb` oder leer (= keine Farbe) */
+  color: str(16),
+  authorName: str(2e3),
+  authorUrl: str(4e3),
+  authorIconUrl: str(4e3),
+  thumbnailUrl: str(4e3),
+  imageUrl: str(4e3),
+  footerText: str(4e3),
+  footerIconUrl: str(4e3),
+  /** none = ohne, send = Zeitpunkt des Versands, custom = `timestampAt` */
+  timestamp: import_zod8.z.enum(["none", "send", "custom"]).default("none"),
+  timestampAt: str(64),
+  fields: import_zod8.z.array(mbFieldSchema).max(50).default([])
+});
+var mbMessageSchema = import_zod8.z.object({
+  id: id2,
+  content: str(1e4),
+  embeds: import_zod8.z.array(mbEmbedSchema).max(20).default([]),
+  rows: import_zod8.z.array(mbRowSchema).max(10).default([]),
+  /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
+  mentions: import_zod8.z.object({ users: import_zod8.z.boolean().default(true), roles: import_zod8.z.boolean().default(false), everyone: import_zod8.z.boolean().default(false) }).default({})
+});
+var mbDocumentDataSchema = import_zod8.z.object({
+  messages: import_zod8.z.array(mbMessageSchema).max(MB_LIMITS.messagesPerGroup).default([]),
+  /** Name/Profilbild nur beim Versand über einen Webhook (der Bot sendet immer als er selbst). */
+  webhookProfile: import_zod8.z.object({ username: str(200), avatarUrl: str(4e3) }).default({})
+});
+var counter = 0;
+var mbId = () => `${Date.now().toString(36)}${(counter++).toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+var emptyMbEmbed = () => mbEmbedSchema.parse({ id: mbId(), color: "#1e3a8a" });
+var emptyMbMessage = () => mbMessageSchema.parse({ id: mbId() });
+var emptyMbDocument = () => mbDocumentDataSchema.parse({ messages: [{ id: mbId(), content: "" }] });
+function cloneWithNewIds(v) {
+  const walk = (x) => {
+    if (Array.isArray(x)) return x.map(walk);
+    if (x && typeof x === "object") return Object.fromEntries(Object.entries(x).map(([k, val]) => [k, k === "id" && typeof val === "string" ? mbId() : walk(val)]));
+    return x;
+  };
+  return walk(v);
+}
+var SNOWFLAKE = /^\d{15,25}$/;
+var CUSTOM_EMOJI = /^<(a?):(\w{2,32}):(\d{15,25})>$/;
+var UNICODE_EMOJI = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[#*0-9]️?⃣)(?:[️‍\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\u{E0020}-\u{E007F}])*$/u;
+var isValidEmoji = (e) => CUSTOM_EMOJI.test(e) || e.length <= 32 && UNICODE_EMOJI.test(e);
+function isHttpUrl(u) {
+  if (!/^https?:\/\//i.test(u) || /\s/.test(u)) return false;
+  try {
+    const x = new URL(u);
+    return (x.protocol === "https:" || x.protocol === "http:") && !!x.hostname;
+  } catch {
+    return false;
+  }
+}
+var HEX = /^#[0-9a-fA-F]{6}$/;
+var len = (s) => [...s].length;
+var embedChars = (e) => len(e.title) + len(e.description) + len(e.authorName) + len(e.footerText) + e.fields.reduce((n, f) => n + len(f.name) + len(f.value), 0);
+function validateMbMessage(m, idx, o = {}) {
+  const out = [];
+  const base = `Nachricht ${idx + 1}`;
+  const add = (level, where, path, message) => out.push({ level, where: where ? `${base} \u203A ${where}` : base, path: ["messages", idx, ...path], message });
+  const url = (v, where, path, label, max = MB_LIMITS.url) => {
+    if (!v) return;
+    if (!isHttpUrl(v)) add("error", where, path, `${label}: keine g\xFCltige URL (muss mit https:// oder http:// beginnen).`);
+    else if (v.length > max) add("error", where, path, `${label}: h\xF6chstens ${max} Zeichen.`);
+    else if (v.startsWith("http://")) add("warning", where, path, `${label}: unverschl\xFCsselt (http). Discord zeigt Bilder \xFCber http oft nicht an.`);
+  };
+  if (len(m.content) > DISCORD_LIMITS.content) add("error", "Text", ["content"], `Text: ${len(m.content)}/${DISCORD_LIMITS.content} Zeichen.`);
+  if (!m.content.trim() && !m.embeds.length && !m.rows.length) add("error", "", [], "Die Nachricht ist leer \u2013 Text, Embed oder Komponente n\xF6tig.");
+  if (m.mentions.everyone && /@(everyone|here)/.test(m.content)) add("warning", "Text", ["content"], "@everyone/@here wird wirklich gepingt (der Bot braucht daf\xFCr das Recht \u201E@everyone erw\xE4hnen\u201C).");
+  if (m.embeds.length > DISCORD_LIMITS.embedsPerMessage) add("error", "", ["embeds"], `H\xF6chstens ${DISCORD_LIMITS.embedsPerMessage} Embeds je Nachricht.`);
+  let total = 0;
+  m.embeds.forEach((e, ei) => {
+    const w = `Embed ${ei + 1}`;
+    const p = (...x) => ["embeds", ei, ...x];
+    total += embedChars(e);
+    const lim = (v, max, key3, label) => {
+      if (len(v) > max) add("error", w, p(key3), `${label}: ${len(v)}/${max} Zeichen.`);
+    };
+    lim(e.title, DISCORD_LIMITS.title, "title", "Titel");
+    lim(e.description, DISCORD_LIMITS.description, "description", "Beschreibung");
+    lim(e.authorName, DISCORD_LIMITS.authorName, "authorName", "Autorname");
+    lim(e.footerText, DISCORD_LIMITS.footerText, "footerText", "Fu\xDFzeile");
+    if (e.color && !HEX.test(e.color)) add("error", w, p("color"), "Farbe: HEX-Wert wie #1e3a8a.");
+    url(e.url, w, p("url"), "Titel-URL");
+    if (e.url && !e.title) add("warning", w, p("url"), "Titel-URL ohne Titel wird in Discord nicht angezeigt.");
+    url(e.authorUrl, w, p("authorUrl"), "Autor-URL");
+    url(e.authorIconUrl, w, p("authorIconUrl"), "Autor-Icon");
+    if ((e.authorUrl || e.authorIconUrl) && !e.authorName.trim()) add("error", w, p("authorName"), "Autor-URL/-Icon brauchen einen Autornamen.");
+    url(e.thumbnailUrl, w, p("thumbnailUrl"), "Thumbnail");
+    url(e.imageUrl, w, p("imageUrl"), "Bild");
+    url(e.footerIconUrl, w, p("footerIconUrl"), "Fu\xDFzeilen-Icon");
+    if (e.footerIconUrl && !e.footerText.trim()) add("error", w, p("footerText"), "Ein Fu\xDFzeilen-Icon braucht einen Fu\xDFzeilentext.");
+    if (e.timestamp === "custom" && (!e.timestampAt || Number.isNaN(Date.parse(e.timestampAt)))) add("error", w, p("timestampAt"), "Zeitstempel: g\xFCltiges Datum w\xE4hlen.");
+    if (e.fields.length > DISCORD_LIMITS.fields) add("error", w, p("fields"), `H\xF6chstens ${DISCORD_LIMITS.fields} Felder je Embed.`);
+    e.fields.forEach((f, fi) => {
+      const fw = `${w} \u203A Feld ${fi + 1}`;
+      if (!f.name.trim()) add("error", fw, p("fields", fi, "name"), "Feldname fehlt (Discord verlangt Name und Wert).");
+      if (!f.value.trim()) add("error", fw, p("fields", fi, "value"), "Feldwert fehlt (Discord verlangt Name und Wert).");
+      if (len(f.name) > DISCORD_LIMITS.fieldName) add("error", fw, p("fields", fi, "name"), `Feldname: ${len(f.name)}/${DISCORD_LIMITS.fieldName} Zeichen.`);
+      if (len(f.value) > DISCORD_LIMITS.fieldValue) add("error", fw, p("fields", fi, "value"), `Feldwert: ${len(f.value)}/${DISCORD_LIMITS.fieldValue} Zeichen.`);
+    });
+    const empty = !e.title.trim() && !e.description.trim() && !e.fields.length && !e.imageUrl && !e.thumbnailUrl && !e.authorName.trim() && !e.footerText.trim();
+    if (empty) add("error", w, p(), "Das Embed ist leer \u2013 Titel, Beschreibung, Feld, Bild, Autor oder Fu\xDFzeile n\xF6tig.");
+  });
+  if (total > DISCORD_LIMITS.embedTotal) add("error", "Embeds", ["embeds"], `Alle Embeds zusammen: ${total}/${DISCORD_LIMITS.embedTotal} Zeichen.`);
+  if (m.rows.length > DISCORD_LIMITS.actionRows) add("error", "Komponenten", ["rows"], `H\xF6chstens ${DISCORD_LIMITS.actionRows} Komponenten-Reihen je Nachricht.`);
+  const action = (a, where, path) => {
+    if (a.type === "reply") {
+      if (!a.text.trim()) add("error", where, [...path, "text"], "Aktion \u201EAntwort\u201C: Antworttext fehlt.");
+      else if (len(a.text) > MB_LIMITS.replyText) add("error", where, [...path, "text"], `Antworttext: ${len(a.text)}/${MB_LIMITS.replyText} Zeichen.`);
+    } else {
+      if (o.allowRoleActions === false) add("error", where, path, "Rollen-Aktionen darfst du nicht anlegen (Recht \u201ERollen-Buttons\u201C).");
+      if (!SNOWFLAKE.test(a.roleId)) add("error", where, [...path, "roleId"], "Aktion \u201ERolle\u201C: Rolle w\xE4hlen.");
+      else if (o.roleIds && !o.roleIds.includes(a.roleId)) add("error", where, [...path, "roleId"], "Diese Rolle gibt es auf dem Discord-Server nicht (mehr).");
+    }
+  };
+  m.rows.forEach((r, ri) => {
+    const w = `Reihe ${ri + 1}`;
+    const p = (...x) => ["rows", ri, ...x];
+    if (r.type === "buttons") {
+      if (!r.buttons.length) add("error", w, p("buttons"), "Die Button-Reihe ist leer.");
+      if (r.buttons.length > DISCORD_LIMITS.buttonsPerRow) add("error", w, p("buttons"), `H\xF6chstens ${DISCORD_LIMITS.buttonsPerRow} Buttons je Reihe.`);
+      r.buttons.forEach((b, bi) => {
+        const bw = `${w} \u203A Button ${bi + 1}`;
+        if (!b.label.trim() && !b.emoji.trim()) add("error", bw, p("buttons", bi, "label"), "Button braucht eine Beschriftung oder ein Emoji.");
+        if (len(b.label) > DISCORD_LIMITS.buttonLabel) add("error", bw, p("buttons", bi, "label"), `Beschriftung: ${len(b.label)}/${DISCORD_LIMITS.buttonLabel} Zeichen.`);
+        if (b.emoji && !isValidEmoji(b.emoji.trim())) add("error", bw, p("buttons", bi, "emoji"), "Emoji: ein Unicode-Emoji (z. B. \u{1F693}) oder ein Server-Emoji wie <:name:123\u2026>.");
+        if (b.kind === "link") {
+          if (!b.url) add("error", bw, p("buttons", bi, "url"), "Link-Button braucht eine URL.");
+          else url(b.url, bw, p("buttons", bi, "url"), "Link", DISCORD_LIMITS.linkUrl);
+        } else {
+          if (o.target === "webhook") add("error", bw, p("buttons", bi), "\xDCber einen Webhook sind nur Link-Buttons m\xF6glich \u2013 f\xFCr Aktions-Buttons \xFCber den Bot senden.");
+          action(b.action, bw, p("buttons", bi, "action"));
+        }
+      });
+    } else {
+      if (o.target === "webhook") add("error", w, p(), "\xDCber einen Webhook sind keine Auswahlmen\xFCs m\xF6glich \u2013 \xFCber den Bot senden.");
+      if (!r.options.length) add("error", w, p("options"), "Das Auswahlmen\xFC braucht mindestens eine Option.");
+      if (r.options.length > DISCORD_LIMITS.selectOptions) add("error", w, p("options"), `H\xF6chstens ${DISCORD_LIMITS.selectOptions} Optionen.`);
+      if (len(r.placeholder) > DISCORD_LIMITS.selectPlaceholder) add("error", w, p("placeholder"), `Platzhalter: ${len(r.placeholder)}/${DISCORD_LIMITS.selectPlaceholder} Zeichen.`);
+      r.options.forEach((op, oi) => {
+        const ow = `${w} \u203A Option ${oi + 1}`;
+        if (!op.label.trim()) add("error", ow, p("options", oi, "label"), "Option braucht eine Beschriftung.");
+        if (len(op.label) > DISCORD_LIMITS.optionLabel) add("error", ow, p("options", oi, "label"), `Beschriftung: ${len(op.label)}/${DISCORD_LIMITS.optionLabel} Zeichen.`);
+        if (len(op.description) > DISCORD_LIMITS.optionDescription) add("error", ow, p("options", oi, "description"), `Beschreibung: ${len(op.description)}/${DISCORD_LIMITS.optionDescription} Zeichen.`);
+        if (op.emoji && !isValidEmoji(op.emoji.trim())) add("error", ow, p("options", oi, "emoji"), "Emoji: ein Unicode-Emoji oder ein Server-Emoji wie <:name:123\u2026>.");
+        action(op.action, ow, p("options", oi, "action"));
+      });
+    }
+  });
+  return out;
+}
+function validateMbDocument(d, o = {}) {
+  const out = [];
+  if (!d.messages.length) out.push({ level: "error", where: "Gruppe", path: ["messages"], message: "Keine Nachricht vorhanden." });
+  if (d.messages.length > MB_LIMITS.messagesPerGroup) out.push({ level: "error", where: "Gruppe", path: ["messages"], message: `H\xF6chstens ${MB_LIMITS.messagesPerGroup} Nachrichten je Gruppe.` });
+  d.messages.forEach((m, i) => out.push(...validateMbMessage(m, i, o)));
+  if (o.target === "webhook") {
+    const u = d.webhookProfile.username.trim();
+    if (len(u) > DISCORD_LIMITS.webhookUsername) out.push({ level: "error", where: "Webhook-Profil", path: ["webhookProfile", "username"], message: `Name: h\xF6chstens ${DISCORD_LIMITS.webhookUsername} Zeichen.` });
+    if (/clyde|discord/i.test(u)) out.push({ level: "error", where: "Webhook-Profil", path: ["webhookProfile", "username"], message: "Discord verbietet \u201Eclyde\u201C und \u201Ediscord\u201C im Webhook-Namen." });
+    if (d.webhookProfile.avatarUrl && !isHttpUrl(d.webhookProfile.avatarUrl)) out.push({ level: "error", where: "Webhook-Profil", path: ["webhookProfile", "avatarUrl"], message: "Profilbild: keine g\xFCltige URL." });
+  }
+  return out;
+}
+var hasErrors = (issues) => issues.some((i) => i.level === "error");
+function toPartialEmoji(e) {
+  const t = e.trim();
+  if (!t) return void 0;
+  const c = CUSTOM_EMOJI.exec(t);
+  return c ? { id: c[3], name: c[2], ...c[1] ? { animated: true } : {} } : { name: t };
+}
+var STYLE_NUM = { primary: 1, secondary: 2, success: 3, danger: 4 };
+function toDiscordPayload(m, o = {}) {
+  const now = o.now ?? /* @__PURE__ */ new Date();
+  const embeds = m.embeds.map((e) => {
+    const x = {};
+    if (e.title) x.title = e.title;
+    if (e.url) x.url = e.url;
+    if (e.description) x.description = e.description;
+    if (e.color && HEX.test(e.color)) x.color = parseInt(e.color.slice(1), 16);
+    if (e.authorName) x.author = { name: e.authorName, ...e.authorUrl ? { url: e.authorUrl } : {}, ...e.authorIconUrl ? { icon_url: e.authorIconUrl } : {} };
+    if (e.thumbnailUrl) x.thumbnail = { url: e.thumbnailUrl };
+    if (e.imageUrl) x.image = { url: e.imageUrl };
+    if (e.footerText) x.footer = { text: e.footerText, ...e.footerIconUrl ? { icon_url: e.footerIconUrl } : {} };
+    if (e.timestamp === "send") x.timestamp = now.toISOString();
+    if (e.timestamp === "custom" && e.timestampAt && !Number.isNaN(Date.parse(e.timestampAt))) x.timestamp = new Date(e.timestampAt).toISOString();
+    if (e.fields.length) x.fields = e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline }));
+    return x;
+  });
+  const components = [];
+  for (const r of m.rows) {
+    if (r.type === "buttons") {
+      const buttons = r.buttons.flatMap((b) => {
+        const emoji2 = toPartialEmoji(b.emoji);
+        const common = { ...b.label ? { label: b.label } : {}, ...emoji2 ? { emoji: emoji2 } : {}, ...b.disabled ? { disabled: true } : {} };
+        if (b.kind === "link") return b.url ? [{ type: 2, style: 5, url: b.url, ...common }] : [];
+        const cid = o.customIdOf?.(b.id);
+        return cid ? [{ type: 2, style: STYLE_NUM[b.style], custom_id: cid, ...common }] : [];
+      });
+      if (buttons.length) components.push({ type: 1, components: buttons });
+    } else {
+      const cid = o.customIdOf?.(r.id);
+      if (!cid || !r.options.length) continue;
+      components.push({ type: 1, components: [{
+        type: 3,
+        custom_id: cid,
+        min_values: 1,
+        max_values: 1,
+        ...r.placeholder ? { placeholder: r.placeholder } : {},
+        ...r.disabled ? { disabled: true } : {},
+        options: r.options.map((op) => {
+          const emoji2 = toPartialEmoji(op.emoji);
+          return { label: op.label, value: op.id, ...op.description ? { description: op.description } : {}, ...emoji2 ? { emoji: emoji2 } : {} };
+        })
+      }] });
+    }
+  }
+  const parse = [];
+  if (m.mentions.users) parse.push("users");
+  if (m.mentions.roles) parse.push("roles");
+  if (m.mentions.everyone) parse.push("everyone");
+  return { ...m.content ? { content: m.content } : {}, embeds, components, allowed_mentions: { parse } };
+}
+function mbSummary(m) {
+  const buttons = m.rows.reduce((n, r) => n + (r.type === "buttons" ? r.buttons.length : 0), 0);
+  const selects = m.rows.filter((r) => r.type === "select").length;
+  const parts = [m.content.trim() ? "Text" : "", m.embeds.length ? `${m.embeds.length} Embed${m.embeds.length > 1 ? "s" : ""}` : "", buttons ? `${buttons} Button${buttons > 1 ? "s" : ""}` : "", selects ? `${selects} Auswahlmen\xFC${selects > 1 ? "s" : ""}` : ""].filter(Boolean);
+  return parts.join(" \xB7 ") || "leer";
+}
+function interactiveComponents(m) {
+  return m.rows.flatMap((r) => r.type === "buttons" ? r.buttons.filter((b) => b.kind === "action").map((b) => ({ componentId: b.id, kind: "button", action: b.action })) : [{ componentId: r.id, kind: "select", options: Object.fromEntries(r.options.map((op) => [op.id, op.action])) }]);
+}
+var MB_DEFAULT_CATEGORIES = ["Allgemein", "Polizei", "Leitstelle", "Dienstantritt", "Dienstende", "Einsatzmeldung", "Personalinformation", "Ank\xFCndigung", "Wartung", "Sonstiges"];
+function missingBotPerms(p, d) {
+  const miss = [];
+  if (!p.view) miss.push("Kanal ansehen");
+  if (!p.send) miss.push("Nachrichten senden");
+  if (!p.embed && d.messages.some((m) => m.embeds.length)) miss.push("Links einbetten");
+  if (p.mentionEveryone === false && d.messages.some((m) => m.mentions.everyone && /@(everyone|here)/.test(m.content))) miss.push("@everyone, @here und alle Rollen erw\xE4hnen");
+  return miss;
+}
+var DISCORD_ERRORS = {
+  10003: "Den Kanal gibt es nicht (mehr).",
+  10008: "Die Nachricht gibt es nicht (mehr).",
+  10015: "Den Webhook gibt es nicht mehr \u2013 in den Webhook-Einstellungen entfernen oder neu anlegen.",
+  20016: "Langsamer Modus im Kanal aktiv \u2013 sp\xE4ter erneut senden.",
+  40005: "Die Nachricht ist zu gro\xDF.",
+  50001: "Der Bot hat keinen Zugriff auf diesen Kanal.",
+  50006: "Discord lehnt eine leere Nachricht ab.",
+  50008: "In diesen Kanaltyp kann nicht gesendet werden.",
+  50013: "Dem Bot fehlen Rechte in diesem Kanal (z. B. \u201ENachrichten senden\u201C oder \u201ELinks einbetten\u201C).",
+  50035: "Discord hat Inhalte als ung\xFCltig abgelehnt.",
+  50109: "Ung\xFCltiges JSON."
+};
+function describeDiscordError(e) {
+  const known = e.code !== void 0 ? DISCORD_ERRORS[e.code] : void 0;
+  const detail = (e.message ?? "").replace(/https?:\/\/\S+/g, "[URL]").replace(/\s+/g, " ").trim().slice(0, 200);
+  if (e.status === 429) return "Discord-Anfragelimit erreicht \u2013 bitte kurz warten und erneut senden.";
+  if (known) return e.code === 50035 && detail ? `${known.slice(0, -1)} (${detail.replace(/\.$/, "")}).` : known;
+  if (e.status === 401 || e.status === 403) return `Discord verweigert den Zugriff${detail ? ` (${detail})` : ""}.`;
+  if (e.status && e.status >= 500) return "Discord ist gerade nicht erreichbar (Serverfehler) \u2013 sp\xE4ter erneut versuchen.";
+  return detail || "Unbekannter Discord-Fehler.";
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ALL_PERMISSIONS,
@@ -2281,6 +2639,7 @@ var fleetInternalSchema = import_zod7.z.object({
   DEFAULT_MDT_CONFIG,
   DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
+  DISCORD_LIMITS,
   DISPATCH_STATUSES,
   DISPATCH_TRANSITIONS,
   DN_STATUSES,
@@ -2315,6 +2674,9 @@ var fleetInternalSchema = import_zod7.z.object({
   LOG_TYPES,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
+  MB_BUTTON_STYLES,
+  MB_DEFAULT_CATEGORIES,
+  MB_LIMITS,
   MODULES,
   MODULE_KEYS,
   MUSIC_TRACKS,
@@ -2374,14 +2736,20 @@ var fleetInternalSchema = import_zod7.z.object({
   canTransition,
   checkAnswer,
   cleanReportValues,
+  cloneWithNewIds,
   commandsForModules,
   conditionMatches,
   dangerLevelOf,
   defaultTicketButtons,
   departmentSchema,
+  describeDiscordError,
   dnSettingsSchema,
   dutyTimeText,
   effectivePermissions,
+  embedChars,
+  emptyMbDocument,
+  emptyMbEmbed,
+  emptyMbMessage,
   fieldValue,
   fillTemplate,
   fleetConfigSchema,
@@ -2396,6 +2764,7 @@ var fleetInternalSchema = import_zod7.z.object({
   gameToPixel,
   gradeAnswer,
   grantMatches,
+  hasErrors,
   hexColor,
   hireMappingSchema,
   hrConfigSchema,
@@ -2404,11 +2773,14 @@ var fleetInternalSchema = import_zod7.z.object({
   infoOptionSchema,
   infoPanelMessage,
   infoPanelSchema,
+  interactiveComponents,
   isDutyTimeField,
+  isHttpUrl,
   isInputQuestion,
   isPermissionKey,
   isRobloxField,
   isSupportOpen,
+  isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
   localMidnight,
@@ -2418,7 +2790,18 @@ var fleetInternalSchema = import_zod7.z.object({
   logTypeLabel,
   loggingConfigSchema,
   matchingBinds,
+  mbActionSchema,
+  mbButtonSchema,
+  mbDocumentDataSchema,
+  mbEmbedSchema,
+  mbFieldSchema,
+  mbId,
+  mbMessageSchema,
+  mbRowSchema,
+  mbSelectOptionSchema,
+  mbSummary,
   mdtConfigSchema,
+  missingBotPerms,
   moduleDef,
   moduleDependencyError,
   moduleOfPermission,
@@ -2458,7 +2841,11 @@ var fleetInternalSchema = import_zod7.z.object({
   statusLabel,
   ticketChannelName,
   ticketNumber,
+  toDiscordPayload,
+  toPartialEmoji,
   triggerMatches,
+  validateMbDocument,
+  validateMbMessage,
   verifyActions,
   weekIso,
   weekKey,

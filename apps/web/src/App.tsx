@@ -33,6 +33,7 @@ const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default
 const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
 const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
 const Modules = lazy(() => import('./pages/admin/Modules').then((m) => ({ default: m.Modules })));
+const MessageBuilder = lazy(() => import('./pages/message-builder/MessageBuilder').then((m) => ({ default: m.MessageBuilder })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
@@ -212,6 +213,7 @@ export function App() {
           <Route path="admin/multi-server" element={<Navigate to="/admin/modules" replace />} />
           <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
+          <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />
           <Route path="admin/embeds" element={<Guard perm="settings.view"><Embeds /></Guard>} />
           <Route path="admin/welcome" element={<Guard perm="settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />

@@ -145,6 +145,9 @@ Gelöscht wird dabei **nichts**: Schichten und Dienstzeiten bleiben in `DutySess
 - **Nachholen**: Die API prüft beim Start und alle 30 Sekunden. War sie über einen Wochenwechsel aus, wird jeder verpasste Reset genau einmal nachgeholt; ältere verpasste Wochen werden nur archiviert, die zuletzt abgeschlossene Woche wird veröffentlicht (Archiv als „nachgeholt“ markiert).
 - **Dashboard**: *Team* → **Wochenrangliste** (laufende Woche, **nächster Reset-Zeitpunkt**, Auswahl abgeschlossener Wochen); Einstellungen unter *Administration → Schichten* → **Automatischer Wochen-Reset** (`settings.manage`, dauerhaft gespeichert). Vollständige Archive (mit allen Sitzungen): `GET /api/v1/team/week/archives/:id` (`team.manage`).
 
+## Discord Message Builder
+Discohook-artiger Editor im Dashboard (mehrere Nachrichten, Embeds, Buttons/Menüs, Vorlagen, Versandhistorie). Der Bot führt die Versandaufträge (`mb.send`) aus und beantwortet Klicks auf dessen Buttons (`mb:<id>`). Details: [message-builder.md](message-builder.md).
+
 ## Embeds (Baukasten wie bei Sapphire)
 *Administration → Embeds* (ansehen `settings.view`, bearbeiten/senden `settings.manage`): Nachricht mit Embed bauen – Text über dem Embed, Titel, Beschreibung, Farbe, **Abschnitte** (Überschrift mit Emoji + Text, z. B. „👑 | Kommandant:“, bis 25; „Aus Dienstgraden“ legt je Dienstgrad der Teamstruktur einen Abschnitt an), Autor, Bilder, Link, Fußzeile, Zeitstempel – mit Live-Vorschau.
 - **Senden** in den gewählten Kanal (z. B. `#karriereweg`). Danach **Nachricht aktualisieren**: der Bot bearbeitet dieselbe Nachricht (kein neuer Post); **Neu senden** postet eine weitere. Wurde die Nachricht in Discord gelöscht, postet der Bot sie neu.

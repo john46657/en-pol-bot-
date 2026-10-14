@@ -60,6 +60,12 @@ declare const PERMISSION_CATALOG: {
     readonly roles: readonly ["view", "manage"];
     /** Module an/aus (Administration → Module) */
     readonly modules: readonly ["view", "manage"];
+    /**
+     * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
+     * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
+     * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+     */
+    readonly messagebuilder: readonly ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"];
 };
 type Catalog = typeof PERMISSION_CATALOG;
 type PermissionKey = {
@@ -1626,6 +1632,11 @@ declare const MODULES: readonly [{
     readonly name: "SEK";
     readonly description: "Spezialeinsatzkommando";
     readonly permissionPrefixes: ["sek"];
+}, {
+    readonly key: "message_builder";
+    readonly name: "Discord Message Builder";
+    readonly description: "Nachrichten und Embeds bauen, Vorlagen, Versand über den Bot, Versandhistorie";
+    readonly permissionPrefixes: ["messagebuilder"];
 }, {
     readonly key: "communication";
     readonly name: "Kommunikation";
@@ -3203,4 +3214,1618 @@ declare const fleetInternalSchema: z.ZodObject<{
 }>;
 type FleetInternalInput = z.infer<typeof fleetInternalSchema>;
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, commandsForModules, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, dnSettingsSchema, dutyTimeText, effectivePermissions, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, isDutyTimeField, isInputQuestion, isPermissionKey, isRobloxField, isSupportOpen, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, mdtConfigSchema, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, policeReportFields, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, triggerMatches, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+/**
+ * Discord Message Builder (Discohook-artig): Nachrichtengruppen aus mehreren Discord-Nachrichten mit Text, Embeds und
+ * Komponenten (Buttons, Auswahlmenü). Gemeinsam für Dashboard (Editor + Vorschau), API (Prüfung + Versand) und Bot.
+ *
+ * Gespeichert wird bewusst „locker“ (Entwürfe dürfen unfertig sein). Vor dem Versand prüft `validateMbDocument` streng gegen
+ * die Discord-Limits; `toDiscordPayload` erzeugt den JSON-Body im Format der Discord-REST-API (Create Message / Execute Webhook).
+ */
+/** Discord-API-Limits (https://discord.com/developers/docs/resources/message, …/channel#embed-limits, …/components). */
+declare const DISCORD_LIMITS: {
+    readonly content: 2000;
+    readonly embedsPerMessage: 10;
+    readonly embedTotal: 6000;
+    readonly title: 256;
+    readonly description: 4096;
+    readonly fields: 25;
+    readonly fieldName: 256;
+    readonly fieldValue: 1024;
+    readonly footerText: 2048;
+    readonly authorName: 256;
+    readonly actionRows: 5;
+    readonly buttonsPerRow: 5;
+    readonly buttonLabel: 80;
+    readonly customId: 100;
+    readonly linkUrl: 512;
+    readonly selectOptions: 25;
+    readonly selectPlaceholder: 150;
+    readonly optionLabel: 100;
+    readonly optionValue: 100;
+    readonly optionDescription: 100;
+    readonly webhookUsername: 80;
+};
+/** Interne Obergrenzen (kein Discord-Limit): eine Gruppe, Länge sonstiger URLs. */
+declare const MB_LIMITS: {
+    readonly messagesPerGroup: 10;
+    readonly url: 2048;
+    readonly replyText: 2000;
+};
+declare const MB_BUTTON_STYLES: readonly ["primary", "secondary", "success", "danger"];
+type MbButtonStyle = (typeof MB_BUTTON_STYLES)[number];
+/** Was ein interaktiver Button / eine Menü-Option tut. Ohne definierte Aktion wird kein interaktiver Button gesendet. */
+declare const mbActionSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+    type: z.ZodLiteral<"reply">;
+    text: z.ZodDefault<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    type: "reply";
+    text: string;
+}, {
+    type: "reply";
+    text?: string | undefined;
+}>, z.ZodObject<{
+    type: z.ZodLiteral<"role">;
+    roleId: z.ZodDefault<z.ZodString>;
+    mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+}, "strip", z.ZodTypeAny, {
+    type: "role";
+    roleId: string;
+    mode: "remove" | "add" | "toggle";
+}, {
+    type: "role";
+    roleId?: string | undefined;
+    mode?: "remove" | "add" | "toggle" | undefined;
+}>]>;
+type MbAction = z.infer<typeof mbActionSchema>;
+declare const mbButtonSchema: z.ZodObject<{
+    id: z.ZodString;
+    /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
+    kind: z.ZodDefault<z.ZodEnum<["link", "action"]>>;
+    label: z.ZodDefault<z.ZodString>;
+    emoji: z.ZodDefault<z.ZodString>;
+    style: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+    url: z.ZodDefault<z.ZodString>;
+    disabled: z.ZodDefault<z.ZodBoolean>;
+    action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+        type: z.ZodLiteral<"reply">;
+        text: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        type: "reply";
+        text: string;
+    }, {
+        type: "reply";
+        text?: string | undefined;
+    }>, z.ZodObject<{
+        type: z.ZodLiteral<"role">;
+        roleId: z.ZodDefault<z.ZodString>;
+        mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+    }, "strip", z.ZodTypeAny, {
+        type: "role";
+        roleId: string;
+        mode: "remove" | "add" | "toggle";
+    }, {
+        type: "role";
+        roleId?: string | undefined;
+        mode?: "remove" | "add" | "toggle" | undefined;
+    }>]>>;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    kind: "action" | "link";
+    action: {
+        type: "reply";
+        text: string;
+    } | {
+        type: "role";
+        roleId: string;
+        mode: "remove" | "add" | "toggle";
+    };
+    id: string;
+    emoji: string;
+    url: string;
+    style: "danger" | "secondary" | "success" | "primary";
+    disabled: boolean;
+}, {
+    id: string;
+    label?: string | undefined;
+    kind?: "action" | "link" | undefined;
+    action?: {
+        type: "reply";
+        text?: string | undefined;
+    } | {
+        type: "role";
+        roleId?: string | undefined;
+        mode?: "remove" | "add" | "toggle" | undefined;
+    } | undefined;
+    emoji?: string | undefined;
+    url?: string | undefined;
+    style?: "danger" | "secondary" | "success" | "primary" | undefined;
+    disabled?: boolean | undefined;
+}>;
+type MbButton = z.infer<typeof mbButtonSchema>;
+declare const mbSelectOptionSchema: z.ZodObject<{
+    id: z.ZodString;
+    label: z.ZodDefault<z.ZodString>;
+    description: z.ZodDefault<z.ZodString>;
+    emoji: z.ZodDefault<z.ZodString>;
+    action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+        type: z.ZodLiteral<"reply">;
+        text: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        type: "reply";
+        text: string;
+    }, {
+        type: "reply";
+        text?: string | undefined;
+    }>, z.ZodObject<{
+        type: z.ZodLiteral<"role">;
+        roleId: z.ZodDefault<z.ZodString>;
+        mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+    }, "strip", z.ZodTypeAny, {
+        type: "role";
+        roleId: string;
+        mode: "remove" | "add" | "toggle";
+    }, {
+        type: "role";
+        roleId?: string | undefined;
+        mode?: "remove" | "add" | "toggle" | undefined;
+    }>]>>;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    description: string;
+    action: {
+        type: "reply";
+        text: string;
+    } | {
+        type: "role";
+        roleId: string;
+        mode: "remove" | "add" | "toggle";
+    };
+    id: string;
+    emoji: string;
+}, {
+    id: string;
+    label?: string | undefined;
+    description?: string | undefined;
+    action?: {
+        type: "reply";
+        text?: string | undefined;
+    } | {
+        type: "role";
+        roleId?: string | undefined;
+        mode?: "remove" | "add" | "toggle" | undefined;
+    } | undefined;
+    emoji?: string | undefined;
+}>;
+type MbSelectOption = z.infer<typeof mbSelectOptionSchema>;
+declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+    id: z.ZodString;
+    type: z.ZodLiteral<"buttons">;
+    buttons: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
+        kind: z.ZodDefault<z.ZodEnum<["link", "action"]>>;
+        label: z.ZodDefault<z.ZodString>;
+        emoji: z.ZodDefault<z.ZodString>;
+        style: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+        url: z.ZodDefault<z.ZodString>;
+        disabled: z.ZodDefault<z.ZodBoolean>;
+        action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+            type: z.ZodLiteral<"reply">;
+            text: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            type: "reply";
+            text: string;
+        }, {
+            type: "reply";
+            text?: string | undefined;
+        }>, z.ZodObject<{
+            type: z.ZodLiteral<"role">;
+            roleId: z.ZodDefault<z.ZodString>;
+            mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+        }, "strip", z.ZodTypeAny, {
+            type: "role";
+            roleId: string;
+            mode: "remove" | "add" | "toggle";
+        }, {
+            type: "role";
+            roleId?: string | undefined;
+            mode?: "remove" | "add" | "toggle" | undefined;
+        }>]>>;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        kind: "action" | "link";
+        action: {
+            type: "reply";
+            text: string;
+        } | {
+            type: "role";
+            roleId: string;
+            mode: "remove" | "add" | "toggle";
+        };
+        id: string;
+        emoji: string;
+        url: string;
+        style: "danger" | "secondary" | "success" | "primary";
+        disabled: boolean;
+    }, {
+        id: string;
+        label?: string | undefined;
+        kind?: "action" | "link" | undefined;
+        action?: {
+            type: "reply";
+            text?: string | undefined;
+        } | {
+            type: "role";
+            roleId?: string | undefined;
+            mode?: "remove" | "add" | "toggle" | undefined;
+        } | undefined;
+        emoji?: string | undefined;
+        url?: string | undefined;
+        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+        disabled?: boolean | undefined;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    type: "buttons";
+    id: string;
+    buttons: {
+        label: string;
+        kind: "action" | "link";
+        action: {
+            type: "reply";
+            text: string;
+        } | {
+            type: "role";
+            roleId: string;
+            mode: "remove" | "add" | "toggle";
+        };
+        id: string;
+        emoji: string;
+        url: string;
+        style: "danger" | "secondary" | "success" | "primary";
+        disabled: boolean;
+    }[];
+}, {
+    type: "buttons";
+    id: string;
+    buttons?: {
+        id: string;
+        label?: string | undefined;
+        kind?: "action" | "link" | undefined;
+        action?: {
+            type: "reply";
+            text?: string | undefined;
+        } | {
+            type: "role";
+            roleId?: string | undefined;
+            mode?: "remove" | "add" | "toggle" | undefined;
+        } | undefined;
+        emoji?: string | undefined;
+        url?: string | undefined;
+        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+        disabled?: boolean | undefined;
+    }[] | undefined;
+}>, z.ZodObject<{
+    id: z.ZodString;
+    type: z.ZodLiteral<"select">;
+    placeholder: z.ZodDefault<z.ZodString>;
+    disabled: z.ZodDefault<z.ZodBoolean>;
+    options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        label: z.ZodDefault<z.ZodString>;
+        description: z.ZodDefault<z.ZodString>;
+        emoji: z.ZodDefault<z.ZodString>;
+        action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+            type: z.ZodLiteral<"reply">;
+            text: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            type: "reply";
+            text: string;
+        }, {
+            type: "reply";
+            text?: string | undefined;
+        }>, z.ZodObject<{
+            type: z.ZodLiteral<"role">;
+            roleId: z.ZodDefault<z.ZodString>;
+            mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+        }, "strip", z.ZodTypeAny, {
+            type: "role";
+            roleId: string;
+            mode: "remove" | "add" | "toggle";
+        }, {
+            type: "role";
+            roleId?: string | undefined;
+            mode?: "remove" | "add" | "toggle" | undefined;
+        }>]>>;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        description: string;
+        action: {
+            type: "reply";
+            text: string;
+        } | {
+            type: "role";
+            roleId: string;
+            mode: "remove" | "add" | "toggle";
+        };
+        id: string;
+        emoji: string;
+    }, {
+        id: string;
+        label?: string | undefined;
+        description?: string | undefined;
+        action?: {
+            type: "reply";
+            text?: string | undefined;
+        } | {
+            type: "role";
+            roleId?: string | undefined;
+            mode?: "remove" | "add" | "toggle" | undefined;
+        } | undefined;
+        emoji?: string | undefined;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    options: {
+        label: string;
+        description: string;
+        action: {
+            type: "reply";
+            text: string;
+        } | {
+            type: "role";
+            roleId: string;
+            mode: "remove" | "add" | "toggle";
+        };
+        id: string;
+        emoji: string;
+    }[];
+    type: "select";
+    id: string;
+    placeholder: string;
+    disabled: boolean;
+}, {
+    type: "select";
+    id: string;
+    options?: {
+        id: string;
+        label?: string | undefined;
+        description?: string | undefined;
+        action?: {
+            type: "reply";
+            text?: string | undefined;
+        } | {
+            type: "role";
+            roleId?: string | undefined;
+            mode?: "remove" | "add" | "toggle" | undefined;
+        } | undefined;
+        emoji?: string | undefined;
+    }[] | undefined;
+    placeholder?: string | undefined;
+    disabled?: boolean | undefined;
+}>]>;
+type MbRow = z.infer<typeof mbRowSchema>;
+declare const mbFieldSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodDefault<z.ZodString>;
+    value: z.ZodDefault<z.ZodString>;
+    inline: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    value: string;
+    id: string;
+    name: string;
+    inline: boolean;
+}, {
+    id: string;
+    value?: string | undefined;
+    name?: string | undefined;
+    inline?: boolean | undefined;
+}>;
+type MbField = z.infer<typeof mbFieldSchema>;
+declare const mbEmbedSchema: z.ZodObject<{
+    id: z.ZodString;
+    title: z.ZodDefault<z.ZodString>;
+    url: z.ZodDefault<z.ZodString>;
+    description: z.ZodDefault<z.ZodString>;
+    /** `#rrggbb` oder leer (= keine Farbe) */
+    color: z.ZodDefault<z.ZodString>;
+    authorName: z.ZodDefault<z.ZodString>;
+    authorUrl: z.ZodDefault<z.ZodString>;
+    authorIconUrl: z.ZodDefault<z.ZodString>;
+    thumbnailUrl: z.ZodDefault<z.ZodString>;
+    imageUrl: z.ZodDefault<z.ZodString>;
+    footerText: z.ZodDefault<z.ZodString>;
+    footerIconUrl: z.ZodDefault<z.ZodString>;
+    /** none = ohne, send = Zeitpunkt des Versands, custom = `timestampAt` */
+    timestamp: z.ZodDefault<z.ZodEnum<["none", "send", "custom"]>>;
+    timestampAt: z.ZodDefault<z.ZodString>;
+    fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodDefault<z.ZodString>;
+        value: z.ZodDefault<z.ZodString>;
+        inline: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        value: string;
+        id: string;
+        name: string;
+        inline: boolean;
+    }, {
+        id: string;
+        value?: string | undefined;
+        name?: string | undefined;
+        inline?: boolean | undefined;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    title: string;
+    description: string;
+    id: string;
+    color: string;
+    timestamp: "send" | "custom" | "none";
+    fields: {
+        value: string;
+        id: string;
+        name: string;
+        inline: boolean;
+    }[];
+    url: string;
+    authorName: string;
+    authorUrl: string;
+    authorIconUrl: string;
+    thumbnailUrl: string;
+    imageUrl: string;
+    footerText: string;
+    footerIconUrl: string;
+    timestampAt: string;
+}, {
+    id: string;
+    title?: string | undefined;
+    description?: string | undefined;
+    color?: string | undefined;
+    timestamp?: "send" | "custom" | "none" | undefined;
+    fields?: {
+        id: string;
+        value?: string | undefined;
+        name?: string | undefined;
+        inline?: boolean | undefined;
+    }[] | undefined;
+    url?: string | undefined;
+    authorName?: string | undefined;
+    authorUrl?: string | undefined;
+    authorIconUrl?: string | undefined;
+    thumbnailUrl?: string | undefined;
+    imageUrl?: string | undefined;
+    footerText?: string | undefined;
+    footerIconUrl?: string | undefined;
+    timestampAt?: string | undefined;
+}>;
+type MbEmbed = z.infer<typeof mbEmbedSchema>;
+declare const mbMessageSchema: z.ZodObject<{
+    id: z.ZodString;
+    content: z.ZodDefault<z.ZodString>;
+    embeds: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        title: z.ZodDefault<z.ZodString>;
+        url: z.ZodDefault<z.ZodString>;
+        description: z.ZodDefault<z.ZodString>;
+        /** `#rrggbb` oder leer (= keine Farbe) */
+        color: z.ZodDefault<z.ZodString>;
+        authorName: z.ZodDefault<z.ZodString>;
+        authorUrl: z.ZodDefault<z.ZodString>;
+        authorIconUrl: z.ZodDefault<z.ZodString>;
+        thumbnailUrl: z.ZodDefault<z.ZodString>;
+        imageUrl: z.ZodDefault<z.ZodString>;
+        footerText: z.ZodDefault<z.ZodString>;
+        footerIconUrl: z.ZodDefault<z.ZodString>;
+        /** none = ohne, send = Zeitpunkt des Versands, custom = `timestampAt` */
+        timestamp: z.ZodDefault<z.ZodEnum<["none", "send", "custom"]>>;
+        timestampAt: z.ZodDefault<z.ZodString>;
+        fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            name: z.ZodDefault<z.ZodString>;
+            value: z.ZodDefault<z.ZodString>;
+            inline: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            value: string;
+            id: string;
+            name: string;
+            inline: boolean;
+        }, {
+            id: string;
+            value?: string | undefined;
+            name?: string | undefined;
+            inline?: boolean | undefined;
+        }>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        title: string;
+        description: string;
+        id: string;
+        color: string;
+        timestamp: "send" | "custom" | "none";
+        fields: {
+            value: string;
+            id: string;
+            name: string;
+            inline: boolean;
+        }[];
+        url: string;
+        authorName: string;
+        authorUrl: string;
+        authorIconUrl: string;
+        thumbnailUrl: string;
+        imageUrl: string;
+        footerText: string;
+        footerIconUrl: string;
+        timestampAt: string;
+    }, {
+        id: string;
+        title?: string | undefined;
+        description?: string | undefined;
+        color?: string | undefined;
+        timestamp?: "send" | "custom" | "none" | undefined;
+        fields?: {
+            id: string;
+            value?: string | undefined;
+            name?: string | undefined;
+            inline?: boolean | undefined;
+        }[] | undefined;
+        url?: string | undefined;
+        authorName?: string | undefined;
+        authorUrl?: string | undefined;
+        authorIconUrl?: string | undefined;
+        thumbnailUrl?: string | undefined;
+        imageUrl?: string | undefined;
+        footerText?: string | undefined;
+        footerIconUrl?: string | undefined;
+        timestampAt?: string | undefined;
+    }>, "many">>;
+    rows: z.ZodDefault<z.ZodArray<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+        id: z.ZodString;
+        type: z.ZodLiteral<"buttons">;
+        buttons: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
+            kind: z.ZodDefault<z.ZodEnum<["link", "action"]>>;
+            label: z.ZodDefault<z.ZodString>;
+            emoji: z.ZodDefault<z.ZodString>;
+            style: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+            url: z.ZodDefault<z.ZodString>;
+            disabled: z.ZodDefault<z.ZodBoolean>;
+            action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                type: z.ZodLiteral<"reply">;
+                text: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                type: "reply";
+                text: string;
+            }, {
+                type: "reply";
+                text?: string | undefined;
+            }>, z.ZodObject<{
+                type: z.ZodLiteral<"role">;
+                roleId: z.ZodDefault<z.ZodString>;
+                mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+            }, "strip", z.ZodTypeAny, {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            }, {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            }>]>>;
+        }, "strip", z.ZodTypeAny, {
+            label: string;
+            kind: "action" | "link";
+            action: {
+                type: "reply";
+                text: string;
+            } | {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            };
+            id: string;
+            emoji: string;
+            url: string;
+            style: "danger" | "secondary" | "success" | "primary";
+            disabled: boolean;
+        }, {
+            id: string;
+            label?: string | undefined;
+            kind?: "action" | "link" | undefined;
+            action?: {
+                type: "reply";
+                text?: string | undefined;
+            } | {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            } | undefined;
+            emoji?: string | undefined;
+            url?: string | undefined;
+            style?: "danger" | "secondary" | "success" | "primary" | undefined;
+            disabled?: boolean | undefined;
+        }>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        type: "buttons";
+        id: string;
+        buttons: {
+            label: string;
+            kind: "action" | "link";
+            action: {
+                type: "reply";
+                text: string;
+            } | {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            };
+            id: string;
+            emoji: string;
+            url: string;
+            style: "danger" | "secondary" | "success" | "primary";
+            disabled: boolean;
+        }[];
+    }, {
+        type: "buttons";
+        id: string;
+        buttons?: {
+            id: string;
+            label?: string | undefined;
+            kind?: "action" | "link" | undefined;
+            action?: {
+                type: "reply";
+                text?: string | undefined;
+            } | {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            } | undefined;
+            emoji?: string | undefined;
+            url?: string | undefined;
+            style?: "danger" | "secondary" | "success" | "primary" | undefined;
+            disabled?: boolean | undefined;
+        }[] | undefined;
+    }>, z.ZodObject<{
+        id: z.ZodString;
+        type: z.ZodLiteral<"select">;
+        placeholder: z.ZodDefault<z.ZodString>;
+        disabled: z.ZodDefault<z.ZodBoolean>;
+        options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            label: z.ZodDefault<z.ZodString>;
+            description: z.ZodDefault<z.ZodString>;
+            emoji: z.ZodDefault<z.ZodString>;
+            action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                type: z.ZodLiteral<"reply">;
+                text: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                type: "reply";
+                text: string;
+            }, {
+                type: "reply";
+                text?: string | undefined;
+            }>, z.ZodObject<{
+                type: z.ZodLiteral<"role">;
+                roleId: z.ZodDefault<z.ZodString>;
+                mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+            }, "strip", z.ZodTypeAny, {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            }, {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            }>]>>;
+        }, "strip", z.ZodTypeAny, {
+            label: string;
+            description: string;
+            action: {
+                type: "reply";
+                text: string;
+            } | {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            };
+            id: string;
+            emoji: string;
+        }, {
+            id: string;
+            label?: string | undefined;
+            description?: string | undefined;
+            action?: {
+                type: "reply";
+                text?: string | undefined;
+            } | {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            } | undefined;
+            emoji?: string | undefined;
+        }>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        options: {
+            label: string;
+            description: string;
+            action: {
+                type: "reply";
+                text: string;
+            } | {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            };
+            id: string;
+            emoji: string;
+        }[];
+        type: "select";
+        id: string;
+        placeholder: string;
+        disabled: boolean;
+    }, {
+        type: "select";
+        id: string;
+        options?: {
+            id: string;
+            label?: string | undefined;
+            description?: string | undefined;
+            action?: {
+                type: "reply";
+                text?: string | undefined;
+            } | {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            } | undefined;
+            emoji?: string | undefined;
+        }[] | undefined;
+        placeholder?: string | undefined;
+        disabled?: boolean | undefined;
+    }>]>, "many">>;
+    /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
+    mentions: z.ZodDefault<z.ZodObject<{
+        users: z.ZodDefault<z.ZodBoolean>;
+        roles: z.ZodDefault<z.ZodBoolean>;
+        everyone: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        roles: boolean;
+        users: boolean;
+        everyone: boolean;
+    }, {
+        roles?: boolean | undefined;
+        users?: boolean | undefined;
+        everyone?: boolean | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    id: string;
+    content: string;
+    embeds: {
+        title: string;
+        description: string;
+        id: string;
+        color: string;
+        timestamp: "send" | "custom" | "none";
+        fields: {
+            value: string;
+            id: string;
+            name: string;
+            inline: boolean;
+        }[];
+        url: string;
+        authorName: string;
+        authorUrl: string;
+        authorIconUrl: string;
+        thumbnailUrl: string;
+        imageUrl: string;
+        footerText: string;
+        footerIconUrl: string;
+        timestampAt: string;
+    }[];
+    rows: ({
+        type: "buttons";
+        id: string;
+        buttons: {
+            label: string;
+            kind: "action" | "link";
+            action: {
+                type: "reply";
+                text: string;
+            } | {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            };
+            id: string;
+            emoji: string;
+            url: string;
+            style: "danger" | "secondary" | "success" | "primary";
+            disabled: boolean;
+        }[];
+    } | {
+        options: {
+            label: string;
+            description: string;
+            action: {
+                type: "reply";
+                text: string;
+            } | {
+                type: "role";
+                roleId: string;
+                mode: "remove" | "add" | "toggle";
+            };
+            id: string;
+            emoji: string;
+        }[];
+        type: "select";
+        id: string;
+        placeholder: string;
+        disabled: boolean;
+    })[];
+    mentions: {
+        roles: boolean;
+        users: boolean;
+        everyone: boolean;
+    };
+}, {
+    id: string;
+    content?: string | undefined;
+    embeds?: {
+        id: string;
+        title?: string | undefined;
+        description?: string | undefined;
+        color?: string | undefined;
+        timestamp?: "send" | "custom" | "none" | undefined;
+        fields?: {
+            id: string;
+            value?: string | undefined;
+            name?: string | undefined;
+            inline?: boolean | undefined;
+        }[] | undefined;
+        url?: string | undefined;
+        authorName?: string | undefined;
+        authorUrl?: string | undefined;
+        authorIconUrl?: string | undefined;
+        thumbnailUrl?: string | undefined;
+        imageUrl?: string | undefined;
+        footerText?: string | undefined;
+        footerIconUrl?: string | undefined;
+        timestampAt?: string | undefined;
+    }[] | undefined;
+    rows?: ({
+        type: "buttons";
+        id: string;
+        buttons?: {
+            id: string;
+            label?: string | undefined;
+            kind?: "action" | "link" | undefined;
+            action?: {
+                type: "reply";
+                text?: string | undefined;
+            } | {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            } | undefined;
+            emoji?: string | undefined;
+            url?: string | undefined;
+            style?: "danger" | "secondary" | "success" | "primary" | undefined;
+            disabled?: boolean | undefined;
+        }[] | undefined;
+    } | {
+        type: "select";
+        id: string;
+        options?: {
+            id: string;
+            label?: string | undefined;
+            description?: string | undefined;
+            action?: {
+                type: "reply";
+                text?: string | undefined;
+            } | {
+                type: "role";
+                roleId?: string | undefined;
+                mode?: "remove" | "add" | "toggle" | undefined;
+            } | undefined;
+            emoji?: string | undefined;
+        }[] | undefined;
+        placeholder?: string | undefined;
+        disabled?: boolean | undefined;
+    })[] | undefined;
+    mentions?: {
+        roles?: boolean | undefined;
+        users?: boolean | undefined;
+        everyone?: boolean | undefined;
+    } | undefined;
+}>;
+type MbMessage = z.infer<typeof mbMessageSchema>;
+/** Inhalt eines Entwurfs bzw. einer Vorlage. */
+declare const mbDocumentDataSchema: z.ZodObject<{
+    messages: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        content: z.ZodDefault<z.ZodString>;
+        embeds: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            title: z.ZodDefault<z.ZodString>;
+            url: z.ZodDefault<z.ZodString>;
+            description: z.ZodDefault<z.ZodString>;
+            /** `#rrggbb` oder leer (= keine Farbe) */
+            color: z.ZodDefault<z.ZodString>;
+            authorName: z.ZodDefault<z.ZodString>;
+            authorUrl: z.ZodDefault<z.ZodString>;
+            authorIconUrl: z.ZodDefault<z.ZodString>;
+            thumbnailUrl: z.ZodDefault<z.ZodString>;
+            imageUrl: z.ZodDefault<z.ZodString>;
+            footerText: z.ZodDefault<z.ZodString>;
+            footerIconUrl: z.ZodDefault<z.ZodString>;
+            /** none = ohne, send = Zeitpunkt des Versands, custom = `timestampAt` */
+            timestamp: z.ZodDefault<z.ZodEnum<["none", "send", "custom"]>>;
+            timestampAt: z.ZodDefault<z.ZodString>;
+            fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodDefault<z.ZodString>;
+                value: z.ZodDefault<z.ZodString>;
+                inline: z.ZodDefault<z.ZodBoolean>;
+            }, "strip", z.ZodTypeAny, {
+                value: string;
+                id: string;
+                name: string;
+                inline: boolean;
+            }, {
+                id: string;
+                value?: string | undefined;
+                name?: string | undefined;
+                inline?: boolean | undefined;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            timestamp: "send" | "custom" | "none";
+            fields: {
+                value: string;
+                id: string;
+                name: string;
+                inline: boolean;
+            }[];
+            url: string;
+            authorName: string;
+            authorUrl: string;
+            authorIconUrl: string;
+            thumbnailUrl: string;
+            imageUrl: string;
+            footerText: string;
+            footerIconUrl: string;
+            timestampAt: string;
+        }, {
+            id: string;
+            title?: string | undefined;
+            description?: string | undefined;
+            color?: string | undefined;
+            timestamp?: "send" | "custom" | "none" | undefined;
+            fields?: {
+                id: string;
+                value?: string | undefined;
+                name?: string | undefined;
+                inline?: boolean | undefined;
+            }[] | undefined;
+            url?: string | undefined;
+            authorName?: string | undefined;
+            authorUrl?: string | undefined;
+            authorIconUrl?: string | undefined;
+            thumbnailUrl?: string | undefined;
+            imageUrl?: string | undefined;
+            footerText?: string | undefined;
+            footerIconUrl?: string | undefined;
+            timestampAt?: string | undefined;
+        }>, "many">>;
+        rows: z.ZodDefault<z.ZodArray<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+            id: z.ZodString;
+            type: z.ZodLiteral<"buttons">;
+            buttons: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
+                kind: z.ZodDefault<z.ZodEnum<["link", "action"]>>;
+                label: z.ZodDefault<z.ZodString>;
+                emoji: z.ZodDefault<z.ZodString>;
+                style: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+                url: z.ZodDefault<z.ZodString>;
+                disabled: z.ZodDefault<z.ZodBoolean>;
+                action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                    type: z.ZodLiteral<"reply">;
+                    text: z.ZodDefault<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    type: "reply";
+                    text: string;
+                }, {
+                    type: "reply";
+                    text?: string | undefined;
+                }>, z.ZodObject<{
+                    type: z.ZodLiteral<"role">;
+                    roleId: z.ZodDefault<z.ZodString>;
+                    mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                }, {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                }>]>>;
+            }, "strip", z.ZodTypeAny, {
+                label: string;
+                kind: "action" | "link";
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+                url: string;
+                style: "danger" | "secondary" | "success" | "primary";
+                disabled: boolean;
+            }, {
+                id: string;
+                label?: string | undefined;
+                kind?: "action" | "link" | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+                url?: string | undefined;
+                style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                disabled?: boolean | undefined;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            type: "buttons";
+            id: string;
+            buttons: {
+                label: string;
+                kind: "action" | "link";
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+                url: string;
+                style: "danger" | "secondary" | "success" | "primary";
+                disabled: boolean;
+            }[];
+        }, {
+            type: "buttons";
+            id: string;
+            buttons?: {
+                id: string;
+                label?: string | undefined;
+                kind?: "action" | "link" | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+                url?: string | undefined;
+                style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                disabled?: boolean | undefined;
+            }[] | undefined;
+        }>, z.ZodObject<{
+            id: z.ZodString;
+            type: z.ZodLiteral<"select">;
+            placeholder: z.ZodDefault<z.ZodString>;
+            disabled: z.ZodDefault<z.ZodBoolean>;
+            options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                label: z.ZodDefault<z.ZodString>;
+                description: z.ZodDefault<z.ZodString>;
+                emoji: z.ZodDefault<z.ZodString>;
+                action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                    type: z.ZodLiteral<"reply">;
+                    text: z.ZodDefault<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    type: "reply";
+                    text: string;
+                }, {
+                    type: "reply";
+                    text?: string | undefined;
+                }>, z.ZodObject<{
+                    type: z.ZodLiteral<"role">;
+                    roleId: z.ZodDefault<z.ZodString>;
+                    mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+                }, "strip", z.ZodTypeAny, {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                }, {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                }>]>>;
+            }, "strip", z.ZodTypeAny, {
+                label: string;
+                description: string;
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+            }, {
+                id: string;
+                label?: string | undefined;
+                description?: string | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            options: {
+                label: string;
+                description: string;
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+            }[];
+            type: "select";
+            id: string;
+            placeholder: string;
+            disabled: boolean;
+        }, {
+            type: "select";
+            id: string;
+            options?: {
+                id: string;
+                label?: string | undefined;
+                description?: string | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+            }[] | undefined;
+            placeholder?: string | undefined;
+            disabled?: boolean | undefined;
+        }>]>, "many">>;
+        /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
+        mentions: z.ZodDefault<z.ZodObject<{
+            users: z.ZodDefault<z.ZodBoolean>;
+            roles: z.ZodDefault<z.ZodBoolean>;
+            everyone: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            roles: boolean;
+            users: boolean;
+            everyone: boolean;
+        }, {
+            roles?: boolean | undefined;
+            users?: boolean | undefined;
+            everyone?: boolean | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        content: string;
+        embeds: {
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            timestamp: "send" | "custom" | "none";
+            fields: {
+                value: string;
+                id: string;
+                name: string;
+                inline: boolean;
+            }[];
+            url: string;
+            authorName: string;
+            authorUrl: string;
+            authorIconUrl: string;
+            thumbnailUrl: string;
+            imageUrl: string;
+            footerText: string;
+            footerIconUrl: string;
+            timestampAt: string;
+        }[];
+        rows: ({
+            type: "buttons";
+            id: string;
+            buttons: {
+                label: string;
+                kind: "action" | "link";
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+                url: string;
+                style: "danger" | "secondary" | "success" | "primary";
+                disabled: boolean;
+            }[];
+        } | {
+            options: {
+                label: string;
+                description: string;
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+            }[];
+            type: "select";
+            id: string;
+            placeholder: string;
+            disabled: boolean;
+        })[];
+        mentions: {
+            roles: boolean;
+            users: boolean;
+            everyone: boolean;
+        };
+    }, {
+        id: string;
+        content?: string | undefined;
+        embeds?: {
+            id: string;
+            title?: string | undefined;
+            description?: string | undefined;
+            color?: string | undefined;
+            timestamp?: "send" | "custom" | "none" | undefined;
+            fields?: {
+                id: string;
+                value?: string | undefined;
+                name?: string | undefined;
+                inline?: boolean | undefined;
+            }[] | undefined;
+            url?: string | undefined;
+            authorName?: string | undefined;
+            authorUrl?: string | undefined;
+            authorIconUrl?: string | undefined;
+            thumbnailUrl?: string | undefined;
+            imageUrl?: string | undefined;
+            footerText?: string | undefined;
+            footerIconUrl?: string | undefined;
+            timestampAt?: string | undefined;
+        }[] | undefined;
+        rows?: ({
+            type: "buttons";
+            id: string;
+            buttons?: {
+                id: string;
+                label?: string | undefined;
+                kind?: "action" | "link" | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+                url?: string | undefined;
+                style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                disabled?: boolean | undefined;
+            }[] | undefined;
+        } | {
+            type: "select";
+            id: string;
+            options?: {
+                id: string;
+                label?: string | undefined;
+                description?: string | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+            }[] | undefined;
+            placeholder?: string | undefined;
+            disabled?: boolean | undefined;
+        })[] | undefined;
+        mentions?: {
+            roles?: boolean | undefined;
+            users?: boolean | undefined;
+            everyone?: boolean | undefined;
+        } | undefined;
+    }>, "many">>;
+    /** Name/Profilbild nur beim Versand über einen Webhook (der Bot sendet immer als er selbst). */
+    webhookProfile: z.ZodDefault<z.ZodObject<{
+        username: z.ZodDefault<z.ZodString>;
+        avatarUrl: z.ZodDefault<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        username: string;
+        avatarUrl: string;
+    }, {
+        username?: string | undefined;
+        avatarUrl?: string | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    messages: {
+        id: string;
+        content: string;
+        embeds: {
+            title: string;
+            description: string;
+            id: string;
+            color: string;
+            timestamp: "send" | "custom" | "none";
+            fields: {
+                value: string;
+                id: string;
+                name: string;
+                inline: boolean;
+            }[];
+            url: string;
+            authorName: string;
+            authorUrl: string;
+            authorIconUrl: string;
+            thumbnailUrl: string;
+            imageUrl: string;
+            footerText: string;
+            footerIconUrl: string;
+            timestampAt: string;
+        }[];
+        rows: ({
+            type: "buttons";
+            id: string;
+            buttons: {
+                label: string;
+                kind: "action" | "link";
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+                url: string;
+                style: "danger" | "secondary" | "success" | "primary";
+                disabled: boolean;
+            }[];
+        } | {
+            options: {
+                label: string;
+                description: string;
+                action: {
+                    type: "reply";
+                    text: string;
+                } | {
+                    type: "role";
+                    roleId: string;
+                    mode: "remove" | "add" | "toggle";
+                };
+                id: string;
+                emoji: string;
+            }[];
+            type: "select";
+            id: string;
+            placeholder: string;
+            disabled: boolean;
+        })[];
+        mentions: {
+            roles: boolean;
+            users: boolean;
+            everyone: boolean;
+        };
+    }[];
+    webhookProfile: {
+        username: string;
+        avatarUrl: string;
+    };
+}, {
+    messages?: {
+        id: string;
+        content?: string | undefined;
+        embeds?: {
+            id: string;
+            title?: string | undefined;
+            description?: string | undefined;
+            color?: string | undefined;
+            timestamp?: "send" | "custom" | "none" | undefined;
+            fields?: {
+                id: string;
+                value?: string | undefined;
+                name?: string | undefined;
+                inline?: boolean | undefined;
+            }[] | undefined;
+            url?: string | undefined;
+            authorName?: string | undefined;
+            authorUrl?: string | undefined;
+            authorIconUrl?: string | undefined;
+            thumbnailUrl?: string | undefined;
+            imageUrl?: string | undefined;
+            footerText?: string | undefined;
+            footerIconUrl?: string | undefined;
+            timestampAt?: string | undefined;
+        }[] | undefined;
+        rows?: ({
+            type: "buttons";
+            id: string;
+            buttons?: {
+                id: string;
+                label?: string | undefined;
+                kind?: "action" | "link" | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+                url?: string | undefined;
+                style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                disabled?: boolean | undefined;
+            }[] | undefined;
+        } | {
+            type: "select";
+            id: string;
+            options?: {
+                id: string;
+                label?: string | undefined;
+                description?: string | undefined;
+                action?: {
+                    type: "reply";
+                    text?: string | undefined;
+                } | {
+                    type: "role";
+                    roleId?: string | undefined;
+                    mode?: "remove" | "add" | "toggle" | undefined;
+                } | undefined;
+                emoji?: string | undefined;
+            }[] | undefined;
+            placeholder?: string | undefined;
+            disabled?: boolean | undefined;
+        })[] | undefined;
+        mentions?: {
+            roles?: boolean | undefined;
+            users?: boolean | undefined;
+            everyone?: boolean | undefined;
+        } | undefined;
+    }[] | undefined;
+    webhookProfile?: {
+        username?: string | undefined;
+        avatarUrl?: string | undefined;
+    } | undefined;
+}>;
+type MbDocumentData = z.infer<typeof mbDocumentDataSchema>;
+/** Kurze, im Dokument eindeutige ID (für React-Keys und Zuordnung von Aktionen). */
+declare const mbId: () => string;
+declare const emptyMbEmbed: () => MbEmbed;
+declare const emptyMbMessage: () => MbMessage;
+declare const emptyMbDocument: () => MbDocumentData;
+/** Kopie mit neuen IDs (Nachricht/Embed duplizieren). */
+declare function cloneWithNewIds<T>(v: T): T;
+interface MbIssue {
+    level: 'error' | 'warning';
+    message: string; /** z. B. „Nachricht 1 › Embed 2 › Feld 3“ */
+    where: string; /** Pfad im Dokument (für Markierungen im Editor) */
+    path: (string | number)[];
+}
+declare const isValidEmoji: (e: string) => boolean;
+/** http(s)-URL, die Discord annimmt. */
+declare function isHttpUrl(u: string): boolean;
+/** Zeichen, die bei den 6000 Zeichen je Nachricht zählen (Titel, Beschreibung, Feldnamen/-werte, Fußzeile, Autor). */
+declare const embedChars: (e: MbEmbed) => number;
+interface MbValidateOptions {
+    /** Versandweg: Webhooks (nicht vom Bot) dürfen nur Link-Buttons senden. */
+    target?: 'bot' | 'webhook';
+    /** Rollen-Aktionen erlaubt (eigenes Recht)? */
+    allowRoleActions?: boolean;
+    /** Bekannte Rollen des Servers (für Rollen-Aktionen); undefiniert = nicht prüfbar */
+    roleIds?: readonly string[];
+}
+declare function validateMbMessage(m: MbMessage, idx: number, o?: MbValidateOptions): MbIssue[];
+declare function validateMbDocument(d: MbDocumentData, o?: MbValidateOptions): MbIssue[];
+declare const hasErrors: (issues: MbIssue[]) => boolean;
+/** Emoji im Format der Discord-API (Partial Emoji). */
+declare function toPartialEmoji(e: string): {
+    id?: string;
+    name: string;
+    animated?: boolean;
+} | undefined;
+/** Discord-JSON einer Nachricht (snake_case wie die REST-API). */
+interface DiscordMessagePayload {
+    content?: string;
+    embeds: Record<string, unknown>[];
+    components: {
+        type: 1;
+        components: Record<string, unknown>[];
+    }[];
+    allowed_mentions: {
+        parse: ('users' | 'roles' | 'everyone')[];
+    };
+}
+/**
+ * Baut den Discord-Body. `customIdOf(componentId)` liefert die custom_id interaktiver Komponenten (`mb:<aktion>`);
+ * ohne Zuordnung werden interaktive Komponenten weggelassen – es entsteht nie ein Button ohne Funktion.
+ */
+declare function toDiscordPayload(m: MbMessage, o?: {
+    now?: Date;
+    customIdOf?: (componentId: string) => string | undefined;
+}): DiscordMessagePayload;
+/** Kurzbeschreibung für Historie und Versandstatus („Text · 2 Embeds · 3 Buttons“). */
+declare function mbSummary(m: MbMessage): string;
+/** Interaktive Komponenten einer Nachricht (Button-ID bzw. Menü-ID → Aktion(en)), für die beim Versand Aktionen angelegt werden. */
+type MbInteractive = {
+    componentId: string;
+    kind: 'button';
+    action: MbAction;
+} | {
+    componentId: string;
+    kind: 'select';
+    options: Record<string, MbAction>;
+};
+declare function interactiveComponents(m: MbMessage): MbInteractive[];
+declare const MB_DEFAULT_CATEGORIES: readonly ["Allgemein", "Polizei", "Leitstelle", "Dienstantritt", "Dienstende", "Einsatzmeldung", "Personalinformation", "Ankündigung", "Wartung", "Sonstiges"];
+/** Rechte des Bots im Kanal, die zum Senden gebraucht werden (meldet der Bot im Kanalverzeichnis). */
+interface MbChannelBotPerms {
+    view: boolean;
+    send: boolean;
+    embed: boolean;
+    mentionEveryone?: boolean;
+    sendInThreads?: boolean;
+}
+/** Fehlende Bot-Rechte für eine Nachrichtengruppe (leer = alles da). */
+declare function missingBotPerms(p: MbChannelBotPerms, d: MbDocumentData): string[];
+declare function describeDiscordError(e: {
+    status?: number;
+    code?: number;
+    message?: string;
+}): string;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForModules, conditionMatches, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, dnSettingsSchema, dutyTimeText, effectivePermissions, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, policeReportFields, questionSchema, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

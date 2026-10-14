@@ -62,6 +62,7 @@ export declare class ApplicationsService {
                 confirmation: string;
                 completion: string;
             };
+            mode: "DM" | "WEB";
             roles: {
                 denied: string[];
                 accepted: string[];
@@ -79,7 +80,6 @@ export declare class ApplicationsService {
                 removeOnSubmit: string[];
                 managers: string[];
             };
-            mode: "DM" | "WEB";
             staffThreads: boolean;
             timeLimitMinutes: number;
             onLeave: "DENY" | "NONE" | "WITHDRAW";
