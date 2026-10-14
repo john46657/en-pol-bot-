@@ -48,13 +48,13 @@ export declare class NotificationsController {
         unread: number;
         items: {
             id: string;
+            createdAt: Date;
             type: string;
             title: string;
-            createdAt: Date;
             userId: string;
-            entityType: string | null;
-            entityId: string | null;
             body: string | null;
+            entityId: string | null;
+            entityType: string | null;
             readAt: Date | null;
             archivedAt: Date | null;
         }[];

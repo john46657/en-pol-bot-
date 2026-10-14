@@ -7,11 +7,11 @@ export declare class EmbedsController {
     constructor(s: EmbedsService);
     list(): Promise<{
         id: string;
+        color: string;
         title: string;
         description: string;
-        name: string;
-        color: string;
         guildId: string | null;
+        name: string;
         content: string;
         footer: string;
         channelId: string | null;
@@ -39,11 +39,11 @@ export declare class EmbedsController {
     }[]>;
     save(a: Actor, id: string, b: EmbedDoc): Promise<{
         id: string;
+        color: string;
         title: string;
         description: string;
-        name: string;
-        color: string;
         guildId: string | null;
+        name: string;
         content: string;
         footer: string;
         channelId: string | null;
@@ -71,11 +71,11 @@ export declare class EmbedsController {
     }>;
     duplicate(a: Actor, id: string): Promise<{
         id: string;
+        color: string;
         title: string;
         description: string;
-        name: string;
-        color: string;
         guildId: string | null;
+        name: string;
         content: string;
         footer: string;
         channelId: string | null;

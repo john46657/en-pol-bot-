@@ -56,10 +56,10 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         error: string | null;
         id: string;
         status: string;
-        createdAt: Date;
         createdById: string | null;
-        name: string;
+        createdAt: Date;
         guildId: string;
+        name: string;
         guildName: string;
         auto: boolean;
         stats: Prisma.JsonValue;
@@ -70,10 +70,10 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         error: string | null;
         id: string;
         status: string;
-        createdAt: Date;
         createdById: string | null;
-        name: string;
+        createdAt: Date;
         guildId: string;
+        name: string;
         data: Prisma.JsonValue | null;
         guildName: string;
         auto: boolean;
@@ -86,10 +86,10 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         error: string | null;
         id: string;
         status: string;
-        createdAt: Date;
         createdById: string | null;
-        name: string;
+        createdAt: Date;
         guildId: string;
+        name: string;
         data: Prisma.JsonValue | null;
         guildName: string;
         auto: boolean;

@@ -6,13 +6,13 @@ export declare const serverWeeklyResetSchema: z.ZodObject<{
     topN: z.ZodDefault<z.ZodNumber>;
     mention: z.ZodDefault<z.ZodBoolean>;
 }, "strict", z.ZodTypeAny, {
-    channelId: string | null;
     enabled: boolean;
+    channelId: string | null;
     topN: number;
     mention: boolean;
 }, {
-    channelId?: string | null | undefined;
     enabled?: boolean | undefined;
+    channelId?: string | null | undefined;
     topN?: number | undefined;
     mention?: boolean | undefined;
 }>;

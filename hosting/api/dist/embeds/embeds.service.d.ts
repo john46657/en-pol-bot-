@@ -59,11 +59,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     }>>>;
 }, "strip", z.ZodTypeAny, {
     id: string;
+    color: string;
     title: string;
     description: string;
-    name: string;
-    color: string;
     guildId: string | null;
+    name: string;
     content: string;
     footer: string;
     channelId: string | null;
@@ -91,9 +91,9 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
 }, {
     id: string;
     name: string;
+    color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    color?: string | undefined;
     guildId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
@@ -121,11 +121,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     }[] | undefined;
 }>, {
     id: string;
+    color: string;
     title: string;
     description: string;
-    name: string;
-    color: string;
     guildId: string | null;
+    name: string;
     content: string;
     footer: string;
     channelId: string | null;
@@ -153,9 +153,9 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
 }, {
     id: string;
     name: string;
+    color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    color?: string | undefined;
     guildId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
@@ -194,11 +194,11 @@ export declare class EmbedsService {
         posted?: unknown;
     }): Promise<{
         id: string;
+        color: string;
         title: string;
         description: string;
-        name: string;
-        color: string;
         guildId: string | null;
+        name: string;
         content: string;
         footer: string;
         channelId: string | null;
@@ -226,11 +226,11 @@ export declare class EmbedsService {
     }>;
     duplicate(actor: Actor, id: string): Promise<{
         id: string;
+        color: string;
         title: string;
         description: string;
-        name: string;
-        color: string;
         guildId: string | null;
+        name: string;
         content: string;
         footer: string;
         channelId: string | null;

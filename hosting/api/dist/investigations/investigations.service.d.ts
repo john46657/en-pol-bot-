@@ -13,11 +13,11 @@ export declare class InvestigationsService {
         items: {
             serverId: string | null;
             id: string;
-            title: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            title: string;
             description: string | null;
             caseNumber: string;
             leadId: string | null;
@@ -30,11 +30,11 @@ export declare class InvestigationsService {
         investigation: {
             serverId: string | null;
             id: string;
-            title: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            title: string;
             description: string | null;
             caseNumber: string;
             leadId: string | null;
@@ -50,8 +50,8 @@ export declare class InvestigationsService {
             createdAt: Date;
             personId: string | null;
             vehicleId: string | null;
-            entityType: string;
             entityId: string;
+            entityType: string;
         })[];
         evidence: {
             number: string;
@@ -62,8 +62,8 @@ export declare class InvestigationsService {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -80,11 +80,11 @@ export declare class InvestigationsService {
     }): Promise<{
         serverId: string | null;
         id: string;
-        title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        title: string;
         description: string | null;
         caseNumber: string;
         leadId: string | null;
@@ -93,11 +93,11 @@ export declare class InvestigationsService {
     setStatus(actor: Actor, id: string, to: InvestigationStatus, reason?: string): Promise<{
         serverId: string | null;
         id: string;
-        title: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        title: string;
         description: string | null;
         caseNumber: string;
         leadId: string | null;

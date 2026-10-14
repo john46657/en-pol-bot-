@@ -13,18 +13,18 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     plate: string;
     model?: string | undefined;
-    ownerId?: string | undefined;
-    color?: string | undefined;
     notes?: string | undefined;
     custom?: Record<string, unknown> | undefined;
+    color?: string | undefined;
+    ownerId?: string | undefined;
     erlcReference?: string | undefined;
 }, {
     plate: string;
     model?: string | undefined;
-    ownerId?: string | undefined;
-    color?: string | undefined;
     notes?: string | undefined;
     custom?: Record<string, unknown> | undefined;
+    color?: string | undefined;
+    ownerId?: string | undefined;
     erlcReference?: string | undefined;
 }>;
 declare const archive: z.ZodObject<{
@@ -48,14 +48,14 @@ export declare class VehiclesController {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         })[];
         total: number;
@@ -67,14 +67,10 @@ export declare class VehiclesController {
             owner: {
                 serverId: string | null;
                 id: string;
-                status: string;
-                createdAt: Date;
-                updatedAt: Date;
-                version: number;
-                createdById: string | null;
                 robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
+                status: string;
                 notes: string | null;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 fullName: string | null;
@@ -88,27 +84,31 @@ export declare class VehiclesController {
                 licenses: string[];
                 flags: string[];
                 photoId: string | null;
+                createdById: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                version: number;
             } | null;
         } & {
             serverId: string | null;
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         };
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -119,14 +119,14 @@ export declare class VehiclesController {
         model: string | null;
         id: string;
         status: string;
+        notes: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        ownerId: string | null;
-        color: string | null;
-        notes: string | null;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
         plate: string;
+        color: string | null;
+        ownerId: string | null;
         erlcReference: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
@@ -134,14 +134,14 @@ export declare class VehiclesController {
         model: string | null;
         id: string;
         status: string;
+        notes: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        ownerId: string | null;
-        color: string | null;
-        notes: string | null;
-        custom: import("@prisma/client/runtime/library").JsonValue | null;
         plate: string;
+        color: string | null;
+        ownerId: string | null;
         erlcReference: string | null;
     }>;
 }

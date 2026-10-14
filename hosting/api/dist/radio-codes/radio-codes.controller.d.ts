@@ -52,17 +52,17 @@ declare const discordCfg: z.ZodObject<{
     showDescription: z.ZodBoolean;
     autoUpdate: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
+    color: string;
     title: string;
     description: string;
-    color: string;
     channelId: string | null;
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
 }, {
+    color: string;
     title: string;
     description: string;
-    color: string;
     channelId: string | null;
     groupByCategory: boolean;
     showDescription: boolean;
@@ -84,8 +84,8 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -126,8 +126,8 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;
@@ -140,8 +140,8 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -151,8 +151,8 @@ export declare class RadioCodesController {
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        guildId: string | null;
         code: string;
+        guildId: string | null;
         position: number;
         meaning: string;
     }>;

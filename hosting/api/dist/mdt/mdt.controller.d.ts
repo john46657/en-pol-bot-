@@ -119,19 +119,19 @@ declare const weaponBody: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED", ...("REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED")[]]>>;
     notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    type: string;
     serial: string;
+    type: string;
     model?: string | null | undefined;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | null | undefined;
     notes?: string | null | undefined;
+    ownerId?: string | null | undefined;
 }, {
-    type: string;
     serial: string;
+    type: string;
     model?: string | null | undefined;
     status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | null | undefined;
     notes?: string | null | undefined;
+    ownerId?: string | null | undefined;
 }>;
 /** Polizei-MDT (Streifen-Terminal): Bürger, Fahrzeuge, Waffen, Haftbefehle. Gleiche Akten und Rechte wie im Dashboard. */
 export declare class MdtController {
@@ -201,8 +201,8 @@ export declare class MdtController {
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -246,33 +246,34 @@ export declare class MdtController {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
         weapons: {
             serverId: string | null;
             model: string | null;
             id: string;
-            type: string;
             status: string;
+            notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
-            notes: string | null;
             serial: string;
+            type: string;
         }[] | null;
         warrants: {
             serverId: string | null;
             id: string;
             status: string;
+            createdById: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
@@ -281,7 +282,6 @@ export declare class MdtController {
             vehicleId: string | null;
             reason: string;
             priority: string;
-            createdById: string;
             expiresAt: Date | null;
         }[] | null;
     }>;
@@ -332,14 +332,14 @@ export declare class MdtController {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         }[];
         total: number;
@@ -360,20 +360,21 @@ export declare class MdtController {
             model: string | null;
             id: string;
             status: string;
+            notes: string | null;
+            custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
-            ownerId: string | null;
-            color: string | null;
-            notes: string | null;
-            custom: import("@prisma/client/runtime/library").JsonValue | null;
             plate: string;
+            color: string | null;
+            ownerId: string | null;
             erlcReference: string | null;
         };
         wanted: {
             serverId: string | null;
             id: string;
             status: string;
+            createdById: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
@@ -382,21 +383,20 @@ export declare class MdtController {
             vehicleId: string | null;
             reason: string;
             priority: string;
-            createdById: string;
             expiresAt: Date | null;
         }[] | null;
         incidents: {
             number: string;
             id: string;
-            title: string;
             status: string;
             createdAt: Date;
+            title: string;
         }[];
         timeline: {
             id: string;
             createdAt: Date;
-            entityType: string;
             entityId: string;
+            entityType: string;
             summary: string;
             action: string;
             actorId: string | null;
@@ -413,14 +413,14 @@ export declare class MdtController {
             serverId: string | null;
             model: string | null;
             id: string;
-            type: string;
             status: string;
+            notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
-            notes: string | null;
             serial: string;
+            type: string;
         })[];
         total: number;
         page: number;
@@ -430,14 +430,14 @@ export declare class MdtController {
         serverId: string | null;
         model: string | null;
         id: string;
-        type: string;
         status: string;
+        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
-        notes: string | null;
         serial: string;
+        type: string;
     }>;
     updateWeapon(a: Actor, id: string, b: {
         version: number;
@@ -445,14 +445,14 @@ export declare class MdtController {
         serverId: string | null;
         model: string | null;
         id: string;
-        type: string;
         status: string;
+        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
-        notes: string | null;
         serial: string;
+        type: string;
     }>;
     warrants(q: {
         status?: 'ACTIVE' | 'ALL';
@@ -468,12 +468,13 @@ export declare class MdtController {
         vehicle: {
             model: string | null;
             id: string;
-            color: string | null;
             plate: string;
+            color: string | null;
         } | null;
         serverId: string | null;
         id: string;
         status: string;
+        createdById: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -482,7 +483,6 @@ export declare class MdtController {
         vehicleId: string | null;
         reason: string;
         priority: string;
-        createdById: string;
         expiresAt: Date | null;
     }[]>;
 }

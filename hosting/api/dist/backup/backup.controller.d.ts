@@ -43,10 +43,10 @@ export declare class BackupController {
         error: string | null;
         id: string;
         status: string;
-        createdAt: Date;
         createdById: string | null;
-        name: string;
+        createdAt: Date;
         guildId: string;
+        name: string;
         guildName: string;
         auto: boolean;
         stats: import("@prisma/client/runtime/library").JsonValue;
@@ -57,10 +57,10 @@ export declare class BackupController {
         error: string | null;
         id: string;
         status: string;
-        createdAt: Date;
         createdById: string | null;
-        name: string;
+        createdAt: Date;
         guildId: string;
+        name: string;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
         auto: boolean;
@@ -75,10 +75,10 @@ export declare class BackupController {
         error: string | null;
         id: string;
         status: string;
-        createdAt: Date;
         createdById: string | null;
-        name: string;
+        createdAt: Date;
         guildId: string;
+        name: string;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
         auto: boolean;

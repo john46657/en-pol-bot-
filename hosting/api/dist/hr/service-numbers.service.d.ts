@@ -220,6 +220,8 @@ export declare class ServiceNumbersService implements OnModuleInit {
             releaseAs: string;
         };
     }>;
+    /** Vorabprüfung einer bestimmten Nummer (die eigentliche, atomare Prüfung macht `allocate`). */
+    private checkFree;
     /** Personalakte zu einem Discord-Mitglied – vorhandene oder neu angelegt (Benutzer wird bei Bedarf mit angelegt). */
     private personnelForDiscord;
     /** Nummer ändern (dienstnummer.edit); die alte wird je nach Kreis frei, ehemalig oder gesperrt. */

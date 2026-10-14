@@ -12,15 +12,15 @@ declare const q: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
+    entityId?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
-    entityId?: string | undefined;
     action?: string | undefined;
     q?: string | undefined;
 }, {
+    entityId?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
-    entityId?: string | undefined;
     action?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -54,9 +54,9 @@ export declare class AuditController {
             id: string;
             createdAt: Date;
             reason: string | null;
+            entityId: string | null;
             module: string;
             entityType: string | null;
-            entityId: string | null;
             action: string;
             actorUserId: string | null;
             actorRobloxUserId: string | null;

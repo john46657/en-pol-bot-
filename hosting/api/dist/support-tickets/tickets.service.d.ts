@@ -134,11 +134,11 @@ export declare class SupportTicketsService {
             };
             status: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
-                position: number;
+                name: string;
                 kind: string;
+                position: number;
+                emoji: string;
                 isDefault: boolean;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -146,10 +146,10 @@ export declare class SupportTicketsService {
             };
             priority: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
+                name: string;
                 position: number;
+                emoji: string;
                 isDefault: boolean;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -184,11 +184,11 @@ export declare class SupportTicketsService {
             };
             status: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
-                position: number;
+                name: string;
                 kind: string;
+                position: number;
+                emoji: string;
                 isDefault: boolean;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -196,10 +196,10 @@ export declare class SupportTicketsService {
             };
             priority: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
+                name: string;
                 position: number;
+                emoji: string;
                 isDefault: boolean;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -250,11 +250,11 @@ export declare class SupportTicketsService {
             };
             status: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
-                position: number;
+                name: string;
                 kind: string;
+                position: number;
+                emoji: string;
                 isDefault: boolean;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -262,10 +262,10 @@ export declare class SupportTicketsService {
             };
             priority: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
+                name: string;
                 position: number;
+                emoji: string;
                 isDefault: boolean;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -346,8 +346,8 @@ export declare class SupportTicketsService {
     }>;
     createTranscript(id: string, actor: TicketActor): Promise<{
         id: string;
-        createdAt: Date;
         createdById: string | null;
+        createdAt: Date;
         createdByName: string | null;
         creatorId: string;
         creatorName: string;
@@ -373,11 +373,11 @@ export declare class SupportTicketsService {
         };
         status: {
             id: string;
-            name: string;
             color: number;
-            emoji: string;
-            position: number;
+            name: string;
             kind: string;
+            position: number;
+            emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -385,10 +385,10 @@ export declare class SupportTicketsService {
         };
         priority: {
             id: string;
-            name: string;
             color: number;
-            emoji: string;
+            name: string;
             position: number;
+            emoji: string;
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -437,11 +437,11 @@ export declare class SupportTicketsService {
             } | null;
             status: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
-                position: number;
+                name: string;
                 kind: string;
+                position: number;
+                emoji: string;
                 isDefault: boolean;
                 isClaimed: boolean;
                 isEscalation: boolean;
@@ -449,10 +449,10 @@ export declare class SupportTicketsService {
             } | null;
             priority: {
                 id: string;
-                name: string;
                 color: number;
-                emoji: string;
+                name: string;
                 position: number;
+                emoji: string;
                 isDefault: boolean;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
@@ -472,11 +472,11 @@ export declare class SupportTicketsService {
         };
         status: {
             id: string;
-            name: string;
             color: number;
-            emoji: string;
-            position: number;
+            name: string;
             kind: string;
+            position: number;
+            emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -484,10 +484,10 @@ export declare class SupportTicketsService {
         } | null;
         priority: {
             id: string;
-            name: string;
             color: number;
-            emoji: string;
+            name: string;
             position: number;
+            emoji: string;
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -496,18 +496,18 @@ export declare class SupportTicketsService {
             id: string;
             createdAt: Date;
             expiresAt: Date | null;
-            addedById: string | null;
             kind: string;
+            addedById: string | null;
             ticketId: string;
             targetId: string;
         }[];
         messages: {
             id: string;
-            authorId: string;
             createdAt: Date;
-            content: string;
-            attachments: Prisma.JsonValue;
+            authorId: string;
             discordId: string | null;
+            attachments: Prisma.JsonValue;
+            content: string;
             authorName: string;
             ticketId: string;
             authorAvatar: string | null;
@@ -517,10 +517,10 @@ export declare class SupportTicketsService {
         }[];
         notes: {
             id: string;
-            authorId: string | null;
             createdAt: Date;
-            authorName: string;
+            authorId: string | null;
             text: string;
+            authorName: string;
             ticketId: string;
             authorUserId: string | null;
         }[] | null;
@@ -554,9 +554,9 @@ export declare class SupportTicketsService {
         createdAt: Date;
         updatedAt: Date;
         lastActivityAt: Date;
-        name: string;
-        guildId: string;
         closedAt: Date | null;
+        guildId: string;
+        name: string;
         deletedAt: Date | null;
         answers: Prisma.JsonValue;
         channelId: string | null;
@@ -586,11 +586,11 @@ export declare class SupportTicketsService {
         closed: boolean;
         statuses: {
             id: string;
-            name: string;
             color: number;
-            emoji: string;
-            position: number;
+            name: string;
             kind: string;
+            position: number;
+            emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
             isEscalation: boolean;
@@ -598,10 +598,10 @@ export declare class SupportTicketsService {
         }[];
         priorities: {
             id: string;
-            name: string;
             color: number;
-            emoji: string;
+            name: string;
             position: number;
+            emoji: string;
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
@@ -620,8 +620,8 @@ export declare class SupportTicketsService {
             id: string;
             createdAt: Date;
             expiresAt: Date | null;
-            addedById: string | null;
             kind: string;
+            addedById: string | null;
             ticketId: string;
             targetId: string;
         }[];
@@ -668,8 +668,8 @@ export declare class SupportTicketsService {
     }>;
     transcript(userId: string | null, id: string): Promise<{
         id: string;
-        createdAt: Date;
         createdById: string | null;
+        createdAt: Date;
         createdByName: string | null;
         creatorId: string;
         creatorName: string;

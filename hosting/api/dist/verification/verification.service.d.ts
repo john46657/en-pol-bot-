@@ -18,14 +18,14 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         buttonLabel: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         message: string;
-        title: string;
         color: string;
+        title: string;
         channelId: string | null;
         buttonLabel: string;
     }, {
         message?: string | undefined;
-        title?: string | undefined;
         color?: string | undefined;
+        title?: string | undefined;
         channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     }>>;
@@ -37,14 +37,14 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         roleIds: z.ZodArray<z.ZodString, "many">;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }, {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }>, "many">>;
@@ -53,8 +53,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId: string | null;
     panel: {
         message: string;
-        title: string;
         color: string;
+        title: string;
         channelId: string | null;
         buttonLabel: string;
     };
@@ -64,8 +64,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin: boolean;
     binds: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[];
@@ -74,8 +74,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId?: string | null | undefined;
     panel?: {
         message?: string | undefined;
-        title?: string | undefined;
         color?: string | undefined;
+        title?: string | undefined;
         channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
@@ -85,8 +85,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[] | undefined;
@@ -95,8 +95,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId: string | null;
     panel: {
         message: string;
-        title: string;
         color: string;
+        title: string;
         channelId: string | null;
         buttonLabel: string;
     };
@@ -106,8 +106,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin: boolean;
     binds: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[];
@@ -116,8 +116,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     logChannelId?: string | null | undefined;
     panel?: {
         message?: string | undefined;
-        title?: string | undefined;
         color?: string | undefined;
+        title?: string | undefined;
         channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
@@ -127,8 +127,8 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
-        groupId: string;
         roleIds: string[];
+        groupId: string;
         minRank: number;
         maxRank: number;
     }[] | undefined;
@@ -195,11 +195,11 @@ export declare class VerificationService {
         displayName: string;
     }, method: string): Promise<{
         updatedAt: Date;
-        displayName: string;
         discordId: string;
         discordName: string | null;
         robloxName: string;
         robloxId: string;
+        displayName: string;
         verifiedAt: Date;
     }>;
     /** Verknüpfung + was der Bot auf diesem Server tun soll (Rollen, Nickname). */

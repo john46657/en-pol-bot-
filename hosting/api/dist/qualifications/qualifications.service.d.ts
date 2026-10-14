@@ -35,8 +35,8 @@ export declare class QualificationsService {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: FormField[];
+            enabled: boolean;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -62,11 +62,12 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            enabled: boolean;
+            key: string;
             pingRoleIds: string[];
             roleId?: string | undefined;
             channelId?: string | undefined;
@@ -77,6 +78,7 @@ export declare class QualificationsService {
             title: string;
             description: string;
             name: string;
+            enabled: boolean;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -102,11 +104,11 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            enabled: boolean;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -123,8 +125,8 @@ export declare class QualificationsService {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: FormField[];
+            enabled: boolean;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -150,11 +152,12 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            enabled: boolean;
+            key: string;
             pingRoleIds: string[];
             roleId?: string | undefined;
             channelId?: string | undefined;
@@ -165,6 +168,7 @@ export declare class QualificationsService {
             title: string;
             description: string;
             name: string;
+            enabled: boolean;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -190,11 +194,11 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            enabled: boolean;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -210,8 +214,8 @@ export declare class QualificationsService {
         units: {
             description: string;
             name: string;
-            key: string;
             questions: FormField[];
+            enabled: boolean;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -237,11 +241,12 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            enabled: boolean;
+            key: string;
             pingRoleIds: string[];
             roleId?: string | undefined;
             channelId?: string | undefined;
@@ -252,6 +257,7 @@ export declare class QualificationsService {
             title: string;
             description: string;
             name: string;
+            enabled: boolean;
             settings: {
                 cooldownMinutes: number;
                 messages: {
@@ -277,11 +283,11 @@ export declare class QualificationsService {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
+                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
             };
-            enabled: boolean;
             pingRoleIds: string[];
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -322,13 +328,13 @@ export declare class QualificationsService {
         createdAt: Date;
         userId: string | null;
         guildId: string | null;
-        decidedById: string | null;
+        discordId: string;
+        discordName: string;
         decidedAt: Date | null;
+        decidedById: string | null;
         decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
-        discordId: string;
-        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
         unitName: string;
@@ -341,13 +347,13 @@ export declare class QualificationsService {
         createdAt: Date;
         userId: string | null;
         guildId: string | null;
-        decidedById: string | null;
+        discordId: string;
+        discordName: string;
         decidedAt: Date | null;
+        decidedById: string | null;
         decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
-        discordId: string;
-        discordName: string;
         durationSec: number | null;
         joinedAt: Date | null;
         unitName: string;

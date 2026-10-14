@@ -59,13 +59,13 @@ export declare const preferencesSchema: z.ZodObject<{
             status: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             status?: string | undefined;
-            rank?: string | undefined;
             team?: string | undefined;
+            rank?: string | undefined;
             office?: string | undefined;
         }, {
             status?: string | undefined;
-            rank?: string | undefined;
             team?: string | undefined;
+            rank?: string | undefined;
             office?: string | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
@@ -73,8 +73,8 @@ export declare const preferencesSchema: z.ZodObject<{
         search?: string | undefined;
         filters?: {
             status?: string | undefined;
-            rank?: string | undefined;
             team?: string | undefined;
+            rank?: string | undefined;
             office?: string | undefined;
         } | undefined;
     }, {
@@ -82,8 +82,8 @@ export declare const preferencesSchema: z.ZodObject<{
         search?: string | undefined;
         filters?: {
             status?: string | undefined;
-            rank?: string | undefined;
             team?: string | undefined;
+            rank?: string | undefined;
             office?: string | undefined;
         } | undefined;
     }>>;
@@ -150,15 +150,15 @@ export declare const preferencesSchema: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             model?: string | undefined;
             unit?: string | undefined;
-            active?: "active" | "inactive" | "all" | undefined;
             color?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
             owner?: string | undefined;
             online?: "all" | "yes" | "no" | undefined;
         }, {
             model?: string | undefined;
             unit?: string | undefined;
-            active?: "active" | "inactive" | "all" | undefined;
             color?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
             owner?: string | undefined;
             online?: "all" | "yes" | "no" | undefined;
         }>>;
@@ -182,8 +182,8 @@ export declare const preferencesSchema: z.ZodObject<{
         filters?: {
             model?: string | undefined;
             unit?: string | undefined;
-            active?: "active" | "inactive" | "all" | undefined;
             color?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
             owner?: string | undefined;
             online?: "all" | "yes" | "no" | undefined;
         } | undefined;
@@ -197,8 +197,8 @@ export declare const preferencesSchema: z.ZodObject<{
         filters?: {
             model?: string | undefined;
             unit?: string | undefined;
-            active?: "active" | "inactive" | "all" | undefined;
             color?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
             owner?: string | undefined;
             online?: "all" | "yes" | "no" | undefined;
         } | undefined;
@@ -269,8 +269,8 @@ export declare const preferencesSchema: z.ZodObject<{
         filters?: {
             model?: string | undefined;
             unit?: string | undefined;
-            active?: "active" | "inactive" | "all" | undefined;
             color?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
             owner?: string | undefined;
             online?: "all" | "yes" | "no" | undefined;
         } | undefined;
@@ -301,8 +301,8 @@ export declare const preferencesSchema: z.ZodObject<{
         search?: string | undefined;
         filters?: {
             status?: string | undefined;
-            rank?: string | undefined;
             team?: string | undefined;
+            rank?: string | undefined;
             office?: string | undefined;
         } | undefined;
     } | undefined;
@@ -346,8 +346,8 @@ export declare const preferencesSchema: z.ZodObject<{
         filters?: {
             model?: string | undefined;
             unit?: string | undefined;
-            active?: "active" | "inactive" | "all" | undefined;
             color?: string | undefined;
+            active?: "active" | "inactive" | "all" | undefined;
             owner?: string | undefined;
             online?: "all" | "yes" | "no" | undefined;
         } | undefined;
@@ -378,8 +378,8 @@ export declare const preferencesSchema: z.ZodObject<{
         search?: string | undefined;
         filters?: {
             status?: string | undefined;
-            rank?: string | undefined;
             team?: string | undefined;
+            rank?: string | undefined;
             office?: string | undefined;
         } | undefined;
     } | undefined;
