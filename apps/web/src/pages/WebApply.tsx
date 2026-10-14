@@ -33,7 +33,9 @@ export function WebApply() {
       <div className="mb-4 flex items-center gap-2 text-lg font-semibold"><Shield className="text-primary" aria-hidden />{d?.title ?? 'Bewerbung'}</div>
       {done ? (
         <div role="status" className="whitespace-pre-wrap rounded-lg border border-success/40 bg-success/10 p-4">{done.message.replace(/\*\*/g, '')}</div>
-      ) : form.isLoading ? <SkeletonRows /> : form.error || !d ? <ErrorState error={form.error} onRetry={() => void form.refetch()} /> : (
+      ) : form.isLoading ? <SkeletonRows /> : form.error instanceof ApiError && form.error.status < 500 ? (
+        <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 p-4">{form.error.status === 400 ? 'Dieser Bewerbungslink ist ungültig.' : form.error.message} Starte die Bewerbung im Discord über das Bewerbungs-Panel neu.</div>
+      ) : form.error || !d ? <ErrorState error={form.error} onRetry={() => void form.refetch()} /> : (
         <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-line bg-panel p-5" aria-label="Bewerbungsformular">
           <p className="text-sm text-muted">Angemeldet über Discord als <b className="text-fg">{d.discordName}</b> · Link gültig bis {new Date(d.expiresAt).toLocaleString('de-DE')}</p>
           {d.robloxField && <Field label="Roblox-Benutzername *">{(id) => <Input id={id} name="robloxUsername" required maxLength={64} />}</Field>}

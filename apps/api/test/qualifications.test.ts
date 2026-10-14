@@ -329,9 +329,11 @@ describe('Bewerbungsart „Web“', () => {
     expect(f.body).toMatchObject({ name: unit.name, discordName: 'webby', robloxField: false });
     const qs = f.body.questions as { key: string; options?: { label: string }[] }[];
     // manipulierter Link (andere Discord-ID) wird abgelehnt
-    const [body, sig] = token.split('.');
-    const forged = Buffer.from(Buffer.from(body!, 'base64url').toString().replace(WEB, APPLICANT)).toString('base64url');
-    expect((await http().get(`/api/v1/web-apply/${forged}.${sig}`)).status).toBe(404);
+    expect(token).not.toContain('.'); // Punkt im Pfad: Webserver hielte den Link für eine Datei
+    const body = token.slice(0, -43), sig = token.slice(-43);
+    const forged = Buffer.from(Buffer.from(body, 'base64url').toString().replace(WEB, APPLICANT)).toString('base64url');
+    expect((await http().get(`/api/v1/web-apply/${forged}${sig}`)).status).toBe(404);
+    expect((await http().get('/api/v1/web-apply/kaputt')).status).toBe(400);
     // Pflichtfragen werden wie bei der DM-Bewerbung geprüft
     expect((await http().post(`/api/v1/web-apply/${token}`).send({ answers: {} })).status).toBe(400);
     const r = await http().post(`/api/v1/web-apply/${token}`).send({ answers: Object.fromEntries(qs.map((q) => [q.key, q.options?.length ? q.options[0]!.label : 'Meine Antwort für die Bewerbung'])) });

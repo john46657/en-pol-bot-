@@ -91,7 +91,9 @@ export function WelcomeSettings() {
   const key = ['welcome-config', server];
   const q = useQuery({ queryKey: key, queryFn: () => api<Cfg>('/welcome/config') });
   const [cfg, setCfg] = useState<Cfg>();
-  useEffect(() => { if (q.data) setCfg(q.data); }, [q.data]);
+  // aus welchem geladenen Stand der Entwurf stammt – nach dem Server-Wechsel nicht den alten Stand beim neuen Server speichern
+  const [loadedFrom, setLoadedFrom] = useState<Cfg>();
+  useEffect(() => { if (q.data) { setCfg(q.data); setLoadedFrom(q.data); } }, [q.data]);
   const body = (c: Cfg): WelcomeConfig => ({ welcome: c.welcome, dm: c.dm, autoRoleIds: c.autoRoleIds, goodbye: c.goodbye });
   const url = (x: string) => !x || /^https:\/\/\S+$/.test(x);
   const valid = (c: Cfg) => (!c.welcome.enabled || !!c.welcome.channelId) && (!c.goodbye.enabled || !!c.goodbye.channelId) && url(c.welcome.image) && url(c.goodbye.image);
@@ -104,7 +106,7 @@ export function WelcomeSettings() {
     onSuccess: (_r, kind) => setTested({ kind, ok: true, text: kind === 'dm' ? 'Test-DM ist unterwegs – schau in deine Direktnachrichten.' : 'Test-Nachricht ist unterwegs – schau in den Kanal (dauert ein paar Sekunden).' }),
     onError: (e, kind) => setTested({ kind, ok: false, text: errText(e) }),
   });
-  useAutosaveDraft(manage ? `welcome:${server || 'all'}` : null, cfg, (c) => (valid(c) ? { method: 'PUT', path: '/welcome/config', body: body(c), label: 'Willkommen & Abschied' } : null));
+  useAutosaveDraft(manage ? `welcome:${server || 'all'}` : null, q.data && loadedFrom === q.data ? cfg : undefined, (c) => (valid(c) ? { method: 'PUT', path: '/welcome/config', body: body(c), label: 'Willkommen & Abschied' } : null));
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   if (!cfg) return <SkeletonRows />;
   const set = (p: Partial<Cfg>) => setCfg({ ...cfg, ...p });
