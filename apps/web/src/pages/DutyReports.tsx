@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, CheckCircle2, Copy, Inbox, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { PERIOD_LABEL, periodLabel, reportMessage, type ReportField, type ReportTemplate } from '@enrp/shared';
+import { PERIOD_LABEL, periodLabel, policeReportFields, reportMessage, type ReportField, type ReportTemplate } from '@enrp/shared';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { errText } from '../lib/tickets';
@@ -171,12 +171,10 @@ function ReportList({ templates }: { templates: ReportTemplate[] }) {
 
 // ───────────── Vorlagen ─────────────
 
+/** Neue Vorlage im Polizei-Format (📖 Tages-/Wochenbericht mit ➣-Liste und Trennlinien). */
 const blankTemplate = (guildId: string | null, period: ReportTemplate['period'] = 'DAILY'): ReportTemplate => ({
-  id: crypto.randomUUID(), name: period === 'WEEKLY' ? 'Wochenbericht' : 'Tagesbericht', emoji: period === 'WEEKLY' ? '📅' : '📝', description: '', period, active: true, guildId, channelId: null, color: '#3b82f6',
-  fields: period === 'WEEKLY'
-    ? [{ id: 'zusammenfassung', label: 'Zusammenfassung der Woche', type: 'long', placeholder: '', required: true, options: [], maxLength: 2000, inline: false }, { id: 'einsaetze', label: 'Anzahl Einsätze', type: 'number', placeholder: '', required: false, options: [], maxLength: 10, inline: true }, { id: 'besonderheiten', label: 'Besonderheiten', type: 'long', placeholder: '', required: false, options: [], maxLength: 2000, inline: false }]
-    : [{ id: 'dienstzeit', label: 'Dienstzeit', type: 'short', placeholder: 'z. B. 18:00–21:00', required: true, options: [], maxLength: 50, inline: true }, { id: 'taetigkeiten', label: 'Tätigkeiten', type: 'long', placeholder: 'Was hast du gemacht?', required: true, options: [], maxLength: 2000, inline: false }, { id: 'vorkommnisse', label: 'Besondere Vorkommnisse', type: 'long', placeholder: '', required: false, options: [], maxLength: 2000, inline: false }],
-  onePerPeriod: true, authorCanEdit: true, pingRoleIds: [],
+  id: crypto.randomUUID(), name: period === 'WEEKLY' ? 'Wochenbericht' : 'Tagesbericht', emoji: '📖', description: '', period, active: true, guildId, channelId: null, color: '#3b82f6',
+  fields: policeReportFields(), onePerPeriod: true, authorCanEdit: true, pingRoleIds: [], layout: 'LIST',
 });
 const templateProblems = (t: ReportTemplate) => [!t.name.trim() && 'Name fehlt', !t.fields.length && 'Mindestens ein Feld', t.fields.some((f) => !/^[a-z0-9_]{1,30}$/.test(f.id)) && 'Kürzel: nur a–z, 0–9, _', new Set(t.fields.map((f) => f.id)).size !== t.fields.length && 'Kürzel doppelt', t.fields.some((f) => !f.label.trim()) && 'Feld ohne Beschriftung', t.fields.some((f) => f.type === 'select' && !f.options.length) && 'Auswahl ohne Möglichkeiten'].filter(Boolean) as string[];
 
@@ -212,18 +210,22 @@ function TemplateEditor({ t, set, manage }: { t: ReportTemplate; set: (p: Partia
               <Input aria-label={`Max. Länge Feld ${i + 1}`} type="number" min={1} max={4000} disabled={!manage} value={f.maxLength} onChange={(e) => field(i, { maxLength: Math.max(1, Math.min(4000, Number(e.target.value) || 1)) })} />
               <span className="flex items-center gap-3 text-xs">
                 <label className="flex items-center gap-1"><Toggle label={`Pflicht Feld ${i + 1}`} checked={f.required} onChange={(v) => field(i, { required: v })} />Pflicht</label>
-                <label className="flex items-center gap-1"><Toggle label={`Nebeneinander Feld ${i + 1}`} checked={f.inline} onChange={(v) => field(i, { inline: v })} />nebeneinander</label>
+                {t.layout === 'LIST'
+                  ? <label className="flex items-center gap-1"><Toggle label={`Trennlinie vor Feld ${i + 1}`} checked={!!f.separator} onChange={(v) => field(i, { separator: v })} />Trennlinie davor</label>
+                  : <label className="flex items-center gap-1"><Toggle label={`Nebeneinander Feld ${i + 1}`} checked={f.inline} onChange={(v) => field(i, { inline: v })} />nebeneinander</label>}
               </span>
             </div>
           </div>
         ))}
-        <Button size="sm" variant="secondary" className="w-fit" disabled={!manage || t.fields.length >= 20} onClick={() => set({ fields: [...t.fields, { id: `feld${t.fields.length + 1}`, label: 'Neues Feld', type: 'short', placeholder: '', required: false, options: [], maxLength: 500, inline: false }] })}><Plus size={14} className="mr-1" />Feld</Button>
+        <Button size="sm" variant="secondary" className="w-fit" disabled={!manage || t.fields.length >= 20} onClick={() => set({ fields: [...t.fields, { id: `feld${t.fields.length + 1}`, label: 'Neues Feld', type: 'short', placeholder: '', required: false, options: [], maxLength: 500, inline: false, separator: false }] })}><Plus size={14} className="mr-1" />Feld</Button>
+        <p className="text-xs text-muted">Automatisch vorbelegt: Felder mit „Dienstzeit“ im Kürzel/Namen (aus den Dienst-Sitzungen) und mit „Roblox“ (verknüpfter Roblox-Name).</p>
         <p className="text-xs text-muted">In Discord kommen je 5 Felder auf eine Formularseite („Weiter“-Button dazwischen). Auswahl-Felder sind dort ein Textfeld mit Hinweis auf die Möglichkeiten.</p>
       </section>
       <details open className="rounded-lg border border-line p-2">
         <summary className="cursor-pointer text-sm font-semibold">Discord & Regeln</summary>
         <div className="mt-2 grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">Kanal für Berichte (leer = nur Dashboard)<ChannelPicker ariaLabel="Kanal für Berichte" disabled={!manage} value={t.channelId} onChange={(id) => set({ channelId: id })} /></label>
+          <label className="grid gap-1 text-sm">Darstellung<Select aria-label="Darstellung" disabled={!manage} value={t.layout ?? 'FIELDS'} onChange={(e) => set({ layout: e.target.value as ReportTemplate['layout'] })}><option value="LIST">Liste (➣ Feld: Wert, Trennlinien)</option><option value="FIELDS">Embed-Felder</option></Select></label>
           <label className="grid gap-1 text-sm">Farbe<input type="color" aria-label="Farbe" disabled={!manage} value={t.color} onChange={(e) => set({ color: e.target.value })} className="h-9 w-16 rounded border border-line bg-transparent" /></label>
           <label className="grid gap-1 text-sm md:col-span-2">Rollen bei neuem Bericht erwähnen<RolePicker ariaLabel="Rollen erwähnen" disabled={!manage} max={10} value={t.pingRoleIds} onChange={(ids) => set({ pingRoleIds: ids })} /></label>
           <div className="grid gap-2 text-sm md:col-span-2">
@@ -265,7 +267,7 @@ function Templates() {
     </Card>
   );
   const sample = Object.fromEntries(cur.fields.map((f) => [f.id, f.type === 'number' ? '3' : f.type === 'select' ? f.options[0] ?? '' : f.placeholder || '…']));
-  const preview = reportMessage(cur, { number: 'TB-2026-XXXXXX', period: cur.period, periodStart: new Date(), values: sample, authorName: 'Max Mustermann', status: 'SUBMITTED', updatedAt: new Date(), edited: false }, 'x');
+  const preview = reportMessage(cur, { number: 'TB-2026-XXXXXX', period: cur.period, periodStart: new Date(), values: sample, authorName: 'Max Mustermann', authorDiscordId: '123456789012345678', status: 'SUBMITTED', updatedAt: new Date(), edited: false }, 'x');
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
       <Card title={`${cur.emoji} ${cur.name}`} actions={<span className="flex gap-1">{manage && <Button size="sm" variant="danger" aria-label="Vorlage löschen" onClick={() => setDel(cur.id)}><Trash2 size={14} /></Button>}<Button size="sm" variant="secondary" onClick={() => L.setOpen(undefined)}>Zurück</Button></span>}>

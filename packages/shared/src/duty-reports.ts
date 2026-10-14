@@ -15,6 +15,8 @@ export const reportFieldSchema = z.object({
   maxLength: z.number().int().min(1).max(4000).default(1000),
   /** in Discord nebeneinander anzeigen */
   inline: z.boolean().default(false),
+  /** Trennlinie vor diesem Feld (nur Listen-Darstellung) */
+  separator: z.boolean().default(false),
 });
 export const reportTemplateSchema = z.object({
   id: z.string().uuid(),
@@ -34,6 +36,8 @@ export const reportTemplateSchema = z.object({
   authorCanEdit: z.boolean().default(true),
   /** Rollen, die beim neuen Bericht erwähnt werden */
   pingRoleIds: z.array(sf).max(10).default([]),
+  /** Darstellung in Discord: FIELDS = Embed-Felder, LIST = „➣ **Feld:** Wert“-Liste mit Trennlinien */
+  layout: z.enum(['FIELDS', 'LIST']).default('FIELDS'),
 });
 export type ReportTemplate = z.infer<typeof reportTemplateSchema>;
 export type ReportField = z.infer<typeof reportFieldSchema>;
@@ -62,6 +66,23 @@ export function periodLabel(period: ReportTemplate['period'], start: Date | stri
 // ---------------- Dienstzeit automatisch ----------------
 /** Felder, die automatisch mit der Dienstzeit gefüllt werden (Kürzel oder Beschriftung). */
 export const isDutyTimeField = (f: Pick<ReportField, 'id' | 'label' | 'type'>) => f.type !== 'select' && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
+/** Felder des Polizei-Tages-/Wochenberichts (Listen-Darstellung mit Trennlinien). */
+export function policeReportFields(): ReportField[] {
+  const f = (id: string, label: string, type: ReportField['type'], o: Partial<ReportField> = {}): ReportField => ({ id, label, type, placeholder: '', required: false, options: [], maxLength: type === 'number' ? 10 : type === 'long' ? 1000 : 100, inline: false, separator: false, ...o });
+  return [
+    f('roblox', 'Roblox-Username', 'short', { required: true }),
+    f('dienstzeit', 'Zeitraum', 'short', { placeholder: 'wird automatisch aus der Dienstzeit gefüllt' }),
+    f('verfolgungen', 'Verfolgungen', 'number', { separator: true }),
+    f('dispatch', 'Dispatch', 'number'),
+    f('geblitzt', 'Geblitzt', 'number', { separator: true }),
+    f('verkehrskontrollen', 'Verkehrskontrollen', 'number'),
+    f('festnahmen', 'Festnahmen', 'number', { separator: true }),
+    f('geiselnahmen', 'Geiselnahmen', 'number'),
+    f('notiz', 'Notiz', 'long', { separator: true }),
+  ];
+}
+/** Felder, die automatisch mit dem verknüpften Roblox-Namen gefüllt werden. */
+export const isRobloxField = (f: Pick<ReportField, 'id' | 'label' | 'type'>) => f.type !== 'select' && /roblox/i.test(`${f.id} ${f.label}`);
 /** Ende des Zeitraums (exklusiv). */
 export function periodEnd(period: ReportTemplate['period'], start: Date): Date {
   const e = new Date(start);
@@ -108,15 +129,33 @@ export function cleanReportValues(t: ReportTemplate, input: Record<string, unkno
 export interface ReportView { number: string; period: ReportTemplate['period']; periodStart: string | Date; values: Record<string, string>; authorName: string; authorDiscordId?: string | null; status: string; updatedAt: string | Date; edited: boolean; reviewerName?: string | null; reviewNote?: string | null }
 export const REPORT_STATUS_LABEL: Record<string, string> = { SUBMITTED: '📨 Eingereicht', REVIEWED: '✅ Geprüft', RETURNED: '↩️ Zur Nachbesserung' };
 
+const LINE_LONG = '⎯'.repeat(20);
+const LINE_SHORT = '⎯'.repeat(12);
+/** Status-/Prüfzeilen unter dem Bericht */
+const statusLines = (r: ReportView) => r.status !== 'SUBMITTED' ? `\n**${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ''}${r.reviewNote ? `\n> ${r.reviewNote.replace(/\n/g, '\n> ').slice(0, 900)}` : ''}` : '';
+
+/** Listen-Darstellung: „📖 Tagesbericht Name“, „➣ **Feld:** Wert“, Trennlinien, Fußzeile „Nummer | Name ( Discord-ID )“. */
+function listEmbed(t: ReportTemplate, r: ReportView): EmbedSpec {
+  const parts: string[] = [LINE_LONG, ''];
+  t.fields.forEach((f, i) => {
+    if (f.separator && i > 0) parts.push('', LINE_SHORT, '');
+    parts.push(`➣ **${f.label}:** ${(r.values[f.id] ?? '').slice(0, 1000)}`);
+  });
+  const status = statusLines(r);
+  let description = parts.join('\n');
+  if (description.length + status.length > 4096) description = `${description.slice(0, 4090 - status.length)}…`;
+  return {
+    title: `${t.emoji ? `${t.emoji} ` : ''}${t.name} ${r.authorName}`.slice(0, 256),
+    description: `${description}${status ? `\n${status}` : ''}`,
+    color: parseInt(t.color.slice(1), 16),
+    footer: `${r.number} | ${r.authorName}${r.authorDiscordId ? ` ( ${r.authorDiscordId} )` : ''}${r.edited ? ' · bearbeitet' : ''}`.slice(0, 2048),
+    timestamp: new Date(r.updatedAt).toISOString(),
+  };
+}
+
 /** Bericht als Discord-Nachricht (mit „Bearbeiten“-Button). */
 export function reportMessage(t: ReportTemplate, r: ReportView, id: string): MessageSpec {
-  const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id]!.slice(0, 1024), inline: f.inline }));
-  const embed: EmbedSpec = {
-    title: `${t.emoji ? `${t.emoji} ` : ''}${t.name} – ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
-    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${r.status !== 'SUBMITTED' ? `\n**${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ''}${r.reviewNote ? `\n> ${r.reviewNote.replace(/\n/g, '\n> ').slice(0, 900)}` : ''}` : ''}`,
-    color: parseInt(t.color.slice(1), 16), fields: fields.slice(0, 25),
-    footer: `${r.number}${r.edited ? ' · bearbeitet' : ''}`, timestamp: new Date(r.updatedAt).toISOString(),
-  };
+  const embed = t.layout === 'LIST' ? listEmbed(t, r) : fieldsEmbed(t, r);
   embed.color = r.status === 'REVIEWED' ? 0x22c55e : r.status === 'RETURNED' ? 0xf59e0b : embed.color;
   // Leitung prüft direkt in Discord (Rechte prüft das System beim Klick)
   return { embeds: [embed], buttons: [
@@ -124,4 +163,14 @@ export function reportMessage(t: ReportTemplate, r: ReportView, id: string): Mes
     ...(r.status !== 'REVIEWED' ? [{ id: `drep:rev:${id}`, label: 'Geprüft', emoji: '✅', style: 'success' as const }] : []),
     ...(r.status !== 'RETURNED' ? [{ id: `drep:ret:${id}`, label: 'Zur Nachbesserung', emoji: '↩️', style: 'secondary' as const }] : []),
   ] };
+}
+
+function fieldsEmbed(t: ReportTemplate, r: ReportView): EmbedSpec {
+  const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id]!.slice(0, 1024), inline: f.inline }));
+  return {
+    title: `${t.emoji ? `${t.emoji} ` : ''}${t.name} – ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
+    description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${statusLines(r)}`,
+    color: parseInt(t.color.slice(1), 16), fields: fields.slice(0, 25),
+    footer: `${r.number}${r.edited ? ' · bearbeitet' : ''}`, timestamp: new Date(r.updatedAt).toISOString(),
+  };
 }
