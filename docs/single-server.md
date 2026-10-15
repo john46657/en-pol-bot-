@@ -14,12 +14,20 @@ In dieser Reihenfolge (`apps/api/src/common/guild-context.ts`, `server/home-serv
 
 Empfehlung: `DISCORD_GUILD_ID` in API und Bot setzen.
 
+## Weitere Discord-Server (getrennte Akten)
+
+Der Bot darf auf weiteren Servern sein. Jeder Server bekommt dann eine **eigene Installation** mit eigener Datenbank. Akten, Rollen, Rechte und Einstellungen werden nie geteilt.
+
+- Pro Server eine eigene Installation (eigenes Hosting-Paket bzw. eigener Container) mit **eigener `DATABASE_URL`**, eigenem `SESSION_SECRET` und eigenem `BOT_API_TOKEN`.
+- In jeder Installation `DISCORD_GUILD_ID` auf **ihren** Server setzen (API und Bot). Das ist Pflicht, sobald der Bot auf mehr als einem Server ist. Ohne diese Angabe bleibt der Bot dort überall inaktiv, damit nichts in fremden Akten landet.
+- Bot-Token: Am saubersten ist eine eigene Bot-Anwendung je Server. Derselbe Bot-Token in mehreren Installationen funktioniert auch: Jede Installation registriert Befehle nur auf ihrem Server und beantwortet nur dessen Interaktionen.
+
 ## Verhalten
 
 | Bereich | Verhalten |
 |---|---|
 | Dashboard | Kein `X-Guild-Id` mehr. Ein solcher Header wird ignoriert. Server-Auswahllisten (Kanäle, Rollen) zeigen nur den eigenen Server. |
-| Bot | Registriert Slash-Commands nur auf dem eigenen Server. Auf anderen Servern entfernt er seine Befehle und ignoriert Interaktionen und Ereignisse (mit Hinweis an den Nutzer). Den Server und abgeschaltete Module fragt er über `GET /bot/server` ab. |
+| Bot | Registriert Slash-Commands nur auf dem eigenen Server. Andere Server lässt er unberührt (keine Befehle löschen, Interaktionen und Ereignisse still ignorieren), damit dort eine eigene Installation desselben Bots arbeiten kann. Ist er auf mehreren Servern und kein Server eingerichtet, ist er überall inaktiv. Den Server und abgeschaltete Module fragt er über `GET /bot/server` ab. |
 | API (Bot im Namen eines Mitglieds) | Kommt eine Interaktion von einem anderen Discord-Server, antwortet die API mit `403` (`reason: FOREIGN_GUILD`). |
 | Anmeldung und Mitgliedschaft | Discord-Login und die laufende Prüfung alle 2 bzw. 5 Minuten (`DiscordAccessService`) prüfen die Mitgliedschaft und die Team-Rollen auf **diesem** Server. Wer ihn verlässt oder die Rolle verliert, wird abgemeldet. |
 | Rollen und Rechte | Zentral: `RolePermission`, persönliche Ausnahmen, DENY vor ALLOW. Über Discord vergebene Rollen (`UserRole.guildIds`) zählen nur, wenn die Discord-Rolle auf diesem Server besteht. |

@@ -80934,10 +80934,14 @@ function describeDiscordError(e) {
 
 // apps/bot/src/home.ts
 var home = null;
+var several = false;
 var setHomeGuild = (guildId) => {
   if (guildId && /^\d{15,25}$/.test(guildId)) home = guildId;
 };
-var isHomeGuild = (guildId) => !home || guildId === home;
+var setGuildCount = (n) => {
+  several = n > 1;
+};
+var isHomeGuild = (guildId) => home ? guildId === home : !several;
 var ownGuilds = (c) => [...c.guilds.cache.values()].filter((g) => isHomeGuild(g.id));
 
 // apps/bot/src/staff-lists.ts
@@ -84914,10 +84918,7 @@ function wire(c) {
   c.on("error", (e) => console.error("discord client error:", e.message));
   c.on("shardError", (e, id3) => console.error(`discord shard ${id3} error:`, e.message));
   c.on("interactionCreate", (i) => {
-    if (i.guildId && !isHomeGuild(i.guildId)) {
-      if (i.isRepliable()) void i.reply({ content: "Dieser Bot ist nur auf dem Discord-Server der EN Polizei aktiv.", flags: import_discord6.MessageFlags.Ephemeral }).catch(() => void 0);
-      return;
-    }
+    if (i.guildId && !isHomeGuild(i.guildId)) return;
     const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
   });
@@ -84999,6 +85000,8 @@ function wireReady(client0) {
       console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
     }
     setHomeGuild(guildIds(cfg)[0]);
+    setGuildCount(c.guilds.cache.size);
+    if (!guildIds(cfg).length && c.guilds.cache.size > 1) console.warn("Der Bot ist auf mehreren Discord-Servern, aber DISCORD_GUILD_ID ist nicht gesetzt \u2013 bis der Server eingerichtet ist (DISCORD_GUILD_ID oder Einstellungen \u2192 Discord-Server-ID), bleibt der Bot \xFCberall inaktiv. Jeder Server braucht eine eigene Installation.");
     const registered = /* @__PURE__ */ new Map();
     const register = async (g, name, list, quiet = false, note2 = "") => {
       const sig = list.map((j) => j.name).sort().join(",");
@@ -85018,14 +85021,15 @@ function wireReady(client0) {
       const servers = new Map(ownGuilds(c).map((g) => [g.id, g.name]));
       for (const g of guildIds(cfg).slice(0, 1)) if (isHomeGuild(g) && !servers.has(g)) servers.set(g, g);
       for (const [id3, name] of servers) await register(id3, name, list, quiet, s?.disabled.length ? ` (Module aus: ${s.disabled.join(", ")})` : "");
-      for (const g of c.guilds.cache.values()) if (!isHomeGuild(g.id)) await register(g.id, g.name, [], true, " (nicht der Server der EN Polizei \u2013 keine Befehle)");
     };
     setInterval(() => void syncCommands(true), 12e4).unref();
     await syncCommands();
     c.on("guildCreate", (g) => {
-      console.log(`added to server ${g.name}${isHomeGuild(g.id) ? "" : " (nicht der Server der EN Polizei \u2013 der Bot bleibt dort inaktiv)"}`);
+      setGuildCount(c.guilds.cache.size);
+      console.log(`added to server ${g.name}${isHomeGuild(g.id) ? "" : " (anderer Server \u2013 diese Installation bleibt dort inaktiv; dort braucht es eine eigene Installation)"}`);
       void syncCommands(true);
     });
+    c.on("guildDelete", () => setGuildCount(c.guilds.cache.size));
     const presence = startPresenceReporter(() => client, api, { members: intents.members, presences: intents.presences });
     startOutboxLoop(
       api,
