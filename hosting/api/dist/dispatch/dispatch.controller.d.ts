@@ -47,13 +47,13 @@ declare const update: z.ZodObject<{
     supervisorId?: string | null | undefined;
 }>;
 declare const status: z.ZodObject<{
-    status: z.ZodEffects<z.ZodEnum<["NEW", "ACKNOWLEDGED", "ASSIGNED", "EN_ROUTE", "ON_SCENE", "PROCESSING", "CLEARING", "CLOSED", "CANCELLED"]>, "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING", "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING">;
+    status: z.ZodEffects<z.ZodEnum<["NEW", "ACKNOWLEDGED", "ASSIGNED", "EN_ROUTE", "ON_SCENE", "PROCESSING", "CLEARING", "CLOSED", "CANCELLED"]>, "CANCELLED" | "NEW" | "ACKNOWLEDGED" | "EN_ROUTE" | "ON_SCENE" | "ASSIGNED" | "PROCESSING" | "CLEARING", "CANCELLED" | "NEW" | "ACKNOWLEDGED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "ASSIGNED" | "PROCESSING" | "CLEARING">;
     note: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING";
+    status: "CANCELLED" | "NEW" | "ACKNOWLEDGED" | "EN_ROUTE" | "ON_SCENE" | "ASSIGNED" | "PROCESSING" | "CLEARING";
     note?: string | undefined;
 }, {
-    status: "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING";
+    status: "CANCELLED" | "NEW" | "ACKNOWLEDGED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "ASSIGNED" | "PROCESSING" | "CLEARING";
     note?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -66,11 +66,11 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
+    status?: "CANCELLED" | "NEW" | "ACKNOWLEDGED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
     active?: boolean | undefined;
     q?: string | undefined;
 }, {
-    status?: "CANCELLED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "NEW" | "ACKNOWLEDGED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
+    status?: "CANCELLED" | "NEW" | "ACKNOWLEDGED" | "EN_ROUTE" | "ON_SCENE" | "CLOSED" | "ASSIGNED" | "PROCESSING" | "CLEARING" | undefined;
     active?: boolean | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;

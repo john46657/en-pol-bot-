@@ -270,6 +270,7 @@ export declare class MdtController {
             type: string;
         }[] | null;
         warrants: {
+            number: string | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -371,6 +372,7 @@ export declare class MdtController {
             erlcReference: string | null;
         };
         wanted: {
+            number: string | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -471,6 +473,7 @@ export declare class MdtController {
             plate: string;
             color: string | null;
         } | null;
+        number: string | null;
         serverId: string | null;
         id: string;
         status: string;

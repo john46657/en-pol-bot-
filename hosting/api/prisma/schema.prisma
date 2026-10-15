@@ -483,19 +483,22 @@ model Investigation {
 }
 
 model WantedRecord {
-  id          String    @id @default(uuid()) @db.Uuid
-  serverId    String?   @db.Uuid
-  personId    String?   @db.Uuid
-  vehicleId   String?   @db.Uuid
+  id          String          @id @default(uuid()) @db.Uuid
+  /// Fahndungsnummer (z. B. F-2026-K7M2QX); ältere Einträge bekommen sie per Migration
+  number      String?         @unique
+  serverId    String?         @db.Uuid
+  personId    String?         @db.Uuid
+  vehicleId   String?         @db.Uuid
   reason      String
   description String?
-  priority    String    @default("MEDIUM")
-  status      String    @default("ACTIVE")
-  createdById String    @db.Uuid
-  createdAt   DateTime  @default(now())
+  priority    String          @default("MEDIUM")
+  status      String          @default("ACTIVE")
+  createdById String          @db.Uuid
+  createdAt   DateTime        @default(now())
   expiresAt   DateTime?
-  updatedAt   DateTime  @updatedAt
-  version     Int       @default(1)
+  updatedAt   DateTime        @updatedAt
+  version     Int             @default(1)
+  hits        ErlcWantedHit[]
 
   @@index([status])
   @@index([serverId])
@@ -1260,37 +1263,101 @@ model RadioCode {
 
 /// Verbundener ER:LC-Privatserver. Der Server-Key liegt nur verschlüsselt hier (AES-256-GCM) und verlässt das Backend nie.
 model ErlcServer {
-  id             String              @id @default(uuid()) @db.Uuid
-  name           String
+  id               String               @id @default(uuid()) @db.Uuid
+  name             String
   /// Optionale eigene Kennung (z. B. Join-Key) zur Anzeige
-  serverRef      String?
-  description    String?
-  logoUrl        String?
+  serverRef        String?
+  description      String?
+  logoUrl          String?
   /// zugehöriger Discord-Server
-  guildId        String?
-  active         Boolean             @default(true)
-  keyCipher      String
-  pollSeconds    Int                 @default(15)
+  guildId          String?
+  active           Boolean              @default(true)
+  keyCipher        String
+  pollSeconds      Int                  @default(15)
   /// Erlaubte Funktionen: players, staff, queue, vehicles, emergencyCalls, modCalls, joinLogs, killLogs, commandLogs, commands, webhook
-  features       String[]            @default([])
-  webhookEnabled Boolean             @default(false)
+  features         String[]             @default([])
+  webhookEnabled   Boolean              @default(false)
   /// Geheimer Teil der Webhook-Adresse (bindet signierte PRC-Zustellungen an genau diesen Server)
-  webhookToken   String              @default(dbgenerated("md5(((random())::text || (clock_timestamp())::text))"))
+  webhookToken     String               @default(dbgenerated("md5(((random())::text || (clock_timestamp())::text))"))
   /// API-Einstellungen (z. B. kritische/gesperrte Befehle, Timeout)
-  settings       Json?
-  status         String              @default("UNKNOWN") // CONNECTED | LIMITED | OFFLINE | ERROR | UNKNOWN | DISABLED
-  lastSyncAt     DateTime?
-  lastError      String?
-  lastErrorAt    DateTime?
-  latencyMs      Int?
-  rateLimit      Json?
+  settings         Json?
+  status           String               @default("UNKNOWN") // CONNECTED | LIMITED | OFFLINE | ERROR | UNKNOWN | DISABLED
+  lastSyncAt       DateTime?
+  lastError        String?
+  lastErrorAt      DateTime?
+  latencyMs        Int?
+  rateLimit        Json?
   /// Letzter erfolgreicher Datenstand (ohne Zugangsdaten) – bleibt bei API-Ausfall sichtbar
-  snapshot       Json?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  calls          ErlcEmergencyCall[]
-  commands       ErlcCommandLog[]
-  liveVehicles   ErlcLiveVehicle[]
+  snapshot         Json?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  /// Letzter erfolgreicher Fahndungsabgleich (Spielerliste ↔ aktive Fahndungen) und letzter Fehler dabei
+  wantedCheckAt    DateTime?
+  wantedCheckError String?
+  calls            ErlcEmergencyCall[]
+  commands         ErlcCommandLog[]
+  liveVehicles     ErlcLiveVehicle[]
+  presence         ErlcPlayerPresence[]
+  wantedHits       ErlcWantedHit[]
+}
+
+/// Wer gerade auf einem ER:LC-Server ist (aus dem Vergleich der Spielerlisten). Eine Zeile = eine Sitzung:
+/// verlässt der Spieler den Server (oder zeigen die Join-Logs einen neuen Beitritt), beginnt eine neue Sitzung mit neuer ID.
+/// Bleibt bei API-Ausfällen und Neustarts erhalten, damit derselbe Aufenthalt nicht erneut als Beitritt zählt.
+model ErlcPlayerPresence {
+  id           String     @id @default(uuid()) @db.Uuid
+  serverId     String     @db.Uuid
+  server       ErlcServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  /// „id:<Roblox-ID>“ bzw. „name:<name klein>“, falls die API keine ID liefert
+  playerKey    String
+  playerName   String
+  robloxUserId String?
+  joinedAt     DateTime   @default(now())
+  lastSeenAt   DateTime   @default(now())
+
+  @@unique([serverId, playerKey])
+}
+
+/// Fahndungstreffer: ein Spieler auf dem ER:LC-Server passt zu einer aktiven Fahndung. Dauerhafte Historie (wird nie automatisch gelöscht).
+/// Je Sitzung und Fahndung höchstens ein Eintrag. Bestätigt („identified“) nur bei exakt gleicher Roblox-ID oder nach manueller Prüfung.
+model ErlcWantedHit {
+  id               String        @id @default(uuid()) @db.Uuid
+  /// Discord-Server des ER:LC-Servers (Trennung der Server im Dashboard)
+  guildId          String?
+  erlcServerId     String?       @db.Uuid
+  erlcServer       ErlcServer?   @relation(fields: [erlcServerId], references: [id], onDelete: SetNull)
+  serverName       String
+  wantedId         String?       @db.Uuid
+  wanted           WantedRecord? @relation(fields: [wantedId], references: [id], onDelete: SetNull)
+  /// Stand der Fahndung bei der Erkennung (bleibt lesbar, auch wenn sich die Fahndung ändert)
+  wantedNumber     String?
+  wantedReason     String
+  wantedPriority   String
+  personId         String?       @db.Uuid
+  /// Sitzung (ErlcPlayerPresence.id) – verhindert doppelte Treffer für denselben Aufenthalt
+  sessionId        String        @db.Uuid
+  sessionStartedAt DateTime
+  playerName       String
+  /// Roblox-ID laut ER:LC-API (fehlt, wenn die API keine liefert)
+  robloxUserId     String?
+  /// ROBLOX_ID | NAME | ALIAS | NAME_ID_MISMATCH
+  matchType        String
+  /// true nur bei exakter Roblox-ID oder manueller Bestätigung
+  identified       Boolean       @default(false)
+  /// NEW | REVIEW_REQUIRED | ACKNOWLEDGED | CONFIRMED | REJECTED
+  reviewStatus     String
+  reviewedById     String?       @db.Uuid
+  reviewedAt       DateTime?
+  reviewNote       String?
+  /// QUEUED (Discord-Ausgang) | NOT_CONFIGURED (kein Kanal) | FAILED (konnte nicht eingereiht werden)
+  notifyStatus     String        @default("NOT_CONFIGURED")
+  outboxId         String?       @db.Uuid
+  detectedAt       DateTime      @default(now())
+
+  @@unique([sessionId, wantedId])
+  @@index([guildId, detectedAt])
+  @@index([wantedId])
+  @@index([reviewStatus])
 }
 
 /// Notruf aus ER:LC (API oder Webhook). Verknüpfung mit einem CAD-Einsatz über incidentId.

@@ -183,8 +183,8 @@ export declare const SETTING_SCHEMAS: {
         tickets?: string | undefined;
         guildId?: string | undefined;
         qualifications?: string | undefined;
-        dispatch?: string | undefined;
         wanted?: string | undefined;
+        dispatch?: string | undefined;
         announcements?: string | undefined;
         applications?: string | undefined;
         danger?: string | undefined;
@@ -202,8 +202,8 @@ export declare const SETTING_SCHEMAS: {
         tickets?: string | undefined;
         guildId?: string | undefined;
         qualifications?: string | undefined;
-        dispatch?: string | undefined;
         wanted?: string | undefined;
+        dispatch?: string | undefined;
         announcements?: string | undefined;
         applications?: string | undefined;
         danger?: string | undefined;

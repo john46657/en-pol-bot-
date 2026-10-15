@@ -10,6 +10,7 @@ import { CadStatsService } from './cad-stats.service';
 import { CadConfigService } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
+import { ErlcWantedService } from './erlc-wanted.service';
 declare const incidentBody: z.ZodObject<{
     title: z.ZodString;
     type: z.ZodOptional<z.ZodNullable<z.ZodTypeAny>>;
@@ -2012,6 +2013,116 @@ export declare class ErlcController {
         events: number;
         duplicate?: undefined;
         ignored?: undefined;
+    }>;
+}
+declare const hitsQ: z.ZodObject<{
+    page: z.ZodDefault<z.ZodNumber>;
+    pageSize: z.ZodDefault<z.ZodNumber>;
+    q: z.ZodOptional<z.ZodString>;
+} & {
+    status: z.ZodOptional<z.ZodEnum<["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"]>>;
+    open: z.ZodOptional<z.ZodEffects<z.ZodEnum<["true", "false"]>, boolean, "true" | "false">>;
+    identified: z.ZodOptional<z.ZodEffects<z.ZodEnum<["true", "false"]>, boolean, "true" | "false">>;
+    wantedId: z.ZodOptional<z.ZodString>;
+    id: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    page: number;
+    pageSize: number;
+    id?: string | undefined;
+    status?: "REJECTED" | "NEW" | "REVIEW_REQUIRED" | "ACKNOWLEDGED" | "CONFIRMED" | undefined;
+    wantedId?: string | undefined;
+    identified?: boolean | undefined;
+    open?: boolean | undefined;
+    q?: string | undefined;
+}, {
+    id?: string | undefined;
+    status?: "REJECTED" | "NEW" | "REVIEW_REQUIRED" | "ACKNOWLEDGED" | "CONFIRMED" | undefined;
+    wantedId?: string | undefined;
+    identified?: "true" | "false" | undefined;
+    open?: "true" | "false" | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
+    q?: string | undefined;
+}>;
+declare const reviewBody: z.ZodObject<{
+    decision: z.ZodEnum<["ACKNOWLEDGED", "CONFIRMED", "REJECTED"]>;
+    note: z.ZodOptional<z.ZodString>;
+    linkRobloxId: z.ZodOptional<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    decision: "REJECTED" | "ACKNOWLEDGED" | "CONFIRMED";
+    note?: string | undefined;
+    linkRobloxId?: boolean | undefined;
+}, {
+    decision: "REJECTED" | "ACKNOWLEDGED" | "CONFIRMED";
+    note?: string | undefined;
+    linkRobloxId?: boolean | undefined;
+}>;
+/** Automatischer ER:LC-Fahndungsabgleich: Treffer ansehen (Fahndungsrecht) und prüfen (Fahndungen bearbeiten). */
+export declare class WantedHitsController {
+    private readonly s;
+    constructor(s: ErlcWantedService);
+    list(q: z.infer<typeof hitsQ>): Promise<{
+        items: {
+            id: string;
+            serverName: string;
+            erlcServerId: string | null;
+            playerName: string;
+            robloxUserId: string | null;
+            matchType: string;
+            matchLabel: string;
+            identified: boolean;
+            identification: string;
+            reviewStatus: string;
+            reviewLabel: string;
+            reviewedBy: string | null;
+            reviewedAt: Date | null;
+            reviewNote: string | null;
+            detectedAt: Date;
+            sessionStartedAt: Date;
+            wantedId: string | null;
+            wantedNumber: string | null;
+            reason: string;
+            priority: string;
+            wantedStatus: string | null;
+            personId: string | null;
+            person: {
+                id: string;
+                robloxUsername: string;
+                robloxUserId: string | null;
+            } | null;
+            notify: {
+                status: string;
+                attempts: number;
+                error: string | null;
+            };
+        }[];
+        total: number;
+        page: number;
+        pageSize: number;
+    }>;
+    status(): Promise<{
+        open: number;
+        review: number;
+        servers: {
+            id: string;
+            name: string;
+            active: boolean;
+            status: string;
+            lastSyncAt: Date | null;
+            lastError: string | null;
+            lastErrorAt: Date | null;
+            playersEnabled: boolean;
+            joinLogsEnabled: boolean;
+            wantedCheckAt: Date | null;
+            wantedCheckError: string | null;
+            online: number;
+        }[];
+    }>;
+    review(a: Actor, id: string, b: z.infer<typeof reviewBody>): Promise<{
+        id: string;
+        reviewStatus: string;
+        identified: boolean;
+        robloxIdLinked: boolean;
     }>;
 }
 export {};

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Check, ChevronDown, Globe, LayoutGrid, Shield } from 'lucide-react';
 import { useGuilds, useServer } from '../lib/guilds';
 import { useOptionalAuth } from '../lib/auth';
+import { chooseAllServers } from '../lib/server';
 
 const Icon = ({ icon, name }: { icon: string | null; name: string }) => (icon
   ? <img src={icon} alt="" className="h-6 w-6 shrink-0 rounded-full" />
@@ -44,7 +45,7 @@ export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicke
           </li>
           {[...(user?.globalAdmin ? [{ id: '', name: 'Alle Server', icon: null as string | null }] : []), ...list].map((g) => (
             <li key={g.id || 'all'} role="none">
-              <button type="button" role="option" aria-selected={g.id === server} onClick={() => { setServer(g.id); setOpen(false); onPicked?.(); }} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-normal hover:bg-panel-2">
+              <button type="button" role="option" aria-selected={g.id === server} onClick={() => { if (g.id) setServer(g.id); else chooseAllServers(); setOpen(false); onPicked?.(); }} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-normal hover:bg-panel-2">
                 {g.id ? <Icon icon={g.icon} name={g.name} /> : <span className="grid h-6 w-6 place-items-center"><Globe size={16} className="text-muted" aria-hidden /></span>}
                 <span className="min-w-0 flex-1 truncate">{g.name}</span>
                 {g.id === server && <Check size={14} className="text-primary" aria-hidden />}

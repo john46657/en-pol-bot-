@@ -59,8 +59,8 @@ declare const submit: z.ZodObject<{
         answer: string | string[] | null;
     }[];
     guildId?: string | undefined;
-    durationSec?: number | undefined;
     joinedAt?: Date | undefined;
+    durationSec?: number | undefined;
 }, {
     unit: string;
     discordId: string;
@@ -70,8 +70,8 @@ declare const submit: z.ZodObject<{
         answer: string | string[] | null;
     }[];
     guildId?: string | undefined;
-    durationSec?: number | undefined;
     joinedAt?: Date | undefined;
+    durationSec?: number | undefined;
 }>;
 declare const openQ: z.ZodObject<{
     discordId: z.ZodString;
@@ -409,12 +409,12 @@ export declare class QualificationsController {
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
         unitName: string;
     }[]>;
     history(q: z.infer<typeof historyQ>): import("@prisma/client").Prisma.PrismaPromise<{
@@ -436,12 +436,12 @@ export declare class QualificationsController {
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
         unitName: string;
     }>;
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */

@@ -82775,6 +82775,25 @@ ${list}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         description: p.description ? clip(plain(p.description), 1500) : void 0,
         fields: [...f("Ort", p.location), ...f("Team", p.team), ...p.startedAt ? [{ name: "Zeit", value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1e3)}:t>`, inline: true }] : [], { name: "Status", value: "Offen", inline: true }, ...f("Server", p.server)]
       };
+    case "cad.wanted.hit":
+    case "cad.wanted.possible": {
+      const confirmed = type === "cad.wanted.hit" && p.identified === true;
+      return {
+        title: confirmed ? "\u{1F6A8} FAHNDUNGSTREFFER" : "\u26A0\uFE0F M\xD6GLICHER FAHNDUNGSTREFFER",
+        color: confirmed ? COLORS.danger : COLORS.warning,
+        fields: [
+          { name: "Spieler", value: clip(plain(p.playerName), 256), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
+          ...f("Fahndung", p.wantedNumber),
+          { name: "Grund", value: clip(plain(p.reason), 1024), inline: false },
+          ...f("Priorit\xE4t", p.priority),
+          ...p.detectedAt ? [{ name: "Erkannt am", value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1e3)}:f>`, inline: true }] : [],
+          { name: "Identifikation", value: confirmed ? "Best\xE4tigt (Roblox-ID stimmt \xFCberein)" : `Manuelle Pr\xFCfung erforderlich${p.matchLabel ? ` \u2013 ${plain(p.matchLabel)}` : ""}`, inline: false },
+          ...f("Server", p.server)
+        ],
+        footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
+      };
+    }
     case "cad.announcement":
       return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
     case "cad.radio":
@@ -82793,6 +82812,7 @@ function cadButtons(type, p) {
     ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
   ];
   if (type === "cad.handover") return link.length ? link : void 0;
+  if (type === "cad.wanted.hit" || type === "cad.wanted.possible") return typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard \xF6ffnen", style: "secondary", url: p.dashboardUrl }] : void 0;
   if (type.startsWith("cad.incident.")) {
     const map = type === "cad.incident.created" && typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : [];
     return link.length || map.length ? [...link, ...map] : void 0;

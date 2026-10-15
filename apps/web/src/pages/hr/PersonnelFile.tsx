@@ -5,6 +5,7 @@ import { ArrowLeft, Ban, Plus, Trash2 } from 'lucide-react';
 import type { HrConfig, PromotionCheck } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { guildName, useGuilds } from '../../lib/guilds';
 import { errText } from '../../lib/tickets';
 import { onSaved, pendingBody, useAutosaveDraft } from '../../lib/autosave';
 import { fmtDate, requestStatus, statusInfo, useHrConfig, useRanks, type HrRank, type HrRecord, type HrRequest, type Profile } from '../../lib/hr';
@@ -199,7 +200,7 @@ function EditCard({ p, cfg }: { p: Profile; cfg: HrConfig | undefined }) {
 }
 
 // ───────────── Dashboard-Rollen (wie unter Rollen & Rechte → Hierarchie) ─────────────
-interface DashRole { id: string; name: string; priority: number; color: string | null; icon: string | null; active: boolean }
+interface DashRole { id: string; name: string; priority: number; color: string | null; icon: string | null; active: boolean; guildId?: string | null }
 function RolesCard({ userId }: { userId: string }) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -217,11 +218,17 @@ function RolesCard({ userId }: { userId: string }) {
   const myRank = rank.data?.rank ?? Number.MAX_SAFE_INTEGER;
   const has = new Set((account.data?.roles ?? []).map((r) => r.role.id));
   const list = [...(roles.data ?? [])].sort((a, b) => a.priority - b.priority);
+  // „Alle Server“: Rollen gleichen Namens gibt es je Server – getrennt nach Server zeigen statt gemischt (sonst z. B. 5× „Police Member“)
+  const guilds = useGuilds();
+  const groups = [...new Set(list.map((r) => r.guildId ?? null))].map((g) => ({ g, roles: list.filter((r) => (r.guildId ?? null) === g) }))
+    .sort((a, b) => (a.g === null ? 1 : 0) - (b.g === null ? 1 : 0));
   return (
     <Card title="Rollen im Dashboard">
       {roles.isLoading || account.isLoading ? <SkeletonRows /> : roles.error || account.error ? <ErrorState error={roles.error ?? account.error} /> : (
         <>
-          <ul className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">{list.map((r) => {
+          {groups.map(({ g, roles: rs }) => <div key={g ?? 'global'} className="mb-3 last:mb-0">
+          {groups.length > 1 && <h3 className="mb-1 text-xs font-medium text-muted">{g ? `Server: ${guildName(guilds.data, g)}` : 'Serverübergreifend (Vorlagen und manuell vergebene Rollen)'}</h3>}
+          <ul className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">{rs.map((r) => {
             const allowed = !self && (owner || r.priority > myRank);
             return (
               <li key={r.id}>
@@ -233,7 +240,7 @@ function RolesCard({ userId }: { userId: string }) {
                 </label>
               </li>
             );
-          })}</ul>
+          })}</ul></div>)}
           {err && <p role="alert" className="mt-2 text-sm text-danger">{err}</p>}
           <p className="mt-2 text-xs text-muted">{self ? 'Deine eigenen Rollen kannst du nicht ändern.' : 'Wird sofort gespeichert. Oben = höchster Rang; du kannst nur Rollen unterhalb deines eigenen Rangs vergeben.'}</p>
         </>

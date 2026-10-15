@@ -28,6 +28,7 @@ const erlc_client_1 = require("./erlc-client");
 const erlc_crypto_1 = require("./erlc-crypto");
 const fleet_service_1 = require("../fleet/fleet.service");
 const cad_notify_service_1 = require("./cad-notify.service");
+const erlc_wanted_service_1 = require("./erlc-wanted.service");
 /** Öffentlicher Ed25519-Schlüssel von PRC für Event-Webhooks (https://apidocs.erlc.gg/event-webhooks). */
 const PRC_WEBHOOK_KEY = 'MCowBQYDK2VwAyEAjSICb9pp0kHizGQtdG8ySWsDChfGqi+gyFCttigBNOA=';
 const MAX_BACKOFF_MS = 5 * 60_000;
@@ -121,12 +122,13 @@ let ErlcService = class ErlcService {
     notify;
     records;
     fleet;
+    wanted;
     log = new common_1.Logger('ERLC');
     client;
     rt = new Map();
     webhookKey;
     seen = new Map();
-    constructor(prisma, audit, perms, realtime, notify, records, fleet) {
+    constructor(prisma, audit, perms, realtime, notify, records, fleet, wanted) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
@@ -134,6 +136,7 @@ let ErlcService = class ErlcService {
         this.notify = notify;
         this.records = records;
         this.fleet = fleet;
+        this.wanted = wanted;
         this.client = new erlc_client_1.ErlcClient();
         this.webhookKey = (0, node_crypto_1.createPublicKey)({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
     }
@@ -262,6 +265,9 @@ let ErlcService = class ErlcService {
                     this.realtime.publish('cad', 'erlc.status', { serverId: id, status: st.status });
                 if (manual || s.status !== st.status)
                     this.log.warn(`server ${s.name}: ${st.message}`);
+                // Server laut API leer/offline → alle Aufenthalte sind beendet. Bei Netzwerk-/API-Fehlern bleiben die Sitzungen (keine Doppeltreffer danach).
+                if (st.status === 'OFFLINE' && !res.network)
+                    await this.wanted.serverEmpty(id);
                 return { ok: false, status: st.status, message: st.message, latencyMs: res.latencyMs };
             }
             r.failures = 0;
@@ -273,6 +279,8 @@ let ErlcService = class ErlcService {
             await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap, rateLimit: this.client.rate(id) } });
             if (snap.emergencyCalls)
                 await this.syncCalls(s, snap.emergencyCalls, 'API');
+            // Fahndungsabgleich VOR der Personen-Übernahme: deren Namens-Zuordnung darf keinen „bestätigten“ Treffer erzeugen
+            await this.wanted.check(s, snap);
             await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
             await this.fleet.sync(id, snap, manual).catch((e) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
             this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
@@ -438,6 +446,6 @@ let ErlcService = class ErlcService {
 exports.ErlcService = ErlcService;
 exports.ErlcService = ErlcService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService, cad_notify_service_1.CadNotifyService, erlc_sync_service_1.ErlcSyncService, fleet_service_1.FleetService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService, cad_notify_service_1.CadNotifyService, erlc_sync_service_1.ErlcSyncService, fleet_service_1.FleetService, erlc_wanted_service_1.ErlcWantedService])
 ], ErlcService);
 //# sourceMappingURL=erlc.service.js.map

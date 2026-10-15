@@ -1,5 +1,5 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
-import { currentGuild, PER_SERVER_SETTING_KEYS, recordSpace, settingsGuild } from '../common/guild-context';
+import { currentGuild, inRequest, PER_SERVER_SETTING_KEYS, recordSpace, registeredSpaces, settingsGuild } from '../common/guild-context';
 
 /**
  * Daten, die je Discord-Server getrennt sind (Spalte `serverId` = Bereich des Servers bzw. einer ausdrücklich eingerichteten
@@ -15,11 +15,11 @@ export const SERVER_SCOPED_MODELS = new Set([
 ]);
 
 /** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */
-export const GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat',
+export const GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat', 'ErlcWantedHit',
   // Discord Message Builder: Vorlagen, Entwürfe, Kategorien, Versände, Button-Aktionen, Webhooks je Server
   'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook']);
 /** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
-export const RELATION_SCOPED_MODELS: Record<string, string> = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', MessageBuilderSendItem: 'send' };
+export const RELATION_SCOPED_MODELS: Record<string, string> = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', ErlcPlayerPresence: 'server', MessageBuilderSendItem: 'send' };
 
 const FILTERED = new Set(['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate', 'groupBy', 'updateMany', 'deleteMany']);
 const delegate = (base: PrismaClient, model: string) => (base as unknown as Record<string, { findUnique: (a: unknown) => Promise<{ serverId: string | null } | null> }>)[model[0]!.toLowerCase() + model.slice(1)]!;
@@ -39,7 +39,15 @@ export function withServerScope(base: PrismaClient) {
           if (model && (GUILD_SCOPED_MODELS.has(model) || model in RELATION_SCOPED_MODELS)) return scopeByGuild(base, model, operation, args as Record<string, unknown>, query as (a: unknown) => Promise<unknown>);
           if (!model || !SERVER_SCOPED_MODELS.has(model)) return query(args);
           const space = recordSpace();
-          if (space === undefined) return query(args); // kein Server gewählt
+          if (space === undefined) {
+            // kein Server gewählt („Alle Server“): Listen ohne Reste früherer Umstellungen (verwaiste Bereiche), sonst stünde alles doppelt da
+            const known = inRequest() && FILTERED.has(operation) ? await registeredSpaces() : null;
+            if (!known) return query(args);
+            const a = (args ?? {}) as Record<string, unknown>;
+            const visible = { OR: [{ serverId: null }, { serverId: { in: [...known] } }] };
+            a.where = a.where ? { AND: [a.where, visible] } : visible;
+            return query(a as typeof args);
+          }
           const a = (args ?? {}) as Record<string, unknown>;
           if (FILTERED.has(operation)) {
             a.where = a.where ? { AND: [a.where, { serverId: space }] } : { serverId: space };

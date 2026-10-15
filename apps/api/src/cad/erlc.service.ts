@@ -14,6 +14,7 @@ import { ErlcClient, type ErlcResult } from './erlc-client';
 import { decryptSecret, encryptSecret } from './erlc-crypto';
 import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
+import { ErlcWantedService } from './erlc-wanted.service';
 
 /** Öffentlicher Ed25519-Schlüssel von PRC für Event-Webhooks (https://apidocs.erlc.gg/event-webhooks). */
 const PRC_WEBHOOK_KEY = 'MCowBQYDK2VwAyEAjSICb9pp0kHizGQtdG8ySWsDChfGqi+gyFCttigBNOA=';
@@ -117,7 +118,7 @@ export class ErlcService {
   private webhookKey: KeyObject;
   private readonly seen = new Map<string, number>();
 
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService) {
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService, private readonly wanted: ErlcWantedService) {
     this.client = new ErlcClient();
     this.webhookKey = createPublicKey({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
   }
@@ -239,6 +240,8 @@ export class ErlcService {
         await this.prisma.erlcServer.update({ where: { id }, data: { status: st.status, lastError: st.message, lastErrorAt: new Date(), latencyMs: res.latencyMs || null, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
         if (s.status !== st.status) this.realtime.publish('cad', 'erlc.status', { serverId: id, status: st.status });
         if (manual || s.status !== st.status) this.log.warn(`server ${s.name}: ${st.message}`);
+        // Server laut API leer/offline → alle Aufenthalte sind beendet. Bei Netzwerk-/API-Fehlern bleiben die Sitzungen (keine Doppeltreffer danach).
+        if (st.status === 'OFFLINE' && !res.network) await this.wanted.serverEmpty(id);
         return { ok: false, status: st.status, message: st.message, latencyMs: res.latencyMs };
       }
       r.failures = 0;
@@ -248,6 +251,8 @@ export class ErlcService {
       if (prev?.webhookEvents) snap.webhookEvents = prev.webhookEvents;
       await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap as unknown as Prisma.InputJsonValue, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
       if (snap.emergencyCalls) await this.syncCalls(s, snap.emergencyCalls, 'API');
+      // Fahndungsabgleich VOR der Personen-Übernahme: deren Namens-Zuordnung darf keinen „bestätigten“ Treffer erzeugen
+      await this.wanted.check(s, snap);
       await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
       await this.fleet.sync(id, snap, manual).catch((e: Error) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
       this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });

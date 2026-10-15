@@ -2,6 +2,7 @@ import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
 import { InvestigationPersons } from '../components/InvestigationPersons';
+import { WantedHitList, WantedHitsNotice } from './WantedHits';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
 import type { ResourceConfig } from '../components/ResourcePage';
@@ -53,9 +54,9 @@ export const investigations: ResourceConfig<Row> = {
 };
 
 export const wanted: ResourceConfig<Row> = {
-  notice: <DiscordChannelHint channel="wanted" what="Fahndungen" />,
+  notice: <><DiscordChannelHint channel="wanted" what="Fahndungen" /><WantedHitsNotice /></>,
   title: 'Fahndungen', subtitle: 'Standardmäßig nur aktive Fahndungen', endpoint: '/wanted', queryKey: 'wanted', emptyText: 'Keine aktiven Fahndungen.', statusFilter: WANTED_STATUSES, detailPath: (r) => `/wanted/${r.id}`,
-  columns: [{ key: 'reason', label: 'Grund' }, { key: 'priority', label: 'Priorität', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'expiresAt', label: 'Läuft ab', render: (r) => (r.expiresAt ? fmt(r.expiresAt as string) : 'Nie') }],
+  columns: [{ key: 'number', label: 'Nummer', render: (r) => s(r.number) }, { key: 'reason', label: 'Grund' }, { key: 'priority', label: 'Priorität', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'expiresAt', label: 'Läuft ab', render: (r) => (r.expiresAt ? fmt(r.expiresAt as string) : 'Nie') }],
   create: { perm: 'wanted.create', label: 'Neue Fahndung', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'reason', label: 'Grund', required: true, min: 3, max: 500 }, { name: 'priority', label: 'Priorität', type: 'select', options: PRIORITIES }, { name: 'description', label: 'Beschreibung', type: 'textarea' }] },
 };
 
@@ -97,8 +98,9 @@ export const records: Record<string, RecordConfig> = {
       { label: 'Fall schließen', perm: 'investigations.close', path: (id) => `/investigations/${id}/close`, danger: true, reason: 'required', show: (r) => r.status !== 'CLOSED' && r.status !== 'ARCHIVED' },
     ],
     extra: (r, d) => <><InvestigationPersons id={String(r.id)} status={String(r.status)} links={(d.links as never) ?? []} />{((d.evidence as Row[] | undefined)?.length ? <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Beweismittel</h3><ul className="text-sm">{(d.evidence as Row[]).map((e) => <li key={String(e.id)}><Link className="text-primary underline" to={`/evidence/${e.id}`}>{String(e.number)}</Link> · {String(e.type)} · <Badge>{statusLabel(String(e.custodyState))}</Badge></li>)}</ul></div> : null)}</> },
-  wanted: { endpoint: '/wanted', queryKey: 'wanted', back: '/wanted', title: (r) => `Fahndung: ${r.reason}`, pick: nested('wanted'),
-    fields: [{ key: 'reason', label: 'Grund' }, { key: 'description', label: 'Beschreibung' }, { key: 'priority', label: 'Priorität', render: (v) => <PriorityBadge priority={String(v)} /> }, { key: 'personId', label: 'Person', render: (_v, r) => r.personId ? <Link className="text-primary underline" to={`/persons/${r.personId}`}>Akte öffnen</Link> : '—' }, { key: 'expiresAt', label: 'Läuft ab' }],
+  wanted: { endpoint: '/wanted', queryKey: 'wanted', back: '/wanted', title: (r) => `Fahndung${r.number ? ` ${r.number}` : ''}: ${r.reason}`, pick: nested('wanted'),
+    extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Fahndungstreffer (ER:LC)</h3><WantedHitList wantedId={String(r.id)} compact /></div>,
+    fields: [{ key: 'number', label: 'Fahndungsnummer' }, { key: 'reason', label: 'Grund' }, { key: 'description', label: 'Beschreibung' }, { key: 'priority', label: 'Priorität', render: (v) => <PriorityBadge priority={String(v)} /> }, { key: 'personId', label: 'Person', render: (_v, r) => r.personId ? <Link className="text-primary underline" to={`/persons/${r.personId}`}>Akte öffnen</Link> : '—' }, { key: 'expiresAt', label: 'Läuft ab' }],
     actions: [
       { label: 'Erledigen', perm: 'wanted.clear', path: (id) => `/wanted/${id}/clear`, reason: 'required', show: (r) => r.status === 'ACTIVE' },
       { label: 'Abbrechen', perm: 'wanted.edit', path: (id) => `/wanted/${id}/cancel`, danger: true, reason: 'required', show: (r) => r.status === 'ACTIVE' },

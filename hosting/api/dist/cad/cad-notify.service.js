@@ -41,8 +41,8 @@ let CadNotifyService = class CadNotifyService {
         const routesFor = (g) => cfg.routes.filter((r) => r.enabled && r.event === event && (g === null || r.guildId === g));
         routesFor(home).forEach(add);
         const linked = [];
-        if (home) {
-            const sendType = shared_1.CAD_EVENT_SEND_TYPE[event];
+        const sendType = shared_1.CAD_EVENT_SEND_TYPE[event];
+        if (home && sendType) {
             const links = await this.prisma.cadServerLink.findMany({ where: { active: true, notify: true, sourceGuildId: home, sendTypes: { has: sendType } } });
             for (const l of links) {
                 linked.push(l.targetGuildId);

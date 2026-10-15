@@ -8,6 +8,7 @@ import { AppError } from '../common/errors';
 import { DiscordService } from '../discord/discord.service';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
+import { makeNumber } from '../common/numbering';
 
 @Injectable()
 export class WantedService {
@@ -20,7 +21,7 @@ export class WantedService {
 
   async list(p: PageQuery, status = 'ACTIVE') {
     await this.expireDue();
-    const where = { status, ...(p.q ? { reason: { contains: p.q, mode: 'insensitive' as const } } : {}) };
+    const where = { status, ...(p.q ? { OR: [{ reason: { contains: p.q, mode: 'insensitive' as const } }, { number: { contains: p.q, mode: 'insensitive' as const } }] } : {}) };
     const [items, total] = await Promise.all([this.prisma.wantedRecord.findMany({ where, orderBy: { createdAt: 'desc' }, ...skipTake(p) }), this.prisma.wantedRecord.count({ where })]);
     return pageResult(items, total, p);
   }
@@ -40,7 +41,7 @@ export class WantedService {
       if (d.vehicleId && !(await tx.vehicle.findUnique({ where: { id: d.vehicleId } }))) throw new AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
       const dup = await tx.wantedRecord.findFirst({ where: { status: 'ACTIVE', personId: d.personId ?? undefined, vehicleId: d.vehicleId ?? undefined } });
       if (dup) throw new AppError('CONFLICT', 'Es gibt schon eine aktive Fahndung.', { existingId: dup.id });
-      const w = await tx.wantedRecord.create({ data: { ...d, priority: d.priority ?? 'MEDIUM', createdById: actor.userId! } });
+      const w = await tx.wantedRecord.create({ data: { ...d, number: makeNumber('F'), priority: d.priority ?? 'MEDIUM', createdById: actor.userId! } });
       if (d.personId) {
         await tx.recordLink.upsert({ where: { personId_entityType_entityId_role: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' } }, create: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' }, update: {} });
         await this.timeline.add(tx, { entityType: 'Person', entityId: d.personId, action: 'wanted.created', summary: `Fahndung: ${d.reason}`, actorId: actor.userId });

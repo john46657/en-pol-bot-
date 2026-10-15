@@ -28,6 +28,8 @@ interface RangeRow {
   releaseAs: RangeInput['releaseAs']; department: string | null; position: number;
   /** Achtung: `active` ist hier die Anzahl aktiver Nummern, der Schalter heißt `isActive`. */
   total: number; active: number; reserved: number; blocked: number; former: number; free: number; first: string; last: string; isActive: boolean;
+  /** gleicher Kreis existiert bereits (z. B. Kopie aus einer Server-Umstellung) */
+  duplicateOf?: { id: string; name: string } | null;
 }
 interface PendingRow { id: string; applicationId: string; kind: string; userId: string; discordId: string | null; reason: string | null; status: string; createdAt: string; name: string; personnelId: string | null }
 interface HistoryEvent { id: string; display: string; oldDisplay: string | null; action: string; reason: string | null; createdAt: string; name: string | null; actor: string; approver: string | null }
@@ -521,6 +523,7 @@ function RangesTab() {
                   <Button size="sm" variant="ghost" aria-label={`${r.name} bearbeiten`} onClick={() => { setErr(undefined); setEditing({ id: r.id, value: toInput(r) }); }}><Pencil size={14} aria-hidden /></Button>
                   <Button size="sm" variant="ghost" aria-label={`${r.name} löschen`} onClick={() => { setErr(undefined); setDel(r); }}><Trash2 size={14} aria-hidden /></Button>
                 </div>}>
+                {r.duplicateOf && <p role="alert" className="mb-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-warning">Doppelter Kreis: „{r.duplicateOf.name}“ hat dieselbe Schreibweise und denselben Bereich (vermutlich eine Kopie aus der Umstellung auf getrennte Server). Freie Nummern werden nur einmal angezeigt. Bitte prüfen und den überzähligen Kreis deaktivieren – es wird nichts automatisch geändert.</p>}
                 <p className="font-mono text-lg font-semibold">{r.first} – {r.last}</p>
                 <p className="text-xs text-muted">{r.total.toLocaleString('de-DE')} Nummern{r.department ? ` · Abteilung ${r.department}` : ''}</p>
                 <div className="mt-3" role="progressbar" aria-label={`Auslastung ${r.name}`} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>

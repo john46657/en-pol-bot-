@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ErlcController = exports.CadController = void 0;
+exports.WantedHitsController = exports.ErlcController = exports.CadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
@@ -32,6 +32,8 @@ const cad_link_interceptor_1 = require("./cad-link.interceptor");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
+const erlc_wanted_service_1 = require("./erlc-wanted.service");
+const pagination_1 = require("../common/pagination");
 const map_image_1 = require("./map-image");
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
@@ -768,4 +770,51 @@ exports.ErlcController = ErlcController = __decorate([
     (0, common_1.Controller)('erlc'),
     __metadata("design:paramtypes", [erlc_service_1.ErlcService, permission_service_1.PermissionService, erlc_sync_service_1.ErlcSyncService])
 ], ErlcController);
+const hitsQ = pagination_1.pageQuery.extend({
+    status: zod_1.z.enum(shared_1.WANTED_HIT_STATUSES).optional(), open: zod_1.z.enum(['true', 'false']).transform((v) => v === 'true').optional(),
+    identified: zod_1.z.enum(['true', 'false']).transform((v) => v === 'true').optional(), wantedId: zod_1.z.string().uuid().optional(), id: zod_1.z.string().uuid().optional(),
+});
+const reviewBody = zod_1.z.object({ decision: zod_1.z.enum(['ACKNOWLEDGED', 'CONFIRMED', 'REJECTED']), note: zod_1.z.string().trim().max(1000).optional(), linkRobloxId: zod_1.z.boolean().optional() });
+/** Automatischer ER:LC-Fahndungsabgleich: Treffer ansehen (Fahndungsrecht) und prüfen (Fahndungen bearbeiten). */
+let WantedHitsController = class WantedHitsController {
+    s;
+    constructor(s) {
+        this.s = s;
+    }
+    list(q) { return this.s.list(q, q); }
+    status() { return this.s.status(); }
+    review(a, id, b) { return this.s.review(a, id, b); }
+};
+exports.WantedHitsController = WantedHitsController;
+__decorate([
+    (0, common_1.Get)(),
+    (0, decorators_1.RequirePermission)('wanted.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(hitsQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], WantedHitsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('status'),
+    (0, decorators_1.RequirePermission)('wanted.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], WantedHitsController.prototype, "status", null);
+__decorate([
+    (0, common_1.Post)(':id/review'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('wanted.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(reviewBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], WantedHitsController.prototype, "review", null);
+exports.WantedHitsController = WantedHitsController = __decorate([
+    (0, swagger_1.ApiTags)('wanted'),
+    (0, common_1.Controller)('wanted-hits'),
+    __metadata("design:paramtypes", [erlc_wanted_service_1.ErlcWantedService])
+], WantedHitsController);
 //# sourceMappingURL=cad.controller.js.map

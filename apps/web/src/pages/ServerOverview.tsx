@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Clock, Plus, ShieldOff } from 'lucide-react';
 import { api } from '../lib/api';
-import { setServer } from '../lib/server';
+import { chooseAllServers, setServer } from '../lib/server';
 import { ErrorState, SkeletonRows } from '../components/ui';
 
 type State = 'open' | 'disabled' | 'invite' | 'pending';
@@ -63,7 +63,7 @@ export function ServerOverview() {
               {usable ? (
                 <button type="button" className={cls} onClick={() => open(s.guildId)} aria-label={`${s.name} öffnen`}>{inner}</button>
               ) : s.state === 'disabled' && d.globalAdmin ? (
-                <button type="button" className={`${cls} opacity-80 grayscale hover:grayscale-0`} onClick={() => { setServer(''); nav('/admin/multi-server'); }} aria-label={`${s.name} freischalten`}>{inner}</button>
+                <button type="button" className={`${cls} opacity-80 grayscale hover:grayscale-0`} onClick={() => { chooseAllServers(); nav('/admin/multi-server'); }} aria-label={`${s.name} freischalten`}>{inner}</button>
               ) : (
                 <div className={`${cls} opacity-80 grayscale`}>
                   {inner}
@@ -80,7 +80,7 @@ export function ServerOverview() {
         })}
       </ul>
       {d.discordLinked && !d.guildsSyncedAt && <p className="mt-4 text-xs text-muted">Deine eigenen Discord-Server zum Einladen erscheinen nach der nächsten Anmeldung mit Discord.</p>}
-      {d.globalAdmin && <p className="mt-2 text-xs text-muted"><button type="button" className="underline hover:text-fg" onClick={() => { setServer(''); nav('/dashboard'); }}>Alle Server</button> (nur Systemadministratoren: ohne Server-Auswahl, z. B. für Server-Verwaltung und Backups)</p>}
+      {d.globalAdmin && <p className="mt-2 text-xs text-muted"><button type="button" className="underline hover:text-fg" onClick={() => { chooseAllServers(); nav('/dashboard'); }}>Alle Server</button> (nur Systemadministratoren: ohne Server-Auswahl, z. B. für Server-Verwaltung und Backups)</p>}
     </div>
   );
 }

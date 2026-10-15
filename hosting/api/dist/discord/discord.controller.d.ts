@@ -144,18 +144,18 @@ declare const membersBody: z.ZodObject<{
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
+        joinedAt: string | null;
         username: string;
         displayName: string;
-        joinedAt: string | null;
         avatar: string | null;
     }, {
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
+        joinedAt: string | null;
         username: string;
         displayName: string;
-        joinedAt: string | null;
         avatar: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -164,9 +164,9 @@ declare const membersBody: z.ZodObject<{
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
+        joinedAt: string | null;
         username: string;
         displayName: string;
-        joinedAt: string | null;
         avatar: string | null;
     }[];
 }, {
@@ -175,9 +175,9 @@ declare const membersBody: z.ZodObject<{
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         guildId: string;
         roleIds: string[];
+        joinedAt: string | null;
         username: string;
         displayName: string;
-        joinedAt: string | null;
         avatar: string | null;
     }[];
 }>;
@@ -328,8 +328,8 @@ declare const application: z.ZodObject<{
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
     discordName?: string | undefined;
-    durationSec?: number | undefined;
     joinedAt?: Date | undefined;
+    durationSec?: number | undefined;
 }, {
     robloxUsername: string;
     discordId: string;
@@ -337,8 +337,8 @@ declare const application: z.ZodObject<{
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
     discordName?: string | undefined;
-    durationSec?: number | undefined;
     joinedAt?: Date | undefined;
+    durationSec?: number | undefined;
 }>;
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 export declare class DiscordController {

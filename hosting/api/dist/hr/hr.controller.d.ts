@@ -1754,6 +1754,10 @@ export declare class ServiceNumbersController {
         first: string;
         last: string;
         isActive: boolean;
+        duplicateOf: {
+            id: string;
+            name: string;
+        } | null;
         serverId: string | null;
         id: string;
         createdAt: Date;

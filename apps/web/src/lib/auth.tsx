@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError, setUnauthenticatedHandler } from './api';
 import { initAutosave, resetAutosave } from './autosave';
 import { useRealtimeEvent } from './realtime';
-import { getServer, setServer, subscribeServer } from './server';
+import { allServersChosen, getServer, setServer, subscribeServer } from './server';
 
 export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[]; globalAdmin?: boolean }
 interface AuthCtx { user: Profile | null; loading: boolean; can: (p: string) => boolean; login: (u: string, p: string) => Promise<{ ticket: string } | void>; loginTwoFactor: (ticket: string, code: string) => Promise<void>; logout: () => Promise<void> }
@@ -33,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     if (!server && !user.permissions.includes('dashboard.view') && user.servers?.length) setServer(user.servers[0]!);
+    // Genau ein Server (auch für Systemadministratoren): diesen wählen, statt unbemerkt „Alle Server“ zu zeigen
+    else if (!server && user.servers?.length === 1 && !allServersChosen()) setServer(user.servers[0]!);
     else if (server && !user.globalAdmin && user.servers && !user.servers.includes(server)) setServer(user.servers[0] ?? '');
   }, [user, server]);
   useRealtimeEvent('permissions.changed', () => void qc.invalidateQueries({ queryKey: ['me'] }), !!user);

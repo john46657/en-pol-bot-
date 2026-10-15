@@ -23,6 +23,7 @@ const cad_handover_service_1 = require("./cad-handover.service");
 const cad_stats_service_1 = require("./cad-stats.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
+const erlc_wanted_service_1 = require("./erlc-wanted.service");
 /** CAD-Leitstelle + ER:LC-Integration. Der ER:LC-Abruf läuft ausschließlich hier im Backend. */
 let CadModule = class CadModule {
     erlc;
@@ -64,8 +65,8 @@ exports.CadModule = CadModule;
 exports.CadModule = CadModule = __decorate([
     (0, common_1.Module)({
         imports: [media_module_1.MediaModule, fleet_module_1.FleetModule],
-        controllers: [cad_controller_1.CadController, cad_controller_1.ErlcController],
-        providers: [cad_link_interceptor_1.CadLinkInterceptor, cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService],
+        controllers: [cad_controller_1.CadController, cad_controller_1.ErlcController, cad_controller_1.WantedHitsController],
+        providers: [cad_link_interceptor_1.CadLinkInterceptor, cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService, erlc_service_1.ErlcService, erlc_sync_service_1.ErlcSyncService, erlc_wanted_service_1.ErlcWantedService],
         exports: [cad_service_1.CadService, cad_config_service_1.CadConfigService, erlc_service_1.ErlcService],
     }),
     __metadata("design:paramtypes", [erlc_service_1.ErlcService, cad_service_1.CadService])

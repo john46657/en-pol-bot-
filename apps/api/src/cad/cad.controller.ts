@@ -2,7 +2,7 @@ import { Body, Controller, createParamDecorator, Delete, ExecutionContext, Get, 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES } from '@enrp/shared';
+import { CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES, WANTED_HIT_STATUSES } from '@enrp/shared';
 import { CurrentActor, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
@@ -19,6 +19,8 @@ import { CadLinkInterceptor } from './cad-link.interceptor';
 import { CadConfigService, cadConfigSchema } from './cad-config.service';
 import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
+import { ErlcWantedService } from './erlc-wanted.service';
+import { pageQuery } from '../common/pagination';
 import { fetchMapImage, imageSize } from './map-image';
 
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
@@ -252,4 +254,23 @@ export class ErlcController {
   webhook(@Param('id', ParseUUIDPipe) id: string, @Param('token') token: string, @Req() req: AppRequest & { rawBody?: Buffer }, @Headers('x-signature-timestamp') ts?: string, @Headers('x-signature-ed25519') sig?: string) {
     return this.s.webhook(id, token, req.rawBody, ts, sig);
   }
+}
+
+const hitsQ = pageQuery.extend({
+  status: z.enum(WANTED_HIT_STATUSES).optional(), open: z.enum(['true', 'false']).transform((v) => v === 'true').optional(),
+  identified: z.enum(['true', 'false']).transform((v) => v === 'true').optional(), wantedId: z.string().uuid().optional(), id: z.string().uuid().optional(),
+});
+const reviewBody = z.object({ decision: z.enum(['ACKNOWLEDGED', 'CONFIRMED', 'REJECTED']), note: z.string().trim().max(1000).optional(), linkRobloxId: z.boolean().optional() });
+
+/** Automatischer ER:LC-Fahndungsabgleich: Treffer ansehen (Fahndungsrecht) und prüfen (Fahndungen bearbeiten). */
+@ApiTags('wanted')
+@Controller('wanted-hits')
+export class WantedHitsController {
+  constructor(private readonly s: ErlcWantedService) {}
+  @Get() @RequirePermission('wanted.view')
+  list(@Query(zodBody(hitsQ)) q: z.infer<typeof hitsQ>) { return this.s.list(q, q); }
+  @Get('status') @RequirePermission('wanted.view')
+  status() { return this.s.status(); }
+  @Post(':id/review') @HttpCode(200) @RequirePermission('wanted.edit')
+  review(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(reviewBody)) b: z.infer<typeof reviewBody>) { return this.s.review(a, id, b); }
 }
