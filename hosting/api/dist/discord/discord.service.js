@@ -142,10 +142,14 @@ let DiscordService = class DiscordService {
      * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
      */
     async guilds() {
-        const v = (await this.prisma.systemSetting.findUnique({ where: { key: GUILDS_KEY } }))?.value;
-        const all = Array.isArray(v) ? v : [];
+        const all = await this.reportedGuilds();
         const home = (0, guild_context_1.homeGuild)();
         return home ? all.filter((g) => g.id === home) : all;
+    }
+    /** Alle vom Bot gemeldeten Server (auch fremde) – nur für Hinweise, wenn der eingerichtete nicht dabei ist. */
+    async reportedGuilds() {
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: GUILDS_KEY } }))?.value;
+        return Array.isArray(v) ? v : [];
     }
     async saveGuilds(guilds) {
         const value = guilds;

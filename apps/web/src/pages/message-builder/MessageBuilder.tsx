@@ -14,7 +14,19 @@ import { History, SettingsTab, type Category } from './HistoryAndSettings';
 import { useDocAutosave, type DocSaveStatus, type MbDoc } from './useDocAutosave';
 
 interface DocMeta { id: string; kind: 'DRAFT' | 'TEMPLATE'; name: string; categoryId: string | null; updatedAt: string; messageCount: number; updatedByName: string | null }
-interface ServerInfo { guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; roles: ServerRole[]; configured: boolean; restricted?: boolean }
+interface ServerInfo {
+  guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; roles: ServerRole[]; configured: boolean; restricted?: boolean;
+  problem?: 'no_report' | 'wrong_guild' | 'several_guilds'; configuredGuildId?: string | null; reportedGuilds?: { id: string; name: string }[];
+}
+/** Warum keine Kanäle da sind – mit dem, was zu tun ist. */
+function channelHint(s: ServerInfo | undefined): string | null {
+  if (!s || s.channels.length) return null;
+  const list = (s.reportedGuilds ?? []).map((g) => `${g.name} (${g.id})`).join(', ');
+  if (s.problem === 'no_report') return 'Der Bot hat noch keine Kanäle gemeldet. Läuft der Bot (gleicher BOT_API_TOKEN wie die API)? Nach dem Start dauert es einige Sekunden.';
+  if (s.problem === 'wrong_guild') return `Eingerichtet ist der Discord-Server ${s.configuredGuildId}, der Bot ist aber nur auf: ${list}. Bitte DISCORD_GUILD_ID bzw. Einstellungen → Discord-Server-ID prüfen oder den Bot auf den Server einladen.`;
+  if (s.problem === 'several_guilds') return `Der Bot ist auf mehreren Servern (${list}). Bitte unter Einstellungen → Discord-Server-ID (oder DISCORD_GUILD_ID) den richtigen eintragen.`;
+  return `Auf ${s.guild?.name ?? 'dem Discord-Server'} sieht der Bot keine Textkanäle – bitte dem Bot das Recht „Kanäle ansehen“ geben.`;
+}
 
 const SAVE_VIEW: Record<DocSaveStatus, [string, string]> = {
   saved: ['Gespeichert', 'text-success'], pending: ['Ungespeicherte Änderungen …', 'text-warning'], saving: ['Speichert …', 'text-muted'], error: ['Speichern fehlgeschlagen', 'text-danger'], conflict: ['Konflikt – neuere Fassung vorhanden', 'text-danger'],
@@ -228,7 +240,7 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
             </Card>
             {(can('messagebuilder.send') || can('messagebuilder.create')) && (
               <Card title="Senden">
-                <SendPanel data={doc.data} name={doc.name} documentId={doc.id} channelId={localChannel} channels={server?.channels ?? []} issues={issues} can={can} webhooks={webhooks.data ?? []} mode={mode} onMode={setMode}
+                <SendPanel data={doc.data} name={doc.name} documentId={doc.id} channelId={localChannel} channels={server?.channels ?? []} channelHint={server ? channelHint(server) : null} issues={issues} can={can} webhooks={webhooks.data ?? []} mode={mode} onMode={setMode}
                   onChannel={(id) => { setLocalChannel(id); if (!readOnly) auto.setDoc((x) => ({ ...x, channelId: id })); }} />
               </Card>
             )}

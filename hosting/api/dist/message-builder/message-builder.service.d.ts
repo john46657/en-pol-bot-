@@ -2086,6 +2086,12 @@ export declare class MessageBuilderService {
             position: number;
         }[];
         configured: boolean;
+        problem: string;
+        configuredGuildId: string | null;
+        reportedGuilds: {
+            id: string;
+            name: string;
+        }[];
         restricted?: undefined;
     } | {
         guild: {
@@ -2102,6 +2108,9 @@ export declare class MessageBuilderService {
         }[];
         configured: boolean;
         restricted: boolean;
+        problem?: undefined;
+        configuredGuildId?: undefined;
+        reportedGuilds?: undefined;
     }>;
     names(ids: (string | null | undefined)[]): Promise<Map<string, string>>;
 }

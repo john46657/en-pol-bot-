@@ -81014,7 +81014,7 @@ function guildInfo(g) {
       return { id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: "parentId" in c ? c.parentId ?? null : null, position: "rawPosition" in c ? c.rawPosition : 0, ...bot ? { bot } : {} };
     }),
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
-    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.color, position: r.position }))
+    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position }))
   };
 }
 function startGuildDirectory(client2, api2, log = console.log) {

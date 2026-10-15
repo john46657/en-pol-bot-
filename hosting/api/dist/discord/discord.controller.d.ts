@@ -11,31 +11,8 @@ declare const guildsBody: z.ZodObject<{
     guilds: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
-        icon: z.ZodNullable<z.ZodString>;
-        channels: z.ZodArray<z.ZodObject<{
-            id: z.ZodString;
-            name: z.ZodString;
-            type: z.ZodEnum<["text", "category", "voice", "other"]>;
-            parentId: z.ZodNullable<z.ZodString>;
-            position: z.ZodNumber;
-            /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
-            bot: z.ZodOptional<z.ZodObject<{
-                view: z.ZodBoolean;
-                send: z.ZodBoolean;
-                embed: z.ZodBoolean;
-                mentionEveryone: z.ZodOptional<z.ZodBoolean>;
-            }, "strip", z.ZodTypeAny, {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            }, {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            }>>;
-        }, "strip", z.ZodTypeAny, {
+        icon: z.ZodCatch<z.ZodNullable<z.ZodString>>;
+        channels: z.ZodEffects<z.ZodArray<z.ZodUnknown, "many">, {
             name: string;
             id: string;
             type: "other" | "category" | "text" | "voice";
@@ -47,35 +24,13 @@ declare const guildsBody: z.ZodObject<{
                 embed: boolean;
                 mentionEveryone?: boolean | undefined;
             } | undefined;
-        }, {
-            name: string;
-            id: string;
-            type: "other" | "category" | "text" | "voice";
-            position: number;
-            parentId: string | null;
-            bot?: {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            } | undefined;
-        }>, "many">;
-        roles: z.ZodArray<z.ZodObject<{
-            id: z.ZodString;
-            name: z.ZodString;
-            color: z.ZodNumber;
-            position: z.ZodNumber;
-        }, "strip", z.ZodTypeAny, {
+        }[], unknown[]>;
+        roles: z.ZodEffects<z.ZodArray<z.ZodUnknown, "many">, {
             name: string;
             id: string;
             color: number;
             position: number;
-        }, {
-            name: string;
-            id: string;
-            color: number;
-            position: number;
-        }>, "many">;
+        }[], unknown[]>;
     }, "strip", z.ZodTypeAny, {
         name: string;
         id: string;
@@ -102,26 +57,9 @@ declare const guildsBody: z.ZodObject<{
     }, {
         name: string;
         id: string;
-        icon: string | null;
-        channels: {
-            name: string;
-            id: string;
-            type: "other" | "category" | "text" | "voice";
-            position: number;
-            parentId: string | null;
-            bot?: {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            } | undefined;
-        }[];
-        roles: {
-            name: string;
-            id: string;
-            color: number;
-            position: number;
-        }[];
+        channels: unknown[];
+        roles: unknown[];
+        icon?: unknown;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
@@ -152,26 +90,9 @@ declare const guildsBody: z.ZodObject<{
     guilds: {
         name: string;
         id: string;
-        icon: string | null;
-        channels: {
-            name: string;
-            id: string;
-            type: "other" | "category" | "text" | "voice";
-            position: number;
-            parentId: string | null;
-            bot?: {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            } | undefined;
-        }[];
-        roles: {
-            name: string;
-            id: string;
-            color: number;
-            position: number;
-        }[];
+        channels: unknown[];
+        roles: unknown[];
+        icon?: unknown;
     }[];
 }>;
 declare const redeem: z.ZodObject<{

@@ -210,8 +210,13 @@ let MessageBuilderService = class MessageBuilderService {
         const home = (0, guild_context_1.homeGuild)();
         const guilds = await this.discord.guilds();
         const g = home ? guilds.find((x) => x.id === home) : guilds.length === 1 ? guilds[0] : undefined;
-        if (!g)
-            return { guild: null, channels: [], roles: [], configured: !!home };
+        if (!g) {
+            // Ursache nennen: Bot hat (noch) nichts gemeldet, ist auf einem anderen als dem eingerichteten Server oder auf mehreren
+            const reported = await this.discord.reportedGuilds();
+            const others = reported.map((x) => ({ id: x.id, name: x.name }));
+            const problem = !reported.length ? 'no_report' : home ? 'wrong_guild' : 'several_guilds';
+            return { guild: null, channels: [], roles: [], configured: !!home, problem, configuredGuildId: home, reportedGuilds: others };
+        }
         const allowed = await this.allowedChannelIds();
         const cats = new Map(g.channels.filter((c) => c.type === 'category').map((c) => [c.id, c]));
         const channels = g.channels.filter((c) => c.type === 'text')

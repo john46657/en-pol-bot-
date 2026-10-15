@@ -125,6 +125,8 @@ export declare class DiscordService {
      * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
      */
     guilds(): Promise<DiscordGuildInfo[]>;
+    /** Alle vom Bot gemeldeten Server (auch fremde) – nur für Hinweise, wenn der eingerichtete nicht dabei ist. */
+    reportedGuilds(): Promise<DiscordGuildInfo[]>;
     saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;
     /**
      * Nachricht in einen Kanal setzen oder die dort zuletzt unter `stateKey` gepostete bearbeiten (Funk-Codes, Staff-Liste, Panels …).

@@ -136,6 +136,29 @@ describe('Message Builder – Kanäle', () => {
     expect(s2.restricted).toBe(true);
     expect(s2.channels.find((c: { id: string }) => c.id === CH_OTHER).allowed).toBe(false);
   });
+  it('ein einzelner unerwarteter Kanal/Rolle verwirft nicht die ganze Meldung des Bots', async () => {
+    const g = guilds();
+    g.guilds[0]!.channels.push({ id: 'kaputt', name: 'x', type: 'text', parentId: null, position: 9 } as never);
+    (g.guilds[0]!.roles as unknown[]).push({ id: '482000000000000002', name: 'Neu', position: 4 }); // ohne Farbe (neuere Discord-Rollen)
+    await http().put('/api/v1/bot/guilds').set(bot()).send(g).expect(204);
+    const a = (await login(app, 'mb_admin')).agent;
+    const s = (await a.get('/api/v1/message-builder/server')).body;
+    expect(s.channels.map((c: { id: string }) => c.id)).toEqual(expect.arrayContaining([CH_OK, CH_NOEMBED, CH_OTHER]));
+    expect(s.channels).toHaveLength(3);
+    expect(s.roles.map((r: { id: string }) => r.id)).toEqual(['482000000000000002', ROLE]);
+  });
+  it('ohne Kanäle wird die Ursache genannt (Bot meldet nichts / anderer Server)', async () => {
+    const a = (await login(app, 'mb_admin')).agent;
+    try {
+      await prisma.systemSetting.deleteMany({ where: { key: 'discord.guilds' } });
+      expect((await a.get('/api/v1/message-builder/server')).body).toMatchObject({ guild: null, channels: [], problem: 'no_report' });
+      const g = guilds(); g.guilds[0]!.id = OTHER_GUILD; g.guilds[0]!.name = 'Fremd';
+      await http().put('/api/v1/bot/guilds').set(bot()).send(g).expect(204);
+      expect((await a.get('/api/v1/message-builder/server')).body).toMatchObject({ guild: null, problem: 'wrong_guild', configuredGuildId: GUILD, reportedGuilds: [{ id: OTHER_GUILD, name: 'Fremd' }] });
+    } finally {
+      await http().put('/api/v1/bot/guilds').set(bot()).send(guilds()).expect(204);
+    }
+  });
 });
 
 describe('Message Builder – Versand über den Bot', () => {

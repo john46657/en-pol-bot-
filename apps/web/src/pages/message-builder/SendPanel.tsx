@@ -50,8 +50,8 @@ export function SendResult({ id, initial }: { id: string; initial?: SendRecord }
 }
 
 /** Versand: Bot (Standard), Testmodus oder ausdrücklich gewählter Webhook. Mit Bestätigung. */
-export function SendPanel({ data, name, documentId, channelId, onChannel, channels, issues, can, webhooks, mode, onMode }: {
-  data: MbDocumentData; name: string; documentId: string | null; channelId: string | null; onChannel: (id: string | null) => void; channels: ServerChannel[];
+export function SendPanel({ data, name, documentId, channelId, onChannel, channels, channelHint, issues, can, webhooks, mode, onMode }: {
+  data: MbDocumentData; name: string; documentId: string | null; channelId: string | null; onChannel: (id: string | null) => void; channels: ServerChannel[]; channelHint?: string | null;
   issues: MbIssue[]; can: (p: string) => boolean; webhooks: Webhook[]; mode: 'bot' | 'test' | 'webhook'; onMode: (m: 'bot' | 'test' | 'webhook') => void;
 }) {
   const [webhookId, setWebhookId] = useState('');
@@ -92,7 +92,7 @@ export function SendPanel({ data, name, documentId, channelId, onChannel, channe
             <option value="">— Kanal wählen —</option>
             {channels.map((c) => <option key={c.id} value={c.id} disabled={!c.allowed || (c.bot ? !c.bot.view || !c.bot.send : false)}>#{c.name}{c.category ? ` (${c.category})` : ''}{!c.allowed ? ' – nicht freigegeben' : c.bot && (!c.bot.view || !c.bot.send) ? ' – Bot darf hier nicht senden' : ''}</option>)}
           </Select>
-          {!channels.length && <p className="text-xs text-warning">Keine Kanäle bekannt – läuft der Bot, und ist der Discord-Server eingerichtet?</p>}
+          {!channels.length && <p className="text-xs text-warning">{channelHint ?? 'Keine Kanäle bekannt – läuft der Bot, und ist der Discord-Server eingerichtet?'}</p>}
           {ch && !ch.bot && <p className="text-xs text-muted">Die Rechte des Bots in diesem Kanal sind noch nicht gemeldet; sie werden beim Senden geprüft.</p>}
           {miss.length > 0 && <p role="alert" className="text-xs text-danger">Dem Bot fehlen in #{ch!.name}: {miss.join(', ')}.</p>}
         </div>

@@ -28,6 +28,12 @@ export declare class MessageBuilderController {
             position: number;
         }[];
         configured: boolean;
+        problem: string;
+        configuredGuildId: string | null;
+        reportedGuilds: {
+            id: string;
+            name: string;
+        }[];
         restricted?: undefined;
     } | {
         guild: {
@@ -44,6 +50,9 @@ export declare class MessageBuilderController {
         }[];
         configured: boolean;
         restricted: boolean;
+        problem?: undefined;
+        configuredGuildId?: undefined;
+        reportedGuilds?: undefined;
     }>;
     list(a: Actor, q: z.infer<typeof kindQuery>): Promise<{
         updatedByName: string | null;
