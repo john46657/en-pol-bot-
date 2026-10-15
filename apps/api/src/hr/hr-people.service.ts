@@ -7,6 +7,7 @@ import { DISCORD_ONLY_PASSWORD } from '../auth/discord-oauth.service';
 import { AppError } from '../common/errors';
 import { HrCoreService } from './hr-core.service';
 import { DiscordLiveService } from '../discord/discord-live.service';
+import { preferPersonnel } from './personnel-pick';
 
 export interface OverviewFilter { q?: string; status?: string; rank?: string; department?: string; state?: 'active' | 'inactive' | 'absent' }
 const INACTIVE = ['RESIGNED', 'TERMINATED', 'INACTIVE'];
@@ -37,7 +38,11 @@ export class HrPeopleService {
     };
     const links = new Map((await this.prisma.discordLink.findMany()).map((l) => [l.userId, l.discordId]));
     const term = f.q?.trim().toLowerCase();
-    const people = await this.prisma.personnel.findMany({ where, include: { user: { select: { id: true, displayName: true, username: true, robloxUsername: true, robloxUserId: true, active: true } } }, take: 2000 });
+    const found = await this.prisma.personnel.findMany({ where, include: { user: { select: { id: true, displayName: true, username: true, robloxUsername: true, robloxUserId: true, active: true } } }, take: 2000 });
+    // je Person nur eine Akte (z. B. Archiv-Doppel aus der Umstellung auf einen Server, solange sie nicht ausgeblendet sind)
+    const byUser = new Map<string, (typeof found)[number]>();
+    for (const p of found) { const o = byUser.get(p.userId); byUser.set(p.userId, o ? preferPersonnel(o, p) : p); }
+    const people = [...byUser.values()];
     const ids = people.map((p) => p.id);
     const [records, trainings, absent] = await Promise.all([
       this.prisma.personnelRecord.groupBy({ by: ['personnelId', 'type'], where: { personnelId: { in: ids }, deletedAt: null }, _count: { _all: true } }),

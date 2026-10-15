@@ -6,6 +6,7 @@ import { DiscordLiveService, type LiveMember } from '../discord/discord-live.ser
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { homeGuild } from '../common/guild-context';
+import { preferPersonnel } from '../hr/personnel-pick';
 
 export interface TeamStructure { teams: string[]; ranks: string[]; offices: string[] }
 export interface RosterMember {
@@ -65,7 +66,10 @@ export class RosterService {
     const byDiscord = new Map(live.map((m) => [m.id, m]));
     const out: RosterMember[] = [];
     const seen = new Set<string>();
-    for (const p of people) {
+    // je Person nur eine Akte (z. B. Archiv-Doppel aus der Umstellung auf einen Server, solange sie nicht ausgeblendet sind)
+    const byUser = new Map<string, (typeof people)[number]>();
+    for (const p of people) { const o = byUser.get(p.userId); byUser.set(p.userId, o ? preferPersonnel(o, p) : p); }
+    for (const p of byUser.values()) {
       const discordId = linkOf.get(p.userId) ?? null;
       const d = discordId ? byDiscord.get(discordId) : undefined;
       if (g && !d) continue;

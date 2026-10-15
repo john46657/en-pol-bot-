@@ -18,6 +18,7 @@ const discord_live_service_1 = require("../discord/discord-live.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
+const personnel_pick_1 = require("../hr/personnel-pick");
 /** „🏛️ · Polizeipräsident“ und „Polizeipräsident“ gelten als gleich. */
 const norm = (n) => n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
 /** Erster Wert der Liste (Reihenfolge = Rang), den die Person als Discord-Rolle hat. */
@@ -73,7 +74,13 @@ let RosterService = class RosterService {
         const byDiscord = new Map(live.map((m) => [m.id, m]));
         const out = [];
         const seen = new Set();
+        // je Person nur eine Akte (z. B. Archiv-Doppel aus der Umstellung auf einen Server, solange sie nicht ausgeblendet sind)
+        const byUser = new Map();
         for (const p of people) {
+            const o = byUser.get(p.userId);
+            byUser.set(p.userId, o ? (0, personnel_pick_1.preferPersonnel)(o, p) : p);
+        }
+        for (const p of byUser.values()) {
             const discordId = linkOf.get(p.userId) ?? null;
             const d = discordId ? byDiscord.get(discordId) : undefined;
             if (g && !d)
