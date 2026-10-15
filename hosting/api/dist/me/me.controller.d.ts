@@ -797,9 +797,14 @@ export declare class MeController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;

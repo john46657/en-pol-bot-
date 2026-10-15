@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Copy, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, GripVertical, Plus, Trash2, Users as UsersIcon } from 'lucide-react';
 import { PERMISSION_CATALOG } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -33,6 +33,7 @@ export function Roles() {
   const [confirmDelete, setConfirmDelete] = useState<Role>();
   const [err, setErr] = useState<string>();
   const [drag, setDrag] = useState<string>();
+  const [find, setFind] = useState('');
   const manage = can('roles.manage');
   const owner = !!user?.roles.includes(ADMIN);
   const myRank = rank.data?.rank ?? NO_RANK;
@@ -100,8 +101,9 @@ export function Roles() {
         ) : (
           <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
             <Card title="Hierarchie (oben = höchster Rang)">
+              {roles.length > 6 && <Input aria-label="Rolle suchen" className="mb-2 py-1 text-sm" placeholder="Rolle suchen…" value={find} onChange={(e) => setFind(e.target.value)} />}
               <ol className="space-y-1">
-                {roles.map((r, i) => (
+                {roles.map((r, i) => (!find || r.name.toLowerCase().includes(find.toLowerCase())) && (
                   <li key={r.id} draggable={editable(r)} onDragStart={() => setDrag(r.id)} onDragEnd={() => setDrag(undefined)}
                     onDragOver={(e) => { if (drag && editable(r)) e.preventDefault(); }} onDrop={() => { if (drag && drag !== r.id) move(drag, i); setDrag(undefined); }}
                     className={`flex items-center gap-1 rounded ${r.id === role?.id ? 'bg-primary/15' : 'hover:bg-panel-2'} ${drag === r.id ? 'opacity-50' : ''}`}>
@@ -121,8 +123,11 @@ export function Roles() {
               </ol>
               <p className="mt-3 text-xs text-muted">Ziehen oder Pfeile zum Sortieren. Du kannst nur Rollen unterhalb deines eigenen Rangs ändern und nur Rechte vergeben, die du selbst hast.</p>
             </Card>
-            {role && <RoleEditor key={role.id} role={role} editable={editable(role)} scope={scope(role)} onMeta={(m) => setMeta(role, m)} onPerm={(k, e) => setPerm(role, k, e)}
-              onDuplicate={() => duplicate.mutate(role)} onDelete={() => setConfirmDelete(role)} canCreate={manage} />}
+            {role && <div className="min-w-0 space-y-4">
+              <RoleEditor key={role.id} role={role} editable={editable(role)} scope={scope(role)} onMeta={(m) => setMeta(role, m)} onPerm={(k, e) => setPerm(role, k, e)}
+                onDuplicate={() => duplicate.mutate(role)} onDelete={() => setConfirmDelete(role)} canCreate={manage} />
+              <Members role={role} />
+            </div>}
           </div>
         )}
       </div>
@@ -143,6 +148,10 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
   const [name, setName] = useState(role.name);
   const [desc, setDesc] = useState(role.description ?? '');
   const wildcard = effectOf(role, '*') === 'ALLOW';
+  const [pf, setPf] = useState('');
+  const f = pf.toLowerCase();
+  const modules = Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => ({ mod, actions: (actions as readonly string[]).filter((a) => !f || `${mod}.${a} ${MODULE_LABELS[mod] ?? ''} ${ACTION_LABELS[a] ?? ''}`.toLowerCase().includes(f)) })).filter((m) => m.actions.length);
+  const set = role.permissions.filter((p) => p.permissionKey !== '*' && !p.permissionKey.endsWith('.*'));
   return (
     <Card title={<span className="flex items-center gap-2">{role.icon && <span aria-hidden>{role.icon}</span>}{role.name}{scope && <Badge>{scope}</Badge>}{!role.active && <Badge tone="warning">deaktiviert</Badge>}</span>}
       actions={<span className="flex gap-1">{canCreate && role.name !== ADMIN && <Button size="sm" variant="secondary" onClick={onDuplicate}><Copy size={12} />Duplizieren</Button>}{editable && <Button size="sm" variant="danger" onClick={onDelete}><Trash2 size={12} />Löschen</Button>}</span>}>
@@ -160,13 +169,19 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
           <RolePicker ariaLabel="Discord-Rolle verknüpfen" value={role.discordRoleIds} disabled={!editable} onChange={(ids) => onMeta({ discordRoleIds: ids })} />
         </div>
       </div>
-      <h3 className="mb-2 mt-5 text-sm font-semibold">Berechtigungen <span className="text-xs font-normal text-muted">– klicken: nicht gesetzt → ✓ erlaubt → ✕ verweigert. Verweigern schlägt Erlauben.</span></h3>
+      <div className="mb-2 mt-5 flex flex-wrap items-end justify-between gap-2">
+        <h3 className="text-sm font-semibold">Berechtigungen <span className="text-xs font-normal text-muted">– {set.filter((p) => p.effect === 'ALLOW').length} erlaubt · {set.filter((p) => p.effect === 'DENY').length} verweigert · klicken: nicht gesetzt → ✓ erlaubt → ✕ verweigert. Verweigern schlägt Erlauben.</span></h3>
+        <Input aria-label="Berechtigung suchen" className="w-52 py-1 text-xs" placeholder="Berechtigung suchen…" value={pf} onChange={(e) => setPf(e.target.value)} />
+      </div>
       {wildcard && <p className="mb-3 rounded bg-warning/10 p-2 text-xs text-warning">Diese Rolle hat das Generalrecht (*) – sie darf alles.</p>}
       <div className="grid gap-4 md:grid-cols-2">
-        {Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => {
+        {!modules.length && <p className="text-sm text-muted">Keine Berechtigung passt zur Suche.</p>}
+        {modules.map(({ mod, actions }) => {
           const all = effectOf(role, `${mod}.*`);
+          const on = (PERMISSION_CATALOG[mod as keyof typeof PERMISSION_CATALOG] as readonly string[]).filter((a) => effectOf(role, `${mod}.${a}`) === 'ALLOW').length;
           return (
             <fieldset key={mod}><legend className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-muted">{MODULE_LABELS[mod] ?? mod}
+              <span className="font-normal normal-case">{on}/{PERMISSION_CATALOG[mod as keyof typeof PERMISSION_CATALOG].length}</span>
               <button type="button" disabled={!editable} onClick={() => onPerm(`${mod}.*`, next(all))} className={`rounded border px-1.5 text-[10px] normal-case ${cellCls(all)}`} aria-label={`${mod}.*: ${EFF_LABEL[all]}`}>{all === 'ALLOW' ? '✓ alle' : all === 'DENY' ? '✕ alle' : 'alle'}</button></legend>
               <div className="flex flex-wrap gap-1.5">{actions.map((a) => { const k = `${mod}.${a}`; const st = effectOf(role, k); return (
                 <button key={k} type="button" title={k} disabled={!editable} aria-pressed={st !== 'NONE'} aria-label={`${k}: ${EFF_LABEL[st]}`} onClick={() => onPerm(k, next(st))} className={`rounded border px-2 py-0.5 text-xs ${cellCls(st)}`}>{st === 'ALLOW' ? '✓ ' : st === 'DENY' ? '✕ ' : ''}{ACTION_LABELS[a] ?? a}</button>); })}</div>
@@ -181,7 +196,8 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
 /** Übersicht: Bereiche/Aktionen × Rollen. Jede Zelle ist direkt änderbar (automatisch gespeichert). */
 function Matrix({ roles, editable, onSet }: { roles: Role[]; editable: (r: Role) => boolean; onSet: (r: Role, k: string, e: Eff) => void }) {
   const [filter, setFilter] = useState('');
-  const shown = roles;
+  const [hidden, setHidden] = useState<string[]>([]);
+  const shown = roles.filter((r) => !hidden.includes(r.id));
   const rows = Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => ({ mod, keys: actions.map((a) => `${mod}.${a}`).filter((k) => !filter || `${k} ${MODULE_LABELS[mod]} ${ACTION_LABELS[k.slice(mod.length + 1)] ?? ''}`.toLowerCase().includes(filter.toLowerCase())) })).filter((g) => g.keys.length);
   const granted = (r: Role, k: string) => {
     const own = effectOf(r, k);
@@ -191,6 +207,10 @@ function Matrix({ roles, editable, onSet }: { roles: Role[]; editable: (r: Role)
   };
   return (
     <Card title="Berechtigungsmatrix" actions={<Input aria-label="Recht suchen" className="w-56 py-1 text-xs" placeholder="Recht suchen…" value={filter} onChange={(e) => setFilter(e.target.value)} />}>
+      <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs"><span className="text-muted">Spalten:</span>
+        {roles.map((r) => { const on = !hidden.includes(r.id); return <button key={r.id} type="button" aria-pressed={on} onClick={() => setHidden(on ? [...hidden, r.id] : hidden.filter((x) => x !== r.id))} className={`rounded-full border px-2 py-0.5 ${on ? 'border-primary/40 bg-primary/10' : 'border-line text-muted line-through'}`}>{r.icon} {r.name}</button>; })}
+        {hidden.length > 0 && <button type="button" className="text-primary hover:underline" onClick={() => setHidden([])}>alle zeigen</button>}
+      </div>
       <div className="table-scroll max-h-[70vh] overflow-y-auto">
         <table className="w-full text-left text-xs">
           <thead className="sticky top-0 z-10 bg-panel"><tr><th className="p-2">Bereich / Aktion</th>{shown.map((r) => <th key={r.id} className="p-2 text-center font-semibold" style={{ color: r.color ?? undefined }}>{r.icon} {r.name}</th>)}</tr></thead>
@@ -216,6 +236,32 @@ function Matrix({ roles, editable, onSet }: { roles: Role[]; editable: (r: Role)
         </table>
       </div>
       <p className="mt-2 text-xs text-muted">✅ erlaubt · ❌ verweigert · blass = geerbt über „alle“ bzw. *. Klicken schaltet um; gespeichert wird automatisch.</p>
+    </Card>
+  );
+}
+
+interface Member { id: string; username: string; displayName: string; active: boolean; source: 'MANUAL' | 'DISCORD'; guildIds: string[] }
+
+/** Wer hat die Rolle – manuell oder über eine verknüpfte Discord-Rolle. Zuweisen unter „Benutzer“. */
+function Members({ role }: { role: Role }) {
+  const [server] = useServer();
+  const q = useQuery({ queryKey: ['role-members', role.id, server], queryFn: () => api<Member[]>(`/roles/${role.id}/members`) });
+  const [show, setShow] = useState(12);
+  const list = q.data ?? [];
+  return (
+    <Card title={<span className="flex items-center gap-2"><UsersIcon size={14} />Mitglieder {q.data && <span className="text-xs font-normal text-muted">{list.length}{list.length >= 500 ? '+' : ''}</span>}</span>}>
+      {q.isLoading ? <SkeletonRows rows={3} /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !list.length ? <p className="text-sm text-muted">Noch niemand hat diese Rolle.{role.discordRoleIds.length ? ' Mitglieder mit der verknüpften Discord-Rolle bekommen sie beim nächsten Abgleich.' : ''}</p> : (
+        <>
+          <ul className="grid gap-1 sm:grid-cols-2">{list.slice(0, show).map((m) => (
+            <li key={m.id} className="flex min-w-0 items-center gap-2 text-sm">
+              <span className={`min-w-0 flex-1 truncate ${m.active ? '' : 'text-muted line-through'}`}>{m.displayName} <span className="text-xs text-muted">@{m.username}</span></span>
+              {m.source === 'DISCORD' ? <Badge tone="info">Discord</Badge> : <Badge>manuell</Badge>}
+            </li>))}
+          </ul>
+          {list.length > show && <Button className="mt-2" size="sm" variant="ghost" onClick={() => setShow(list.length)}>Alle {list.length} anzeigen</Button>}
+        </>
+      )}
+      <p className="mt-2 text-xs text-muted">Zuweisen und entziehen unter Benutzer & Rollen → Benutzer.</p>
     </Card>
   );
 }

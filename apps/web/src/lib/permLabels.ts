@@ -5,6 +5,8 @@ export const MODULE_LABELS: Record<string, string> = {
   personnel: '🪪 Personal', promotion: '🎖️ Beförderungen', transfer: '🔀 Versetzungen', training: '🎓 Ausbildungen', exam: '📝 Prüfungen', warning: '⚠️ Verwarnungen', awards: '🏅 Auszeichnungen', announcements: '📢 Interne Meldungen', polls: '🗳️ Abstimmungen', dienstnummer: '🪪 Dienstnummern', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
   settings: '⚙️ Bot-Einstellungen', users: '👤 Benutzer', roles: '🛡️ Rollen & Rechte',
+  fleet: '🚓 Polizeifahrzeuge', weapons: '🔫 Waffenregister', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
+  messagebuilder: '✉️ Message Builder', connections: '🔗 Serververbindungen', sync: '🔄 Synchronisierung',
 };
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -21,6 +23,12 @@ export const ACTION_LABELS: Record<string, string> = {
   handover: 'Schichtübergabe erstellen/bestätigen', view_stats: 'Statistik ansehen',
   'tickets.view': 'Bereich Tickets', 'applications.view': 'Bereich Bewerbungen', 'team.view': 'Bereich Team', 'offices.view': 'Bereich Büros',
   'voice.view': 'Bereich Sprachkanäle', 'logs.view': 'Bereich Logs', 'settings.view': 'Bereich Einstellungen',
+  'radio.view': 'Bereich Funk-Codes', 'teamchance.view': 'Bereich Team-Chance', 'cad.view': 'Bereich CAD-Leitstelle',
+  create_incident: 'Einsätze anlegen', edit_incident: 'Einsätze bearbeiten', close_incident: 'Einsätze schließen', assign_unit: 'Einheiten zuweisen', manage_units: 'Einheiten verwalten',
+  view_persons: 'Personen abfragen', view_vehicles: 'Fahrzeuge abfragen', manage_map: 'Karte verwalten', view_erlc: 'ER:LC live ansehen', manage_erlc: 'ER:LC verwalten',
+  erlc_command: 'ER:LC-Befehle senden', erlc_command_critical: 'kritische ER:LC-Befehle', manage_cross_server: 'Cross-Server verwalten', view_logs: 'Protokolle ansehen', radio: 'Funk-Chronik',
+  view_details: 'Details ansehen', manage_catalog: 'Katalog verwalten', templates_create: 'Vorlagen erstellen', templates_edit: 'Vorlagen bearbeiten', templates_delete: 'Vorlagen löschen',
+  channels: 'Kanäle wählen', webhooks: 'Webhooks verwalten', retry: 'erneut versuchen',
 };
 
 export const permLabel = (key: string) => {

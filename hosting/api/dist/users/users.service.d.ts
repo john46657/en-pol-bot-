@@ -4,6 +4,11 @@ import { AuthService } from '../auth/auth.service';
 import { PermissionService } from '../authz/permission.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { PageQuery } from '../common/pagination';
+export interface UserListQuery extends PageQuery {
+    status?: 'active' | 'inactive';
+    roleId?: string;
+    linked?: 'yes' | 'no';
+}
 export declare class UsersService {
     private readonly prisma;
     private readonly audit;
@@ -15,8 +20,13 @@ export declare class UsersService {
     private assertNotSelf;
     /** Mindestens ein aktiver System Administrator muss bestehen bleiben. */
     private assertAdminRemains;
-    list(p: PageQuery): Promise<{
+    /** Benutzerliste mit Suche (Name, Benutzername, Roblox-ID, Discord-ID) und Filtern (Status, Rolle, Discord-Verknüpfung). */
+    list(p: UserListQuery): Promise<{
         items: {
+            discord: {
+                discordId: string;
+                linkedAt: Date;
+            } | null;
             id: string;
             robloxUserId: string | null;
             robloxUsername: string | null;
@@ -33,9 +43,14 @@ export declare class UsersService {
             roles: {
                 role: {
                     id: string;
+                    color: string | null;
+                    priority: number;
+                    active: boolean;
                     guildId: string | null;
                     name: string;
+                    icon: string | null;
                 };
+                guildIds: string[];
             }[];
             overrides: {
                 reason: string | null;
@@ -48,11 +63,14 @@ export declare class UsersService {
         page: number;
         pageSize: number;
     }>;
+    /** Rohdaten ohne Server-Filter (für Prüfungen und Audit). */
+    private load;
     get(id: string): Promise<{
         discord: {
             discordId: string;
             linkedAt: Date;
         } | null;
+        rank: number | null;
         id: string;
         robloxUserId: string | null;
         robloxUsername: string | null;
@@ -69,15 +87,39 @@ export declare class UsersService {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
             guildId: string | null;
             permissionKey: string;
             effect: string;
+        }[];
+    }>;
+    /**
+     * Effektive Rechte eines Benutzers im gewählten Server – mit Herkunft je Recht (Sonderrecht, Rolle, Standard).
+     * Dieselbe Auflösung wie bei jeder API-Anfrage (@enrp/shared), damit die Anzeige nie von der Prüfung abweicht.
+     */
+    permissions(id: string): Promise<{
+        roles: {
+            id: string;
+            color: string | null;
+            priority: number;
+            name: string;
+            icon: string | null;
+        }[];
+        entries: {
+            key: import("@enrp/shared").PermissionKey;
+            allowed: boolean;
+            source: import("@enrp/shared").ResolutionSource;
+            via: string[];
         }[];
     }>;
     create(actor: Actor, d: {
@@ -103,9 +145,14 @@ export declare class UsersService {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -135,9 +182,14 @@ export declare class UsersService {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -164,9 +216,14 @@ export declare class UsersService {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -197,9 +254,14 @@ export declare class UsersService {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -229,9 +291,14 @@ export declare class UsersService {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
