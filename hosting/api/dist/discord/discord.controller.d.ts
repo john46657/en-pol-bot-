@@ -6,39 +6,16 @@ import { DangerService } from '../danger/danger.service';
 import { DutyService } from '../duty/duty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Actor } from '../audit/audit.service';
-import { HomeServerService } from '../server/home-server.service';
+import { ServersService } from '../multi-server/servers.service';
 declare const guildsBody: z.ZodObject<{
     guilds: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
-        icon: z.ZodNullable<z.ZodString>;
-        channels: z.ZodArray<z.ZodObject<{
-            id: z.ZodString;
-            name: z.ZodString;
-            type: z.ZodEnum<["text", "category", "voice", "other"]>;
-            parentId: z.ZodNullable<z.ZodString>;
-            position: z.ZodNumber;
-            /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
-            bot: z.ZodOptional<z.ZodObject<{
-                view: z.ZodBoolean;
-                send: z.ZodBoolean;
-                embed: z.ZodBoolean;
-                mentionEveryone: z.ZodOptional<z.ZodBoolean>;
-            }, "strip", z.ZodTypeAny, {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            }, {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            }>>;
-        }, "strip", z.ZodTypeAny, {
-            name: string;
+        icon: z.ZodCatch<z.ZodNullable<z.ZodString>>;
+        channels: z.ZodEffects<z.ZodArray<z.ZodUnknown, "many">, {
             id: string;
             type: "other" | "category" | "text" | "voice";
+            name: string;
             position: number;
             parentId: string | null;
             bot?: {
@@ -47,43 +24,21 @@ declare const guildsBody: z.ZodObject<{
                 embed: boolean;
                 mentionEveryone?: boolean | undefined;
             } | undefined;
-        }, {
-            name: string;
-            id: string;
-            type: "other" | "category" | "text" | "voice";
-            position: number;
-            parentId: string | null;
-            bot?: {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            } | undefined;
-        }>, "many">;
-        roles: z.ZodArray<z.ZodObject<{
-            id: z.ZodString;
-            name: z.ZodString;
-            color: z.ZodNumber;
-            position: z.ZodNumber;
-        }, "strip", z.ZodTypeAny, {
-            name: string;
+        }[], unknown[]>;
+        roles: z.ZodEffects<z.ZodArray<z.ZodUnknown, "many">, {
             id: string;
             color: number;
-            position: number;
-        }, {
             name: string;
-            id: string;
-            color: number;
             position: number;
-        }>, "many">;
+        }[], unknown[]>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         id: string;
+        name: string;
         icon: string | null;
         channels: {
-            name: string;
             id: string;
             type: "other" | "category" | "text" | "voice";
+            name: string;
             position: number;
             parentId: string | null;
             bot?: {
@@ -94,44 +49,27 @@ declare const guildsBody: z.ZodObject<{
             } | undefined;
         }[];
         roles: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
         }[];
     }, {
-        name: string;
         id: string;
-        icon: string | null;
-        channels: {
-            name: string;
-            id: string;
-            type: "other" | "category" | "text" | "voice";
-            position: number;
-            parentId: string | null;
-            bot?: {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            } | undefined;
-        }[];
-        roles: {
-            name: string;
-            id: string;
-            color: number;
-            position: number;
-        }[];
+        name: string;
+        channels: unknown[];
+        roles: unknown[];
+        icon?: unknown;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
-        name: string;
         id: string;
+        name: string;
         icon: string | null;
         channels: {
-            name: string;
             id: string;
             type: "other" | "category" | "text" | "voice";
+            name: string;
             position: number;
             parentId: string | null;
             bot?: {
@@ -142,36 +80,19 @@ declare const guildsBody: z.ZodObject<{
             } | undefined;
         }[];
         roles: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
         }[];
     }[];
 }, {
     guilds: {
-        name: string;
         id: string;
-        icon: string | null;
-        channels: {
-            name: string;
-            id: string;
-            type: "other" | "category" | "text" | "voice";
-            position: number;
-            parentId: string | null;
-            bot?: {
-                send: boolean;
-                view: boolean;
-                embed: boolean;
-                mentionEveryone?: boolean | undefined;
-            } | undefined;
-        }[];
-        roles: {
-            name: string;
-            id: string;
-            color: number;
-            position: number;
-        }[];
+        name: string;
+        channels: unknown[];
+        roles: unknown[];
+        icon?: unknown;
     }[];
 }>;
 declare const redeem: z.ZodObject<{
@@ -283,102 +204,102 @@ declare const voiceBody: z.ZodObject<{
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }, {
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         id: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
     }, {
-        name: string;
         id: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     channels: {
-        name: string;
         id: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
     }[];
 }, {
     channels: {
-        name: string;
         id: string;
         guildId: string;
+        name: string;
         position: number;
         members: {
             id: string;
             displayName: string;
             avatar: string | null;
+            since: string | null;
             selfMute: boolean;
             selfDeaf: boolean;
             serverMute: boolean;
             serverDeaf: boolean;
             video: boolean;
             streaming: boolean;
-            since: string | null;
         }[];
         parentId: string | null;
         parentName: string | null;
@@ -401,8 +322,8 @@ declare const application: z.ZodObject<{
     joinedAt: z.ZodOptional<z.ZodDate>;
     answers: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">]>>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     robloxUsername: string;
+    discordId: string;
     answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
@@ -410,8 +331,8 @@ declare const application: z.ZodObject<{
     durationSec?: number | undefined;
     joinedAt?: Date | undefined;
 }, {
-    discordId: string;
     robloxUsername: string;
+    discordId: string;
     answers: Record<string, string | string[]>;
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
@@ -449,8 +370,8 @@ export declare class BotController {
     private readonly danger;
     private readonly applications;
     private readonly prisma;
-    private readonly home;
-    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService, home: HomeServerService);
+    private readonly servers;
+    constructor(d: DiscordService, live: DiscordLiveService, duty: DutyService, danger: DangerService, applications: ApplicationsService, prisma: PrismaService, servers: ServersService);
     redeem(b: z.infer<typeof redeem>): Promise<{
         displayName: string;
         username: string;
@@ -465,11 +386,11 @@ export declare class BotController {
         id: string;
         createdAt: Date;
         type: string;
-        channelKey: string;
-        payload: import("@prisma/client/runtime/library").JsonValue;
-        attempts: number;
         lastError: string | null;
+        payload: import("@prisma/client/runtime/library").JsonValue;
         sentAt: Date | null;
+        channelKey: string;
+        attempts: number;
     }[]>;
     ack(id: string, b: z.infer<typeof ack>): Promise<void>;
     /** Teamübersicht für die selbst aktualisierende Teamliste in Discord (nur Anzeigefelder). */

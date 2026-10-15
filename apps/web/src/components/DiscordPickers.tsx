@@ -16,7 +16,7 @@ function channelOptions(g: GuildInfo, kind: ChannelKind) {
     .map((c) => ({ id: c.id, label: `${kind === 'voice' ? '🔊' : '#'} ${c.name}${c.parentId && cats.get(c.parentId) ? `  (${cats.get(c.parentId)!.name})` : ''}` }));
 }
 
-/** Der Discord-Server dieses Systems (solange keiner eingerichtet ist: alle gemeldeten). */
+/** Gemeldete Server – ist oben links ein Server gewählt, nur dieser. */
 function useGuildList() {
   const guilds = useGuilds();
   const [server] = useServer();
@@ -24,7 +24,7 @@ function useGuildList() {
   return server ? all.filter((g) => g.id === server) : all;
 }
 
-/** Channel auswählen. Ohne gemeldete Server: Eingabe der ID. */
+/** Channel auswählen (nach Server gruppiert). Ohne gemeldete Server: Eingabe der ID. */
 export function ChannelPicker({ value, onChange, kind = 'text', ariaLabel, disabled }: { value: string | null | undefined; onChange: (id: string | null) => void; kind?: ChannelKind; ariaLabel: string; disabled?: boolean }) {
   const list = useGuildList();
   if (!list.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value ?? ''} placeholder={kind === 'category' ? 'Discord-Kategorie-ID' : kind === 'voice' ? 'Sprachkanal-ID' : 'Discord-Kanal-ID'} onChange={(e) => onChange(idOf(e.target.value) || null)} />;
@@ -102,17 +102,26 @@ export function ChannelsPicker({ value, onChange, ariaLabel, disabled, max = 10,
   );
 }
 
-/** Den Discord-Server der EN Polizei auswählen (einer). Ohne gemeldete Server: ID eintippen. */
-export function ServerPicker({ value, onChange, ariaLabel, disabled }: { value: string; onChange: (id: string) => void; ariaLabel: string; disabled?: boolean }) {
+/** Discord-Server auswählen (Server, auf denen der Bot ist). Wert: Komma-getrennte IDs. Ohne gemeldete Server: ID eintippen. */
+export function ServersPicker({ value, onChange, ariaLabel, disabled }: { value: string; onChange: (ids: string) => void; ariaLabel: string; disabled?: boolean }) {
   const all = useGuilds().data ?? [];
-  const id = value.split(/[\s,;]+/).find(Boolean) ?? ''; // ältere Einträge mit mehreren IDs: nur die erste zählt
-  if (!all.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={id} placeholder="Server-ID" onChange={(e) => onChange(idOf(e.target.value))} />;
+  const ids = value.split(/[\s,;]+/).filter(Boolean);
+  const set = (next: string[]) => onChange([...new Set(next)].join(', '));
+  if (!all.length) return <Input aria-label={ariaLabel} inputMode="numeric" disabled={disabled} value={value} placeholder="Server-ID" onChange={(e) => onChange(e.target.value)} />;
   return (
-    <Select aria-label={ariaLabel} disabled={disabled} value={id} onChange={(e) => onChange(e.target.value)}>
-      <option value="">— keiner —</option>
-      {id && !all.some((g) => g.id === id) && <option value={id}>Unbekannt ({id})</option>}
-      {all.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-    </Select>
+    <div className="grid gap-2">
+      {ids.length > 0 && <ul className="flex flex-wrap gap-1.5">{ids.map((id) => { const g = all.find((x) => x.id === id); return (
+        <li key={id} className="inline-flex items-center gap-1.5 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs">
+          {g?.icon && <img src={g.icon} alt="" className="h-3.5 w-3.5 rounded-full" />}<span>{g?.name ?? id}</span>
+          {!disabled && <button type="button" aria-label={`Server ${g?.name ?? id} entfernen`} className="text-muted hover:text-danger" onClick={() => set(ids.filter((x) => x !== id))}><X size={12} /></button>}
+        </li>); })}</ul>}
+      {!disabled && all.some((g) => !ids.includes(g.id)) && (
+        <Select aria-label={ariaLabel} value="" onChange={(e) => e.target.value && set([...ids, e.target.value])}>
+          <option value="">{ids.length ? '+ weiteren Server wählen…' : 'Server wählen…'}</option>
+          {all.filter((g) => !ids.includes(g.id)).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </Select>
+      )}
+    </div>
   );
 }
 

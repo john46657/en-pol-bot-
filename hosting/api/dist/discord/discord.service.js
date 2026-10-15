@@ -16,7 +16,6 @@ const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
-const guild_context_1 = require("../common/guild-context");
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL_MS = 10 * 60_000;
 const hash = (c) => (0, node_crypto_1.createHash)('sha256').update(c.toUpperCase().replace(/[\s-]/g, '')).digest('hex');
@@ -126,7 +125,7 @@ let DiscordService = class DiscordService {
     async applicantTicket(actor, a, entityType) {
         if (!a.discordId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Diese Bewerbung kam nicht über Discord – es gibt keinen Discord-Benutzer für ein Ticket.');
-        const guildId = (0, guild_context_1.homeGuild)() ?? a.guildId ?? (await this.guilds())[0]?.id;
+        const guildId = a.guildId ?? (await this.channels()).guildId ?? (await this.guilds())[0]?.id;
         if (!guildId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Kein Discord-Server bekannt – ist der Bot online?');
         const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
@@ -137,15 +136,14 @@ let DiscordService = class DiscordService {
         return { queued: true, linked: !!link };
     }
     // ---- Bot-Zustand (z. B. IDs der selbst aktualisierenden Nachrichten) ----
-    /**
-     * Der Discord-Server dieses Systems mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im
-     * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
-     */
+    /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
     async guilds() {
+        return this.reportedGuilds();
+    }
+    /** Alle vom Bot gemeldeten Server (auch fremde) – nur für Hinweise, wenn der eingerichtete nicht dabei ist. */
+    async reportedGuilds() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: GUILDS_KEY } }))?.value;
-        const all = Array.isArray(v) ? v : [];
-        const home = (0, guild_context_1.homeGuild)();
-        return home ? all.filter((g) => g.id === home) : all;
+        return Array.isArray(v) ? v : [];
     }
     async saveGuilds(guilds) {
         const value = guilds;

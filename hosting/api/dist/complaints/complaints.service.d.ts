@@ -15,8 +15,8 @@ export declare class ComplaintsService {
     list(actor: Actor, p: PageQuery, status?: string): Promise<{
         items: ({
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -34,8 +34,8 @@ export declare class ComplaintsService {
             internalNotes: undefined;
             findings: undefined;
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -55,8 +55,8 @@ export declare class ComplaintsService {
     get(actor: Actor, id: string): Promise<{
         complaint: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -74,8 +74,8 @@ export declare class ComplaintsService {
             internalNotes: undefined;
             findings: undefined;
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -92,8 +92,8 @@ export declare class ComplaintsService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];

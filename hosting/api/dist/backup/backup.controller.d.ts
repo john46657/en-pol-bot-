@@ -40,13 +40,13 @@ export declare class BackupController {
     listDiscord(q: {
         guildId?: string;
     }): import("@prisma/client").Prisma.PrismaPromise<{
-        name: string;
         error: string | null;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
         guildId: string;
+        name: string;
         guildName: string;
         auto: boolean;
         stats: import("@prisma/client/runtime/library").JsonValue;
@@ -54,13 +54,13 @@ export declare class BackupController {
         restoreResult: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     getDiscord(id: string): Promise<{
-        name: string;
         error: string | null;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
         guildId: string;
+        name: string;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
         auto: boolean;
@@ -72,13 +72,13 @@ export declare class BackupController {
         guildId: string;
         name?: string;
     }): Promise<{
-        name: string;
         error: string | null;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
         guildId: string;
+        name: string;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
         auto: boolean;

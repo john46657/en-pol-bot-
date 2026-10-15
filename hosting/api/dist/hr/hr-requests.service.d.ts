@@ -41,8 +41,8 @@ export declare class HrRequestsService {
             rank: string | null;
         };
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -87,17 +87,17 @@ export declare class HrRequestsService {
             cancel: boolean;
         };
         personnel: {
-            userId: string;
             user: {
                 displayName: string;
             };
             id: string;
+            userId: string;
             team: string | null;
             rank: string | null;
         };
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -130,8 +130,8 @@ export declare class HrRequestsService {
         attachments?: string[];
     }): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -158,8 +158,8 @@ export declare class HrRequestsService {
         version?: number;
     }): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -181,8 +181,8 @@ export declare class HrRequestsService {
     /** Entscheidung: genehmigen (Stufe), ablehnen, in Prüfung nehmen, zurückstellen, abbrechen. */
     decide(actor: Actor, id: string, decision: 'APPROVE' | 'REJECT' | 'REVIEW' | 'DEFER' | 'CANCEL', comment?: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -204,8 +204,8 @@ export declare class HrRequestsService {
     /** Durchführung: Rang/Abteilung setzen, Rollen tauschen, Personalakte + Historie, Ankündigung, Benachrichtigung. */
     execute(actor: Actor, id: string, auto?: boolean): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;

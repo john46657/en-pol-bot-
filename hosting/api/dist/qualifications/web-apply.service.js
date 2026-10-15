@@ -14,6 +14,7 @@ const node_crypto_1 = require("node:crypto");
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const applications_service_1 = require("../applications/applications.service");
+const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 const web_url_1 = require("../common/web-url");
 const env_1 = require("../config/env");
@@ -48,11 +49,12 @@ let WebApplyService = class WebApplyService {
         return c;
     }
     /** Name, Einstellungen und Fragen einer Bewerbung (Polizei oder Einheit). */
-    async flow(key) {
-        const cfg = await this.q.config();
+    /** Je Discord-Server eigene Bewerbungen (Server aus dem signierten Link). */
+    async flow(key, guildId) {
+        const cfg = await this.q.config(guildId);
         if (key === exports.POLICE_KEY) {
             const name = cfg.police.name;
-            return { name, title: `Bewerbung – ${name}`, enabled: cfg.police.enabled, settings: cfg.police.settings, questions: await this.apps.form(), police: true };
+            return { name, title: `Bewerbung – ${name}`, enabled: cfg.police.enabled, settings: cfg.police.settings, questions: await this.apps.form(guildId), police: true };
         }
         const u = cfg.units.find((x) => x.key === key);
         if (!u)
@@ -61,7 +63,7 @@ let WebApplyService = class WebApplyService {
     }
     /** Vom Bot: Link für eine Person ausstellen; gültig so lange wie das Zeitlimit der Bewerbung. */
     async link(d) {
-        const f = await this.flow(d.unit);
+        const f = await this.flow(d.unit, d.guildId);
         if (!f.enabled)
             throw new errors_1.AppError('CONFLICT', `Bewerbungen für ${f.name} sind derzeit geschlossen.`);
         const now = Date.now();
@@ -72,7 +74,7 @@ let WebApplyService = class WebApplyService {
     /** Öffentlich: Formular zum Link. */
     async open(token) {
         const c = this.verify(token);
-        const f = await this.flow(c.k);
+        const f = await this.flow(c.k, c.g);
         if (!f.enabled)
             throw new errors_1.AppError('CONFLICT', `Bewerbungen für ${f.name} sind derzeit geschlossen.`);
         return { title: f.title, name: f.name, discordName: c.n, expiresAt: new Date(c.e).toISOString(), questions: f.questions, robloxField: f.police && !f.questions.some((x) => x.type === 'ROBLOX') };
@@ -80,7 +82,11 @@ let WebApplyService = class WebApplyService {
     /** Öffentlich: Antworten absenden – gleiche Prüfungen wie bei der Bewerbung per Direktnachricht. */
     async submit(token, b) {
         const c = this.verify(token);
-        const f = await this.flow(c.k);
+        // im Kontext des Servers, für den der Link ausgestellt wurde (Akten-Bereich der Bewerbung)
+        return (0, guild_context_1.runInGuild)(c.g ?? null, () => this.submitIn(c, b));
+    }
+    async submitIn(c, b) {
+        const f = await this.flow(c.k, c.g);
         const meta = { discordId: c.d, discordName: c.n, durationSec: Math.min(86_400, Math.max(0, Math.round((Date.now() - c.t) / 1000))), ...(c.g ? { guildId: c.g } : {}), ...(c.j ? { joinedAt: new Date(c.j) } : {}) };
         let number;
         if (f.police) {

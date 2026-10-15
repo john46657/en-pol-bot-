@@ -227,11 +227,11 @@ export declare class PanelsController {
         queued: boolean;
     }>;
     subs(id: string): import("@prisma/client").Prisma.PrismaPromise<{
-        discordId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         guildId: string | null;
+        discordId: string;
         channelId: string | null;
         messageId: string | null;
         panelId: string;
@@ -247,14 +247,14 @@ declare const submit: z.ZodObject<{
     avatar: z.ZodOptional<z.ZodString>;
     values: z.ZodRecord<z.ZodString, z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string | null;
+    discordId: string;
     userName: string;
     values: Record<string, string>;
     avatar?: string | undefined;
 }, {
-    discordId: string;
     guildId: string | null;
+    discordId: string;
     userName: string;
     values: Record<string, string>;
     avatar?: string | undefined;

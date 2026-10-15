@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import { ApiError } from './api';
+import { ApiError, apiHeaders } from './api';
 
 /**
  * Automatisches Speichern für alle Einstellungen.
@@ -11,7 +11,7 @@ import { ApiError } from './api';
  * Die Datenbank bleibt die Quelle der Wahrheit; der Browser ist nur Zwischenspeicher.
  */
 export type SaveState = 'saved' | 'pending' | 'saving' | 'error';
-export interface SaveRequest { method: 'PUT' | 'PATCH' | 'POST'; path: string; body: unknown; label?: string }
+export interface SaveRequest { method: 'PUT' | 'PATCH' | 'POST'; path: string; body: unknown; guildId?: string | null; label?: string }
 interface Entry extends SaveRequest { key: string; attempts: number; at: number }
 
 const STORE_KEY = 'enrp.autosave.v1';
@@ -70,7 +70,7 @@ export function onSaved(prefix: string, fn: (data: unknown) => void) {
 }
 
 async function send(e: Entry, keepalive = false) {
-  const res = await fetch(`/api/v1${e.path}`, { method: e.method, credentials: 'same-origin', keepalive, headers: { 'content-type': 'application/json' }, body: JSON.stringify(e.body) });
+  const res = await fetch(`/api/v1${e.path}`, { method: e.method, credentials: 'same-origin', keepalive, headers: { 'content-type': 'application/json', ...apiHeaders(e.guildId) }, body: JSON.stringify(e.body) });
   const text = await res.text();
   let data: unknown; try { data = text ? JSON.parse(text) : undefined; } catch { data = undefined; }
   if (!res.ok) { const d = (data ?? {}) as { code?: string; message?: string; requestId?: string }; throw new ApiError(res.status, d.code ?? 'ERROR', d.message ?? `Anfrage fehlgeschlagen (${res.status})`, d.requestId); }

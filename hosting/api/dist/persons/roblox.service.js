@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var RobloxService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RobloxService = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const NAME = /^[A-Za-z0-9_]{3,20}$/;
@@ -55,7 +56,7 @@ let RobloxService = RobloxService_1 = class RobloxService {
         if (!profile)
             return null;
         const person = await this.prisma.person.findFirst({
-            where: { OR: [{ robloxUserId: profile.id }, { robloxUsername: { equals: profile.name, mode: 'insensitive' } }] },
+            where: { ...(0, guild_context_1.recordWhere)(), OR: [{ robloxUserId: profile.id }, { robloxUsername: { equals: profile.name, mode: 'insensitive' } }] },
             orderBy: { robloxUserId: { sort: 'asc', nulls: 'last' } }, select: { id: true, robloxUsername: true },
         });
         return { ...profile, person };

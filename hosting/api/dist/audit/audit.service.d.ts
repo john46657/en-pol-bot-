@@ -13,6 +13,8 @@ export interface AuditEntry {
     before?: unknown;
     after?: unknown;
     reason?: string;
+    /** Discord-Server (Guild-ID) der Aktion; Standard: Server der Anfrage */
+    serverId?: string | null;
     /** SUCCESS (Standard) | DENIED | FAILED */
     result?: 'SUCCESS' | 'DENIED' | 'FAILED';
 }

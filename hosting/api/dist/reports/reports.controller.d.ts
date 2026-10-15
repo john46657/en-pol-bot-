@@ -66,8 +66,8 @@ export declare class ReportsController {
     list(a: Actor, q: z.infer<typeof listQ>): Promise<{
         items: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -96,8 +96,8 @@ export declare class ReportsController {
             }[];
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -112,16 +112,16 @@ export declare class ReportsController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -134,8 +134,8 @@ export declare class ReportsController {
     }>;
     edit(a: Actor, id: string, b: z.infer<typeof edit>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -148,8 +148,8 @@ export declare class ReportsController {
     }>;
     submit(a: Actor, id: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -162,8 +162,8 @@ export declare class ReportsController {
     }>;
     review(a: Actor, id: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -176,8 +176,8 @@ export declare class ReportsController {
     }>;
     approve(a: Actor, id: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -190,8 +190,8 @@ export declare class ReportsController {
     }>;
     reject(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -204,8 +204,8 @@ export declare class ReportsController {
     }>;
     archive(a: Actor, id: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;

@@ -193,7 +193,7 @@ export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
         imageMediaId?: string | undefined;
     } | undefined;
 }>;
-/** Willkommen & Abschied (`welcome.config`) und was beim Verlassen passiert. */
+/** Willkommen & Abschied je Discord-Server (`welcome.config@<guildId>`, sonst die gemeinsame Grundeinstellung) und was beim Verlassen passiert. */
 export declare class WelcomeService {
     private readonly prisma;
     private readonly audit;
@@ -203,10 +203,16 @@ export declare class WelcomeService {
     private readonly media;
     private readonly log;
     constructor(prisma: PrismaService, audit: AuditService, applications: ApplicationsService, qualifications: QualificationsService, tickets: SupportTicketsService, media: MediaService);
-    config(): Promise<WelcomeConfig & {
+    private keyOf;
+    /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
+    config(guildId?: string | null): Promise<WelcomeConfig & {
         own: boolean;
     }>;
-    save(actor: Actor, input: WelcomeConfig): Promise<WelcomeConfig & {
+    save(actor: Actor, input: WelcomeConfig, guildId?: string | null): Promise<WelcomeConfig & {
+        own: boolean;
+    }>;
+    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame. */
+    reset(actor: Actor, guildId: string): Promise<WelcomeConfig & {
         own: boolean;
     }>;
     /** Hochgeladener Banner für den Bot (nur Bilder, die als Willkommens-Banner hochgeladen wurden). */
@@ -214,7 +220,7 @@ export declare class WelcomeService {
      * Test-Nachricht: der Bot schickt die gespeicherte Willkommens-/Abschiedsnachricht bzw. DM so, als wärst du gerade
      * beigetreten/gegangen (mit deinem Discord-Profil) – ohne Rollen oder Aktionen beim Verlassen.
      */
-    test(actor: Actor, kind: 'welcome' | 'goodbye' | 'dm'): Promise<{
+    test(actor: Actor, guildId: string | null, kind: 'welcome' | 'goodbye' | 'dm'): Promise<{
         queued: boolean;
     }>;
     banner(id: string): Promise<{

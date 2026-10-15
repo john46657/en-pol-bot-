@@ -53,8 +53,8 @@ export declare class AcademyController {
             enrollments: number;
         };
     } & {
-        id: string;
         serverId: string | null;
+        id: string;
         title: string;
         description: string | null;
         passScore: number;
@@ -79,8 +79,8 @@ export declare class AcademyController {
             createdAt: Date;
             courseId: string;
         }[];
-        id: string;
         serverId: string | null;
+        id: string;
         title: string;
         description: string | null;
         passScore: number;
@@ -91,8 +91,8 @@ export declare class AcademyController {
             channelId: string | null;
             pingRoleIds: string[];
         } | null;
-        id: string;
         serverId: string | null;
+        id: string;
         title: string;
         description: string | null;
         passScore: number;

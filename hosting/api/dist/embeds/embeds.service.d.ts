@@ -58,15 +58,15 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     }>>>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     id: string;
     color: string;
     title: string;
     description: string;
     guildId: string | null;
+    name: string;
+    channelId: string | null;
     content: string;
     footer: string;
-    channelId: string | null;
     author: string;
     url: string;
     image: string;
@@ -89,15 +89,15 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         inline: boolean;
     }[];
 }, {
-    name: string;
     id: string;
+    name: string;
     color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
     guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
-    channelId?: string | null | undefined;
     author?: string | undefined;
     url?: string | undefined;
     image?: string | undefined;
@@ -120,15 +120,15 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         inline?: boolean | undefined;
     }[] | undefined;
 }>, {
-    name: string;
     id: string;
     color: string;
     title: string;
     description: string;
     guildId: string | null;
+    name: string;
+    channelId: string | null;
     content: string;
     footer: string;
-    channelId: string | null;
     author: string;
     url: string;
     image: string;
@@ -151,15 +151,15 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         inline: boolean;
     }[];
 }, {
-    name: string;
     id: string;
+    name: string;
     color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
     guildId?: string | null | undefined;
+    channelId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
-    channelId?: string | null | undefined;
     author?: string | undefined;
     url?: string | undefined;
     image?: string | undefined;
@@ -193,15 +193,15 @@ export declare class EmbedsService {
     save(actor: Actor, e: Omit<EmbedDoc, 'posted'> & {
         posted?: unknown;
     }): Promise<{
-        name: string;
         id: string;
         color: string;
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
+        channelId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;
@@ -225,15 +225,15 @@ export declare class EmbedsService {
         }[];
     }>;
     duplicate(actor: Actor, id: string): Promise<{
-        name: string;
         id: string;
         color: string;
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
+        channelId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;

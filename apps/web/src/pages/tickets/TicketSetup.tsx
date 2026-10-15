@@ -76,6 +76,12 @@ const Names = ({ label: l, value, onChange, hint }: { label: string; value: stri
 const move = <T,>(a: T[], i: number, d: -1 | 1) => { const b = [...a]; const j = i + d; if (j < 0 || j >= b.length) return b; [b[i], b[j]] = [b[j]!, b[i]!]; return b; };
 const Section = ({ title, children }: { title: string; children: ReactNode }) => <fieldset className="grid gap-3 rounded-md border border-line p-3"><legend className="px-1 text-sm font-semibold">{title}</legend>{children}</fieldset>;
 
+/** Für welchen Server (leer = alle Server) – nur sichtbar, wenn der Bot auf mehreren Servern ist. */
+function ServerField({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const guilds = useGuilds();
+  if ((guilds.data?.length ?? 0) < 2) return null;
+  return <Field label="Server">{(id) => <Select id={id} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}><option value="">Alle Server</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>}</Field>;
+}
 
 // =============================== Panels ===============================
 type PanelDraft = Omit<TicketPanelCfg, 'id' | 'messageChannelId' | 'messageId'> & { id?: string };
@@ -142,6 +148,7 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
           <Section title="Allgemein">
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Interner Name">{(id) => <Input id={id} value={p.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} />}</Field>
+              <ServerField value={p.guildId} onChange={(v) => set({ guildId: v })} />
               <Field label="Zielkanal">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={p.channelId} onChange={(v) => set({ channelId: v })} />}</Field>
               <Field label="Typ">{(id) => <Select id={id} value={p.style} onChange={(e) => set({ style: e.target.value as PanelDraft['style'] })}><option value="BUTTONS">Buttons</option><option value="DROPDOWN">Dropdown-Menü</option></Select>}</Field>
               {p.style === 'DROPDOWN' && <Field label="Dropdown-Platzhalter">{(id) => <Input id={id} value={p.placeholder} maxLength={150} onChange={(e) => set({ placeholder: e.target.value })} />}</Field>}
@@ -254,6 +261,7 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
           <Section title="Allgemein">
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Name">{(id) => <Input id={id} value={d.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} />}</Field>
+              <ServerField value={d.guildId} onChange={(v) => set({ guildId: v })} />
               <Field label="Emoji">{(id) => <Input id={id} value={d.emoji ?? ''} maxLength={64} onChange={(e) => set({ emoji: e.target.value || null })} />}</Field>
               <Field label="Kurzbeschreibung (Dropdown)">{(id) => <Input id={id} value={d.description} maxLength={500} onChange={(e) => set({ description: e.target.value })} />}</Field>
               <Field label="Farbe des Panel-Buttons">{(id) => <Select id={id} value={d.buttonStyle} onChange={(e) => set({ buttonStyle: e.target.value as ButtonStyleName })}>{STYLES.map((s) => <option key={s} value={s}>{STYLE_LABEL[s]}</option>)}</Select>}</Field>

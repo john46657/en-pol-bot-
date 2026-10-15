@@ -19,13 +19,13 @@ const auth_service_1 = require("../auth/auth.service");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const realtime_service_1 = require("../realtime/realtime.service");
+const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
 const publicSelect = {
     id: true, username: true, displayName: true, email: true, robloxUserId: true, robloxUsername: true, robloxStatus: true,
     robloxVerifiedAt: true, active: true, lastLogin: true, totpEnabledAt: true, createdAt: true, updatedAt: true,
-    // archivierte Server-Rollen/-Ausnahmen aus der früheren Multi-Server-Zeit (guildId gesetzt) gelten nicht und werden nicht angezeigt
-    roles: { where: { role: { guildId: null } }, select: { role: { select: { id: true, name: true, guildId: true } } } },
-    overrides: { where: { guildId: null }, select: { permissionKey: true, effect: true, reason: true, guildId: true } },
+    roles: { select: { role: { select: { id: true, name: true, guildId: true } } } },
+    overrides: { select: { permissionKey: true, effect: true, reason: true, guildId: true } },
 };
 let UsersService = class UsersService {
     prisma;
@@ -146,12 +146,16 @@ let UsersService = class UsersService {
             await this.auth.revokeAllSessions(id);
         return u;
     }
-    /** Rollen eines Benutzers setzen (archivierte Server-Rollen aus der früheren Multi-Server-Zeit bleiben unberührt). */
+    /**
+     * Rollen eines Benutzers setzen – NUR im Bereich der Anfrage: mit gewähltem Server die Rollen dieses Servers, unter
+     * „Alle Server“ die serverübergreifenden. Rollen anderer Server bleiben unberührt (Server sind getrennt).
+     */
     async setRoles(actor, id, roleIds) {
         this.assertNotSelf(actor, id);
         const before = await this.get(id);
         await this.perms.assertOutranksUser(actor.userId, id);
-        const inScope = (r) => r.guildId === null;
+        const g = (0, guild_context_1.currentGuild)();
+        const inScope = (r) => (g ? r.guildId === g : r.guildId === null);
         // Nur Rollen unterhalb des eigenen Rangs dürfen hinzukommen oder wegfallen
         const old = before.roles.filter((r) => inScope(r.role)).map((r) => r.role.id);
         const touched = [...roleIds.filter((r) => !old.includes(r)), ...old.filter((r) => !roleIds.includes(r))];
@@ -160,12 +164,12 @@ let UsersService = class UsersService {
             throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.');
         for (const r of roles) {
             if (!inScope(r))
-                throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.');
+                throw new errors_1.AppError('NOT_FOUND', 'Rolle nicht gefunden.'); // Rollen anderer Server sind hier nicht vorhanden
             await this.perms.assertOutranksRole(actor.userId, r.priority, r.name);
         }
         return this.prisma.$transaction(async (tx) => {
             const adminRole = await tx.role.findFirst({ where: { guildId: null, name: 'System Administrator' } });
-            if (adminRole && !roleIds.includes(adminRole.id))
+            if (!g && adminRole && !roleIds.includes(adminRole.id))
                 await this.assertAdminRemains(tx, id);
             await tx.userRole.deleteMany({ where: { userId: id, roleId: { in: old } } });
             await tx.userRole.createMany({ data: roleIds.map((roleId) => ({ userId: id, roleId })), skipDuplicates: true });
@@ -184,7 +188,8 @@ let UsersService = class UsersService {
         if (d.effect === 'ALLOW')
             await this.perms.assertCanDelegate(actor.userId, [d.permission]);
         return this.prisma.$transaction(async (tx) => {
-            const guildId = null;
+            // Ausnahme gilt nur auf dem Server der Anfrage (ohne Server: nur unter „Alle Server“)
+            const guildId = (0, guild_context_1.currentGuild)();
             const prev = await tx.userPermissionOverride.findFirst({ where: { userId: id, guildId, permissionKey: d.permission } });
             const o = prev
                 ? await tx.userPermissionOverride.update({ where: { id: prev.id }, data: { effect: d.effect, reason: d.reason, createdById: actor.userId } })
@@ -198,7 +203,7 @@ let UsersService = class UsersService {
         this.assertNotSelf(actor, id);
         await this.perms.assertOutranksUser(actor.userId, id); // auch das Aufheben einer Sperre (DENY) nur von oben
         await this.prisma.$transaction(async (tx) => {
-            const prev = await tx.userPermissionOverride.findFirst({ where: { userId: id, guildId: null, permissionKey: permission } });
+            const prev = await tx.userPermissionOverride.findFirst({ where: { userId: id, guildId: (0, guild_context_1.currentGuild)(), permissionKey: permission } });
             if (!prev)
                 throw new errors_1.AppError('NOT_FOUND', 'Sonderrecht nicht gefunden.');
             await tx.userPermissionOverride.delete({ where: { id: prev.id } });

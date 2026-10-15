@@ -17,7 +17,7 @@ const isUnique = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestErr
  * Dienstnummern: Nummernkreise, atomare Vergabe (Unique-Constraints + Wiederholung – nie doppelt),
  * manuelle Vergabe/Änderung/Freigabe/Sperre, Historie und die Automatik nach angenommener Bewerbung.
  */
-import { onePersonnel } from '../common/personnel-ref';
+import { onePersonnel } from '../common/guild-context';
 @Injectable()
 export class ServiceNumbersService implements OnModuleInit {
   constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService, private readonly perms: PermissionService, private readonly discord: DiscordAccessService, private readonly live: DiscordLiveService) {}
@@ -181,7 +181,7 @@ export class ServiceNumbersService implements OnModuleInit {
             old = active.display;
           }
           // 3) zuweisen + Personalakte
-          const target = await tx.serviceNumber.findFirstOrThrow({ where: { display } });
+          const target = await tx.serviceNumber.findFirstOrThrow({ where: { display } }); // Dienstnummern je Server
           const row = await tx.serviceNumber.update({ where: { id: target.id }, data: { status: 'ACTIVE', personnelId: o.personnelId, assignedAt: now } });
           if (o.personnelId) {
             await tx.personnel.updateMany({ where: { serviceNumber: display, id: { not: o.personnelId } }, data: { serviceNumber: null } });

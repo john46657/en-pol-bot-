@@ -58,19 +58,19 @@ declare const listQ: z.ZodObject<{
     authorId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
-    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
+    q?: string | undefined;
 }, {
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     authorId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
+    from?: string | undefined;
+    to?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
-    from?: string | undefined;
-    to?: string | undefined;
 }>;
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 export declare class DutyReportsController {

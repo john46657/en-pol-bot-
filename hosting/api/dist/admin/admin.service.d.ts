@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
-import { HomeServerService } from '../server/home-server.service';
 /** Nur bekannte Settings-Keys mit striktem Schema werden akzeptiert. */
 export declare const SETTING_SCHEMAS: {
     readonly 'org.name': z.ZodString;
@@ -368,27 +367,26 @@ export type SettingKey = keyof typeof SETTING_SCHEMAS;
 export declare class AdminService {
     private readonly prisma;
     private readonly audit;
-    private readonly home;
-    constructor(prisma: PrismaService, audit: AuditService, home: HomeServerService);
+    constructor(prisma: PrismaService, audit: AuditService);
     /**
-     * Alle zentralen Einstellungen. Archivierte Werte aus der früheren Multi-Server-Zeit (`<Schlüssel>@<Server-ID>`) bleiben in
-     * der Datenbank, werden aber nicht mehr angezeigt oder verwendet.
+     * Mit gewähltem Server: nur die Werte DIESES Servers (Konfiguration je Server) und die globalen Einstellungen – nie Werte
+     * anderer Server. Unter „Alle Server“: alles (Verwaltung der Grundwerte).
      */
     getSettings(): Promise<{
-        settings: {
-            [k: string]: Prisma.JsonValue;
-        };
+        settings: Record<string, unknown>;
         allowedKeys: string[];
+        serverScoped: readonly string[];
     }>;
-    setSetting(actor: Actor, key: string, value: unknown): Promise<{
+    /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */
+    setSetting(actor: Actor, rawKey: string, value: unknown): Promise<{
         key: string;
         value: Prisma.JsonValue;
     }>;
     securityEvents(take?: number, type?: string): Prisma.PrismaPromise<{
-        userId: string | null;
         id: string;
         createdAt: Date;
         type: string;
+        userId: string | null;
         ip: string | null;
         requestId: string | null;
         detail: string | null;

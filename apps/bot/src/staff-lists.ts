@@ -1,7 +1,6 @@
 import type { Client } from 'discord.js';
 import { renderStaffList, type StaffList } from '@enrp/shared';
 import type { Api } from './api';
-import { ownGuilds } from './home';
 import { postOrUpdate } from './messages';
 
 /**
@@ -14,7 +13,7 @@ export function createStaffLists(client: () => Client, api: Api, log: (m: string
 
   async function render(l: StaffList) {
     const c = client();
-    const guilds = ownGuilds(c).filter((g) => !l.guildId || g.id === l.guildId);
+    const guilds = l.guildId ? [c.guilds.cache.get(l.guildId)].filter((g) => !!g) : [...c.guilds.cache.values()];
     const members = new Map<string, { id: string; name: string; roleIds: string[] }>();
     for (const g of guilds) {
       for (const s of l.sections) {

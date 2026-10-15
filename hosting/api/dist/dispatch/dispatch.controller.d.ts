@@ -119,8 +119,8 @@ export declare class IncidentsController {
             })[];
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -151,19 +151,19 @@ export declare class IncidentsController {
         incident: {
             units: ({
                 unit: {
-                    callsign: string;
-                    name: string | null;
+                    serverId: string | null;
                     vehicle: string | null;
                     id: string;
-                    serverId: string | null;
                     status: string;
                     notes: string | null;
                     updatedAt: Date;
                     color: string | null;
                     type: string | null;
+                    callsign: string;
                     mapX: number | null;
                     mapZ: number | null;
                     guildId: string | null;
+                    name: string | null;
                     icon: string | null;
                     discordRoleId: string | null;
                     erlcTeam: string | null;
@@ -178,8 +178,8 @@ export declare class IncidentsController {
             })[];
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -215,16 +215,16 @@ export declare class IncidentsController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -249,8 +249,8 @@ export declare class IncidentsController {
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -284,19 +284,19 @@ export declare class DispatchController {
             unitId: string;
         }[];
     } & {
-        callsign: string;
-        name: string | null;
+        serverId: string | null;
         vehicle: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         updatedAt: Date;
         color: string | null;
         type: string | null;
+        callsign: string;
         mapX: number | null;
         mapZ: number | null;
         guildId: string | null;
+        name: string | null;
         icon: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
@@ -304,19 +304,19 @@ export declare class DispatchController {
         statusRoleIds: string[];
     })[]>;
     createUnit(a: Actor, b: z.infer<typeof unit>): Promise<{
-        callsign: string;
-        name: string | null;
+        serverId: string | null;
         vehicle: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         updatedAt: Date;
         color: string | null;
         type: string | null;
+        callsign: string;
         mapX: number | null;
         mapZ: number | null;
         guildId: string | null;
+        name: string | null;
         icon: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
@@ -326,19 +326,19 @@ export declare class DispatchController {
     unitStatus(a: Actor, id: string, b: {
         status: (typeof UNIT_STATUSES)[number];
     }): Promise<{
-        callsign: string;
-        name: string | null;
+        serverId: string | null;
         vehicle: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         updatedAt: Date;
         color: string | null;
         type: string | null;
+        callsign: string;
         mapX: number | null;
         mapZ: number | null;
         guildId: string | null;
+        name: string | null;
         icon: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
@@ -353,19 +353,19 @@ export declare class DispatchController {
             unitId: string;
         }[];
     } & {
-        callsign: string;
-        name: string | null;
+        serverId: string | null;
         vehicle: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         updatedAt: Date;
         color: string | null;
         type: string | null;
+        callsign: string;
         mapX: number | null;
         mapZ: number | null;
         guildId: string | null;
+        name: string | null;
         icon: string | null;
         discordRoleId: string | null;
         erlcTeam: string | null;
@@ -383,8 +383,8 @@ export declare class DispatchController {
         }[];
     } & {
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -409,8 +409,8 @@ export declare class DispatchController {
     }>;
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -435,8 +435,8 @@ export declare class DispatchController {
     }>;
     close(a: Actor, id: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;

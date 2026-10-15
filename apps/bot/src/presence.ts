@@ -1,6 +1,5 @@
 import { ChannelType, type Client, type Guild, type GuildMember, type VoiceBasedChannel } from 'discord.js';
 import type { Api } from './api';
-import { ownGuilds } from './home';
 
 /** Teammitglied für die Teamliste im Dashboard (ohne Voice-Daten). */
 export interface MemberReport { id: string; guildId: string; username: string; displayName: string; avatar: string | null; status: 'online' | 'idle' | 'dnd' | 'offline' | 'unknown'; roleIds: string[]; joinedAt: string | null }
@@ -60,7 +59,7 @@ export function startPresenceReporter(client: () => Client, api: Api, opts: { me
   const since = new Map<string, number>(); // Aufenthaltsdauer: seit wann in diesem Channel (ab Bot-Start bekannt)
   let teamRoles: string[] = [];
   let lastError: string | undefined;
-  const guilds = () => ownGuilds(client()).slice(0, 50);
+  const guilds = () => [...client().guilds.cache.values()].slice(0, 50);
   const fail = (what: string) => (e: unknown) => {
     const msg = `${what}: ${e instanceof Error ? e.message : e}`;
     if (msg !== lastError) { log(`team/voice report failed – ${msg} (will keep retrying quietly)`); lastError = msg; }

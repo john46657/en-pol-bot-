@@ -16,11 +16,11 @@ declare const login2faSchema: z.ZodObject<{
     ticket: z.ZodString;
     code: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    code: string;
     ticket: string;
+    code: string;
 }, {
-    code: string;
     ticket: string;
+    code: string;
 }>;
 declare const loginSchema: z.ZodObject<{
     username: z.ZodString;
@@ -54,6 +54,21 @@ export declare class AuthController {
     discordLink(user: AuthUser, res: Response): void;
     /** Bot auf einen Server einladen – über das Dashboard (löst den Code ein; klappt auch mit „OAuth2-Code-Erlaubnis benötigt“). */
     discordInstall(user: AuthUser, res: Response): void;
+    /** Server-Übersicht nach dem Login (Kacheln wie bei Dyno/GalaxyBot). */
+    servers(user: AuthUser): Promise<{
+        name: string;
+        globalAdmin: boolean;
+        servers: {
+            guildId: string;
+            name: string;
+            icon: string | null;
+            state: "open" | "disabled" | "invite" | "pending";
+        }[];
+        guildsSyncedAt: Date | null;
+        discordLinked: boolean;
+    }>;
+    /** Bot auf einen eigenen Discord-Server einladen (Kachel „+“) – nur Server, die man laut Discord verwalten darf. */
+    discordAddServer(user: AuthUser, guild: string | undefined, res: Response): Promise<void>;
     /** Rücksprung von Discord (diese Adresse muss im Developer Portal unter OAuth2 → Redirects stehen). */
     discordCallback(code: string | undefined, state: string | undefined, error: string | undefined, req: AppRequest & {
         cookies?: Record<string, string>;
@@ -69,6 +84,8 @@ export declare class AuthController {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
+        servers: string[];
+        globalAdmin: boolean;
     } | {
         twoFactorRequired: true;
         ticket: string;
@@ -85,6 +102,8 @@ export declare class AuthController {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
+        servers: string[];
+        globalAdmin: boolean;
     }>;
     twoFactorStatus(user: AuthUser): Promise<{
         enabled: boolean;
@@ -114,6 +133,8 @@ export declare class AuthController {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
+        servers: string[];
+        globalAdmin: boolean;
     }>;
 }
 export {};

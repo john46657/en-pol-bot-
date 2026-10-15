@@ -76,8 +76,8 @@ export declare class MdtService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -116,36 +116,36 @@ export declare class MdtService {
             evidence: number | null;
         };
         vehicles: {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
         weapons: {
-            serial: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
+            serial: string;
             type: string;
         }[] | null;
         warrants: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdById: string;
             createdAt: Date;
@@ -214,16 +214,16 @@ export declare class MdtService {
                 robloxUsername: string;
                 fullName: string | null;
             } | null;
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
@@ -242,23 +242,23 @@ export declare class MdtService {
                 flags: string[];
                 photoId: string | null;
             } | null;
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
         wanted: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdById: string;
             createdAt: Date;
@@ -282,8 +282,8 @@ export declare class MdtService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -299,16 +299,16 @@ export declare class MdtService {
                 fullName: string | null;
             } | null;
         } & {
-            serial: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
+            serial: string;
             type: string;
         })[];
         total: number;
@@ -324,16 +324,16 @@ export declare class MdtService {
         status?: string;
         notes?: string | null;
     }): Promise<{
-        serial: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
+        serial: string;
         type: string;
     }>;
     updateWeapon(actor: Actor, id: string, version: number, d: {
@@ -343,16 +343,16 @@ export declare class MdtService {
         status?: string;
         notes?: string | null;
     }): Promise<{
-        serial: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
+        serial: string;
         type: string;
     }>;
     warrants(status: 'ACTIVE' | 'ALL'): Promise<{
@@ -365,13 +365,13 @@ export declare class MdtService {
             photoId: string | null;
         } | null;
         vehicle: {
-            plate: string;
             model: string | null;
             id: string;
+            plate: string;
             color: string | null;
         } | null;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;

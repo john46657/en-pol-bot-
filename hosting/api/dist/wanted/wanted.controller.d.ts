@@ -52,8 +52,8 @@ export declare class WantedController {
     constructor(w: WantedService);
     list(q: z.infer<typeof listQ>): Promise<{
         items: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdById: string;
             createdAt: Date;
@@ -72,8 +72,8 @@ export declare class WantedController {
     }>;
     get(id: string): Promise<{
         wanted: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdById: string;
             createdAt: Date;
@@ -90,15 +90,15 @@ export declare class WantedController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;
@@ -112,8 +112,8 @@ export declare class WantedController {
         expiresAt: Date | null;
     }>;
     activate(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;
@@ -127,8 +127,8 @@ export declare class WantedController {
         expiresAt: Date | null;
     }>;
     clear(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;
@@ -142,8 +142,8 @@ export declare class WantedController {
         expiresAt: Date | null;
     }>;
     cancel(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;
@@ -157,8 +157,8 @@ export declare class WantedController {
         expiresAt: Date | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof reason>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;

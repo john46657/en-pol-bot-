@@ -202,8 +202,8 @@ export declare class MdtController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -242,36 +242,36 @@ export declare class MdtController {
             evidence: number | null;
         };
         vehicles: {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[] | null;
         weapons: {
-            serial: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
+            serial: string;
             type: string;
         }[] | null;
         warrants: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdById: string;
             createdAt: Date;
@@ -328,16 +328,16 @@ export declare class MdtController {
                 robloxUsername: string;
                 fullName: string | null;
             } | null;
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
@@ -356,23 +356,23 @@ export declare class MdtController {
                 flags: string[];
                 photoId: string | null;
             } | null;
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         };
         wanted: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdById: string;
             createdAt: Date;
@@ -396,8 +396,8 @@ export declare class MdtController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -410,16 +410,16 @@ export declare class MdtController {
                 fullName: string | null;
             } | null;
         } & {
-            serial: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
             ownerId: string | null;
+            serial: string;
             type: string;
         })[];
         total: number;
@@ -427,31 +427,31 @@ export declare class MdtController {
         pageSize: number;
     }>;
     createWeapon(a: Actor, b: z.infer<typeof weaponBody>): Promise<{
-        serial: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
+        serial: string;
         type: string;
     }>;
     updateWeapon(a: Actor, id: string, b: {
         version: number;
     } & Partial<Omit<z.infer<typeof weaponBody>, 'serial'>>): Promise<{
-        serial: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
         ownerId: string | null;
+        serial: string;
         type: string;
     }>;
     warrants(q: {
@@ -466,13 +466,13 @@ export declare class MdtController {
             photoId: string | null;
         } | null;
         vehicle: {
-            plate: string;
             model: string | null;
             id: string;
+            plate: string;
             color: string | null;
         } | null;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdById: string;
         createdAt: Date;

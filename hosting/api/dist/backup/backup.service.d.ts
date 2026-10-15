@@ -4,7 +4,7 @@ import { type BackupConfig, type BackupPart, type BackupRestoreResult, type Disc
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
-export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung';
+export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver';
 export declare const setAfterRestore: (fn: (() => Promise<unknown>) | null) => void;
 /**
  * Backups: Dashboard-Daten (alle Tabellen als komprimierte JSON-Datei im Speicherordner, herunterladbar und wieder einspielbar)
@@ -26,7 +26,7 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         discordAuto: boolean;
         keep: number;
     }>;
-    /** Täglich: Daten-Backup und (falls an) Discord-Backup; alte automatische Backups aufräumen. */
+    /** Täglich: Daten-Backup und (falls an) Discord-Backup je Server; alte automatische Backups aufräumen. */
     autoTick(now?: Date): Promise<void>;
     listData(): Promise<{
         name: string;
@@ -55,13 +55,13 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         safety: string;
     }>;
     listDiscord(guildId?: string): Prisma.PrismaPromise<{
-        name: string;
         error: string | null;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
         guildId: string;
+        name: string;
         guildName: string;
         auto: boolean;
         stats: Prisma.JsonValue;
@@ -69,13 +69,13 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         restoreResult: Prisma.JsonValue;
     }[]>;
     getDiscord(id: string): Promise<{
-        name: string;
         error: string | null;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
         guildId: string;
+        name: string;
         data: Prisma.JsonValue | null;
         guildName: string;
         auto: boolean;
@@ -85,13 +85,13 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
     }>;
     /** Backup anlegen – der Bot liest den Server aus und schickt die Daten (Status PENDING → READY). */
     createDiscord(actor: Actor | null, guildId: string, name?: string, auto?: boolean): Promise<{
-        name: string;
         error: string | null;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
         guildId: string;
+        name: string;
         data: Prisma.JsonValue | null;
         guildName: string;
         auto: boolean;
@@ -100,7 +100,7 @@ export declare class BackupService implements OnModuleInit, OnModuleDestroy {
         restoreResult: Prisma.JsonValue | null;
     }>;
     deleteDiscord(actor: Actor, id: string): Promise<void>;
-    /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). */
+    /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). Ziel kann ein anderer Server sein. */
     restoreDiscord(actor: Actor, id: string, d: {
         guildId?: string;
         parts: BackupPart[];

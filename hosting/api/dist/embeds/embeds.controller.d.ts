@@ -6,15 +6,15 @@ export declare class EmbedsController {
     private readonly s;
     constructor(s: EmbedsService);
     list(): Promise<{
-        name: string;
         id: string;
         color: string;
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
+        channelId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;
@@ -38,15 +38,15 @@ export declare class EmbedsController {
         }[];
     }[]>;
     save(a: Actor, id: string, b: EmbedDoc): Promise<{
-        name: string;
         id: string;
         color: string;
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
+        channelId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;
@@ -70,15 +70,15 @@ export declare class EmbedsController {
         }[];
     }>;
     duplicate(a: Actor, id: string): Promise<{
-        name: string;
         id: string;
         color: string;
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
+        channelId: string | null;
         content: string;
         footer: string;
-        channelId: string | null;
         author: string;
         url: string;
         image: string;

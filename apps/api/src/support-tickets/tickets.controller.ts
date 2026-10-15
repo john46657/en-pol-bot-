@@ -1,3 +1,4 @@
+import { currentGuild } from '../common/guild-context';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -26,7 +27,7 @@ const actionSchema = z.discriminatedUnion('action', [
 const listQ = z.object({
   kind: z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: z.string().uuid().optional(), priorityId: z.string().uuid().optional(), categoryId: z.string().uuid().optional(),
   claimer: z.union([snowflake, z.literal('me')]).optional(), creator: z.string().trim().max(100).optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional(),
-  q: z.string().trim().max(100).optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25),
+  q: z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25),
 });
 const transcriptQ = z.object({
   q: z.string().trim().max(100).optional(), categoryName: z.string().max(80).optional(), creator: z.string().max(100).optional(), staff: snowflake.optional(), status: z.string().max(60).optional(),
@@ -68,7 +69,7 @@ export class SupportTicketsController {
   @Delete('reasons/:id') @HttpCode(204) @RequirePermission('ticket.settings') delReason(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.cfg.deleteReason(actor(u), id); }
 
   // ---- Tickets ----
-  @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, kind: q.kind === 'all' ? undefined : q.kind }); }
+  @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? currentGuild() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
   @Post() @RequirePermission('ticket.create') async create(@CurrentUser() u: AuthUser, @Body(zodBody(openQ)) b: z.infer<typeof openQ>) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
   @Get('stats') @RequirePermission('ticket.view') stats(@CurrentUser() u: AuthUser) { return this.s.stats(u.id); }
   @Get('ratings') @RequirePermission('ticket.view') ratings(@CurrentUser() u: AuthUser, @Query(zodBody(ratingQ)) q: z.infer<typeof ratingQ>) { return this.s.ratings(u.id, q); }

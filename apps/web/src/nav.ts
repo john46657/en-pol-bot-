@@ -1,4 +1,4 @@
-import { MessageSquareText, ScrollText, BellRing, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Search, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { ScrollText, BellRing, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Search, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -52,7 +52,6 @@ export const NAV: NavItem[] = [
   ]),
   { path: '/announcements', label: 'Meldungen & Abstimmungen', icon: BellRing, perm: 'announcements.view', group: 'Organisation' },
   { path: '/leave', label: 'Abmeldungen', icon: CalendarOff, perm: 'leave.request', group: 'Organisation' },
-  { path: '/message-builder', label: 'Discord Message Builder', icon: MessageSquareText, perm: 'messagebuilder.view', group: 'Organisation' },
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
   grp('Benutzer & Rollen', Users, 'Administration', [
     { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
@@ -62,7 +61,8 @@ export const NAV: NavItem[] = [
     { path: '/admin/settings', label: 'Allgemein', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/modules', label: 'Module', perm: 'modules.view', area: 'dashboard.settings.view' },
+    { path: '/admin/servers', label: 'Server-Verbund', perm: 'settings.view', area: 'dashboard.settings.view' },
+    { path: '/admin/multi-server', label: 'Server & Module', perm: 'servers.view', area: 'dashboard.settings.view' },
     { path: '/admin/personnel', label: 'Personal', perm: 'promotion.manage_settings', area: 'dashboard.settings.view' },
     { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
@@ -72,6 +72,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/welcome', label: 'Willkommen & Abschied', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/danger-level', label: 'Gefahrenstatus', perm: 'settings.manage', area: 'dashboard.settings.view' },
+    { path: '/message-builder', label: 'Message Builder', perm: 'messagebuilder.view' },
   ]),
   grp('Protokolle & Backups', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },

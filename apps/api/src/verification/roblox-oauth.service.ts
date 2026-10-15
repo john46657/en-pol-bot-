@@ -61,7 +61,7 @@ export class RobloxOAuthService {
   async link(guildId: string | undefined, discordId: string, discordName?: string) {
     const c = await this.creds();
     if (!c) throw new AppError('CAPABILITY_UNAVAILABLE', 'Die Roblox-Anmeldung ist noch nicht eingerichtet (Dashboard → Roblox-Verifizierung).');
-    if (guildId && !(await this.verification.config()).enabled) throw new AppError('CONFLICT', 'Die Roblox-Verifizierung ist auf diesem Server nicht aktiviert.');
+    if (guildId && !(await this.verification.config(guildId)).enabled) throw new AppError('CONFLICT', 'Die Roblox-Verifizierung ist auf diesem Server nicht aktiviert.');
     await this.prisma.robloxOAuthState.deleteMany({ where: { OR: [{ expiresAt: { lt: new Date() } }, { discordId }] } });
     const state = randomBytes(24).toString('base64url');
     await this.prisma.robloxOAuthState.create({ data: { state, discordId, discordName: discordName ?? null, guildId: guildId ?? null, expiresAt: new Date(Date.now() + STATE_TTL) } });

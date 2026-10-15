@@ -23,6 +23,7 @@ export declare class WebApplyService {
     private sign;
     private verify;
     /** Name, Einstellungen und Fragen einer Bewerbung (Polizei oder Einheit). */
+    /** Je Discord-Server eigene Bewerbungen (Server aus dem signierten Link). */
     private flow;
     /** Vom Bot: Link für eine Person ausstellen; gültig so lange wie das Zeitlimit der Bewerbung. */
     link(d: WebApplyInput): Promise<{
@@ -47,4 +48,5 @@ export declare class WebApplyService {
         number: string;
         message: string;
     }>;
+    private submitIn;
 }

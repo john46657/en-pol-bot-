@@ -70,8 +70,8 @@ export declare class ComplaintsController {
     list(a: Actor, q: z.infer<typeof listQ>): Promise<{
         items: ({
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -89,8 +89,8 @@ export declare class ComplaintsController {
             internalNotes: undefined;
             findings: undefined;
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -110,8 +110,8 @@ export declare class ComplaintsController {
     get(a: Actor, id: string): Promise<{
         complaint: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -129,8 +129,8 @@ export declare class ComplaintsController {
             internalNotes: undefined;
             findings: undefined;
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -147,8 +147,8 @@ export declare class ComplaintsController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];

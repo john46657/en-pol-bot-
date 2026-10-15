@@ -15,7 +15,6 @@ const bot = { Authorization: `Bot ${TOKEN}` };
 
 beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
-  process.env.DISCORD_GUILD_ID = G; // der eine Discord-Server dieses Systems
   ({ app, prisma } = await createTestApp());
   await makeUser(prisma, 'bk_admin', ['System Administrator']);
   await makeUser(prisma, 'bk_off', ['Police Member']);
@@ -28,7 +27,7 @@ afterAll(async () => {
   await prisma.discordBackup.deleteMany({});
   if (guildsBefore !== undefined) await prisma.systemSetting.update({ where: { key: 'discord.guilds' }, data: { value: guildsBefore as never } }); else await prisma.systemSetting.deleteMany({ where: { key: 'discord.guilds' } });
   await rm(path.resolve(loadEnv().STORAGE_DIR, 'backups'), { recursive: true, force: true });
-  delete process.env.BOT_API_TOKEN; delete process.env.DISCORD_GUILD_ID; await app.close();
+  delete process.env.BOT_API_TOKEN; await app.close();
 });
 
 describe('Backups', () => {

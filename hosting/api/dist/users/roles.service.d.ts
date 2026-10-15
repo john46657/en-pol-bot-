@@ -5,6 +5,7 @@ import { RealtimeService } from '../realtime/realtime.service';
 export declare const ADMIN_ROLE = "System Administrator";
 type Effect = 'ALLOW' | 'DENY';
 export interface RoleInput {
+    guildId?: string | null;
     name?: string;
     description?: string | null;
     color?: string | null;
@@ -28,10 +29,7 @@ export declare class RolesService {
     constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService);
     /** Nach jeder Änderung: alle Dashboards laden ihre Rechte neu (die API prüft ohnehin bei jeder Anfrage). */
     private changed;
-    /**
-     * Alle Rollen. Rollen, die früher nur für einen bestimmten Discord-Server galten (`guildId` gesetzt), wurden bei der
-     * Umstellung auf einen Server zusammengeführt und bleiben nur als Archiv in der Datenbank – sie erscheinen hier nicht.
-     */
+    /** Im Server-Kontext nur die Rollen dieses Servers; unter „Alle Server“: alle (serverübergreifende = Vorlagen für neue Server). */
     list(): import("@prisma/client").Prisma.PrismaPromise<({
         _count: {
             users: number;
@@ -41,7 +39,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -50,6 +47,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -62,7 +60,7 @@ export declare class RolesService {
     private load;
     private guard;
     private assertPriority;
-    /** Rollennamen sind eindeutig. */
+    /** Rollennamen sind je Server eindeutig (gleicher Name auf zwei Servern = zwei verschiedene Rollen). */
     private uniqueName;
     create(actor: Actor, d: RoleInput & {
         name: string;
@@ -75,7 +73,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -84,6 +81,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -97,7 +95,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -106,6 +103,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -121,7 +119,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -130,6 +127,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -144,7 +142,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -153,6 +150,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -170,7 +168,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -179,6 +176,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -193,7 +191,6 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -202,6 +199,7 @@ export declare class RolesService {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;

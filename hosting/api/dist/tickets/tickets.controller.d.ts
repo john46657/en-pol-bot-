@@ -7,11 +7,11 @@ declare const create: z.ZodObject<{
         serverId: z.ZodString;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         serverId: string;
+        name: string;
     }, {
-        name: string;
         serverId: string;
+        name: string;
     }>>;
     notifyInGame: z.ZodOptional<z.ZodBoolean>;
     legalCodeId: z.ZodOptional<z.ZodString>;
@@ -27,8 +27,8 @@ declare const create: z.ZodObject<{
     amount?: number | undefined;
     reportId?: string | undefined;
     erlcPlayer?: {
-        name: string;
         serverId: string;
+        name: string;
     } | undefined;
     notifyInGame?: boolean | undefined;
 }, {
@@ -39,8 +39,8 @@ declare const create: z.ZodObject<{
     amount?: number | undefined;
     reportId?: string | undefined;
     erlcPlayer?: {
-        name: string;
         serverId: string;
+        name: string;
     } | undefined;
     notifyInGame?: boolean | undefined;
 }>;
@@ -79,8 +79,8 @@ export declare class TicketsController {
             };
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             notes: string | null;
             updatedAt: Date;
@@ -114,9 +114,9 @@ export declare class TicketsController {
     get(id: string): Promise<{
         ticket: {
             person: {
-                robloxUserId: string | null;
-                id: string;
                 serverId: string | null;
+                id: string;
+                robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
                 status: string;
@@ -139,21 +139,21 @@ export declare class TicketsController {
                 version: number;
             };
             legalCode: {
-                code: string;
-                id: string;
                 serverId: string | null;
+                id: string;
                 title: string;
                 category: string;
                 description: string | null;
                 expiresAt: Date | null;
+                code: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
                 active: boolean;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             notes: string | null;
             updatedAt: Date;
@@ -172,8 +172,8 @@ export declare class TicketsController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -184,8 +184,8 @@ export declare class TicketsController {
             message: string;
         } | null;
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         notes: string | null;
         updatedAt: Date;
@@ -202,8 +202,8 @@ export declare class TicketsController {
     }>;
     void(a: Actor, id: string, b: z.infer<typeof voidSchema>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         notes: string | null;
         updatedAt: Date;

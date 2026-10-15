@@ -50,14 +50,17 @@ import { AuthGuard, PermissionGuard } from './authz/guards';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { RequestIdMiddleware } from './common/request-id.middleware';
 import { OriginMiddleware } from './common/origin.middleware';
+import { GuildContextMiddleware } from './common/guild-context';
 
 import { LocksModule } from './locks/locks.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 import { WelcomeModule } from './welcome/welcome.module';
 import { VoiceSupportModule } from './voice-support/voice-support.module';
 import { EmbedsModule } from './embeds/embeds.module';
+import { ServerLinksModule } from './server-links/server-links.module';
+import { MultiServerModule } from './multi-server/multi-server.module';
+import { MultiServerRestoreModule } from './multi-server/multi-server-restore.module';
 import { MessageBuilderModule } from './message-builder/message-builder.module';
-import { ServerModule } from './server/server.module';
 import { LoggingModule } from './logging/logging.module';
 import { BackupModule } from './backup/backup.module';
 import { VerificationModule } from './verification/verification.module';
@@ -70,7 +73,7 @@ import { HrModule } from './hr/hr.module';
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, InvestigationsModule, WantedModule, EvidenceModule,
-    PersonnelModule, DutyModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
+    PersonnelModule, DutyModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerLinksModule, MultiServerModule, MultiServerRestoreModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [
@@ -82,6 +85,6 @@ import { HrModule } from './hr/hr.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware, OriginMiddleware).forRoutes('{*splat}');
+    consumer.apply(RequestIdMiddleware, OriginMiddleware, GuildContextMiddleware).forRoutes('{*splat}');
   }
 }

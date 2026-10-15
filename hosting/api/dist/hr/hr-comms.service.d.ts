@@ -79,8 +79,8 @@ export declare class HrCommsService {
         readAt: Date | null;
         readCount: number;
         audienceCount: number | null;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -95,8 +95,8 @@ export declare class HrCommsService {
         discordChannelId: string | null;
     }[]>;
     saveAnnouncement(actor: Actor, d: z.infer<typeof announcementSchema>, id?: string): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -136,8 +136,8 @@ export declare class HrCommsService {
             count: number;
             voters: string[] | null;
         }[] | null;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -152,8 +152,8 @@ export declare class HrCommsService {
         showResults: string;
     }[]>;
     savePoll(actor: Actor, d: z.infer<typeof pollSchema>, id?: string): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;

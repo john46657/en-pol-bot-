@@ -106,11 +106,47 @@ let AuthService = class AuthService {
     async profile(userId) {
         const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: { include: { role: true } } } });
         const active = new Set(await this.perms.roleIdsFor(userId));
+        // Server, die man wählen darf: registriert, nicht archiviert, bestätigte Mitgliedschaft (globale Systemadministratoren: alle)
+        const owner = await this.perms.isOwner(userId);
+        const servers = await this.prisma.discordServer.findMany({ where: { archivedAt: null, ...(owner ? {} : { memberships: { some: { userId, status: 'MEMBER' } } }) }, select: { guildId: true }, orderBy: { name: 'asc' } });
         return {
             id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
+            // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
             roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.authz.effective(userId), lastLogin: u.lastLogin,
-            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.homeGuild)(),
+            twoFactor: !!u.totpEnabledAt, guildId: (0, guild_context_1.currentGuild)(), servers: servers.map((s) => s.guildId), globalAdmin: owner,
         };
+    }
+    /**
+     * Server-Übersicht nach dem Login (Kacheln): Server, die man öffnen darf (registriert, Mitglied bzw. globaler
+     * Systemadministrator), freizuschaltende Server und eigene Discord-Server ohne Bot (zum Einladen). Jeder Server hat
+     * eigene Akten – die Übersicht verrät nur Name und Bild.
+     */
+    async serverOverview(userId) {
+        const owner = await this.perms.isOwner(userId);
+        const [registered, link, known, u] = await Promise.all([
+            this.prisma.discordServer.findMany({ where: { archivedAt: null, ...(owner ? {} : { memberships: { some: { userId, status: 'MEMBER' } } }) }, select: { guildId: true, name: true, status: true }, orderBy: { name: 'asc' } }),
+            this.prisma.discordLink.findUnique({ where: { userId } }),
+            this.prisma.systemSetting.findUnique({ where: { key: 'discord.guilds' } }),
+            this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { displayName: true } }),
+        ]);
+        const bot = new Map((Array.isArray(known?.value) ? known.value : []).filter((g) => g.id).map((g) => [g.id, g]));
+        const managed = (Array.isArray(link?.managedGuilds) ? link.managedGuilds : []);
+        const icon = new Map(managed.map((g) => [g.id, g.icon]));
+        const seen = new Set();
+        const servers = [];
+        for (const s of registered) {
+            seen.add(s.guildId);
+            servers.push({ guildId: s.guildId, name: s.name, icon: bot.get(s.guildId)?.icon ?? icon.get(s.guildId) ?? null, state: s.status === 'DISABLED' ? 'disabled' : 'open' });
+        }
+        // eigene Discord-Server: Bot schon da (wartet auf Freischaltung) bzw. noch nicht da (einladen)
+        const pending = owner ? [] : await this.prisma.discordServer.findMany({ where: { guildId: { in: managed.map((g) => g.id) }, archivedAt: null }, select: { guildId: true } });
+        const pendingIds = new Set(pending.map((p) => p.guildId));
+        for (const g of managed) {
+            if (seen.has(g.id))
+                continue;
+            servers.push({ guildId: g.id, name: g.name, icon: g.icon, state: bot.has(g.id) || pendingIds.has(g.id) ? 'pending' : 'invite' });
+        }
+        return { name: u.displayName, globalAdmin: owner, servers, guildsSyncedAt: link?.guildsSyncedAt ?? null, discordLinked: !!link };
     }
 };
 exports.AuthService = AuthService;

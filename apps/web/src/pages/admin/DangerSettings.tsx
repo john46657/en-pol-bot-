@@ -83,7 +83,7 @@ function DangerSettings() {
   const q = useQuery({ queryKey: ['danger-config'], queryFn: () => api<DangerConfig>('/danger-level/config') });
   const [d, setD] = useState<DangerConfig | null>(null);
   useEffect(() => { if (q.data && !d) setD(q.data); }, [q.data, d]);
-  useAutosaveDraft(d ? 'danger:config' : null, d ?? undefined, (v) => ({ method: 'PUT', path: '/danger-level/config', body: v, label: 'Gefahrenstatus' }));
+  useAutosaveDraft(d ? 'danger:config' : null, d ?? undefined, (v) => ({ method: 'PUT', path: '/danger-level/config', body: v, guildId: null, label: 'Gefahrenstatus' }));
   if (!d) return <SkeletonRows />;
   const setLevel = (i: number, p: Partial<DangerConfig['levels'][number]>) => setD({ ...d, levels: d.levels.map((l, j) => (j === i ? { ...l, ...p } : l)) });
   const move = (i: number, dir: number) => { const n = [...d.levels]; const [x] = n.splice(i, 1); n.splice(i + dir, 0, x!); setD({ ...d, levels: n }); };
@@ -131,7 +131,7 @@ function DangerSettings() {
   );
 }
 
-/** Discord-Rollen als Chips mit „+ Rolle…“, höchstens 10. */
+/** Discord-Rollen als Chips mit „+ Rolle…“ (aus allen verbundenen Servern), höchstens 10. */
 function RolePicker({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
   const guilds = useGuilds();
   return (

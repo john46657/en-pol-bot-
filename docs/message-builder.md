@@ -1,6 +1,6 @@
 # Discord Message Builder
 
-Ein Discohook-ähnlicher Nachrichten- und Embed-Editor direkt im Dashboard (Menü *Organisation → Discord Message Builder*, Pfad `/message-builder`). Er nutzt die Anmeldung, die Rollen und Rechte und das Design des Dashboards und sendet über den **vorhandenen Discord-Bot**. Es gibt keinen zweiten Bot, keine eigene Anwendung und nur den einen fest eingerichteten Discord-Server ([single-server.md](single-server.md)).
+Ein Discohook-ähnlicher Nachrichten- und Embed-Editor direkt im Dashboard (Menü *Verwaltung → Discord-Nachrichten → Message Builder*, Pfad `/message-builder`). Er nutzt die Anmeldung, die Rollen und Rechte und das Design des Dashboards und sendet über den **vorhandenen Discord-Bot**. Es gibt keinen zweiten Bot und keine eigene Anwendung. Er arbeitet **je Discord-Server** (oben links gewählt): Vorlagen, Entwürfe, Kategorien, Verlauf und Webhooks eines Servers sind auf anderen Servern unsichtbar ([multi-server.md](multi-server.md)).
 
 Der ältere *Embed-Baukasten* (*Discord-Nachrichten → Embeds*) bleibt unverändert bestehen.
 

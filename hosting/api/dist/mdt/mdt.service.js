@@ -21,6 +21,7 @@ const media_service_1 = require("../media/media.service");
 const locks_service_1 = require("../locks/locks.service");
 const roblox_service_1 = require("../persons/roblox.service");
 const errors_1 = require("../common/errors");
+const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
 const KEY = 'mdt.config';
 const PHOTO_MAX = 8 * 1024 * 1024;
@@ -90,7 +91,7 @@ let MdtService = class MdtService {
     async citizens(p) {
         const q = p.q?.trim();
         const where = {
-            status: 'ACTIVE',
+            ...(0, guild_context_1.recordWhere)(), status: 'ACTIVE',
             ...(p.flag ? { flags: { has: p.flag } } : {}),
             ...(q ? { OR: [
                     { robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }, { robloxUserId: q },
@@ -105,7 +106,7 @@ let MdtService = class MdtService {
         return (0, pagination_1.pageResult)(items.map((i) => ({ ...this.citizen(i, counts.get(i.id) ?? 0), robloxHeadshotUrl: i.robloxUserId ? heads.get(i.robloxUserId) ?? null : null })), total, p);
     }
     async profile(actor, id) {
-        const p = await this.prisma.person.findFirst({ where: { id } });
+        const p = await this.prisma.person.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() } });
         if (!p)
             throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
         const can = async (perm) => this.perms.has(actor.userId, perm);
@@ -149,7 +150,7 @@ let MdtService = class MdtService {
     }
     async updateCitizen(actor, id, version, d) {
         await this.locks.assertFree('person', id, actor.userId);
-        const before = await this.prisma.person.findFirst({ where: { id } });
+        const before = await this.prisma.person.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() } });
         if (!before)
             throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
         const cfg = await this.config();
@@ -184,7 +185,7 @@ let MdtService = class MdtService {
      * Ohne gespeicherte Roblox-ID wird sie über den Roblox-Namen gesucht (nur exakter Treffer) und in der Akte nachgetragen.
      */
     async robloxProfile(actor, id) {
-        const p = await this.prisma.person.findFirst({ where: { id }, select: { id: true, robloxUserId: true, robloxUsername: true } });
+        const p = await this.prisma.person.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() }, select: { id: true, robloxUserId: true, robloxUsername: true } });
         if (!p)
             throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
         let rid = p.robloxUserId;
@@ -208,7 +209,7 @@ let MdtService = class MdtService {
     async setPhoto(actor, id, file) {
         if (!file || !/^image\/(png|jpeg|webp)$/.test(file.mimetype))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte ein Bild (PNG, JPG oder WebP) hochladen.');
-        const p = await this.prisma.person.findFirst({ where: { id } });
+        const p = await this.prisma.person.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() } });
         if (!p)
             throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
         const m = await this.media.upload(actor, file, { linkedType: 'Person', linkedId: id }, PHOTO_MAX);
@@ -224,7 +225,7 @@ let MdtService = class MdtService {
         const q = p.q?.trim();
         const plate = q?.toUpperCase().replace(/\s+/g, '');
         const where = {
-            status: { not: 'ARCHIVED' },
+            ...(0, guild_context_1.recordWhere)(), status: { not: 'ARCHIVED' },
             ...(q ? { OR: [{ plate: { contains: plate } }, { model: { contains: q, mode: 'insensitive' } }, { owner: { OR: [{ robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }] } }] } : {}),
         };
         const [items, total] = await Promise.all([
@@ -236,7 +237,7 @@ let MdtService = class MdtService {
         return (0, pagination_1.pageResult)(items.map((v) => ({ ...v, activeBolos: n.get(v.id) ?? 0 })), total, p);
     }
     async vehicle(actor, id) {
-        const v = await this.prisma.vehicle.findFirst({ where: { id }, include: { owner: { select: { id: true, robloxUsername: true, fullName: true, flags: true, photoId: true } } } });
+        const v = await this.prisma.vehicle.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() }, include: { owner: { select: { id: true, robloxUsername: true, fullName: true, flags: true, photoId: true } } } });
         if (!v)
             throw new errors_1.AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
         const [wanted, links, timeline] = await Promise.all([
@@ -252,7 +253,7 @@ let MdtService = class MdtService {
     async weapons(p) {
         const q = p.q?.trim();
         const where = {
-            ...(p.ownerId ? { ownerId: p.ownerId } : {}), ...(p.status ? { status: p.status } : {}),
+            ...(0, guild_context_1.recordWhere)(), ...(p.ownerId ? { ownerId: p.ownerId } : {}), ...(p.status ? { status: p.status } : {}),
             ...(q ? { OR: [{ serial: { contains: normSerial(q) } }, { model: { contains: q, mode: 'insensitive' } }, { owner: { OR: [{ robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }] } }] } : {}),
         };
         const [items, total] = await Promise.all([
@@ -265,16 +266,17 @@ let MdtService = class MdtService {
         const cfg = await this.config();
         if (d.type && !cfg.weaponTypes.some((t) => t.key === d.type))
             throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Waffenart „${d.type}“.`);
-        if (d.ownerId && !(await this.prisma.person.findFirst({ where: { id: d.ownerId }, select: { id: true } })))
+        if (d.ownerId && !(await this.prisma.person.findFirst({ where: { id: d.ownerId, ...(0, guild_context_1.recordWhere)() }, select: { id: true } })))
             throw new errors_1.AppError('NOT_FOUND', 'Besitzer nicht gefunden.');
     }
     async createWeapon(actor, d) {
         await this.checkWeapon(d);
         const serial = normSerial(d.serial);
-        if (await this.prisma.weapon.findFirst({ where: { serial } }))
+        const serverId = (0, guild_context_1.recordSpace)() ?? null;
+        if (await this.prisma.weapon.findFirst({ where: { serial, serverId } }))
             throw new errors_1.AppError('CONFLICT', `Die Seriennummer ${serial} ist schon registriert.`);
         return this.prisma.$transaction(async (tx) => {
-            const w = await tx.weapon.create({ data: { ...d, serial } });
+            const w = await tx.weapon.create({ data: { ...d, serial, serverId } });
             if (w.ownerId)
                 await this.timeline.add(tx, { entityType: 'Person', entityId: w.ownerId, action: 'weapon.linked', summary: `Waffe ${serial} registriert`, actorId: actor.userId });
             await this.audit.record(actor, { action: 'weapon.create', module: 'weapons', entityType: 'Weapon', entityId: w.id, after: w }, tx);
@@ -283,7 +285,7 @@ let MdtService = class MdtService {
     }
     async updateWeapon(actor, id, version, d) {
         await this.checkWeapon(d);
-        const before = await this.prisma.weapon.findFirst({ where: { id } });
+        const before = await this.prisma.weapon.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() } });
         if (!before)
             throw new errors_1.AppError('NOT_FOUND', 'Waffe nicht gefunden.');
         return this.prisma.$transaction(async (tx) => {
@@ -301,10 +303,11 @@ let MdtService = class MdtService {
     async warrants(status) {
         const rows = await this.prisma.wantedRecord.findMany({ where: status === 'ACTIVE' ? { status: { in: ACTIVE_WANTED } } : {}, orderBy: { createdAt: 'desc' }, take: 200 });
         const [persons, vehicles] = await Promise.all([
-            this.prisma.person.findMany({ where: { id: { in: rows.map((r) => r.personId).filter((x) => !!x) } }, select: { id: true, robloxUsername: true, fullName: true, photoId: true, flags: true } }),
-            this.prisma.vehicle.findMany({ where: { id: { in: rows.map((r) => r.vehicleId).filter((x) => !!x) } }, select: { id: true, plate: true, model: true, color: true } }),
+            this.prisma.person.findMany({ where: { id: { in: rows.map((r) => r.personId).filter((x) => !!x) }, ...(0, guild_context_1.recordWhere)() }, select: { id: true, robloxUsername: true, fullName: true, photoId: true, flags: true } }),
+            this.prisma.vehicle.findMany({ where: { id: { in: rows.map((r) => r.vehicleId).filter((x) => !!x) }, ...(0, guild_context_1.recordWhere)() }, select: { id: true, plate: true, model: true, color: true } }),
         ]);
         const pm = new Map(persons.map((p) => [p.id, { ...p, photoUrl: p.photoId ? `/api/v1/media/${p.photoId}` : null }])), vm = new Map(vehicles.map((v) => [v.id, v]));
+        // nur Fahndungen zu Akten im gewählten Server-Bereich
         return rows.filter((r) => (r.personId ? pm.has(r.personId) : r.vehicleId ? vm.has(r.vehicleId) : true))
             .map((r) => ({ ...r, person: r.personId ? pm.get(r.personId) ?? null : null, vehicle: r.vehicleId ? vm.get(r.vehicleId) ?? null : null }));
     }

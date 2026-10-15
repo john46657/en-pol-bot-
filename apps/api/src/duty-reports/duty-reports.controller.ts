@@ -6,6 +6,7 @@ import { DutyReportsService } from './duty-reports.service';
 import { CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
+import { currentGuild } from '../common/guild-context';
 import { AppError } from '../common/errors';
 
 const values = z.record(z.string().max(40), z.union([z.string().max(4000), z.number()]));
@@ -19,7 +20,7 @@ const listQ = z.object({ templateId: z.string().uuid().optional(), authorId: z.s
 @Controller('duty-reports')
 export class DutyReportsController {
   constructor(private readonly s: DutyReportsService) {}
-  @Get('templates') @RequirePermission('dutyreports.view') templates(@Query('active') active?: string) { return this.s.listTemplates(null, active === '1'); }
+  @Get('templates') @RequirePermission('dutyreports.view') templates(@Query('active') active?: string) { return this.s.listTemplates(currentGuild(), active === '1'); }
   @Put('templates/:id') @RequirePermission('dutyreports.manage')
   saveTemplate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(reportTemplateSchema)) b: ReportTemplate) { if (b.id !== id) throw new AppError('VALIDATION_FAILED', 'ID passt nicht.'); return this.s.saveTemplate(a, b); }
   /** Vorbelegung (z. B. Dienstzeit aus den Dienst-Sitzungen) für ein neues Formular. */

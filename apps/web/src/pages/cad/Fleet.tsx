@@ -161,7 +161,7 @@ export function VehicleDetail({ id, onClose }: { id: string | null; onClose: () 
   useEffect(() => { if (!id) { loaded.current = null; setDraft(undefined); } }, [id]);
   const canEdit = can('fleet.edit'), canAssign = can('fleet.assign');
   useAutosaveDraft(id && draft ? `fleet:vehicle:${id}` : null, draft, (v) => (canEdit || canAssign ? {
-    method: 'PATCH', path: `/fleet/vehicles/${id}`, label: 'Polizeifahrzeug',
+    method: 'PATCH', path: `/fleet/vehicles/${id}`, guildId: null, label: 'Polizeifahrzeug',
     body: { ...(canAssign ? { unitId: v.unitId } : {}), ...(canEdit ? { internalStatus: v.internalStatus, internalCode: v.internalCode.trim() || null, notes: v.notes.trim() || null, tags: v.tags.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 20) } : {}) },
   } : null));
   const [incident, setIncident] = useState('');
@@ -304,7 +304,7 @@ function ModelEditor({ model, prefill, cfg, onClose, onSaved }: { model: Model |
   useEffect(() => { setErr(undefined); setV(m ? { name: m.name, erlcName: m.erlcName, category: m.category, description: m.description ?? '', internalCode: m.internalCode ?? '', active: m.active, tags: m.tags.join(', '), department: m.department ?? '' } : blank); }, [model, prefill]);
   const body = (x: typeof v) => ({ name: x.name.trim(), erlcName: x.erlcName.trim(), category: x.category, description: x.description.trim() || null, internalCode: x.internalCode.trim() || null, active: x.active, tags: x.tags.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 20), department: x.department.trim() || null });
   // Bestehende Modelle: automatisch speichern; neue: einmal „Anlegen“
-  useAutosaveDraft(m ? `fleet:model:${m.id}` : null, m ? v : undefined, (x) => (x.name.trim() && x.erlcName.trim() ? { method: 'PATCH', path: `/fleet/catalog/${m!.id}`, body: body(x), label: 'Fahrzeugkatalog' } : null));
+  useAutosaveDraft(m ? `fleet:model:${m.id}` : null, m ? v : undefined, (x) => (x.name.trim() && x.erlcName.trim() ? { method: 'PATCH', path: `/fleet/catalog/${m!.id}`, body: body(x), guildId: null, label: 'Fahrzeugkatalog' } : null));
   const create = useMutation({ mutationFn: () => api('/fleet/catalog', { body: body(v) }), onSuccess: () => { onSaved(); onClose(); }, onError: (e) => setErr(errText(e)) });
   const image = useMutation({ mutationFn: (file: File) => { const fd = new FormData(); fd.append('file', file); return api(`/fleet/catalog/${m!.id}/image`, { formData: fd }); }, onSuccess: () => void qc.invalidateQueries({ queryKey: ['fleet-catalog'] }), onError: (e) => setErr(errText(e)) });
   const f = (k: keyof typeof v, label: string, extra: Record<string, unknown> = {}) => <Field label={label}>{(id) => <Input id={id} value={String(v[k])} onChange={(e) => setV({ ...v, [k]: e.target.value })} {...extra} />}</Field>;
@@ -333,7 +333,7 @@ function FleetSettings() {
   const [d, setD] = useState<FleetConfig>();
   useEffect(() => { if (q.data && !d) setD(q.data); }, [q.data, d]);
   const ok = (c: FleetConfig) => [c.categories, c.internalStatuses].every((l) => l.length && l.every((o) => /^[A-Z0-9_]+$/.test(o.key) && o.label.trim()) && new Set(l.map((o) => o.key)).size === l.length) && c.internalStatuses.every((s) => /^#[0-9a-fA-F]{6}$/.test(s.color)) && c.categories.every((x) => x.icon.trim());
-  useAutosaveDraft(d ? 'fleet:config' : null, d, (c) => (ok(c) ? { method: 'PUT', path: '/fleet/config', body: c, label: 'Fahrzeug-Einstellungen' } : null));
+  useAutosaveDraft(d ? 'fleet:config' : null, d, (c) => (ok(c) ? { method: 'PUT', path: '/fleet/config', body: c, guildId: null, label: 'Fahrzeug-Einstellungen' } : null));
   if (!d) return <SkeletonRows />;
   const upd = <K extends 'categories' | 'internalStatuses'>(k: K, i: number, patch: Partial<FleetConfig[K][number]>) => setD({ ...d, [k]: d[k].map((x, j) => (j === i ? { ...x, ...patch } : x)) });
   return (

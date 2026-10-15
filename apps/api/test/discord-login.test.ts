@@ -49,7 +49,7 @@ async function discordLogin(agent = request.agent(app.getHttpServer())) {
   expect(start.status).toBe(302);
   const to = new URL(start.headers.location as string);
   expect(to.origin + to.pathname).toBe('https://discord.com/oauth2/authorize');
-  expect(to.searchParams.get('scope')).toBe('identify');
+  expect(to.searchParams.get('scope')).toBe('identify guilds'); // guilds: eigene Server für die Server-Übersicht
   const back = await agent.get(`/api/v1/auth/discord/callback?code=abc&state=${to.searchParams.get('state')}`);
   return { agent, location: String(back.headers.location), back };
 }
@@ -78,12 +78,12 @@ describe('login with Discord', () => {
     expect(to.searchParams.get('response_type')).toBe('code');
     expect(to.searchParams.get('redirect_uri')).toMatch(/\/api\/v1\/auth\/discord\/callback$/);
     const back = await admin.get(`/api/v1/auth/discord/callback?code=abc&state=${to.searchParams.get('state')}&guild_id=1`);
-    expect(String(back.headers.location)).toMatch(/\/admin\/settings\?discord=installed/);
+    expect(String(back.headers.location)).toMatch(/\/servers\?discord=installed/);
     expect(await prisma.auditLog.count({ where: { action: 'discord.bot_installed' } })).toBe(1);
     // fehlgeschlagener Code → zurück in die Einstellungen mit Hinweis
     discord.tokenOk = false;
     const s2 = new URL((await admin.get('/api/v1/auth/discord/install')).headers.location as string);
-    expect(String((await admin.get(`/api/v1/auth/discord/callback?code=abc&state=${s2.searchParams.get('state')}`)).headers.location)).toMatch(/\/admin\/settings\?discord=install_failed$/);
+    expect(String((await admin.get(`/api/v1/auth/discord/callback?code=abc&state=${s2.searchParams.get('state')}`)).headers.location)).toMatch(/\/servers\?discord=install_failed$/);
     discord.tokenOk = true;
     // nur mit Recht (Gast ohne Login)
     expect((await request(app.getHttpServer()).get('/api/v1/auth/discord/install')).status).toBe(401);
@@ -98,7 +98,7 @@ describe('login with Discord', () => {
     expect(out.location).toMatch(/\/login\?discord=not_member$/);
     discord.members.set(discord.user.id, []);
     const ok = await discordLogin();
-    expect(ok.location).toMatch(/\/$/);
+    expect(ok.location).toMatch(/\/servers$/);
     const me = await ok.agent.get('/api/v1/auth/me');
     expect(me.body).toMatchObject({ username: 'oscar.officer', displayName: 'Oscar', roles: [] });
     expect(await prisma.discordLink.count({ where: { discordId: discord.user.id } })).toBe(1);
@@ -111,10 +111,12 @@ describe('login with Discord', () => {
     expect((await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [{ discordRoleId: ROLE_POLICE, role: 'Police Member' }] } })).status).toBe(200);
     discord.members.set(discord.user.id, [ROLE_POLICE]);
     const a = await discordLogin();
-    expect((await a.agent.get('/api/v1/auth/me')).body.roles).toEqual(['Police Member']);
+    // über Discord vergebene Rollen gelten nur auf dem Server, auf dem die Discord-Rolle besteht
+    expect((await a.agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).toEqual(['Police Member']);
+    expect((await a.agent.get('/api/v1/auth/me')).body.roles).toEqual([]);
     discord.members.set(discord.user.id, []);
     const b = await discordLogin();
-    expect((await b.agent.get('/api/v1/auth/me')).body.roles).toEqual([]);
+    expect((await b.agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).toEqual([]);
     const oscar = await prisma.user.findUniqueOrThrow({ where: { username: 'oscar.officer' } });
     expect(await prisma.auditLog.count({ where: { action: 'auth.discord.roles_synced', entityId: oscar.id } })).toBe(2);
   });
@@ -185,7 +187,7 @@ describe('login with Discord', () => {
     // Besitzer: nicht auf dem Server, Anmeldung neuer Konten aus – kommt trotzdem rein und ist Admin
     discord.user = { id: '444444444444444444', username: 'owner', global_name: 'Owner' };
     const ok = await discordLogin();
-    expect(ok.location).toMatch(/\/$/);
+    expect(ok.location).toMatch(/\/servers$/);
     expect((await ok.agent.get('/api/v1/auth/me')).body.roles).toContain('System Administrator');
     process.env.PASSWORD_LOGIN = 'true';
     expect((await login(app, 'dl_admin')).res.status).toBe(200);

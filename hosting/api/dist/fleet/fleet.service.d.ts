@@ -105,9 +105,9 @@ export declare class FleetService {
             internal: {
                 unitId: string | null;
                 unit: {
+                    id: string;
                     callsign: string;
                     name: string | null;
-                    id: string;
                 } | null;
                 status: string;
                 internalCode: string | null;
@@ -119,12 +119,12 @@ export declare class FleetService {
         }[];
         servers: {
             vehiclesEnabled: boolean;
-            name: string;
             id: string;
             status: string;
-            lastError: string | null;
+            name: string;
             features: string[];
             lastSyncAt: Date | null;
+            lastError: string | null;
         }[];
     }>;
     get(actor: Actor, id: string): Promise<{
@@ -149,8 +149,8 @@ export declare class FleetService {
             incidentId: string | null;
             vehicleId: string;
             kind: string;
-            actorId: string | null;
             text: string;
+            actorId: string | null;
         }[];
         id: string;
         erlcServerId: string;
@@ -201,9 +201,9 @@ export declare class FleetService {
         internal: {
             unitId: string | null;
             unit: {
+                id: string;
                 callsign: string;
                 name: string | null;
-                id: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -253,8 +253,8 @@ export declare class FleetService {
             incidentId: string | null;
             vehicleId: string;
             kind: string;
-            actorId: string | null;
             text: string;
+            actorId: string | null;
         }[];
         id: string;
         erlcServerId: string;
@@ -305,9 +305,9 @@ export declare class FleetService {
         internal: {
             unitId: string | null;
             unit: {
+                id: string;
                 callsign: string;
                 name: string | null;
-                id: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -373,9 +373,9 @@ export declare class FleetService {
         internal: {
             unitId: string | null;
             unit: {
+                id: string;
                 callsign: string;
                 name: string | null;
-                id: string;
             } | null;
             status: string;
             internalCode: string | null;
@@ -388,13 +388,13 @@ export declare class FleetService {
     catalog(): Promise<{
         imageUrl: string | null;
         liveCount: number;
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string;
         description: string | null;
         active: boolean;
+        name: string;
         erlcName: string;
         department: string | null;
         internalCode: string | null;
@@ -408,13 +408,13 @@ export declare class FleetService {
     }[]>;
     private checkModel;
     createModel(actor: Actor, d: FleetModelInput): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string;
         description: string | null;
         active: boolean;
+        name: string;
         erlcName: string;
         department: string | null;
         internalCode: string | null;
@@ -422,13 +422,13 @@ export declare class FleetService {
         imageId: string | null;
     }>;
     updateModel(actor: Actor, id: string, d: Partial<FleetModelInput>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string;
         description: string | null;
         active: boolean;
+        name: string;
         erlcName: string;
         department: string | null;
         internalCode: string | null;

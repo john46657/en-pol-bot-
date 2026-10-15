@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { MessageBuilderSendService } from '../src/message-builder/message-builder-send.service';
 import { WebhookClient } from '../src/message-builder/webhook-client';
@@ -17,10 +17,19 @@ const http = () => request(app.getHttpServer());
 const started = new Date();
 const prevGuild = process.env.DISCORD_GUILD_ID;
 
+/** Rechte gelten je Discord-Server: Ausnahmen für GUILD, Mitglied auf GUILD. */
 async function userWith(name: string, perms: string[]) {
   const u = await makeUser(prisma, name);
-  await prisma.userPermissionOverride.createMany({ data: perms.map((p) => ({ userId: u.id, permissionKey: p, effect: 'ALLOW' })) });
+  await prisma.userPermissionOverride.createMany({ data: perms.map((p) => ({ userId: u.id, guildId: GUILD, permissionKey: p, effect: 'ALLOW' })) });
+  members.push(u.id);
   return u;
+}
+const members: string[] = [];
+/** Anmelden mit gewähltem Server (wie das Dashboard: Header X-Guild-Id). */
+async function as(name: string, guild = GUILD) {
+  const a = (await login(app, name)).agent;
+  a.set('X-Guild-Id', guild);
+  return a;
 }
 const msg = (over: Record<string, unknown> = {}) => ({ id: 'm1', content: 'Dienstantritt **EMD 1**', ...over });
 const data = (...messages: Record<string, unknown>[]) => ({ messages: messages.length ? messages : [msg()] });
@@ -40,6 +49,8 @@ beforeAll(async () => {
   await userWith('mb_viewer', ['messagebuilder.view']);
   await userWith('mb_writer', ['messagebuilder.view', 'messagebuilder.create']);
   await userWith('mb_sender', ['messagebuilder.view', 'messagebuilder.create', 'messagebuilder.send']);
+  const member = await prisma.user.findUniqueOrThrow({ where: { username: 'mb_member' } });
+  await registerServer(prisma, GUILD, [...members, member.id], 'EN | Polizei');
   await http().put('/api/v1/bot/guilds').set(bot()).send(guilds()).expect(204);
 });
 afterAll(async () => {
@@ -51,13 +62,13 @@ afterAll(async () => {
 
 describe('Message Builder – Rechte', () => {
   it('ohne messagebuilder.view kein Zugriff (auch nicht per direktem API-Aufruf)', async () => {
-    const m = (await login(app, 'mb_member')).agent;
+    const m = await as('mb_member');
     expect((await m.get('/api/v1/message-builder/documents?kind=TEMPLATE')).status).toBe(403);
     expect((await m.post('/api/v1/message-builder/documents').send({ kind: 'DRAFT', name: 'x' })).status).toBe(403);
     expect((await m.post('/api/v1/message-builder/send').send({ mode: 'bot', channelId: CH_OK, data: data(), confirm: true })).status).toBe(403);
   });
   it('nur ansehen: keine Entwürfe, keine Vorlagen, kein Versand, keine Historie, keine Webhooks', async () => {
-    const v = (await login(app, 'mb_viewer')).agent;
+    const v = await as('mb_viewer');
     expect((await v.post('/api/v1/message-builder/documents').send({ kind: 'DRAFT', name: 'x' })).status).toBe(403);
     expect((await v.post('/api/v1/message-builder/send').send({ mode: 'test', channelId: CH_OK, data: data(), confirm: true })).status).toBe(403);
     expect((await v.get('/api/v1/message-builder/sends')).status).toBe(403);
@@ -66,8 +77,8 @@ describe('Message Builder – Rechte', () => {
     expect((await v.post('/api/v1/message-builder/categories').send({ name: 'Neu' })).status).toBe(403);
   });
   it('Entwürfe sind privat; Vorlagen brauchen eigene Rechte', async () => {
-    const w = (await login(app, 'mb_writer')).agent;
-    const s = (await login(app, 'mb_sender')).agent;
+    const w = await as('mb_writer');
+    const s = await as('mb_sender');
     const d = await w.post('/api/v1/message-builder/documents').send({ kind: 'DRAFT', name: 'Mein Entwurf' });
     expect(d.status).toBe(201);
     expect((await s.get(`/api/v1/message-builder/documents/${d.body.id}`)).status).toBe(404);
@@ -80,7 +91,7 @@ describe('Message Builder – Rechte', () => {
 
 describe('Message Builder – Entwürfe, Vorlagen, Kategorien', () => {
   it('Standard-Kategorien aus der Migration; Kategorien bearbeitbar, Löschen behält Vorlagen', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const cats = (await a.get('/api/v1/message-builder/categories')).body as { id: string; name: string }[];
     expect(cats.map((c) => c.name)).toEqual(['Allgemein', 'Polizei', 'Leitstelle', 'Dienstantritt', 'Dienstende', 'Einsatzmeldung', 'Personalinformation', 'Ankündigung', 'Wartung', 'Sonstiges']);
     const c = await a.post('/api/v1/message-builder/categories').send({ name: 'Schulung' });
@@ -93,7 +104,7 @@ describe('Message Builder – Entwürfe, Vorlagen, Kategorien', () => {
   });
 
   it('Autosave mit Versionsprüfung, Duplizieren, Entwurf → Vorlage, Vorlage → Entwurf, Löschen = Archiv', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const cat = ((await a.get('/api/v1/message-builder/categories')).body as { id: string; name: string }[]).find((c) => c.name === 'Dienstantritt')!;
     const t = (await a.post('/api/v1/message-builder/documents').send({ kind: 'TEMPLATE', name: 'Dienstantritt', categoryId: cat.id })).body;
     expect(t).toMatchObject({ kind: 'TEMPLATE', version: 1, messageCount: 1 });
@@ -125,7 +136,7 @@ describe('Message Builder – Entwürfe, Vorlagen, Kategorien', () => {
 
 describe('Message Builder – Kanäle', () => {
   it('nur Textkanäle des eingerichteten Servers, mit Bot-Rechten; erlaubte Kanäle einschränkbar', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const s = (await a.get('/api/v1/message-builder/server')).body;
     expect(s.guild).toMatchObject({ id: GUILD });
     expect(s.channels.map((c: { id: string }) => c.id)).toEqual([CH_OTHER, CH_OK, CH_NOEMBED]); // ohne Kategorie zuerst, dann nach Kategorie
@@ -136,11 +147,37 @@ describe('Message Builder – Kanäle', () => {
     expect(s2.restricted).toBe(true);
     expect(s2.channels.find((c: { id: string }) => c.id === CH_OTHER).allowed).toBe(false);
   });
+  it('ein einzelner unerwarteter Kanal/Rolle verwirft nicht die ganze Meldung des Bots', async () => {
+    const g = guilds();
+    g.guilds[0]!.channels.push({ id: 'kaputt', name: 'x', type: 'text', parentId: null, position: 9 } as never);
+    (g.guilds[0]!.roles as unknown[]).push({ id: '482000000000000002', name: 'Neu', position: 4 }); // ohne Farbe (neuere Discord-Rollen)
+    await http().put('/api/v1/bot/guilds').set(bot()).send(g).expect(204);
+    const a = await as('mb_admin');
+    const s = (await a.get('/api/v1/message-builder/server')).body;
+    expect(s.channels.map((c: { id: string }) => c.id)).toEqual(expect.arrayContaining([CH_OK, CH_NOEMBED, CH_OTHER]));
+    expect(s.channels).toHaveLength(3);
+    expect(s.roles.map((r: { id: string }) => r.id)).toEqual(['482000000000000002', ROLE]);
+  });
+  it('ohne Kanäle wird die Ursache genannt (kein Server gewählt / Bot meldet den Server nicht)', async () => {
+    const a = await as('mb_admin');
+    try {
+      await prisma.systemSetting.deleteMany({ where: { key: 'discord.guilds' } });
+      expect((await a.get('/api/v1/message-builder/server')).body).toMatchObject({ guild: null, channels: [], problem: 'no_report' });
+      const g = guilds(); g.guilds[0]!.id = OTHER_GUILD; g.guilds[0]!.name = 'Fremd';
+      await http().put('/api/v1/bot/guilds').set(bot()).send(g).expect(204);
+      expect((await a.get('/api/v1/message-builder/server')).body).toMatchObject({ guild: null, problem: 'no_report' }); // Bot meldet nur einen anderen Server
+      const all = (await login(app, 'mb_admin')).agent; // „Alle Server“
+      expect((await all.get('/api/v1/message-builder/server')).body).toMatchObject({ guild: null, problem: 'no_server' });
+      expect((await all.get('/api/v1/message-builder/documents?kind=TEMPLATE')).status).toBe(400);
+    } finally {
+      await http().put('/api/v1/bot/guilds').set(bot()).send(guilds()).expect(204);
+    }
+  });
 });
 
 describe('Message Builder – Versand über den Bot', () => {
   it('Prüfung vor dem Versand: Limits, Kanal, Bot-Rechte, erlaubte Kanäle, Rollen-Aktionen', async () => {
-    const s = (await login(app, 'mb_sender')).agent;
+    const s = await as('mb_sender');
     const send = (b: Record<string, unknown>) => s.post('/api/v1/message-builder/send').send({ mode: 'bot', channelId: CH_OK, data: data(), confirm: true, ...b });
     const empty = await send({ data: data(msg({ content: '' })) });
     expect(empty.status).toBe(400);
@@ -148,7 +185,7 @@ describe('Message Builder – Versand über den Bot', () => {
     expect((await send({ data: data(msg({ content: 'x'.repeat(2001) })) })).body.message).toMatch(/2001\/2000/);
     expect((await send({ data: data(msg({ embeds: [{ id: 'e', title: 'T', imageUrl: 'kein-link' }] })) })).body.message).toMatch(/Bild: keine gültige URL/);
     expect((await send({ confirm: false })).status).toBe(400);
-    expect((await send({ channelId: '489999999999999999' })).body.message).toMatch(/gibt es auf dem Discord-Server/);
+    expect((await send({ channelId: '489999999999999999' })).body.message).toMatch(/gibt es auf diesem Discord-Server nicht/);
     expect((await send({ channelId: CH_OTHER })).status).toBe(403); // nicht erlaubt (Einschränkung aus dem Kanal-Test)
     const noEmbed = await send({ channelId: CH_NOEMBED, data: data(msg({ embeds: [{ id: 'e', title: 'T' }] })) });
     expect(noEmbed.status).toBe(400);
@@ -159,7 +196,7 @@ describe('Message Builder – Versand über den Bot', () => {
   });
 
   it('Gruppe → ein Outbox-Auftrag; Bot holt einmal ab, meldet je Nachricht; Teilfehler ehrlich als „teilweise“', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const group = data(
       msg({ content: 'Willkommen', embeds: [{ id: 'e1', title: 'Info', color: '#1e3a8a', timestamp: 'send' }] }),
       msg({ id: 'm2', content: 'Weiteres', rows: [{ id: 'r1', type: 'buttons', buttons: [{ id: 'b1', kind: 'link', label: 'Web', url: 'https://emden.example/' }, { id: 'b2', kind: 'action', label: 'Info', style: 'success', action: { type: 'reply', text: 'Nur für dich' } }] }, { id: 's1', type: 'select', placeholder: 'Abteilung', options: [{ id: 'o1', label: 'SEK', action: { type: 'reply', text: 'SEK-Info' } }, { id: 'o2', label: 'Funk', action: { type: 'role', roleId: ROLE } }] }] }),
@@ -196,11 +233,11 @@ describe('Message Builder – Versand über den Bot', () => {
     expect((await ask({ actionId: btn.id })).body).toEqual({ type: 'reply', text: 'Nur für dich' });
     expect((await ask({ actionId: sel.id, value: 'o2' })).body).toEqual({ type: 'role', roleId: ROLE, mode: 'toggle' });
     expect((await ask({ actionId: sel.id, value: 'zz' })).body).toEqual({ type: 'gone' });
-    expect((await ask({ actionId: btn.id, guildId: OTHER_GUILD })).status).toBe(403);
+    expect((await ask({ actionId: btn.id, guildId: OTHER_GUILD })).body).toEqual({ type: 'gone' }); // Button auf einem anderen Server wirkt nicht
   });
 
   it('alle erfolgreich → „gesendet“; Historie zeigt Status je Nachricht', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const r = (await a.post('/api/v1/message-builder/send').send({ mode: 'bot', channelId: CH_OK, name: 'Kurz', data: data(), confirm: true })).body;
     await http().post(`/api/v1/bot/message-builder/sends/${r.id}/start`).set(bot()).expect(200);
     await http().post(`/api/v1/bot/message-builder/sends/${r.id}/items/0`).set(bot()).send({ ok: true, messageId: '484000000000000002' }).expect(204);
@@ -209,12 +246,12 @@ describe('Message Builder – Versand über den Bot', () => {
     expect(h.items[0]).toMatchObject({ id: r.id, status: 'SENT', documentName: 'Kurz', createdByName: 'mb_admin', items: [{ status: 'SENT', messageId: '484000000000000002' }] });
     expect(h.guildId).toBe(GUILD);
     // Absender ohne Historien-Recht sieht nur den eigenen Versand
-    const s = (await login(app, 'mb_sender')).agent;
+    const s = await as('mb_sender');
     expect((await s.get(`/api/v1/message-builder/sends/${r.id}`)).status).toBe(403);
   });
 
   it('Testmodus: prüft wie echt, sendet nichts, liefert die Discord-Daten', async () => {
-    const w = (await login(app, 'mb_writer')).agent;
+    const w = await as('mb_writer');
     const before = await prisma.discordOutbox.count();
     const r = await w.post('/api/v1/message-builder/send').send({ mode: 'test', channelId: CH_OK, data: data(msg({ embeds: [{ id: 'e', title: 'Test', imageUrl: 'http://emden.example/x.png' }] })), confirm: true });
     expect(r.status).toBe(201);
@@ -226,7 +263,7 @@ describe('Message Builder – Versand über den Bot', () => {
   });
 
   it('Bot holt nicht ab → nach 10 Minuten „fehlgeschlagen“, Outbox-Auftrag erledigt; danach kein Versand mehr', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const r = (await a.post('/api/v1/message-builder/send').send({ mode: 'bot', channelId: CH_OK, data: data(), confirm: true })).body;
     await app.get(MessageBuilderSendService).expireStale(Date.now() + 11 * 60_000);
     const s = (await a.get(`/api/v1/message-builder/sends/${r.id}`)).body;
@@ -252,10 +289,10 @@ describe('Message Builder – Webhooks (optional)', () => {
   });
 
   it('anlegen nur für den eigenen Server; URL wird nie ausgeliefert und verschlüsselt gespeichert', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     expect((await a.post('/api/v1/message-builder/webhooks').send({ name: 'X', url: 'https://evil.example/api/webhooks/1/2' })).status).toBe(400);
     replies = [{ status: 200, json: { id: '483000000000000001', guild_id: OTHER_GUILD, channel_id: CH_OK } }];
-    expect((await a.post('/api/v1/message-builder/webhooks').send({ name: 'Fremd', url: HOOK_URL })).body.message).toMatch(/nicht zum Discord-Server/);
+    expect((await a.post('/api/v1/message-builder/webhooks').send({ name: 'Fremd', url: HOOK_URL })).body.message).toMatch(/anderen Discord-Server/);
     replies = [{ status: 200, json: { id: '483000000000000001', guild_id: GUILD, channel_id: CH_OK } }];
     const w = await a.post('/api/v1/message-builder/webhooks').send({ name: 'Leitstelle', url: HOOK_URL });
     expect(w.status).toBe(201);
@@ -267,8 +304,8 @@ describe('Message Builder – Webhooks (optional)', () => {
   });
 
   it('Versand über Webhook nur mit Recht und ausdrücklicher Wahl; Rate-Limit wird abgewartet; Teilfehler', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
-    const s = (await login(app, 'mb_sender')).agent;
+    const a = await as('mb_admin');
+    const s = await as('mb_sender');
     const hook = (await a.get('/api/v1/message-builder/webhooks')).body[0];
     const body = { mode: 'webhook', webhookId: hook.id, confirm: true, data: { ...data(msg(), msg({ id: 'm2', content: 'Zwei' }), msg({ id: 'm3', content: 'Drei' })), webhookProfile: { username: 'EN Leitstelle', avatarUrl: '' } } };
     expect((await s.post('/api/v1/message-builder/send').send(body)).status).toBe(403); // ohne messagebuilder.webhooks
@@ -293,7 +330,7 @@ describe('Message Builder – Webhooks (optional)', () => {
   });
 
   it('Webhook entfernen löscht das Geheimnis', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const hook = (await a.get('/api/v1/message-builder/webhooks')).body[0];
     await a.delete(`/api/v1/message-builder/webhooks/${hook.id}`).expect(204);
     expect((await prisma.messageBuilderWebhook.findUniqueOrThrow({ where: { id: hook.id } })).secret).toBe('');
@@ -303,13 +340,33 @@ describe('Message Builder – Webhooks (optional)', () => {
 
 describe('Message Builder – dauerhafte Speicherung', () => {
   it('Vorlagen, Entwürfe und Historie überstehen einen Neustart der API', async () => {
-    const a = (await login(app, 'mb_admin')).agent;
+    const a = await as('mb_admin');
     const t = (await a.post('/api/v1/message-builder/documents').send({ kind: 'TEMPLATE', name: 'Wartungshinweis', data: data(msg({ content: 'Wartung um 20 Uhr' })) })).body;
     const sends = (await a.get('/api/v1/message-builder/sends')).body.total;
     await app.close();
     ({ app, prisma } = await createTestApp());
-    const a2 = (await login(app, 'mb_admin')).agent;
+    const a2 = await as('mb_admin');
     expect((await a2.get(`/api/v1/message-builder/documents/${t.id}`)).body.data.messages[0].content).toBe('Wartung um 20 Uhr');
     expect((await a2.get('/api/v1/message-builder/sends')).body.total).toBe(sends);
+  });
+});
+
+describe('Message Builder – Server getrennt', () => {
+  it('Vorlagen, Kategorien, Entwürfe und Webhooks eines Servers sind auf einem anderen Server unsichtbar', async () => {
+    await registerServer(prisma, OTHER_GUILD, [], 'Anderer Server');
+    await prisma.discordServer.update({ where: { guildId: OTHER_GUILD }, data: { status: 'ACTIVE' } }); // vom Bot entdeckt = deaktiviert, bis freigeschaltet
+    const a = await as('mb_admin'), b = await as('mb_admin', OTHER_GUILD);
+    const t = await a.post('/api/v1/message-builder/documents').send({ kind: 'TEMPLATE', name: 'Nur Server A', data: data() });
+    expect(t.status).toBe(201);
+    const lb = await b.get('/api/v1/message-builder/documents?kind=TEMPLATE');
+    expect(lb.status, JSON.stringify(lb.body)).toBe(200);
+    expect((lb.body as { id: string }[]).map((x) => x.id)).not.toContain(t.body.id);
+    expect((await b.get(`/api/v1/message-builder/documents/${t.body.id}`)).status).toBe(404);
+    expect((await b.put(`/api/v1/message-builder/documents/${t.body.id}`).send({ name: 'x', categoryId: null, channelId: null, data: data(), version: 1 })).status).toBe(404);
+    // eigene Standard-Kategorien je Server (keine gemeinsamen)
+    const ca = (await a.get('/api/v1/message-builder/categories')).body as { id: string }[], cb = (await b.get('/api/v1/message-builder/categories')).body as { id: string }[];
+    expect(cb.length).toBeGreaterThan(0);
+    expect(cb.some((x) => ca.some((y) => y.id === x.id))).toBe(false);
+    expect((await prisma.messageBuilderDocument.findUniqueOrThrow({ where: { id: t.body.id } })).guildId).toBe(GUILD);
   });
 });

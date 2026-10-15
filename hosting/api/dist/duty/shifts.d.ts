@@ -10,15 +10,15 @@ export declare const shiftTypeSchema: z.ZodObject<{
     onBreakRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     logChannelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     id: string;
+    name: string;
     isDefault: boolean;
     onShiftRoleIds: string[];
     onBreakRoleIds: string[];
     logChannelId?: string | null | undefined;
 }, {
-    name: string;
     id: string;
+    name: string;
     isDefault?: boolean | undefined;
     logChannelId?: string | null | undefined;
     onShiftRoleIds?: string[] | undefined;
@@ -50,15 +50,15 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         onBreakRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         logChannelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         id: string;
+        name: string;
         isDefault: boolean;
         onShiftRoleIds: string[];
         onBreakRoleIds: string[];
         logChannelId?: string | null | undefined;
     }, {
-        name: string;
         id: string;
+        name: string;
         isDefault?: boolean | undefined;
         logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
@@ -82,8 +82,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     enabled: boolean;
     types: {
-        name: string;
         id: string;
+        name: string;
         isDefault: boolean;
         onShiftRoleIds: string[];
         onBreakRoleIds: string[];
@@ -97,8 +97,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
 }, {
     enabled?: boolean | undefined;
     types?: {
-        name: string;
         id: string;
+        name: string;
         isDefault?: boolean | undefined;
         logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
@@ -112,8 +112,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     enabled: boolean;
     types: {
-        name: string;
         id: string;
+        name: string;
         isDefault: boolean;
         onShiftRoleIds: string[];
         onBreakRoleIds: string[];
@@ -127,8 +127,8 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
 }, {
     enabled?: boolean | undefined;
     types?: {
-        name: string;
         id: string;
+        name: string;
         isDefault?: boolean | undefined;
         logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
@@ -150,8 +150,8 @@ export declare class ShiftsService {
     save(actor: Actor, input: ShiftsConfig): Promise<{
         enabled: boolean;
         types: {
-            name: string;
             id: string;
+            name: string;
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
@@ -178,8 +178,8 @@ export declare class ShiftsController {
     config(): Promise<{
         enabled: boolean;
         types: {
-            name: string;
             id: string;
+            name: string;
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
@@ -194,8 +194,8 @@ export declare class ShiftsController {
     save(a: Actor, b: ShiftsConfig): Promise<{
         enabled: boolean;
         types: {
-            name: string;
             id: string;
+            name: string;
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
@@ -214,8 +214,8 @@ export declare class BotShiftsController {
     config(): Promise<{
         enabled: boolean;
         types: {
-            name: string;
             id: string;
+            name: string;
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];

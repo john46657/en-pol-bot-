@@ -45,8 +45,8 @@ export declare class AcademyService {
             enrollments: number;
         };
     } & {
-        id: string;
         serverId: string | null;
+        id: string;
         title: string;
         description: string | null;
         passScore: number;
@@ -72,8 +72,8 @@ export declare class AcademyService {
             createdAt: Date;
             courseId: string;
         }[];
-        id: string;
         serverId: string | null;
+        id: string;
         title: string;
         description: string | null;
         passScore: number;
@@ -94,8 +94,8 @@ export declare class AcademyService {
             channelId: string | null;
             pingRoleIds: string[];
         } | null;
-        id: string;
         serverId: string | null;
+        id: string;
         title: string;
         description: string | null;
         passScore: number;

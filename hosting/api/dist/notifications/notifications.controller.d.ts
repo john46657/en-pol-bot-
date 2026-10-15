@@ -22,14 +22,14 @@ declare const q: z.ZodObject<{
     filter: z.ZodDefault<z.ZodEnum<["unread", "read", "archived", "all"]>>;
     type: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    filter: "all" | "archived" | "unread" | "read";
+    filter: "all" | "read" | "archived" | "unread";
     page: number;
     pageSize: number;
     type?: string | undefined;
     q?: string | undefined;
 }, {
     type?: string | undefined;
-    filter?: "all" | "archived" | "unread" | "read" | undefined;
+    filter?: "all" | "read" | "archived" | "unread" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -40,23 +40,23 @@ export declare class NotificationsController {
     private readonly notify;
     private readonly audit;
     constructor(prisma: PrismaService, notify: NotifyService, audit: AuditService);
-    /** ⚠️ Systemhinweis an alle Dashboard-Benutzer. */
+    /** ⚠️ Systemhinweis an alle Dashboard-Benutzer (des gewählten Servers). */
     system(a: Actor, b: z.infer<typeof systemBody>): Promise<{
         recipients: number;
     }>;
     list(u: AuthUser, f: z.infer<typeof q>): Promise<{
         unread: number;
         items: {
-            userId: string;
             id: string;
             createdAt: Date;
             type: string;
             title: string;
+            userId: string;
             body: string | null;
             entityId: string | null;
+            archivedAt: Date | null;
             entityType: string | null;
             readAt: Date | null;
-            archivedAt: Date | null;
         }[];
         total: number;
         page: number;

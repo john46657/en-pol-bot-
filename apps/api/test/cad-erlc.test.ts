@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { generateKeyPairSync, sign } from 'node:crypto';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { ErlcService } from '../src/cad/erlc.service';
 import { CadService } from '../src/cad/cad.service';
@@ -37,7 +37,6 @@ const SERVER_DATA = {
 
 beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
-  process.env.DISCORD_GUILD_ID = HOME; // der eine Discord-Server dieses Systems
   ({ app, prisma } = await createTestApp());
   erlc = app.get(ErlcService);
   erlc.useClient(new ErlcClient(async (url, init) => {
@@ -51,8 +50,10 @@ beforeAll(async () => {
   await makeUser(prisma, 'cad_member', ['Police Member']);
   const sek = await makeUser(prisma, 'cad_sek', ['SEK']);
   await prisma.discordLink.create({ data: { userId: sek.id, discordId: SEK_D } });
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [HOME, SEK_GUILD]) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
-afterAll(async () => { delete process.env.BOT_API_TOKEN; delete process.env.DISCORD_GUILD_ID; await app.close(); });
+afterAll(async () => { delete process.env.BOT_API_TOKEN; await app.close(); });
 
 describe('ER:LC integration', () => {
   let id = '';
@@ -77,7 +78,7 @@ describe('ER:LC integration', () => {
   it('polls GET /v2/server, keeps a secret-free snapshot and turns emergency calls into CAD calls once', async () => {
     const admin = (await login(app, 'cad_admin')).agent;
     // Leitstelle: Kanal für „Notruf eingegangen“
-    expect((await admin.put('/api/v1/cad/config').send({ routes: [{ id: 'r1', guildId: HOME, event: 'call.received', channelIds: [CH.leit], pingRoleIds: [], enabled: true }] })).status).toBe(200);
+    expect((await admin.put('/api/v1/cad/config').send({ homeGuildId: HOME, routes: [{ id: 'r1', guildId: HOME, event: 'call.received', channelIds: [CH.leit], pingRoleIds: [], enabled: true }] })).status).toBe(200);
     replies = [json(200, SERVER_DATA, { 'x-ratelimit-bucket': 'global', 'x-ratelimit-limit': '35', 'x-ratelimit-remaining': '34', 'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 1) })];
     const t = await admin.post(`/api/v1/erlc/servers/${id}/test`);
     expect(t.status).toBe(200);
@@ -173,8 +174,7 @@ describe('CAD', () => {
     expect((await disp.put('/api/v1/cad/config').send({ incidentNumberPrefix: 'X' })).status).toBe(403);
     expect((await admin.put('/api/v1/cad/config').send({ incidentStatuses: [{ key: 'A', label: 'A' }, { key: 'B', label: 'B' }] })).status).toBe(400); // kein abschließender Status
     const r = await admin.put('/api/v1/cad/config').send({ incidentNumberPrefix: 'E' });
-    expect(r.body).toMatchObject({ incidentNumberPrefix: 'E' });
-    expect(r.body.homeGuildId).toBeUndefined(); // keine Leitstellen-Querverbindung mehr
+    expect(r.body).toMatchObject({ incidentNumberPrefix: 'E', homeGuildId: HOME });
     expect((await admin.put('/api/v1/cad/config/map').send({ scale: 0.5 })).body.map.scale).toBe(0.5);
     expect(await prisma.auditLog.count({ where: { action: 'cad.map.config' } })).toBe(1);
   });
@@ -224,31 +224,37 @@ describe('CAD', () => {
     expect(await prisma.erlcEmergencyCall.findUnique({ where: { id: c2.id } })).toMatchObject({ status: 'CLOSED' });
   });
 
-  it('Discord-Befehle nur vom Discord-Server der EN Polizei; SEK-Besatzung meldet Status und funkt dort', async () => {
+  it('cross-server: SEK server can report status / radio only through an allowed server link', async () => {
     const admin = (await login(app, 'cad_admin')).agent;
     const sekUser = await prisma.discordLink.findUniqueOrThrow({ where: { discordId: SEK_D } });
     await admin.post('/api/v1/cad/members').send({ userId: sekUser.userId, discordId: SEK_D, erlcName: 'MaxMustermann123', team: 'SEK', unitId, callsign: 'SEK-01', zelloName: 'max_zello' });
-    // ein anderer Discord-Server (früher z. B. ein eigener SEK-Server) wird abgewiesen – keine Querverbindungen mehr
+    // Server sind getrennt: die Leitstelle dieses Tests läuft im gemeinsamen Bestand (HOME nutzt ihn ausdrücklich), SEK hat einen eigenen Bereich
+    expect((await admin.put('/api/v1/server-links').send({ groups: [], sharedRecords: [HOME] })).status).toBe(200);
+    // ohne Querverbindung: der SEK-Server sieht die Einheit der Leitstelle gar nicht
     const denied = await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' });
-    expect(denied.status).toBe(403);
-    expect(denied.body.details).toMatchObject({ reason: 'FOREIGN_GUILD' });
-    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'x' })).status).toBe(403);
-    expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, HOME)).send({ status: 'ON_SCENE' })).status).toBe(200);
-    const radio = await http().post('/api/v1/cad/radio').set(bot(SEK_D, HOME)).send({ text: 'Am Einsatzort.' });
+    expect(denied.status).toBe(404);
+    // Querverbindung ausdrücklich auf beiden Seiten: SEK nennt die Leitstelle als Heimat-Server, die Leitstelle legt die Verbindung an
+    expect((await admin.put('/api/v1/cad/config').set('X-Guild-Id', SEK_GUILD).send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await admin.put('/api/v1/cad/config').set('X-Guild-Id', HOME).send({ homeGuildId: HOME })).status).toBe(200);
+    expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' })).status).toBe(404); // Heimat-Server allein reicht nicht
+    const link = await admin.post('/api/v1/cad/links').send({ name: 'Leitstelle ↔ SEK/K9', sourceGuildId: HOME, targetGuildId: SEK_GUILD, sendTypes: ['incidents', 'unit_requests'], allowActions: ['status_report', 'radio'], channels: { incidents: [CH.sek] } });
+    expect(link.status).toBe(201);
+    expect((await http().post(`/api/v1/cad/units/${unitId}/status`).set(bot(SEK_D, SEK_GUILD)).send({ status: 'ON_SCENE' })).status).toBe(200);
+    const radio = await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'Am Einsatzort.' });
     expect(radio.status).toBe(201);
     expect(radio.body).toMatchObject({ callsign: 'SEK-01', incidentId });
     const detail = (await admin.get(`/api/v1/cad/incidents/${incidentId}`)).body;
     expect(detail.log.at(-1)).toMatchObject({ kind: 'RADIO', text: 'SEK-01: „Am Einsatzort.“' });
     // Fremde Einheit/Rufname vortäuschen geht nicht; in fremde Einsätze funken auch nicht
     const other = await admin.post('/api/v1/cad/incidents').send({ title: 'Fremder Einsatz' });
-    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, HOME)).send({ text: 'x', incidentId: other.body.id })).status).toBe(403);
-    const fake = await http().post('/api/v1/cad/radio').set(bot(SEK_D, HOME)).send({ text: 'y', callsign: 'LEITSTELLE' });
+    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'x', incidentId: other.body.id })).status).toBe(403);
+    const fake = await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'y', callsign: 'LEITSTELLE' });
     expect(fake.body.callsign).toBe('SEK-01');
     // Einheit wählen: nur die eigene (Leitstelle: alle)
     const k9 = (await admin.post('/api/v1/cad/units').send({ callsign: 'K9-77', type: 'K9' })).body;
-    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, HOME)).send({ text: 'z', unitId: k9.id })).status).toBe(403);
-    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, HOME)).send({ text: 'z', unitId })).body.callsign).toBe('SEK-01');
-    expect((await http().get('/api/v1/cad/radio/units').set(bot(SEK_D, HOME))).status).toBe(403); // nur fürs Dashboard
+    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'z', unitId: k9.id })).status).toBe(403);
+    expect((await http().post('/api/v1/cad/radio').set(bot(SEK_D, SEK_GUILD)).send({ text: 'z', unitId })).body.callsign).toBe('SEK-01');
+    expect((await http().get('/api/v1/cad/radio/units').set(bot(SEK_D, SEK_GUILD))).status).toBe(403); // nur fürs Dashboard
     const mine = await app.get(CadService).radioUnits({ userId: sekUser.userId, discordId: SEK_D });
     expect(mine).toMatchObject({ mine: unitId, dispatcher: false });
     expect(mine.units.map((u) => u.callsign)).toEqual(['SEK-01']);
@@ -256,11 +262,16 @@ describe('CAD', () => {
     expect(all.dispatcher).toBe(true);
     expect(all.units.map((u: { callsign: string }) => u.callsign)).toContain('K9-77');
     expect((await admin.post('/api/v1/cad/radio').send({ text: 'Leitstelle an K9', unitId: k9.id })).body.callsign).toBe('K9-77');
-    // neue Einsätze gehen an die eingestellten Kanäle; Zuordnungen zu einem anderen Discord-Server werden nicht mehr bedient
-    await admin.put('/api/v1/cad/config').send({ routes: [{ id: 'r1', guildId: HOME, event: 'incident.created', channelIds: [CH.leit], pingRoleIds: [], enabled: true }, { id: 'r2', guildId: SEK_GUILD, event: 'incident.created', channelIds: [CH.sek], pingRoleIds: [], enabled: true }] });
+    // Einsätze sehen / Notrufe bearbeiten vom SEK-Server nur mit freigegebener Aktion
+    expect((await http().get('/api/v1/cad/incidents').set(bot(SEK_D, SEK_GUILD))).status).toBe(403);
+    const call = await prisma.erlcEmergencyCall.findFirstOrThrow({ where: { callNumber: 1183 } });
+    expect((await http().post(`/api/v1/cad/calls/${call.id}/claim`).set(bot(SEK_D, SEK_GUILD))).status).toBe(403);
+    await admin.patch(`/api/v1/cad/links/${link.body.id}`).send({ allowActions: ['status_report', 'radio', 'view_incidents'] });
+    expect((await http().get('/api/v1/cad/incidents').set(bot(SEK_D, SEK_GUILD))).status).toBe(200);
+    // neue Einsätze gehen zusätzlich an den Kanal des verbundenen Servers
     await admin.post('/api/v1/cad/incidents').send({ title: 'Geiselnahme' });
     const out = await prisma.discordOutbox.findFirst({ where: { type: 'cad.incident.created' }, orderBy: { createdAt: 'desc' } });
-    expect((out?.payload as { channelIds: string[] }).channelIds).toEqual([CH.leit]);
+    expect((out?.payload as { channelIds: string[] }).channelIds.sort()).toEqual([CH.leit, CH.sek].sort());
     // Einheit auf der Karte über die ER:LC-Position ihres Spielers
     const map = (await admin.get('/api/v1/cad/map')).body;
     expect(map.units.find((x: { id: string }) => x.id === unitId).position).toMatchObject({ x: 100, z: -50, source: 'erlc' });
@@ -319,7 +330,7 @@ describe('CAD – Rechte pro Einsatz und pro Einheit', () => {
     const ROLE = '640000000000000001';
     const u = await admin.post('/api/v1/cad/units').send({ callsign: 'K9-02', type: 'K9', statusRoleIds: [ROLE] });
     expect(u.status).toBe(201);
-    const roles = (r: string) => ({ ...bot(SEK_D, HOME), 'X-Discord-Roles': r });
+    const roles = (r: string) => ({ ...bot(SEK_D, SEK_GUILD), 'X-Discord-Roles': r });
     expect((await http().post(`/api/v1/cad/units/${u.body.id}/status`).set(roles('640000000000000099')).send({ status: 'ON_SCENE' })).status).toBe(403);
     expect((await http().post(`/api/v1/cad/units/${u.body.id}/status`).set(roles(ROLE)).send({ status: 'ON_SCENE' })).status).toBe(200);
   });

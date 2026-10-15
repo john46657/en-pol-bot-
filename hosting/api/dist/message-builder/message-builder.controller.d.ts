@@ -19,6 +19,19 @@ export declare class MessageBuilderController {
     private readonly send;
     constructor(s: MessageBuilderService, send: MessageBuilderSendService);
     server(): Promise<{
+        problem: "no_server";
+        guild: null;
+        channels: import("./message-builder.service").MbChannel[];
+        roles: {
+            id: string;
+            name: string;
+            color: number;
+            position: number;
+        }[];
+        configured: boolean;
+        restricted?: undefined;
+    } | {
+        problem: "no_report";
         guild: null;
         channels: import("./message-builder.service").MbChannel[];
         roles: {
@@ -492,23 +505,25 @@ export declare class MessageBuilderController {
         messageCount: number;
     }>;
     remove(a: Actor, id: string): Promise<void>;
-    categories(): import("@prisma/client").Prisma.PrismaPromise<{
-        name: string;
+    categories(): Promise<{
         id: string;
+        name: string;
         position: number;
     }[]>;
     createCategory(a: Actor, b: z.infer<typeof categorySchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        guildId: string | null;
+        name: string;
         position: number;
     }>;
     updateCategory(a: Actor, id: string, b: z.infer<typeof categorySchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        guildId: string | null;
+        name: string;
         position: number;
     }>;
     removeCategory(a: Actor, id: string): Promise<void>;
@@ -573,7 +588,7 @@ export declare class MessageBuilderController {
         total: number;
         page: number;
         pageSize: number;
-        guildId: string | null;
+        guildId: string;
     }>;
     sendStatus(a: Actor, id: string): Promise<{
         guildId: string | null;

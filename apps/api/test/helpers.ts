@@ -7,6 +7,7 @@ import { configureApp } from '../src/setup-app';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { hashPassword } from '../src/auth/password';
 import { seedBase, seedTickets } from '../src/seed/seed-lib';
+import { initServerRoles } from '../src/multi-server/server-roles';
 
 export const PASSWORD = 'correct-horse-battery-staple';
 
@@ -36,4 +37,18 @@ export async function login(app: INestApplication, username: string, password = 
   const agent = request.agent(app.getHttpServer());
   const res = await agent.post('/api/v1/auth/login').send({ username, password });
   return { agent, res };
+}
+
+/**
+ * Multi-Server: Discord-Server registrieren (aktiv) und Benutzer als bestätigte Mitglieder eintragen.
+ * Ohne Registrierung lehnt die API einen Server im Header ab; ohne Mitgliedschaft gibt es dort keinen Zugriff.
+ */
+export async function registerServer(prisma: PrismaService, guildId: string, memberUserIds: string[] = [], name = `Server ${guildId.slice(-4)}`) {
+  const s = await prisma.discordServer.upsert({ where: { guildId }, create: { guildId, name, status: 'ACTIVE' }, update: {} });
+  // wie bei der Migration bestehender Server: bisherige Rollen samt Zuweisungen als eigene Server-Rollen
+  await initServerRoles(prisma, s.id, true);
+  for (const userId of memberUserIds) {
+    await prisma.serverMembership.upsert({ where: { serverId_userId: { serverId: s.id, userId } }, create: { serverId: s.id, userId, status: 'MEMBER', source: 'MANUAL' }, update: { status: 'MEMBER' } });
+  }
+  return s;
 }

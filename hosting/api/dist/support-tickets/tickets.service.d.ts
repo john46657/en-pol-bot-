@@ -133,9 +133,9 @@ export declare class SupportTicketsService {
                 emoji: string | null;
             };
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -145,9 +145,9 @@ export declare class SupportTicketsService {
                 isClose: boolean;
             };
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -183,9 +183,9 @@ export declare class SupportTicketsService {
                 emoji: string | null;
             };
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -195,9 +195,9 @@ export declare class SupportTicketsService {
                 isClose: boolean;
             };
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -249,9 +249,9 @@ export declare class SupportTicketsService {
                 emoji: string | null;
             };
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -261,9 +261,9 @@ export declare class SupportTicketsService {
                 isClose: boolean;
             };
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -372,9 +372,9 @@ export declare class SupportTicketsService {
             emoji: string | null;
         };
         status: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -384,9 +384,9 @@ export declare class SupportTicketsService {
             isClose: boolean;
         };
         priority: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -431,14 +431,14 @@ export declare class SupportTicketsService {
             deletedAt: Date | null;
             escalatedAt: Date | null;
             category: {
-                name: string;
                 id: string;
+                name: string;
                 emoji: string | null;
             } | null;
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -448,9 +448,9 @@ export declare class SupportTicketsService {
                 isClose: boolean;
             } | null;
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -471,9 +471,9 @@ export declare class SupportTicketsService {
             allowReopen: boolean;
         };
         status: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -483,9 +483,9 @@ export declare class SupportTicketsService {
             isClose: boolean;
         } | null;
         priority: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -502,10 +502,10 @@ export declare class SupportTicketsService {
             targetId: string;
         }[];
         messages: {
-            discordId: string | null;
             id: string;
             createdAt: Date;
             authorId: string;
+            discordId: string | null;
             attachments: Prisma.JsonValue;
             content: string;
             authorName: string;
@@ -519,8 +519,8 @@ export declare class SupportTicketsService {
             id: string;
             createdAt: Date;
             authorId: string | null;
-            authorName: string;
             text: string;
+            authorName: string;
             ticketId: string;
             authorUserId: string | null;
         }[] | null;
@@ -542,25 +542,25 @@ export declare class SupportTicketsService {
         rating: {
             id: string;
             createdAt: Date;
-            comment: string | null;
             categoryId: string;
+            comment: string | null;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
             stars: number;
         } | null;
         names: Record<string, string>;
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         lastActivityAt: Date;
         closedAt: Date | null;
         guildId: string;
+        name: string;
+        categoryId: string;
+        channelId: string | null;
         deletedAt: Date | null;
         answers: Prisma.JsonValue;
-        channelId: string | null;
-        categoryId: string;
         panelId: string | null;
         controlMessageId: string | null;
         creatorId: string;
@@ -585,9 +585,9 @@ export declare class SupportTicketsService {
     options(actor: TicketActor, id: string): Promise<{
         closed: boolean;
         statuses: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -597,9 +597,9 @@ export declare class SupportTicketsService {
             isClose: boolean;
         }[];
         priorities: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -607,8 +607,8 @@ export declare class SupportTicketsService {
             notifyRoleIds: string[];
         }[];
         categories: {
-            name: string;
             id: string;
+            name: string;
             emoji: string | null;
         }[];
         reasons: {
@@ -759,8 +759,8 @@ export declare class SupportTicketsService {
             category: string;
             id: string;
             createdAt: Date;
-            comment: string | null;
             categoryId: string;
+            comment: string | null;
             creatorId: string;
             ticketId: string;
             staffIds: string[];

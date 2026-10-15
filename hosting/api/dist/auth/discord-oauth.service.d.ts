@@ -2,6 +2,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
 import { DiscordAccessService, type DiscordLoginSettings } from '../authz/discord-access.service';
+import { PermissionService } from '../authz/permission.service';
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 export declare const DISCORD_ONLY_PASSWORD = "!discord-login-only";
 export { DEFAULT_DISCORD_LOGIN, type DiscordLoginSettings } from '../authz/discord-access.service';
@@ -10,6 +11,12 @@ export type DiscordLoginError = 'disabled' | 'state' | 'failed' | 'no_account' |
 export declare class DiscordLoginFailure extends Error {
     readonly code: DiscordLoginError;
     constructor(code: DiscordLoginError);
+}
+/** Discord-Server des Benutzers, die er verwalten darf (Besitzer, Administrator oder „Server verwalten“). */
+export interface ManagedGuild {
+    id: string;
+    name: string;
+    icon: string | null;
 }
 /**
  * „Mit Discord anmelden“ (OAuth2, Scope `identify`) – wie bei Dyno & Co.
@@ -22,10 +29,11 @@ export declare class DiscordOAuthService {
     private readonly audit;
     private readonly auth;
     private readonly access;
+    private readonly perms;
     private readonly env;
     private readonly pending;
     private readonly log;
-    constructor(prisma: PrismaService, audit: AuditService, auth: AuthService, access: DiscordAccessService);
+    constructor(prisma: PrismaService, audit: AuditService, auth: AuthService, access: DiscordAccessService, perms: PermissionService);
     clientId(): string | null;
     enabled(): boolean;
     /** Link zum Einladen des Bots auf einen Server – mit Administrator-Rechten (so gewünscht; deckt Tickets, Rollen, Threads ab). */
@@ -35,7 +43,7 @@ export declare class DiscordOAuthService {
     private isAdminId;
     redirectUri(): string;
     /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
-    start(mode: 'login' | 'link' | 'install', userId?: string): {
+    start(mode: 'login' | 'link' | 'install', userId?: string, guildId?: string): {
         url: string;
         browser: string;
     };
@@ -46,10 +54,14 @@ export declare class DiscordOAuthService {
         requestId?: string;
     }): Promise<{
         kind: "installed";
+        guildId: string | null;
         guildName: string | null;
+        userId: string | null;
     } | {
         kind: "linked";
+        guildId?: undefined;
         guildName?: undefined;
+        userId?: undefined;
     } | {
         token: string;
         expiresAt: Date;
@@ -64,14 +76,26 @@ export declare class DiscordOAuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
+            servers: string[];
+            globalAdmin: boolean;
         };
         kind: "login";
+        guildId?: undefined;
         guildName?: undefined;
+        userId?: undefined;
     }>;
     settings(): Promise<DiscordLoginSettings>;
     /** Code bei Discord einlösen (Login und Bot-Einladung). */
     private exchange;
     private discordUser;
+    /** Eigene Discord-Server mit Verwaltungsrecht (nur Anzeige; fehlt der Scope oder klappt es nicht: `null`, Login geht trotzdem). */
+    private managedGuilds;
     private createUser;
+    /**
+     * Bot wurde über das Dashboard eingeladen: hat das ein globaler Systemadministrator getan, ist der Server sofort registriert
+     * und aktiv (eigene Startrollen ohne Zuweisungen, eigene Akten). Sonst bleibt er deaktiviert, bis ein globaler
+     * Systemadministrator ihn freischaltet – so kann niemand ungefragt einen Server ins System holen.
+     */
+    activateInstalled(userId: string, guildId: string, name: string | null): Promise<boolean>;
     private ensureAdmin;
 }

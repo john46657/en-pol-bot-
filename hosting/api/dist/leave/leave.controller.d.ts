@@ -31,12 +31,12 @@ declare const listQ: z.ZodObject<{
     mine: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
     discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    discordId?: string | undefined;
     status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }, {
-    discordId?: string | undefined;
     status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }>;
 declare const decision: z.ZodObject<{

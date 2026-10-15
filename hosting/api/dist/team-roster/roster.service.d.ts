@@ -34,6 +34,7 @@ export declare class RosterService {
     private readonly perms;
     constructor(prisma: PrismaService, live: DiscordLiveService, discord: DiscordService, perms: PermissionService);
     /** Teams, Dienstgrade und Büros: aus den Einstellungen, ergänzt um Werte, die in Personalakten vorkommen. */
+    /** Server-Einstellung, sonst die gemeinsame. */
     private setting;
     structure(): Promise<TeamStructure>;
     roster(): Promise<{

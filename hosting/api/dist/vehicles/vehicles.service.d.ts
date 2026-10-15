@@ -17,16 +17,16 @@ export declare class VehiclesService {
                 robloxUsername: string;
             } | null;
         } & {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
@@ -38,9 +38,9 @@ export declare class VehiclesService {
     get(id: string): Promise<{
         vehicle: {
             owner: {
-                robloxUserId: string | null;
-                id: string;
                 serverId: string | null;
+                id: string;
+                robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
                 status: string;
@@ -63,16 +63,16 @@ export declare class VehiclesService {
                 version: number;
             } | null;
         } & {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
@@ -81,8 +81,8 @@ export declare class VehiclesService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -96,31 +96,31 @@ export declare class VehiclesService {
         erlcReference?: string;
         custom?: Record<string, unknown>;
     }): Promise<{
-        plate: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         custom: Prisma.JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        plate: string;
         color: string | null;
         ownerId: string | null;
         erlcReference: string | null;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
-        plate: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         custom: Prisma.JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        plate: string;
         color: string | null;
         ownerId: string | null;
         erlcReference: string | null;

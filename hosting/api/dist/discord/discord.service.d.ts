@@ -71,8 +71,8 @@ export declare class DiscordService {
     }>;
     /** Auflösung Discord-ID → aktiver Benutzer (für die Bot-Authentifizierung). */
     resolveUser(discordId: string): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -120,11 +120,10 @@ export declare class DiscordService {
         queued: boolean;
         linked: boolean;
     }>;
-    /**
-     * Der Discord-Server dieses Systems mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im
-     * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
-     */
+    /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
     guilds(): Promise<DiscordGuildInfo[]>;
+    /** Alle vom Bot gemeldeten Server (auch fremde) – nur für Hinweise, wenn der eingerichtete nicht dabei ist. */
+    reportedGuilds(): Promise<DiscordGuildInfo[]>;
     saveGuilds(guilds: DiscordGuildInfo[]): Promise<void>;
     /**
      * Nachricht in einen Kanal setzen oder die dort zuletzt unter `stateKey` gepostete bearbeiten (Funk-Codes, Staff-Liste, Panels …).
@@ -146,11 +145,11 @@ export declare class DiscordService {
         id: string;
         createdAt: Date;
         type: string;
-        channelKey: string;
-        payload: Prisma.JsonValue;
-        attempts: number;
         lastError: string | null;
+        payload: Prisma.JsonValue;
         sentAt: Date | null;
+        channelKey: string;
+        attempts: number;
     }[]>;
     ack(id: string, ok: boolean, error?: string): Promise<void>;
 }

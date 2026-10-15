@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Copy, FilePlus2, FileText, LayoutTemplate, Pencil, 
 import { cloneWithNewIds, emptyMbMessage, MB_LIMITS, mbDocumentDataSchema, mbSummary, validateMbDocument, type MbDocumentData } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { useServer } from '../../lib/guilds';
 import { errText } from '../../lib/tickets';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
 import { MessageEditor, type EditorCtx, type ServerChannel, type ServerRole } from './MessageEditor';
@@ -14,7 +15,17 @@ import { History, SettingsTab, type Category } from './HistoryAndSettings';
 import { useDocAutosave, type DocSaveStatus, type MbDoc } from './useDocAutosave';
 
 interface DocMeta { id: string; kind: 'DRAFT' | 'TEMPLATE'; name: string; categoryId: string | null; updatedAt: string; messageCount: number; updatedByName: string | null }
-interface ServerInfo { guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; roles: ServerRole[]; configured: boolean; restricted?: boolean }
+interface ServerInfo {
+  guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; roles: ServerRole[]; configured: boolean; restricted?: boolean;
+  problem?: 'no_server' | 'no_report';
+}
+/** Warum keine Kanäle da sind – mit dem, was zu tun ist. */
+function channelHint(s: ServerInfo | undefined): string | null {
+  if (!s || s.channels.length) return null;
+  if (s.problem === 'no_server') return 'Bitte oben links einen Discord-Server wählen – der Message Builder arbeitet je Server.';
+  if (s.problem === 'no_report') return 'Der Bot hat für diesen Server noch keine Kanäle gemeldet. Ist der Bot auf dem Server und läuft er? Nach dem Start dauert es einige Sekunden.';
+  return `Auf ${s.guild?.name ?? 'dem Discord-Server'} sieht der Bot keine Textkanäle – bitte dem Bot das Recht „Kanäle ansehen“ geben.`;
+}
 
 const SAVE_VIEW: Record<DocSaveStatus, [string, string]> = {
   saved: ['Gespeichert', 'text-success'], pending: ['Ungespeicherte Änderungen …', 'text-warning'], saving: ['Speichert …', 'text-muted'], error: ['Speichern fehlgeschlagen', 'text-danger'], conflict: ['Konflikt – neuere Fassung vorhanden', 'text-danger'],
@@ -31,6 +42,12 @@ function useMbData() {
 
 /** Discord Message Builder (Discohook-artig): links Nachrichten/Entwürfe/Vorlagen, Mitte Editor, rechts Live-Vorschau + Versand. */
 export function MessageBuilder() {
+  const [server] = useServer();
+  if (!server) return (<div><PageHeader title="Discord Message Builder" /><EmptyState text="Kein Server gewählt" hint="Der Message Builder arbeitet je Discord-Server – bitte oben links einen Server wählen." /></div>);
+  // Server gewechselt → Editor komplett neu (offene Entwürfe gehören zum vorherigen Server)
+  return <MessageBuilderFor key={server} />;
+}
+function MessageBuilderFor() {
   const { can } = useAuth();
   const tabs = ['Editor', ...(can('messagebuilder.history') ? ['Versandhistorie'] : []), ...(can('messagebuilder.templates_edit') || can('messagebuilder.channels') || can('messagebuilder.webhooks') ? ['Einstellungen'] : [])];
   const [tab, setTab] = useState('Editor');
@@ -228,7 +245,7 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
             </Card>
             {(can('messagebuilder.send') || can('messagebuilder.create')) && (
               <Card title="Senden">
-                <SendPanel data={doc.data} name={doc.name} documentId={doc.id} channelId={localChannel} channels={server?.channels ?? []} issues={issues} can={can} webhooks={webhooks.data ?? []} mode={mode} onMode={setMode}
+                <SendPanel data={doc.data} name={doc.name} documentId={doc.id} channelId={localChannel} channels={server?.channels ?? []} channelHint={server ? channelHint(server) : null} issues={issues} can={can} webhooks={webhooks.data ?? []} mode={mode} onMode={setMode}
                   onChannel={(id) => { setLocalChannel(id); if (!readOnly) auto.setDoc((x) => ({ ...x, channelId: id })); }} />
               </Card>
             )}

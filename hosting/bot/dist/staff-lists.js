@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createStaffLists = createStaffLists;
 const shared_1 = require("@enrp/shared");
-const home_1 = require("./home");
 const messages_1 = require("./messages");
 /**
  * Staff-Listen (Discord-Teamliste nach Rollen, Einstellungen im Dashboard): der Bot rechnet die Mitglieder je Rolle selbst
@@ -13,7 +12,7 @@ function createStaffLists(client, api, log = console.log) {
     let timer;
     async function render(l) {
         const c = client();
-        const guilds = (0, home_1.ownGuilds)(c).filter((g) => !l.guildId || g.id === l.guildId);
+        const guilds = l.guildId ? [c.guilds.cache.get(l.guildId)].filter((g) => !!g) : [...c.guilds.cache.values()];
         const members = new Map();
         for (const g of guilds) {
             for (const s of l.sections) {

@@ -11,15 +11,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
-import { HomeServerService } from '../server/home-server.service';
+import { ServersService } from '../multi-server/servers.service';
 
 const sf = z.string().regex(/^\d{15,25}$/);
+/** Liste, aus der ungültige Einträge entfernt werden – ein einzelner unerwarteter Kanal/Rolle darf nicht die ganze Meldung verwerfen. */
+const lenient = <T extends z.ZodTypeAny>(item: T, max: number) =>
+  z.array(z.unknown()).transform((l) => l.slice(0, max).flatMap((x) => { const r = item.safeParse(x); return r.success ? [r.data as z.infer<T>] : []; }));
 const guildsBody = z.object({ guilds: z.array(z.object({
-  id: sf, name: z.string().max(100), icon: z.string().url().max(300).nullable(),
-  channels: z.array(z.object({ id: sf, name: z.string().max(100), type: z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: z.number().int(),
+  id: sf, name: z.string().max(100), icon: z.string().url().max(300).nullable().catch(null),
+  channels: lenient(z.object({ id: sf, name: z.string().max(100), type: z.enum(['text', 'category', 'voice', 'other']).catch('other'), parentId: sf.nullable().catch(null), position: z.number().int().catch(0),
     /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
-    bot: z.object({ view: z.boolean(), send: z.boolean(), embed: z.boolean(), mentionEveryone: z.boolean().optional() }).optional() })).max(500),
-  roles: z.array(z.object({ id: sf, name: z.string().max(100), color: z.number().int().min(0), position: z.number().int() })).max(250),
+    bot: z.object({ view: z.boolean(), send: z.boolean(), embed: z.boolean(), mentionEveryone: z.boolean().optional() }).optional().catch(undefined) }), 500),
+  roles: lenient(z.object({ id: sf, name: z.string().max(100), color: z.number().int().min(0).catch(0), position: z.number().int().catch(0) }), 250),
 })).max(50) });
 const redeem = z.object({ code: z.string().trim().min(8).max(12), discordId: z.string().regex(/^\d{15,25}$/) });
 const ack = z.object({ ok: z.boolean(), error: z.string().max(300).optional() });
@@ -61,13 +64,13 @@ export class DiscordController {
 @ApiTags('bot')
 @Controller('bot')
 export class BotController {
-  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService, private readonly home: HomeServerService) {}
+  constructor(private readonly d: DiscordService, private readonly live: DiscordLiveService, private readonly duty: DutyService, private readonly danger: DangerService, private readonly applications: ApplicationsService, private readonly prisma: PrismaService, private readonly servers: ServersService) {}
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('link') @HttpCode(200)
   redeem(@Body(zodBody(redeem)) b: z.infer<typeof redeem>) { return this.d.redeem(b.code, b.discordId); }
   @BotService() @Get('config') config() { return this.d.channels(); }
   /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot); ohne Eintrag an. */
   @BotService() @Get('ghost-ping') async ghostPing() { const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.ghostPing' } }))?.value as { enabled?: boolean } | undefined; return { enabled: v?.enabled !== false }; }
-  @BotService() @Put('guilds') @HttpCode(204) async guilds(@Body(zodBody(guildsBody)) b: z.infer<typeof guildsBody>) { await this.d.saveGuilds(b.guilds); await this.home.refresh(); }
+  @BotService() @Put('guilds') @HttpCode(204) async guilds(@Body(zodBody(guildsBody)) b: z.infer<typeof guildsBody>) { await this.d.saveGuilds(b.guilds); await this.servers.syncFromBot(b.guilds); }
   @BotService() @Get('outbox') outbox(@Query(zodBody(outboxQ)) q: z.infer<typeof outboxQ>) { return this.d.pending(q.limit); }
   @BotService() @Post('outbox/:id/ack') @HttpCode(204)
   ack(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(ack)) b: z.infer<typeof ack>) { return this.d.ack(id, b.ok, b.error); }

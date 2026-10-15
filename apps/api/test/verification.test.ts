@@ -15,7 +15,6 @@ let about = '';
 
 beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
-  process.env.DISCORD_GUILD_ID = G; // der eine Discord-Server dieses Systems
   ({ app, prisma } = await createTestApp());
   await makeUser(prisma, 'vf_admin', ['System Administrator']);
   await makeUser(prisma, 'vf_off', ['Police Member']);
@@ -30,7 +29,7 @@ afterAll(async () => {
   await prisma.robloxVerifyCode.deleteMany({ where: { discordId: { in: [U1, U2] } } });
   await prisma.systemSetting.deleteMany({ where: { key: { startsWith: `verify.` } } });
   await prisma.robloxOAuthState.deleteMany({});
-  delete process.env.BOT_API_TOKEN; delete process.env.DISCORD_GUILD_ID; await app.close();
+  delete process.env.BOT_API_TOKEN; await app.close();
 });
 
 describe('Roblox verification (like RoVer)', () => {
@@ -53,6 +52,7 @@ describe('Roblox verification (like RoVer)', () => {
   });
 
   it('start → code in profile → check gives roles, group binds and nickname', async () => {
+    expect((await http().post('/api/v1/bot/verify/start').set(bot).send({ guildId: '610000000000000099', discordId: U1, roblox: 'builderman_vf' })).status).toBe(409); // dort aus
     expect((await http().post('/api/v1/bot/verify/start').set(bot).send({ guildId: G, discordId: U1, roblox: 'gibtsnicht_vf' })).status).toBe(404);
     expect((await http().post('/api/v1/bot/verify/start').set(bot).send({ guildId: G, discordId: U1, roblox: 'a b' })).status).toBe(400);
     const s = await http().post('/api/v1/bot/verify/start').set(bot).send({ guildId: G, discordId: U1, roblox: 'builderman_vf' });

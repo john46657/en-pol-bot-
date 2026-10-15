@@ -74,9 +74,9 @@ export declare class PersonsController {
     constructor(persons: PersonsService, roblox: RobloxService);
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
-            robloxUserId: string | null;
-            id: string;
             serverId: string | null;
+            id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
             status: string;
@@ -109,24 +109,24 @@ export declare class PersonsController {
     get(id: string): Promise<{
         person: {
             vehicles: {
-                plate: string;
+                serverId: string | null;
                 model: string | null;
                 id: string;
-                serverId: string | null;
                 status: string;
                 notes: string | null;
                 custom: import("@prisma/client/runtime/library").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
+                plate: string;
                 color: string | null;
                 ownerId: string | null;
                 erlcReference: string | null;
             }[];
         } & {
-            robloxUserId: string | null;
-            id: string;
             serverId: string | null;
+            id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
             status: string;
@@ -150,8 +150,8 @@ export declare class PersonsController {
         };
         tickets: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             notes: string | null;
             updatedAt: Date;
@@ -179,17 +179,17 @@ export declare class PersonsController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         person: {
-            robloxUserId: string | null;
-            id: string;
             serverId: string | null;
+            id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
             status: string;
@@ -212,16 +212,16 @@ export declare class PersonsController {
             version: number;
         };
         possibleDuplicates: {
-            robloxUserId: string | null;
             id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             status: string;
         }[];
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;
@@ -244,9 +244,9 @@ export declare class PersonsController {
         version: number;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;
@@ -269,9 +269,9 @@ export declare class PersonsController {
         version: number;
     }>;
     merge(a: Actor, id: string, b: z.infer<typeof merge>): Promise<{
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;

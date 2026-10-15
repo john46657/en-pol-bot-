@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { TeamChanceService, teamChanceSchema } from './teamchance.service';
 import type { Actor } from '../audit/audit.service';
+declare const guildQ: z.ZodObject<{
+    guildId: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    guildId?: string | undefined;
+}, {
+    guildId?: string | undefined;
+}>;
 export declare class TeamChanceController {
     private readonly s;
     constructor(s: TeamChanceService);
@@ -36,7 +43,7 @@ export declare class TeamChanceController {
         restrictApplications: boolean;
         openedAt?: string | null;
     }>;
-    pub(): Promise<{
+    pub(q: z.infer<typeof guildQ>): Promise<{
         isOpen: boolean;
         reason: string | null;
         title: string;
@@ -46,7 +53,7 @@ export declare class TeamChanceController {
         remaining: number | null;
         restrictApplications: boolean;
     }>;
-    bot(): Promise<{
+    bot(q: z.infer<typeof guildQ>): Promise<{
         isOpen: boolean;
         reason: string | null;
         title: string;
@@ -57,3 +64,4 @@ export declare class TeamChanceController {
         restrictApplications: boolean;
     }>;
 }
+export {};

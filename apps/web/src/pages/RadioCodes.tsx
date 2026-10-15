@@ -5,7 +5,8 @@ import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { hasPending, onSaved, pendingBody, queueSave } from '../lib/autosave';
-import { Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows, Textarea } from '../components/ui';
+import { guildName, useGuilds, useServer } from '../lib/guilds';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows, Textarea } from '../components/ui';
 import type { Overview } from '../lib/hr';
 import { useAutosaveDraft } from '../lib/autosave';
 import { errText } from '../lib/tickets';
@@ -19,15 +20,17 @@ const strip = (c: DiscordCfg) => ({ channelId: c.channelId, title: c.title, desc
 
 /** Funk-Codes als Nachricht in einen Discord-Kanal senden (und später dieselbe Nachricht aktualisieren). */
 function RadioDiscordCard({ manage }: { manage: boolean }) {
+  const [server] = useServer();
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['radio-discord'], queryFn: () => api<DiscordCfg>('/radio-codes/discord') });
+  const q = useQuery({ queryKey: ['radio-discord', server], queryFn: () => api<DiscordCfg>('/radio-codes/discord') });
   const [cfg, setCfg] = useState<DiscordCfg>();
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
   useEffect(() => { if (q.data) setCfg((c) => c ?? q.data); }, [q.data]);
-  useAutosaveDraft(manage && cfg ? 'radio-discord' : null, cfg, (c) => ({ method: 'PUT', path: '/radio-codes/discord', body: strip(c), label: 'Funk-Codes in Discord' }));
+  useEffect(() => setCfg(undefined), [server]);
+  useAutosaveDraft(manage && cfg ? `radio-discord:${server || 'all'}` : null, cfg, (c) => ({ method: 'PUT', path: '/radio-codes/discord', body: strip(c), label: 'Funk-Codes in Discord' }));
   const send = useMutation({
     mutationFn: async (mode: 'update' | 'new') => { await api('/radio-codes/discord', { method: 'PUT', body: strip(cfg!) }); return api('/radio-codes/discord/send', { method: 'POST', body: { mode } }); },
-    onSuccess: (_r, mode) => { setMsg({ ok: true, text: mode === 'update' && cfg?.posted ? 'Wird aktualisiert …' : 'Wird gesendet …' }); setTimeout(() => void qc.invalidateQueries({ queryKey: ['radio-discord'] }), 4000); },
+    onSuccess: (_r, mode) => { setMsg({ ok: true, text: mode === 'update' && cfg?.posted ? 'Wird aktualisiert …' : 'Wird gesendet …' }); setTimeout(() => void qc.invalidateQueries({ queryKey: ['radio-discord', server] }), 4000); },
     onError: (e) => setMsg({ ok: false, text: errText(e) }),
   });
   if (!cfg) return null;
@@ -84,6 +87,8 @@ export function RadioCodeList({ limit = 12 }: { limit?: number }) {
 export function RadioCodes() {
   const { can } = useAuth();
   const qc = useQueryClient();
+  const [server] = useServer();
+  const guilds = useGuilds();
   const [params] = useSearchParams();
   const [t, setT] = useState(params.get('q') ?? '');
   const [newCode, setNewCode] = useState({ code: '', meaning: '', category: '' });
@@ -95,7 +100,7 @@ export function RadioCodes() {
   useEffect(() => onSaved('radio:', () => { if (!hasPending('radio:')) void qc.invalidateQueries({ queryKey: KEY }); }), [qc]);
   const rows = useMemo(() => (q.data ?? []).map((r) => ({ ...r, ...(pendingBody<Patch>(`radio:${r.id}`) ?? {}) })), [q.data, q.dataUpdatedAt]);
   const shown = rows.filter((r) => !t || `${r.code} ${r.meaning} ${r.category ?? ''} ${r.description ?? ''}`.toLowerCase().includes(t.toLowerCase()));
-  const editable = (_r: RadioCode) => manage; // die API liefert nur Codes dieses Systems
+  const editable = (r: RadioCode) => manage && (!server || r.guildId === server || r.guildId === null);
   const onError = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen');
   const add = useMutation({ mutationFn: () => api<RadioCode>('/radio-codes', { body: { code: newCode.code.trim(), meaning: newCode.meaning.trim(), category: newCode.category.trim() || null } }), onSuccess: () => { setErr(undefined); setNewCode({ code: '', meaning: '', category: '' }); void qc.invalidateQueries({ queryKey: KEY }); }, onError });
   const defaults = useMutation({ mutationFn: () => api<{ added: number }>('/radio-codes/defaults', { method: 'POST' }), onSuccess: () => void qc.invalidateQueries({ queryKey: KEY }), onError });
@@ -115,7 +120,7 @@ export function RadioCodes() {
   };
   return (
     <>
-      <PageHeader title="📡 Funk-Codes" subtitle={`${manage ? 'Änderungen werden automatisch gespeichert. ' : ''}In Discord: /funkcode`}
+      <PageHeader title="📡 Funk-Codes" subtitle={`${server ? `Server ${guildName(guilds.data, server)}: eigene Codes überdecken gemeinsame.` : 'Gemeinsame Codes für alle Server.'}${manage ? ' Änderungen werden automatisch gespeichert.' : ''} In Discord: /funkcode`}
         actions={manage && <Button variant="secondary" onClick={() => defaults.mutate()} disabled={defaults.isPending}>Standard-Codes einfügen</Button>} />
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       {manage && <RadioDiscordCard manage={manage} />}
@@ -143,7 +148,7 @@ export function RadioCodes() {
                 </> : <>
                   <td className="p-2"><code className="rounded bg-panel-2 px-1.5 font-semibold">{r.code}</code></td><td>{r.meaning}</td><td>{r.category ?? '—'}</td><td className="text-muted">{r.description ?? ''}</td>
                 </>}
-                {manage && <td className="whitespace-nowrap">{editable(r) && <Button size="sm" variant="ghost" aria-label={`${r.code} löschen`} onClick={() => setDel(r)}><Trash2 size={13} /></Button>}</td>}
+                {manage && <td className="whitespace-nowrap">{server && r.guildId === null && <Badge>alle Server</Badge>}{editable(r) && <Button size="sm" variant="ghost" aria-label={`${r.code} löschen`} onClick={() => setDel(r)}><Trash2 size={13} /></Button>}</td>}
               </tr>))}</tbody>
           </table></div>
         )}

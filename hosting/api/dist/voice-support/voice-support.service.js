@@ -73,14 +73,18 @@ let VoiceSupportService = class VoiceSupportService {
         const all = p.success ? p.data : [];
         return guildId ? all.filter((r) => r.guildId === guildId) : all;
     }
-    async saveRooms(actor, input) {
-        const all = exports.roomsSchema.parse(input);
+    /** `guildId`: nur die Räume dieses Servers ersetzen (Server-Ansicht), sonst alle. */
+    async saveRooms(actor, input, guildId) {
+        if (guildId && input.some((r) => r.guildId !== guildId))
+            throw new errors_1.AppError('VALIDATION_FAILED', 'In der Server-Ansicht kannst du nur Räume dieses Servers speichern.');
+        const keep = guildId ? (await this.rooms()).filter((r) => r.guildId !== guildId) : [];
+        const all = exports.roomsSchema.parse([...keep, ...input]);
         const value = all;
         await this.prisma.$transaction(async (tx) => {
             await tx.systemSetting.upsert({ where: { key: KEY }, create: { key: KEY, value }, update: { value } });
-            await this.audit.record(actor, { action: 'voice_support.rooms', module: 'tickets', entityType: 'SystemSetting', entityId: KEY, after: { rooms: input.map((r) => r.name) } }, tx);
+            await this.audit.record(actor, { action: 'voice_support.rooms', module: 'tickets', entityType: 'SystemSetting', entityId: KEY, after: { rooms: input.map((r) => r.name), guildId: guildId ?? null } }, tx);
         });
-        return this.rooms();
+        return this.rooms(guildId);
     }
     async room(id) { return (await this.rooms()).find((r) => r.id === id); }
     async cases(f) {

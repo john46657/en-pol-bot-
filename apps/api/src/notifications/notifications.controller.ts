@@ -6,6 +6,7 @@ import { CurrentActor, CurrentUser, RequirePermission } from '../authz/decorator
 import type { Actor } from '../audit/audit.service';
 import { AuditService } from '../audit/audit.service';
 import { NotifyService } from './notify.service';
+import { currentGuild } from '../common/guild-context';
 import type { AuthUser } from '../common/request-context';
 import { zodBody } from '../common/zod.pipe';
 import { pageQuery, pageResult, skipTake } from '../common/pagination';
@@ -19,10 +20,10 @@ const q = pageQuery.extend({ filter: z.enum(['unread', 'read', 'archived', 'all'
 export class NotificationsController {
   constructor(private readonly prisma: PrismaService, private readonly notify: NotifyService, private readonly audit: AuditService) {}
 
-  /** ⚠️ Systemhinweis an alle Dashboard-Benutzer. */
+  /** ⚠️ Systemhinweis an alle Dashboard-Benutzer (des gewählten Servers). */
   @Post('system') @HttpCode(200) @RequirePermission('settings.manage')
   async system(@CurrentActor() a: Actor, @Body(zodBody(systemBody)) b: z.infer<typeof systemBody>) {
-    const ids = await this.notify.usersWith('dashboard.view');
+    const ids = await this.notify.usersWith('dashboard.view', { guildId: currentGuild() });
     await this.notify.notify(ids, { type: 'SYSTEM', title: `⚠️ ${b.title}`, body: b.body });
     await this.audit.record(a, { action: 'notification.system', module: 'settings', after: { title: b.title, recipients: ids.length } });
     return { recipients: ids.length };

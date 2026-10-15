@@ -1,6 +1,5 @@
 import { ChannelType, PermissionFlagsBits, type Client, type Guild, type GuildBasedChannel } from 'discord.js';
 import type { Api } from './api';
-import { ownGuilds } from './home';
 
 /** Server mit Channels und Rollen, wie das Dashboard sie für Namen und Auswahllisten braucht. */
 export interface GuildInfo {
@@ -29,15 +28,15 @@ export function guildInfo(g: Guild): GuildInfo {
       .map((c) => { const bot = kind(c.type) === 'text' ? botPerms(g, c) : undefined; return { id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: 'parentId' in c ? c.parentId ?? null : null, position: 'rawPosition' in c ? (c.rawPosition as number) : 0, ...(bot ? { bot } : {}) }; }),
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
     roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250)
-      .map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.color, position: r.position })),
+      .map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position })),
   };
 }
 
-/** Meldet den Discord-Server des Systems an das System (beim Start, bei Änderungen und regelmäßig). */
+/** Meldet alle Server des Bots an das System (beim Start, bei Änderungen und regelmäßig). */
 export function startGuildDirectory(client: () => Client, api: Api, log: (m: string) => void = console.log) {
   let timer: NodeJS.Timeout | undefined;
   const push = async () => {
-    const guilds = ownGuilds(client()).slice(0, 50).map(guildInfo);
+    const guilds = [...client().guilds.cache.values()].slice(0, 50).map(guildInfo);
     await api.service('PUT', '/bot/guilds', { guilds }).catch((e) => log(`guild directory not sent: ${e instanceof Error ? e.message : e}`));
   };
   // mehrere Änderungen kurz hintereinander nur einmal melden

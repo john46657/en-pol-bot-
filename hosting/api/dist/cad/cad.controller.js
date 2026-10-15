@@ -28,6 +28,7 @@ const cad_service_1 = require("./cad.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_handover_service_1 = require("./cad-handover.service");
 const cad_stats_service_1 = require("./cad-stats.service");
+const cad_link_interceptor_1 = require("./cad-link.interceptor");
 const cad_config_service_1 = require("./cad-config.service");
 const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
@@ -35,13 +36,15 @@ const map_image_1 = require("./map-image");
 const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const isBot = (r) => typeof r.headers.authorization === 'string' && r.headers.authorization.startsWith('Bot ');
-/** Akteur inkl. – nur vom Bot – Discord-Server, Discord-ID und Rollen des Aufrufers. */
+/** Akteur inkl. Discord-Server der Anfrage und – nur vom Bot – Discord-ID/Rollen des Aufrufers. */
 const Cad = (0, common_1.createParamDecorator)((_d, ctx) => {
     const r = ctx.switchToHttp().getRequest();
     const bot = isBot(r);
     const discordId = bot && typeof r.headers['x-discord-user'] === 'string' ? r.headers['x-discord-user'] : null;
     const roles = bot && typeof r.headers['x-discord-roles'] === 'string' ? r.headers['x-discord-roles'].split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
-    return { userId: r.user?.id ?? null, robloxUserId: r.user?.robloxUserId ?? null, requestId: r.requestId, guildId: discordId ? (0, guild_context_1.homeGuild)() : null, discordId, roles };
+    // Server, von dem der Befehl kommt – auch wenn er per Querverbindung im Bereich der Leitstelle läuft (CadLinkInterceptor)
+    const origin = r.originGuildId;
+    return { userId: r.user?.id ?? null, robloxUserId: r.user?.robloxUserId ?? null, requestId: r.requestId, guildId: origin !== undefined ? origin : (0, guild_context_1.currentGuild)(), discordId, roles };
 });
 const opt = (s) => s.nullish();
 const text = (max) => zod_1.z.string().trim().max(max);
@@ -65,6 +68,11 @@ const mapObjectBody = zod_1.z.object({
     kind: zod_1.z.enum(['POI', 'ZONE']), name: zod_1.z.string().trim().min(1).max(80), description: opt(text(1000)), category: opt(text(40)), layer: zod_1.z.string().max(32),
     icon: opt(text(16)), color: opt(zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/)), x: opt(coord), z: opt(coord), points: zod_1.z.array(zod_1.z.tuple([coord, coord])).max(200).nullish(),
     roleIds: zod_1.z.array(zod_1.z.string().uuid()).max(30).optional(), incidentType: opt(text(32)), autoAction: opt(zod_1.z.enum(['notify', 'warn'])),
+});
+const linkBody = zod_1.z.object({
+    name: zod_1.z.string().trim().min(2).max(80), sourceGuildId: sf, targetGuildId: sf, active: zod_1.z.boolean().optional(),
+    sendTypes: zod_1.z.array(zod_1.z.enum(shared_1.CAD_LINK_SEND_TYPES)).max(shared_1.CAD_LINK_SEND_TYPES.length).optional(), allowActions: zod_1.z.array(zod_1.z.enum(shared_1.CAD_LINK_ACTIONS)).max(shared_1.CAD_LINK_ACTIONS.length).optional(),
+    roleIds: zod_1.z.array(sf).max(30).optional(), channels: zod_1.z.record(zod_1.z.enum(shared_1.CAD_LINK_SEND_TYPES), zod_1.z.array(sf).max(10)).optional(), notify: zod_1.z.boolean().optional(),
 });
 const listQ = zod_1.z.object({ active: zod_1.z.enum(['true', 'false']).optional(), q: zod_1.z.string().max(80).optional(), take: zod_1.z.coerce.number().int().min(1).max(300).optional() });
 const statusBody = zod_1.z.object({ status: zod_1.z.string().min(1).max(32), note: zod_1.z.string().trim().max(500).optional() });
@@ -108,20 +116,20 @@ let CadController = class CadController {
     overview(a) { return this.s.overview(a); }
     map(a) { return this.s.mapData(a); }
     // Einsätze
-    async incidents(a, q) { return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }, a); }
-    async incident(a, id) { return this.s.getIncident(id, a); }
+    async incidents(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listIncidents({ active: q.active === 'true', q: q.q, take: q.take }, a); }
+    async incident(a, id) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.getIncident(id, a); }
     createIncident(a, b) { return this.s.createIncident(a, b); }
     updateIncident(a, id, b) { return this.s.updateIncident(a, id, b); }
-    async status(a, id, b) { return this.s.setStatus(a, id, b.status, b.note); }
+    async status(a, id, b) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.setStatus(a, id, b.status, b.note); }
     note(a, id, b) { return this.s.addNote(a, id, b.text); }
-    async assign(a, id, b) { return this.s.assignUnit(a, id, b.unitId); }
+    async assign(a, id, b) { await this.s.assertCrossServer(a, 'dispatch', a.roles); return this.s.assignUnit(a, id, b.unitId); }
     clear(a, id, unitId) { return this.s.clearUnit(a, id, unitId); }
     // Einheiten
-    units() { return this.s.listUnits(); }
+    async units(a) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listUnits(); }
     createUnit(a, b) { return this.s.createUnit(a, b); }
     updateUnit(a, id, b) { return this.s.updateUnit(a, id, b); }
     deleteUnit(a, id) { return this.s.deleteUnit(a, id); }
-    /** Leitstelle oder die Besatzung selbst. */
+    /** Leitstelle oder die Besatzung selbst (auch vom verbundenen SEK/K9-Server, falls freigegeben). */
     unitStatus(a, id, b) { return this.s.setUnitStatus(a, id, b.status, a.roles); }
     /** Rückmeldung zum Einsatz (MDT/Discord): gleiche Berechtigung wie der Einheitenstatus. */
     feedback(a, id, b) { return this.s.feedback(a, id, b, a.roles); }
@@ -135,8 +143,9 @@ let CadController = class CadController {
     // Statistik
     stats(q) { return this.statsSvc.stats(q.days ?? 30); }
     // Notrufe
-    async calls(a, q) { return this.s.listCalls({ status: q.status ?? 'ALL' }); }
+    async calls(a, q) { await this.s.assertCrossServer(a, 'view_incidents', a.roles); return this.s.listCalls({ status: q.status ?? 'ALL' }); }
     async callAction(a, id, action, body) {
+        await this.s.assertCrossServer(a, 'dispatch', a.roles);
         const need = (p) => this.perms.assert(a.userId, p);
         if (action === 'claim' || action === 'close' || action === 'reopen') {
             await need('cad.edit_incident');
@@ -158,7 +167,7 @@ let CadController = class CadController {
     radio(q) { return this.s.listRadio(q); }
     /** Einheiten, als die man funken darf (Leitstelle: alle; sonst nur die eigene). */
     radioUnits(a) { return this.s.radioUnits(a); }
-    sendRadio(a, b) { return this.s.sendRadio(a, b); }
+    sendRadio(a, b) { return this.s.sendRadio(a, b, a.roles); }
     announce(a, b) { return this.s.announce(a, b.text); }
     // Zuordnungen (Teamübersicht)
     members() { return this.s.listMembers(); }
@@ -170,6 +179,11 @@ let CadController = class CadController {
     createObject(a, b) { return this.s.saveMapObject(a, null, b); }
     updateObject(a, id, b) { return this.s.saveMapObject(a, id, b); }
     deleteObject(a, id) { return this.s.deleteMapObject(a, id); }
+    // Server-Verbindungen
+    links() { return this.s.listLinks(); }
+    createLink(a, b) { return this.s.saveLink(a, null, b); }
+    updateLink(a, id, b) { return this.s.saveLink(a, id, b); }
+    deleteLink(a, id) { return this.s.deleteLink(a, id); }
     logs() { return this.s.logs(); }
 };
 exports.CadController = CadController;
@@ -318,9 +332,10 @@ __decorate([
 __decorate([
     (0, common_1.Get)('units'),
     (0, decorators_1.RequirePermission)('cad.view'),
+    __param(0, Cad()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
 ], CadController.prototype, "units", null);
 __decorate([
     (0, common_1.Post)('units'),
@@ -560,6 +575,42 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "deleteObject", null);
 __decorate([
+    (0, common_1.Get)('links'),
+    (0, decorators_1.RequirePermission)('cad.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "links", null);
+__decorate([
+    (0, common_1.Post)('links'),
+    (0, decorators_1.RequirePermission)('cad.manage_cross_server'),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(linkBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "createLink", null);
+__decorate([
+    (0, common_1.Patch)('links/:id'),
+    (0, decorators_1.RequirePermission)('cad.manage_cross_server'),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(linkBody.partial()))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "updateLink", null);
+__decorate([
+    (0, common_1.Delete)('links/:id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('cad.manage_cross_server'),
+    __param(0, Cad()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "deleteLink", null);
+__decorate([
     (0, common_1.Get)('logs'),
     (0, decorators_1.RequirePermission)('cad.view_logs'),
     __metadata("design:type", Function),
@@ -568,6 +619,7 @@ __decorate([
 ], CadController.prototype, "logs", null);
 exports.CadController = CadController = __decorate([
     (0, swagger_1.ApiTags)('cad'),
+    (0, common_1.UseInterceptors)(cad_link_interceptor_1.CadLinkInterceptor),
     (0, common_1.Controller)('cad'),
     __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService,
         cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService])
@@ -583,8 +635,8 @@ let ErlcController = class ErlcController {
         this.records = records;
     }
     /** Personen-/Fahrzeugseite: wer bzw. was gerade im Spiel ist (aus der ER:LC-API), mit Link zur Akte. */
-    livePersons() { return this.records.live('persons'); }
-    liveVehicles() { return this.records.live('vehicles'); }
+    livePersons() { return this.records.live('persons', (0, guild_context_1.currentGuild)()); }
+    liveVehicles() { return this.records.live('vehicles', (0, guild_context_1.currentGuild)()); }
     async list(a) { return this.s.list(await this.perms.has(a.userId, 'cad.manage_erlc')); }
     create(a, b) { return this.s.create(a, b); }
     update(a, id, b) { return this.s.update(a, id, b); }

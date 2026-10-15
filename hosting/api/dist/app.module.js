@@ -59,13 +59,16 @@ const guards_1 = require("./authz/guards");
 const all_exceptions_filter_1 = require("./common/all-exceptions.filter");
 const request_id_middleware_1 = require("./common/request-id.middleware");
 const origin_middleware_1 = require("./common/origin.middleware");
+const guild_context_1 = require("./common/guild-context");
 const locks_module_1 = require("./locks/locks.module");
 const workflows_module_1 = require("./workflows/workflows.module");
 const welcome_module_1 = require("./welcome/welcome.module");
 const voice_support_module_1 = require("./voice-support/voice-support.module");
 const embeds_module_1 = require("./embeds/embeds.module");
+const server_links_module_1 = require("./server-links/server-links.module");
+const multi_server_module_1 = require("./multi-server/multi-server.module");
+const multi_server_restore_module_1 = require("./multi-server/multi-server-restore.module");
 const message_builder_module_1 = require("./message-builder/message-builder.module");
-const server_module_1 = require("./server/server.module");
 const logging_module_1 = require("./logging/logging.module");
 const backup_module_1 = require("./backup/backup.module");
 const verification_module_1 = require("./verification/verification.module");
@@ -74,7 +77,7 @@ const duty_reports_module_1 = require("./duty-reports/duty-reports.module");
 const hr_module_1 = require("./hr/hr.module");
 let AppModule = class AppModule {
     configure(consumer) {
-        consumer.apply(request_id_middleware_1.RequestIdMiddleware, origin_middleware_1.OriginMiddleware).forRoutes('{*splat}');
+        consumer.apply(request_id_middleware_1.RequestIdMiddleware, origin_middleware_1.OriginMiddleware, guild_context_1.GuildContextMiddleware).forRoutes('{*splat}');
     }
 };
 exports.AppModule = AppModule;
@@ -84,7 +87,7 @@ exports.AppModule = AppModule = __decorate([
             throttler_1.ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
             core_1.DiscoveryModule, prisma_module_1.PrismaModule, authz_module_1.AuthzModule, audit_module_1.AuditModule, auth_module_1.AuthModule, users_module_1.UsersModule, persons_module_1.PersonsModule, vehicles_module_1.VehiclesModule, tickets_module_1.TicketsModule,
             dispatch_module_1.DispatchModule, reports_module_1.ReportsModule, complaints_module_1.ComplaintsModule, investigations_module_1.InvestigationsModule, wanted_module_1.WantedModule, evidence_module_1.EvidenceModule,
-            personnel_module_1.PersonnelModule, duty_module_1.DutyModule, applications_module_1.ApplicationsModule, application_bans_module_1.ApplicationBansModule, academy_module_1.AcademyModule, notifications_module_1.NotificationsModule, search_module_1.SearchModule, communication_module_1.CommunicationModule, analytics_module_1.AnalyticsModule, realtime_module_1.RealtimeModule, admin_module_1.AdminModule, export_module_1.ExportModule, media_module_1.MediaModule, studio_module_1.StudioModule, discord_module_1.DiscordModule, danger_module_1.DangerModule, radio_module_1.RadioModule, sek_module_1.SekModule, qualifications_module_1.QualificationsModule, tickets_module_2.SupportTicketsModule, leave_module_1.LeaveModule, roster_module_1.RosterModule, me_module_1.MeModule, radio_codes_module_1.RadioCodesModule, teamchance_module_1.TeamChanceModule, cad_module_1.CadModule, mdt_module_1.MdtModule, fleet_module_1.FleetModule, locks_module_1.LocksModule, workflows_module_1.WorkflowsModule, welcome_module_1.WelcomeModule, voice_support_module_1.VoiceSupportModule, embeds_module_1.EmbedsModule, message_builder_module_1.MessageBuilderModule, server_module_1.ServerModule, logging_module_1.LoggingModule, backup_module_1.BackupModule, verification_module_1.VerificationModule, panels_module_1.PanelsModule, duty_reports_module_1.DutyReportsModule, hr_module_1.HrModule,
+            personnel_module_1.PersonnelModule, duty_module_1.DutyModule, applications_module_1.ApplicationsModule, application_bans_module_1.ApplicationBansModule, academy_module_1.AcademyModule, notifications_module_1.NotificationsModule, search_module_1.SearchModule, communication_module_1.CommunicationModule, analytics_module_1.AnalyticsModule, realtime_module_1.RealtimeModule, admin_module_1.AdminModule, export_module_1.ExportModule, media_module_1.MediaModule, studio_module_1.StudioModule, discord_module_1.DiscordModule, danger_module_1.DangerModule, radio_module_1.RadioModule, sek_module_1.SekModule, qualifications_module_1.QualificationsModule, tickets_module_2.SupportTicketsModule, leave_module_1.LeaveModule, roster_module_1.RosterModule, me_module_1.MeModule, radio_codes_module_1.RadioCodesModule, teamchance_module_1.TeamChanceModule, cad_module_1.CadModule, mdt_module_1.MdtModule, fleet_module_1.FleetModule, locks_module_1.LocksModule, workflows_module_1.WorkflowsModule, welcome_module_1.WelcomeModule, voice_support_module_1.VoiceSupportModule, embeds_module_1.EmbedsModule, message_builder_module_1.MessageBuilderModule, server_links_module_1.ServerLinksModule, multi_server_module_1.MultiServerModule, multi_server_restore_module_1.MultiServerRestoreModule, logging_module_1.LoggingModule, backup_module_1.BackupModule, verification_module_1.VerificationModule, panels_module_1.PanelsModule, duty_reports_module_1.DutyReportsModule, hr_module_1.HrModule,
         ],
         controllers: [health_controller_1.HealthController, audit_controller_1.AuditController],
         providers: [

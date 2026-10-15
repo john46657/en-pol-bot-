@@ -51,11 +51,11 @@ export declare class ServiceNumbersService implements OnModuleInit {
         first: string;
         last: string;
         isActive: boolean;
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         department: string | null;
         position: number;
         prefix: string;
@@ -70,12 +70,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         releaseAs: string;
     }[]>;
     saveRange(actor: Actor, d: RangeInput, id?: string): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         active: boolean;
+        name: string;
         department: string | null;
         position: number;
         prefix: string;
@@ -124,12 +124,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         name: string | null;
         actor: string;
         approver: string | null;
-        userId: string | null;
-        display: string;
         id: string;
         createdAt: Date;
         reason: string | null;
+        userId: string | null;
         personnelId: string | null;
+        display: string;
         action: string;
         actorId: string | null;
         oldDisplay: string | null;
@@ -156,12 +156,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;
@@ -200,12 +200,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;
@@ -235,12 +235,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;
@@ -281,15 +281,15 @@ export declare class ServiceNumbersService implements OnModuleInit {
     pending(): Promise<{
         name: string;
         personnelId: string | null;
-        userId: string;
-        discordId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         reason: string;
+        userId: string;
         kind: string;
+        discordId: string | null;
         applicationId: string;
     }[]>;
     /** Ausstehende Einstellung bestätigen/abschließen: Nummer aus dem Kreis der Zuordnung vergeben. */
@@ -297,12 +297,12 @@ export declare class ServiceNumbersService implements OnModuleInit {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;

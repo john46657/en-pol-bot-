@@ -7,7 +7,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
 const fields = { meaning: z.string().trim().min(1).max(200), category: z.string().trim().max(64).nullable().optional(), description: z.string().trim().max(1000).nullable().optional() };
-const create = z.object({ code: z.string().trim().min(1).max(32), ...fields });
+const create = z.object({ code: z.string().trim().min(1).max(32), ...fields, guildId: z.string().regex(/^\d{15,25}$/).nullable().optional() });
 const update = z.object({ code: z.string().trim().min(1).max(32).optional(), meaning: fields.meaning.optional(), category: fields.category, description: fields.description });
 const listQ = z.object({ q: z.string().max(64).optional() });
 const discordCfg = z.object({ channelId: z.string().regex(/^\d{15,25}$/).nullable(), title: z.string().max(256), description: z.string().max(2000), color: z.string().regex(/^#[0-9a-fA-F]{6}$/), groupByCategory: z.boolean(), showDescription: z.boolean(), autoUpdate: z.boolean() });

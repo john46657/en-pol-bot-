@@ -13,6 +13,7 @@ exports.AuditService = exports.setAuditSink = void 0;
 exports.redact = redact;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const guild_context_1 = require("../common/guild-context");
 const SENSITIVE = /password|secret|token|apikey|api_key|hash/i;
 /** Entfernt Geheimnisse rekursiv, bevor Daten ins Audit-Log gelangen. */
 function redact(value) {
@@ -43,6 +44,7 @@ let AuditService = class AuditService {
                 before: redact(entry.before),
                 after: redact(entry.after),
                 reason: entry.reason,
+                serverId: entry.serverId === undefined ? (0, guild_context_1.currentGuild)() : entry.serverId,
                 result: entry.result ?? 'SUCCESS',
             },
         });

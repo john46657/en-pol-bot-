@@ -11,7 +11,6 @@ const commands_1 = require("./commands");
 const features_1 = require("./commands/features");
 const qualifications_1 = require("./commands/qualifications");
 const config_1 = require("./config");
-const home_1 = require("./home");
 const live_1 = require("./live");
 const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
@@ -269,7 +268,7 @@ const verify = (0, verify_1.createVerify)(api, {
     apply: applyVerify,
     async guildsOf(userId) {
         const out = [];
-        for (const g of (0, home_1.ownGuilds)(client)) {
+        for (const g of client.guilds.cache.values()) {
             const m = await g.members.fetch(userId).catch(() => null);
             if (m)
                 out.push({ guildId: g.id, displayName: m.user.username });
@@ -428,8 +427,6 @@ function baseCtx(i) {
                     await m.roles.add(add, 'EN Polizei: Formular-Panel');
             },
             setRole: async (guildId, userId, roleId, mode) => {
-                if (!(0, home_1.isHomeGuild)(guildId))
-                    throw new Error('foreign server');
                 const g = await client.guilds.fetch(guildId);
                 const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
                 if (!role || role.managed)
@@ -530,48 +527,38 @@ function wire(c) {
     c.on('error', (e) => console.error('discord client error:', e.message));
     c.on('shardError', (e, id) => console.error(`discord shard ${id} error:`, e.message));
     c.on('interactionCreate', (i) => {
-        // nur auf dem Discord-Server der EN Polizei (die API weist andere Server zusätzlich ab)
-        if (i.guildId && !(0, home_1.isHomeGuild)(i.guildId)) {
-            if (i.isRepliable())
-                void i.reply({ content: 'Dieser Bot ist nur auf dem Discord-Server der EN Polizei aktiv.', flags: discord_js_1.MessageFlags.Ephemeral }).catch(() => undefined);
-            return;
-        }
-        // Server und Rollen der Interaktion gehen mit an die API (Mitgliedschaft und Rollenabgleich)
+        // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
         const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
     c.on('voiceStateUpdate', (o, n) => {
         const user = n.member?.user ?? o.member?.user;
-        if (!user || !(0, home_1.isHomeGuild)(n.guild.id))
+        if (!user)
             return;
         void voiceSupport.onVoiceState({ guildId: n.guild.id, userId: n.id, userName: n.member?.displayName ?? user.username, bot: user.bot, from: o.channelId, to: n.channelId })
             .catch((x) => console.error('voice support failed:', x instanceof Error ? x.message : x));
     });
     c.on('guildMemberAdd', (m) => {
-        if (!(0, home_1.isHomeGuild)(m.guild.id))
-            return;
         const e = memberEvent(m);
         if (!e)
             return;
         void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x));
     });
-    c.on('guildMemberRemove', (m) => { if (!(0, home_1.isHomeGuild)(m.guild.id))
-        return; staffLists.changed(); const e = memberEvent(m); if (e)
+    c.on('guildMemberRemove', (m) => { staffLists.changed(); const e = memberEvent(m); if (e)
         void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
     // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
-    c.on('guildMemberUpdate', (o, n) => { if ((0, home_1.isHomeGuild)(n.guild.id) && (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))))
+    c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r)))
         staffLists.changed(); });
     // Ghost-Ping: nur Nachrichten aus dem Cache (Erwähnungen bekannt); Teil-Nachrichten ohne Daten werden übergangen
     c.on('messageDelete', (m) => {
-        if (m.partial || !m.inGuild() || !m.author || !(0, home_1.isHomeGuild)(m.guildId))
+        if (m.partial || !m.inGuild() || !m.author)
             return;
         void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? '', createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
     });
     // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)
     c.on('messageCreate', (m) => {
         if (m.inGuild()) {
-            if ((0, home_1.isHomeGuild)(m.guildId))
-                void tickets.onMessage(m);
+            void tickets.onMessage(m);
             return;
         } // Verlauf der Support-Tickets
         if (m.author.bot)
@@ -581,9 +568,9 @@ function wire(c) {
     });
 }
 setInterval(() => (0, qualifications_1.sweepSessions)(), 10 * 60_000).unref();
-/** Dienst-Rollen auf dem Discord-Server abgleichen. Nur tatsächlich nötige Änderungen. */
-async function syncMemberRoles(userId, add, remove) {
-    for (const g of (0, home_1.ownGuilds)(client)) {
+/** Rollen auf allen Servern abgleichen, auf denen es sie gibt (Dienst-Rollen). Nur tatsächlich nötige Änderungen. */
+async function syncRolesEverywhere(userId, add, remove) {
+    for (const g of client.guilds.cache.values()) {
         const present = [...add, ...remove].filter((r) => g.roles.cache.has(r));
         if (!present.length)
             continue;
@@ -598,10 +585,10 @@ async function syncMemberRoles(userId, add, remove) {
             await member.roles.add(toAdd, 'EN Polizei: Dienststatus');
     }
 }
-/** Rolle auf dem Discord-Server vergeben (angenommene Bewerbung). */
-async function grantMemberRole(userId, roleId) {
+/** Rolle auf allen Servern vergeben, auf denen es sie gibt (angenommene Bewerbung). */
+async function grantRoleEverywhere(userId, roleId) {
     let found = false;
-    for (const g of (0, home_1.ownGuilds)(client)) {
+    for (const g of client.guilds.cache.values()) {
         const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
         if (!role)
             continue;
@@ -611,7 +598,7 @@ async function grantMemberRole(userId, roleId) {
             await member.roles.add(roleId, 'EN Polizei: Bewerbung angenommen');
     }
     if (!found)
-        throw new Error('role not found on the server');
+        throw new Error('role not found on any server');
 }
 /** Beim Start prüfen, ob das System erreichbar ist (nur Hinweis – der Bot läuft auch ohne API weiter). */
 async function checkApi() {
@@ -631,49 +618,41 @@ function wireReady(client0) {
         console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(', ') || 'keiner – Bot mit dem Link oben einladen'}`);
         void checkApi();
         const json = commands_1.COMMANDS.map(toBuilder);
-        // Befehle nur auf dem Discord-Server der EN Polizei registrieren (sofort sichtbar). Welcher das ist, sagt das System
-        // (DISCORD_GUILD_ID bzw. Einstellungen); bis es erreichbar ist, gilt DISCORD_GUILD_ID der Bot-Konfiguration.
+        // Befehle auf JEDEM Server des Bots registrieren (sofort sichtbar) – auch auf neuen Servern, sobald der Bot eingeladen wird.
+        // DISCORD_GUILD_ID wird zusätzlich berücksichtigt (falls der Bot dort noch nicht im Cache ist).
         try {
             await c.application.commands.set([]);
         }
         catch (e) {
             console.error(`could not clear global commands: ${e instanceof Error ? e.message : e}`);
         } // keine doppelten (global + Server)
-        (0, home_1.setHomeGuild)((0, config_1.guildIds)(cfg)[0]);
-        // nur Befehle aktivierter Module (Komfort – die API prüft Modul und Rechte bei JEDER Ausführung erneut)
+        // Je Server nur Befehle der dort aktivierten Module (Komfort – die API prüft Modul und Rechte bei JEDER Ausführung erneut)
         const registered = new Map();
-        const register = async (g, name, list, quiet = false, note = '') => {
+        const register = async (g, name, quiet = false) => {
+            const mods = await api.service('GET', `/bot/servers/${g}/modules`).catch(() => null);
+            const list = mods ? json.filter((j) => (0, shared_1.commandsForServer)([{ name: j.name }], mods.disabled).length) : json;
             const sig = list.map((j) => j.name).sort().join(',');
             if (quiet && registered.get(g) === sig)
                 return;
             try {
                 await c.application.commands.set(list, g);
                 registered.set(g, sig);
-                console.log(`${list.length} slash commands registered for ${name ?? g}${note}`);
+                console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(', ')})` : ''}`);
             }
             catch (e) {
                 console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
             }
         };
-        const syncCommands = async (quiet = false) => {
-            const s = await api.service('GET', '/bot/server').catch(() => null);
-            (0, home_1.setHomeGuild)(s?.guildId);
-            const list = s ? json.filter((j) => (0, shared_1.commandsForModules)([{ name: j.name }], s.disabled).length) : json;
-            const servers = new Map((0, home_1.ownGuilds)(c).map((g) => [g.id, g.name]));
-            for (const g of (0, config_1.guildIds)(cfg).slice(0, 1))
-                if ((0, home_1.isHomeGuild)(g) && !servers.has(g))
-                    servers.set(g, g);
-            for (const [id, name] of servers)
-                await register(id, name, list, quiet, s?.disabled.length ? ` (Module aus: ${s.disabled.join(', ')})` : '');
-            // andere Server, auf denen der Bot (noch) ist: keine Befehle (früher dort registrierte werden entfernt)
-            for (const g of c.guilds.cache.values())
-                if (!(0, home_1.isHomeGuild)(g.id))
-                    await register(g.id, g.name, [], true, ' (nicht der Server der EN Polizei – keine Befehle)');
-        };
         // Moduländerungen im Dashboard: Befehlsliste alle 2 Minuten abgleichen (nur bei Änderung neu registrieren)
-        setInterval(() => void syncCommands(true), 120_000).unref();
-        await syncCommands();
-        c.on('guildCreate', (g) => { console.log(`added to server ${g.name}${(0, home_1.isHomeGuild)(g.id) ? '' : ' (nicht der Server der EN Polizei – der Bot bleibt dort inaktiv)'}`); void syncCommands(true); });
+        setInterval(() => { for (const [id, gname] of c.guilds.cache.map((x) => [x.id, x.name]))
+            void register(id, gname, true); }, 120_000).unref();
+        const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));
+        for (const g of (0, config_1.guildIds)(cfg))
+            if (!all.has(g))
+                all.set(g, g);
+        for (const [id, name] of all)
+            await register(id, name);
+        c.on('guildCreate', (g) => { console.log(`added to server ${g.name}`); void register(g.id, g.name); });
         // Teamliste und Voice-Widget im Dashboard (alle 5 s und bei Änderungen)
         const presence = (0, presence_1.startPresenceReporter)(() => client, api, { members: intents.members, presences: intents.presences });
         (0, outbox_1.startOutboxLoop)(api, async (channelId, embeds, buttons, opts) => {
@@ -711,7 +690,7 @@ function wireReady(client0) {
             }
             if (opts?.thread)
                 await msg.startThread({ name: opts.thread, autoArchiveDuration: 10080 }).catch((e) => console.error('could not create staff thread:', e instanceof Error ? e.message : e));
-        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantMemberRole, syncMemberRoles, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
+        }, cfg.OUTBOX_POLL_SECONDS, console.log, (userId, msg) => (typeof msg === 'string' ? platform.sendDirectMessage(userId, msg) : platform.sendDm(userId, { embed: msg }).then(() => undefined)), grantRoleEverywhere, syncRolesEverywhere, () => void live.refresh('teamlist').catch(() => undefined), (effects) => tickets.apply(effects).then(() => undefined, (e) => console.error('ticket effects failed:', e instanceof Error ? e.message : e)), () => void presence.sync().catch((e) => console.error('team/voice sync failed:', e instanceof Error ? e.message : e)), async (kind, channelId) => { await live.refresh(kind, { channelId, force: true }); }, async (type, p) => {
             if (type === 'voice.effects') {
                 await voiceSupport.applyEffects(p);
                 return true;
@@ -771,8 +750,8 @@ function wireReady(client0) {
                         const ch = await client.channels.fetch(channelId).catch(() => null);
                         if (!ch || ch.isDMBased() || !ch.isSendable() || !('permissionsFor' in ch))
                             throw new Error('Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.');
-                        if (!(0, home_1.isHomeGuild)(ch.guildId) || (guildId && ch.guildId !== guildId))
-                            throw new Error('Der Kanal gehört nicht zum Discord-Server der EN Polizei.');
+                        if (!guildId || ch.guildId !== guildId)
+                            throw new Error('Der Kanal gehört nicht zu dem Discord-Server, für den die Nachricht gebaut wurde.');
                         const perms = ch.permissionsFor(client.user);
                         const need = [
                             [discord_js_1.PermissionFlagsBits.ViewChannel, 'Kanal ansehen', true],
@@ -804,18 +783,18 @@ function wireReady(client0) {
                 return true;
             }
             if (type === 'bot.nickname') {
-                // Dienstnummer im Nickname (Bot braucht „Nicknames verwalten“; Server-Inhaber geht nicht)
+                // Dienstnummer im Nickname – auf allen Servern, auf denen die Person ist (Bot braucht „Nicknames verwalten“; Server-Inhaber geht nicht)
                 const userId = String(p.discordId ?? ''), nick = String(p.nickname ?? '').slice(0, 32);
                 if (!/^\d{15,25}$/.test(userId) || !nick)
                     throw new Error('invalid nickname task');
                 let done = 0;
-                for (const g of (0, home_1.ownGuilds)(client)) {
+                for (const g of client.guilds.cache.values()) {
                     const m = await g.members.fetch(userId).catch(() => null);
                     if (m && m.id !== g.ownerId && (await m.setNickname(nick, 'EN Polizei: Dienstnummer').then(() => true, () => false)))
                         done++;
                 }
                 if (!done)
-                    console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on the server)`);
+                    console.warn(`nickname for ${userId} could not be set (missing permission, owner or not on a server)`);
                 return true;
             }
             if (type === 'bot.backup.create') {

@@ -74,8 +74,8 @@ export declare class InvestigationsController {
     constructor(i: InvestigationsService);
     list(q: z.infer<typeof listQ>): Promise<{
         items: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -91,8 +91,8 @@ export declare class InvestigationsController {
     }>;
     get(id: string): Promise<{
         investigation: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -126,15 +126,15 @@ export declare class InvestigationsController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -146,8 +146,8 @@ export declare class InvestigationsController {
     }>;
     addPerson(a: Actor, id: string, b: z.infer<typeof addPerson>): Promise<void>;
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -160,8 +160,8 @@ export declare class InvestigationsController {
     close(a: Actor, id: string, b: {
         reason: string;
     }): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;

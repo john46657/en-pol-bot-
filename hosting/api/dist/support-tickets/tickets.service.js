@@ -26,7 +26,6 @@ const errors_1 = require("../common/errors");
 const env_1 = require("../config/env");
 const web_url_1 = require("../common/web-url");
 const config_service_1 = require("./config.service");
-const guild_context_1 = require("../common/guild-context");
 const transcript_1 = require("./transcript");
 const MAX_ATTACHMENT = 8 * 1024 * 1024;
 const INLINE_IMAGE = 2 * 1024 * 1024;
@@ -271,9 +270,10 @@ let SupportTicketsService = class SupportTicketsService {
     async openFromDashboard(actor, d) {
         if (actor.userId)
             await this.perms.assert(actor.userId, 'ticket.create');
-        // der Discord-Server dieses Systems (ohne Einrichtung: der des Befehls bzw. der Ticket-Art)
+        const ch = await this.discord.channels();
+        // aus Discord (/ticket mitglied:…): der Server, auf dem der Befehl kam – sonst der eingestellte Server
         const cat = await this.config.category(d.categoryId);
-        const guildId = (0, guild_context_1.homeGuild)() ?? d.guildId ?? cat.guildId ?? undefined;
+        const guildId = d.guildId ?? cat.guildId ?? (ch.guildId ?? process.env.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).find((g) => /^\d{15,25}$/.test(g));
         if (!guildId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Trage zuerst die Discord-Server-ID unter Einstellungen → Discord-Bot-Kanäle ein.');
         return this.open({ categoryId: d.categoryId, guildId, discordId: d.discordId, discordName: d.discordName || d.discordId, memberRoleIds: [] }, actor, true);

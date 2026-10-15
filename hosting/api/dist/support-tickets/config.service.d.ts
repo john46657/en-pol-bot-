@@ -14,7 +14,6 @@ export declare class TicketConfigService {
     /** `guildId`: nur Kategorien/Panels dieses Servers und die für alle Server. */
     all(guildId?: string): Promise<{
         categories: ({
-            name: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -22,6 +21,7 @@ export declare class TicketConfigService {
             description: string;
             active: boolean;
             guildId: string | null;
+            name: string;
             position: number;
             questions: Prisma.JsonValue;
             emoji: string | null;
@@ -75,7 +75,6 @@ export declare class TicketConfigService {
             questions: TicketQuestion[];
         })[];
         panels: {
-            name: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -83,7 +82,10 @@ export declare class TicketConfigService {
             title: string;
             description: string;
             guildId: string | null;
+            name: string;
             position: number;
+            channelId: string | null;
+            messageId: string | null;
             emoji: string | null;
             thumbnailUrl: string | null;
             imageUrl: string | null;
@@ -94,17 +96,15 @@ export declare class TicketConfigService {
             authorIconUrl: string | null;
             style: string;
             placeholder: string;
-            channelId: string | null;
             categoryIds: string[];
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            messageId: string | null;
         }[];
         statuses: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -114,9 +114,9 @@ export declare class TicketConfigService {
             isClose: boolean;
         }[];
         priorities: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -153,9 +153,9 @@ export declare class TicketConfigService {
         questions: TicketQuestion[];
     };
     statuses(): Prisma.PrismaPromise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         kind: string;
         position: number;
         emoji: string;
@@ -165,9 +165,9 @@ export declare class TicketConfigService {
         isClose: boolean;
     }[]>;
     priorities(): Prisma.PrismaPromise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         position: number;
         emoji: string;
         isDefault: boolean;
@@ -181,7 +181,6 @@ export declare class TicketConfigService {
     }[]>;
     settings(): Promise<TicketSettings>;
     category(id: string): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -189,6 +188,7 @@ export declare class TicketConfigService {
         description: string;
         active: boolean;
         guildId: string | null;
+        name: string;
         position: number;
         questions: Prisma.JsonValue;
         emoji: string | null;
@@ -242,7 +242,6 @@ export declare class TicketConfigService {
         questions: TicketQuestion[];
     }>;
     saveCategory(actor: Actor, id: string | null, d: CategoryInput): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -250,6 +249,7 @@ export declare class TicketConfigService {
         description: string;
         active: boolean;
         guildId: string | null;
+        name: string;
         position: number;
         questions: Prisma.JsonValue;
         emoji: string | null;
@@ -303,7 +303,6 @@ export declare class TicketConfigService {
         questions: TicketQuestion[];
     }>;
     duplicateCategory(actor: Actor, id: string): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -311,6 +310,7 @@ export declare class TicketConfigService {
         description: string;
         active: boolean;
         guildId: string | null;
+        name: string;
         position: number;
         questions: Prisma.JsonValue;
         emoji: string | null;
@@ -365,7 +365,6 @@ export declare class TicketConfigService {
     }>;
     deleteCategory(actor: Actor, id: string): Promise<void>;
     savePanel(actor: Actor, id: string | null, d: PanelInput): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -373,7 +372,10 @@ export declare class TicketConfigService {
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
         position: number;
+        channelId: string | null;
+        messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
         imageUrl: string | null;
@@ -384,15 +386,12 @@ export declare class TicketConfigService {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     duplicatePanel(actor: Actor, id: string): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -400,7 +399,10 @@ export declare class TicketConfigService {
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
         position: number;
+        channelId: string | null;
+        messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
         imageUrl: string | null;
@@ -411,18 +413,16 @@ export declare class TicketConfigService {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     deletePanel(actor: Actor, id: string): Promise<void>;
     saveStatus(actor: Actor, id: string | null, d: z.infer<typeof statusSchema>): Promise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         kind: string;
         position: number;
         emoji: string;
@@ -433,9 +433,9 @@ export declare class TicketConfigService {
     }>;
     deleteStatus(actor: Actor, id: string): Promise<void>;
     savePriority(actor: Actor, id: string | null, d: z.infer<typeof prioritySchema>): Promise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         position: number;
         emoji: string;
         isDefault: boolean;
