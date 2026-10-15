@@ -2255,3 +2255,108 @@ model SyncedRecord {
   @@unique([targetServerId, dataType, sourceRecordId])
   @@index([targetServerId, dataType, updatedAt])
 }
+
+// ───────────── Discord Message Builder ─────────────
+
+/// Kategorien der Vorlagen (im Editor bearbeitbar).
+model MessageBuilderCategory {
+  id        String                   @id @default(uuid()) @db.Uuid
+  name      String                   @unique
+  position  Int                      @default(0)
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+  documents MessageBuilderDocument[]
+}
+
+/// Entwurf oder Vorlage: eine Gruppe aus mehreren Discord-Nachrichten (Inhalt siehe `mbDocumentDataSchema` in @enrp/shared).
+model MessageBuilderDocument {
+  id          String                  @id @default(uuid()) @db.Uuid
+  /// DRAFT | TEMPLATE
+  kind        String
+  name        String
+  categoryId  String?                 @db.Uuid
+  data        Json
+  /// zuletzt gewählter Kanal (Komfort beim Senden)
+  channelId   String?
+  /// optimistisches Sperren (Autosave aus mehreren Tabs)
+  version     Int                     @default(1)
+  createdById String?                 @db.Uuid
+  updatedById String?                 @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  /// gelöscht (nach Bestätigung) – bleibt als Archiv erhalten
+  archivedAt  DateTime?
+  category    MessageBuilderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([kind, archivedAt, updatedAt])
+}
+
+/// Ein Versand (Historie): Gruppe von Nachrichten an einen Kanal über den Bot, einen Webhook oder als Test (ohne Discord).
+model MessageBuilderSend {
+  id            String                   @id @default(uuid()) @db.Uuid
+  documentId    String?                  @db.Uuid
+  documentName  String
+  /// BOT | WEBHOOK | TEST
+  mode          String
+  channelId     String?
+  channelName   String?
+  webhookId     String?                  @db.Uuid
+  /// QUEUED | SENDING | SENT | PARTIAL | FAILED | TEST
+  status        String                   @default("QUEUED")
+  error         String?
+  createdById   String?                  @db.Uuid
+  createdByName String
+  createdAt     DateTime                 @default(now())
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  items         MessageBuilderSendItem[]
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+/// Eine Nachricht eines Versands mit eigenem Status. `payload` (Discord-JSON) nur bis zum Versand, danach geleert.
+model MessageBuilderSendItem {
+  id        String             @id @default(uuid()) @db.Uuid
+  sendId    String             @db.Uuid
+  position  Int
+  summary   String
+  /// PENDING | SENT | FAILED | SKIPPED | TEST
+  status    String             @default("PENDING")
+  messageId String?
+  error     String?
+  payload   Json?
+  sentAt    DateTime?
+  send      MessageBuilderSend @relation(fields: [sendId], references: [id], onDelete: Cascade)
+
+  @@unique([sendId, position])
+}
+
+/// Aktion eines interaktiven Buttons/Auswahlmenüs (custom_id `mb:<id>`). Beim Versand festgeschrieben – spätere Änderungen an der Vorlage ändern gesendete Buttons nicht.
+model MessageBuilderAction {
+  id          String   @id @default(uuid()) @db.Uuid
+  sendId      String?  @db.Uuid
+  /// button | select
+  kind        String
+  config      Json
+  createdById String?  @db.Uuid
+  createdAt   DateTime @default(now())
+
+  @@index([sendId])
+}
+
+/// Optionaler Webhook (Versand mit eigenem Namen/Bild). Die URL enthält das Webhook-Token und liegt nur verschlüsselt vor.
+model MessageBuilderWebhook {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  /// AES-256-GCM-verschlüsselte Webhook-URL
+  secret      String
+  /// öffentliche Discord-ID des Webhooks
+  webhookId   String
+  channelId   String?
+  guildId     String?
+  createdById String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  archivedAt  DateTime?
+}

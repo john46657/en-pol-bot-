@@ -44,6 +44,8 @@ export interface Ctx {
     post(channelId: string, message: import('@enrp/shared').MessageSpec, asUser?: { username: string; avatarURL?: string }): Promise<{ channelId: string; messageId: string }>;
     deleteMessage(channelId: string, messageId: string): Promise<void>;
     addRoles(guildId: string, userId: string, roleIds: string[]): Promise<void>;
+    /** Eine Rolle geben/nehmen/umschalten (Message-Builder-Buttons); liefert, was passiert ist. */
+    setRole?(guildId: string, userId: string, roleId: string, mode: 'toggle' | 'add' | 'remove'): Promise<'added' | 'removed' | 'unchanged'>;
   };
   /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
   voiceSupport?: VoiceSupportRuntime;

@@ -15,6 +15,12 @@ export interface DiscordGuildInfo {
         type: 'text' | 'category' | 'voice' | 'other';
         parentId: string | null;
         position: number;
+        bot?: {
+            view: boolean;
+            send: boolean;
+            embed: boolean;
+            mentionEveryone?: boolean;
+        };
     }[];
     roles: {
         id: string;

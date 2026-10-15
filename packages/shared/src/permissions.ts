@@ -58,6 +58,12 @@ export const PERMISSION_CATALOG = {
   roles: ['view', 'manage'],
   /** Module an/aus (Administration → Module) */
   modules: ['view', 'manage'],
+  /**
+   * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
+   * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
+   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+   */
+  messagebuilder: ['view', 'create', 'templates_create', 'templates_edit', 'templates_delete', 'send', 'history', 'channels', 'webhooks', 'roles'],
 } as const;
 
 type Catalog = typeof PERMISSION_CATALOG;

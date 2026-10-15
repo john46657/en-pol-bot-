@@ -16,7 +16,9 @@ import { HomeServerService } from '../server/home-server.service';
 const sf = z.string().regex(/^\d{15,25}$/);
 const guildsBody = z.object({ guilds: z.array(z.object({
   id: sf, name: z.string().max(100), icon: z.string().url().max(300).nullable(),
-  channels: z.array(z.object({ id: sf, name: z.string().max(100), type: z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: z.number().int() })).max(500),
+  channels: z.array(z.object({ id: sf, name: z.string().max(100), type: z.enum(['text', 'category', 'voice', 'other']), parentId: sf.nullable(), position: z.number().int(),
+    /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
+    bot: z.object({ view: z.boolean(), send: z.boolean(), embed: z.boolean(), mentionEveryone: z.boolean().optional() }).optional() })).max(500),
   roles: z.array(z.object({ id: sf, name: z.string().max(100), color: z.number().int().min(0), position: z.number().int() })).max(250),
 })).max(50) });
 const redeem = z.object({ code: z.string().trim().min(8).max(12), discordId: z.string().regex(/^\d{15,25}$/) });

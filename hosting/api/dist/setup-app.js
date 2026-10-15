@@ -20,7 +20,7 @@ function configureApp(app) {
     app.useBodyParser('json', { limit: '5mb' });
     const httpsOnly = env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : env.NODE_ENV === 'production';
     // Ohne HTTPS dürfen CSP/HSTS die Seite nicht auf https „hochziehen“ (sonst laden Assets nicht).
-    app.use((0, helmet_1.default)({ contentSecurityPolicy: { useDefaults: true, directives: { 'img-src': ["'self'", 'data:', 'blob:', 'https://cdn.discordapp.com', 'https://*.rbxcdn.com', 'https://api.erlc.gg'], ...(httpsOnly ? {} : { 'upgrade-insecure-requests': null }) } }, hsts: httpsOnly }));
+    app.use((0, helmet_1.default)({ contentSecurityPolicy: { useDefaults: true, directives: { 'img-src': ["'self'", 'data:', 'blob:', 'https://cdn.discordapp.com', 'https://*.rbxcdn.com', 'https://api.erlc.gg', /* Message-Builder-Vorschau: Bilder beliebiger https-Adressen (nur Bilder, keine Skripte) */ 'https:'], ...(httpsOnly ? {} : { 'upgrade-insecure-requests': null }) } }, hsts: httpsOnly }));
     app.use((0, cookie_parser_1.default)());
     const express = app.getHttpAdapter().getInstance();
     express.set('trust proxy', 1);

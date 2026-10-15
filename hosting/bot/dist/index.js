@@ -20,6 +20,7 @@ const ghost_ping_1 = require("./ghost-ping");
 const backup_1 = require("./backup");
 const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
+const message_builder_1 = require("./message-builder");
 const format_1 = require("./format");
 const shared_1 = require("@enrp/shared");
 (0, config_1.loadDotEnv)();
@@ -426,6 +427,26 @@ function baseCtx(i) {
                 if (m && add.length)
                     await m.roles.add(add, 'EN Polizei: Formular-Panel');
             },
+            setRole: async (guildId, userId, roleId, mode) => {
+                if (!(0, home_1.isHomeGuild)(guildId))
+                    throw new Error('foreign server');
+                const g = await client.guilds.fetch(guildId);
+                const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
+                if (!role || role.managed)
+                    throw new Error('Die Rolle gibt es nicht (mehr).');
+                const m = await g.members.fetch(userId);
+                const has = m.roles.cache.has(roleId);
+                if ((mode === 'toggle' && has) || mode === 'remove') {
+                    if (!has)
+                        return 'unchanged';
+                    await m.roles.remove(roleId, 'EN Polizei: Message-Builder-Button');
+                    return 'removed';
+                }
+                if (has)
+                    return 'unchanged';
+                await m.roles.add(roleId, 'EN Polizei: Message-Builder-Button');
+                return 'added';
+            },
         },
     };
 }
@@ -741,6 +762,33 @@ function wireReady(client0) {
                 const channelId = typeof p.channelId === 'string' ? p.channelId : '';
                 const r = await (0, messages_1.postOrUpdate)(client, api, { channelId, message: p.message, messageId: typeof p.messageId === 'string' ? p.messageId : null, forceNew: typeof p.messageId !== 'string' });
                 await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, r);
+                return true;
+            }
+            if (type === 'mb.send') {
+                // Discord Message Builder: Gruppe in Reihenfolge senden, Status je Nachricht ans System melden
+                await (0, message_builder_1.runMbSend)(api, String(p.sendId ?? ''), {
+                    async missingPerms(guildId, channelId, payloads) {
+                        const ch = await client.channels.fetch(channelId).catch(() => null);
+                        if (!ch || ch.isDMBased() || !ch.isSendable() || !('permissionsFor' in ch))
+                            throw new Error('Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.');
+                        if (!(0, home_1.isHomeGuild)(ch.guildId) || (guildId && ch.guildId !== guildId))
+                            throw new Error('Der Kanal gehört nicht zum Discord-Server der EN Polizei.');
+                        const perms = ch.permissionsFor(client.user);
+                        const need = [
+                            [discord_js_1.PermissionFlagsBits.ViewChannel, 'Kanal ansehen', true],
+                            [discord_js_1.PermissionFlagsBits.SendMessages, 'Nachrichten senden', true],
+                            [discord_js_1.PermissionFlagsBits.EmbedLinks, 'Links einbetten', payloads.some((x) => x.embeds.length)],
+                            [discord_js_1.PermissionFlagsBits.MentionEveryone, '@everyone, @here und alle Rollen erwähnen', payloads.some((x) => x.allowed_mentions.parse.includes('everyone') && /@(everyone|here)/.test(x.content ?? ''))],
+                        ];
+                        return need.filter(([flag, , used]) => used && !perms?.has(flag)).map(([, name]) => name);
+                    },
+                    async send(channelId, x) {
+                        const ch = await client.channels.fetch(channelId);
+                        if (!ch?.isSendable())
+                            throw new Error('Der Kanal ist nicht beschreibbar.');
+                        return ch.send({ ...(x.content ? { content: x.content } : {}), embeds: x.embeds, components: x.components, allowedMentions: { parse: x.allowed_mentions.parse } });
+                    },
+                });
                 return true;
             }
             if (type === 'bot.stafflist') {

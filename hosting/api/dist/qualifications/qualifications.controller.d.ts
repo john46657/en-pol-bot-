@@ -130,6 +130,7 @@ export declare class QualificationsController {
                     confirmation: string;
                     completion: string;
                 };
+                mode: "DM" | "WEB";
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -147,7 +148,6 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -171,6 +171,7 @@ export declare class QualificationsController {
                     confirmation: string;
                     completion: string;
                 };
+                mode: "DM" | "WEB";
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -188,7 +189,6 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -217,6 +217,7 @@ export declare class QualificationsController {
                     confirmation: string;
                     completion: string;
                 };
+                mode: "DM" | "WEB";
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -234,7 +235,6 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -258,6 +258,7 @@ export declare class QualificationsController {
                     confirmation: string;
                     completion: string;
                 };
+                mode: "DM" | "WEB";
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -275,7 +276,6 @@ export declare class QualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -373,6 +373,7 @@ export declare class BotQualificationsController {
                     confirmation: string;
                     completion: string;
                 };
+                mode: "DM" | "WEB";
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -390,7 +391,6 @@ export declare class BotQualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";
@@ -414,6 +414,7 @@ export declare class BotQualificationsController {
                     confirmation: string;
                     completion: string;
                 };
+                mode: "DM" | "WEB";
                 roles: {
                     denied: string[];
                     accepted: string[];
@@ -431,7 +432,6 @@ export declare class BotQualificationsController {
                     removeOnSubmit: string[];
                     managers: string[];
                 };
-                mode: "DM" | "WEB";
                 staffThreads: boolean;
                 timeLimitMinutes: number;
                 onLeave: "DENY" | "NONE" | "WITHDRAW";

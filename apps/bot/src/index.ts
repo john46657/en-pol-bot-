@@ -26,6 +26,7 @@ import { createGhostPing } from './ghost-ping';
 import { captureGuild, restoreGuild } from './backup';
 import { createVoiceSupport } from './voice-support';
 import { createVerify, type VerifyActions } from './verify';
+import { runMbSend, type MbPayload } from './message-builder';
 import { dutyReminderDm } from './format';
 import { commandsForModules, hexColor, type VerifyPanel } from '@enrp/shared';
 
@@ -372,6 +373,18 @@ function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmi
         const add = roleIds.filter((r) => g?.roles.cache.has(r) && !m?.roles.cache.has(r));
         if (m && add.length) await m.roles.add(add, 'EN Polizei: Formular-Panel');
       },
+      setRole: async (guildId, userId, roleId, mode) => {
+        if (!isHomeGuild(guildId)) throw new Error('foreign server');
+        const g = await client.guilds.fetch(guildId);
+        const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
+        if (!role || role.managed) throw new Error('Die Rolle gibt es nicht (mehr).');
+        const m = await g.members.fetch(userId);
+        const has = m.roles.cache.has(roleId);
+        if ((mode === 'toggle' && has) || mode === 'remove') { if (!has) return 'unchanged'; await m.roles.remove(roleId, 'EN Polizei: Message-Builder-Button'); return 'removed'; }
+        if (has) return 'unchanged';
+        await m.roles.add(roleId, 'EN Polizei: Message-Builder-Button');
+        return 'added';
+      },
     },
   };
 }
@@ -633,6 +646,30 @@ function wireReady(client0: Client) {
         const channelId = typeof p.channelId === 'string' ? p.channelId : '';
         const r = await postOrUpdate(client, api, { channelId, message: p.message as MessageSpec, messageId: typeof p.messageId === 'string' ? p.messageId : null, forceNew: typeof p.messageId !== 'string' });
         await api.service('POST', `/bot/embeds/${String(p.embedId)}/posted`, r);
+        return true;
+      }
+      if (type === 'mb.send') {
+        // Discord Message Builder: Gruppe in Reihenfolge senden, Status je Nachricht ans System melden
+        await runMbSend(api, String(p.sendId ?? ''), {
+          async missingPerms(guildId, channelId, payloads) {
+            const ch = await client.channels.fetch(channelId).catch(() => null);
+            if (!ch || ch.isDMBased() || !ch.isSendable() || !('permissionsFor' in ch)) throw new Error('Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.');
+            if (!isHomeGuild(ch.guildId) || (guildId && ch.guildId !== guildId)) throw new Error('Der Kanal gehört nicht zum Discord-Server der EN Polizei.');
+            const perms = ch.permissionsFor(client.user!);
+            const need: [bigint, string, boolean][] = [
+              [PermissionFlagsBits.ViewChannel, 'Kanal ansehen', true],
+              [PermissionFlagsBits.SendMessages, 'Nachrichten senden', true],
+              [PermissionFlagsBits.EmbedLinks, 'Links einbetten', payloads.some((x) => x.embeds.length)],
+              [PermissionFlagsBits.MentionEveryone, '@everyone, @here und alle Rollen erwähnen', payloads.some((x) => x.allowed_mentions.parse.includes('everyone') && /@(everyone|here)/.test(x.content ?? ''))],
+            ];
+            return need.filter(([flag, , used]) => used && !perms?.has(flag)).map(([, name]) => name);
+          },
+          async send(channelId, x: MbPayload) {
+            const ch = await client.channels.fetch(channelId);
+            if (!ch?.isSendable()) throw new Error('Der Kanal ist nicht beschreibbar.');
+            return ch.send({ ...(x.content ? { content: x.content } : {}), embeds: x.embeds as never, components: x.components as never, allowedMentions: { parse: x.allowed_mentions.parse } });
+          },
+        });
         return true;
       }
       if (type === 'bot.stafflist') { await staffLists.refresh({ id: String(p.id ?? ''), force: true, forceNew: p.forceNew === true }); return true; }
