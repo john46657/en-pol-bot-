@@ -94,14 +94,17 @@ let DiscordService = class DiscordService {
         return (await this.prisma.systemSetting.findUnique({ where: { key: 'discord.channels' } }))?.value ?? {};
     }
     /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
+    /** Liefert die ID des Ausgangseintrags (null = nicht eingereiht), z. B. um die Zustellung später anzuzeigen. */
     async enqueue(channelKey, type, payload, opts = {}) {
         try {
             const ch = await this.channels();
             if (!ch[channelKey] && !opts.always)
-                return; // `always`: z. B. Direktnachrichten brauchen keinen Channel
-            await this.prisma.discordOutbox.create({ data: { type, channelKey, payload: payload } });
+                return null; // `always`: z. B. Direktnachrichten brauchen keinen Channel
+            return (await this.prisma.discordOutbox.create({ data: { type, channelKey, payload: payload }, select: { id: true } })).id;
         }
-        catch { /* Benachrichtigung ist best effort */ }
+        catch {
+            return null; /* Benachrichtigung ist best effort */
+        }
     }
     /**
      * Antrags-/Bewerbungsnachricht in Discord nach der Entscheidung anpassen (egal ob im Dashboard oder in Discord entschieden):

@@ -464,7 +464,7 @@ export declare const statusSchema: z.ZodObject<{
     emoji: z.ZodDefault<z.ZodString>;
     color: z.ZodDefault<z.ZodNumber>;
     position: z.ZodDefault<z.ZodNumber>;
-    kind: z.ZodDefault<z.ZodEnum<["CLOSED" | "OPEN" | "ARCHIVED", ...("CLOSED" | "OPEN" | "ARCHIVED")[]]>>;
+    kind: z.ZodDefault<z.ZodEnum<["ARCHIVED" | "CLOSED" | "OPEN", ...("ARCHIVED" | "CLOSED" | "OPEN")[]]>>;
     isDefault: z.ZodDefault<z.ZodBoolean>;
     isClaimed: z.ZodDefault<z.ZodBoolean>;
     isEscalation: z.ZodDefault<z.ZodBoolean>;
@@ -472,7 +472,7 @@ export declare const statusSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     color: number;
     name: string;
-    kind: "CLOSED" | "OPEN" | "ARCHIVED";
+    kind: "ARCHIVED" | "CLOSED" | "OPEN";
     position: number;
     emoji: string;
     isDefault: boolean;
@@ -482,7 +482,7 @@ export declare const statusSchema: z.ZodObject<{
 }, {
     name: string;
     color?: number | undefined;
-    kind?: "CLOSED" | "OPEN" | "ARCHIVED" | undefined;
+    kind?: "ARCHIVED" | "CLOSED" | "OPEN" | undefined;
     position?: number | undefined;
     emoji?: string | undefined;
     isDefault?: boolean | undefined;

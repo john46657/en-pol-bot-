@@ -230,10 +230,10 @@ declare const eventsQuery: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "FAILED" | "PENDING" | "CANCELLED" | "DONE" | "SKIPPED" | undefined;
+    status?: "FAILED" | "PENDING" | "CANCELLED" | "SKIPPED" | "DONE" | undefined;
     q?: string | undefined;
 }, {
-    status?: "FAILED" | "PENDING" | "CANCELLED" | "DONE" | "SKIPPED" | undefined;
+    status?: "FAILED" | "PENDING" | "CANCELLED" | "SKIPPED" | "DONE" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;

@@ -11,7 +11,7 @@ const guild_context_1 = require("../common/guild-context");
  * Ausnahmen gibt es nur ausdrücklich: CAD-Querverbindung (CadServerLink) und Datenfreigaben (Serververbindungen).
  */
 exports.SERVER_SCOPED_MODELS = new Set([
-    'Person', 'Vehicle', 'Weapon', 'Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession', 'Ticket', 'LegalCode',
+    'Person', 'Vehicle', 'Weapon', 'Report', 'Complaint', 'Investigation', 'WantedRecord', 'WantedHit', 'Evidence', 'DutySession', 'Ticket', 'LegalCode',
     'Incident', 'Unit', 'CadMapObject', 'CadMember',
     'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'HrAnnouncement', 'HrPoll', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
     'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',

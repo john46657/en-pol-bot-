@@ -501,6 +501,61 @@ model WantedRecord {
   @@index([serverId])
 }
 
+/// Automatischer ER:LC-Fahndungsabgleich: ein Treffer je Spieler-Sitzung und Fahndung (Historie bleibt dauerhaft erhalten).
+/// matchType: ROBLOX_ID (Roblox-ID der Akte = ID aus der ER:LC-Spielerliste) | NAME (nur Name/Alias gleich → mögliche Übereinstimmung)
+/// reviewStatus: CONFIRMED (ID-Treffer) | PENDING (manuelle Prüfung nötig) | VERIFIED (manuell bestätigt) | DISMISSED (verworfen)
+model WantedHit {
+  id             String             @id @default(uuid()) @db.Uuid
+  serverId       String?            @db.Uuid
+  wantedId       String             @db.Uuid
+  personId       String?            @db.Uuid
+  /// ER:LC-Server (ohne Fremdschlüssel: Treffer bleiben auch nach dem Entfernen des Servers erhalten)
+  erlcServerId   String?            @db.Uuid
+  erlcServerName String?
+  sessionId      String?            @db.Uuid
+  playerName     String
+  robloxUserId   String?
+  matchType      String
+  reviewStatus   String
+  /// z. B. „Roblox-ID weicht von der Akte ab“
+  matchNote      String?
+  /// Stand der Fahndung beim Erkennen (Grund/Priorität können sich später ändern)
+  wantedReason   String
+  wantedPriority String
+  detectedAt     DateTime           @default(now())
+  reviewedById   String?            @db.Uuid
+  reviewedAt     DateTime?
+  reviewNote     String?
+  /// Discord: NONE (nicht vorgesehen) | QUEUED (an den Bot übergeben, Zustellung siehe Outbox) | SKIPPED (kein Kanal) | FAILED
+  notifyStatus   String             @default("NONE")
+  notifyOutboxId String?            @db.Uuid
+  notifyError    String?
+  session        ErlcPlayerSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@unique([sessionId, wantedId])
+  @@index([serverId, detectedAt])
+  @@index([wantedId])
+  @@index([reviewStatus])
+}
+
+/// Anwesenheit auf einem ER:LC-Server, abgeleitet aus dem Vergleich aufeinanderfolgender Spielerlisten (GET /v2/server?Players=true).
+/// Offene Sitzung = leftAt NULL (höchstens eine je Server + Spieler, Teilindex in der Migration).
+model ErlcPlayerSession {
+  id           String      @id @default(uuid()) @db.Uuid
+  erlcServerId String      @db.Uuid
+  /// „id:<Roblox-ID>“ bzw. „name:<name klein>“, wenn die API keine ID liefert
+  playerKey    String
+  robloxUserId String?
+  playerName   String
+  joinedAt     DateTime    @default(now())
+  lastSeenAt   DateTime    @default(now())
+  leftAt       DateTime?
+  server       ErlcServer  @relation(fields: [erlcServerId], references: [id], onDelete: Cascade)
+  hits         WantedHit[]
+
+  @@index([erlcServerId, leftAt])
+}
+
 model Evidence {
   id              String             @id @default(uuid()) @db.Uuid
   serverId        String?            @db.Uuid
@@ -1289,6 +1344,7 @@ model ErlcServer {
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   calls          ErlcEmergencyCall[]
+  playerSessions ErlcPlayerSession[]
   commands       ErlcCommandLog[]
   liveVehicles   ErlcLiveVehicle[]
 }

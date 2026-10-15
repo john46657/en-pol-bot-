@@ -39,10 +39,10 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "CANCELLED" | "ACTIVE" | "ARCHIVED" | "EXPIRED" | "CLEARED" | undefined;
+    status?: "CANCELLED" | "ACTIVE" | "EXPIRED" | "CLEARED" | "ARCHIVED" | undefined;
     q?: string | undefined;
 }, {
-    status?: "CANCELLED" | "ACTIVE" | "ARCHIVED" | "EXPIRED" | "CLEARED" | undefined;
+    status?: "CANCELLED" | "ACTIVE" | "EXPIRED" | "CLEARED" | "ARCHIVED" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;

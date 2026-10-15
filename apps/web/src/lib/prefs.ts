@@ -52,7 +52,7 @@ const w = (widget: string, size: WidgetSize = 'M'): WidgetCfg => ({ widget, size
 export const DEFAULT_LAYOUTS: Layouts = {
   active: 'standard',
   items: [
-    { id: 'standard', name: 'Standard', widgets: [w('stats', 'XL'), w('quick', 'M'), w('favorites', 'M'), w('notifications', 'M'), w('tickets', 'M'), w('applications', 'M'), w('teamlist', 'L'), w('voice', 'M'), w('radio', 'M'), w('teamchance', 'S'), w('incidents'), w('queue'), w('units'), w('wanted'), w('reports'), w('activity')] },
+    { id: 'standard', name: 'Standard', widgets: [w('stats', 'XL'), w('quick', 'M'), w('favorites', 'M'), w('notifications', 'M'), w('tickets', 'M'), w('applications', 'M'), w('teamlist', 'L'), w('voice', 'M'), w('radio', 'M'), w('teamchance', 'S'), w('incidents'), w('queue'), w('units'), w('wanted'), w('wanted-hits'), w('reports'), w('activity')] },
     { id: 'tickets', name: 'Tickets', widgets: [w('tickets', 'L'), w('my-tickets', 'M'), w('ticket-activity', 'M'), w('quick', 'M')] },
     { id: 'team', name: 'Team', widgets: [w('teamlist', 'XL'), w('ranks', 'M'), w('offices', 'M'), w('activity', 'M'), w('voice', 'M'), w('teamchance', 'M')] },
   ],

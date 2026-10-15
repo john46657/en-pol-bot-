@@ -19,7 +19,8 @@ declare const PERMISSION_CATALOG: {
     readonly tickets: readonly ["view", "create", "edit", "void"];
     readonly complaints: readonly ["view", "create", "assign", "investigate", "resolve", "close"];
     readonly investigations: readonly ["view", "create", "edit", "close"];
-    readonly wanted: readonly ["view", "create", "edit", "activate", "clear"];
+    /** review_hits: ER:LC-Fahndungstreffer prüfen (bestätigen/verwerfen); manage_matching: Abgleich-Einstellungen */
+    readonly wanted: readonly ["view", "create", "edit", "activate", "clear", "review_hits", "manage_matching"];
     readonly evidence: readonly ["view", "create", "transfer", "release"];
     /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
     readonly personnel: readonly ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"];

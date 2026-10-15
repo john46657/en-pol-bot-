@@ -19,6 +19,7 @@ export const ACTION_LABELS: Record<string, string> = {
   investigate: 'ermitteln', resolve: 'abschließen', activate: 'aktivieren', clear: 'aufheben', transfer: 'übergeben', release: 'freigeben', promote: 'befördern',
   discipline: 'Disziplinarmaßnahmen', request: 'beantragen', report: 'melden', send: 'senden', moderate: 'moderieren', export: 'exportieren',
   handover: 'Schichtübergabe erstellen/bestätigen', view_stats: 'Statistik ansehen',
+  review_hits: 'Fahndungstreffer prüfen', manage_matching: 'ER:LC-Abgleich einstellen',
   'tickets.view': 'Bereich Tickets', 'applications.view': 'Bereich Bewerbungen', 'team.view': 'Bereich Team', 'offices.view': 'Bereich Büros',
   'voice.view': 'Bereich Sprachkanäle', 'logs.view': 'Bereich Logs', 'settings.view': 'Bereich Einstellungen',
 };

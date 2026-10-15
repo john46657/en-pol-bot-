@@ -96,9 +96,10 @@ export declare class DiscordService {
     } | null>;
     channels(): Promise<DiscordChannels>;
     /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
+    /** Liefert die ID des Ausgangseintrags (null = nicht eingereiht), z. B. um die Zustellung später anzuzeigen. */
     enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>, opts?: {
         always?: boolean;
-    }): Promise<void>;
+    }): Promise<string | null>;
     /**
      * Antrags-/Bewerbungsnachricht in Discord nach der Entscheidung anpassen (egal ob im Dashboard oder in Discord entschieden):
      * Farbe, Feld „Entscheidung“, Annehmen/Ablehnen-Buttons weg. Der Bot hat sich beim Posten gemerkt, wo sie steht (`msg-<art>-<id>`).

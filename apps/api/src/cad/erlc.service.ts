@@ -14,6 +14,7 @@ import { ErlcClient, type ErlcResult } from './erlc-client';
 import { decryptSecret, encryptSecret } from './erlc-crypto';
 import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
+import { WantedMatchService } from '../wanted/wanted-match.service';
 
 /** Öffentlicher Ed25519-Schlüssel von PRC für Event-Webhooks (https://apidocs.erlc.gg/event-webhooks). */
 const PRC_WEBHOOK_KEY = 'MCowBQYDK2VwAyEAjSICb9pp0kHizGQtdG8ySWsDChfGqi+gyFCttigBNOA=';
@@ -117,7 +118,7 @@ export class ErlcService {
   private webhookKey: KeyObject;
   private readonly seen = new Map<string, number>();
 
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService) {
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService, private readonly wantedMatch: WantedMatchService) {
     this.client = new ErlcClient();
     this.webhookKey = createPublicKey({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
   }
@@ -248,6 +249,8 @@ export class ErlcService {
       if (prev?.webhookEvents) snap.webhookEvents = prev.webhookEvents;
       await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap as unknown as Prisma.InputJsonValue, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
       if (snap.emergencyCalls) await this.syncCalls(s, snap.emergencyCalls, 'API');
+      // Fahndungsabgleich VOR der Aktenübernahme: dort wird eine Roblox-ID sonst über den Namen nachgetragen
+      await this.wantedMatch.onPlayers(s, snap.players).catch((e: Error) => this.log.error(`Fahndungsabgleich: ${e.message}`));
       await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
       await this.fleet.sync(id, snap, manual).catch((e: Error) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
       this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });

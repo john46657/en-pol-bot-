@@ -80111,7 +80111,8 @@ var PERMISSION_CATALOG = {
   tickets: ["view", "create", "edit", "void"],
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
   investigations: ["view", "create", "edit", "close"],
-  wanted: ["view", "create", "edit", "activate", "clear"],
+  /** review_hits: ER:LC-Fahndungstreffer prüfen (bestätigen/verwerfen); manage_matching: Abgleich-Einstellungen */
+  wanted: ["view", "create", "edit", "activate", "clear", "review_hits", "manage_matching"],
   evidence: ["view", "create", "transfer", "release"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
@@ -81273,6 +81274,24 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
       const [title, color3] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
       return { title, description: `**${clip(plain(p.subject), 200)}** \u2013 ${clip(plain(p.reason), 1e3)}${p.note ? `
 **Grund:** ${clip(plain(p.note), 1e3)}` : ""}`, color: color3, ...p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {} };
+    }
+    case "wanted.hit": {
+      const ok = p.confirmed === true;
+      const at = typeof p.detectedAt === "string" && !Number.isNaN(Date.parse(p.detectedAt)) ? `<t:${Math.floor(Date.parse(p.detectedAt) / 1e3)}:f>` : "unbekannt";
+      return {
+        title: ok ? "\u{1F6A8} FAHNDUNGSTREFFER" : "\u2754 M\xD6GLICHER FAHNDUNGSTREFFER",
+        color: ok ? COLORS.danger : COLORS.warning,
+        fields: [
+          { name: "Spieler", value: clip(plain(p.player ?? "unbekannt"), 200), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${clip(plain(p.robloxUserId), 30)}` : "keine Roblox-ID geliefert", inline: true },
+          { name: "Fahndung", value: clip(plain(p.reference ?? "\u2014"), 40), inline: true },
+          { name: "Grund", value: clip(plain(p.reason ?? "\u2014"), 1024) },
+          { name: "Erkannt am", value: at, inline: true },
+          { name: "ER:LC-Server", value: clip(plain(p.server ?? "\u2014"), 100), inline: true },
+          { name: "Identifikation", value: ok ? "\u2705 Best\xE4tigt (Roblox-ID)" : "\u26A0\uFE0F Manuelle Pr\xFCfung erforderlich (nur Name)", inline: true }
+        ],
+        footer: "Nur zur internen Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
+      };
     }
     case "teamchance.changed":
       return p.open ? {

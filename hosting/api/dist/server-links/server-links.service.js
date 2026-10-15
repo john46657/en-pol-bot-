@@ -100,7 +100,7 @@ let ServerLinksService = class ServerLinksService {
         const where = { serverId: null }, data = { serverId: space };
         const r = await this.prisma.$transaction([
             this.prisma.report.updateMany({ where, data }), this.prisma.complaint.updateMany({ where, data }), this.prisma.investigation.updateMany({ where, data }),
-            this.prisma.wantedRecord.updateMany({ where, data }), this.prisma.evidence.updateMany({ where, data }), this.prisma.dutySession.updateMany({ where, data }),
+            this.prisma.wantedRecord.updateMany({ where, data }), this.prisma.wantedHit.updateMany({ where, data }), this.prisma.evidence.updateMany({ where, data }), this.prisma.dutySession.updateMany({ where, data }),
         ]);
         let moved = r.reduce((n, x) => n + x.count, 0);
         // Seit der vollständigen Trennung ebenfalls je Server: bisher gemeinsame Einträge gehören dem Heimat-Server.

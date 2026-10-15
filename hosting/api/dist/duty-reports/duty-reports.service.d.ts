@@ -117,6 +117,9 @@ export declare class DutyReportsService {
             updatedAt: Date;
             version: number;
             authorId: string;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
+            reviewNote: string | null;
             source: string;
             guildId: string | null;
             values: Prisma.JsonValue;
@@ -124,9 +127,6 @@ export declare class DutyReportsService {
             templateName: string;
             period: string;
             periodStart: Date;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
-            reviewNote: string | null;
             editedById: string | null;
         })[];
         total: number;
@@ -178,6 +178,9 @@ export declare class DutyReportsService {
         updatedAt: Date;
         version: number;
         authorId: string;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
+        reviewNote: string | null;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -185,9 +188,6 @@ export declare class DutyReportsService {
         templateName: string;
         period: string;
         periodStart: Date;
-        reviewedById: string | null;
-        reviewedAt: Date | null;
-        reviewNote: string | null;
         editedById: string | null;
     }>;
     private canEdit;
@@ -215,6 +215,9 @@ export declare class DutyReportsService {
         updatedAt: Date;
         version: number;
         authorId: string;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
+        reviewNote: string | null;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -222,9 +225,6 @@ export declare class DutyReportsService {
         templateName: string;
         period: string;
         periodStart: Date;
-        reviewedById: string | null;
-        reviewedAt: Date | null;
-        reviewNote: string | null;
         editedById: string | null;
     }>;
     update(actor: Actor, id: string, d: {
@@ -238,6 +238,9 @@ export declare class DutyReportsService {
         updatedAt: Date;
         version: number;
         authorId: string;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
+        reviewNote: string | null;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -245,9 +248,6 @@ export declare class DutyReportsService {
         templateName: string;
         period: string;
         periodStart: Date;
-        reviewedById: string | null;
-        reviewedAt: Date | null;
-        reviewNote: string | null;
         editedById: string | null;
     }>;
     /**
@@ -265,6 +265,9 @@ export declare class DutyReportsService {
         updatedAt: Date;
         version: number;
         authorId: string;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
+        reviewNote: string | null;
         source: string;
         guildId: string | null;
         values: Prisma.JsonValue;
@@ -272,9 +275,6 @@ export declare class DutyReportsService {
         templateName: string;
         period: string;
         periodStart: Date;
-        reviewedById: string | null;
-        reviewedAt: Date | null;
-        reviewNote: string | null;
         editedById: string | null;
     }>;
     remove(actor: Actor, id: string): Promise<void>;

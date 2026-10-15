@@ -331,12 +331,12 @@ export declare class QualificationsService {
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
         unitName: string;
     }[]>;
     get(id: string): Promise<{
@@ -350,12 +350,12 @@ export declare class QualificationsService {
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
         unitName: string;
     }>;
     /** Bewerbung endgültig löschen (qualifications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */

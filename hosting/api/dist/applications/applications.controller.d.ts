@@ -139,12 +139,12 @@ export declare class ApplicationsController {
             discordId: string | null;
             discordName: string | null;
             decidedAt: Date | null;
+            joinedAt: Date | null;
             decidedById: string | null;
             decisionReason: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
             durationSec: number | null;
-            joinedAt: Date | null;
         }[];
         total: number;
         page: number;
@@ -246,12 +246,12 @@ export declare class ApplicationsController {
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
     }>;
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a: Actor, id: string, b: z.infer<typeof move>): Promise<{
@@ -268,12 +268,12 @@ export declare class ApplicationsController {
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
     }>;
     decide(a: Actor, id: string, b: {
         accept: boolean;
@@ -292,12 +292,12 @@ export declare class ApplicationsController {
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
     }>;
     /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
     discordDecide(a: Actor, id: string, b: {

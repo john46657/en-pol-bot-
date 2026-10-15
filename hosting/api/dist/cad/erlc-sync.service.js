@@ -54,8 +54,14 @@ let ErlcSyncService = class ErlcSyncService {
             const known = await this.prisma.person.findMany({ where: { serverId: space, OR: [{ robloxUserId: { in: ids } }, { robloxUsername: { in: [...players.map((p) => p.name), ...vehicles.map((v) => v.owner)], mode: 'insensitive' } }] }, select: { id: true, robloxUserId: true, robloxUsername: true } });
             const byId = new Map(known.filter((k) => k.robloxUserId).map((k) => [k.robloxUserId, k]));
             const byName = new Map(known.map((k) => [lc(k.robloxUsername), k]));
+            // Gesuchte Personen ohne Roblox-ID: die ID NICHT über den bloßen Namen nachtragen – sonst würde aus einer
+            // Namensgleichheit eine scheinbar eindeutige Identifikation (Fahndungsabgleich). Bestätigt wird manuell.
+            const noId = known.filter((k) => !k.robloxUserId).map((k) => k.id);
+            const wanted = new Set(noId.length ? (await this.prisma.wantedRecord.findMany({ where: { status: 'ACTIVE', personId: { in: noId } }, select: { personId: true } })).map((w) => w.personId) : []);
             for (const p of players) {
                 const hit = byId.get(p.id) ?? (() => { const n = byName.get(lc(p.name)); return n && !n.robloxUserId ? n : undefined; })();
+                if (hit && !hit.robloxUserId && wanted.has(hit.id))
+                    continue; // Akte bleibt, wie sie ist; kein Duplikat anlegen
                 if (hit) {
                     // ID nachtragen bzw. neuen Roblox-Namen übernehmen (Namensänderung)
                     if (hit.robloxUserId !== p.id || hit.robloxUsername !== p.name) {

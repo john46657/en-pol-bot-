@@ -14,6 +14,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Mdt } from './pages/Mdt';
 import { Team } from './pages/Team';
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
+const WantedHits = lazy(() => import('./pages/WantedHits').then((m) => ({ default: m.WantedHits })));
 const ApplicationBans = lazy(() => import('./pages/ApplicationBans').then((m) => ({ default: m.ApplicationBans })));
 const Applications = lazy(() => import('./pages/Applications').then((m) => ({ default: m.Applications })));
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
@@ -190,6 +191,7 @@ export function App() {
           <Route path="investigations" element={list(R.investigations as never, 'investigations.view')} />
           <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
+          <Route path="wanted/hits" element={<Guard perm="wanted.view"><WantedHits /></Guard>} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
           <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />

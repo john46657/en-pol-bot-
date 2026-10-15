@@ -43,13 +43,13 @@ declare const addPerson: z.ZodObject<{
     personId: string;
 }>;
 declare const status: z.ZodObject<{
-    status: z.ZodEffects<z.ZodEnum<["OPEN", "ACTIVE", "SUSPENDED", "CLOSED", "ARCHIVED"]>, "ACTIVE" | "OPEN" | "ARCHIVED" | "SUSPENDED", "ACTIVE" | "CLOSED" | "OPEN" | "ARCHIVED" | "SUSPENDED">;
+    status: z.ZodEffects<z.ZodEnum<["OPEN", "ACTIVE", "SUSPENDED", "CLOSED", "ARCHIVED"]>, "ACTIVE" | "ARCHIVED" | "OPEN" | "SUSPENDED", "ACTIVE" | "ARCHIVED" | "CLOSED" | "OPEN" | "SUSPENDED">;
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "ACTIVE" | "OPEN" | "ARCHIVED" | "SUSPENDED";
+    status: "ACTIVE" | "ARCHIVED" | "OPEN" | "SUSPENDED";
     reason?: string | undefined;
 }, {
-    status: "ACTIVE" | "CLOSED" | "OPEN" | "ARCHIVED" | "SUSPENDED";
+    status: "ACTIVE" | "ARCHIVED" | "CLOSED" | "OPEN" | "SUSPENDED";
     reason?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -61,10 +61,10 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "ACTIVE" | "CLOSED" | "OPEN" | "ARCHIVED" | "SUSPENDED" | undefined;
+    status?: "ACTIVE" | "ARCHIVED" | "CLOSED" | "OPEN" | "SUSPENDED" | undefined;
     q?: string | undefined;
 }, {
-    status?: "ACTIVE" | "CLOSED" | "OPEN" | "ARCHIVED" | "SUSPENDED" | undefined;
+    status?: "ACTIVE" | "ARCHIVED" | "CLOSED" | "OPEN" | "SUSPENDED" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;

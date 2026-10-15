@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
 import { api, type Page } from '../lib/api';
 import { useRealtime } from '../lib/realtime';
 import { Button, EmptyState, fmt, Modal, Tabs } from './ui';
 
-interface Notification { id: string; type: string; title: string; body: string | null; createdAt: string; readAt: string | null }
+interface Notification { id: string; type: string; title: string; body: string | null; createdAt: string; readAt: string | null; entityType?: string | null; entityId?: string | null }
+/** Zugehöriges Modul öffnen (nur für Arten mit eindeutiger Seite). */
+const linkOf = (n: Notification) => (n.type === 'wanted.hit' ? '/wanted/hits' : n.entityType === 'Wanted' && n.entityId ? `/wanted/${n.entityId}` : null);
 type Filter = 'unread' | 'read' | 'archived';
 const FILTERS: Filter[] = ['unread', 'read', 'archived'];
 const FILTER_LABEL: Record<Filter, string> = { unread: 'Ungelesen', read: 'Gelesen', archived: 'Archiviert' };
@@ -31,7 +34,7 @@ export function NotificationCenter() {
         {!q.data?.items.length ? <EmptyState text={tab === 'unread' ? 'Keine ungelesenen Benachrichtigungen.' : 'Hier ist nichts.'} /> : (
           <ul className="max-h-96 divide-y divide-line overflow-auto">{q.data.items.map((n) => (
             <li key={n.id} className="flex items-start justify-between gap-2 py-2.5">
-              <div><p className={n.readAt ? 'text-muted' : 'font-medium'}>{n.title}</p>{n.body && <p className="text-xs text-muted">{n.body}</p>}<p className="text-xs text-muted">{fmt(n.createdAt)} · {n.type}</p></div>
+              <div><p className={n.readAt ? 'text-muted' : 'font-medium'}>{n.title}</p>{n.body && <p className="text-xs text-muted">{n.body}</p>}<p className="text-xs text-muted">{fmt(n.createdAt)} · {n.type}{linkOf(n) && <> · <Link to={linkOf(n)!} className="text-primary hover:underline" onClick={() => { setOpen(false); if (!n.readAt) act.mutate({ id: n.id, a: 'read' }); }}>Öffnen</Link></>}</p></div>
               <div className="flex shrink-0 gap-1">{!n.readAt && <Button size="sm" variant="ghost" onClick={() => act.mutate({ id: n.id, a: 'read' })}>Gelesen</Button>}{tab !== 'archived' && <Button size="sm" variant="ghost" onClick={() => act.mutate({ id: n.id, a: 'archive' })}>Archivieren</Button>}</div>
             </li>
           ))}</ul>

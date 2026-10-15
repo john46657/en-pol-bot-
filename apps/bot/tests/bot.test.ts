@@ -162,6 +162,40 @@ describe('outbox poller', () => {
   });
 });
 
+describe('ER:LC-Fahndungstreffer (wanted.hit)', () => {
+  const base = { id: 'h1', wantedId: 'w1', reference: 'FA-1234ABCD', player: 'Bank_Robber', robloxUserId: '111', reason: 'Bankraub @everyone', priority: 'HIGH', server: 'EN Haupt', detectedAt: '2026-10-15T20:00:00.000Z', dashboardUrl: 'https://dash.example/wanted/hits?id=h1' };
+  it('shows player, identifier, reference, reason, time and the identification type – no mass pings', () => {
+    const e = renderOutbox('wanted.hit', { ...base, confirmed: true })!;
+    expect(e.title).toBe('🚨 FAHNDUNGSTREFFER');
+    const f = Object.fromEntries(e.fields!.map((x) => [x.name, x.value]));
+    expect(f).toMatchObject({ Spieler: 'Bank\\_Robber', Identifikator: 'Roblox-ID 111', Fahndung: 'FA-1234ABCD', 'Erkannt am': '<t:1792094400:f>', Identifikation: '✅ Bestätigt (Roblox-ID)' });
+    expect(f.Grund).not.toContain('@everyone');
+    const p = renderOutbox('wanted.hit', { ...base, robloxUserId: null, confirmed: false })!;
+    expect(p.title).toContain('MÖGLICHER');
+    expect(p.fields!.find((x) => x.name === 'Identifikation')!.value).toContain('Manuelle Prüfung');
+    expect(p.fields!.find((x) => x.name === 'Identifikator')!.value).toBe('keine Roblox-ID geliefert');
+  });
+  it('posts to the channels chosen by the API with a dashboard button; a failed send is reported, not acknowledged', async () => {
+    const acks: { path: string; body: { ok: boolean; error?: string } }[] = [];
+    const item = { id: '9', type: 'wanted.hit', channelKey: 'wanted', payload: { ...base, confirmed: true, channelIds: ['720000000000000001'] } };
+    const api = (fail: boolean): Api => ({
+      async asUser() { throw new Error('not used'); },
+      async service(_m, path, body) {
+        if (path === '/bot/config') return { wanted: '720000000000000099' } as never;
+        if (path.startsWith('/bot/outbox?')) return [item] as never;
+        acks.push({ path, body: body as never }); void fail; return undefined as never;
+      },
+    });
+    const sent: { ch: string; buttons: unknown }[] = [];
+    expect(await pollOnce(api(false), async (ch, _e, buttons) => { sent.push({ ch, buttons }); }, () => undefined)).toBe(1);
+    expect(sent[0]!.ch).toBe('720000000000000001'); // nicht der allgemeine Fahndungs-Kanal
+    expect(sent[0]!.buttons).toEqual([{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: base.dashboardUrl }]);
+    expect(acks.at(-1)).toMatchObject({ path: '/bot/outbox/9/ack', body: { ok: true } });
+    expect(await pollOnce(api(true), async () => { throw new Error('Missing Permissions'); }, () => undefined)).toBe(0);
+    expect(acks.at(-1)).toMatchObject({ path: '/bot/outbox/9/ack', body: { ok: false, error: '720000000000000001: Missing Permissions' } });
+  });
+});
+
 describe('HttpApi', () => {
   it('sends the bot token and Discord id headers, parses API errors, and maps network failures', async () => {
     const fetchMock = vi.fn(async (_u: string, init: { headers: Record<string, string> }) => ({ status: 200, text: async () => JSON.stringify({ ok: init.headers['x-discord-user'] }) }));

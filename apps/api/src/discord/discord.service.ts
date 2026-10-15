@@ -87,12 +87,13 @@ export class DiscordService {
   }
 
   /** Nur Einreihen, wenn für den Kanal-Schlüssel ein Channel konfiguriert ist (kein Datenanfall ohne Bot). Fehler dürfen den Fachprozess nie stören. */
-  async enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>, opts: { always?: boolean } = {}) {
+  /** Liefert die ID des Ausgangseintrags (null = nicht eingereiht), z. B. um die Zustellung später anzuzeigen. */
+  async enqueue(channelKey: ChannelKey, type: string, payload: Record<string, unknown>, opts: { always?: boolean } = {}): Promise<string | null> {
     try {
       const ch = await this.channels();
-      if (!ch[channelKey] && !opts.always) return; // `always`: z. B. Direktnachrichten brauchen keinen Channel
-      await this.prisma.discordOutbox.create({ data: { type, channelKey, payload: payload as Prisma.InputJsonValue } });
-    } catch { /* Benachrichtigung ist best effort */ }
+      if (!ch[channelKey] && !opts.always) return null; // `always`: z. B. Direktnachrichten brauchen keinen Channel
+      return (await this.prisma.discordOutbox.create({ data: { type, channelKey, payload: payload as Prisma.InputJsonValue }, select: { id: true } })).id;
+    } catch { return null; /* Benachrichtigung ist best effort */ }
   }
 
   /**

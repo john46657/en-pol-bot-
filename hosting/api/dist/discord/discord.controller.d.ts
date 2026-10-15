@@ -328,8 +328,8 @@ declare const application: z.ZodObject<{
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
     discordName?: string | undefined;
-    durationSec?: number | undefined;
     joinedAt?: Date | undefined;
+    durationSec?: number | undefined;
 }, {
     robloxUsername: string;
     discordId: string;
@@ -337,8 +337,8 @@ declare const application: z.ZodObject<{
     robloxUserId?: string | undefined;
     guildId?: string | undefined;
     discordName?: string | undefined;
-    durationSec?: number | undefined;
     joinedAt?: Date | undefined;
+    durationSec?: number | undefined;
 }>;
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 export declare class DiscordController {

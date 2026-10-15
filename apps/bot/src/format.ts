@@ -81,6 +81,24 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
       const [title, color] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
       return { title, description: `**${clip(plain(p.subject), 200)}** – ${clip(plain(p.reason), 1000)}${p.note ? `\n**Grund:** ${clip(plain(p.note), 1000)}` : ''}`, color, ...(p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {}) };
     }
+    case 'wanted.hit': {
+      // Fahndungsabgleich ER:LC: bewusst knapp, keine Personalien. „Bestätigt“ nur bei gleicher Roblox-ID.
+      const ok = p.confirmed === true;
+      const at = typeof p.detectedAt === 'string' && !Number.isNaN(Date.parse(p.detectedAt)) ? `<t:${Math.floor(Date.parse(p.detectedAt) / 1000)}:f>` : 'unbekannt';
+      return {
+        title: ok ? '🚨 FAHNDUNGSTREFFER' : '❔ MÖGLICHER FAHNDUNGSTREFFER', color: ok ? COLORS.danger : COLORS.warning,
+        fields: [
+          { name: 'Spieler', value: clip(plain(p.player ?? 'unbekannt'), 200), inline: true },
+          { name: 'Identifikator', value: p.robloxUserId ? `Roblox-ID ${clip(plain(p.robloxUserId), 30)}` : 'keine Roblox-ID geliefert', inline: true },
+          { name: 'Fahndung', value: clip(plain(p.reference ?? '—'), 40), inline: true },
+          { name: 'Grund', value: clip(plain(p.reason ?? '—'), 1024) },
+          { name: 'Erkannt am', value: at, inline: true },
+          { name: 'ER:LC-Server', value: clip(plain(p.server ?? '—'), 100), inline: true },
+          { name: 'Identifikation', value: ok ? '✅ Bestätigt (Roblox-ID)' : '⚠️ Manuelle Prüfung erforderlich (nur Name)', inline: true },
+        ],
+        footer: 'Nur zur internen Information – keine automatischen Maßnahmen im Spiel.',
+      };
+    }
     case 'teamchance.changed':
       return p.open
         ? { title: `📣 ${clip(plain(p.title ?? 'Team-Chance'), 200)} – jetzt offen!`, description: clip(plain(p.description ?? ''), 3500) || undefined, color: COLORS.success,

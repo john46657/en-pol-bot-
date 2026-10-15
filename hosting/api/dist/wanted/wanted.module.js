@@ -9,11 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WantedModule = void 0;
 const common_1 = require("@nestjs/common");
 const wanted_controller_1 = require("./wanted.controller");
+const wanted_hits_controller_1 = require("./wanted-hits.controller");
 const wanted_service_1 = require("./wanted.service");
+const wanted_match_service_1 = require("./wanted-match.service");
 let WantedModule = class WantedModule {
 };
 exports.WantedModule = WantedModule;
 exports.WantedModule = WantedModule = __decorate([
-    (0, common_1.Module)({ controllers: [wanted_controller_1.WantedController], providers: [wanted_service_1.WantedService], exports: [wanted_service_1.WantedService] })
+    (0, common_1.Module)({ controllers: [wanted_controller_1.WantedController, wanted_hits_controller_1.WantedHitsController], providers: [wanted_service_1.WantedService, wanted_match_service_1.WantedMatchService], exports: [wanted_service_1.WantedService, wanted_match_service_1.WantedMatchService] })
 ], WantedModule);
 //# sourceMappingURL=wanted.module.js.map

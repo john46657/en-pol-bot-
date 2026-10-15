@@ -140,6 +140,7 @@ let PersonsService = class PersonsService {
             await tx.ticket.updateMany({ where: { personId: sourceId }, data: { personId: targetId } });
             await tx.vehicle.updateMany({ where: { ownerId: sourceId }, data: { ownerId: targetId } });
             await tx.wantedRecord.updateMany({ where: { personId: sourceId }, data: { personId: targetId } });
+            await tx.wantedHit.updateMany({ where: { personId: sourceId }, data: { personId: targetId } });
             await tx.timelineEvent.updateMany({ where: { entityType: 'Person', entityId: sourceId }, data: { entityId: targetId } });
             const robloxUserId = dst.robloxUserId ?? src.robloxUserId;
             await tx.person.update({ where: { id: sourceId }, data: { status: 'ARCHIVED', robloxUserId: null, notes: `${src.notes ?? ''}\n[merged into ${targetId}]`.trim(), version: { increment: 1 } } });

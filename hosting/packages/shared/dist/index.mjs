@@ -17,7 +17,8 @@ var PERMISSION_CATALOG = {
   tickets: ["view", "create", "edit", "void"],
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
   investigations: ["view", "create", "edit", "close"],
-  wanted: ["view", "create", "edit", "activate", "clear"],
+  /** review_hits: ER:LC-Fahndungstreffer prüfen (bestätigen/verwerfen); manage_matching: Abgleich-Einstellungen */
+  wanted: ["view", "create", "edit", "activate", "clear", "review_hits", "manage_matching"],
   evidence: ["view", "create", "transfer", "release"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
