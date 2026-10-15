@@ -19,6 +19,11 @@ const createUser = z.object({
 const roblox = z.object({ robloxUserId: z.string().nullable(), robloxUsername: z.string().trim().max(64).optional() });
 const active = z.object({ active: z.boolean(), reason: z.string().max(500).optional() });
 const roles = z.object({ roleIds: z.array(z.string().uuid()) });
+const listQuery = pageQuery.extend({
+  status: z.enum(['active', 'inactive']).optional(),
+  roleId: z.string().uuid().optional(),
+  linked: z.enum(['yes', 'no']).optional(),
+});
 const override = z.object({ permission: z.string(), effect: z.enum(['ALLOW', 'DENY']), reason: z.string().max(500).optional() });
 
 @ApiTags('users')
@@ -27,10 +32,14 @@ export class UsersController {
   constructor(private readonly users: UsersService, private readonly twoFactor: TwoFactorService) {}
 
   @Get() @RequirePermission('users.view')
-  list(@Query(zodBody(pageQuery)) q: z.infer<typeof pageQuery>) { return this.users.list(q); }
+  list(@Query(zodBody(listQuery)) q: z.infer<typeof listQuery>) { return this.users.list(q); }
 
   @Get(':id') @RequirePermission('users.view')
   get(@Param('id', ParseUUIDPipe) id: string) { return this.users.get(id); }
+
+  /** Effektive Rechte im gewählten Server mit Herkunft (Sonderrecht / Rolle / Standard). */
+  @Get(':id/permissions') @RequirePermission('users.view')
+  permissions(@Param('id', ParseUUIDPipe) id: string) { return this.users.permissions(id); }
 
   @Post() @RequirePermission('users.manage')
   create(@CurrentActor() a: Actor, @Body(zodBody(createUser)) b: z.infer<typeof createUser>) { return this.users.create(a, b); }

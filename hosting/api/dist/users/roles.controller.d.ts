@@ -128,6 +128,15 @@ export declare class RolesController {
     myRank(a: Actor): Promise<{
         rank: number;
     }>;
+    /** Mitglieder einer Rolle (manuell oder über Discord vergeben). */
+    members(id: string): Promise<{
+        source: string;
+        guildIds: string[];
+        id: string;
+        active: boolean;
+        username: string;
+        displayName: string;
+    }[]>;
     catalog(): readonly import("@enrp/shared").PermissionKey[];
     create(a: Actor, b: z.infer<typeof createRole>): Promise<{
         _count: {

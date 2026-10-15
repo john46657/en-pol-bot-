@@ -41,6 +41,8 @@ let RolesController = class RolesController {
     }
     list() { return this.roles.list(); }
     myRank(a) { return this.roles.myRank(a.userId); }
+    /** Mitglieder einer Rolle (manuell oder über Discord vergeben). */
+    members(id) { return this.roles.members(id); }
     catalog() { return this.roles.catalog(); }
     create(a, b) { return this.roles.create(a, b); }
     reorder(a, b) { return this.roles.reorder(a, b.ids); }
@@ -66,6 +68,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "myRank", null);
+__decorate([
+    (0, common_1.Get)('roles/:id/members'),
+    (0, decorators_1.RequirePermission)('roles.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RolesController.prototype, "members", null);
 __decorate([
     (0, common_1.Get)('permissions'),
     (0, decorators_1.RequirePermission)('roles.view'),

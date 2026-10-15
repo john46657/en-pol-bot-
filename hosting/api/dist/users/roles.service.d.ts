@@ -53,6 +53,15 @@ export declare class RolesService {
         system: boolean;
     })[]>;
     catalog(): readonly import("@enrp/shared").PermissionKey[];
+    /** Wer hat die Rolle – und woher (manuell oder über Discord-Rollen auf welchen Servern)? Höchstens 500 Einträge. */
+    members(id: string): Promise<{
+        source: string;
+        guildIds: string[];
+        id: string;
+        active: boolean;
+        username: string;
+        displayName: string;
+    }[]>;
     /** Eigener Rang (für die Oberfläche: welche Rollen sind bearbeitbar). */
     myRank(userId: string): Promise<{
         rank: number;

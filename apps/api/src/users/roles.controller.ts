@@ -33,6 +33,10 @@ export class RolesController {
   @Get('roles/my-rank') @RequirePermission('roles.view')
   myRank(@CurrentActor() a: Actor) { return this.roles.myRank(a.userId!); }
 
+  /** Mitglieder einer Rolle (manuell oder über Discord vergeben). */
+  @Get('roles/:id/members') @RequirePermission('roles.view')
+  members(@Param('id', ParseUUIDPipe) id: string) { return this.roles.members(id); }
+
   @Get('permissions') @RequirePermission('roles.view')
   catalog() { return this.roles.catalog(); }
 

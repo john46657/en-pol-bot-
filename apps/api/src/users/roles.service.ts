@@ -37,6 +37,19 @@ export class RolesService {
 
   catalog() { return ALL_PERMISSIONS; }
 
+  /** Wer hat die Rolle – und woher (manuell oder über Discord-Rollen auf welchen Servern)? Höchstens 500 Einträge. */
+  async members(id: string) {
+    const role = await this.load(id);
+    const g = currentGuild();
+    if (g && role.guildId !== g && role.name !== ADMIN_ROLE) throw new AppError('NOT_FOUND', 'Rolle nicht gefunden.');
+    const rows = await this.prisma.userRole.findMany({
+      where: { roleId: id }, take: 500,
+      select: { guildIds: true, user: { select: { id: true, username: true, displayName: true, active: true } } },
+      orderBy: { user: { displayName: 'asc' } },
+    });
+    return rows.map((r) => ({ ...r.user, source: r.guildIds.length ? 'DISCORD' : 'MANUAL', guildIds: r.guildIds }));
+  }
+
   /** Eigener Rang (für die Oberfläche: welche Rollen sind bearbeitbar). */
   async myRank(userId: string) { return { rank: await this.perms.rankOf(userId) }; }
 

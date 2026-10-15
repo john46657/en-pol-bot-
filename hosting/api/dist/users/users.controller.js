@@ -32,6 +32,11 @@ const createUser = zod_1.z.object({
 const roblox = zod_1.z.object({ robloxUserId: zod_1.z.string().nullable(), robloxUsername: zod_1.z.string().trim().max(64).optional() });
 const active = zod_1.z.object({ active: zod_1.z.boolean(), reason: zod_1.z.string().max(500).optional() });
 const roles = zod_1.z.object({ roleIds: zod_1.z.array(zod_1.z.string().uuid()) });
+const listQuery = pagination_1.pageQuery.extend({
+    status: zod_1.z.enum(['active', 'inactive']).optional(),
+    roleId: zod_1.z.string().uuid().optional(),
+    linked: zod_1.z.enum(['yes', 'no']).optional(),
+});
 const override = zod_1.z.object({ permission: zod_1.z.string(), effect: zod_1.z.enum(['ALLOW', 'DENY']), reason: zod_1.z.string().max(500).optional() });
 let UsersController = class UsersController {
     users;
@@ -42,6 +47,8 @@ let UsersController = class UsersController {
     }
     list(q) { return this.users.list(q); }
     get(id) { return this.users.get(id); }
+    /** Effektive Rechte im gewählten Server mit Herkunft (Sonderrecht / Rolle / Standard). */
+    permissions(id) { return this.users.permissions(id); }
     create(a, b) { return this.users.create(a, b); }
     setRoblox(a, id, b) { return this.users.setRoblox(a, id, b); }
     setActive(a, id, b) { return this.users.setActive(a, id, b.active, b.reason); }
@@ -57,7 +64,7 @@ exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.RequirePermission)('users.view'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(pagination_1.pageQuery))),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(listQuery))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
@@ -70,6 +77,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "get", null);
+__decorate([
+    (0, common_1.Get)(':id/permissions'),
+    (0, decorators_1.RequirePermission)('users.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "permissions", null);
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.RequirePermission)('users.manage'),

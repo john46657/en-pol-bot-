@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { UsersService } from './users.service';
 import { TwoFactorService } from '../auth/two-factor.service';
 import type { Actor } from '../audit/audit.service';
-import { pageQuery } from '../common/pagination';
 export declare const nameBody: z.ZodObject<{
     displayName: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -56,6 +55,29 @@ declare const roles: z.ZodObject<{
 }, {
     roleIds: string[];
 }>;
+declare const listQuery: z.ZodObject<{
+    page: z.ZodDefault<z.ZodNumber>;
+    pageSize: z.ZodDefault<z.ZodNumber>;
+    q: z.ZodOptional<z.ZodString>;
+} & {
+    status: z.ZodOptional<z.ZodEnum<["active", "inactive"]>>;
+    roleId: z.ZodOptional<z.ZodString>;
+    linked: z.ZodOptional<z.ZodEnum<["yes", "no"]>>;
+}, "strip", z.ZodTypeAny, {
+    page: number;
+    pageSize: number;
+    status?: "active" | "inactive" | undefined;
+    roleId?: string | undefined;
+    q?: string | undefined;
+    linked?: "yes" | "no" | undefined;
+}, {
+    status?: "active" | "inactive" | undefined;
+    roleId?: string | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
+    q?: string | undefined;
+    linked?: "yes" | "no" | undefined;
+}>;
 declare const override: z.ZodObject<{
     permission: z.ZodString;
     effect: z.ZodEnum<["ALLOW", "DENY"]>;
@@ -73,8 +95,12 @@ export declare class UsersController {
     private readonly users;
     private readonly twoFactor;
     constructor(users: UsersService, twoFactor: TwoFactorService);
-    list(q: z.infer<typeof pageQuery>): Promise<{
+    list(q: z.infer<typeof listQuery>): Promise<{
         items: {
+            discord: {
+                discordId: string;
+                linkedAt: Date;
+            } | null;
             id: string;
             robloxUserId: string | null;
             robloxUsername: string | null;
@@ -91,9 +117,14 @@ export declare class UsersController {
             roles: {
                 role: {
                     id: string;
+                    color: string | null;
+                    priority: number;
+                    active: boolean;
                     guildId: string | null;
                     name: string;
+                    icon: string | null;
                 };
+                guildIds: string[];
             }[];
             overrides: {
                 reason: string | null;
@@ -111,6 +142,7 @@ export declare class UsersController {
             discordId: string;
             linkedAt: Date;
         } | null;
+        rank: number | null;
         id: string;
         robloxUserId: string | null;
         robloxUsername: string | null;
@@ -127,15 +159,36 @@ export declare class UsersController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
             guildId: string | null;
             permissionKey: string;
             effect: string;
+        }[];
+    }>;
+    /** Effektive Rechte im gewählten Server mit Herkunft (Sonderrecht / Rolle / Standard). */
+    permissions(id: string): Promise<{
+        roles: {
+            id: string;
+            color: string | null;
+            priority: number;
+            name: string;
+            icon: string | null;
+        }[];
+        entries: {
+            key: import("@enrp/shared").PermissionKey;
+            allowed: boolean;
+            source: import("@enrp/shared").ResolutionSource;
+            via: string[];
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof createUser>): Promise<{
@@ -155,9 +208,14 @@ export declare class UsersController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -183,9 +241,14 @@ export declare class UsersController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -211,9 +274,14 @@ export declare class UsersController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -242,9 +310,14 @@ export declare class UsersController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
@@ -270,9 +343,14 @@ export declare class UsersController {
         roles: {
             role: {
                 id: string;
+                color: string | null;
+                priority: number;
+                active: boolean;
                 guildId: string | null;
                 name: string;
+                icon: string | null;
             };
+            guildIds: string[];
         }[];
         overrides: {
             reason: string | null;
