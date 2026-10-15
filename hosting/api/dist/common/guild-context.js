@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.runInGuild = exports.currentGuild = void 0;
+exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inRequest = exports.runInGuild = exports.currentGuild = void 0;
 exports.setServerLinkResolvers = setServerLinkResolvers;
 const node_async_hooks_1 = require("node:async_hooks");
 const common_1 = require("@nestjs/common");
@@ -20,11 +20,14 @@ const currentGuild = () => store.getStore()?.guildId ?? null;
 exports.currentGuild = currentGuild;
 const runInGuild = (guildId, fn) => store.run({ guildId }, fn);
 exports.runInGuild = runInGuild;
+/** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
+const inRequest = () => store.getStore()?.request === true;
+exports.inRequest = inRequest;
 let GuildContextMiddleware = class GuildContextMiddleware {
     use(req, _res, next) {
         const h = req.headers['x-guild-id'];
         const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
-        store.run({ guildId }, next);
+        store.run({ guildId, request: true }, next);
     }
 };
 exports.GuildContextMiddleware = GuildContextMiddleware;
@@ -49,7 +52,22 @@ exports.scopedKey = scopedKey;
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
 let settingsOf = (g) => g;
 let spaceOf = () => null;
-function setServerLinkResolvers(settings, space) { settingsOf = settings; spaceOf = space; }
+let knownSpaces = async () => null;
+function setServerLinkResolvers(settings, space, known) { settingsOf = settings; spaceOf = space; if (known)
+    knownSpaces = known; }
+/**
+ * Akten-Bereiche, die zu einem registrierten Discord-Server (bzw. einer Server-Gruppe) gehören. Alles andere sind Reste früherer
+ * Umstellungen (z. B. „separat belassene“ Doppel aus der Rück-Umstellung, Bereiche aufgelöster Gruppen) – sie bleiben gespeichert
+ * (Backups, Zugriff per ID), erscheinen aber unter „Alle Server“ nicht mehr in Listen. Einmal je Anfrage geladen; außerhalb von Anfragen `null`.
+ */
+const registeredSpaces = () => {
+    const st = store.getStore();
+    if (!st?.request)
+        return Promise.resolve(null);
+    st.spaces ??= knownSpaces().catch(() => null);
+    return st.spaces;
+};
+exports.registeredSpaces = registeredSpaces;
 /** Server, dessen Einstellungen gelten: in einer Gruppe mit „Einstellungen teilen“ der Haupt-Server der Gruppe, sonst der Server selbst. */
 const settingsGuild = (guildId) => (guildId ? settingsOf(guildId) : null);
 exports.settingsGuild = settingsGuild;

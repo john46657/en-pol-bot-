@@ -35,12 +35,13 @@ export interface CadConfig {
   widgets: string[];
 }
 
-export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'incident.feedback', 'incident.support', 'call.received', 'announcement', 'radio', 'handover'] as const;
+export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'incident.feedback', 'incident.support', 'call.received', 'announcement', 'radio', 'handover', 'wanted.hit', 'wanted.possible'] as const;
 export type CadEvent = (typeof CAD_EVENTS)[number];
 export const CAD_EVENT_LABELS: Record<CadEvent, string> = {
   'incident.created': 'Neuer Einsatz', 'incident.status': 'Einsatzstatus geändert', 'incident.assigned': 'Einheit zugewiesen',
   'incident.closed': 'Einsatz abgeschlossen', 'incident.feedback': 'Rückmeldung einer Einheit (MDT)', 'incident.support': 'Unterstützung benötigt',
   'call.received': 'Notruf eingegangen', announcement: 'Wichtige Leitstellenmeldung', radio: 'Funkmeldung', handover: 'Schichtübergabe',
+  'wanted.hit': 'Fahndungstreffer (Roblox-ID bestätigt)', 'wanted.possible': 'Mögliche Fahndungsübereinstimmung (nur Name – Prüfung nötig)',
 };
 
 /**
@@ -65,8 +66,8 @@ export const CAD_LINK_LABELS: Record<string, string> = {
   incidents: 'Einsätze senden', incident_status: 'Einsatzstatus senden', unit_requests: 'Einheiten anfordern', calls: 'Notrufe senden', announcements: 'Leitstellenmeldungen senden', radio: 'Funkmeldungen senden',
   status_report: 'Status zurückmelden', view_incidents: 'Einsatzstatus sehen', dispatch: 'Notrufe/Einsätze bearbeiten (Übernehmen, Einsatz erstellen, Einheit zuweisen)',
 };
-/** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. */
-export const CAD_EVENT_SEND_TYPE: Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]> = {
+/** Welche Datenart ein CAD-Ereignis bei verbundenen Servern ist. Fehlt ein Ereignis (Fahndungstreffer), geht es nie an verbundene Server. */
+export const CAD_EVENT_SEND_TYPE: Partial<Record<CadEvent, (typeof CAD_LINK_SEND_TYPES)[number]>> = {
   'incident.created': 'incidents', 'incident.status': 'incident_status', 'incident.assigned': 'unit_requests', 'incident.closed': 'incident_status',
   'incident.feedback': 'incident_status', 'incident.support': 'incident_status', 'call.received': 'calls', announcement: 'announcements', radio: 'radio', handover: 'announcements',
 };
@@ -171,4 +172,69 @@ export function parsePlayer(v: unknown): { name: string; id: string | null } {
   const s = String(v ?? '');
   const i = s.lastIndexOf(':');
   return i > 0 && /^\d+$/.test(s.slice(i + 1)) ? { name: s.slice(0, i), id: s.slice(i + 1) } : { name: s, id: null };
+}
+
+/**
+ * Automatischer ER:LC-Fahndungsabgleich. Die ER:LC-API liefert je Spieler nur „Roblox-Name:Roblox-ID“ (Players, JoinLogs) –
+ * weitere eindeutige Kennungen gibt es nicht. Bestätigt ist ein Treffer nur bei exakt gleicher Roblox-ID.
+ */
+export const WANTED_MATCH_TYPES = ['ROBLOX_ID', 'NAME', 'ALIAS', 'NAME_ID_MISMATCH'] as const;
+export type WantedMatchType = (typeof WANTED_MATCH_TYPES)[number];
+export const WANTED_MATCH_LABELS: Record<WantedMatchType, string> = {
+  ROBLOX_ID: 'Roblox-ID stimmt überein', NAME: 'Nur Roblox-Name stimmt überein', ALIAS: 'Nur Alias stimmt überein', NAME_ID_MISMATCH: 'Name gleich, Roblox-ID abweichend',
+};
+export const WANTED_HIT_STATUSES = ['NEW', 'REVIEW_REQUIRED', 'ACKNOWLEDGED', 'CONFIRMED', 'REJECTED'] as const;
+export type WantedHitStatus = (typeof WANTED_HIT_STATUSES)[number];
+export const WANTED_HIT_STATUS_LABELS: Record<WantedHitStatus, string> = {
+  NEW: 'Neu', REVIEW_REQUIRED: 'Manuelle Prüfung erforderlich', ACKNOWLEDGED: 'Zur Kenntnis genommen', CONFIRMED: 'Manuell bestätigt', REJECTED: 'Verworfen (nicht die Person)',
+};
+
+export interface WantedMatchPlayer { name: string; id: string | null }
+export interface WantedMatchSubject { wantedId: string; personId: string; robloxUserId: string | null; robloxUsername: string; aliases: string[] }
+export interface WantedMatch { wantedId: string; personId: string; matchType: WantedMatchType; identified: boolean }
+
+/**
+ * Spieler ↔ aktive Personen-Fahndungen. Reihenfolge: 1. exakte Roblox-ID (bestätigt), 2. Roblox-Name, 3. Alias – Namen sind
+ * immer nur mögliche Treffer. Gleicher Name bei unterschiedlicher Roblox-ID wird eigens gekennzeichnet (wahrscheinlich andere Person).
+ */
+export function matchWantedPlayer(player: WantedMatchPlayer, subjects: WantedMatchSubject[]): WantedMatch[] {
+  const lc = (v: string) => v.trim().toLowerCase();
+  const name = lc(player.name);
+  const out: WantedMatch[] = [];
+  for (const s of subjects) {
+    if (player.id && s.robloxUserId && player.id === s.robloxUserId) { out.push({ wantedId: s.wantedId, personId: s.personId, matchType: 'ROBLOX_ID', identified: true }); continue; }
+    if (!name) continue;
+    const idsDiffer = !!player.id && !!s.robloxUserId && player.id !== s.robloxUserId;
+    if (lc(s.robloxUsername) === name) out.push({ wantedId: s.wantedId, personId: s.personId, matchType: idsDiffer ? 'NAME_ID_MISMATCH' : 'NAME', identified: false });
+    else if (s.aliases.some((a) => lc(a) === name)) out.push({ wantedId: s.wantedId, personId: s.personId, matchType: idsDiffer ? 'NAME_ID_MISMATCH' : 'ALIAS', identified: false });
+  }
+  return out;
+}
+
+export interface PresenceRow { id: string; playerKey: string; joinedAt: Date; lastSeenAt: Date }
+/** Uhren von ER:LC und Backend laufen nicht exakt gleich: ein Join-Log-Eintrag zählt erst als neuer Beitritt, wenn er deutlich nach dem Sitzungsbeginn liegt. */
+export const JOIN_LOG_TOLERANCE_MS = 60_000;
+/** Schlüssel eines Spielers: Roblox-ID, sonst (ohne ID von der API) der Name. */
+export const playerKey = (p: WantedMatchPlayer) => (p.id ? `id:${p.id}` : `name:${p.name.trim().toLowerCase()}`);
+
+/**
+ * Vergleich der aktuellen mit der vorherigen Spielerliste: wer ist neu (Beitritt), wer ist geblieben, wer ist weg.
+ * `joins`: Beitritte laut Join-Logs (Schlüssel → letzter Beitritt in ms). Liegt ein Beitritt nach dem letzten Sehen,
+ * war der Spieler zwischen zwei Abfragen kurz weg → neue Sitzung (der Beitritt, mit dem die Sitzung begann, zählt nicht).
+ */
+export function diffPresence(current: WantedMatchPlayer[], previous: PresenceRow[], joins: Map<string, number> = new Map()) {
+  const prev = new Map(previous.map((p) => [p.playerKey, p]));
+  const seen = new Set<string>();
+  const joined: WantedMatchPlayer[] = [], stayed: { player: WantedMatchPlayer; row: PresenceRow }[] = [], rejoined: { player: WantedMatchPlayer; row: PresenceRow }[] = [];
+  for (const p of current) {
+    const k = playerKey(p);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const row = prev.get(k);
+    if (!row) joined.push(p);
+    else if ((joins.get(k) ?? 0) > Math.max(row.lastSeenAt.getTime(), row.joinedAt.getTime() + JOIN_LOG_TOLERANCE_MS)) rejoined.push({ player: p, row });
+    else stayed.push({ player: p, row });
+  }
+  const left = previous.filter((p) => !seen.has(p.playerKey));
+  return { joined, stayed, rejoined, left };
 }

@@ -9,6 +9,7 @@ import { RealtimeService } from '../realtime/realtime.service';
 import { ErlcClient, type ErlcResult } from './erlc-client';
 import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
+import { ErlcWantedService } from './erlc-wanted.service';
 export declare const erlcServerInput: z.ZodObject<{
     name: z.ZodString;
     serverRef: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -34,7 +35,7 @@ export declare const erlcServerInput: z.ZodObject<{
     active: boolean;
     name: string;
     pollSeconds: number;
-    features: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[];
+    features: ("vehicles" | "commands" | "players" | "joinLogs" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "killLogs" | "commandLogs" | "webhook")[];
     webhookEnabled: boolean;
     description?: string | null | undefined;
     guildId?: string | null | undefined;
@@ -53,7 +54,7 @@ export declare const erlcServerInput: z.ZodObject<{
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     pollSeconds?: number | undefined;
-    features?: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[] | undefined;
+    features?: ("vehicles" | "commands" | "players" | "joinLogs" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "killLogs" | "commandLogs" | "webhook")[] | undefined;
     webhookEnabled?: boolean | undefined;
     settings?: {
         criticalCommands?: string[] | undefined;
@@ -167,12 +168,13 @@ export declare class ErlcService {
     private readonly notify;
     private readonly records;
     private readonly fleet;
+    private readonly wanted;
     private readonly log;
     readonly client: ErlcClient;
     private readonly rt;
     private webhookKey;
     private readonly seen;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService, fleet: FleetService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService, fleet: FleetService, wanted: ErlcWantedService);
     /** Nur für Tests: andere Gegenstelle/Signaturschlüssel. */
     useClient(c: ErlcClient): void;
     useWebhookKey(spkiBase64: string): void;

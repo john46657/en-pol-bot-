@@ -33,7 +33,10 @@ export const NAV: NavItem[] = [
     { path: '/duty-reports', label: '🗓️ Tages-/Wochenberichte', perm: 'dutyreports.view' },
   ]),
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
-  { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
+  grp('Fahndungen', Flag, 'Records', [
+    { path: '/wanted', label: 'Fahndungen', perm: 'wanted.view' },
+    { path: '/wanted/hits', label: '🎯 Fahndungstreffer (ER:LC)', perm: 'wanted.view' },
+  ]),
   grp('Personal', UserCheck, 'Organisation', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },

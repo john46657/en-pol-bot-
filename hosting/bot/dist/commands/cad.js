@@ -148,6 +148,17 @@ function renderCadOutbox(type, p) {
         case 'cad.call.received':
             return { title: (0, format_1.clip)(`🚨 NOTRUF #${String(p.callNumber ?? '?')}`, 256), color: format_1.COLORS.danger, description: p.description ? (0, format_1.clip)((0, format_1.plain)(p.description), 1500) : undefined,
                 fields: [...f('Ort', p.location), ...f('Team', p.team), ...(p.startedAt ? [{ name: 'Zeit', value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1000)}:t>`, inline: true }] : []), { name: 'Status', value: 'Offen', inline: true }, ...f('Server', p.server)] };
+        case 'cad.wanted.hit':
+        case 'cad.wanted.possible': {
+            // Nur das Nötigste – keine Beschreibung, keine Personalien. Bestätigt nur bei gleicher Roblox-ID.
+            const confirmed = type === 'cad.wanted.hit' && p.identified === true;
+            return { title: confirmed ? '🚨 FAHNDUNGSTREFFER' : '⚠️ MÖGLICHER FAHNDUNGSTREFFER', color: confirmed ? format_1.COLORS.danger : format_1.COLORS.warning,
+                fields: [{ name: 'Spieler', value: (0, format_1.clip)((0, format_1.plain)(p.playerName), 256), inline: true }, { name: 'Identifikator', value: p.robloxUserId ? `Roblox-ID ${(0, format_1.plain)(p.robloxUserId)}` : 'keine ID von ER:LC geliefert', inline: true },
+                    ...f('Fahndung', p.wantedNumber), { name: 'Grund', value: (0, format_1.clip)((0, format_1.plain)(p.reason), 1024), inline: false }, ...f('Priorität', p.priority),
+                    ...(p.detectedAt ? [{ name: 'Erkannt am', value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1000)}:f>`, inline: true }] : []),
+                    { name: 'Identifikation', value: confirmed ? 'Bestätigt (Roblox-ID stimmt überein)' : `Manuelle Prüfung erforderlich${p.matchLabel ? ` – ${(0, format_1.plain)(p.matchLabel)}` : ''}`, inline: false }, ...f('Server', p.server)],
+                footer: 'Nur zur Information – keine automatischen Maßnahmen im Spiel.' };
+        }
         case 'cad.announcement':
             return { title: '📢 Leitstellenmeldung', description: (0, format_1.clip)((0, format_1.plain)(p.text), 4000), color: format_1.COLORS.warning, ...(p.from ? { footer: `von ${(0, format_1.clip)(String(p.from), 100)}` } : {}) };
         case 'cad.radio':
@@ -168,6 +179,8 @@ function cadButtons(type, p) {
         ];
     if (type === 'cad.handover')
         return link.length ? link : undefined;
+    if (type === 'cad.wanted.hit' || type === 'cad.wanted.possible')
+        return typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard öffnen', style: 'secondary', url: p.dashboardUrl }] : undefined;
     if (type.startsWith('cad.incident.')) {
         const map = type === 'cad.incident.created' && typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary', url: p.mapUrl }] : [];
         return link.length || map.length ? [...link, ...map] : undefined;

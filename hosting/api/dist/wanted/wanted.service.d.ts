@@ -14,6 +14,7 @@ export declare class WantedService {
     expireDue(): Promise<import("@prisma/client").Prisma.BatchPayload>;
     list(p: PageQuery, status?: string): Promise<{
         items: {
+            number: string | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -34,6 +35,7 @@ export declare class WantedService {
     }>;
     get(id: string): Promise<{
         wanted: {
+            number: string | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -66,6 +68,7 @@ export declare class WantedService {
         priority?: string;
         expiresAt?: Date;
     }): Promise<{
+        number: string | null;
         serverId: string | null;
         id: string;
         status: string;
@@ -81,6 +84,7 @@ export declare class WantedService {
         expiresAt: Date | null;
     }>;
     setStatus(actor: Actor, id: string, to: WantedStatus, reason: string): Promise<{
+        number: string | null;
         serverId: string | null;
         id: string;
         status: string;

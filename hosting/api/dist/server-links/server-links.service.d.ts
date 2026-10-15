@@ -83,6 +83,8 @@ export declare class ServerLinksService implements OnModuleInit {
      */
     assignLegacyRecords(): Promise<number | null>;
     reload(): Promise<void>;
+    /** Akten-Bereiche der registrierten (nicht archivierten) Server und der Server-Gruppen – alles andere sind Reste früherer Umstellungen. */
+    knownSpaces(): Promise<ReadonlySet<string>>;
     private groupOf;
     settingsGuild(guildId: string): string;
     space(guildId: string): string | null;

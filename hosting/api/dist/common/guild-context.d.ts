@@ -2,6 +2,8 @@ import { NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 export declare const currentGuild: () => string | null;
 export declare const runInGuild: <T>(guildId: string | null, fn: () => T) => T;
+/** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
+export declare const inRequest: () => boolean;
 export declare class GuildContextMiddleware implements NestMiddleware {
     use(req: Request, _res: Response, next: NextFunction): void;
 }
@@ -14,7 +16,13 @@ export declare const SERVER_SCOPED_SETTINGS: readonly ["team.structure", "team.r
  */
 export declare const PER_SERVER_SETTING_KEYS: readonly string[];
 export declare const scopedKey: (key: string, guildId: string | null) => string;
-export declare function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null): void;
+export declare function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null, known?: () => Promise<ReadonlySet<string> | null>): void;
+/**
+ * Akten-Bereiche, die zu einem registrierten Discord-Server (bzw. einer Server-Gruppe) gehören. Alles andere sind Reste früherer
+ * Umstellungen (z. B. „separat belassene“ Doppel aus der Rück-Umstellung, Bereiche aufgelöster Gruppen) – sie bleiben gespeichert
+ * (Backups, Zugriff per ID), erscheinen aber unter „Alle Server“ nicht mehr in Listen. Einmal je Anfrage geladen; außerhalb von Anfragen `null`.
+ */
+export declare const registeredSpaces: () => Promise<ReadonlySet<string> | null>;
 /** Server, dessen Einstellungen gelten: in einer Gruppe mit „Einstellungen teilen“ der Haupt-Server der Gruppe, sonst der Server selbst. */
 export declare const settingsGuild: (guildId: string | null | undefined) => string | null;
 /**

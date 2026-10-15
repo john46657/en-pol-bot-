@@ -41,6 +41,7 @@ const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) 
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
+const WantedHits = lazy(() => import('./pages/WantedHits').then((m) => ({ default: m.WantedHits })));
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
 const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
 const FormPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.FormPanels })));
@@ -190,6 +191,7 @@ export function App() {
           <Route path="investigations" element={list(R.investigations as never, 'investigations.view')} />
           <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
+          <Route path="wanted/hits" element={<Guard perm="wanted.view"><WantedHits /></Guard>} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
           <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />

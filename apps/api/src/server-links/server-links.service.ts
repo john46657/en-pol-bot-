@@ -50,7 +50,7 @@ export class ServerLinksService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
 
   async onModuleInit() {
-    setServerLinkResolvers((g) => this.settingsGuild(g), (g) => this.space(g));
+    setServerLinkResolvers((g) => this.settingsGuild(g), (g) => this.space(g), () => this.knownSpaces());
     await this.reload();
     if (process.env.NODE_ENV !== 'test') await this.assignLegacyRecords().catch((e) => this.log.warn(`Zuordnung alter Einträge fehlgeschlagen: ${e instanceof Error ? e.message : e}`));
   }
@@ -102,6 +102,14 @@ export class ServerLinksService implements OnModuleInit {
     const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
     const p = linksSchema.safeParse(v ?? {});
     this.links = p.success ? p.data : { groups: [], sharedRecords: [] };
+  }
+
+  /** Akten-Bereiche der registrierten (nicht archivierten) Server und der Server-Gruppen – alles andere sind Reste früherer Umstellungen. */
+  async knownSpaces(): Promise<ReadonlySet<string>> {
+    const servers = await this.prisma.discordServer.findMany({ where: { archivedAt: null }, select: { guildId: true } });
+    const spaces = new Set<string>(this.links.groups.map((g) => g.id!).filter(Boolean));
+    for (const s of servers) { const sp = this.space(s.guildId); if (sp) spaces.add(sp); }
+    return spaces;
   }
 
   private groupOf(guildId: string) { return this.links.groups.find((x) => x.guildIds.includes(guildId)); }

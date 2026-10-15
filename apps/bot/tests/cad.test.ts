@@ -68,6 +68,16 @@ describe('/cad', () => {
     expect(h?.description).toContain('B210 gesperrt');
     expect(h?.description).toContain('E-1 · Raub');
     expect(cadButtons('cad.handover', { dashboardUrl: 'https://x.test/cad/handover' })).toHaveLength(1);
+    // Fahndungstreffer: nur das Nötigste, Identifikation ehrlich, Link ins Dashboard, keine Aktions-Buttons
+    const hit = renderCadOutbox('cad.wanted.hit', { playerName: 'BadGuy', robloxUserId: '1001', wantedNumber: 'F-2026-ABCDEF', reason: 'Bankraub', priority: 'HIGH', detectedAt: '2026-10-15T20:00:00Z', identified: true, server: 'EN' })!;
+    expect(hit.title).toBe('🚨 FAHNDUNGSTREFFER');
+    expect(JSON.stringify(hit.fields)).toContain('Roblox-ID 1001');
+    expect(JSON.stringify(hit.fields)).toContain('Bestätigt');
+    const maybe = renderCadOutbox('cad.wanted.possible', { playerName: 'BadGuy', robloxUserId: null, wantedNumber: 'F-2026-ABCDEF', reason: 'Bankraub', identified: false, matchLabel: 'Nur Roblox-Name stimmt überein' })!;
+    expect(maybe.title).toContain('MÖGLICHER');
+    expect(JSON.stringify(maybe.fields)).toContain('Manuelle Prüfung erforderlich');
+    expect(JSON.stringify(maybe.fields)).toContain('keine ID von ER:LC geliefert');
+    expect(cadButtons('cad.wanted.hit', { dashboardUrl: 'https://x.test/wanted/hits?id=1' })).toEqual([expect.objectContaining({ label: 'Im Dashboard öffnen', url: 'https://x.test/wanted/hits?id=1' })]);
   });
 });
 

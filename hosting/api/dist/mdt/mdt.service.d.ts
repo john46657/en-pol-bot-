@@ -144,6 +144,7 @@ export declare class MdtService {
             type: string;
         }[] | null;
         warrants: {
+            number: string | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -257,6 +258,7 @@ export declare class MdtService {
             erlcReference: string | null;
         };
         wanted: {
+            number: string | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -370,6 +372,7 @@ export declare class MdtService {
             plate: string;
             color: string | null;
         } | null;
+        number: string | null;
         serverId: string | null;
         id: string;
         status: string;

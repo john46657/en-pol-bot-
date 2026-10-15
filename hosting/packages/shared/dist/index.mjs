@@ -338,7 +338,7 @@ var formatMinutes = (min) => {
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
 
 // src/cad.ts
-var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover"];
+var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible"];
 var CAD_EVENT_LABELS = {
   "incident.created": "Neuer Einsatz",
   "incident.status": "Einsatzstatus ge\xE4ndert",
@@ -349,7 +349,9 @@ var CAD_EVENT_LABELS = {
   "call.received": "Notruf eingegangen",
   announcement: "Wichtige Leitstellenmeldung",
   radio: "Funkmeldung",
-  handover: "Schicht\xFCbergabe"
+  handover: "Schicht\xFCbergabe",
+  "wanted.hit": "Fahndungstreffer (Roblox-ID best\xE4tigt)",
+  "wanted.possible": "M\xF6gliche Fahndungs\xFCbereinstimmung (nur Name \u2013 Pr\xFCfung n\xF6tig)"
 };
 var CAD_FEEDBACK = [
   { key: "accepted", label: "Auftrag angenommen", emoji: "\u2705", unitStatus: "EN_ROUTE" },
@@ -492,6 +494,55 @@ function parsePlayer(v) {
   const s = String(v ?? "");
   const i = s.lastIndexOf(":");
   return i > 0 && /^\d+$/.test(s.slice(i + 1)) ? { name: s.slice(0, i), id: s.slice(i + 1) } : { name: s, id: null };
+}
+var WANTED_MATCH_TYPES = ["ROBLOX_ID", "NAME", "ALIAS", "NAME_ID_MISMATCH"];
+var WANTED_MATCH_LABELS = {
+  ROBLOX_ID: "Roblox-ID stimmt \xFCberein",
+  NAME: "Nur Roblox-Name stimmt \xFCberein",
+  ALIAS: "Nur Alias stimmt \xFCberein",
+  NAME_ID_MISMATCH: "Name gleich, Roblox-ID abweichend"
+};
+var WANTED_HIT_STATUSES = ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"];
+var WANTED_HIT_STATUS_LABELS = {
+  NEW: "Neu",
+  REVIEW_REQUIRED: "Manuelle Pr\xFCfung erforderlich",
+  ACKNOWLEDGED: "Zur Kenntnis genommen",
+  CONFIRMED: "Manuell best\xE4tigt",
+  REJECTED: "Verworfen (nicht die Person)"
+};
+function matchWantedPlayer(player, subjects) {
+  const lc = (v) => v.trim().toLowerCase();
+  const name = lc(player.name);
+  const out = [];
+  for (const s of subjects) {
+    if (player.id && s.robloxUserId && player.id === s.robloxUserId) {
+      out.push({ wantedId: s.wantedId, personId: s.personId, matchType: "ROBLOX_ID", identified: true });
+      continue;
+    }
+    if (!name) continue;
+    const idsDiffer = !!player.id && !!s.robloxUserId && player.id !== s.robloxUserId;
+    if (lc(s.robloxUsername) === name) out.push({ wantedId: s.wantedId, personId: s.personId, matchType: idsDiffer ? "NAME_ID_MISMATCH" : "NAME", identified: false });
+    else if (s.aliases.some((a) => lc(a) === name)) out.push({ wantedId: s.wantedId, personId: s.personId, matchType: idsDiffer ? "NAME_ID_MISMATCH" : "ALIAS", identified: false });
+  }
+  return out;
+}
+var JOIN_LOG_TOLERANCE_MS = 6e4;
+var playerKey = (p) => p.id ? `id:${p.id}` : `name:${p.name.trim().toLowerCase()}`;
+function diffPresence(current, previous, joins = /* @__PURE__ */ new Map()) {
+  const prev = new Map(previous.map((p) => [p.playerKey, p]));
+  const seen = /* @__PURE__ */ new Set();
+  const joined = [], stayed = [], rejoined = [];
+  for (const p of current) {
+    const k = playerKey(p);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const row = prev.get(k);
+    if (!row) joined.push(p);
+    else if ((joins.get(k) ?? 0) > Math.max(row.lastSeenAt.getTime(), row.joinedAt.getTime() + JOIN_LOG_TOLERANCE_MS)) rejoined.push({ player: p, row });
+    else stayed.push({ player: p, row });
+  }
+  const left = previous.filter((p) => !seen.has(p.playerKey));
+  return { joined, stayed, rejoined, left };
 }
 
 // src/danger.ts
@@ -2453,6 +2504,7 @@ export {
   INVESTIGATION_STATUSES,
   INVESTIGATION_TRANSITIONS,
   InvalidTransitionError,
+  JOIN_LOG_TOLERANCE_MS,
   LEGACY_DANGER,
   LOG_CATEGORIES,
   LOG_DEFAULT_OFF,
@@ -2498,6 +2550,10 @@ export {
   UNIT_STATUSES,
   VERIFY_NICK_VARS,
   VOICE_CASE_STATUS,
+  WANTED_HIT_STATUSES,
+  WANTED_HIT_STATUS_LABELS,
+  WANTED_MATCH_LABELS,
+  WANTED_MATCH_TYPES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
   WARNING_VARIABLES,
@@ -2530,6 +2586,7 @@ export {
   defaultTicketButtons,
   departmentSchema,
   describeDiscordError,
+  diffPresence,
   dnSettingsSchema,
   dutyTimeText,
   effectivePermissions,
@@ -2576,6 +2633,7 @@ export {
   logChannelFor,
   logTypeLabel,
   loggingConfigSchema,
+  matchWantedPlayer,
   matchingBinds,
   mbActionSchema,
   mbButtonSchema,
@@ -2603,6 +2661,7 @@ export {
   periodStart,
   personDetailsSchema,
   pixelToGame,
+  playerKey,
   policeReportFields,
   policyAllowsFlow,
   questionSchema,

@@ -145,12 +145,12 @@ export declare class ApplicationsService {
             discordId: string | null;
             discordName: string | null;
             decidedAt: Date | null;
+            joinedAt: Date | null;
             decidedById: string | null;
             decisionReason: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
             durationSec: number | null;
-            joinedAt: Date | null;
         }[];
         total: number;
         page: number;
@@ -210,12 +210,12 @@ export declare class ApplicationsService {
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
     }>;
     transition(actor: Actor, id: string, to: ApplicationStatus, reason?: string): Promise<{
         number: string;
@@ -231,11 +231,11 @@ export declare class ApplicationsService {
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
+        joinedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
         durationSec: number | null;
-        joinedAt: Date | null;
     }>;
 }

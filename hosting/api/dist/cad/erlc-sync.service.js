@@ -54,8 +54,15 @@ let ErlcSyncService = class ErlcSyncService {
             const known = await this.prisma.person.findMany({ where: { serverId: space, OR: [{ robloxUserId: { in: ids } }, { robloxUsername: { in: [...players.map((p) => p.name), ...vehicles.map((v) => v.owner)], mode: 'insensitive' } }] }, select: { id: true, robloxUserId: true, robloxUsername: true } });
             const byId = new Map(known.filter((k) => k.robloxUserId).map((k) => [k.robloxUserId, k]));
             const byName = new Map(known.map((k) => [lc(k.robloxUsername), k]));
+            // Akten mit aktiver Fahndung bekommen nie allein über den Namen eine Roblox-ID (sonst wäre ein „bestätigter“ Fahndungstreffer nur geraten).
+            // Die ID setzt dort nur, wer eine mögliche Übereinstimmung im Dashboard prüft und bestätigt.
+            const nameOnly = known.filter((k) => !k.robloxUserId).map((k) => k.id);
+            const wantedIds = nameOnly.length ? new Set((await this.prisma.wantedRecord.findMany({ where: { personId: { in: nameOnly }, status: 'ACTIVE' }, select: { personId: true } })).map((w) => w.personId)) : new Set();
             for (const p of players) {
-                const hit = byId.get(p.id) ?? (() => { const n = byName.get(lc(p.name)); return n && !n.robloxUserId ? n : undefined; })();
+                const named = byName.get(lc(p.name));
+                if (!byId.has(p.id) && named && !named.robloxUserId && wantedIds.has(named.id))
+                    continue;
+                const hit = byId.get(p.id) ?? (named && !named.robloxUserId ? named : undefined);
                 if (hit) {
                     // ID nachtragen bzw. neuen Roblox-Namen übernehmen (Namensänderung)
                     if (hit.robloxUserId !== p.id || hit.robloxUsername !== p.name) {

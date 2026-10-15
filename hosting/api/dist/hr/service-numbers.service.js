@@ -63,7 +63,9 @@ let ServiceNumbersService = class ServiceNumbersService {
         return list.map((r) => {
             const c = (s) => counts.find((x) => x.rangeId === r.id && x.status === s)?._count._all ?? 0;
             const used = counts.filter((x) => x.rangeId === r.id && x.status !== 'FREE').reduce((n, x) => n + x._count._all, 0);
-            return { ...r, total: r.end - r.start + 1, active: c('ACTIVE'), reserved: c('RESERVED'), blocked: c('BLOCKED'), former: c('FORMER'), free: r.end - r.start + 1 - used, first: (0, shared_1.formatServiceNumber)(r, r.start), last: (0, shared_1.formatServiceNumber)(r, r.end), isActive: r.active };
+            // gleicher Kreis (Präfix/Suffix/Länge/Bereich) schon einmal da – z. B. Kopie aus der Umstellung auf getrennte Server
+            const twin = list.find((o) => o.id !== r.id && o.active && r.active && o.prefix === r.prefix && o.suffix === r.suffix && o.padLength === r.padLength && o.start === r.start && o.end === r.end && list.indexOf(o) < list.indexOf(r));
+            return { ...r, total: r.end - r.start + 1, active: c('ACTIVE'), reserved: c('RESERVED'), blocked: c('BLOCKED'), former: c('FORMER'), free: r.end - r.start + 1 - used, first: (0, shared_1.formatServiceNumber)(r, r.start), last: (0, shared_1.formatServiceNumber)(r, r.end), isActive: r.active, duplicateOf: twin ? { id: twin.id, name: twin.name } : null };
         });
     }
     async saveRange(actor, d, id) {
@@ -110,11 +112,14 @@ let ServiceNumbersService = class ServiceNumbersService {
         if (!f.status || f.status === 'FREE') {
             // nie benutzte Nummern als „frei“ ergänzen
             const ranges = await this.prisma.serviceNumberRange.findMany({ where: f.rangeId ? { id: f.rangeId } : { active: true } });
+            // jede Schreibweise nur einmal: eine vergebene Nummer bzw. ein doppelter Kreis darf keine zweite „freie“ Zeile erzeugen
+            const shown = new Set(out.map((x) => x.display));
             for (const r of ranges) {
                 const used = new Set(rows.filter((x) => x.rangeId === r.id).map((x) => x.value));
                 let added = 0;
                 for (let v = r.start; v <= r.end && added < limit; v++)
-                    if (!used.has(v)) {
+                    if (!used.has(v) && !shown.has((0, shared_1.formatServiceNumber)(r, v))) {
+                        shown.add((0, shared_1.formatServiceNumber)(r, v));
                         out.push({ id: `free:${r.id}:${v}`, display: (0, shared_1.formatServiceNumber)(r, v), value: v, status: 'FREE', rangeId: r.id, range: r.name, note: null, assignedAt: null, reservedAt: null, userId: null, name: null, roblox: null, discordId: null, personnelId: null, rank: null, department: r.department });
                         added++;
                     }

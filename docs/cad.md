@@ -106,6 +106,10 @@ Jeder Benutzer stellt für sich ein: Widgets und Reihenfolge der Startseite, kom
 
 Alles mit `module: cad` oder `erlc`: Verbindung angelegt/geändert/Key geändert/getestet/entfernt, Einsätze, Zuweisungen, Status, Notrufe, Funk, Befehle, Server-Verbindungen, Karte (POI/Zone), Einstellungen. Ansicht: CAD → Protokolle (`cad.view_logs`).
 
+## Fahndungsabgleich
+
+Nach jedem erfolgreichen Abruf werden die Spieler mit den aktiven Fahndungen abgeglichen (bestätigt nur per Roblox-ID). Details: [wanted.md](wanted.md#automatischer-erlc-fahndungsabgleich).
+
 ## Grenzen / offen
 
 - Die Webhook-Nutzlast ist von PRC nur teilweise dokumentiert; Notrufe werden erkannt, andere Ereignisse nur protokolliert.

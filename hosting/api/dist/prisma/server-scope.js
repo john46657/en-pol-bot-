@@ -17,11 +17,11 @@ exports.SERVER_SCOPED_MODELS = new Set([
     'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
 ]);
 /** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */
-exports.GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat',
+exports.GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat', 'ErlcWantedHit',
     // Discord Message Builder: Vorlagen, Entwürfe, Kategorien, Versände, Button-Aktionen, Webhooks je Server
     'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook']);
 /** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
-exports.RELATION_SCOPED_MODELS = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', MessageBuilderSendItem: 'send' };
+exports.RELATION_SCOPED_MODELS = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', ErlcPlayerPresence: 'server', MessageBuilderSendItem: 'send' };
 const FILTERED = new Set(['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate', 'groupBy', 'updateMany', 'deleteMany']);
 const delegate = (base, model) => base[model[0].toLowerCase() + model.slice(1)];
 /**
@@ -42,8 +42,16 @@ function withServerScope(base) {
                     if (!model || !exports.SERVER_SCOPED_MODELS.has(model))
                         return query(args);
                     const space = (0, guild_context_1.recordSpace)();
-                    if (space === undefined)
-                        return query(args); // kein Server gewählt
+                    if (space === undefined) {
+                        // kein Server gewählt („Alle Server“): Listen ohne Reste früherer Umstellungen (verwaiste Bereiche), sonst stünde alles doppelt da
+                        const known = (0, guild_context_1.inRequest)() && FILTERED.has(operation) ? await (0, guild_context_1.registeredSpaces)() : null;
+                        if (!known)
+                            return query(args);
+                        const a = (args ?? {});
+                        const visible = { OR: [{ serverId: null }, { serverId: { in: [...known] } }] };
+                        a.where = a.where ? { AND: [a.where, visible] } : visible;
+                        return query(a);
+                    }
                     const a = (args ?? {});
                     if (FILTERED.has(operation)) {
                         a.where = a.where ? { AND: [a.where, { serverId: space }] } : { serverId: space };

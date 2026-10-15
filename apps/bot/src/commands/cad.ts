@@ -138,6 +138,17 @@ export function renderCadOutbox(type: string, p: Record<string, unknown>): Embed
     case 'cad.call.received':
       return { title: clip(`🚨 NOTRUF #${String(p.callNumber ?? '?')}`, 256), color: COLORS.danger, description: p.description ? clip(plain(p.description), 1500) : undefined,
         fields: [...f('Ort', p.location), ...f('Team', p.team), ...(p.startedAt ? [{ name: 'Zeit', value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1000)}:t>`, inline: true }] : []), { name: 'Status', value: 'Offen', inline: true }, ...f('Server', p.server)] };
+    case 'cad.wanted.hit':
+    case 'cad.wanted.possible': {
+      // Nur das Nötigste – keine Beschreibung, keine Personalien. Bestätigt nur bei gleicher Roblox-ID.
+      const confirmed = type === 'cad.wanted.hit' && p.identified === true;
+      return { title: confirmed ? '🚨 FAHNDUNGSTREFFER' : '⚠️ MÖGLICHER FAHNDUNGSTREFFER', color: confirmed ? COLORS.danger : COLORS.warning,
+        fields: [{ name: 'Spieler', value: clip(plain(p.playerName), 256), inline: true }, { name: 'Identifikator', value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : 'keine ID von ER:LC geliefert', inline: true },
+          ...f('Fahndung', p.wantedNumber), { name: 'Grund', value: clip(plain(p.reason), 1024), inline: false }, ...f('Priorität', p.priority),
+          ...(p.detectedAt ? [{ name: 'Erkannt am', value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1000)}:f>`, inline: true }] : []),
+          { name: 'Identifikation', value: confirmed ? 'Bestätigt (Roblox-ID stimmt überein)' : `Manuelle Prüfung erforderlich${p.matchLabel ? ` – ${plain(p.matchLabel)}` : ''}`, inline: false }, ...f('Server', p.server)],
+        footer: 'Nur zur Information – keine automatischen Maßnahmen im Spiel.' };
+    }
     case 'cad.announcement':
       return { title: '📢 Leitstellenmeldung', description: clip(plain(p.text), 4000), color: COLORS.warning, ...(p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {}) };
     case 'cad.radio':
@@ -157,6 +168,7 @@ export function cadButtons(type: string, p: Record<string, unknown>): ButtonSpec
     ...(typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : []),
   ];
   if (type === 'cad.handover') return link.length ? link : undefined;
+  if (type === 'cad.wanted.hit' || type === 'cad.wanted.possible') return typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard öffnen', style: 'secondary', url: p.dashboardUrl }] : undefined;
   if (type.startsWith('cad.incident.')) {
     const map = type === 'cad.incident.created' && typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : [];
     return link.length || map.length ? [...link, ...map] : undefined;

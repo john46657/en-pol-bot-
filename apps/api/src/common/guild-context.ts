@@ -7,16 +7,18 @@ import type { NextFunction, Request, Response } from 'express';
  * Server laufen getrennt: serverbezogene Rollen gelten nur dort, Teamliste/Voice/Einstellungen zeigen nur diesen Server.
  * Ohne Header = „Alle Server“ (nur serverübergreifende Rollen).
  */
-const store = new AsyncLocalStorage<{ guildId: string | null }>();
+const store = new AsyncLocalStorage<{ guildId: string | null; request?: boolean; spaces?: Promise<ReadonlySet<string> | null> }>();
 export const currentGuild = (): string | null => store.getStore()?.guildId ?? null;
 export const runInGuild = <T>(guildId: string | null, fn: () => T): T => store.run({ guildId }, fn);
+/** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
+export const inRequest = (): boolean => store.getStore()?.request === true;
 
 @Injectable()
 export class GuildContextMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
     const h = req.headers['x-guild-id'];
     const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
-    store.run({ guildId }, next);
+    store.run({ guildId, request: true }, next);
   }
 }
 
@@ -38,7 +40,19 @@ export const scopedKey = (key: string, guildId: string | null) => { const g = se
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----
 let settingsOf: (guildId: string) => string = (g) => g;
 let spaceOf: (guildId: string) => string | null = () => null;
-export function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null) { settingsOf = settings; spaceOf = space; }
+let knownSpaces: () => Promise<ReadonlySet<string> | null> = async () => null;
+export function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null, known?: () => Promise<ReadonlySet<string> | null>) { settingsOf = settings; spaceOf = space; if (known) knownSpaces = known; }
+/**
+ * Akten-Bereiche, die zu einem registrierten Discord-Server (bzw. einer Server-Gruppe) gehören. Alles andere sind Reste früherer
+ * Umstellungen (z. B. „separat belassene“ Doppel aus der Rück-Umstellung, Bereiche aufgelöster Gruppen) – sie bleiben gespeichert
+ * (Backups, Zugriff per ID), erscheinen aber unter „Alle Server“ nicht mehr in Listen. Einmal je Anfrage geladen; außerhalb von Anfragen `null`.
+ */
+export const registeredSpaces = (): Promise<ReadonlySet<string> | null> => {
+  const st = store.getStore();
+  if (!st?.request) return Promise.resolve(null);
+  st.spaces ??= knownSpaces().catch(() => null);
+  return st.spaces;
+};
 /** Server, dessen Einstellungen gelten: in einer Gruppe mit „Einstellungen teilen“ der Haupt-Server der Gruppe, sonst der Server selbst. */
 export const settingsGuild = (guildId: string | null | undefined): string | null => (guildId ? settingsOf(guildId) : null);
 /**
