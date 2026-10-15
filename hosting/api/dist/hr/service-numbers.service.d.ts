@@ -7,13 +7,15 @@ import type { Actor } from '../audit/audit.service';
 import { type AcceptedApplication } from '../common/hire-events';
 import { HrCoreService } from './hr-core.service';
 import { HrPeopleService } from './hr-people.service';
+import { BackupService } from '../backup/backup.service';
 export declare class ServiceNumbersService implements OnModuleInit {
     private readonly core;
     private readonly people;
     private readonly perms;
     private readonly discord;
     private readonly live;
-    constructor(core: HrCoreService, people: HrPeopleService, perms: PermissionService, discord: DiscordAccessService, live: DiscordLiveService);
+    private readonly backup;
+    constructor(core: HrCoreService, people: HrPeopleService, perms: PermissionService, discord: DiscordAccessService, live: DiscordLiveService, backup: BackupService);
     private get prisma();
     onModuleInit(): void;
     settings(): Promise<DnSettings>;
@@ -92,6 +94,39 @@ export declare class ServiceNumbersService implements OnModuleInit {
         manual: boolean;
         reuse: boolean;
         releaseAs: string;
+    }>;
+    /** Doppelte Kreise des Servers: gleiche Schreibweise (Präfix/Suffix/Länge) und gleicher Bereich, beide aktiv. Behalten wird der mit den meisten Nummern. */
+    private duplicateGroups;
+    /** Vorschau für den Button „Doppelte Nummernkreise zusammenführen“. */
+    duplicates(): Promise<{
+        keep: {
+            id: string;
+            name: string;
+            numbers: number;
+            first: string;
+            last: string;
+        };
+        merge: {
+            id: string;
+            name: string;
+            numbers: number;
+        }[];
+    }[]>;
+    /**
+     * Auf ausdrückliche Bestätigung: doppelte Kreise zusammenführen. Zuerst ein vollständiges Backup (schlägt es fehl, passiert nichts).
+     * Nummern der Kopie wandern in den bleibenden Kreis (außer dieselbe Nummer gibt es dort schon – die bleibt bei der Kopie),
+     * die Automatik-Zuordnungen zeigen danach auf den bleibenden Kreis, die Kopie wird deaktiviert (nicht gelöscht).
+     */
+    mergeDuplicates(actor: Actor): Promise<{
+        merged: number;
+        moved: number;
+        kept: number;
+        backup: null;
+    } | {
+        merged: number;
+        moved: number;
+        kept: number;
+        backup: string;
     }>;
     deleteRange(actor: Actor, id: string): Promise<void>;
     /** Nummern mit Status/Person. „Frei“ enthält auch nie benutzte Nummern (bis `limit`). */

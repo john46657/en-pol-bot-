@@ -9,6 +9,7 @@ import { AppError } from '../common/errors';
 import { hireEvents, type AcceptedApplication } from '../common/hire-events';
 import { HrCoreService } from './hr-core.service';
 import { HrPeopleService } from './hr-people.service';
+import { BackupService } from '../backup/backup.service';
 
 const SETTINGS_KEY = 'dienstnummer.settings';
 const isUnique = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
@@ -20,7 +21,7 @@ const isUnique = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestErr
 import { onePersonnel } from '../common/guild-context';
 @Injectable()
 export class ServiceNumbersService implements OnModuleInit {
-  constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService, private readonly perms: PermissionService, private readonly discord: DiscordAccessService, private readonly live: DiscordLiveService) {}
+  constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService, private readonly perms: PermissionService, private readonly discord: DiscordAccessService, private readonly live: DiscordLiveService, private readonly backup: BackupService) {}
   private get prisma() { return this.core.prisma; }
 
   onModuleInit() { hireEvents.handler = (actor, a) => this.onApplicationAccepted(actor, a); }
@@ -66,6 +67,53 @@ export class ServiceNumbersService implements OnModuleInit {
     await this.core.audit.record(actor, { action: id ? 'dienstnummer.range.update' : 'dienstnummer.range.create', module: 'dienstnummer', entityType: 'ServiceNumberRange', entityId: r.id, before, after: r });
     return r;
   }
+  /** Doppelte Kreise des Servers: gleiche Schreibweise (Präfix/Suffix/Länge) und gleicher Bereich, beide aktiv. Behalten wird der mit den meisten Nummern. */
+  private async duplicateGroups() {
+    const list = await this.prisma.serviceNumberRange.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' }, include: { _count: { select: { numbers: true } } } });
+    const groups = new Map<string, typeof list>();
+    for (const r of list) { const k = JSON.stringify([r.serverId, r.prefix, r.suffix, r.padLength, r.start, r.end]); groups.set(k, [...(groups.get(k) ?? []), r]); }
+    return [...groups.values()].filter((g) => g.length > 1).map((g) => {
+      const [keep, ...rest] = [...g].sort((a, b) => b._count.numbers - a._count.numbers || a.createdAt.getTime() - b.createdAt.getTime());
+      return { keep: keep!, rest };
+    });
+  }
+  /** Vorschau für den Button „Doppelte Nummernkreise zusammenführen“. */
+  async duplicates() {
+    return (await this.duplicateGroups()).map((g) => ({ keep: { id: g.keep.id, name: g.keep.name, numbers: g.keep._count.numbers, first: formatServiceNumber(g.keep, g.keep.start), last: formatServiceNumber(g.keep, g.keep.end) }, merge: g.rest.map((r) => ({ id: r.id, name: r.name, numbers: r._count.numbers })) }));
+  }
+  /**
+   * Auf ausdrückliche Bestätigung: doppelte Kreise zusammenführen. Zuerst ein vollständiges Backup (schlägt es fehl, passiert nichts).
+   * Nummern der Kopie wandern in den bleibenden Kreis (außer dieselbe Nummer gibt es dort schon – die bleibt bei der Kopie),
+   * die Automatik-Zuordnungen zeigen danach auf den bleibenden Kreis, die Kopie wird deaktiviert (nicht gelöscht).
+   */
+  async mergeDuplicates(actor: Actor) {
+    const groups = await this.duplicateGroups();
+    if (!groups.length) return { merged: 0, moved: 0, kept: 0, backup: null };
+    const backup = await this.backup.createData(actor, 'vor-zusammenfuehrung');
+    let merged = 0, moved = 0, kept = 0;
+    const settings = await this.settings();
+    const remap = new Map<string, string>();
+    await this.prisma.$transaction(async (tx) => {
+      for (const { keep, rest } of groups) {
+        for (const d of rest) {
+          const n = await tx.$executeRawUnsafe(`UPDATE "ServiceNumber" n SET "rangeId" = $1::uuid WHERE n."rangeId" = $2::uuid AND NOT EXISTS (SELECT 1 FROM "ServiceNumber" o WHERE o."rangeId" = $1::uuid AND o."value" = n."value")`, keep.id, d.id);
+          const left = await tx.serviceNumber.count({ where: { rangeId: d.id } });
+          await tx.serviceNumberRange.update({ where: { id: d.id }, data: { active: false, name: `${d.name} (zusammengeführt)`.slice(0, 120) } });
+          // Abteilung nicht verlieren: hatte nur die Kopie eine, gilt sie für den bleibenden Kreis
+          if (!keep.department && d.department) { await tx.serviceNumberRange.update({ where: { id: keep.id }, data: { department: d.department } }); keep.department = d.department; }
+          await this.core.audit.record(actor, { action: 'dienstnummer.range.merge', module: 'dienstnummer', entityType: 'ServiceNumberRange', entityId: d.id, before: { name: d.name, active: true, numbers: d._count.numbers }, after: { into: keep.id, intoName: keep.name, movedNumbers: n, remainingNumbers: left, backup: backup.name } }, tx);
+          remap.set(d.id, keep.id);
+          merged++; moved += n; kept += left;
+        }
+      }
+      if (settings.mappings.some((m) => m.rangeId && remap.has(m.rangeId))) {
+        const v = { ...settings, mappings: settings.mappings.map((m) => (m.rangeId && remap.has(m.rangeId) ? { ...m, rangeId: remap.get(m.rangeId)! } : m)) };
+        await tx.systemSetting.upsert({ where: { key: SETTINGS_KEY }, create: { key: SETTINGS_KEY, value: v as unknown as Prisma.InputJsonValue }, update: { value: v as unknown as Prisma.InputJsonValue } });
+      }
+    }, { timeout: 120_000 });
+    return { merged, moved, kept, backup: backup.name };
+  }
+
   async deleteRange(actor: Actor, id: string) {
     if (await this.prisma.serviceNumber.count({ where: { rangeId: id, status: { not: 'FREE' } } })) throw new AppError('CONFLICT', 'Im Nummernkreis gibt es vergebene, gesperrte oder ehemalige Nummern – stattdessen deaktivieren.');
     await this.prisma.$transaction([this.prisma.serviceNumber.deleteMany({ where: { rangeId: id } }), this.prisma.serviceNumberRange.delete({ where: { id } })]);

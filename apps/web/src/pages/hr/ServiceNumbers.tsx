@@ -486,6 +486,52 @@ function HistoryModal({ display, onClose }: { display: string; onClose: () => vo
   );
 }
 
+// ───────────── Doppelte Kreise zusammenführen (nur auf Klick, mit Backup vorab) ─────────────
+interface DupGroup { keep: { id: string; name: string; numbers: number; first: string; last: string }; merge: { id: string; name: string; numbers: number }[] }
+function MergeDuplicates() {
+  const invalidate = useInvalidate();
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const preview = useQuery({ queryKey: ['dienstnummern', 'duplicates'], queryFn: () => api<DupGroup[]>('/dienstnummern/ranges/duplicates'), enabled: open });
+  const run = useMutation({
+    mutationFn: () => api<{ merged: number; moved: number; kept: number; backup: string | null }>('/dienstnummern/ranges/merge-duplicates', { body: { confirm } }),
+    onSuccess: () => { invalidate(); setConfirm(''); },
+  });
+  return (
+    <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-warning">Es gibt doppelte Nummernkreise (gleiche Schreibweise und gleicher Bereich) – dadurch standen Nummern doppelt da.</span>
+        <Button variant="secondary" onClick={() => { setOpen(true); run.reset(); }}>Doppelte Nummernkreise zusammenführen</Button>
+      </div>
+      <Modal open={open} title="Doppelte Nummernkreise zusammenführen" onClose={() => setOpen(false)}>
+        {run.data ? (
+          <div className="space-y-2 text-sm">
+            <p className="text-success">{run.data.merged} Kreis(e) zusammengeführt, {run.data.moved} Nummer(n) übernommen.</p>
+            {run.data.kept > 0 && <p className="text-warning">{run.data.kept} Nummer(n) gab es im bleibenden Kreis schon – sie bleiben beim deaktivierten Kreis und sind weiter sichtbar.</p>}
+            {run.data.backup && <p className="text-muted">Backup vorher: {run.data.backup} (Administration → Backups).</p>}
+            <div className="flex justify-end"><Button onClick={() => setOpen(false)}>Schließen</Button></div>
+          </div>
+        ) : (
+          <div className="space-y-3 text-sm">
+            {preview.isLoading ? <SkeletonRows rows={2} /> : preview.error ? <ErrorState error={preview.error} /> : !preview.data?.length ? <p>Keine doppelten Kreise (mehr).</p> : (
+              <ul className="space-y-2">{preview.data.map((g) => (
+                <li key={g.keep.id} className="rounded border border-line p-2">
+                  <div><b>Bleibt:</b> {g.keep.name} ({g.keep.first} – {g.keep.last}, {g.keep.numbers} Nummern)</div>
+                  {g.merge.map((m) => <div key={m.id} className="text-muted">Wird übernommen und danach deaktiviert: {m.name} ({m.numbers} Nummern)</div>)}
+                </li>
+              ))}</ul>
+            )}
+            <p className="text-muted">Vorher wird automatisch ein vollständiges Backup angelegt. Vergebene Nummern und Personalakten bleiben unverändert; nichts wird gelöscht. Zuordnungen der Dienstnummern-Automatik zeigen danach auf den bleibenden Kreis.</p>
+            <label className="block text-xs text-muted">Zur Bestätigung <b>ZUSAMMENFÜHREN</b> eingeben<Input className="mt-1" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>
+            {run.error && <p role="alert" className="text-danger">{errText(run.error)}</p>}
+            <div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setOpen(false)}>Abbrechen</Button><Button disabled={confirm !== 'ZUSAMMENFÜHREN' || run.isPending || !preview.data?.length} onClick={() => run.mutate()}>{run.isPending ? 'Läuft …' : 'Zusammenführen'}</Button></div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
 // ───────────── Nummernkreise ─────────────
 const emptyRange = (): RangeInput => ({ name: '', prefix: '', suffix: '', start: 1, end: 999, padLength: 3, order: 'LOWEST_FREE', autoAssign: true, manual: true, reuse: true, releaseAs: 'FORMER', department: null, active: true });
 const toInput = (r: RangeRow): RangeInput => ({ name: r.name, prefix: r.prefix, suffix: r.suffix, start: r.start, end: r.end, padLength: r.padLength, order: r.order, autoAssign: r.autoAssign, manual: r.manual, reuse: r.reuse, releaseAs: r.releaseAs, department: r.department, active: r.isActive });
@@ -512,6 +558,7 @@ function RangesTab() {
         {edit && <Button onClick={() => setEditing({ value: emptyRange() })}><Plus size={16} aria-hidden />Nummernkreis</Button>}
       </div>
       <Err text={err} />
+      {edit && ranges.data?.some((r) => r.duplicateOf) && <MergeDuplicates />}
       {!ranges.data?.length ? <Card><EmptyState text="Noch kein Nummernkreis angelegt." hint="z. B. „Polizei“ mit 001–999." /></Card> : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {ranges.data.map((r) => {
@@ -523,7 +570,7 @@ function RangesTab() {
                   <Button size="sm" variant="ghost" aria-label={`${r.name} bearbeiten`} onClick={() => { setErr(undefined); setEditing({ id: r.id, value: toInput(r) }); }}><Pencil size={14} aria-hidden /></Button>
                   <Button size="sm" variant="ghost" aria-label={`${r.name} löschen`} onClick={() => { setErr(undefined); setDel(r); }}><Trash2 size={14} aria-hidden /></Button>
                 </div>}>
-                {r.duplicateOf && <p role="alert" className="mb-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-warning">Doppelter Kreis: „{r.duplicateOf.name}“ hat dieselbe Schreibweise und denselben Bereich (vermutlich eine Kopie aus der Umstellung auf getrennte Server). Freie Nummern werden nur einmal angezeigt. Bitte prüfen und den überzähligen Kreis deaktivieren – es wird nichts automatisch geändert.</p>}
+                {r.duplicateOf && <p role="alert" className="mb-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-warning">Doppelter Kreis: „{r.duplicateOf.name}“ hat dieselbe Schreibweise und denselben Bereich (vermutlich eine Kopie aus der Umstellung auf getrennte Server). Freie Nummern werden nur einmal angezeigt. Oben mit „Doppelte Nummernkreise zusammenführen“ bereinigen (Backup vorab) – ohne deinen Klick wird nichts geändert.</p>}
                 <p className="font-mono text-lg font-semibold">{r.first} – {r.last}</p>
                 <p className="text-xs text-muted">{r.total.toLocaleString('de-DE')} Nummern{r.department ? ` · Abteilung ${r.department}` : ''}</p>
                 <div className="mt-3" role="progressbar" aria-label={`Auslastung ${r.name}`} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>

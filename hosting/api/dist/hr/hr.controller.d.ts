@@ -1816,6 +1816,33 @@ export declare class ServiceNumbersController {
         reuse: boolean;
         releaseAs: string;
     }>;
+    duplicates(): Promise<{
+        keep: {
+            id: string;
+            name: string;
+            numbers: number;
+            first: string;
+            last: string;
+        };
+        merge: {
+            id: string;
+            name: string;
+            numbers: number;
+        }[];
+    }[]>;
+    mergeDuplicates(a: Actor, _b: {
+        confirm: string;
+    }): Promise<{
+        merged: number;
+        moved: number;
+        kept: number;
+        backup: null;
+    } | {
+        merged: number;
+        moved: number;
+        kept: number;
+        backup: string;
+    }>;
     deleteRange(a: Actor, id: string): Promise<void>;
     settings(): Promise<{
         dm: {

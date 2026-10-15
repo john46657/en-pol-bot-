@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BackupModule } from '../backup/backup.module';
 import { BotTrainingSessionsController, HrCommsController, HrController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, ServiceNumbersController } from './hr.controller';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
 import { HrCoreService } from './hr-core.service';
@@ -10,6 +11,7 @@ import { ServiceNumbersService } from './service-numbers.service';
 
 /** Personal- & Verwaltungssystem: Personalakte, Ränge/Beförderungen, Versetzungen, Ausbildungen/Prüfungen, Meldungen/Abstimmungen, Dienstnummern. */
 @Module({
+  imports: [BackupModule],
   controllers: [HrController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, BotTrainingSessionsController, HrCommsController, ServiceNumbersController],
   providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrTrainingSessionsService, HrCommsService, ServiceNumbersService],
   exports: [HrCoreService, ServiceNumbersService],

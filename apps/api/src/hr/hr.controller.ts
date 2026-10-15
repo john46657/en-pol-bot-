@@ -139,6 +139,8 @@ export class ServiceNumbersController {
   @Get('ranges') @RequirePermission('dienstnummer.view') ranges() { return this.s.ranges(); }
   @Post('ranges') @RequirePermission('dienstnummer.manage_ranges') createRange(@CurrentActor() a: Actor, @Body(zodBody(rangeSchema)) b: RangeInput) { return this.s.saveRange(a, b); }
   @Put('ranges/:id') @RequirePermission('dienstnummer.manage_ranges') saveRange(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(rangeSchema)) b: RangeInput) { return this.s.saveRange(a, b, id); }
+  @Get('ranges/duplicates') @RequirePermission('dienstnummer.manage_ranges') duplicates() { return this.s.duplicates(); }
+  @Post('ranges/merge-duplicates') @HttpCode(200) @RequirePermission('dienstnummer.manage_ranges') mergeDuplicates(@CurrentActor() a: Actor, @Body(zodBody(z.object({ confirm: z.literal('ZUSAMMENFÜHREN', { message: 'Bitte zur Bestätigung ZUSAMMENFÜHREN eingeben.' }) }))) _b: { confirm: string }) { return this.s.mergeDuplicates(a); }
   @Delete('ranges/:id') @HttpCode(204) @RequirePermission('dienstnummer.manage_ranges') deleteRange(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.deleteRange(a, id); }
   @Get('settings') @RequirePermission('dienstnummer.view') settings() { return this.s.settings(); }
   @Put('settings') @RequirePermission('dienstnummer.manage_settings') saveSettings(@CurrentActor() a: Actor, @Body(zodBody(dnSettingsSchema)) b: DnSettings) { return this.s.saveSettings(a, b); }
