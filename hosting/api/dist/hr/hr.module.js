@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HrModule = void 0;
 const common_1 = require("@nestjs/common");
+const backup_module_1 = require("../backup/backup.module");
 const hr_controller_1 = require("./hr.controller");
 const hr_training_sessions_service_1 = require("./hr-training-sessions.service");
 const hr_core_service_1 = require("./hr-core.service");
@@ -22,6 +23,7 @@ let HrModule = class HrModule {
 exports.HrModule = HrModule;
 exports.HrModule = HrModule = __decorate([
     (0, common_1.Module)({
+        imports: [backup_module_1.BackupModule],
         controllers: [hr_controller_1.HrController, hr_controller_1.HrRequestsController, hr_controller_1.HrTrainingController, hr_controller_1.HrTrainingSessionsController, hr_controller_1.BotTrainingSessionsController, hr_controller_1.HrCommsController, hr_controller_1.ServiceNumbersController],
         providers: [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService, hr_requests_service_1.HrRequestsService, hr_training_service_1.HrTrainingService, hr_training_sessions_service_1.HrTrainingSessionsService, hr_comms_service_1.HrCommsService, service_numbers_service_1.ServiceNumbersService],
         exports: [hr_core_service_1.HrCoreService, service_numbers_service_1.ServiceNumbersService],

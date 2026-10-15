@@ -16,8 +16,8 @@ const KEY = 'backup.config';
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
 const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
-const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver)-(\d{8}-\d{6})\.json\.gz$/;
-export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver';
+const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver|vor-zusammenfuehrung)-(\d{8}-\d{6})\.json\.gz$/;
+export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver' | 'vor-zusammenfuehrung';
 /** Nach dem Einspielen (z. B. eines Backups aus dem Ein-Server-Betrieb): gesetzt vom MultiServerRestoreService. */
 let afterRestore: (() => Promise<unknown>) | null = null;
 export const setAfterRestore = (fn: (() => Promise<unknown>) | null) => { afterRestore = fn; };
@@ -149,7 +149,8 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     if (unknown.length) throw new AppError('VALIDATION_FAILED', `Das Backup passt nicht zu dieser Version (unbekannte Tabellen: ${unknown.slice(0, 5).join(', ')}).`);
     const safety = await this.createData(null, 'vor-wiederherstellung');
     let rows = 0;
-    await this.prisma.$transaction(async (tx) => {
+    // vollständiger Bestand aller Server, ohne Filter (sonst blieben z. B. unter „Alle Server“ ausgeblendete Altbestände stehen → Konflikte)
+    await unscoped(() => this.prisma.$transaction(async (tx) => {
       const db = tx as unknown as Record<string, { deleteMany(): Promise<unknown>; createMany(a: { data: unknown[] }): Promise<unknown> }>;
       // Sitzungen hängen an den Benutzern (werden beim Leeren mitgelöscht) → danach für weiterhin vorhandene Benutzer zurückholen
       const sessions = await tx.session.findMany();
@@ -167,7 +168,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       // Wochenarchive aus dem Backup, die hier fehlen, ergänzen – vorhandene werden nie überschrieben
       const weeks = (body.tables!.DutyWeekArchive ?? []) as Prisma.DutyWeekArchiveCreateManyInput[];
       for (let i = 0; i < weeks.length; i += 500) await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
-    }, { timeout: 10 * 60_000, maxWait: 30_000 });
+    }, { timeout: 10 * 60_000, maxWait: 30_000 }));
     await this.audit.record(actor, { action: 'backup.data.restore', module: 'settings', entityType: 'Backup', entityId: source.name ?? 'upload', after: { rows, safety: safety.name } });
     // Backup aus dem Ein-Server-Betrieb eingespielt → Daten wieder dem Server zuordnen (siehe MultiServerRestoreService)
     if (afterRestore) await afterRestore().catch((e) => this.log.warn(`Nach dem Einspielen: ${e instanceof Error ? e.message : e}`));

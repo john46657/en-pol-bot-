@@ -673,6 +673,8 @@ let ServiceNumbersController = class ServiceNumbersController {
     ranges() { return this.s.ranges(); }
     createRange(a, b) { return this.s.saveRange(a, b); }
     saveRange(a, id, b) { return this.s.saveRange(a, b, id); }
+    duplicates() { return this.s.duplicates(); }
+    mergeDuplicates(a, _b) { return this.s.mergeDuplicates(a); }
     deleteRange(a, id) { return this.s.deleteRange(a, id); }
     settings() { return this.s.settings(); }
     saveSettings(a, b) { return this.s.saveSettings(a, b); }
@@ -724,6 +726,23 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], ServiceNumbersController.prototype, "saveRange", null);
+__decorate([
+    (0, common_1.Get)('ranges/duplicates'),
+    (0, decorators_1.RequirePermission)('dienstnummer.manage_ranges'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ServiceNumbersController.prototype, "duplicates", null);
+__decorate([
+    (0, common_1.Post)('ranges/merge-duplicates'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('dienstnummer.manage_ranges'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ confirm: zod_1.z.literal('ZUSAMMENFÜHREN', { message: 'Bitte zur Bestätigung ZUSAMMENFÜHREN eingeben.' }) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ServiceNumbersController.prototype, "mergeDuplicates", null);
 __decorate([
     (0, common_1.Delete)('ranges/:id'),
     (0, common_1.HttpCode)(204),
