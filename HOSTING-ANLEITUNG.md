@@ -19,7 +19,7 @@ Tab **Startup**, Startdatei **`start.js`** (Node.js-Server). Kann dein Server nu
 | `WEB_ORIGIN` | deine Domain, z. B. `https://tnnyq4svmz.apps.bot-hosting.cloud` (ohne `/` am Ende) |
 | `ADMIN_DISCORD_IDS` | **zuerst setzen:** deine Discord-ID (Rechtsklick auf dich → „ID kopieren“; mehrere mit Komma) – du bist beim Discord-Login immer Administrator |
 | `DISCORD_CLIENT_SECRET` | **Nur noch mit Discord anmelden**: sobald gesetzt, gibt es keinen Passwort-Login mehr (Notfall: `PASSWORD_LOGIN=true`). – Discord Developer Portal → deine Anwendung → OAuth2 → *Client Secret* (Reset Secret). Dort unter *Redirects* eintragen: `https://<deine-domain>/api/v1/auth/discord/callback` |
-| `DISCORD_GUILD_ID` | **empfohlen:** ID des Discord-Servers der EN Polizei (Rechtsklick auf den Server → „ID kopieren“). Das System arbeitet nur mit diesem einen Server; Slash-Befehle erscheinen dort sofort. Ohne Wert gilt die Einstellung im Dashboard bzw. der einzige Server des Bots. |
+| `DISCORD_GUILD_ID` | optional: Server-ID, dann erscheinen die Slash-Befehle sofort (sonst bis zu 1 Stunde) |
 
 **Nicht setzen bzw. löschen:** `PORT` (das Panel setzt `SERVER_PORT` selbst, und der hat Vorrang), `API_URL` (im gemeinsamen Betrieb nutzt der Bot automatisch die lokale API), `NEXUS_ENTRY`.
 `BOT_API_TOKEN` und `SESSION_SECRET` werden beim ersten Start automatisch erzeugt (Ordner `hosting/data/`, nicht löschen).
@@ -44,7 +44,7 @@ Dann im Browser: `https://<deine-domain>/health` → muss `{"status":"ok"}` zeig
 | Konsole bleibt leer / „Console connection error“ | Panel-Konsole neu laden; Server neu starten. Disk `0 B` heißt: es sind keine Dateien da → Schritt 1 (Pull). |
 | `DATABASE_URL fehlt` / `muss mit postgresql:// beginnen` | Variable setzen; es wird **PostgreSQL** gebraucht (kein MySQL). |
 | `Invalid bot configuration` | `DISCORD_TOKEN` fehlt/ungültig. |
-| Slash-Befehle erscheinen nicht | `DISCORD_GUILD_ID` auf den Server der EN Polizei setzen; Bot mit Bereich `applications.commands` einladen. Auf anderen Servern registriert der Bot bewusst keine Befehle. |
+| Slash-Befehle erscheinen nicht | `DISCORD_GUILD_ID` setzen oder bis zu 1 Stunde warten; Bot mit Bereich `applications.commands` einladen. |
 | Befehle antworten „System nicht erreichbar“ | API läuft nicht (siehe 502). |
 | Bot antwortet „Serverfehler (Request-ID …)“ nach einem Update | Server neu starten – beim Start erscheint „Erzeuge Prisma-Client …“, danach passt die API wieder zur Datenbank. Hilft das nicht: Konsole nach der Request-ID durchsuchen. |
 | Abbruch bei `npm install` | Zu wenig Speicher/RAM → im Panel „Adjust resources“ erhöhen. |

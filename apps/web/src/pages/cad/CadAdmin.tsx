@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Link2, Trash2, Upload } from 'lucide-react';
-import { CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, ERLC_BUILTIN_MAP, type CadConfig, type CadRoute } from '@enrp/shared';
+import { CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, ERLC_BUILTIN_MAP, type CadConfig, type CadRoute } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useAutosaveDraft } from '../../lib/autosave';
@@ -77,14 +77,14 @@ export function CadSettings() {
   const [draft, setDraft] = useState<CadConfig | null>(null);
   useEffect(() => { if (q.data && !draft) setDraft(q.data); }, [q.data, draft]);
   const { map: mapDraft, ...rest } = draft ?? ({} as CadConfig);
-  useAutosaveDraft(draft ? 'cad:config' : null, draft ? rest : undefined, (d) => (can('cad.manage_settings') ? { method: 'PUT', path: '/cad/config', body: d, label: 'CAD-Einstellungen' } : null));
-  useAutosaveDraft(draft ? 'cad:map' : null, mapDraft, (d) => (can('cad.manage_map') ? { method: 'PUT', path: '/cad/config/map', body: d, label: 'CAD-Karte' } : null));
+  useAutosaveDraft(draft ? 'cad:config' : null, draft ? rest : undefined, (d) => (can('cad.manage_settings') ? { method: 'PUT', path: '/cad/config', body: d, guildId: null, label: 'CAD-Einstellungen' } : null));
+  useAutosaveDraft(draft ? 'cad:map' : null, mapDraft, (d) => (can('cad.manage_map') ? { method: 'PUT', path: '/cad/config/map', body: d, guildId: null, label: 'CAD-Karte' } : null));
   if (!tabs.length) return <EmptyState text="Keine Einstellungen für dich." />;
   if (q.isLoading || !draft) return <SkeletonRows />;
   const upd = (p: Partial<CadConfig>) => setDraft({ ...draft, ...p });
   // Was steckt in welchem Bereich – und ist er schon eingerichtet? (Klick öffnet den Bereich)
   const AREAS: Record<string, { desc: string; ok?: boolean }> = {
-    Allgemein: { desc: 'Einsatznummern, Startseite' },
+    Allgemein: { desc: 'Heimat-Server, Einsatznummern, Startseite', ok: !!draft.homeGuildId },
     'Einsätze': { desc: 'Prioritäten, Status, Einsatzarten', ok: draft.priorities.length > 0 && draft.incidentStatuses.length > 0 },
     Einheiten: { desc: 'Einheitenstatus und -typen', ok: draft.unitStatuses.length > 0 && draft.unitTypes.length > 0 },
     'Discord-Kanäle': { desc: 'Welche Meldung in welchen Kanal', ok: draft.routes.some((r) => r.enabled && r.channelIds.length) },
@@ -108,6 +108,7 @@ export function CadSettings() {
         {tab === 'Allgemein' && <div className="grid gap-3 lg:grid-cols-2">
           <Card title="🏢 Leitstelle">
             <div className="grid gap-3">
+              <Field label="Discord-Server der Leitstelle (Heimat der Einsätze)" hint="Von anderen Servern (z. B. SEK/K9) geht nur, was eine Server-Verbindung freigibt.">{() => <GuildSelect label="Leitstelle" value={draft.homeGuildId} onChange={(v) => upd({ homeGuildId: v })} />}</Field>
               <Field label="Präfix der Einsatznummer" hint={`Beispiel: ${draft.incidentNumberPrefix || 'E'}-${new Date().getFullYear()}-00421`}>{(id) => <Input id={id} maxLength={6} value={draft.incidentNumberPrefix} onChange={(e) => upd({ incidentNumberPrefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })} />}</Field>
             </div>
           </Card>
@@ -143,7 +144,7 @@ function RoutesEditor({ routes, onChange }: { routes: CadRoute[]; onChange: (r: 
   const guilds = useGuilds();
   return (
     <Card title="CAD → Discord">
-      <p className="mb-3 text-xs text-muted">Welche CAD-Ereignisse in welche Kanäle gehen.</p>
+      <p className="mb-3 text-xs text-muted">Welche CAD-Ereignisse in welche Kanäle gehen – je Discord-Server. Verbundene Server (Cross-Server) bekommen zusätzlich die dort freigegebenen Datenarten.</p>
       {!routes.length && <EmptyState text="Noch keine Kanalzuordnung." />}
       <ul className="space-y-2">{routes.map((r, i) => (
         <li key={r.id} className="grid gap-2 rounded border border-line p-2 md:grid-cols-[1fr_1fr_2fr_2fr_auto]">
@@ -349,6 +350,57 @@ export function CadTeam() {
               : <Input id={id} type={f.type === 'number' ? 'number' : 'text'} value={String(edit.extra?.[f.key] ?? '')} onChange={(e) => setEdit({ ...edit, extra: { ...(edit.extra ?? {}), [f.key]: f.type === 'number' ? Number(e.target.value) : e.target.value } })} />}</Field>)}
             {err && <p role="alert" className="text-sm text-danger sm:col-span-3">{err}</p>}
             <div className="flex justify-between gap-2 sm:col-span-3">{edit.id ? <Button variant="danger" onClick={() => del.mutate(edit.id!)}>Löschen</Button> : <span />}<div className="flex gap-2"><Button variant="secondary" onClick={() => setEdit(null)}>Abbrechen</Button><Button type="submit">Speichern</Button></div></div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+// ───────── Cross-Server ─────────
+interface Link { id: string; name: string; sourceGuildId: string; targetGuildId: string; active: boolean; sendTypes: string[]; allowActions: string[]; roleIds: string[]; channels: Record<string, string[]> | null; notify: boolean }
+
+export function CadCrossServer() {
+  const { can } = useAuth();
+  const qc = useQueryClient();
+  const guilds = useGuilds();
+  const q = useQuery({ queryKey: ['cad-links'], queryFn: () => api<Link[]>('/cad/links') });
+  const [edit, setEdit] = useState<Partial<Link> | null>(null);
+  const [err, setErr] = useState<string>();
+  const gname = (id: string) => guilds.data?.find((g) => g.id === id)?.name ?? id;
+  const save = useMutation({
+    mutationFn: (l: Partial<Link>) => { const { id, ...body } = l; return id ? api(`/cad/links/${id}`, { method: 'PATCH', body: { ...body, channels: body.channels ?? {} } }) : api('/cad/links', { body: { ...body, channels: body.channels ?? {} } }); },
+    onSuccess: () => { setEdit(null); setErr(undefined); void qc.invalidateQueries({ queryKey: ['cad-links'] }); }, onError: (e) => setErr(errText(e)),
+  });
+  const del = useMutation({ mutationFn: (id: string) => api(`/cad/links/${id}`, { method: 'DELETE' }), onSuccess: () => { setEdit(null); void qc.invalidateQueries({ queryKey: ['cad-links'] }); } });
+  const toggle = (list: string[] | undefined, x: string) => ((list ?? []).includes(x) ? (list ?? []).filter((y) => y !== x) : [...(list ?? []), x]);
+  return (
+    <>
+      <PageHeader title="Server-Verbindungen" subtitle="Leitstelle ↔ SEK/K9: welche Daten fließen, welche Aktionen erlaubt sind" actions={can('cad.manage_cross_server') ? <Button onClick={() => setEdit({ active: true, notify: true, sendTypes: ['incidents', 'unit_requests'], allowActions: ['status_report', 'radio'], roleIds: [], channels: {} })}>Verbindung anlegen</Button> : undefined} />
+      {q.isLoading ? <SkeletonRows /> : !q.data?.length ? <Card><EmptyState text="Noch keine Server verbunden." hint="Ohne Verbindung bleiben die Server vollständig getrennt." /></Card> : (
+        <div className="grid gap-3 lg:grid-cols-2">{q.data.map((l) => (
+          <Card key={l.id} title={l.name} actions={<Badge tone={l.active ? 'success' : 'neutral'}>{l.active ? 'aktiv' : 'aus'}</Badge>}>
+            <p className="text-sm"><b>{gname(l.sourceGuildId)}</b> → <b>{gname(l.targetGuildId)}</b></p>
+            <p className="mt-1 text-xs text-muted">Sendet: {l.sendTypes.map((t) => CAD_LINK_LABELS[t] ?? t).join(', ') || 'nichts'}</p>
+            <p className="text-xs text-muted">Darf zurück: {l.allowActions.map((t) => CAD_LINK_LABELS[t] ?? t).join(', ') || 'nichts'}{l.roleIds.length ? ` (nur mit freigegebener Rolle)` : ''}</p>
+            {can('cad.manage_cross_server') && <Button size="sm" variant="secondary" className="mt-2" onClick={() => setEdit(l)}>Bearbeiten</Button>}
+          </Card>))}</div>
+      )}
+      {edit && (
+        <Modal open wide title={edit.id ? 'Verbindung bearbeiten' : 'Verbindung anlegen'} onClose={() => setEdit(null)}>
+          <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); save.mutate(edit); }}>
+            <div className="sm:col-span-2"><Field label="Name">{(id) => <Input id={id} required minLength={2} maxLength={80} value={edit.name ?? ''} placeholder="Leitstelle ↔ SEK/K9" onChange={(e) => setEdit({ ...edit, name: e.target.value })} />}</Field></div>
+            <Field label="Quelle (Leitstelle)">{() => <GuildSelect label="Quelle" allowEmpty={false} value={edit.sourceGuildId} onChange={(v) => v && setEdit({ ...edit, sourceGuildId: v })} />}</Field>
+            <Field label="Ziel (z. B. SEK + K9)">{() => <GuildSelect label="Ziel" allowEmpty={false} value={edit.targetGuildId} onChange={(v) => v && setEdit({ ...edit, targetGuildId: v, channels: {}, roleIds: [] })} />}</Field>
+            <fieldset><legend className="mb-1 text-xs font-medium text-muted">Quelle darf an Ziel senden</legend>{CAD_LINK_SEND_TYPES.map((t) => <label key={t} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={(edit.sendTypes ?? []).includes(t)} onChange={() => setEdit({ ...edit, sendTypes: toggle(edit.sendTypes, t) })} />{CAD_LINK_LABELS[t]}</label>)}</fieldset>
+            <fieldset><legend className="mb-1 text-xs font-medium text-muted">Ziel darf zurück</legend>{CAD_LINK_ACTIONS.map((t) => <label key={t} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={(edit.allowActions ?? []).includes(t)} onChange={() => setEdit({ ...edit, allowActions: toggle(edit.allowActions, t) })} />{CAD_LINK_LABELS[t]}</label>)}</fieldset>
+            <div className="sm:col-span-2"><Field label="Nur diese Rollen auf dem Ziel-Server (leer = alle mit CAD-Recht)">{() => <GuildRoles label="Rollen" guildId={edit.targetGuildId ?? null} value={edit.roleIds ?? []} onChange={(v) => setEdit({ ...edit, roleIds: v })} />}</Field></div>
+            <div className="space-y-1 sm:col-span-2"><p className="text-xs font-medium text-muted">Kanäle auf dem Ziel-Server je Datenart</p>
+              {(edit.sendTypes ?? []).map((t) => <div key={t} className="flex flex-wrap items-center gap-2 text-sm"><span className="w-44">{CAD_LINK_LABELS[t]}</span><GuildChannels label={`Kanäle ${t}`} guildId={edit.targetGuildId ?? null} value={edit.channels?.[t] ?? []} onChange={(v) => setEdit({ ...edit, channels: { ...(edit.channels ?? {}), [t]: v } })} /></div>)}</div>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={edit.active !== false} onChange={(e) => setEdit({ ...edit, active: e.target.checked })} />Aktiv</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={edit.notify !== false} onChange={(e) => setEdit({ ...edit, notify: e.target.checked })} />Benachrichtigungen senden</label>
+            {err && <p role="alert" className="text-sm text-danger sm:col-span-2">{err}</p>}
+            <div className="flex justify-between gap-2 sm:col-span-2">{edit.id ? <Button variant="danger" onClick={() => del.mutate(edit.id!)}>Löschen</Button> : <span />}<div className="flex gap-2"><Button variant="secondary" onClick={() => setEdit(null)}>Abbrechen</Button><Button type="submit" disabled={!edit.sourceGuildId || !edit.targetGuildId}>Speichern</Button></div></div>
           </form>
         </Modal>
       )}

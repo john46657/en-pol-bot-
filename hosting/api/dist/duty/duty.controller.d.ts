@@ -28,13 +28,13 @@ declare const body: z.ZodObject<{
     shiftType: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "OFF_DUTY" | "BREAK" | "ON_DUTY" | "TRAINING" | "ADMINISTRATIVE";
-    callsign?: string | undefined;
     unitId?: string | undefined;
+    callsign?: string | undefined;
     shiftType?: string | undefined;
 }, {
     status: "OFF_DUTY" | "BREAK" | "ON_DUTY" | "TRAINING" | "ADMINISTRATIVE";
-    callsign?: string | undefined;
     unitId?: string | undefined;
+    callsign?: string | undefined;
     shiftType?: string | undefined;
 }>;
 export declare class DutyController {
@@ -50,12 +50,12 @@ export declare class DutyController {
             displayName: string;
         };
     } & {
-        callsign: string | null;
-        userId: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
         startedAt: Date;
         endedAt: Date | null;
@@ -89,12 +89,12 @@ export declare class DutyController {
         } | null;
     }[]>;
     mine(a: Actor): import("@prisma/client").Prisma.Prisma__DutySessionClient<{
-        callsign: string | null;
-        userId: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
         startedAt: Date;
         endedAt: Date | null;
@@ -152,12 +152,12 @@ export declare class DutyController {
         status: string;
     }>;
     set(a: Actor, b: z.infer<typeof body>): Promise<{
-        callsign: string | null;
-        userId: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
         startedAt: Date;
         endedAt: Date | null;
@@ -168,12 +168,12 @@ export declare class DutyController {
     }>;
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a: Actor, userId: string, b: z.infer<typeof body>): Promise<{
-        callsign: string | null;
-        userId: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
+        userId: string;
         unitId: string | null;
+        callsign: string | null;
         shiftType: string | null;
         startedAt: Date;
         endedAt: Date | null;

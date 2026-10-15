@@ -5,7 +5,6 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
-import { homeGuild } from '../common/guild-context';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL_MS = 10 * 60_000;
@@ -118,7 +117,7 @@ export class DiscordService {
    */
   async applicantTicket(actor: Actor, a: { id: string; number: string; discordId: string | null; discordName: string | null; guildId: string | null; unitName?: string | null; robloxUsername?: string | null }, entityType: string) {
     if (!a.discordId) throw new AppError('VALIDATION_FAILED', 'Diese Bewerbung kam nicht über Discord – es gibt keinen Discord-Benutzer für ein Ticket.');
-    const guildId = homeGuild() ?? a.guildId ?? (await this.guilds())[0]?.id;
+    const guildId = a.guildId ?? (await this.channels()).guildId ?? (await this.guilds())[0]?.id;
     if (!guildId) throw new AppError('VALIDATION_FAILED', 'Kein Discord-Server bekannt – ist der Bot online?');
     const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
     await this.prisma.$transaction(async (tx) => {
@@ -129,14 +128,9 @@ export class DiscordService {
   }
 
   // ---- Bot-Zustand (z. B. IDs der selbst aktualisierenden Nachrichten) ----
-  /**
-   * Der Discord-Server dieses Systems mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im
-   * Dashboard. Solange noch keiner eingerichtet ist, alle Server des Bots (zum Auswählen in den Einstellungen).
-   */
+  /** Server des Bots mit Channels und Rollen (meldet der Bot regelmäßig) – für Namen und Auswahllisten im Dashboard. */
   async guilds(): Promise<DiscordGuildInfo[]> {
-    const all = await this.reportedGuilds();
-    const home = homeGuild();
-    return home ? all.filter((g) => g.id === home) : all;
+    return this.reportedGuilds();
   }
   /** Alle vom Bot gemeldeten Server (auch fremde) – nur für Hinweise, wenn der eingerichtete nicht dabei ist. */
   async reportedGuilds(): Promise<DiscordGuildInfo[]> {

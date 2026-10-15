@@ -46,8 +46,8 @@ export declare class EvidenceController {
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
@@ -77,8 +77,8 @@ export declare class EvidenceController {
         }[];
     } & {
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -92,8 +92,8 @@ export declare class EvidenceController {
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -107,8 +107,8 @@ export declare class EvidenceController {
     }>;
     transfer(a: Actor, id: string, b: z.infer<typeof transfer>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -124,8 +124,8 @@ export declare class EvidenceController {
         reason: string;
     }): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;

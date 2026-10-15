@@ -31,26 +31,25 @@ export declare const erlcServerInput: z.ZodObject<{
         blockedCommands?: string[] | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     active: boolean;
+    name: string;
     pollSeconds: number;
     features: ("vehicles" | "commands" | "players" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "joinLogs" | "killLogs" | "commandLogs" | "webhook")[];
     webhookEnabled: boolean;
     description?: string | null | undefined;
     guildId?: string | null | undefined;
-    key?: string | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     settings?: {
         criticalCommands?: string[] | undefined;
         blockedCommands?: string[] | undefined;
     } | undefined;
+    key?: string | undefined;
 }, {
     name: string;
     description?: string | null | undefined;
     active?: boolean | undefined;
     guildId?: string | null | undefined;
-    key?: string | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     pollSeconds?: number | undefined;
@@ -60,6 +59,7 @@ export declare const erlcServerInput: z.ZodObject<{
         criticalCommands?: string[] | undefined;
         blockedCommands?: string[] | undefined;
     } | undefined;
+    key?: string | undefined;
 }>;
 export type ErlcServerInput = z.infer<typeof erlcServerInput>;
 export interface ErlcPlayer {
@@ -405,13 +405,13 @@ export declare class ErlcService {
     }>;
     commandLog(id: string, take?: number): Promise<{
         userName: string | null;
-        userId: string | null;
-        discordId: string | null;
+        serverId: string;
         error: string | null;
         result: string | null;
         id: string;
-        serverId: string;
         createdAt: Date;
+        userId: string | null;
+        discordId: string | null;
         command: string;
         critical: boolean;
         ok: boolean;

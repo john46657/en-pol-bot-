@@ -60,7 +60,7 @@ export interface TicketStats {
   perCategory: { id: string; name: string; total: number; open: number }[]; perStaff: { discordId: string; tickets: number; closed: number }[]; ratings: RatingSummary; names: Record<string, string>;
 }
 
-/** Ticket-Einstellungen (Kategorien und Panels des Discord-Servers). */
+/** Einstellungen für den gewählten Server (Kategorien/Panels dieses Servers + die für alle Server). */
 export const useTicketConfig = () => {
   const [server] = useServer();
   return useQuery({ queryKey: ['ticket-config', server], queryFn: () => api<TicketConfig>('/support-tickets/config', { query: { guildId: server } }) });

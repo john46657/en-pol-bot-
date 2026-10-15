@@ -11,8 +11,8 @@ export declare class EvidenceService {
     list(p: PageQuery): Promise<{
         items: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             version: number;
@@ -42,8 +42,8 @@ export declare class EvidenceService {
         }[];
     } & {
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -64,8 +64,8 @@ export declare class EvidenceService {
         personIds?: string[];
     }): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
@@ -85,8 +85,8 @@ export declare class EvidenceService {
         storageLocation?: string;
     }): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;

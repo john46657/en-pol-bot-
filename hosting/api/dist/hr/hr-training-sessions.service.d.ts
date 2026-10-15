@@ -38,12 +38,12 @@ export declare class HrTrainingSessionsService {
     }): Promise<{
         signups: Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -60,8 +60,8 @@ export declare class HrTrainingSessionsService {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -74,12 +74,12 @@ export declare class HrTrainingSessionsService {
     get(id: string): Promise<{
         signups: Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -96,8 +96,8 @@ export declare class HrTrainingSessionsService {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -113,12 +113,12 @@ export declare class HrTrainingSessionsService {
     create(actor: Actor, d: SessionInput): Promise<{
         signups: Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -135,8 +135,8 @@ export declare class HrTrainingSessionsService {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -149,12 +149,12 @@ export declare class HrTrainingSessionsService {
     update(actor: Actor, id: string, d: SessionInput): Promise<{
         signups: Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -171,8 +171,8 @@ export declare class HrTrainingSessionsService {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -185,12 +185,12 @@ export declare class HrTrainingSessionsService {
     cancel(actor: Actor, id: string, reason?: string): Promise<{
         signups: Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -207,8 +207,8 @@ export declare class HrTrainingSessionsService {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -249,12 +249,12 @@ export declare class HrTrainingSessionsService {
         session: {
             signups: Signup[];
             training: {
-                name: string;
                 id: string;
+                name: string;
             } | null;
             promoteRank: {
-                name: string;
                 id: string;
+                name: string;
             } | null;
             instructorName: string | null;
             number: string;
@@ -271,8 +271,8 @@ export declare class HrTrainingSessionsService {
             trainingId: string | null;
             startsAt: Date;
             instructorId: string | null;
-            passed: string[];
             channelId: string | null;
+            passed: string[];
             forRank: string | null;
             promoteRankId: string | null;
             maxSignups: number | null;

@@ -19,6 +19,7 @@ const errors_1 = require("../common/errors");
 const links_1 = require("../common/links");
 const numbering_1 = require("../common/numbering");
 const pagination_1 = require("../common/pagination");
+const guild_context_1 = require("../common/guild-context");
 const erlc_service_1 = require("../cad/erlc.service");
 const notify_service_1 = require("../notifications/notify.service");
 let TicketsService = class TicketsService {
@@ -58,15 +59,16 @@ let TicketsService = class TicketsService {
     }
     /** Personenakte zu einem Spieler aus ER:LC finden oder anlegen (wie der automatische Abgleich). */
     async personForErlc(actor, p) {
-        const srv = await this.prisma.erlcServer.findUnique({ where: { id: p.serverId }, select: { snapshot: true } });
+        const srv = await this.prisma.erlcServer.findUnique({ where: { id: p.serverId }, select: { guildId: true, snapshot: true } });
         const player = (srv?.snapshot?.players ?? []).find((x) => x.name.toLowerCase() === p.name.toLowerCase());
         if (!srv || !player?.id)
             throw new errors_1.AppError('NOT_FOUND', `„${p.name}“ ist gerade nicht im Spiel.`);
-        const hit = await this.prisma.person.findFirst({ where: { serverId: null, OR: [{ robloxUserId: player.id }, { robloxUsername: { equals: player.name, mode: 'insensitive' } }] } });
+        const space = (0, guild_context_1.recordSpace)(srv.guildId) ?? null;
+        const hit = await this.prisma.person.findFirst({ where: { serverId: space, OR: [{ robloxUserId: player.id }, { robloxUsername: { equals: player.name, mode: 'insensitive' } }] } });
         if (hit)
             return { person: hit, player };
         const person = await this.prisma.$transaction(async (tx) => {
-            const c = await tx.person.create({ data: { robloxUsername: player.name, robloxUserId: player.id, notes: 'Automatisch aus ER:LC angelegt (Strafzettel).' } });
+            const c = await tx.person.create({ data: { serverId: space, robloxUsername: player.name, robloxUserId: player.id, notes: 'Automatisch aus ER:LC angelegt (Strafzettel).' } });
             await this.timeline.add(tx, { entityType: 'Person', entityId: c.id, action: 'person.created', summary: 'Personenakte aus ER:LC angelegt', actorId: actor.userId ?? null });
             await this.audit.record(actor, { action: 'person.create', module: 'persons', entityType: 'Person', entityId: c.id, after: { robloxUsername: c.robloxUsername, robloxUserId: c.robloxUserId, source: 'ERLC' } }, tx);
             return c;

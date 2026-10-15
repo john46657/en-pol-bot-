@@ -4,7 +4,7 @@ import { DiscoveryService, Reflector } from '@nestjs/core';
 import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from '../src/authz/decorators';
+import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY, SERVICE_AUTHORIZED_KEY } from '../src/authz/decorators';
 
 let app: INestApplication; let prisma: PrismaService;
 beforeAll(async () => {
@@ -21,6 +21,7 @@ const AUTH_ONLY_ALLOWLIST = new Set([
   'AuthController.logout', 'AuthController.me', 'AuthController.twoFactorStatus', 'AuthController.twoFactorSetup', 'AuthController.twoFactorEnable', 'AuthController.twoFactorDisable', 'AuthController.twoFactorRecovery', // nur das eigene Konto
   'LocksController.status', 'LocksController.acquire', 'LocksController.release', // Recht je Datensatzart im Service
   'AuthController.discordLink', // discordLink: verknüpft nur das eigene Konto
+  'AuthController.servers', 'AuthController.discordAddServer', // eigene Server-Übersicht; „+“ nur für eigene Discord-Server mit Verwaltungsrecht (Freischaltung nur durch globale Admins)
   'NotificationsController.list', 'NotificationsController.readAll', 'NotificationsController.read', 'NotificationsController.archive', // immer per userId gefiltert
   'SearchController.search', 'StudioController.config', 'DiscordController.link', 'DiscordController.linkCode', 'DiscordController.unlinkSelf', 'AnalyticsController.overview', // pro Entität/Kennzahl geprüft
   'ExportController.export', 'MediaController.upload', 'MediaController.list', 'MediaController.download', // Service-Ebene
@@ -39,8 +40,9 @@ describe('route authorization coverage', () => {
         const perms = reflector.getAllAndOverride<string[]>(PERMISSION_KEY, [handler, w.metatype!]);
         const bot = reflector.getAllAndOverride<boolean>(BOT_SERVICE_KEY, [handler, w.metatype!]);
         const pub = reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [handler, w.metatype!]);
+        const inService = reflector.getAllAndOverride<boolean>(SERVICE_AUTHORIZED_KEY, [handler, w.metatype!]);
         const key = `${w.metatype!.name}.${name}`;
-        if (!perms?.length && !pub && !bot && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
+        if (!perms?.length && !pub && !bot && !inService && !AUTH_ONLY_ALLOWLIST.has(key)) missing.push(key);
       }
     }
     expect(missing).toEqual([]);

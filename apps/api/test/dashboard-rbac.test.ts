@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { DiscordAccessService } from '../src/authz/discord-access.service';
 
@@ -34,6 +34,8 @@ beforeAll(async () => {
   const lead = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Police Administration' } });
   await prisma.rolePermission.createMany({ data: [{ roleId: lead.id, permissionKey: 'roles.manage', effect: 'ALLOW' }, { roleId: lead.id, permissionKey: 'users.manage', effect: 'ALLOW' }], skipDuplicates: true });
   await prisma.rolePermission.deleteMany({ where: { roleId: lead.id, permissionKey: { in: ['ticket.delete', 'ticket.*'] } } });
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [GUILD, '800000000000000001', '800000000000000002']) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => {
   vi.restoreAllMocks();
@@ -141,21 +143,24 @@ describe('Discord role sync after login', () => {
     const user = await makeUser(prisma, 'r_discord');
     await prisma.discordLink.create({ data: { userId: user.id, discordId: D.mod } });
     members.set(D.mod, [ACCESS_ROLE, MOD_ROLE]);
+    // Über Discord vergeben werden nur Rollen des jeweiligen Servers: „Moderator“ als Server-Rolle von GUILD
+    const tpl = await prisma.role.findFirstOrThrow({ where: { guildId: null, name: 'Moderator' }, include: { permissions: true } });
+    await prisma.role.create({ data: { guildId: GUILD, name: 'Moderator', priority: tpl.priority, discordRoleIds: [MOD_ROLE], permissions: { create: tpl.permissions.map((p) => ({ permissionKey: p.permissionKey, effect: p.effect })) } } });
     const access = app.get(DiscordAccessService);
     access.forget();
     const agent = (await login(app, 'r_discord')).agent;
-    const me = await agent.get('/api/v1/auth/me');
+    const me = await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD);
     expect(me.status).toBe(200);
     expect(me.body.roles).toContain('Moderator'); // verknüpft über Rolle „Moderator“ → MOD_ROLE
     expect(me.body.permissions).toContain('ticket.close');
     // Moderator-Rolle auf Discord weg → Dashboard-Rolle weg
     members.set(D.mod, [ACCESS_ROLE]);
     access.forget(user.id);
-    expect((await agent.get('/api/v1/auth/me')).body.roles).not.toContain('Moderator');
+    expect((await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).not.toContain('Moderator');
     // Zugangsrolle weg → Session sofort ungültig, auch für spätere Anfragen
     members.set(D.mod, []);
     access.forget(user.id);
-    const denied = await agent.get('/api/v1/auth/me');
+    const denied = await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD);
     expect(denied.status).toBe(401);
     expect(denied.body.details).toMatchObject({ reason: 'NO_ACCESS' });
     expect(await prisma.session.count({ where: { userId: user.id, revokedAt: null } })).toBe(0);
@@ -234,39 +239,40 @@ describe('team list, voice and personal settings', () => {
   });
 });
 
-describe('ein fester Discord-Server', () => {
-  const OTHER = '800000000000000002';
-  it('X-Guild-Id ändert im Dashboard nichts: Rollen, Rechte und Einstellungen sind zentral', async () => {
+describe('servers run separately', () => {
+  const A = '800000000000000001', B = '800000000000000002';
+  it('server roles only apply on their server; team list, voice and settings are per server', async () => {
     const adm = (await login(app, 'r_admin')).agent;
-    const role = (await adm.post('/api/v1/roles').set('X-Guild-Id', OTHER).send({ name: 'Mod Zentral' })).body;
-    expect(role.guildId).toBeNull();
-    await adm.patch(`/api/v1/roles/${role.id}/permissions`).send({ permission: 'audit.view', effect: 'ALLOW' });
+    const role = (await adm.post('/api/v1/roles').set('X-Guild-Id', A).send({ name: 'Mod Server A' })).body;
+    expect(role.guildId).toBe(A);
+    await adm.patch(`/api/v1/roles/${role.id}/permissions`).set('X-Guild-Id', A).send({ permission: 'audit.view', effect: 'ALLOW' });
     const u = await makeUser(prisma, 'r_server');
-    await adm.put(`/api/v1/users/${u.id}/roles`).send({ roleIds: [role.id] });
+    await registerServer(prisma, A, [u.id]); // bestätigtes Mitglied nur auf Server A
+    await adm.put(`/api/v1/users/${u.id}/roles`).set('X-Guild-Id', A).send({ roleIds: [role.id] });
     const agent = (await login(app, 'r_server')).agent;
-    for (const h of [{}, { 'X-Guild-Id': GUILD }, { 'X-Guild-Id': OTHER }]) {
-      const me = (await agent.get('/api/v1/auth/me').set(h)).body;
-      expect(me).toMatchObject({ roles: ['Mod Zentral'], guildId: GUILD });
-      expect(me.permissions).toContain('audit.view');
-      expect((await agent.get('/api/v1/audit').set(h)).status).toBe(200);
-    }
-    // keine Einstellungen „je Server“ mehr
-    expect((await adm.put(`/api/v1/admin/settings/team.structure@${GUILD}`).send({ value: { teams: ['Team A'], offices: [] } })).status).toBe(400);
-    expect((await adm.put('/api/v1/admin/settings/team.structure').send({ value: { teams: ['Team Zentral'], offices: [] } })).status).toBe(200);
-    expect((await adm.get('/api/v1/team/structure').set('X-Guild-Id', OTHER)).body.teams).toContain('Team Zentral');
-    // Server-Verwaltung, Verbindungen und Server-Verbund gibt es nicht mehr
-    for (const path of ['/api/v1/servers', '/api/v1/connections', '/api/v1/server-links']) expect((await adm.get(path)).status).toBe(404);
-  });
-
-  it('Teamliste und Voice zeigen nur den eigenen Discord-Server', async () => {
-    const adm = (await login(app, 'r_admin')).agent;
+    const inA = (await agent.get('/api/v1/auth/me').set('X-Guild-Id', A)).body;
+    expect(inA).toMatchObject({ roles: ['Mod Server A'], servers: [A], guildId: A });
+    expect(inA.permissions).toContain('audit.view');
+    expect((await agent.get('/api/v1/audit').set('X-Guild-Id', A)).status).toBe(200);
+    // anderer Server und „Alle Server“: die Rolle gilt dort nicht
+    expect((await agent.get('/api/v1/audit').set('X-Guild-Id', B)).status).toBe(403);
+    expect((await agent.get('/api/v1/audit')).status).toBe(403);
+    // Rollen anderer Server sind im Server-Kontext unsichtbar und nicht bearbeitbar
+    expect(((await adm.get('/api/v1/roles').set('X-Guild-Id', B)).body as { id: string }[]).some((r) => r.id === role.id)).toBe(false);
+    expect((await adm.patch(`/api/v1/roles/${role.id}`).set('X-Guild-Id', B).send({ name: 'xx' })).status).toBe(404);
+    // Teamliste und Voice je Server
     const http = request(app.getHttpServer());
     const mem = (g: string, did: string, name: string) => ({ id: did, guildId: g, username: name, displayName: name, avatar: null, status: 'online', roleIds: [ACCESS_ROLE], joinedAt: null });
-    await http.put('/api/v1/bot/members').set(bot()).send({ members: [mem(GUILD, '730000000000000001', 'Eigener'), mem(OTHER, '730000000000000002', 'Fremder')] });
-    await http.put('/api/v1/bot/voice').set(bot()).send({ channels: [GUILD, OTHER].map((g, i) => ({ id: `74000000000000000${i}`, guildId: g, name: g === GUILD ? 'Funk EN' : 'Funk fremd', parentId: null, parentName: null, position: 0, members: [] })) });
-    const names = ((await adm.get('/api/v1/team/roster')).body.members as { name: string }[]).map((m) => m.name);
-    expect(names).toContain('Eigener');
-    expect(names).not.toContain('Fremder');
-    expect(((await adm.get('/api/v1/team/voice')).body.channels as { name: string }[]).map((c) => c.name)).toEqual(['Funk EN']);
+    await http.put('/api/v1/bot/members').set(bot()).send({ members: [mem(A, '730000000000000001', 'NurA'), mem(B, '730000000000000002', 'NurB')] });
+    await http.put('/api/v1/bot/voice').set(bot()).send({ channels: [A, B].map((g, i) => ({ id: `74000000000000000${i}`, guildId: g, name: `Funk ${g === A ? 'A' : 'B'}`, parentId: null, parentName: null, position: 0, members: [] })) });
+    const names = async (g: string) => ((await adm.get('/api/v1/team/roster').set('X-Guild-Id', g)).body.members as { name: string }[]).map((m) => m.name);
+    expect(await names(A)).toEqual(['NurA']);
+    expect(await names(B)).toEqual(['NurB']);
+    expect(((await adm.get('/api/v1/team/voice').set('X-Guild-Id', B)).body.channels as { name: string }[]).map((c) => c.name)).toEqual(['Funk B']);
+    // Einstellungen: Server-Wert überschreibt den gemeinsamen nur auf diesem Server
+    expect((await adm.put(`/api/v1/admin/settings/team.structure@${A}`).send({ value: { teams: ['Team A'], offices: [] } })).status).toBe(200);
+    expect((await adm.put(`/api/v1/admin/settings/auth.discord@${A}`).send({ value: {} })).status).toBe(400);
+    expect((await adm.get('/api/v1/team/structure').set('X-Guild-Id', A)).body.teams).toContain('Team A');
+    expect((await adm.get('/api/v1/team/structure').set('X-Guild-Id', B)).body.teams).not.toContain('Team A');
   });
 });

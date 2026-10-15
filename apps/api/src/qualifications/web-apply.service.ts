@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { formatMinutes, renderApplicationText, type FormField } from '@enrp/shared';
 import { ApplicationsService } from '../applications/applications.service';
+import { runInGuild } from '../common/guild-context';
 import { AppError } from '../common/errors';
 import { webUrl } from '../common/web-url';
 import { loadEnv } from '../config/env';
@@ -39,11 +40,12 @@ export class WebApplyService {
   }
 
   /** Name, Einstellungen und Fragen einer Bewerbung (Polizei oder Einheit). */
-  private async flow(key: string) {
-    const cfg = await this.q.config();
+  /** Je Discord-Server eigene Bewerbungen (Server aus dem signierten Link). */
+  private async flow(key: string, guildId?: string | null) {
+    const cfg = await this.q.config(guildId);
     if (key === POLICE_KEY) {
       const name = cfg.police.name;
-      return { name, title: `Bewerbung – ${name}`, enabled: cfg.police.enabled, settings: cfg.police.settings, questions: await this.apps.form(), police: true };
+      return { name, title: `Bewerbung – ${name}`, enabled: cfg.police.enabled, settings: cfg.police.settings, questions: await this.apps.form(guildId), police: true };
     }
     const u = cfg.units.find((x) => x.key === key);
     if (!u) throw new AppError('NOT_FOUND', 'Diese Bewerbung gibt es nicht mehr.');
@@ -52,7 +54,7 @@ export class WebApplyService {
 
   /** Vom Bot: Link für eine Person ausstellen; gültig so lange wie das Zeitlimit der Bewerbung. */
   async link(d: WebApplyInput) {
-    const f = await this.flow(d.unit);
+    const f = await this.flow(d.unit, d.guildId);
     if (!f.enabled) throw new AppError('CONFLICT', `Bewerbungen für ${f.name} sind derzeit geschlossen.`);
     const now = Date.now();
     const claims: Claims = { k: d.unit, d: d.discordId, n: d.discordName, ...(d.guildId ? { g: d.guildId } : {}), ...(d.joinedAt ? { j: d.joinedAt.toISOString() } : {}), t: now, e: now + f.settings.timeLimitMinutes * 60_000 };
@@ -63,7 +65,7 @@ export class WebApplyService {
   /** Öffentlich: Formular zum Link. */
   async open(token: string) {
     const c = this.verify(token);
-    const f = await this.flow(c.k);
+    const f = await this.flow(c.k, c.g);
     if (!f.enabled) throw new AppError('CONFLICT', `Bewerbungen für ${f.name} sind derzeit geschlossen.`);
     return { title: f.title, name: f.name, discordName: c.n, expiresAt: new Date(c.e).toISOString(), questions: f.questions, robloxField: f.police && !f.questions.some((x) => x.type === 'ROBLOX') };
   }
@@ -71,7 +73,11 @@ export class WebApplyService {
   /** Öffentlich: Antworten absenden – gleiche Prüfungen wie bei der Bewerbung per Direktnachricht. */
   async submit(token: string, b: { answers: Record<string, string | string[]>; robloxUsername?: string }) {
     const c = this.verify(token);
-    const f = await this.flow(c.k);
+    // im Kontext des Servers, für den der Link ausgestellt wurde (Akten-Bereich der Bewerbung)
+    return runInGuild(c.g ?? null, () => this.submitIn(c, b));
+  }
+  private async submitIn(c: Claims, b: { answers: Record<string, string | string[]>; robloxUsername?: string }) {
+    const f = await this.flow(c.k, c.g);
     const meta = { discordId: c.d, discordName: c.n, durationSec: Math.min(86_400, Math.max(0, Math.round((Date.now() - c.t) / 1000))), ...(c.g ? { guildId: c.g } : {}), ...(c.j ? { joinedAt: new Date(c.j) } : {}) };
     let number: string;
     if (f.police) {

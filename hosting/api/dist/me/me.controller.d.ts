@@ -565,8 +565,8 @@ declare const layoutsBody: z.ZodObject<{
                 hidden?: boolean | undefined;
             }>, "many">;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 size: "S" | "M" | "L" | "XL";
                 widget: string;
@@ -574,8 +574,8 @@ declare const layoutsBody: z.ZodObject<{
                 hidden: boolean;
             }[];
         }, {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 widget: string;
                 size?: "S" | "M" | "L" | "XL" | undefined;
@@ -586,8 +586,8 @@ declare const layoutsBody: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 size: "S" | "M" | "L" | "XL";
                 widget: string;
@@ -598,8 +598,8 @@ declare const layoutsBody: z.ZodObject<{
     }, {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 widget: string;
                 size?: "S" | "M" | "L" | "XL" | undefined;
@@ -610,8 +610,8 @@ declare const layoutsBody: z.ZodObject<{
     }>, {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 size: "S" | "M" | "L" | "XL";
                 widget: string;
@@ -622,8 +622,8 @@ declare const layoutsBody: z.ZodObject<{
     }, {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 widget: string;
                 size?: "S" | "M" | "L" | "XL" | undefined;
@@ -634,8 +634,8 @@ declare const layoutsBody: z.ZodObject<{
     }>, {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 size: "S" | "M" | "L" | "XL";
                 widget: string;
@@ -646,8 +646,8 @@ declare const layoutsBody: z.ZodObject<{
     }, {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 widget: string;
                 size?: "S" | "M" | "L" | "XL" | undefined;
@@ -660,8 +660,8 @@ declare const layoutsBody: z.ZodObject<{
     layouts: {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 size: "S" | "M" | "L" | "XL";
                 widget: string;
@@ -674,8 +674,8 @@ declare const layoutsBody: z.ZodObject<{
     layouts: {
         active: string;
         items: {
-            name: string;
             id: string;
+            name: string;
             widgets: {
                 widget: string;
                 size?: "S" | "M" | "L" | "XL" | undefined;
@@ -781,8 +781,8 @@ export declare class MeController {
     }>;
     /** Eigenen Anzeigenamen ändern (steht in Teamliste, Dienst-Übersicht, Einsätzen …). */
     setName(a: Actor, b: z.infer<typeof nameBody>): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -796,9 +796,9 @@ export declare class MeController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -813,8 +813,8 @@ export declare class MeController {
         layouts: {
             active: string;
             items: {
-                name: string;
                 id: string;
+                name: string;
                 widgets: {
                     size: "S" | "M" | "L" | "XL";
                     widget: string;

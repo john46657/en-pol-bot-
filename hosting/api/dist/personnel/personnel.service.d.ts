@@ -12,17 +12,17 @@ export declare class PersonnelService {
     list(p: PageQuery): Promise<{
         items: ({
             user: {
-                robloxUserId: string | null;
                 id: string;
+                robloxUserId: string | null;
                 displayName: string;
             };
         } & {
-            callsign: string | null;
-            userId: string;
+            serverId: string | null;
             serviceNumber: string | null;
             id: string;
-            serverId: string | null;
             updatedAt: Date;
+            userId: string;
+            callsign: string | null;
             team: string | null;
             rank: string | null;
             office: string | null;
@@ -39,16 +39,16 @@ export declare class PersonnelService {
     /** Vollständige Personalakte inkl. Disziplinarvorgängen; Zugriff wird im Audit festgehalten. */
     get(actor: Actor, id: string): Promise<{
         user: {
-            robloxUserId: string | null;
             id: string;
+            robloxUserId: string | null;
             robloxUsername: string | null;
             displayName: string;
             lastLogin: Date | null;
         };
         academyEnrollments: ({
             course: {
-                id: string;
                 serverId: string | null;
+                id: string;
                 title: string;
                 description: string | null;
                 passScore: number;
@@ -78,18 +78,18 @@ export declare class PersonnelService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[];
     } & {
-        callsign: string | null;
-        userId: string;
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        serverId: string | null;
         updatedAt: Date;
+        userId: string;
+        callsign: string | null;
         team: string | null;
         rank: string | null;
         office: string | null;
@@ -108,12 +108,12 @@ export declare class PersonnelService {
         callsign?: string;
         qualifications?: string[];
     }): Promise<{
-        callsign: string | null;
-        userId: string;
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        serverId: string | null;
         updatedAt: Date;
+        userId: string;
+        callsign: string | null;
         team: string | null;
         rank: string | null;
         office: string | null;
@@ -131,12 +131,12 @@ export declare class PersonnelService {
         employmentStatus?: string;
         qualifications?: string[];
     }): Promise<{
-        callsign: string | null;
-        userId: string;
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        serverId: string | null;
         updatedAt: Date;
+        userId: string;
+        callsign: string | null;
         team: string | null;
         rank: string | null;
         office: string | null;
@@ -147,12 +147,12 @@ export declare class PersonnelService {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     promote(actor: Actor, id: string, rank: string, reason: string): Promise<{
-        callsign: string | null;
-        userId: string;
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        serverId: string | null;
         updatedAt: Date;
+        userId: string;
+        callsign: string | null;
         team: string | null;
         rank: string | null;
         office: string | null;
@@ -176,9 +176,9 @@ export declare class PersonnelService {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
         details: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         deletedAt: Date | null;
     }>;
 }

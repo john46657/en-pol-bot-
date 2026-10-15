@@ -86,11 +86,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"category">;
     categoryId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "category";
     categoryId: string;
+    action: "category";
 }, {
-    action: "category";
     categoryId: string;
+    action: "category";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"rename">;
     name: z.ZodString;
@@ -137,11 +137,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"note">;
     text: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "note";
     text: string;
+    action: "note";
 }, {
-    action: "note";
     text: string;
+    action: "note";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"rating">;
 }, "strip", z.ZodTypeAny, {
@@ -158,11 +158,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"reply">;
     text: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "reply";
     text: string;
+    action: "reply";
 }, {
-    action: "reply";
     text: string;
+    action: "reply";
 }>]>;
 declare const listQ: z.ZodObject<{
     kind: z.ZodOptional<z.ZodEnum<["open", "closed", "archived", "escalated", "deleted", "all"]>>;
@@ -174,30 +174,33 @@ declare const listQ: z.ZodObject<{
     from: z.ZodOptional<z.ZodDate>;
     to: z.ZodOptional<z.ZodDate>;
     q: z.ZodOptional<z.ZodString>;
+    guildId: z.ZodOptional<z.ZodString>;
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
+    guildId?: string | undefined;
     kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
-    q?: string | undefined;
     from?: Date | undefined;
     to?: Date | undefined;
+    q?: string | undefined;
     creator?: string | undefined;
     claimer?: string | undefined;
 }, {
+    guildId?: string | undefined;
     kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
+    from?: Date | undefined;
+    to?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     creator?: string | undefined;
     claimer?: string | undefined;
 }>;
@@ -218,21 +221,21 @@ declare const transcriptQ: z.ZodObject<{
     number?: number | undefined;
     status?: string | undefined;
     categoryName?: string | undefined;
-    q?: string | undefined;
-    staff?: string | undefined;
     from?: Date | undefined;
     to?: Date | undefined;
+    q?: string | undefined;
+    staff?: string | undefined;
     creator?: string | undefined;
 }, {
     number?: number | undefined;
     status?: string | undefined;
     categoryName?: string | undefined;
+    from?: Date | undefined;
+    to?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
     staff?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     creator?: string | undefined;
 }>;
 declare const ratingQ: z.ZodObject<{
@@ -276,7 +279,6 @@ export declare class SupportTicketsController {
         guildId?: string;
     }): Promise<{
         categories: ({
-            name: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -284,6 +286,7 @@ export declare class SupportTicketsController {
             description: string;
             active: boolean;
             guildId: string | null;
+            name: string;
             position: number;
             questions: import("@prisma/client/runtime/library").JsonValue;
             emoji: string | null;
@@ -337,7 +340,6 @@ export declare class SupportTicketsController {
             questions: import("@enrp/shared").TicketQuestion[];
         })[];
         panels: {
-            name: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -345,7 +347,10 @@ export declare class SupportTicketsController {
             title: string;
             description: string;
             guildId: string | null;
+            name: string;
             position: number;
+            channelId: string | null;
+            messageId: string | null;
             emoji: string | null;
             thumbnailUrl: string | null;
             imageUrl: string | null;
@@ -356,17 +361,15 @@ export declare class SupportTicketsController {
             authorIconUrl: string | null;
             style: string;
             placeholder: string;
-            channelId: string | null;
             categoryIds: string[];
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            messageId: string | null;
         }[];
         statuses: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -376,9 +379,9 @@ export declare class SupportTicketsController {
             isClose: boolean;
         }[];
         priorities: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -424,7 +427,6 @@ export declare class SupportTicketsController {
         memberLeaveReason: string;
     }>;
     createCategory(u: AuthUser, b: z.infer<typeof categorySchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -432,6 +434,7 @@ export declare class SupportTicketsController {
         description: string;
         active: boolean;
         guildId: string | null;
+        name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         emoji: string | null;
@@ -485,7 +488,6 @@ export declare class SupportTicketsController {
         questions: import("@enrp/shared").TicketQuestion[];
     }>;
     updateCategory(u: AuthUser, id: string, b: z.infer<typeof categorySchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -493,6 +495,7 @@ export declare class SupportTicketsController {
         description: string;
         active: boolean;
         guildId: string | null;
+        name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         emoji: string | null;
@@ -546,7 +549,6 @@ export declare class SupportTicketsController {
         questions: import("@enrp/shared").TicketQuestion[];
     }>;
     dupCategory(u: AuthUser, id: string): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -554,6 +556,7 @@ export declare class SupportTicketsController {
         description: string;
         active: boolean;
         guildId: string | null;
+        name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         emoji: string | null;
@@ -608,7 +611,6 @@ export declare class SupportTicketsController {
     }>;
     delCategory(u: AuthUser, id: string): Promise<void>;
     createPanel(u: AuthUser, b: z.infer<typeof panelSchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -616,7 +618,10 @@ export declare class SupportTicketsController {
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
         position: number;
+        channelId: string | null;
+        messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
         imageUrl: string | null;
@@ -627,15 +632,12 @@ export declare class SupportTicketsController {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     updatePanel(u: AuthUser, id: string, b: z.infer<typeof panelSchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -643,7 +645,10 @@ export declare class SupportTicketsController {
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
         position: number;
+        channelId: string | null;
+        messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
         imageUrl: string | null;
@@ -654,15 +659,12 @@ export declare class SupportTicketsController {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     dupPanel(u: AuthUser, id: string): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -670,7 +672,10 @@ export declare class SupportTicketsController {
         title: string;
         description: string;
         guildId: string | null;
+        name: string;
         position: number;
+        channelId: string | null;
+        messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
         imageUrl: string | null;
@@ -681,12 +686,10 @@ export declare class SupportTicketsController {
         authorIconUrl: string | null;
         style: string;
         placeholder: string;
-        channelId: string | null;
         categoryIds: string[];
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        messageId: string | null;
     }>;
     delPanel(u: AuthUser, id: string): Promise<void>;
     preview(id: string): Promise<import("@enrp/shared").MessageSpec>;
@@ -697,9 +700,9 @@ export declare class SupportTicketsController {
         updating: boolean;
     }>;
     createStatus(u: AuthUser, b: z.infer<typeof statusSchema>): Promise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         kind: string;
         position: number;
         emoji: string;
@@ -709,9 +712,9 @@ export declare class SupportTicketsController {
         isClose: boolean;
     }>;
     updateStatus(u: AuthUser, id: string, b: z.infer<typeof statusSchema>): Promise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         kind: string;
         position: number;
         emoji: string;
@@ -722,9 +725,9 @@ export declare class SupportTicketsController {
     }>;
     delStatus(u: AuthUser, id: string): Promise<void>;
     createPriority(u: AuthUser, b: z.infer<typeof prioritySchema>): Promise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         position: number;
         emoji: string;
         isDefault: boolean;
@@ -732,9 +735,9 @@ export declare class SupportTicketsController {
         notifyRoleIds: string[];
     }>;
     updatePriority(u: AuthUser, id: string, b: z.infer<typeof prioritySchema>): Promise<{
-        name: string;
         id: string;
         color: number;
+        name: string;
         position: number;
         emoji: string;
         isDefault: boolean;
@@ -771,14 +774,14 @@ export declare class SupportTicketsController {
             deletedAt: Date | null;
             escalatedAt: Date | null;
             category: {
-                name: string;
                 id: string;
+                name: string;
                 emoji: string | null;
             } | null;
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -788,9 +791,9 @@ export declare class SupportTicketsController {
                 isClose: boolean;
             } | null;
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -811,9 +814,9 @@ export declare class SupportTicketsController {
                 emoji: string | null;
             };
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -823,9 +826,9 @@ export declare class SupportTicketsController {
                 isClose: boolean;
             };
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -910,8 +913,8 @@ export declare class SupportTicketsController {
             category: string;
             id: string;
             createdAt: Date;
-            comment: string | null;
             categoryId: string;
+            comment: string | null;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
@@ -953,9 +956,9 @@ export declare class SupportTicketsController {
             allowReopen: boolean;
         };
         status: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -965,9 +968,9 @@ export declare class SupportTicketsController {
             isClose: boolean;
         } | null;
         priority: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -984,10 +987,10 @@ export declare class SupportTicketsController {
             targetId: string;
         }[];
         messages: {
-            discordId: string | null;
             id: string;
             createdAt: Date;
             authorId: string;
+            discordId: string | null;
             attachments: import("@prisma/client/runtime/library").JsonValue;
             content: string;
             authorName: string;
@@ -1001,8 +1004,8 @@ export declare class SupportTicketsController {
             id: string;
             createdAt: Date;
             authorId: string | null;
-            authorName: string;
             text: string;
+            authorName: string;
             ticketId: string;
             authorUserId: string | null;
         }[] | null;
@@ -1024,25 +1027,25 @@ export declare class SupportTicketsController {
         rating: {
             id: string;
             createdAt: Date;
-            comment: string | null;
             categoryId: string;
+            comment: string | null;
             creatorId: string;
             ticketId: string;
             staffIds: string[];
             stars: number;
         } | null;
         names: Record<string, string>;
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         lastActivityAt: Date;
         closedAt: Date | null;
         guildId: string;
+        name: string;
+        categoryId: string;
+        channelId: string | null;
         deletedAt: Date | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
-        channelId: string | null;
-        categoryId: string;
         panelId: string | null;
         controlMessageId: string | null;
         creatorId: string;
@@ -1066,9 +1069,9 @@ export declare class SupportTicketsController {
     options(u: AuthUser, id: string): Promise<{
         closed: boolean;
         statuses: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             kind: string;
             position: number;
             emoji: string;
@@ -1078,9 +1081,9 @@ export declare class SupportTicketsController {
             isClose: boolean;
         }[];
         priorities: {
-            name: string;
             id: string;
             color: number;
+            name: string;
             position: number;
             emoji: string;
             isDefault: boolean;
@@ -1088,8 +1091,8 @@ export declare class SupportTicketsController {
             notifyRoleIds: string[];
         }[];
         categories: {
-            name: string;
             id: string;
+            name: string;
             emoji: string | null;
         }[];
         reasons: {
@@ -1126,9 +1129,9 @@ export declare class SupportTicketsController {
                 emoji: string | null;
             };
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -1138,9 +1141,9 @@ export declare class SupportTicketsController {
                 isClose: boolean;
             };
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;
@@ -1165,15 +1168,15 @@ declare const botOpen: z.ZodObject<{
     discordName: z.ZodString;
     memberRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     discordName: string;
     categoryId: string;
     memberRoleIds: string[];
     panelId?: string | undefined;
 }, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     discordName: string;
     categoryId: string;
     panelId?: string | undefined;
@@ -1221,9 +1224,9 @@ declare const botMessage: z.ZodObject<{
         url: string;
         contentType?: string | null | undefined;
     }[];
+    channelId: string;
     content: string;
     authorName: string;
-    channelId: string;
     isBot: boolean;
     embeds: {
         title?: string | undefined;
@@ -1233,9 +1236,9 @@ declare const botMessage: z.ZodObject<{
     authorAvatar?: string | null | undefined;
 }, {
     authorId: string;
+    channelId: string;
     content: string;
     authorName: string;
-    channelId: string;
     isBot: boolean;
     discordMessageId: string;
     attachments?: {
@@ -1266,9 +1269,9 @@ export declare class BotSupportTicketsController {
                 emoji: string | null;
             };
             status: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 kind: string;
                 position: number;
                 emoji: string;
@@ -1278,9 +1281,9 @@ export declare class BotSupportTicketsController {
                 isClose: boolean;
             };
             priority: {
-                name: string;
                 id: string;
                 color: number;
+                name: string;
                 position: number;
                 emoji: string;
                 isDefault: boolean;

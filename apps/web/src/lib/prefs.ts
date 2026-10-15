@@ -86,13 +86,13 @@ export function usePrefs() {
     const cur = qc.getQueryData<Stored>(key) ?? { preferences: {}, layouts: null };
     const next = { ...cur.preferences, ...patch };
     qc.setQueryData<Stored>(key, { ...cur, preferences: next });
-    queueSave('me:prefs', { method: 'PUT', path: '/me/preferences', body: { preferences: next }, label: 'Persönliche Einstellungen' });
+    queueSave('me:prefs', { method: 'PUT', path: '/me/preferences', body: { preferences: next }, guildId: null, label: 'Persönliche Einstellungen' });
   }, [qc, user?.id]);
 
   const setLayouts = useCallback((l: Layouts | null) => {
     const cur = qc.getQueryData<Stored>(key) ?? { preferences: {}, layouts: null };
     qc.setQueryData<Stored>(key, { ...cur, layouts: l });
-    queueSave('me:layouts', { method: 'PUT', path: '/me/layouts', body: { layouts: l }, label: 'Dashboard-Layout' });
+    queueSave('me:layouts', { method: 'PUT', path: '/me/layouts', body: { layouts: l }, guildId: null, label: 'Dashboard-Layout' });
   }, [qc, user?.id]);
 
   return { prefs, layouts, update, setLayouts, loading: q.isLoading, ready: !!stored };

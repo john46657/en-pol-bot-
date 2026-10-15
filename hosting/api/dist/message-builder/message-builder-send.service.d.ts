@@ -809,8 +809,8 @@ export declare const interactionSchema: z.ZodObject<{
     guildId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     discordId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string | null;
+    discordId: string;
     actionId: string;
     value?: string | undefined;
 }, {
@@ -959,7 +959,7 @@ export declare class MessageBuilderSendService {
         total: number;
         page: number;
         pageSize: number;
-        guildId: string | null;
+        guildId: string;
     }>;
     interaction(b: z.infer<typeof interactionSchema>): Promise<MbAction | {
         type: 'gone';

@@ -14,7 +14,7 @@ export declare class ApplicationsAnalyticsService {
     overview(f: AnalyticsFilter): Promise<{
         days: number;
         kpis: {
-            key: "total" | "pending" | "approvalRate" | "avgReviewMin" | "completionRate";
+            key: "pending" | "total" | "approvalRate" | "avgReviewMin" | "completionRate";
             value: number;
             change: number;
         }[];

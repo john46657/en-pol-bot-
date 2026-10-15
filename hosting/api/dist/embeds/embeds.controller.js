@@ -19,6 +19,7 @@ const zod_1 = require("zod");
 const embeds_service_1 = require("./embeds.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 const media_service_1 = require("../media/media.service");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
@@ -28,7 +29,7 @@ let EmbedsController = class EmbedsController {
     constructor(s) {
         this.s = s;
     }
-    list() { return this.s.all(); }
+    list() { return this.s.all((0, guild_context_1.currentGuild)()); }
     save(a, id, b) {
         if (b.id !== id)
             throw new errors_1.AppError('VALIDATION_FAILED', 'ID passt nicht.');

@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageBuilderService = exports.channelsConfigSchema = exports.categorySchema = exports.copyDocSchema = exports.updateDocSchema = exports.createDocSchema = exports.docKind = exports.sf = void 0;
+exports.requireGuild = requireGuild;
 const common_1 = require("@nestjs/common");
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
@@ -38,7 +39,15 @@ exports.updateDocSchema = zod_1.z.object({
 exports.copyDocSchema = zod_1.z.object({ kind: exports.docKind, name: zod_1.z.string().trim().min(1).max(100).optional(), categoryId: zod_1.z.string().uuid().nullable().optional() });
 exports.categorySchema = zod_1.z.object({ name: zod_1.z.string().trim().min(1, 'Name fehlt.').max(60), position: zod_1.z.number().int().min(0).max(1000).optional() });
 exports.channelsConfigSchema = zod_1.z.object({ channelIds: zod_1.z.array(exports.sf).max(200) });
-const CHANNELS_KEY = 'messagebuilder.channels';
+const CHANNELS_KEY = 'messagebuilder.channels'; // je Server (server-scope.ts leitet auf `…@<Server>` um)
+const DEFAULT_CATEGORIES = ['Allgemein', 'Polizei', 'Leitstelle', 'Dienstantritt', 'Dienstende', 'Einsatzmeldung', 'Personalinformation', 'Ankündigung', 'Wartung', 'Sonstiges'];
+/** Message Builder arbeitet immer für genau einen Discord-Server (oben links gewählt). */
+function requireGuild() {
+    const g = (0, guild_context_1.currentGuild)();
+    if (!g)
+        throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte zuerst oben links einen Discord-Server wählen – der Message Builder arbeitet je Server.');
+    return g;
+}
 /** Discord Message Builder: Entwürfe, Vorlagen, Kategorien und erlaubte Kanäle. Versand: MessageBuilderSendService. */
 let MessageBuilderService = class MessageBuilderService {
     prisma;
@@ -67,7 +76,7 @@ let MessageBuilderService = class MessageBuilderService {
             await this.perms.assert(uid, need);
     }
     async load(id) {
-        const d = await this.prisma.messageBuilderDocument.findFirst({ where: { id, archivedAt: null } });
+        const d = await this.prisma.messageBuilderDocument.findFirst({ where: { id, guildId: requireGuild(), archivedAt: null } });
         if (!d)
             throw new errors_1.AppError('NOT_FOUND', 'Entwurf/Vorlage nicht gefunden.');
         return d;
@@ -88,7 +97,7 @@ let MessageBuilderService = class MessageBuilderService {
     /** Vorlagen (alle) bzw. eigene Entwürfe – ohne Inhalt. */
     async list(actor, kind) {
         const rows = await this.prisma.messageBuilderDocument.findMany({
-            where: { kind, archivedAt: null, ...(kind === 'DRAFT' ? { createdById: actor.userId } : {}) },
+            where: { guildId: requireGuild(), kind, archivedAt: null, ...(kind === 'DRAFT' ? { createdById: actor.userId } : {}) },
             orderBy: { updatedAt: 'desc' }, take: 500,
         });
         const users = await this.names(rows.map((r) => r.updatedById ?? r.createdById));
@@ -105,7 +114,7 @@ let MessageBuilderService = class MessageBuilderService {
             await this.assertCategory(b.categoryId);
         const data = b.data ?? shared_1.mbDocumentDataSchema.parse({ messages: [{ id: 'm1' }] });
         const d = await this.prisma.$transaction(async (tx) => {
-            const d = await tx.messageBuilderDocument.create({ data: { kind: b.kind, name: b.name, categoryId: b.categoryId, data: data, createdById: actor.userId, updatedById: actor.userId } });
+            const d = await tx.messageBuilderDocument.create({ data: { guildId: requireGuild(), kind: b.kind, name: b.name, categoryId: b.categoryId, data: data, createdById: actor.userId, updatedById: actor.userId } });
             await this.audit.record(actor, { action: b.kind === 'TEMPLATE' ? 'messagebuilder.template_create' : 'messagebuilder.draft_create', module: 'messagebuilder', entityType: 'MessageBuilderDocument', entityId: d.id, after: { name: d.name } }, tx);
             return d;
         });
@@ -118,7 +127,7 @@ let MessageBuilderService = class MessageBuilderService {
         if (b.categoryId && b.categoryId !== d.categoryId)
             await this.assertCategory(b.categoryId);
         const r = await this.prisma.messageBuilderDocument.updateMany({
-            where: { id, version: b.version, archivedAt: null },
+            where: { id, guildId: requireGuild(), version: b.version, archivedAt: null },
             data: { name: b.name, categoryId: b.categoryId, channelId: b.channelId, data: b.data, version: { increment: 1 }, updatedById: actor.userId },
         });
         if (!r.count) {
@@ -148,24 +157,33 @@ let MessageBuilderService = class MessageBuilderService {
         });
     }
     // ───────────── Kategorien ─────────────
-    categories() { return this.prisma.messageBuilderCategory.findMany({ orderBy: [{ position: 'asc' }, { name: 'asc' }], select: { id: true, name: true, position: true } }); }
+    /** Kategorien des gewählten Servers; ein Server ohne Kategorien bekommt die Standard-Kategorien. */
+    async categories() {
+        const guildId = requireGuild();
+        const list = () => this.prisma.messageBuilderCategory.findMany({ where: { guildId }, orderBy: [{ position: 'asc' }, { name: 'asc' }], select: { id: true, name: true, position: true } });
+        const rows = await list();
+        if (rows.length)
+            return rows;
+        await this.prisma.messageBuilderCategory.createMany({ data: DEFAULT_CATEGORIES.map((name, position) => ({ guildId, name, position })), skipDuplicates: true });
+        return list();
+    }
     async assertCategory(id) {
-        if (!(await this.prisma.messageBuilderCategory.findUnique({ where: { id } })))
+        if (!(await this.prisma.messageBuilderCategory.findFirst({ where: { id, guildId: requireGuild() } })))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Diese Kategorie gibt es nicht (mehr).');
     }
     async createCategory(actor, b) {
-        if (await this.prisma.messageBuilderCategory.findUnique({ where: { name: b.name } }))
+        if (await this.prisma.messageBuilderCategory.findFirst({ where: { guildId: requireGuild(), name: b.name } }))
             throw new errors_1.AppError('CONFLICT', 'Diese Kategorie gibt es schon.');
-        const max = await this.prisma.messageBuilderCategory.aggregate({ _max: { position: true } });
-        const c = await this.prisma.messageBuilderCategory.create({ data: { name: b.name, position: b.position ?? (max._max.position ?? -1) + 1 } });
+        const max = await this.prisma.messageBuilderCategory.aggregate({ where: { guildId: requireGuild() }, _max: { position: true } });
+        const c = await this.prisma.messageBuilderCategory.create({ data: { guildId: requireGuild(), name: b.name, position: b.position ?? (max._max.position ?? -1) + 1 } });
         await this.audit.record(actor, { action: 'messagebuilder.category_create', module: 'messagebuilder', entityType: 'MessageBuilderCategory', entityId: c.id, after: { name: c.name } });
         return c;
     }
     async updateCategory(actor, id, b) {
-        const old = await this.prisma.messageBuilderCategory.findUnique({ where: { id } });
+        const old = await this.prisma.messageBuilderCategory.findFirst({ where: { id, guildId: requireGuild() } });
         if (!old)
             throw new errors_1.AppError('NOT_FOUND', 'Kategorie nicht gefunden.');
-        const dup = await this.prisma.messageBuilderCategory.findUnique({ where: { name: b.name } });
+        const dup = await this.prisma.messageBuilderCategory.findFirst({ where: { guildId: requireGuild(), name: b.name } });
         if (dup && dup.id !== id)
             throw new errors_1.AppError('CONFLICT', 'Diese Kategorie gibt es schon.');
         const c = await this.prisma.messageBuilderCategory.update({ where: { id }, data: { name: b.name, ...(b.position !== undefined ? { position: b.position } : {}) } });
@@ -174,18 +192,21 @@ let MessageBuilderService = class MessageBuilderService {
     }
     /** Kategorie löschen: Vorlagen bleiben erhalten (ohne Kategorie). */
     async removeCategory(actor, id) {
-        const old = await this.prisma.messageBuilderCategory.findUnique({ where: { id } });
+        const old = await this.prisma.messageBuilderCategory.findFirst({ where: { id, guildId: requireGuild() } });
         if (!old)
             throw new errors_1.AppError('NOT_FOUND', 'Kategorie nicht gefunden.');
         await this.prisma.$transaction(async (tx) => {
-            await tx.messageBuilderDocument.updateMany({ where: { categoryId: id }, data: { categoryId: null } });
+            await tx.messageBuilderDocument.updateMany({ where: { categoryId: id, guildId: old.guildId }, data: { categoryId: null } });
             await tx.messageBuilderCategory.delete({ where: { id } });
             await this.audit.record(actor, { action: 'messagebuilder.category_delete', module: 'messagebuilder', entityType: 'MessageBuilderCategory', entityId: id, before: { name: old.name } }, tx);
         });
     }
-    // ───────────── Kanäle (nur der fest eingerichtete Discord-Server) ─────────────
-    async allowedChannelIds() {
-        const v = (await this.prisma.systemSetting.findUnique({ where: { key: CHANNELS_KEY } }))?.value;
+    // ───────────── Kanäle (des gewählten Discord-Servers) ─────────────
+    async allowedChannelIds(guildId = (0, guild_context_1.currentGuild)()) {
+        if (!guildId)
+            requireGuild();
+        // Einstellung des Servers (server-scope.ts leitet im Kontext des Servers auf `…@<Server>` um)
+        const v = (await (0, guild_context_1.runInGuild)(guildId, () => this.prisma.systemSetting.findUnique({ where: { key: CHANNELS_KEY } })))?.value;
         const p = exports.channelsConfigSchema.safeParse(v);
         return p.success ? p.data.channelIds : [];
     }
@@ -203,21 +224,18 @@ let MessageBuilderService = class MessageBuilderService {
         return { channelIds: ids };
     }
     /**
-     * Discord-Server dieses Systems laut Bot-Meldung: Textkanäle (mit Bot-Rechten, falls gemeldet) und Rollen.
-     * Es gibt bewusst keine Auswahl anderer Server.
+     * Gewählter Discord-Server laut Bot-Meldung: Textkanäle (mit Bot-Rechten, falls gemeldet) und Rollen. Nur dieser Server –
+     * Kanäle und Rollen anderer Server sind hier nie wählbar.
      */
-    async serverInfo() {
-        const home = (0, guild_context_1.homeGuild)();
-        const guilds = await this.discord.guilds();
-        const g = home ? guilds.find((x) => x.id === home) : guilds.length === 1 ? guilds[0] : undefined;
-        if (!g) {
-            // Ursache nennen: Bot hat (noch) nichts gemeldet, ist auf einem anderen als dem eingerichteten Server oder auf mehreren
-            const reported = await this.discord.reportedGuilds();
-            const others = reported.map((x) => ({ id: x.id, name: x.name }));
-            const problem = !reported.length ? 'no_report' : home ? 'wrong_guild' : 'several_guilds';
-            return { guild: null, channels: [], roles: [], configured: !!home, problem, configuredGuildId: home, reportedGuilds: others };
-        }
-        const allowed = await this.allowedChannelIds();
+    async serverInfo(guildId = (0, guild_context_1.currentGuild)()) {
+        const none = { guild: null, channels: [], roles: [], configured: !!guildId };
+        if (!guildId)
+            return { ...none, problem: 'no_server' };
+        const g = (await this.discord.guilds()).find((x) => x.id === guildId);
+        // Ursache nennen: Bot ist (noch) nicht auf dem Server bzw. hat ihn noch nicht gemeldet
+        if (!g)
+            return { ...none, problem: 'no_report' };
+        const allowed = await this.allowedChannelIds(guildId);
         const cats = new Map(g.channels.filter((c) => c.type === 'category').map((c) => [c.id, c]));
         const channels = g.channels.filter((c) => c.type === 'text')
             .sort((a, b) => (cats.get(a.parentId ?? '')?.position ?? -1) - (cats.get(b.parentId ?? '')?.position ?? -1) || a.position - b.position)

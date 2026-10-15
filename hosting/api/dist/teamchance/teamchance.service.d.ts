@@ -62,7 +62,7 @@ export type TeamChanceCfg = z.infer<typeof teamChanceSchema> & {
 };
 export declare const DEFAULT_TEAMCHANCE: TeamChanceCfg;
 /**
- * Team-Chance: Die Leitung öffnet/schließt eine Bewerbungsphase für das Team, optional mit
+ * Team-Chance: Die Leitung öffnet/schließt eine Bewerbungsphase für das Team (je Server getrennt), optional mit
  * Zeitfenster und Platzzahl. Beim Öffnen/Schließen: Ankündigung in Discord und Benachrichtigung im Dashboard.
  */
 export declare class TeamChanceService {
@@ -71,9 +71,9 @@ export declare class TeamChanceService {
     private readonly discord;
     private readonly notify;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService);
-    config(): Promise<TeamChanceCfg>;
+    config(guildId?: string | null): Promise<TeamChanceCfg>;
     /** Ist die Team-Chance gerade offen? (Schalter + Zeitfenster + freie Plätze) */
-    status(): Promise<{
+    status(guildId?: string | null): Promise<{
         isOpen: boolean;
         reason: string | null;
         used: number;
@@ -90,7 +90,7 @@ export declare class TeamChanceService {
         openedAt?: string | null;
     }>;
     /** Für Bewerbungen: wenn eingestellt, nur während einer offenen Team-Chance. */
-    assertApplicationsAllowed(): Promise<void>;
+    assertApplicationsAllowed(guildId: string | null): Promise<void>;
     save(actor: Actor, input: z.infer<typeof teamChanceSchema>): Promise<{
         isOpen: boolean;
         reason: string | null;

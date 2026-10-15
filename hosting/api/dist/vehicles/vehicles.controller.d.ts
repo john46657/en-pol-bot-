@@ -44,16 +44,16 @@ export declare class VehiclesController {
                 robloxUsername: string;
             } | null;
         } & {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
@@ -65,9 +65,9 @@ export declare class VehiclesController {
     get(id: string): Promise<{
         vehicle: {
             owner: {
-                robloxUserId: string | null;
-                id: string;
                 serverId: string | null;
+                id: string;
+                robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
                 status: string;
@@ -90,16 +90,16 @@ export declare class VehiclesController {
                 version: number;
             } | null;
         } & {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
@@ -108,38 +108,38 @@ export declare class VehiclesController {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
-        plate: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        plate: string;
         color: string | null;
         ownerId: string | null;
         erlcReference: string | null;
     }>;
     archive(a: Actor, id: string, b: z.infer<typeof archive>): Promise<{
-        plate: string;
+        serverId: string | null;
         model: string | null;
         id: string;
-        serverId: string | null;
         status: string;
         notes: string | null;
         custom: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         version: number;
+        plate: string;
         color: string | null;
         ownerId: string | null;
         erlcReference: string | null;

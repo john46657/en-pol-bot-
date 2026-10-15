@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { ChevronsLeft, ChevronsRight, LogOut, Menu, Monitor, Shield, Star } from 'lucide-react';
+import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
 import { accentHex, useStudio } from '../lib/studio';
@@ -68,13 +69,13 @@ export function AppShell() {
         ))}
       </nav>}
       <aside className={`hidden shrink-0 flex-col border-r border-line bg-panel lg:flex ${collapsed ? 'w-16' : 'sidebar'}`}>
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-2 font-semibold">{collapsed ? <Shield size={20} className="mx-auto text-primary" aria-hidden /> : <OrgName name={orgName} />}</div>
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-2 font-semibold">{collapsed ? <Shield size={20} className="mx-auto text-primary" aria-hidden /> : <ServerSwitcher orgName={orgName} />}</div>
         <div className="min-h-0 flex-1">{sidebar}</div>
         <button type="button" onClick={() => update({ sidebarCollapsed: !collapsed })} aria-label={collapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'} className="flex items-center gap-2 border-t border-line px-4 py-2 text-xs text-muted hover:text-fg">
           {collapsed ? <ChevronsRight size={16} aria-hidden /> : <><ChevronsLeft size={16} aria-hidden />Einklappen</>}
         </button>
       </aside>
-      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}><div className="flex h-14 shrink-0 items-center border-b border-line px-2 font-semibold"><OrgName name={orgName} /></div><div className="min-h-0 flex-1 overflow-y-auto">{sidebar}</div></aside></div>}
+      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}><div className="flex h-14 shrink-0 items-center border-b border-line px-2 font-semibold"><ServerSwitcher orgName={orgName} onPicked={() => setOpen(false)} /></div><div className="min-h-0 flex-1 overflow-y-auto">{sidebar}</div></aside></div>}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center gap-2 border-b border-line bg-panel px-2 sm:gap-3 sm:px-4">
           <Button variant="ghost" className="lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></Button>
@@ -112,18 +113,14 @@ function SectionTabs() {
   );
 }
 
-/** Angemeldet, aber ohne freigeschaltete Rolle. */
+/** Angemeldet, aber im gewählten Server ohne freigeschaltete Rolle. */
 function NoAccess() {
   return (
     <div role="alert" className="mx-auto max-w-md py-16 text-center">
       <p className="text-5xl" aria-hidden>🔒</p>
       <h1 className="mt-2 text-lg font-semibold">Kein Zugriff</h1>
       <p className="mt-1 text-sm text-muted">Du besitzt keine Discord-Rolle, die für den Zugriff auf dieses Dashboard freigeschaltet ist.</p>
+      <p className="mt-3 text-xs text-muted">Hast du Rechte auf einem anderen Server? Wähle ihn oben links aus.</p>
     </div>
   );
-}
-
-/** Name oben links (ein fester Discord-Server – keine Auswahl). */
-function OrgName({ name }: { name: string }) {
-  return <div className="flex min-w-0 items-center gap-2"><Shield size={18} className="text-primary" aria-hidden /><span className="min-w-0 truncate">{name}</span></div>;
 }

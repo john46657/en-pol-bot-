@@ -17,12 +17,13 @@ export declare class ErlcSyncService {
     /** Letzter Stand je Server – unveränderte Abrufe kosten keine Datenbank-Abfrage. */
     private readonly last;
     constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, rt: RealtimeService);
-    sync(serverId: string, snap: ErlcSnapshot): Promise<{
+    /** `guildId`: Discord-Server des ER:LC-Servers → Akten-Bereich (Server-Verbund); ohne = gemeinsamer Bestand. */
+    sync(serverId: string, snap: ErlcSnapshot, guildId?: string | null): Promise<{
         persons: number;
         vehicles: number;
     }>;
-    /** Wer/was gerade auf den ER:LC-Servern ist (letzter Abruf), mit Verweis auf die Akte. */
-    live(kind: 'persons' | 'vehicles'): Promise<{
+    /** Wer/was gerade auf den ER:LC-Servern ist (letzter Abruf), mit Verweis auf die Akte. `guildId`: nur Server dieses Discord-Servers. */
+    live(kind: 'persons' | 'vehicles', guildId?: string | null): Promise<{
         servers: {
             id: string;
             name: string;

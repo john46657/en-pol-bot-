@@ -16,9 +16,9 @@ export declare class PersonsService {
     constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, studio: StudioService, roblox: RobloxService, locks: LocksService);
     list(p: PageQuery, includeArchived?: boolean): Promise<{
         items: {
-            robloxUserId: string | null;
-            id: string;
             serverId: string | null;
+            id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
             status: string;
@@ -46,24 +46,24 @@ export declare class PersonsService {
     }>;
     get(id: string): Promise<{
         vehicles: {
-            plate: string;
+            serverId: string | null;
             model: string | null;
             id: string;
-            serverId: string | null;
             status: string;
             notes: string | null;
             custom: Prisma.JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
             version: number;
+            plate: string;
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
         }[];
     } & {
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;
@@ -88,24 +88,24 @@ export declare class PersonsService {
     overview(id: string): Promise<{
         person: {
             vehicles: {
-                plate: string;
+                serverId: string | null;
                 model: string | null;
                 id: string;
-                serverId: string | null;
                 status: string;
                 notes: string | null;
                 custom: Prisma.JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 version: number;
+                plate: string;
                 color: string | null;
                 ownerId: string | null;
                 erlcReference: string | null;
             }[];
         } & {
-            robloxUserId: string | null;
-            id: string;
             serverId: string | null;
+            id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
             status: string;
@@ -129,8 +129,8 @@ export declare class PersonsService {
         };
         tickets: {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             notes: string | null;
             updatedAt: Date;
@@ -158,16 +158,16 @@ export declare class PersonsService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
     }>;
     /** Mögliche Duplikate: gleiche Roblox-ID (hart, Unique) oder gleicher Username (weich → Hinweis, kein Auto-Merge). */
     findDuplicates(robloxUsername: string, robloxUserId?: string | null): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         status: string;
     }[]>;
@@ -179,9 +179,9 @@ export declare class PersonsService {
         custom?: Record<string, unknown>;
     }): Promise<{
         person: {
-            robloxUserId: string | null;
-            id: string;
             serverId: string | null;
+            id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             aliases: string[];
             status: string;
@@ -204,8 +204,8 @@ export declare class PersonsService {
             version: number;
         };
         possibleDuplicates: {
-            robloxUserId: string | null;
             id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             status: string;
         }[];
@@ -216,9 +216,9 @@ export declare class PersonsService {
         notes?: string | null;
         custom?: Record<string, unknown>;
     }): Promise<{
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;
@@ -241,9 +241,9 @@ export declare class PersonsService {
         version: number;
     }>;
     archive(actor: Actor, id: string, reason: string): Promise<{
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;
@@ -267,9 +267,9 @@ export declare class PersonsService {
     }>;
     /** Merge nur auf ausdrückliche Bestätigung (nie automatisch). Quelle wird archiviert, nichts wird gelöscht. */
     merge(actor: Actor, sourceId: string, targetId: string, reason: string): Promise<{
-        robloxUserId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         aliases: string[];
         status: string;

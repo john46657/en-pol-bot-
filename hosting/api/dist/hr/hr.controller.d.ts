@@ -44,20 +44,20 @@ declare const createP: z.ZodObject<{
     joinDate: z.ZodOptional<z.ZodString>;
     callsign: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    callsign?: string | null | undefined;
-    userId?: string | undefined;
-    discordId?: string | undefined;
-    name?: string | undefined;
     status?: string | undefined;
+    userId?: string | undefined;
+    callsign?: string | null | undefined;
+    name?: string | undefined;
+    discordId?: string | undefined;
     department?: string | null | undefined;
     rank?: string | null | undefined;
     joinDate?: string | undefined;
 }, {
-    callsign?: string | null | undefined;
-    userId?: string | undefined;
-    discordId?: string | undefined;
-    name?: string | undefined;
     status?: string | undefined;
+    userId?: string | undefined;
+    callsign?: string | null | undefined;
+    name?: string | undefined;
+    discordId?: string | undefined;
     department?: string | null | undefined;
     rank?: string | null | undefined;
     joinDate?: string | undefined;
@@ -71,16 +71,16 @@ declare const updateP: z.ZodObject<{
     rank: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     rankSince: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    callsign?: string | null | undefined;
     status?: string | undefined;
+    callsign?: string | null | undefined;
     department?: string | null | undefined;
     rank?: string | null | undefined;
     office?: string | null | undefined;
     joinDate?: string | undefined;
     rankSince?: string | undefined;
 }, {
-    callsign?: string | null | undefined;
     status?: string | undefined;
+    callsign?: string | null | undefined;
     department?: string | null | undefined;
     rank?: string | null | undefined;
     office?: string | null | undefined;
@@ -401,12 +401,12 @@ export declare class HrController {
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof createP>): Promise<{
-        callsign: string | null;
-        userId: string;
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        serverId: string | null;
         updatedAt: Date;
+        userId: string;
+        callsign: string | null;
         team: string | null;
         rank: string | null;
         office: string | null;
@@ -457,9 +457,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         transfers: {
@@ -473,17 +473,17 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         requests: {
             internalNote: string | null;
             requesterName: string;
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -512,9 +512,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         warnings: {
@@ -529,9 +529,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         notes: {
@@ -545,9 +545,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
@@ -561,15 +561,15 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
             details: string | null;
-            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[];
         trainings: ({
             training: {
-                name: string;
                 id: string;
+                name: string;
                 certificate: boolean;
                 validDays: number | null;
             };
@@ -623,12 +623,12 @@ export declare class HrController {
             createdAt: Date;
         }[] | null;
         serviceNumbers: {
-            userId: string | null;
-            display: string;
             id: string;
             createdAt: Date;
             reason: string | null;
+            userId: string | null;
             personnelId: string | null;
+            display: string;
             action: string;
             actorId: string | null;
             oldDisplay: string | null;
@@ -651,12 +651,12 @@ export declare class HrController {
         };
     }>;
     update(a: Actor, id: string, b: z.infer<typeof updateP>): Promise<{
-        callsign: string | null;
-        userId: string;
+        serverId: string | null;
         serviceNumber: string | null;
         id: string;
-        serverId: string | null;
         updatedAt: Date;
+        userId: string;
+        callsign: string | null;
         team: string | null;
         rank: string | null;
         office: string | null;
@@ -707,9 +707,9 @@ export declare class HrController {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
         details: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         deletedAt: Date | null;
     }>;
     editRecord(a: Actor, id: string, b: z.infer<typeof editRecord>): Promise<{
@@ -722,9 +722,9 @@ export declare class HrController {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
         details: string | null;
-        data: import("@prisma/client/runtime/library").JsonValue | null;
         deletedAt: Date | null;
     }>;
     deleteRecord(a: Actor, id: string, b: z.infer<typeof reason>): Promise<void>;
@@ -734,14 +734,14 @@ export declare class HrController {
         [x: string]: boolean;
     }>;
     ranks(): import("@prisma/client").Prisma.PrismaPromise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         color: string;
         description: string | null;
         active: boolean;
+        name: string;
         icon: string | null;
         position: number;
         discordRoleIds: string[];
@@ -751,14 +751,14 @@ export declare class HrController {
         requirements: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     createRank(a: Actor, b: RankInput): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         color: string;
         description: string | null;
         active: boolean;
+        name: string;
         icon: string | null;
         position: number;
         discordRoleIds: string[];
@@ -770,14 +770,14 @@ export declare class HrController {
     order(a: Actor, b: {
         ids: string[];
     }): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         color: string;
         description: string | null;
         active: boolean;
+        name: string;
         icon: string | null;
         position: number;
         discordRoleIds: string[];
@@ -787,14 +787,14 @@ export declare class HrController {
         requirements: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
     saveRank(a: Actor, id: string, b: RankInput): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         color: string;
         description: string | null;
         active: boolean;
+        name: string;
         icon: string | null;
         position: number;
         discordRoleIds: string[];
@@ -824,9 +824,9 @@ declare const reqQ: z.ZodObject<{
     personnelId?: string | undefined;
     requesterId?: string | undefined;
     approverId?: string | undefined;
-    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
+    q?: string | undefined;
 }, {
     status?: string | undefined;
     kind?: "PROMOTION" | "TRANSFER" | undefined;
@@ -835,9 +835,9 @@ declare const reqQ: z.ZodObject<{
     personnelId?: string | undefined;
     requesterId?: string | undefined;
     approverId?: string | undefined;
-    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
+    q?: string | undefined;
 }>;
 declare const createR: z.ZodObject<{
     kind: z.ZodEnum<["PROMOTION", "TRANSFER"]>;
@@ -912,8 +912,8 @@ export declare class HrRequestsController {
             rank: string | null;
         };
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -972,17 +972,17 @@ export declare class HrRequestsController {
             cancel: boolean;
         };
         personnel: {
-            userId: string;
             user: {
                 displayName: string;
             };
             id: string;
+            userId: string;
             team: string | null;
             rank: string | null;
         };
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1002,8 +1002,8 @@ export declare class HrRequestsController {
     }>;
     create(a: Actor, b: z.infer<typeof createR>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1024,8 +1024,8 @@ export declare class HrRequestsController {
     }>;
     edit(a: Actor, id: string, b: z.infer<typeof editR>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1046,8 +1046,8 @@ export declare class HrRequestsController {
     }>;
     decide(a: Actor, id: string, b: z.infer<typeof decide>): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1068,8 +1068,8 @@ export declare class HrRequestsController {
     }>;
     execute(a: Actor, id: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1116,13 +1116,13 @@ export declare class HrTrainingController {
     constructor(s: HrTrainingService);
     trainings(): Promise<{
         passed: number;
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
@@ -1136,13 +1136,13 @@ export declare class HrTrainingController {
         modules: string[];
     }[]>;
     create(a: Actor, b: z.infer<typeof trainingSchema>): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
@@ -1156,13 +1156,13 @@ export declare class HrTrainingController {
         modules: string[];
     }>;
     save(a: Actor, id: string, b: z.infer<typeof trainingSchema>): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
@@ -1241,8 +1241,8 @@ export declare class HrTrainingController {
             maxScore: number | null;
             submittedAt: Date | null;
         }[];
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
@@ -1259,8 +1259,8 @@ export declare class HrTrainingController {
         trainingId: string | null;
     }[]>;
     createExam(a: Actor, b: z.infer<typeof examSchema>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
@@ -1278,8 +1278,8 @@ export declare class HrTrainingController {
         trainingId: string | null;
     }>;
     saveExam(a: Actor, id: string, b: z.infer<typeof examSchema>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
@@ -1504,8 +1504,8 @@ export declare class HrCommsController {
         readAt: Date | null;
         readCount: number;
         audienceCount: number | null;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1520,8 +1520,8 @@ export declare class HrCommsController {
         discordChannelId: string | null;
     }[]>;
     create(a: Actor, b: z.infer<typeof announcementSchema>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1536,8 +1536,8 @@ export declare class HrCommsController {
         discordChannelId: string | null;
     }>;
     save(a: Actor, id: string, b: z.infer<typeof announcementSchema>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1576,8 +1576,8 @@ export declare class HrCommsController {
             count: number;
             voters: string[] | null;
         }[] | null;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1592,8 +1592,8 @@ export declare class HrCommsController {
         showResults: string;
     }[]>;
     createPoll(a: Actor, b: z.infer<typeof pollSchema>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1608,8 +1608,8 @@ export declare class HrCommsController {
         showResults: string;
     }>;
     savePoll(a: Actor, id: string, b: z.infer<typeof pollSchema>): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string;
         createdAt: Date;
         updatedAt: Date;
@@ -1662,33 +1662,33 @@ declare const assign: z.ZodEffects<z.ZodObject<{
     discordId: z.ZodOptional<z.ZodString>;
     name: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    discordId?: string | undefined;
-    name?: string | undefined;
-    display?: string | undefined;
     reason?: string | undefined;
+    name?: string | undefined;
+    discordId?: string | undefined;
     personnelId?: string | undefined;
     rangeId?: string | undefined;
+    display?: string | undefined;
 }, {
-    discordId?: string | undefined;
-    name?: string | undefined;
-    display?: string | undefined;
     reason?: string | undefined;
+    name?: string | undefined;
+    discordId?: string | undefined;
     personnelId?: string | undefined;
     rangeId?: string | undefined;
+    display?: string | undefined;
 }>, {
-    discordId?: string | undefined;
-    name?: string | undefined;
-    display?: string | undefined;
     reason?: string | undefined;
+    name?: string | undefined;
+    discordId?: string | undefined;
     personnelId?: string | undefined;
     rangeId?: string | undefined;
+    display?: string | undefined;
 }, {
-    discordId?: string | undefined;
-    name?: string | undefined;
-    display?: string | undefined;
     reason?: string | undefined;
+    name?: string | undefined;
+    discordId?: string | undefined;
     personnelId?: string | undefined;
     rangeId?: string | undefined;
+    display?: string | undefined;
 }>;
 declare const change: z.ZodObject<{
     display: z.ZodOptional<z.ZodString>;
@@ -1700,14 +1700,14 @@ declare const change: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     reason: string;
     personnelId: string;
-    display?: string | undefined;
     rangeId?: string | undefined;
+    display?: string | undefined;
     approverId?: string | null | undefined;
 }, {
     reason: string;
     personnelId: string;
-    display?: string | undefined;
     rangeId?: string | undefined;
+    display?: string | undefined;
     approverId?: string | null | undefined;
 }>;
 declare const status: z.ZodObject<{
@@ -1716,12 +1716,12 @@ declare const status: z.ZodObject<{
     userId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     display: string;
-    userId?: string | undefined;
     reason?: string | undefined;
+    userId?: string | undefined;
 }, {
     display: string;
-    userId?: string | undefined;
     reason?: string | undefined;
+    userId?: string | undefined;
 }>;
 export declare class ServiceNumbersController {
     private readonly s;
@@ -1754,11 +1754,11 @@ export declare class ServiceNumbersController {
         first: string;
         last: string;
         isActive: boolean;
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         department: string | null;
         position: number;
         prefix: string;
@@ -1773,12 +1773,12 @@ export declare class ServiceNumbersController {
         releaseAs: string;
     }[]>;
     createRange(a: Actor, b: RangeInput): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         active: boolean;
+        name: string;
         department: string | null;
         position: number;
         prefix: string;
@@ -1793,12 +1793,12 @@ export declare class ServiceNumbersController {
         releaseAs: string;
     }>;
     saveRange(a: Actor, id: string, b: RangeInput): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         active: boolean;
+        name: string;
         department: string | null;
         position: number;
         prefix: string;
@@ -1869,12 +1869,12 @@ export declare class ServiceNumbersController {
         name: string | null;
         actor: string;
         approver: string | null;
-        userId: string | null;
-        display: string;
         id: string;
         createdAt: Date;
         reason: string | null;
+        userId: string | null;
         personnelId: string | null;
+        display: string;
         action: string;
         actorId: string | null;
         oldDisplay: string | null;
@@ -1883,15 +1883,15 @@ export declare class ServiceNumbersController {
     pending(): Promise<{
         name: string;
         personnelId: string | null;
-        userId: string;
-        discordId: string | null;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         reason: string;
+        userId: string;
         kind: string;
+        discordId: string | null;
         applicationId: string;
     }[]>;
     /** Angenommene Bewerbungen ohne Personalakte nachträglich übernehmen. */
@@ -1905,12 +1905,12 @@ export declare class ServiceNumbersController {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;
@@ -1939,12 +1939,12 @@ export declare class ServiceNumbersController {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;
@@ -1963,12 +1963,12 @@ export declare class ServiceNumbersController {
         display: string;
         old: string | null;
         range: {
-            name: string;
-            id: string;
             serverId: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             active: boolean;
+            name: string;
             department: string | null;
             position: number;
             prefix: string;
@@ -2064,12 +2064,12 @@ export declare class HrTrainingSessionsController {
     }): Promise<{
         signups: import("./hr-training-sessions.service").Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -2086,8 +2086,8 @@ export declare class HrTrainingSessionsController {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2100,12 +2100,12 @@ export declare class HrTrainingSessionsController {
     get(id: string): Promise<{
         signups: import("./hr-training-sessions.service").Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -2122,8 +2122,8 @@ export declare class HrTrainingSessionsController {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2136,12 +2136,12 @@ export declare class HrTrainingSessionsController {
     create(a: Actor, b: z.infer<typeof sessionBody>): Promise<{
         signups: import("./hr-training-sessions.service").Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -2158,8 +2158,8 @@ export declare class HrTrainingSessionsController {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2172,12 +2172,12 @@ export declare class HrTrainingSessionsController {
     update(a: Actor, id: string, b: z.infer<typeof sessionBody>): Promise<{
         signups: import("./hr-training-sessions.service").Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -2194,8 +2194,8 @@ export declare class HrTrainingSessionsController {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2210,12 +2210,12 @@ export declare class HrTrainingSessionsController {
     }): Promise<{
         signups: import("./hr-training-sessions.service").Signup[];
         training: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         promoteRank: {
-            name: string;
             id: string;
+            name: string;
         } | null;
         instructorName: string | null;
         number: string;
@@ -2232,8 +2232,8 @@ export declare class HrTrainingSessionsController {
         trainingId: string | null;
         startsAt: Date;
         instructorId: string | null;
-        passed: string[];
         channelId: string | null;
+        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2247,12 +2247,12 @@ export declare class HrTrainingSessionsController {
         session: {
             signups: import("./hr-training-sessions.service").Signup[];
             training: {
-                name: string;
                 id: string;
+                name: string;
             } | null;
             promoteRank: {
-                name: string;
                 id: string;
+                name: string;
             } | null;
             instructorName: string | null;
             number: string;
@@ -2269,8 +2269,8 @@ export declare class HrTrainingSessionsController {
             trainingId: string | null;
             startsAt: Date;
             instructorId: string | null;
-            passed: string[];
             channelId: string | null;
+            passed: string[];
             forRank: string | null;
             promoteRankId: string | null;
             maxSignups: number | null;

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { backupConfigSchema, BACKUP_PARTS, type BackupConfig, type BackupPart, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
-import { withArchived } from '../prisma/archive-scope';
+import { unscoped } from '../common/guild-context';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
@@ -16,12 +16,12 @@ const KEY = 'backup.config';
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
 const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
-const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung)-(\d{8}-\d{6})\.json\.gz$/;
-export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung';
-const delegate = (name: string) => name.charAt(0).toLowerCase() + name.slice(1);
-/** Nach dem Einspielen (z. B. eines Backups von vor der Umstellung auf einen Server): gesetzt vom SingleServerMigrationService. */
+const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver)-(\d{8}-\d{6})\.json\.gz$/;
+export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver';
+/** Nach dem Einspielen (z. B. eines Backups aus dem Ein-Server-Betrieb): gesetzt vom MultiServerRestoreService. */
 let afterRestore: (() => Promise<unknown>) | null = null;
 export const setAfterRestore = (fn: (() => Promise<unknown>) | null) => { afterRestore = fn; };
+const delegate = (name: string) => name.charAt(0).toLowerCase() + name.slice(1);
 
 /** Tabellen in einer Reihenfolge, in der jede Tabelle nach denen kommt, auf die sie verweist (zum Einspielen). */
 function modelOrder() {
@@ -68,7 +68,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     return v;
   }
 
-  /** Täglich: Daten-Backup und (falls an) Discord-Backup; alte automatische Backups aufräumen. */
+  /** Täglich: Daten-Backup und (falls an) Discord-Backup je Server; alte automatische Backups aufräumen. */
   async autoTick(now = new Date()) {
     const cfg = await this.config();
     const day = 23 * 60 * 60_000;
@@ -105,8 +105,8 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     const tables: Record<string, unknown[]> = {};
     let rows = 0;
     for (const m of modelOrder()) {
-      // vollständiger Bestand inkl. Archiv-Einträgen aus der Umstellung auf einen Server
-      const list = await withArchived(() => (this.prisma as unknown as Record<string, { findMany(): Promise<unknown[]> }>)[delegate(m.name)]!.findMany());
+      // vollständiger Bestand aller Server
+      const list = await unscoped(() => (this.prisma as unknown as Record<string, { findMany(): Promise<unknown[]> }>)[delegate(m.name)]!.findMany());
       tables[m.name] = list;
       rows += list.length;
     }
@@ -169,6 +169,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       for (let i = 0; i < weeks.length; i += 500) await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
     }, { timeout: 10 * 60_000, maxWait: 30_000 });
     await this.audit.record(actor, { action: 'backup.data.restore', module: 'settings', entityType: 'Backup', entityId: source.name ?? 'upload', after: { rows, safety: safety.name } });
+    // Backup aus dem Ein-Server-Betrieb eingespielt → Daten wieder dem Server zuordnen (siehe MultiServerRestoreService)
     if (afterRestore) await afterRestore().catch((e) => this.log.warn(`Nach dem Einspielen: ${e instanceof Error ? e.message : e}`));
     return { rows, safety: safety.name };
   }
@@ -196,7 +197,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     await this.prisma.discordBackup.delete({ where: { id } });
     await this.audit.record(actor, { action: 'backup.discord.delete', module: 'settings', entityType: 'DiscordBackup', entityId: id });
   }
-  /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). */
+  /** Wiederherstellen (sicher: Vorhandenes wird angepasst, Fehlendes angelegt – nichts gelöscht). Ziel kann ein anderer Server sein. */
   async restoreDiscord(actor: Actor, id: string, d: { guildId?: string; parts: BackupPart[] }) {
     const b = await this.getDiscord(id);
     if (b.status !== 'READY') throw new AppError('CONFLICT', 'Das Backup ist noch nicht fertig.');

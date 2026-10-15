@@ -1,3 +1,4 @@
+import { recordSpace, recordWhere } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { isValidRobloxUserId } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,6 +17,7 @@ export class PersonsService {
 
   async list(p: PageQuery, includeArchived = false) {
     const where = {
+      ...recordWhere(), // Akten-Bereich des gewählten Servers (Server-Verbund)
       ...(includeArchived ? {} : { status: 'ACTIVE' }),
       ...(p.q ? { OR: [{ robloxUsername: { contains: p.q, mode: 'insensitive' as const } }, { robloxUserId: p.q }, { aliases: { has: p.q } }] } : {}),
     };
@@ -45,7 +47,7 @@ export class PersonsService {
   /** Mögliche Duplikate: gleiche Roblox-ID (hart, Unique) oder gleicher Username (weich → Hinweis, kein Auto-Merge). */
   async findDuplicates(robloxUsername: string, robloxUserId?: string | null) {
     return this.prisma.person.findMany({
-      where: { OR: [...(robloxUserId ? [{ robloxUserId }] : []), { robloxUsername: { equals: robloxUsername, mode: 'insensitive' } }] },
+      where: { ...recordWhere(), OR: [...(robloxUserId ? [{ robloxUserId }] : []), { robloxUsername: { equals: robloxUsername, mode: 'insensitive' } }] },
       select: { id: true, robloxUsername: true, robloxUserId: true, status: true },
     });
   }
@@ -62,7 +64,7 @@ export class PersonsService {
     const hard = dups.find((x) => d.robloxUserId && x.robloxUserId === d.robloxUserId);
     if (hard) throw new AppError('CONFLICT', 'Es gibt schon eine Person mit dieser Roblox-Benutzer-ID.', { existingId: hard.id });
     const person = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.person.create({ data: { robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId ?? null, aliases: d.aliases ?? [], notes: d.notes, custom: custom as Prisma.InputJsonValue | undefined, createdById: actor.userId } });
+      const created = await tx.person.create({ data: { serverId: recordSpace() ?? null, robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId ?? null, aliases: d.aliases ?? [], notes: d.notes, custom: custom as Prisma.InputJsonValue | undefined, createdById: actor.userId } });
       await this.timeline.add(tx, { entityType: 'Person', entityId: created.id, action: 'person.created', summary: 'Personenakte angelegt', actorId: actor.userId });
       await this.audit.record(actor, { action: 'person.create', module: 'persons', entityType: 'Person', entityId: created.id, after: created }, tx);
       return created;

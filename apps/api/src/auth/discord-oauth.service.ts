@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -6,6 +7,8 @@ import { AuthService } from './auth.service';
 import { loadEnv } from '../config/env';
 import { webUrl } from '../common/web-url';
 import { DiscordAccessService, type DiscordLoginSettings } from '../authz/discord-access.service';
+import { PermissionService } from '../authz/permission.service';
+import { initServerRoles } from '../multi-server/server-roles';
 
 const API = 'https://discord.com/api/v10';
 const STATE_TTL_MS = 10 * 60_000;
@@ -20,6 +23,9 @@ export class DiscordLoginFailure extends Error { constructor(readonly code: Disc
 
 interface Pending { mode: 'login' | 'link' | 'install'; userId?: string; browser: string; expires: number }
 interface DiscordUser { id: string; username: string; global_name?: string | null }
+/** Discord-Server des Benutzers, die er verwalten darf (Besitzer, Administrator oder „Server verwalten“). */
+export interface ManagedGuild { id: string; name: string; icon: string | null }
+const MANAGE = 0x8n | 0x20n; // ADMINISTRATOR | MANAGE_GUILD
 
 /**
  * „Mit Discord anmelden“ (OAuth2, Scope `identify`) – wie bei Dyno & Co.
@@ -32,7 +38,7 @@ export class DiscordOAuthService {
   private readonly env = loadEnv();
   private readonly pending = new Map<string, Pending>();
   private readonly log = new Logger('DiscordLogin');
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly auth: AuthService, private readonly access: DiscordAccessService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly auth: AuthService, private readonly access: DiscordAccessService, private readonly perms: PermissionService) {}
 
   clientId(): string | null {
     if (this.env.DISCORD_CLIENT_ID) return this.env.DISCORD_CLIENT_ID;
@@ -55,7 +61,7 @@ export class DiscordOAuthService {
   redirectUri() { return webUrl('/api/v1/auth/discord/callback'); }
 
   /** Schritt 1: Adresse bei Discord + Browser-Bindung. */
-  start(mode: 'login' | 'link' | 'install', userId?: string) {
+  start(mode: 'login' | 'link' | 'install', userId?: string, guildId?: string) {
     if (!this.enabled()) throw new DiscordLoginFailure('disabled');
     const now = Date.now();
     for (const [k, v] of this.pending) if (v.expires < now) this.pending.delete(k);
@@ -63,8 +69,9 @@ export class DiscordOAuthService {
     this.pending.set(state, { mode, userId, browser, expires: now + STATE_TTL_MS });
     // „install“: Bot auf einen Server holen – über den Code-Ablauf, funktioniert auch mit „OAuth2-Code-Erlaubnis benötigt“
     const q = mode === 'install'
-      ? new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: 'bot applications.commands', permissions: '8', redirect_uri: this.redirectUri(), state })
-      : new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
+      ? new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: 'bot applications.commands', permissions: '8', redirect_uri: this.redirectUri(), state, ...(guildId ? { guild_id: guildId, disable_guild_select: 'true' } : {}) })
+      // „guilds“: eigene Discord-Server für die Server-Übersicht (Kacheln „Bot einladen“)
+      : new URLSearchParams({ response_type: 'code', client_id: this.clientId()!, scope: mode === 'login' ? 'identify guilds' : 'identify', redirect_uri: this.redirectUri(), state, prompt: 'none' });
     return { url: `https://discord.com/oauth2/authorize?${q}`, browser };
   }
 
@@ -79,9 +86,9 @@ export class DiscordOAuthService {
       const tok = await this.exchange(code).catch(() => { throw new DiscordLoginFailure('install_failed'); });
       const guildId = typeof tok.guild?.id === 'string' ? tok.guild.id : null;
       await this.audit.record({ userId: p.userId ?? null, requestId: meta.requestId }, { action: 'discord.bot_installed', module: 'discord', entityType: 'Guild', entityId: guildId ?? 'unknown', after: { guildId, name: tok.guild?.name ?? null } });
-      return { kind: 'installed' as const, guildName: tok.guild?.name ?? null };
+      return { kind: 'installed' as const, guildId, guildName: tok.guild?.name ?? null, userId: p.userId ?? null };
     }
-    const du = await this.discordUser(code);
+    const { user: du, guilds } = await this.discordUser(code, p.mode === 'login');
     const settings = await this.settings();
 
     if (p.mode === 'link') {
@@ -113,7 +120,11 @@ export class DiscordOAuthService {
       user = await this.createUser(du, meta);
     }
     if (owner) await this.ensureAdmin(user.id);
-    if (member && member !== 'unknown') await this.access.syncRoles(user.id, member.byGuild, settings);
+    if (guilds) await this.prisma.discordLink.updateMany({ where: { userId: user.id, discordId: du.id }, data: { managedGuilds: guilds as unknown as Prisma.InputJsonValue, guildsSyncedAt: new Date() } });
+    if (member && member !== 'unknown') {
+      await this.access.recordMemberships(user.id, member.byGuild, member.checked);
+      await this.access.syncRoles(user.id, member.byGuild, settings, member.checked);
+    }
     this.access.remember(user.id, true);
     await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });
     return { kind: 'login' as const, ...(await this.auth.startSession(user, meta, 'auth.login.discord')) };
@@ -137,19 +148,30 @@ export class DiscordOAuthService {
     }
   }
 
-  private async discordUser(code: string): Promise<DiscordUser> {
+  private async discordUser(code: string, withGuilds = false): Promise<{ user: DiscordUser; guilds: ManagedGuild[] | null }> {
     const { access_token } = await this.exchange(code);
     try {
       const me = await fetch(`${API}/users/@me`, { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(10_000) });
       if (!me.ok) throw new DiscordLoginFailure('failed');
       const u = (await me.json()) as DiscordUser;
       if (!/^\d{15,25}$/.test(u.id)) throw new DiscordLoginFailure('failed');
-      return u;
+      return { user: u, guilds: withGuilds ? await this.managedGuilds(access_token) : null };
     } catch (e) {
       if (e instanceof DiscordLoginFailure) throw e;
       this.log.warn(`Discord not reachable: ${e instanceof Error ? e.message : e}`);
       throw new DiscordLoginFailure('failed');
     }
+  }
+
+  /** Eigene Discord-Server mit Verwaltungsrecht (nur Anzeige; fehlt der Scope oder klappt es nicht: `null`, Login geht trotzdem). */
+  private async managedGuilds(token: string): Promise<ManagedGuild[] | null> {
+    try {
+      const r = await fetch(`${API}/users/@me/guilds`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
+      if (!r.ok) return null;
+      const list = (await r.json()) as { id?: unknown; name?: unknown; icon?: unknown; owner?: unknown; permissions?: unknown }[];
+      return list.filter((g) => typeof g.id === 'string' && /^\d{15,25}$/.test(g.id) && (g.owner === true || (/^\d+$/.test(String(g.permissions ?? '')) && (BigInt(String(g.permissions)) & MANAGE) !== 0n)))
+        .slice(0, 200).map((g) => ({ id: g.id as string, name: String(g.name ?? g.id).slice(0, 100), icon: typeof g.icon === 'string' && /^(a_)?[0-9a-f]{32}$/.test(g.icon) ? `https://cdn.discordapp.com/icons/${g.id as string}/${g.icon}.png?size=128` : null }));
+    } catch { return null; }
   }
 
   private async createUser(du: DiscordUser, meta: { requestId?: string }) {
@@ -163,6 +185,19 @@ export class DiscordOAuthService {
       return u;
     });
     return user;
+  }
+
+  /**
+   * Bot wurde über das Dashboard eingeladen: hat das ein globaler Systemadministrator getan, ist der Server sofort registriert
+   * und aktiv (eigene Startrollen ohne Zuweisungen, eigene Akten). Sonst bleibt er deaktiviert, bis ein globaler
+   * Systemadministrator ihn freischaltet – so kann niemand ungefragt einen Server ins System holen.
+   */
+  async activateInstalled(userId: string, guildId: string, name: string | null): Promise<boolean> {
+    if (!/^\d{15,25}$/.test(guildId) || !(await this.perms.isOwner(userId))) return false;
+    const s = await this.prisma.discordServer.upsert({ where: { guildId }, create: { guildId, name: name?.slice(0, 100) || guildId, status: 'ACTIVE' }, update: { status: 'ACTIVE', archivedAt: null } });
+    await initServerRoles(this.prisma, s.id, false);
+    await this.audit.record({ userId }, { action: 'server.register', module: 'servers', entityType: 'DiscordServer', entityId: s.id, serverId: guildId, after: { guildId, name: s.name, via: 'invite' } });
+    return true;
   }
 
   private async ensureAdmin(userId: string) {

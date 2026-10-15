@@ -3,6 +3,7 @@ import { type CadConfig } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 export declare const cadConfigSchema: z.ZodObject<{
+    homeGuildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     incidentNumberPrefix: z.ZodDefault<z.ZodString>;
     incidentTypes: z.ZodEffects<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -392,6 +393,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         options?: string[] | undefined;
     }[];
+    homeGuildId?: string | null | undefined;
 }, {
     unitTypes: {
         key: string;
@@ -460,6 +462,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         options?: string[] | undefined;
     }[];
+    homeGuildId?: string | null | undefined;
     incidentNumberPrefix?: string | undefined;
 }>;
 /** Zentrale CAD-Konfiguration (eine Quelle für Backend, Dashboard und Bot). Fehlt etwas, gelten die Standardwerte. */

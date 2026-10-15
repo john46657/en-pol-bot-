@@ -19,6 +19,7 @@ const zod_1 = require("zod");
 const teamchance_service_1 = require("./teamchance.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 /** Öffentliche Felder (Bewerbungsseite, Discord) – keine Channel-/Rollen-IDs. */
 const publicView = (s) => ({ isOpen: s.isOpen, reason: s.reason, title: s.title, description: s.description, opensAt: s.opensAt, closesAt: s.closesAt, remaining: s.remaining, restrictApplications: s.restrictApplications });
 let TeamChanceController = class TeamChanceController {
@@ -28,8 +29,8 @@ let TeamChanceController = class TeamChanceController {
     }
     get() { return this.s.status(); }
     save(a, b) { return this.s.save(a, b); }
-    async pub() { return publicView(await this.s.status()); }
-    async bot() { return publicView(await this.s.status()); }
+    async pub(q) { return publicView(await this.s.status(q.guildId ?? null)); }
+    async bot(q) { return publicView(await this.s.status(q.guildId ?? null)); }
 };
 exports.TeamChanceController = TeamChanceController;
 __decorate([
@@ -51,15 +52,17 @@ __decorate([
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Get)('teamchance/public'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", Promise)
 ], TeamChanceController.prototype, "pub", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Get)('bot/teamchance'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", Promise)
 ], TeamChanceController.prototype, "bot", null);
 exports.TeamChanceController = TeamChanceController = __decorate([

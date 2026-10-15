@@ -11,8 +11,8 @@ export declare class InvestigationsService {
     constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService);
     list(p: PageQuery, status?: string): Promise<{
         items: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -28,8 +28,8 @@ export declare class InvestigationsService {
     }>;
     get(id: string): Promise<{
         investigation: {
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             createdAt: Date;
             updatedAt: Date;
@@ -63,8 +63,8 @@ export declare class InvestigationsService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -78,8 +78,8 @@ export declare class InvestigationsService {
             role: (typeof INVESTIGATION_ROLES)[number];
         }[];
     }): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
@@ -91,8 +91,8 @@ export declare class InvestigationsService {
     }>;
     addPerson(actor: Actor, id: string, personId: string, role: (typeof INVESTIGATION_ROLES)[number]): Promise<void>;
     setStatus(actor: Actor, id: string, to: InvestigationStatus, reason?: string): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;

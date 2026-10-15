@@ -23,6 +23,7 @@ export const CAD_NAV: { to: string; label: string; perm?: string; area?: string 
   { to: '/vehicles', label: 'Fahrzeuge', perm: 'cad.view_vehicles' },
   { to: '/cad/erlc', label: 'ER:LC Live', perm: 'cad.view_erlc' },
   { to: '/cad/team', label: 'Teamübersicht' },
+  { to: '/cad/cross-server', label: 'Cross-Server' },
   { to: '/reports', label: 'Berichte', perm: 'reports.view' },
   { to: '/cad/handover', label: 'Schichtübergabe' },
   { to: '/cad/stats', label: 'Statistik', perm: 'cad.view_stats' },

@@ -149,12 +149,12 @@ export declare class WorkflowsService {
             ok: boolean;
         }[];
     } & {
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         enabled: boolean;
         trigger: string;
         conditions: Prisma.JsonValue;
@@ -166,19 +166,19 @@ export declare class WorkflowsService {
         id: string;
         createdAt: Date;
         entityId: string | null;
-        action: string;
         ok: boolean;
+        action: string;
         workflowId: string;
         auditId: string;
     }[]>;
     private checkRoles;
     create(actor: Actor, d: WorkflowInput): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         enabled: boolean;
         trigger: string;
         conditions: Prisma.JsonValue;
@@ -186,12 +186,12 @@ export declare class WorkflowsService {
         activeSince: Date;
     }>;
     update(actor: Actor, id: string, d: WorkflowInput): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdById: string | null;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         enabled: boolean;
         trigger: string;
         conditions: Prisma.JsonValue;

@@ -31,5 +31,5 @@ export class ApplicationBansController {
 export class BotApplicationBansController {
   constructor(private readonly s: ApplicationBansService) {}
   @BotService() @Get('check')
-  check(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/), scope, name: z.string().max(80).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() }))) q: { discordId: string; scope: string; name?: string; guildId?: string }) { return this.s.check(q.discordId, q.scope, q.name ?? 'diese Bewerbung'); }
+  check(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/), scope, name: z.string().max(80).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() }))) q: { discordId: string; scope: string; name?: string; guildId?: string }) { return this.s.check(q.discordId, q.scope, q.name ?? 'diese Bewerbung', q.guildId ?? null); }
 }

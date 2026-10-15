@@ -407,8 +407,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
             hidden?: boolean | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             size: "S" | "M" | "L" | "XL";
             widget: string;
@@ -416,8 +416,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
             hidden: boolean;
         }[];
     }, {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             widget: string;
             size?: "S" | "M" | "L" | "XL" | undefined;
@@ -428,8 +428,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     active: string;
     items: {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             size: "S" | "M" | "L" | "XL";
             widget: string;
@@ -440,8 +440,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }, {
     active: string;
     items: {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             widget: string;
             size?: "S" | "M" | "L" | "XL" | undefined;
@@ -452,8 +452,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }>, {
     active: string;
     items: {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             size: "S" | "M" | "L" | "XL";
             widget: string;
@@ -464,8 +464,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }, {
     active: string;
     items: {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             widget: string;
             size?: "S" | "M" | "L" | "XL" | undefined;
@@ -476,8 +476,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }>, {
     active: string;
     items: {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             size: "S" | "M" | "L" | "XL";
             widget: string;
@@ -488,8 +488,8 @@ export declare const layoutsSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }, {
     active: string;
     items: {
-        name: string;
         id: string;
+        name: string;
         widgets: {
             widget: string;
             size?: "S" | "M" | "L" | "XL" | undefined;

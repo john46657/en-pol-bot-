@@ -18,9 +18,9 @@ export declare const trainingSchema: z.ZodObject<{
     validDays: z.ZodDefault<z.ZodNullable<z.ZodNumber>>;
     modules: z.ZodEffects<z.ZodDefault<z.ZodArray<z.ZodString, "many">>, string[], string[] | undefined>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     description: string | null;
     active: boolean;
+    name: string;
     requirements: string | null;
     instructorIds: string[];
     duration: string | null;
@@ -133,13 +133,13 @@ export declare class HrTrainingService {
     private get prisma();
     trainings(): Promise<{
         passed: number;
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
@@ -153,13 +153,13 @@ export declare class HrTrainingService {
         modules: string[];
     }[]>;
     saveTraining(actor: Actor, d: z.infer<typeof trainingSchema>, id?: string): Promise<{
-        name: string;
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
         active: boolean;
+        name: string;
         position: number;
         requirements: string | null;
         instructorIds: string[];
@@ -250,8 +250,8 @@ export declare class HrTrainingService {
             maxScore: number | null;
             submittedAt: Date | null;
         }[];
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
@@ -268,8 +268,8 @@ export declare class HrTrainingService {
         trainingId: string | null;
     }[]>;
     saveExam(actor: Actor, d: z.infer<typeof examSchema>, id?: string): Promise<{
-        id: string;
         serverId: string | null;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;

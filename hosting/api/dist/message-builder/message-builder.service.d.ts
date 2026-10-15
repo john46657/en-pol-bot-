@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { type MbChannelBotPerms, type MbDocumentData } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -694,6 +693,7 @@ export declare const createDocSchema: z.ZodObject<{
 }, {
     name: string;
     kind: "DRAFT" | "TEMPLATE";
+    categoryId?: string | null | undefined;
     data?: {
         messages?: {
             id: string;
@@ -771,7 +771,6 @@ export declare const createDocSchema: z.ZodObject<{
             avatarUrl?: string | undefined;
         } | undefined;
     } | undefined;
-    categoryId?: string | null | undefined;
 }>;
 export declare const updateDocSchema: z.ZodObject<{
     name: z.ZodString;
@@ -1379,8 +1378,9 @@ export declare const updateDocSchema: z.ZodObject<{
     /** Stand, auf dem die Änderung beruht (optimistisches Sperren) */
     version: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     version: number;
+    name: string;
+    categoryId: string | null;
     data: {
         messages: {
             id: string;
@@ -1459,10 +1459,9 @@ export declare const updateDocSchema: z.ZodObject<{
         };
     };
     channelId: string | null;
-    categoryId: string | null;
 }, {
-    name: string;
     version: number;
+    name: string;
     data: {
         messages?: {
             id: string;
@@ -1540,8 +1539,8 @@ export declare const updateDocSchema: z.ZodObject<{
             avatarUrl?: string | undefined;
         } | undefined;
     };
-    channelId?: string | null | undefined;
     categoryId?: string | null | undefined;
+    channelId?: string | null | undefined;
 }>;
 export declare const copyDocSchema: z.ZodObject<{
     kind: z.ZodEnum<["DRAFT", "TEMPLATE"]>;
@@ -1573,6 +1572,8 @@ export declare const channelsConfigSchema: z.ZodObject<{
 }, {
     channelIds: string[];
 }>;
+/** Message Builder arbeitet immer für genau einen Discord-Server (oben links gewählt). */
+export declare function requireGuild(): string;
 export type Kind = z.infer<typeof docKind>;
 export interface MbChannel {
     id: string;
@@ -2046,37 +2047,41 @@ export declare class MessageBuilderService {
     }>;
     /** Löschen = archivieren (bleibt in der Datenbank und in Backups erhalten). */
     remove(actor: Actor, id: string): Promise<void>;
-    categories(): Prisma.PrismaPromise<{
-        name: string;
+    /** Kategorien des gewählten Servers; ein Server ohne Kategorien bekommt die Standard-Kategorien. */
+    categories(): Promise<{
         id: string;
+        name: string;
         position: number;
     }[]>;
     private assertCategory;
     createCategory(actor: Actor, b: z.infer<typeof categorySchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        guildId: string | null;
+        name: string;
         position: number;
     }>;
     updateCategory(actor: Actor, id: string, b: z.infer<typeof categorySchema>): Promise<{
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        guildId: string | null;
+        name: string;
         position: number;
     }>;
     /** Kategorie löschen: Vorlagen bleiben erhalten (ohne Kategorie). */
     removeCategory(actor: Actor, id: string): Promise<void>;
-    allowedChannelIds(): Promise<string[]>;
+    allowedChannelIds(guildId?: string | null): Promise<string[]>;
     setAllowedChannels(actor: Actor, b: z.infer<typeof channelsConfigSchema>): Promise<{
         channelIds: string[];
     }>;
     /**
-     * Discord-Server dieses Systems laut Bot-Meldung: Textkanäle (mit Bot-Rechten, falls gemeldet) und Rollen.
-     * Es gibt bewusst keine Auswahl anderer Server.
+     * Gewählter Discord-Server laut Bot-Meldung: Textkanäle (mit Bot-Rechten, falls gemeldet) und Rollen. Nur dieser Server –
+     * Kanäle und Rollen anderer Server sind hier nie wählbar.
      */
-    serverInfo(): Promise<{
+    serverInfo(guildId?: string | null): Promise<{
+        problem: "no_server";
         guild: null;
         channels: MbChannel[];
         roles: {
@@ -2086,12 +2091,18 @@ export declare class MessageBuilderService {
             position: number;
         }[];
         configured: boolean;
-        problem: string;
-        configuredGuildId: string | null;
-        reportedGuilds: {
+        restricted?: undefined;
+    } | {
+        problem: "no_report";
+        guild: null;
+        channels: MbChannel[];
+        roles: {
             id: string;
             name: string;
+            color: number;
+            position: number;
         }[];
+        configured: boolean;
         restricted?: undefined;
     } | {
         guild: {
@@ -2108,9 +2119,6 @@ export declare class MessageBuilderService {
         }[];
         configured: boolean;
         restricted: boolean;
-        problem?: undefined;
-        configuredGuildId?: undefined;
-        reportedGuilds?: undefined;
     }>;
     names(ids: (string | null | undefined)[]): Promise<Map<string, string>>;
 }

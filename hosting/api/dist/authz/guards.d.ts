@@ -11,13 +11,18 @@ export declare class AuthGuard implements CanActivate {
     private readonly prisma;
     private readonly discord;
     private readonly access;
+    private readonly authz;
     private readonly botToken;
-    constructor(reflector: Reflector, prisma: PrismaService, discord: DiscordService, access: DiscordAccessService);
+    constructor(reflector: Reflector, prisma: PrismaService, discord: DiscordService, access: DiscordAccessService, authz: AuthorizationService);
     private validBotToken;
     private botFailure;
     canActivate(ctx: ExecutionContext): Promise<boolean>;
 }
-/** Jede Route mit `@RequirePermission` läuft über den zentralen AuthorizationService (Modul an, Berechtigung). */
+/**
+ * Jede Route mit `@RequirePermission` läuft über den zentralen AuthorizationService: Server der Anfrage (X-Guild-Id)
+ * registriert und aktiv, bestätigte Mitgliedschaft, Modul an, Berechtigung. Routen unter `/servers/:serverId/…` prüfen
+ * zusätzlich gegen den Pfad-Server (siehe ServersController) – der Header kann den Pfad nie übersteuern.
+ */
 export declare class PermissionGuard implements CanActivate {
     private readonly reflector;
     private readonly authz;

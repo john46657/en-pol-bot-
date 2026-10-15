@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { RobloxService } from '../persons/roblox.service';
+import { currentGuild } from '../common/guild-context';
 
 /** „*“ = alle Bewerbungen, „police“ = Polizei-Bewerbung, sonst Schlüssel einer Qualifikation (z. B. „sek“). */
 export const BAN_ALL = '*';
@@ -13,7 +14,7 @@ export interface BanInput { discordId?: string | null; roblox?: string | null; n
 /**
  * Bewerbungssperren: Wer gesperrt ist, kann die betroffenen Bewerbungen gar nicht erst starten (Discord-Panel,
  * /bewerbung) und wird beim Absenden (Discord und Web /apply) abgewiesen. Erkannt wird per Discord-ID oder Roblox-ID.
- * Es gibt eine Sperrliste; auch ältere Sperren, die früher nur für einen bestimmten Discord-Server angelegt wurden, gelten.
+ * Jeder Discord-Server hat seine eigene Sperrliste; Sperren ohne Server gelten überall.
  */
 @Injectable()
 export class ApplicationBansService {
@@ -22,10 +23,10 @@ export class ApplicationBansService {
   private activeWhere() { return { liftedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] }; }
 
   /** Aktive Sperre für diese Person und diese Bewerbung (oder null). */
-  async find(who: { discordId?: string | null; robloxUserId?: string | null }, scope: string) {
+  async find(who: { discordId?: string | null; robloxUserId?: string | null }, scope: string, guildId: string | null) {
     const ids = [...(who.discordId ? [{ discordId: who.discordId }] : []), ...(who.robloxUserId ? [{ robloxUserId: who.robloxUserId }] : [])];
     if (!ids.length) return null;
-    return this.prisma.applicationBan.findFirst({ where: { AND: [this.activeWhere(), { OR: ids }, { OR: [{ scopes: { has: BAN_ALL } }, { scopes: { has: scope } }] }] }, orderBy: { createdAt: 'desc' } });
+    return this.prisma.applicationBan.findFirst({ where: { AND: [this.activeWhere(), { OR: [{ guildId: null }, ...(guildId ? [{ guildId }] : [])] }, { OR: ids }, { OR: [{ scopes: { has: BAN_ALL } }, { scopes: { has: scope } }] }] }, orderBy: { createdAt: 'desc' } });
   }
 
   /** Text für die gesperrte Person (Discord-DM/Antwort, Web-Fehlermeldung). */
@@ -33,20 +34,21 @@ export class ApplicationBansService {
     return `Du bist für ${what} gesperrt und kannst dich nicht bewerben. Grund: ${ban.reason}${ban.expiresAt ? ` · gilt bis ${ban.expiresAt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}` : ''}`;
   }
 
-  async assertAllowed(who: { discordId?: string | null; robloxUserId?: string | null }, scope: string, what: string) {
-    const ban = await this.find(who, scope);
+  async assertAllowed(who: { discordId?: string | null; robloxUserId?: string | null }, scope: string, what: string, guildId: string | null) {
+    const ban = await this.find(who, scope, guildId);
     if (ban) throw new AppError('CONFLICT', this.message(ban, what), { reason: 'APPLICATION_BANNED' });
   }
 
   /** Für den Bot vor dem Start einer Bewerbung. */
-  async check(discordId: string, scope: string, what: string) {
-    const ban = await this.find({ discordId }, scope);
+  async check(discordId: string, scope: string, what: string, guildId: string | null) {
+    const ban = await this.find({ discordId }, scope, guildId);
     return ban ? { banned: true, message: this.message(ban, what) } : { banned: false, message: null };
   }
 
-  /** Sperrliste. */
+  /** Sperrliste des gewählten Servers (ohne Server: die übergreifenden). */
   async list(includeInactive: boolean) {
-    return this.prisma.applicationBan.findMany({ where: includeInactive ? {} : this.activeWhere(), orderBy: { createdAt: 'desc' }, take: 500 });
+    const guildId = currentGuild();
+    return this.prisma.applicationBan.findMany({ where: { AND: [{ guildId }, includeInactive ? {} : this.activeWhere()] }, orderBy: { createdAt: 'desc' }, take: 500 });
   }
 
   async create(actor: Actor, d: BanInput) {
@@ -70,7 +72,7 @@ export class ApplicationBansService {
     const by = actor.userId ? (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName ?? null : null;
     const name = d.name?.trim() || robloxName || (d.roblox?.trim() ?? '') || (discordId ? `Discord ${discordId}` : 'unbekannt');
     return this.prisma.$transaction(async (tx) => {
-      const row = await tx.applicationBan.create({ data: { guildId: null, discordId, robloxUserId, name, scopes, reason: d.reason.trim(), expiresAt, createdById: actor.userId, createdByName: by } });
+      const row = await tx.applicationBan.create({ data: { guildId: currentGuild(), discordId, robloxUserId, name, scopes, reason: d.reason.trim(), expiresAt, createdById: actor.userId, createdByName: by } });
       await this.audit.record(actor, { action: 'application.ban.create', module: 'applications', entityType: 'ApplicationBan', entityId: row.id, after: { discordId, robloxUserId, name, scopes, reason: row.reason, expiresAt } }, tx);
       return row;
     });
@@ -78,7 +80,7 @@ export class ApplicationBansService {
 
   async lift(actor: Actor, id: string) {
     const b = await this.prisma.applicationBan.findUnique({ where: { id } });
-    if (!b) throw new AppError('NOT_FOUND', 'Sperre nicht gefunden.');
+    if (!b || b.guildId !== currentGuild()) throw new AppError('NOT_FOUND', 'Sperre nicht gefunden.');
     if (b.liftedAt) return b;
     return this.prisma.$transaction(async (tx) => {
       const row = await tx.applicationBan.update({ where: { id }, data: { liftedAt: new Date(), liftedById: actor.userId } });

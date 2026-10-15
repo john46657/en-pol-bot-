@@ -31,6 +31,8 @@ export declare class AuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
+            servers: string[];
+            globalAdmin: boolean;
         };
     } | {
         twoFactorRequired: true;
@@ -55,6 +57,8 @@ export declare class AuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
+            servers: string[];
+            globalAdmin: boolean;
         };
     }>;
     /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
@@ -79,6 +83,8 @@ export declare class AuthService {
             lastLogin: Date | null;
             twoFactor: boolean;
             guildId: string | null;
+            servers: string[];
+            globalAdmin: boolean;
         };
     }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
@@ -95,5 +101,24 @@ export declare class AuthService {
         lastLogin: Date | null;
         twoFactor: boolean;
         guildId: string | null;
+        servers: string[];
+        globalAdmin: boolean;
+    }>;
+    /**
+     * Server-Übersicht nach dem Login (Kacheln): Server, die man öffnen darf (registriert, Mitglied bzw. globaler
+     * Systemadministrator), freizuschaltende Server und eigene Discord-Server ohne Bot (zum Einladen). Jeder Server hat
+     * eigene Akten – die Übersicht verrät nur Name und Bild.
+     */
+    serverOverview(userId: string): Promise<{
+        name: string;
+        globalAdmin: boolean;
+        servers: {
+            guildId: string;
+            name: string;
+            icon: string | null;
+            state: "open" | "disabled" | "invite" | "pending";
+        }[];
+        guildsSyncedAt: Date | null;
+        discordLinked: boolean;
     }>;
 }

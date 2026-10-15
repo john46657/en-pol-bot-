@@ -253,11 +253,11 @@ export declare class PanelsService {
         placeholder: string;
     }>;
     submissions(panelId: string): import("@prisma/client").Prisma.PrismaPromise<{
-        discordId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         guildId: string | null;
+        discordId: string;
         channelId: string | null;
         messageId: string | null;
         panelId: string;

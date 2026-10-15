@@ -78,6 +78,23 @@ let AuthController = class AuthController {
             res.redirect(302, (0, web_url_1.webUrl)('/admin/settings?discord=disabled'));
         }
     }
+    /** Server-Übersicht nach dem Login (Kacheln wie bei Dyno/GalaxyBot). */
+    servers(user) { return this.auth.serverOverview(user.id); }
+    /** Bot auf einen eigenen Discord-Server einladen (Kachel „+“) – nur Server, die man laut Discord verwalten darf. */
+    async discordAddServer(user, guild, res) {
+        const o = await this.auth.serverOverview(user.id);
+        const g = typeof guild === 'string' && /^\d{15,25}$/.test(guild) ? o.servers.find((x) => x.guildId === guild && x.state === 'invite') : undefined;
+        if (!g && !o.globalAdmin)
+            return res.redirect(302, (0, web_url_1.webUrl)('/servers?discord=not_manager'));
+        try {
+            const s = this.discord.start('install', user.id, g?.guildId);
+            res.cookie(OAUTH_COOKIE, s.browser, { httpOnly: true, sameSite: 'lax', secure: this.secure(), maxAge: 10 * 60_000, path: '/api/v1/auth/discord' });
+            res.redirect(302, s.url);
+        }
+        catch {
+            res.redirect(302, (0, web_url_1.webUrl)('/servers?discord=disabled'));
+        }
+    }
     /** Rücksprung von Discord (diese Adresse muss im Developer Portal unter OAuth2 → Redirects stehen). */
     async discordCallback(code, state, error, req, res) {
         res.clearCookie(OAUTH_COOKIE, { path: '/api/v1/auth/discord' });
@@ -88,14 +105,17 @@ let AuthController = class AuthController {
             const r = await this.discord.callback(code, state, req.cookies?.[OAUTH_COOKIE], { ip: req.ip, userAgent: req.headers['user-agent'], requestId: req.requestId });
             if (r.kind === 'linked')
                 return res.redirect(302, (0, web_url_1.webUrl)('/?discord=linked'));
-            if (r.kind === 'installed')
-                return res.redirect(302, (0, web_url_1.webUrl)(`/admin/settings?discord=installed${r.guildName ? `&server=${encodeURIComponent(r.guildName)}` : ''}`));
+            if (r.kind === 'installed') {
+                // vom globalen Systemadministrator eingeladen: Server sofort freischalten (sonst wartet er auf Freischaltung)
+                const active = r.guildId && r.userId ? await this.discord.activateInstalled(r.userId, r.guildId, r.guildName) : false;
+                return res.redirect(302, (0, web_url_1.webUrl)(`/servers?discord=${active ? 'installed' : 'installed_pending'}${r.guildName ? `&server=${encodeURIComponent(r.guildName)}` : ''}`));
+            }
             res.cookie(guards_1.SESSION_COOKIE, r.token, { httpOnly: true, sameSite: 'strict', secure: this.secure(), expires: r.expiresAt, path: '/' });
-            return res.redirect(302, (0, web_url_1.webUrl)('/'));
+            return res.redirect(302, (0, web_url_1.webUrl)('/servers')); // erst die Server-Übersicht, dann der gewählte Server
         }
         catch (e) {
             if (e instanceof discord_oauth_service_1.DiscordLoginFailure && e.code === 'install_failed')
-                return res.redirect(302, (0, web_url_1.webUrl)('/admin/settings?discord=install_failed'));
+                return res.redirect(302, (0, web_url_1.webUrl)('/servers?discord=install_failed'));
             return res.redirect(302, (0, web_url_1.webUrl)(`/login?discord=${e instanceof discord_oauth_service_1.DiscordLoginFailure ? e.code : 'failed'}`));
         }
     }
@@ -172,6 +192,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "discordInstall", null);
+__decorate([
+    (0, common_1.Get)('servers'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "servers", null);
+__decorate([
+    (0, common_1.Get)('discord/add-server'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('guild')),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "discordAddServer", null);
 __decorate([
     (0, decorators_1.Public)(),
     (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 20, ttl: 60_000 } }),

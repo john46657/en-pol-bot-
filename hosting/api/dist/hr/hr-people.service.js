@@ -17,7 +17,6 @@ const discord_oauth_service_1 = require("../auth/discord-oauth.service");
 const errors_1 = require("../common/errors");
 const hr_core_service_1 = require("./hr-core.service");
 const discord_live_service_1 = require("../discord/discord-live.service");
-const personnel_pick_1 = require("./personnel-pick");
 const INACTIVE = ['RESIGNED', 'TERMINATED', 'INACTIVE'];
 exports.RECORD_TYPES = ['NOTE', 'WARNING', 'AWARD', 'RECOMMENDATION'];
 /** Personal-Übersicht, Personalakte und Einträge (Notizen, Verwarnungen, Auszeichnungen, Empfehlungen). */
@@ -49,14 +48,7 @@ let HrPeopleService = class HrPeopleService {
         };
         const links = new Map((await this.prisma.discordLink.findMany()).map((l) => [l.userId, l.discordId]));
         const term = f.q?.trim().toLowerCase();
-        const found = await this.prisma.personnel.findMany({ where, include: { user: { select: { id: true, displayName: true, username: true, robloxUsername: true, robloxUserId: true, active: true } } }, take: 2000 });
-        // je Person nur eine Akte (z. B. Archiv-Doppel aus der Umstellung auf einen Server, solange sie nicht ausgeblendet sind)
-        const byUser = new Map();
-        for (const p of found) {
-            const o = byUser.get(p.userId);
-            byUser.set(p.userId, o ? (0, personnel_pick_1.preferPersonnel)(o, p) : p);
-        }
-        const people = [...byUser.values()];
+        const people = await this.prisma.personnel.findMany({ where, include: { user: { select: { id: true, displayName: true, username: true, robloxUsername: true, robloxUserId: true, active: true } } }, take: 2000 });
         const ids = people.map((p) => p.id);
         const [records, trainings, absent] = await Promise.all([
             this.prisma.personnelRecord.groupBy({ by: ['personnelId', 'type'], where: { personnelId: { in: ids }, deletedAt: null }, _count: { _all: true } }),

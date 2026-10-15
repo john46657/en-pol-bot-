@@ -1,3 +1,4 @@
+import { currentGuild } from '../common/guild-context';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -15,8 +16,9 @@ import { PermissionService } from '../authz/permission.service';
 const submit = z.object({ robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 const move = z.object({ status: z.enum(APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Annehmen oder Ablehnen bitte über die Entscheidung.'), reason: z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
-const inboxQ = pageQuery.extend({ pageSize: z.coerce.number().int().min(1).max(100).default(20), type: z.string().regex(/^(police|q:.{1,24})$/).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), order: z.enum(['newest', 'oldest']).optional() });
-const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional(), order: z.enum(['newest', 'oldest']).optional() });
+const inboxQ = pageQuery.extend({ pageSize: z.coerce.number().int().min(1).max(100).default(20), type: z.string().regex(/^(police|q:.{1,24})$/).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), order: z.enum(['newest', 'oldest']).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
+const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional(), order: z.enum(['newest', 'oldest']).optional() });
+const guildQ = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional() });
 
 const analyticsQ = z.object({ type: z.string().max(80).optional(), status: z.enum(['APPROVED', 'PENDING', 'REJECTED']).optional(), reviewer: z.string().uuid().optional(), days: z.coerce.number().int().min(7).max(365).default(30) });
 
@@ -24,6 +26,7 @@ const analyticsQ = z.object({ type: z.string().max(80).optional(), status: z.enu
 @Controller('applications')
 export class ApplicationsController {
   constructor(private readonly a: ApplicationsService, private readonly stats: ApplicationsAnalyticsService, private readonly roblox: RobloxService, private readonly perms: PermissionService) {}
+  /** `?guildId=` – Formular eines Servers (für den Bot); ohne: das gemeinsame (Web-Seite /apply). */
   /** Frage „Roblox User“: Konto suchen (Name, Anzeigename, Bild – keine internen Daten). Öffentlich, begrenzt. */
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 30, ttl: 60_000 } }) @Get('roblox')
   async robloxLookup(@Query(zodBody(z.object({ q: z.string().trim().min(3).max(20).regex(/^@?[A-Za-z0-9_]+$/) }))) q: { q: string }) {
@@ -31,21 +34,21 @@ export class ApplicationsController {
   }
 
   @Public() @Get('form')
-  form() { return this.a.form(); }
+  form(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.a.form(q.guildId); }
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 5, ttl: 3_600_000 } }) @Post()
   submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.a.submit(b); }
   @Get() @RequirePermission('applications.view')
-  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.order); }
-  /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). */
+  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId ?? currentGuild() ?? undefined, q.order); } // Server getrennt: gewählter Server
+  /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
   @Get('analytics') @RequirePermission('applications.view')
-  analytics(@Query(zodBody(analyticsQ)) q: z.infer<typeof analyticsQ>) { return this.stats.overview(q); }
+  analytics(@Query(zodBody(analyticsQ)) q: z.infer<typeof analyticsQ>) { return this.stats.overview({ ...q, guildId: currentGuild() }); }
   @Get('history') @RequirePermission('applications.view')
   history(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/) }))) q: { discordId: string }) { return this.a.history(q.discordId); }
   /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
   @Get('inbox') @RequirePermission('applications.view')
   async inbox(@CurrentActor() a: Actor, @Query(zodBody(inboxQ)) q: z.infer<typeof inboxQ>) {
     const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
-    return this.a.inbox(q, { police: true, quali });
+    return this.a.inbox({ ...q, guildId: q.guildId ?? currentGuild() ?? undefined }, { police: true, quali });
   }
   @Delete(':id') @HttpCode(204) @RequirePermission('applications.delete')
   remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.a.remove(a, id); }

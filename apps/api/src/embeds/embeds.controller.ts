@@ -5,6 +5,7 @@ import { embedSchema, EmbedsService, type EmbedDoc } from './embeds.service';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
+import { currentGuild } from '../common/guild-context';
 import { AppError } from '../common/errors';
 import { MediaService } from '../media/media.service';
 
@@ -15,7 +16,7 @@ const sf = z.string().regex(/^\d{15,25}$/);
 @Controller('embeds')
 export class EmbedsController {
   constructor(private readonly s: EmbedsService) {}
-  @Get() @RequirePermission('settings.view') list() { return this.s.all(); }
+  @Get() @RequirePermission('settings.view') list() { return this.s.all(currentGuild()); }
   @Put(':id') @RequirePermission('settings.manage')
   save(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(embedSchema)) b: EmbedDoc) {
     if (b.id !== id) throw new AppError('VALIDATION_FAILED', 'ID passt nicht.');

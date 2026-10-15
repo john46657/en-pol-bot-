@@ -10,11 +10,14 @@ declare const guildQ: z.ZodObject<{
     guildId?: string | undefined;
 }>;
 declare const casesQ: z.ZodObject<{
+    guildId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "WAITING", "CLAIMED", "DECLINED", "ABANDONED", "CLOSED"]>>;
 }, "strip", z.ZodTypeAny, {
     status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
+    guildId?: string | undefined;
 }, {
     status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
+    guildId?: string | undefined;
 }>;
 declare const voice: z.ZodObject<{
     guildId: z.ZodString;
@@ -22,13 +25,13 @@ declare const voice: z.ZodObject<{
     discordId: z.ZodString;
     userName: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     channelId: string;
     userName: string;
 }, {
-    discordId: string;
     guildId: string;
+    discordId: string;
     channelId: string;
     userName?: string | undefined;
 }>;
@@ -57,11 +60,11 @@ declare const webAction: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"message">;
     text: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "message";
     text: string;
+    action: "message";
 }, {
-    action: "message";
     text: string;
+    action: "message";
 }>]>;
 declare const staff: z.ZodObject<{
     discordId: z.ZodString;
@@ -69,13 +72,13 @@ declare const staff: z.ZodObject<{
     roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     admin: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    discordId: string;
     name: string;
     roleIds: string[];
+    discordId: string;
     admin: boolean;
 }, {
-    discordId: string;
     name: string;
+    discordId: string;
     roleIds?: string[] | undefined;
     admin?: boolean | undefined;
 }>;
@@ -83,21 +86,21 @@ declare const staff: z.ZodObject<{
 export declare class VoiceSupportController {
     private readonly s;
     constructor(s: VoiceSupportService);
-    rooms(): Promise<VoiceSupportRoom[]>;
-    save(a: Actor, b: VoiceSupportRoom[]): Promise<VoiceSupportRoom[]>;
+    rooms(q: z.infer<typeof guildQ>): Promise<VoiceSupportRoom[]>;
+    save(a: Actor, q: z.infer<typeof guildQ>, b: VoiceSupportRoom[]): Promise<VoiceSupportRoom[]>;
     cases(q: z.infer<typeof casesQ>): Promise<{
         number: string;
-        userId: string;
         id: string;
         status: string;
         createdAt: Date;
+        userId: string;
         closedAt: Date | null;
         guildId: string;
         channelId: string | null;
+        claimedById: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        claimedById: string | null;
         roomId: string;
         roomName: string;
         userName: string;
@@ -113,17 +116,17 @@ export declare class VoiceSupportController {
     /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
     action(a: Actor, id: string, b: z.infer<typeof webAction>): Promise<{
         number: string;
-        userId: string;
         id: string;
         status: string;
         createdAt: Date;
+        userId: string;
         closedAt: Date | null;
         guildId: string;
         channelId: string | null;
+        claimedById: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
-        claimedById: string | null;
         roomId: string;
         roomName: string;
         userName: string;

@@ -18,11 +18,13 @@ export declare class NotifyService {
     private readonly log;
     constructor(prisma: PrismaService, rt: RealtimeService);
     notify(userIds: string[], n: NotifyInput): Promise<void>;
-    /** Aktive Benutzer mit einem Recht (gleiche Regeln wie der PermissionService), ohne `exceptUserId`. Gebündelt: 5 Abfragen insgesamt. */
+    /** Aktive Benutzer mit einem Recht (im angegebenen Server bzw. serverübergreifend), ohne `exceptUserId`. Gebündelt: 5 Abfragen insgesamt. */
     usersWith(permission: string, opts?: {
+        guildId?: string | null;
         exceptUserId?: string | null;
     }): Promise<string[]>;
     notifyPermission(permission: string, n: NotifyInput, opts?: {
+        guildId?: string | null;
         exceptUserId?: string | null;
     }): Promise<void>;
 }

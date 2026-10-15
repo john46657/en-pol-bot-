@@ -20,6 +20,7 @@ const shared_1 = require("@enrp/shared");
 const panels_service_1 = require("./panels.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
+const guild_context_1 = require("../common/guild-context");
 const errors_1 = require("../common/errors");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const mode = zod_1.z.object({ mode: zod_1.z.enum(['update', 'new']).default('update') });
@@ -31,17 +32,17 @@ let PanelsController = class PanelsController {
     constructor(s) {
         this.s = s;
     }
-    staff() { return this.s.staffLists(null); }
+    staff() { return this.s.staffLists((0, guild_context_1.currentGuild)()); }
     saveStaff(a, id, b) { same(id, b.id); return this.s.saveStaff(a, b); }
     removeStaff(a, id) { return this.s.removeStaff(a, id); }
     dupStaff(a, id) { return this.s.duplicateStaff(a, id); }
-    preview() { return this.s.previewStaff(null); }
+    preview() { return this.s.previewStaff((0, guild_context_1.currentGuild)()); }
     sendStaff(a, id, b) { return this.s.sendStaff(a, id, b.mode); }
-    forms() { return this.s.formPanels(null); }
+    forms() { return this.s.formPanels((0, guild_context_1.currentGuild)()); }
     saveForm(a, id, b) { same(id, b.id); return this.s.saveForm(a, b); }
     removeForm(a, id) { return this.s.removeForm(a, id); }
     sendForm(a, id, b) { return this.s.sendForm(a, id, b.mode); }
-    infos() { return this.s.infoPanels(null); }
+    infos() { return this.s.infoPanels((0, guild_context_1.currentGuild)()); }
     saveInfo(a, id, b) { same(id, b.id); return this.s.saveInfo(a, b); }
     removeInfo(a, id) { return this.s.removeInfo(a, id); }
     sendInfo(a, id, b) { return this.s.sendInfo(a, id, b.mode); }

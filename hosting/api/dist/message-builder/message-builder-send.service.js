@@ -68,8 +68,9 @@ let MessageBuilderSendService = class MessageBuilderSendService {
             await this.perms.assert(uid, 'messagebuilder.send');
         if (b.mode === 'webhook')
             await this.perms.assert(uid, 'messagebuilder.webhooks');
+        const guildId = (0, message_builder_service_1.requireGuild)();
         if (b.documentId)
-            await this.mb.get(actor, b.documentId); // eigener Entwurf bzw. Vorlage (sonst 404)
+            await this.mb.get(actor, b.documentId); // eigener Entwurf bzw. Vorlage dieses Servers (sonst 404)
         const server = await this.mb.serverInfo();
         const issues = (0, shared_1.validateMbDocument)(b.data, { target: b.mode === 'webhook' ? 'webhook' : 'bot', allowRoleActions: await this.perms.has(uid, 'messagebuilder.roles'), ...(server.guild ? { roleIds: server.roles.map((r) => r.id) } : {}) });
         if ((0, shared_1.hasErrors)(issues))
@@ -78,11 +79,9 @@ let MessageBuilderSendService = class MessageBuilderSendService {
         if (b.mode === 'webhook') {
             if (!b.webhookId)
                 throw new errors_1.AppError('VALIDATION_FAILED', 'Webhook wählen.');
-            const w = await this.prisma.messageBuilderWebhook.findFirst({ where: { id: b.webhookId, archivedAt: null } });
+            const w = await this.prisma.messageBuilderWebhook.findFirst({ where: { id: b.webhookId, guildId, archivedAt: null } });
             if (!w)
                 throw new errors_1.AppError('NOT_FOUND', 'Webhook nicht gefunden.');
-            if (!(0, guild_context_1.isHomeGuild)(w.guildId))
-                throw new errors_1.AppError('VALIDATION_FAILED', 'Dieser Webhook gehört nicht zum Discord-Server der EN Polizei.');
             const url = (0, erlc_crypto_1.decryptSecret)(w.secret);
             if (!url)
                 throw new errors_1.AppError('VALIDATION_FAILED', 'Die Webhook-URL lässt sich nicht mehr entschlüsseln (Schlüssel geändert?) – Webhook neu anlegen.');
@@ -94,10 +93,10 @@ let MessageBuilderSendService = class MessageBuilderSendService {
             if (!channelId)
                 throw new errors_1.AppError('VALIDATION_FAILED', 'Kanal wählen.');
             if (!server.guild)
-                throw new errors_1.AppError('CAPABILITY_UNAVAILABLE', 'Die Kanäle des Discord-Servers sind noch nicht bekannt – läuft der Bot und ist der Discord-Server eingerichtet?');
+                throw new errors_1.AppError('CAPABILITY_UNAVAILABLE', 'Die Kanäle dieses Discord-Servers sind noch nicht bekannt – ist der Bot dort und läuft er?');
             const ch = server.channels.find((c) => c.id === channelId);
             if (!ch)
-                throw new errors_1.AppError('VALIDATION_FAILED', 'Diesen Textkanal gibt es auf dem Discord-Server der EN Polizei nicht.');
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Diesen Textkanal gibt es auf diesem Discord-Server nicht.');
             if (!ch.allowed)
                 throw new errors_1.AppError('PERMISSION_DENIED', `In #${ch.name} darf über den Message Builder nicht gesendet werden (erlaubte Kanäle festgelegt).`);
             if (ch.bot) {
@@ -125,12 +124,12 @@ let MessageBuilderSendService = class MessageBuilderSendService {
         const test = b.mode === 'test';
         await this.prisma.$transaction(async (tx) => {
             await tx.messageBuilderSend.create({ data: {
-                    id: sendId, documentId: b.documentId, documentName: b.name, mode: b.mode.toUpperCase(), channelId, channelName, webhookId: webhook?.id ?? null,
+                    id: sendId, guildId, documentId: b.documentId, documentName: b.name, mode: b.mode.toUpperCase(), channelId, channelName, webhookId: webhook?.id ?? null,
                     status: test ? 'TEST' : 'QUEUED', createdById: uid, createdByName: userName, ...(test ? { startedAt: now, finishedAt: now } : {}),
                     items: { create: items.map((i) => ({ position: i.position, summary: i.summary, status: test ? 'TEST' : 'PENDING', payload: test ? client_1.Prisma.DbNull : i.payload })) },
                 } });
             if (actions.length)
-                await tx.messageBuilderAction.createMany({ data: actions.map((a) => ({ id: a.id, sendId, kind: a.kind, config: a.config, createdById: uid })) });
+                await tx.messageBuilderAction.createMany({ data: actions.map((a) => ({ id: a.id, guildId, sendId, kind: a.kind, config: a.config, createdById: uid })) });
             if (b.mode === 'bot')
                 await tx.discordOutbox.create({ data: { type: 'mb.send', channelKey: 'announcements', payload: { sendId } } });
             await this.audit.record(actor, { action: test ? 'messagebuilder.test' : 'messagebuilder.send', module: 'messagebuilder', entityType: 'MessageBuilderSend', entityId: sendId, after: { mode: b.mode, channelId, messages: items.length, document: b.name } }, tx);
@@ -172,7 +171,7 @@ let MessageBuilderSendService = class MessageBuilderSendService {
         if (!r.count)
             return { proceed: false };
         const s = await this.prisma.messageBuilderSend.findUniqueOrThrow({ where: { id: sendId }, include: { items: { orderBy: { position: 'asc' } } } });
-        return { proceed: true, guildId: (0, guild_context_1.homeGuild)(), channelId: s.channelId, items: s.items.map((i) => ({ position: i.position, payload: i.payload })) };
+        return { proceed: true, guildId: s.guildId, channelId: s.channelId, items: s.items.map((i) => ({ position: i.position, payload: i.payload })) };
     }
     async itemResult(sendId, position, b) {
         await this.prisma.messageBuilderSendItem.updateMany({
@@ -216,36 +215,36 @@ let MessageBuilderSendService = class MessageBuilderSendService {
     /** Einzelner Versand: wer gesendet hat, sieht den Status immer; sonst Recht „Versandhistorie“. */
     async get(actor, id) {
         await this.expireStale();
-        const s = await this.prisma.messageBuilderSend.findUnique({ where: { id }, include: { items: true } });
+        const s = await this.prisma.messageBuilderSend.findFirst({ where: { id, guildId: (0, message_builder_service_1.requireGuild)() }, include: { items: true } });
         if (!s)
             throw new errors_1.AppError('NOT_FOUND', 'Versand nicht gefunden.');
         if (s.createdById !== actor.userId)
             await this.perms.assert(actor.userId, 'messagebuilder.history');
-        return { ...this.view(s), guildId: (0, guild_context_1.homeGuild)() };
+        return { ...this.view(s), guildId: s.guildId };
     }
     async history(q) {
         await this.expireStale();
-        const where = q.status ? { status: q.status } : {};
+        const guildId = (0, message_builder_service_1.requireGuild)();
+        const where = { guildId, ...(q.status ? { status: q.status } : {}) };
         const [total, rows] = await Promise.all([
             this.prisma.messageBuilderSend.count({ where }),
             this.prisma.messageBuilderSend.findMany({ where, include: { items: true }, orderBy: { createdAt: 'desc' }, skip: (q.page - 1) * q.pageSize, take: q.pageSize }),
         ]);
-        return { items: rows.map((r) => this.view(r)), total, page: q.page, pageSize: q.pageSize, guildId: (0, guild_context_1.homeGuild)() };
+        return { items: rows.map((r) => this.view(r)), total, page: q.page, pageSize: q.pageSize, guildId };
     }
     // ───────────── Interaktive Komponenten (Bot fragt beim Klick nach) ─────────────
     async interaction(b) {
-        if (!(0, guild_context_1.isHomeGuild)(b.guildId))
-            throw new errors_1.AppError('PERMISSION_DENIED', 'Dieser Discord-Server gehört nicht zum System.', { reason: 'FOREIGN_GUILD' });
-        const a = await this.prisma.messageBuilderAction.findUnique({ where: { id: b.actionId } });
-        if (!a)
+        // Buttons/Menüs wirken nur auf dem Server, für den sie gesendet wurden (kopierte Nachricht auf anderem Server → „gone“)
+        const a = await (0, guild_context_1.unscoped)(() => this.prisma.messageBuilderAction.findUnique({ where: { id: b.actionId } }));
+        if (!a || !b.guildId || a.guildId !== b.guildId)
             return { type: 'gone' };
         const cfg = a.config;
         const action = a.kind === 'select' ? cfg.options?.[b.value ?? ''] : cfg.action;
         if (!action)
             return { type: 'gone' };
         if (action.type === 'role') {
-            const server = await this.mb.serverInfo();
-            if (server.guild && !server.roles.some((r) => r.id === action.roleId))
+            const server = await this.mb.serverInfo(b.guildId);
+            if (!server.guild || !server.roles.some((r) => r.id === action.roleId))
                 return { type: 'gone' };
         }
         return action;
@@ -253,14 +252,12 @@ let MessageBuilderSendService = class MessageBuilderSendService {
     // ───────────── Webhooks (optional) ─────────────
     async listWebhooks() {
         const server = await this.mb.serverInfo();
-        const rows = await this.prisma.messageBuilderWebhook.findMany({ where: { archivedAt: null }, orderBy: { name: 'asc' } });
+        const rows = await this.prisma.messageBuilderWebhook.findMany({ where: { guildId: (0, message_builder_service_1.requireGuild)(), archivedAt: null }, orderBy: { name: 'asc' } });
         // Die URL (enthält das Token) verlässt die API nie
         return rows.map((w) => ({ id: w.id, name: w.name, webhookId: w.webhookId, channelId: w.channelId, channelName: server.channels.find((c) => c.id === w.channelId)?.name ?? null, readable: (0, erlc_crypto_1.decryptSecret)(w.secret) !== null, createdAt: w.createdAt }));
     }
     async createWebhook(actor, b) {
-        const home = (0, guild_context_1.homeGuild)();
-        if (!home)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Zuerst den Discord-Server der EN Polizei einrichten (DISCORD_GUILD_ID).');
+        const home = (0, message_builder_service_1.requireGuild)();
         let info;
         try {
             info = await this.webhooks.info(b.url);
@@ -269,7 +266,7 @@ let MessageBuilderSendService = class MessageBuilderSendService {
             throw new errors_1.AppError('VALIDATION_FAILED', `Webhook konnte nicht geprüft werden: ${e instanceof webhook_client_1.DiscordHttpError ? e.message : 'unbekannter Fehler'}`);
         }
         if (info.guildId !== home)
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Dieser Webhook gehört nicht zum Discord-Server der EN Polizei.');
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Dieser Webhook gehört zu einem anderen Discord-Server als dem gewählten.');
         const w = await this.prisma.$transaction(async (tx) => {
             const w = await tx.messageBuilderWebhook.create({ data: { name: b.name, secret: (0, erlc_crypto_1.encryptSecret)(b.url), webhookId: info.id, channelId: info.channelId, guildId: info.guildId, createdById: actor.userId } });
             await this.audit.record(actor, { action: 'messagebuilder.webhook_create', module: 'messagebuilder', entityType: 'MessageBuilderWebhook', entityId: w.id, after: { name: w.name, webhookId: info.id, channelId: info.channelId } }, tx);
@@ -278,7 +275,7 @@ let MessageBuilderSendService = class MessageBuilderSendService {
         return (await this.listWebhooks()).find((x) => x.id === w.id);
     }
     async removeWebhook(actor, id) {
-        const w = await this.prisma.messageBuilderWebhook.findFirst({ where: { id, archivedAt: null } });
+        const w = await this.prisma.messageBuilderWebhook.findFirst({ where: { id, guildId: (0, message_builder_service_1.requireGuild)(), archivedAt: null } });
         if (!w)
             throw new errors_1.AppError('NOT_FOUND', 'Webhook nicht gefunden.');
         await this.prisma.$transaction(async (tx) => {

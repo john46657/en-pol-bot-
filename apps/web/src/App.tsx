@@ -32,7 +32,8 @@ const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default:
 const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default: m.Warnings })));
 const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
 const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
-const Modules = lazy(() => import('./pages/admin/Modules').then((m) => ({ default: m.Modules })));
+const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
+const MultiServer = lazy(() => import('./pages/admin/MultiServer').then((m) => ({ default: m.MultiServer })));
 const MessageBuilder = lazy(() => import('./pages/message-builder/MessageBuilder').then((m) => ({ default: m.MessageBuilder })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
@@ -68,12 +69,15 @@ const CadTablet = lazy(() => import('./pages/cad/CadTablet').then((m) => ({ defa
 const ErlcLive = lazy(() => import('./pages/cad/ErlcLive').then((m) => ({ default: m.ErlcLive })));
 const CadSettings = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadSettings })));
 const CadTeam = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadTeam })));
+const CadCrossServer = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadCrossServer })));
 const CadLogs = lazy(() => import('./pages/cad/CadAdmin').then((m) => ({ default: m.CadLogs })));
 const FleetPage = lazy(() => import('./pages/cad/Fleet').then((m) => ({ default: m.FleetPage })));
 const CadMdt = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadMdt })));
 const CadHandover = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadHandover })));
 const CadStats = lazy(() => import('./pages/cad/CadShift').then((m) => ({ default: m.CadStats })));
 import { MdtShell } from './pages/mdt/MdtShell';
+import { ServerOverview } from './pages/ServerOverview';
+import { getServer } from './lib/server';
 const MdtCitizens = lazy(() => import('./pages/mdt/Citizens').then((m) => ({ default: m.MdtCitizens })));
 const MdtVehicles = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtVehicles })));
 const MdtWarrants = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtWarrants })));
@@ -87,6 +91,11 @@ function AnalyticsGate() {
 }
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
+/** Start: ohne gewählten Server erst die Server-Übersicht, sonst das Dashboard des Servers. */
+function Home() {
+  return <Navigate to={getServer() ? '/dashboard' : '/servers'} replace />;
+}
+
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
   const { user, loading, can } = useAuth();
   const loc = useLocation();
@@ -128,7 +137,8 @@ export function App() {
           <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
         </Route>
         <Route element={<Guard><AppShell /></Guard>}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<Home />} />
+          <Route path="servers" element={<ServerOverview />} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
@@ -154,8 +164,7 @@ export function App() {
             <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
             <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
             <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
-            {/* CAD-Querverbindung zu anderen Discord-Servern gibt es nicht mehr (ein fester Server) */}
-            <Route path="cross-server" element={<Navigate to="/cad/settings" replace />} />
+            <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
             <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
             <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
           </Route>
@@ -207,10 +216,8 @@ export function App() {
           <Route path="admin/permissions" element={<Navigate to="/admin/roles" replace />} />
           <Route path="admin/audit" element={<Guard perm="audit.view" area="dashboard.logs.view"><Audit /></Guard>} />
           <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
-          <Route path="admin/modules" element={<Guard perm="modules.view" area="dashboard.settings.view"><Modules /></Guard>} />
-          {/* Server-Verbund und „Server & Module“ gibt es nicht mehr (ein fester Discord-Server) – alte Links landen bei den Modulen */}
-          <Route path="admin/servers" element={<Navigate to="/admin/modules" replace />} />
-          <Route path="admin/multi-server" element={<Navigate to="/admin/modules" replace />} />
+          <Route path="admin/servers" element={<Guard perm="settings.view"><ServerLinks /></Guard>} />
+          <Route path="admin/multi-server" element={<MultiServer />} />
           <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />

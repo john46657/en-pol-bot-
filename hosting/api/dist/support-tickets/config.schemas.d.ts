@@ -253,11 +253,11 @@ export declare const categorySchema: z.ZodObject<{
     staffAlertMinutes: z.ZodDefault<z.ZodNumber>;
     closeRequestCloses: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     color: number;
     description: string;
     active: boolean;
     guildId: string | null;
+    name: string;
     position: number;
     questions: {
         id: string;
@@ -416,12 +416,13 @@ export declare const panelSchema: z.ZodObject<{
     showLoad: z.ZodDefault<z.ZodBoolean>;
     position: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     color: number;
     title: string;
     description: string;
     guildId: string | null;
+    name: string;
     position: number;
+    channelId: string | null;
     emoji: string | null;
     thumbnailUrl: string | null;
     imageUrl: string | null;
@@ -432,7 +433,6 @@ export declare const panelSchema: z.ZodObject<{
     authorIconUrl: string | null;
     style: "BUTTONS" | "DROPDOWN";
     placeholder: string;
-    channelId: string | null;
     categoryIds: string[];
     allowedRoleIds: string[];
     showLoad: boolean;
@@ -443,6 +443,7 @@ export declare const panelSchema: z.ZodObject<{
     description?: string | undefined;
     guildId?: string | null | undefined;
     position?: number | undefined;
+    channelId?: string | null | undefined;
     emoji?: string | null | undefined;
     thumbnailUrl?: string | null | undefined;
     imageUrl?: string | null | undefined;
@@ -453,7 +454,6 @@ export declare const panelSchema: z.ZodObject<{
     authorIconUrl?: string | null | undefined;
     style?: "BUTTONS" | "DROPDOWN" | undefined;
     placeholder?: string | undefined;
-    channelId?: string | null | undefined;
     categoryIds?: string[] | undefined;
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
@@ -470,8 +470,8 @@ export declare const statusSchema: z.ZodObject<{
     isEscalation: z.ZodDefault<z.ZodBoolean>;
     isClose: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     color: number;
+    name: string;
     kind: "CLOSED" | "OPEN" | "ARCHIVED";
     position: number;
     emoji: string;
@@ -499,8 +499,8 @@ export declare const prioritySchema: z.ZodObject<{
     allowedRoleNames: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     notifyRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     color: number;
+    name: string;
     position: number;
     emoji: string;
     isDefault: boolean;

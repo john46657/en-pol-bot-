@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 
 const TOKEN = 'c'.repeat(40);
@@ -11,35 +11,33 @@ const id: Record<string, string> = {};
 
 beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
-  process.env.DISCORD_GUILD_ID = G; // der eine Discord-Server dieses Systems
   ({ app, prisma } = await createTestApp());
   for (const [n, roles] of Object.entries({ x_admin: ['System Administrator'], x_off: ['Police Member'], x_sup: ['Police Member', 'Supervisor'] })) id[n] = (await makeUser(prisma, n, roles)).id;
+  // Multi-Server: verwendete Server registrieren, alle Testbenutzer als bestätigte Mitglieder
+  for (const g of [G, '850000000000000001']) await registerServer(prisma, g, (await prisma.user.findMany({ select: { id: true } })).map((u) => u.id));
 });
 afterAll(async () => {
   delete process.env.BOT_API_TOKEN;
-  delete process.env.DISCORD_GUILD_ID;
   await prisma.systemSetting.deleteMany({ where: { key: { startsWith: 'teamchance' } } });
   await app.close();
 });
 
 describe('Funk-Codes', () => {
-  it('team sees codes, only radio.manage edits; central list incl. former server codes; searchable via bot', async () => {
+  it('team sees codes, only radio.manage edits; per server with shared defaults; searchable via bot', async () => {
     const adm = (await login(app, 'x_admin')).agent;
     const off = (await login(app, 'x_off')).agent;
     expect((await adm.post('/api/v1/radio-codes/defaults')).body.added).toBeGreaterThan(10);
     expect((await adm.post('/api/v1/radio-codes/defaults')).body.added).toBe(0); // nicht doppelt
-    expect((await adm.post('/api/v1/radio-codes').set('X-Guild-Id', G).send({ code: '10-4', meaning: 'doppelt' })).status).toBe(409);
-    const created = await adm.post('/api/v1/radio-codes').set('X-Guild-Id', '810000000000000009').send({ code: '10-500', meaning: 'Neu' });
-    expect(created.status).toBe(201);
-    expect(created.body.guildId).toBeNull(); // neue Codes sind zentral – ein Header ändert daran nichts
-    // früher eigens für den Server angelegter Code: gilt weiter und überdeckt den zentralen; Codes eines fremden Servers erscheinen nicht
-    const own = await prisma.radioCode.create({ data: { guildId: G, code: '10-4', meaning: 'Alles klar (Server)', position: 999 } });
-    await prisma.radioCode.create({ data: { guildId: '810000000000000009', code: '10-4', meaning: 'Fremder Server', position: 999 } });
-    expect((await off.get('/api/v1/radio-codes').query({ q: '10-4' })).body).toEqual([expect.objectContaining({ meaning: 'Alles klar (Server)', guildId: G })]);
+    const own = await adm.post('/api/v1/radio-codes').set('X-Guild-Id', G).send({ code: '10-4', meaning: 'Alles klar (Server A)' });
+    expect(own.status).toBe(201);
+    expect((await adm.post('/api/v1/radio-codes').send({ code: '10-4', meaning: 'doppelt' })).status).toBe(409);
+    const shared = (await off.get('/api/v1/radio-codes').query({ q: '10-4' })).body;
+    expect(shared).toEqual([expect.objectContaining({ code: '10-4', meaning: 'Verstanden', guildId: null })]);
+    const inA = (await off.get('/api/v1/radio-codes').set('X-Guild-Id', G).query({ q: '10-4' })).body;
+    expect(inA).toEqual([expect.objectContaining({ meaning: 'Alles klar (Server A)', guildId: G })]); // Server-Code überdeckt den gemeinsamen
     expect((await off.post('/api/v1/radio-codes').send({ code: 'X', meaning: 'nein' })).status).toBe(403);
-    expect((await adm.patch(`/api/v1/radio-codes/${own.id}`).send({ meaning: 'Verstanden!' })).body.meaning).toBe('Verstanden!');
-    const foreign = await prisma.radioCode.findFirstOrThrow({ where: { guildId: '810000000000000009' } });
-    expect((await adm.patch(`/api/v1/radio-codes/${foreign.id}`).send({ meaning: 'x' })).status).toBe(404);
+    expect((await adm.patch(`/api/v1/radio-codes/${own.body.id}`).set('X-Guild-Id', G).send({ meaning: 'Verstanden!' })).body.meaning).toBe('Verstanden!');
+    expect((await adm.patch(`/api/v1/radio-codes/${own.body.id}`).set('X-Guild-Id', '810000000000000009').send({ meaning: 'x' })).status).toBe(403); // nicht registrierter Server: kein Zugriff
     // Bot im Namen eines verknüpften Mitglieds
     await prisma.discordLink.create({ data: { userId: id.x_off!, discordId: '820000000000000001' } });
     const viaBot = await request(app.getHttpServer()).get('/api/v1/radio-codes?q=10-99').set({ Authorization: `Bot ${TOKEN}`, 'X-Discord-User': '820000000000000001' });
@@ -118,12 +116,13 @@ describe('team list derives rank/team/office from Discord roles', () => {
   it('a member with the Discord role „🏛️ · Polizeipräsident“ gets that rank without a personnel file', async () => {
     const adm = (await login(app, 'x_admin')).agent;
     const http = request(app.getHttpServer());
-    const GU = G, R1 = '850000000000000011', R2 = '850000000000000012';
+    const GU = '850000000000000001', R1 = '850000000000000011', R2 = '850000000000000012';
     await http.put('/api/v1/bot/guilds').set({ Authorization: `Bot ${TOKEN}` }).send({ guilds: [{ id: GU, name: 'EN', icon: null, channels: [], roles: [{ id: R1, name: '🏛️ · Polizeipräsident', color: 0, position: 5 }, { id: R2, name: 'EN | Polizei', color: 0, position: 1 }] }] });
-    await adm.put('/api/v1/admin/settings/team.rankOrder').send({ value: ['Polizeipräsident', 'Polizeirat'] });
-    await adm.put('/api/v1/admin/settings/team.structure').send({ value: { teams: ['EN | Polizei'], offices: [] } });
+    // Einstellungen gelten je Server → im Kontext des Servers setzen
+    await adm.put('/api/v1/admin/settings/team.rankOrder').set('X-Guild-Id', GU).send({ value: ['Polizeipräsident', 'Polizeirat'] });
+    await adm.put('/api/v1/admin/settings/team.structure').set('X-Guild-Id', GU).send({ value: { teams: ['EN | Polizei'], offices: [] } });
     await http.put('/api/v1/bot/members').set({ Authorization: `Bot ${TOKEN}` }).send({ members: [{ id: '850000000000000099', guildId: GU, username: 'chef', displayName: 'Chef', avatar: null, status: 'online', roleIds: [R2, R1], joinedAt: null }] });
-    const chef = ((await adm.get('/api/v1/team/roster')).body.members as { name: string; rank: string; team: string }[]).find((m) => m.name === 'Chef');
+    const chef = ((await adm.get('/api/v1/team/roster').set('X-Guild-Id', GU)).body.members as { name: string; rank: string; team: string }[]).find((m) => m.name === 'Chef');
     expect(chef).toMatchObject({ rank: 'Polizeipräsident', team: 'EN | Polizei' });
   });
 });

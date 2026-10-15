@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Copy, FilePlus2, FileText, LayoutTemplate, Pencil, 
 import { cloneWithNewIds, emptyMbMessage, MB_LIMITS, mbDocumentDataSchema, mbSummary, validateMbDocument, type MbDocumentData } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { useServer } from '../../lib/guilds';
 import { errText } from '../../lib/tickets';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
 import { MessageEditor, type EditorCtx, type ServerChannel, type ServerRole } from './MessageEditor';
@@ -16,15 +17,13 @@ import { useDocAutosave, type DocSaveStatus, type MbDoc } from './useDocAutosave
 interface DocMeta { id: string; kind: 'DRAFT' | 'TEMPLATE'; name: string; categoryId: string | null; updatedAt: string; messageCount: number; updatedByName: string | null }
 interface ServerInfo {
   guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; roles: ServerRole[]; configured: boolean; restricted?: boolean;
-  problem?: 'no_report' | 'wrong_guild' | 'several_guilds'; configuredGuildId?: string | null; reportedGuilds?: { id: string; name: string }[];
+  problem?: 'no_server' | 'no_report';
 }
 /** Warum keine Kanäle da sind – mit dem, was zu tun ist. */
 function channelHint(s: ServerInfo | undefined): string | null {
   if (!s || s.channels.length) return null;
-  const list = (s.reportedGuilds ?? []).map((g) => `${g.name} (${g.id})`).join(', ');
-  if (s.problem === 'no_report') return 'Der Bot hat noch keine Kanäle gemeldet. Läuft der Bot (gleicher BOT_API_TOKEN wie die API)? Nach dem Start dauert es einige Sekunden.';
-  if (s.problem === 'wrong_guild') return `Eingerichtet ist der Discord-Server ${s.configuredGuildId}, der Bot ist aber nur auf: ${list}. Bitte DISCORD_GUILD_ID bzw. Einstellungen → Discord-Server-ID prüfen oder den Bot auf den Server einladen.`;
-  if (s.problem === 'several_guilds') return `Der Bot ist auf mehreren Servern (${list}). Bitte unter Einstellungen → Discord-Server-ID (oder DISCORD_GUILD_ID) den richtigen eintragen.`;
+  if (s.problem === 'no_server') return 'Bitte oben links einen Discord-Server wählen – der Message Builder arbeitet je Server.';
+  if (s.problem === 'no_report') return 'Der Bot hat für diesen Server noch keine Kanäle gemeldet. Ist der Bot auf dem Server und läuft er? Nach dem Start dauert es einige Sekunden.';
   return `Auf ${s.guild?.name ?? 'dem Discord-Server'} sieht der Bot keine Textkanäle – bitte dem Bot das Recht „Kanäle ansehen“ geben.`;
 }
 
@@ -43,6 +42,12 @@ function useMbData() {
 
 /** Discord Message Builder (Discohook-artig): links Nachrichten/Entwürfe/Vorlagen, Mitte Editor, rechts Live-Vorschau + Versand. */
 export function MessageBuilder() {
+  const [server] = useServer();
+  if (!server) return (<div><PageHeader title="Discord Message Builder" /><EmptyState text="Kein Server gewählt" hint="Der Message Builder arbeitet je Discord-Server – bitte oben links einen Server wählen." /></div>);
+  // Server gewechselt → Editor komplett neu (offene Entwürfe gehören zum vorherigen Server)
+  return <MessageBuilderFor key={server} />;
+}
+function MessageBuilderFor() {
   const { can } = useAuth();
   const tabs = ['Editor', ...(can('messagebuilder.history') ? ['Versandhistorie'] : []), ...(can('messagebuilder.templates_edit') || can('messagebuilder.channels') || can('messagebuilder.webhooks') ? ['Einstellungen'] : [])];
   const [tab, setTab] = useState('Editor');

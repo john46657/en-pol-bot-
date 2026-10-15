@@ -26,7 +26,7 @@ const isUnique = (e) => e instanceof client_1.Prisma.PrismaClientKnownRequestErr
  * Dienstnummern: Nummernkreise, atomare Vergabe (Unique-Constraints + Wiederholung – nie doppelt),
  * manuelle Vergabe/Änderung/Freigabe/Sperre, Historie und die Automatik nach angenommener Bewerbung.
  */
-const personnel_ref_1 = require("../common/personnel-ref");
+const guild_context_1 = require("../common/guild-context");
 let ServiceNumbersService = class ServiceNumbersService {
     core;
     people;
@@ -234,7 +234,7 @@ let ServiceNumbersService = class ServiceNumbersService {
                         old = active.display;
                     }
                     // 3) zuweisen + Personalakte
-                    const target = await tx.serviceNumber.findFirstOrThrow({ where: { display } });
+                    const target = await tx.serviceNumber.findFirstOrThrow({ where: { display } }); // Dienstnummern je Server
                     const row = await tx.serviceNumber.update({ where: { id: target.id }, data: { status: 'ACTIVE', personnelId: o.personnelId, assignedAt: now } });
                     if (o.personnelId) {
                         await tx.personnel.updateMany({ where: { serviceNumber: display, id: { not: o.personnelId } }, data: { serviceNumber: null } });
@@ -459,7 +459,7 @@ let ServiceNumbersService = class ServiceNumbersService {
     /** Ausstehende Einstellungen (ohne Nummer). */
     async pending() {
         const q = await this.prisma.hireQueue.findMany({ where: { status: 'PENDING' }, orderBy: { createdAt: 'asc' } });
-        const users = new Map((await this.prisma.user.findMany({ where: { id: { in: q.map((x) => x.userId) } }, select: { id: true, displayName: true, personnel: { ...(0, personnel_ref_1.onePersonnel)(), select: { id: true } } } })).map((u) => [u.id, u]));
+        const users = new Map((await this.prisma.user.findMany({ where: { id: { in: q.map((x) => x.userId) } }, select: { id: true, displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { id: true } } } })).map((u) => [u.id, u]));
         return q.map((x) => ({ ...x, name: users.get(x.userId)?.displayName ?? '—', personnelId: users.get(x.userId)?.personnel[0]?.id ?? null }));
     }
     /** Ausstehende Einstellung bestätigen/abschließen: Nummer aus dem Kreis der Zuordnung vergeben. */

@@ -16,7 +16,7 @@ const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 /** Funk-Freigabe: nur freigegebene Mitglieder gelten als funkberechtigt. Identifikation per Benutzer-ID oder verknüpfter Discord-ID. */
-const personnel_ref_1 = require("../common/personnel-ref");
+const guild_context_1 = require("../common/guild-context");
 let RadioService = class RadioService {
     prisma;
     audit;
@@ -34,7 +34,7 @@ let RadioService = class RadioService {
     }
     async list() {
         const rows = await this.prisma.radioWhitelist.findMany({ orderBy: { createdAt: 'asc' } });
-        const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { ...(0, personnel_ref_1.onePersonnel)(), select: { callsign: true, rank: true } } } });
+        const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.userId) } }, select: { id: true, displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { callsign: true, rank: true } } } });
         return rows.map((r) => { const u = users.find((x) => x.id === r.userId); return { userId: r.userId, displayName: u?.displayName ?? '—', callsign: u?.personnel[0]?.callsign ?? null, rank: u?.personnel[0]?.rank ?? null, since: r.createdAt }; });
     }
     async check(t) {

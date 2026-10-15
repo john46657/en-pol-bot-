@@ -273,7 +273,7 @@ let ErlcService = class ErlcService {
             await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap, rateLimit: this.client.rate(id) } });
             if (snap.emergencyCalls)
                 await this.syncCalls(s, snap.emergencyCalls, 'API');
-            await this.records.sync(id, snap); // Personen + Fahrzeuge ins System übernehmen
+            await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
             await this.fleet.sync(id, snap, manual).catch((e) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
             this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
             return { ok: true, status: 'CONNECTED', latencyMs: res.latencyMs };
@@ -309,7 +309,7 @@ let ErlcService = class ErlcService {
                 const where = c.positionDescriptor ?? (fb ? [fb.street, fb.postal && `PLZ ${fb.postal}`].filter(Boolean).join(' · ') || null : null);
                 const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: c.x ?? fb?.x ?? null, mapZ: c.z ?? fb?.z ?? null, startedAt, source } });
                 created++;
-                await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: (0, web_url_1.webUrl)(`/cad/map?call=${row.id}`), dashboardUrl: (0, web_url_1.webUrl)(`/cad/calls?id=${row.id}`) });
+                await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: (0, web_url_1.webUrl)(`/cad/map?call=${row.id}`), dashboardUrl: (0, web_url_1.webUrl)(`/cad/calls?id=${row.id}`) }, s.guildId);
             }
             catch (e) {
                 if (!(e instanceof client_1.Prisma.PrismaClientKnownRequestError && e.code === 'P2002'))

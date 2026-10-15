@@ -2,9 +2,9 @@ import { useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from './api';
 import { useOptionalAuth } from './auth';
-import { getServer, subscribeServer } from './server';
+import { getServer, setServer, subscribeServer } from './server';
 
-/** Der Discord-Server mit Channels und Rollen (meldet der Bot automatisch). */
+/** Discord-Server des Bots mit Channels und Rollen (meldet der Bot automatisch). */
 export interface GuildInfo {
   id: string; name: string; icon: string | null;
   channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number }[];
@@ -30,12 +30,12 @@ export function GuildTag({ id }: { id: string | null | undefined }) {
   );
 }
 
-/**
- * Der Discord-Server dieses Systems (fest eingerichtet, keine Auswahl). Ist noch keiner eingerichtet, aber der Bot nur auf
- * einem Server, gilt dieser; sonst ''.
- */
-export function useServer(): [string] {
+// ---- Ausgewählter Server (Dropdown oben links) – gilt für alles: Rechte, Teamliste, Voice, Tickets, Bewerbungen, Einstellungen ----
+export { setServer };
+/** Gewählter Server ('' = alle Server). Ist der gespeicherte Server nicht mehr da, gilt „alle“. */
+export function useServer(): [string, (id: string) => void] {
   const id = useSyncExternalStore(subscribeServer, getServer, getServer);
   const g = useGuilds();
-  return [id || (g.data?.length === 1 ? g.data[0]!.id : '')];
+  const valid = !id || !g.data || g.data.some((x) => x.id === id);
+  return [valid ? id : '', setServer];
 }

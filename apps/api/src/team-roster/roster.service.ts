@@ -5,8 +5,7 @@ import { PermissionService } from '../authz/permission.service';
 import { DiscordLiveService, type LiveMember } from '../discord/discord-live.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
-import { homeGuild } from '../common/guild-context';
-import { preferPersonnel } from '../hr/personnel-pick';
+import { currentGuild, scopedKey } from '../common/guild-context';
 
 export interface TeamStructure { teams: string[]; ranks: string[]; offices: string[] }
 export interface RosterMember {
@@ -30,7 +29,11 @@ export class RosterService {
   constructor(private readonly prisma: PrismaService, private readonly live: DiscordLiveService, private readonly discord: DiscordService, private readonly perms: PermissionService) {}
 
   /** Teams, Dienstgrade und Büros: aus den Einstellungen, ergänzt um Werte, die in Personalakten vorkommen. */
-  private setting(key: string) { return this.prisma.systemSetting.findUnique({ where: { key } }); }
+  /** Server-Einstellung, sonst die gemeinsame. */
+  private async setting(key: string) {
+    const g = currentGuild();
+    return (g ? await this.prisma.systemSetting.findUnique({ where: { key: scopedKey(key, g) } }) : null) ?? this.prisma.systemSetting.findUnique({ where: { key } });
+  }
 
   async structure(): Promise<TeamStructure> {
     const [cfg, order, used] = await Promise.all([
@@ -55,8 +58,8 @@ export class RosterService {
       this.structure(),
       this.discord.guilds(),
     ]);
-    // nur Mitglieder des Discord-Servers dieses Systems (Personalakten nur, wenn die Person dort Teammitglied ist)
-    const g = homeGuild();
+    // Server getrennt: nur Mitglieder des gewählten Servers (Personalakten nur, wenn die Person dort Teammitglied ist)
+    const g = currentGuild();
     const { members: all, updatedAt } = this.live.getMembers();
     const live = g ? all.filter((m) => m.guildId === g) : [...new Map(all.map((m) => [m.id, m])).values()];
     const roleName = new Map(guilds.flatMap((x) => x.roles.map((r) => [r.id, r.name] as const)));
@@ -66,10 +69,7 @@ export class RosterService {
     const byDiscord = new Map(live.map((m) => [m.id, m]));
     const out: RosterMember[] = [];
     const seen = new Set<string>();
-    // je Person nur eine Akte (z. B. Archiv-Doppel aus der Umstellung auf einen Server, solange sie nicht ausgeblendet sind)
-    const byUser = new Map<string, (typeof people)[number]>();
-    for (const p of people) { const o = byUser.get(p.userId); byUser.set(p.userId, o ? preferPersonnel(o, p) : p); }
-    for (const p of byUser.values()) {
+    for (const p of people) {
       const discordId = linkOf.get(p.userId) ?? null;
       const d = discordId ? byDiscord.get(discordId) : undefined;
       if (g && !d) continue;
@@ -108,12 +108,12 @@ export class RosterService {
 
   /** Voice-Channels mit Personen (eigenes Widget, getrennt von der Teamliste). */
   voice() {
-    const g = homeGuild();
+    const g = currentGuild();
     const v = this.live.getVoice();
     return { ...v, channels: g ? v.channels.filter((c) => c.guildId === g) : v.channels };
   }
 
-  activity(limit: number) { return this.live.getChanges(limit, homeGuild()); }
+  activity(limit: number) { return this.live.getChanges(limit, currentGuild()); }
 
   /** „Jetzt aktualisieren“: den Bot um einen sofortigen Bericht bitten (er meldet sonst ohnehin alle 60 Sekunden). */
   async requestSync() { await this.discord.enqueue('duty', 'members.sync', {}, { always: true }); }

@@ -853,10 +853,13 @@ model SystemSetting {
 
 /// Verknüpfung Discord-Konto ↔ Systembenutzer. Alle Bot-Befehle laufen mit den Rechten dieses Benutzers.
 model DiscordLink {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
-  discordId String   @unique
-  linkedAt  DateTime @default(now())
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @unique @db.Uuid
+  discordId      String    @unique
+  linkedAt       DateTime  @default(now())
+  /// Discord-Server, die der Benutzer verwalten darf ({ id, name, icon }[], beim Discord-Login) – nur für „Bot einladen“
+  managedGuilds  Json?
+  guildsSyncedAt DateTime?
 }
 
 /// Einmal-Code zum Verknüpfen (nur der Hash wird gespeichert, 10 Minuten gültig, einmal verwendbar).
@@ -2261,16 +2264,22 @@ model SyncedRecord {
 /// Kategorien der Vorlagen (im Editor bearbeitbar).
 model MessageBuilderCategory {
   id        String                   @id @default(uuid()) @db.Uuid
-  name      String                   @unique
+  /// Discord-Server (Message Builder je Server getrennt)
+  guildId   String?
+  name      String
   position  Int                      @default(0)
   createdAt DateTime                 @default(now())
   updatedAt DateTime                 @updatedAt
   documents MessageBuilderDocument[]
+
+  @@unique([guildId, name])
 }
 
 /// Entwurf oder Vorlage: eine Gruppe aus mehreren Discord-Nachrichten (Inhalt siehe `mbDocumentDataSchema` in @enrp/shared).
 model MessageBuilderDocument {
   id          String                  @id @default(uuid()) @db.Uuid
+  /// Discord-Server (Message Builder je Server getrennt)
+  guildId     String?
   /// DRAFT | TEMPLATE
   kind        String
   name        String
@@ -2289,11 +2298,14 @@ model MessageBuilderDocument {
   category    MessageBuilderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([kind, archivedAt, updatedAt])
+  @@index([guildId])
 }
 
 /// Ein Versand (Historie): Gruppe von Nachrichten an einen Kanal über den Bot, einen Webhook oder als Test (ohne Discord).
 model MessageBuilderSend {
   id            String                   @id @default(uuid()) @db.Uuid
+  /// Discord-Server (Message Builder je Server getrennt)
+  guildId       String?
   documentId    String?                  @db.Uuid
   documentName  String
   /// BOT | WEBHOOK | TEST
@@ -2313,6 +2325,7 @@ model MessageBuilderSend {
 
   @@index([createdAt])
   @@index([status])
+  @@index([guildId, createdAt])
 }
 
 /// Eine Nachricht eines Versands mit eigenem Status. `payload` (Discord-JSON) nur bis zum Versand, danach geleert.
@@ -2335,6 +2348,8 @@ model MessageBuilderSendItem {
 /// Aktion eines interaktiven Buttons/Auswahlmenüs (custom_id `mb:<id>`). Beim Versand festgeschrieben – spätere Änderungen an der Vorlage ändern gesendete Buttons nicht.
 model MessageBuilderAction {
   id          String   @id @default(uuid()) @db.Uuid
+  /// Discord-Server (Message Builder je Server getrennt)
+  guildId     String?
   sendId      String?  @db.Uuid
   /// button | select
   kind        String
@@ -2359,4 +2374,6 @@ model MessageBuilderWebhook {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   archivedAt  DateTime?
+
+  @@index([guildId])
 }

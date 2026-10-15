@@ -13,8 +13,8 @@ export declare class TimelineService {
         id: string;
         createdAt: Date;
         entityId: string;
-        entityType: string;
         summary: string;
+        entityType: string;
         action: string;
         actorId: string | null;
     }[]>;

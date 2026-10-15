@@ -22,10 +22,9 @@ export declare class AdminController {
     private readonly a;
     constructor(a: AdminService);
     settings(): Promise<{
-        settings: {
-            [k: string]: import("@prisma/client/runtime/library").JsonValue;
-        };
+        settings: Record<string, unknown>;
         allowedKeys: string[];
+        serverScoped: readonly string[];
     }>;
     set(ac: Actor, key: string, b: {
         value: unknown;
@@ -34,10 +33,10 @@ export declare class AdminController {
         value: import("@prisma/client/runtime/library").JsonValue;
     }>;
     events(q: z.infer<typeof evQ>): import("@prisma/client").Prisma.PrismaPromise<{
-        userId: string | null;
         id: string;
         createdAt: Date;
         type: string;
+        userId: string | null;
         ip: string | null;
         requestId: string | null;
         detail: string | null;

@@ -142,19 +142,20 @@ export declare class VerificationService {
     private readonly audit;
     private readonly roblox;
     constructor(prisma: PrismaService, audit: AuditService, roblox: RobloxService);
-    config(): Promise<VerifyConfig & {
+    private keyOf;
+    config(guildId?: string | null): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
-    save(actor: Actor, input: VerifyConfig): Promise<VerifyConfig & {
+    save(actor: Actor, input: VerifyConfig, guildId?: string | null): Promise<VerifyConfig & {
         own: boolean;
         panelMessageId: string | null;
     }>;
     /** Panel („Verifizieren“-Button) posten bzw. aktualisieren. */
-    postPanel(actor: Actor): Promise<{
+    postPanel(actor: Actor, guildId: string | null): Promise<{
         queued: boolean;
     }>;
-    panelPosted(channelId: string, messageId: string): Promise<{
+    panelPosted(guildId: string | null, channelId: string, messageId: string): Promise<{
         ok: boolean;
     }>;
     /** Schritt 1: Roblox-Konto nennen → Code. */
@@ -193,8 +194,8 @@ export declare class VerificationService {
         name: string;
         displayName: string;
     }, method: string): Promise<{
-        discordId: string;
         updatedAt: Date;
+        discordId: string;
         discordName: string | null;
         robloxName: string;
         robloxId: string;

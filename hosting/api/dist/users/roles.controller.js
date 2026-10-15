@@ -28,7 +28,7 @@ const fields = {
     priority: zod_1.z.number().int().min(1).max(100_000).optional(),
     discordRoleIds: zod_1.z.array(discordId).max(25).optional(),
 };
-const createRole = zod_1.z.object({ name: zod_1.z.string().trim().min(2).max(64), ...fields });
+const createRole = zod_1.z.object({ name: zod_1.z.string().trim().min(2).max(64), guildId: zod_1.z.string().regex(/^\d{15,25}$/).nullable().optional(), ...fields });
 const updateRole = zod_1.z.object({ name: zod_1.z.string().trim().min(2).max(64).optional(), ...fields });
 const grants = zod_1.z.object({ grants: zod_1.z.array(zod_1.z.object({ permission: zod_1.z.string(), effect: zod_1.z.enum(['ALLOW', 'DENY']) })).max(500) });
 const single = zod_1.z.object({ permission: zod_1.z.string().max(80), effect: zod_1.z.enum(['ALLOW', 'DENY', 'NONE']) });

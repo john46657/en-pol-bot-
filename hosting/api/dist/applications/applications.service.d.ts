@@ -19,6 +19,7 @@ export interface InboxQuery {
     type?: string;
     status?: string;
     order?: 'newest' | 'oldest';
+    guildId?: string;
 }
 export declare class ApplicationsService {
     private readonly prisma;
@@ -31,8 +32,8 @@ export declare class ApplicationsService {
     private readonly access;
     private readonly live;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, notify: NotifyService, teamchance: TeamChanceService, roblox: RobloxService, bans: ApplicationBansService, access: DiscordAccessService, live: DiscordLiveService);
-    /** Bewerbungsformular (Administration → Studio). */
-    form(): Promise<FormField[]>;
+    /** Formular eines Servers (`application.form@<guildId>`), sonst das gemeinsame. */
+    form(guildId?: string | null): Promise<FormField[]>;
     /** Öffentliche Bewerbung (kein Account nötig). Antworten werden strikt gegen das konfigurierte Formular validiert. */
     submit(d: {
         robloxUsername: string;
@@ -49,12 +50,13 @@ export declare class ApplicationsService {
         status: string;
     }>;
     /** Einstellungen der Polizei-Bewerbung (Qualifications/Applications → Setup). */
-    police(): Promise<{
-        name: string;
+    police(guildId?: string | null): Promise<{
         title: string;
         description: string;
+        name: string;
         enabled: boolean;
         settings: {
+            mode: "DM" | "WEB";
             cooldownMinutes: number;
             messages: {
                 denied: string;
@@ -62,9 +64,9 @@ export declare class ApplicationsService {
                 confirmation: string;
                 completion: string;
             };
-            mode: "DM" | "WEB";
             roles: {
                 denied: string[];
+                pending: string[];
                 accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
@@ -76,7 +78,6 @@ export declare class ApplicationsService {
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
-                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -128,13 +129,12 @@ export declare class ApplicationsService {
         denied: number;
         withdrawn: number;
     }>;
-    list(p: PageQuery, status?: string, order?: 'newest' | 'oldest'): Promise<{
+    list(p: PageQuery, status?: string, guildId?: string, order?: 'newest' | 'oldest'): Promise<{
         items: {
             decidedByName: string | null;
             number: string;
-            robloxUserId: string | null;
-            discordId: string | null;
             id: string;
+            robloxUserId: string | null;
             robloxUsername: string;
             status: string;
             createdAt: Date;
@@ -142,6 +142,7 @@ export declare class ApplicationsService {
             version: number;
             source: string;
             guildId: string | null;
+            discordId: string | null;
             discordName: string | null;
             decidedAt: Date | null;
             decidedById: string | null;
@@ -197,9 +198,8 @@ export declare class ApplicationsService {
     remove(actor: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;
-        robloxUserId: string | null;
-        discordId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         status: string;
         createdAt: Date;
@@ -207,6 +207,7 @@ export declare class ApplicationsService {
         version: number;
         source: string;
         guildId: string | null;
+        discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
         decidedById: string | null;
@@ -218,9 +219,8 @@ export declare class ApplicationsService {
     }>;
     transition(actor: Actor, id: string, to: ApplicationStatus, reason?: string): Promise<{
         number: string;
-        robloxUserId: string | null;
-        discordId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string;
         status: string;
         createdAt: Date;
@@ -228,6 +228,7 @@ export declare class ApplicationsService {
         version: number;
         source: string;
         guildId: string | null;
+        discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
         decidedById: string | null;

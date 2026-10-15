@@ -1,8 +1,13 @@
+import { getServer } from './server';
+
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string, public readonly requestId?: string, public readonly details?: unknown) {
     super(message);
   }
 }
+
+/** Server-Kontext: Rechte, Rollen, Teamliste und Einstellungen gelten je Discord-Server (Server laufen getrennt). */
+export const apiHeaders = (guildId: string | null = getServer()): Record<string, string> => (guildId ? { 'x-guild-id': guildId } : {});
 
 let onUnauthenticated: ((reason?: string) => void) | undefined;
 export const setUnauthenticatedHandler = (fn: (reason?: string) => void) => { onUnauthenticated = fn; };
@@ -12,7 +17,7 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   const res = await fetch(`/api/v1${path}${qs}`, {
     method: init.method ?? (init.body || init.formData ? 'POST' : 'GET'),
     credentials: 'same-origin',
-    headers: init.body ? { 'content-type': 'application/json' } : {},
+    headers: { ...apiHeaders(), ...(init.body ? { 'content-type': 'application/json' } : {}) },
     body: init.formData ?? (init.body ? JSON.stringify(init.body) : undefined),
   });
   if (res.status === 204) return undefined as T;

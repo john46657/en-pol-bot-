@@ -47,8 +47,8 @@ export declare class TicketsService {
             message: string;
         } | null;
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         notes: string | null;
         updatedAt: Date;
@@ -71,8 +71,8 @@ export declare class TicketsService {
             };
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             notes: string | null;
             updatedAt: Date;
@@ -94,9 +94,9 @@ export declare class TicketsService {
     get(id: string): Promise<{
         ticket: {
             person: {
-                robloxUserId: string | null;
-                id: string;
                 serverId: string | null;
+                id: string;
+                robloxUserId: string | null;
                 robloxUsername: string;
                 aliases: string[];
                 status: string;
@@ -119,21 +119,21 @@ export declare class TicketsService {
                 version: number;
             };
             legalCode: {
-                code: string;
-                id: string;
                 serverId: string | null;
+                id: string;
                 title: string;
                 category: string;
                 description: string | null;
                 expiresAt: Date | null;
+                code: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
                 active: boolean;
                 effectiveDate: Date;
             } | null;
         } & {
             number: string;
-            id: string;
             serverId: string | null;
+            id: string;
             status: string;
             notes: string | null;
             updatedAt: Date;
@@ -152,8 +152,8 @@ export declare class TicketsService {
             id: string;
             createdAt: Date;
             entityId: string;
-            entityType: string;
             summary: string;
+            entityType: string;
             action: string;
             actorId: string | null;
         }[];
@@ -168,8 +168,8 @@ export declare class TicketsService {
         reportId?: string;
     }): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         notes: string | null;
         updatedAt: Date;
@@ -186,8 +186,8 @@ export declare class TicketsService {
     }>;
     void(actor: Actor, id: string, reason: string): Promise<{
         number: string;
-        id: string;
         serverId: string | null;
+        id: string;
         status: string;
         notes: string | null;
         updatedAt: Date;

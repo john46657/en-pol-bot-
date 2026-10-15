@@ -75,8 +75,8 @@ export declare class UsersController {
     constructor(users: UsersService, twoFactor: TwoFactorService);
     list(q: z.infer<typeof pageQuery>): Promise<{
         items: {
-            robloxUserId: string | null;
             id: string;
+            robloxUserId: string | null;
             robloxUsername: string | null;
             createdAt: Date;
             updatedAt: Date;
@@ -90,9 +90,9 @@ export declare class UsersController {
             totpEnabledAt: Date | null;
             roles: {
                 role: {
-                    name: string;
                     id: string;
                     guildId: string | null;
+                    name: string;
                 };
             }[];
             overrides: {
@@ -111,8 +111,8 @@ export declare class UsersController {
             discordId: string;
             linkedAt: Date;
         } | null;
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -126,9 +126,9 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -139,8 +139,8 @@ export declare class UsersController {
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof createUser>): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -154,9 +154,9 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -167,8 +167,8 @@ export declare class UsersController {
         }[];
     }>;
     setRoblox(a: Actor, id: string, b: z.infer<typeof roblox>): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -182,9 +182,9 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -195,8 +195,8 @@ export declare class UsersController {
         }[];
     }>;
     setActive(a: Actor, id: string, b: z.infer<typeof active>): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -210,9 +210,9 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -226,8 +226,8 @@ export declare class UsersController {
     resetTwoFactor(a: Actor, id: string): Promise<void>;
     remove(a: Actor, id: string): Promise<void>;
     setName(a: Actor, id: string, b: z.infer<typeof nameBody>): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -241,9 +241,9 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -254,8 +254,8 @@ export declare class UsersController {
         }[];
     }>;
     setRoles(a: Actor, id: string, b: z.infer<typeof roles>): Promise<{
-        robloxUserId: string | null;
         id: string;
+        robloxUserId: string | null;
         robloxUsername: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -269,9 +269,9 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
-                name: string;
                 id: string;
                 guildId: string | null;
+                name: string;
             };
         }[];
         overrides: {
@@ -282,11 +282,11 @@ export declare class UsersController {
         }[];
     }>;
     setOverride(a: Actor, id: string, b: z.infer<typeof override>): Promise<{
-        userId: string;
         id: string;
         createdById: string | null;
         createdAt: Date;
         reason: string | null;
+        userId: string;
         guildId: string | null;
         permissionKey: string;
         effect: string;

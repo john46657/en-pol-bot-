@@ -5,7 +5,7 @@ export const PERMISSION_CATALOG = {
   team: ['view', 'manage'],
   dispatch: ['view', 'create', 'edit', 'assign', 'close', 'manage'],
   /** CAD-Leitstelle + ER:LC-Integration (deny-by-default; kritische ER:LC-Befehle brauchen ein eigenes Recht). */
-  cad: ['view', 'create_incident', 'edit_incident', 'close_incident', 'assign_unit', 'manage_units', 'view_persons', 'view_vehicles', 'manage_map', 'view_erlc', 'manage_erlc', 'erlc_command', 'erlc_command_critical', 'view_logs', 'manage_settings', 'radio', 'handover', 'view_stats'],
+  cad: ['view', 'create_incident', 'edit_incident', 'close_incident', 'assign_unit', 'manage_units', 'view_persons', 'view_vehicles', 'manage_map', 'view_erlc', 'manage_erlc', 'erlc_command', 'erlc_command_critical', 'manage_cross_server', 'view_logs', 'manage_settings', 'radio', 'handover', 'view_stats'],
   incidents: ['view', 'create', 'edit', 'close', 'delete'],
   persons: ['view', 'create', 'edit', 'archive', 'merge'],
   vehicles: ['view', 'create', 'edit', 'archive'],
@@ -56,7 +56,9 @@ export const PERMISSION_CATALOG = {
   settings: ['view', 'manage'],
   users: ['view', 'manage'],
   roles: ['view', 'manage'],
-  /** Module an/aus (Administration → Module) */
+  /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
+  servers: ['view', 'manage'],
+  /** Module je Server an/aus und deren Einstellungen */
   modules: ['view', 'manage'],
   /**
    * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
@@ -64,6 +66,10 @@ export const PERMISSION_CATALOG = {
    * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
    */
   messagebuilder: ['view', 'create', 'templates_create', 'templates_edit', 'templates_delete', 'send', 'history', 'channels', 'webhooks', 'roles'],
+  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
+  connections: ['view', 'manage'],
+  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
+  sync: ['view', 'retry'],
 } as const;
 
 type Catalog = typeof PERMISSION_CATALOG;

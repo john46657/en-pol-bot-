@@ -24,6 +24,7 @@ const option = zod_1.z.object({ key: keyStr, label: zod_1.z.string().trim().min(
 const uniqueKeys = (xs) => new Set(xs.map((x) => x.key.toUpperCase())).size === xs.length;
 const list = (item, min = 0, max = 50) => zod_1.z.array(item).min(min).max(max).refine((xs) => uniqueKeys(xs), 'Schlüssel müssen eindeutig sein');
 exports.cadConfigSchema = zod_1.z.object({
+    homeGuildId: sf.nullish(),
     incidentNumberPrefix: zod_1.z.string().trim().regex(/^[A-Z0-9]{1,6}$/).default('E'),
     incidentTypes: list(option, 0, 60),
     priorities: list(option, 1, 12),

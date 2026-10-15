@@ -17,6 +17,7 @@ const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
 const notify_service_1 = require("../notifications/notify.service");
 const errors_1 = require("../common/errors");
+const guild_context_1 = require("../common/guild-context");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 exports.teamChanceSchema = zod_1.z.object({
     open: zod_1.z.boolean(),
@@ -35,7 +36,7 @@ exports.teamChanceSchema = zod_1.z.object({
 exports.DEFAULT_TEAMCHANCE = { open: false, title: 'Team-Chance', description: 'Wir suchen Verstärkung für unser Team! Bewirb dich jetzt.', opensAt: null, closesAt: null, slots: 0, channelId: null, pingRoleIds: [], restrictApplications: false, openedAt: null };
 const KEY = 'teamchance';
 /**
- * Team-Chance: Die Leitung öffnet/schließt eine Bewerbungsphase für das Team, optional mit
+ * Team-Chance: Die Leitung öffnet/schließt eine Bewerbungsphase für das Team (je Server getrennt), optional mit
  * Zeitfenster und Platzzahl. Beim Öffnen/Schließen: Ankündigung in Discord und Benachrichtigung im Dashboard.
  */
 let TeamChanceService = class TeamChanceService {
@@ -49,39 +50,41 @@ let TeamChanceService = class TeamChanceService {
         this.discord = discord;
         this.notify = notify;
     }
-    async config() {
-        const row = await this.prisma.systemSetting.findUnique({ where: { key: KEY } });
+    async config(guildId = (0, guild_context_1.currentGuild)()) {
+        const own = guildId ? await this.prisma.systemSetting.findUnique({ where: { key: (0, guild_context_1.scopedKey)(KEY, guildId) } }) : null;
+        const row = own ?? (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }));
         return { ...exports.DEFAULT_TEAMCHANCE, ...(row?.value ?? {}) };
     }
     /** Ist die Team-Chance gerade offen? (Schalter + Zeitfenster + freie Plätze) */
-    async status() {
-        const c = await this.config();
+    async status(guildId = (0, guild_context_1.currentGuild)()) {
+        const c = await this.config(guildId);
         const now = new Date();
-        const used = c.slots && c.openedAt ? await this.prisma.application.count({ where: { createdAt: { gte: new Date(c.openedAt) } } }) : 0;
+        const used = c.slots && c.openedAt ? await this.prisma.application.count({ where: { createdAt: { gte: new Date(c.openedAt) }, ...(guildId ? { guildId } : {}) } }) : 0;
         const reason = !c.open ? 'closed' : c.opensAt && now < new Date(c.opensAt) ? 'not_started' : c.closesAt && now >= new Date(c.closesAt) ? 'ended' : c.slots && used >= c.slots ? 'full' : null;
         return { ...c, isOpen: !reason, reason, used, remaining: c.slots ? Math.max(0, c.slots - used) : null };
     }
     /** Für Bewerbungen: wenn eingestellt, nur während einer offenen Team-Chance. */
-    async assertApplicationsAllowed() {
-        const s = await this.status();
+    async assertApplicationsAllowed(guildId) {
+        const s = await this.status(guildId);
         if (s.restrictApplications && !s.isOpen) {
             throw new errors_1.AppError('CONFLICT', s.reason === 'not_started' ? `Die Team-Chance startet am ${new Date(s.opensAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}.` : s.reason === 'full' ? 'Die Team-Chance ist voll – alle Plätze sind vergeben.' : 'Bewerbungen sind nur während einer Team-Chance möglich – derzeit ist keine offen.');
         }
     }
     async save(actor, input) {
-        const before = await this.config();
+        const guildId = (0, guild_context_1.currentGuild)();
+        const before = await this.config(guildId);
         const openedNow = input.open && !before.open;
         const value = { ...input, openedAt: openedNow ? new Date().toISOString() : input.open ? before.openedAt ?? new Date().toISOString() : null };
-        const key = KEY;
+        const key = guildId ? (0, guild_context_1.scopedKey)(KEY, guildId) : KEY;
         await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: value }, update: { value: value } });
         await this.audit.record(actor, { action: openedNow ? 'teamchance.opened' : before.open && !input.open ? 'teamchance.closed' : 'teamchance.updated', module: 'teamchance', entityType: 'SystemSetting', entityId: key, before, after: value });
         if (openedNow || (before.open && !input.open)) {
             if (value.channelId)
                 await this.discord.enqueue('announcements', 'teamchance.changed', { open: input.open, title: value.title, description: value.description, closesAt: value.closesAt, slots: value.slots, channelId: value.channelId, pingRoleIds: value.pingRoleIds }, { always: true });
             if (openedNow)
-                await this.notify.notifyPermission('teamchance.view', { type: 'TEAMCHANCE', title: `📣 Team-Chance geöffnet: ${value.title}`, body: value.description.slice(0, 300) }, { exceptUserId: actor.userId });
+                await this.notify.notifyPermission('teamchance.view', { type: 'TEAMCHANCE', title: `📣 Team-Chance geöffnet: ${value.title}`, body: value.description.slice(0, 300) }, { guildId, exceptUserId: actor.userId });
         }
-        return this.status();
+        return this.status(guildId);
     }
 };
 exports.TeamChanceService = TeamChanceService;

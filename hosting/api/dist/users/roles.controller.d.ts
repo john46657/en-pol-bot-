@@ -9,12 +9,14 @@ declare const createRole: z.ZodObject<{
     priority: z.ZodOptional<z.ZodNumber>;
     discordRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     name: z.ZodString;
+    guildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
+    guildId?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
@@ -23,6 +25,7 @@ declare const createRole: z.ZodObject<{
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
+    guildId?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -35,19 +38,19 @@ declare const updateRole: z.ZodObject<{
     discordRoleIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     name: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    name?: string | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
+    name?: string | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
-    name?: string | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
+    name?: string | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -109,7 +112,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -118,6 +120,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -135,7 +138,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -144,6 +146,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -157,7 +160,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -166,6 +168,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -179,7 +182,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -188,6 +190,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -202,7 +205,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -211,6 +213,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -224,7 +227,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -233,6 +235,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
@@ -246,7 +249,6 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
-        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -255,6 +257,7 @@ export declare class RolesController {
         priority: number;
         active: boolean;
         guildId: string | null;
+        name: string;
         icon: string | null;
         discordRoleIds: string[];
         system: boolean;
