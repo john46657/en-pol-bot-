@@ -14,9 +14,22 @@ import { ChannelPicker } from '../components/DiscordPickers';
 import { Toggle } from '../components/ApplicationSettings';
 import { Send } from 'lucide-react';
 
-interface DiscordCfg { channelId: string | null; title: string; description: string; color: string; groupByCategory: boolean; showDescription: boolean; autoUpdate: boolean; posted?: { channelId: string; messageId: string } | null }
+interface DiscordCfg { channelId: string | null; title: string; description: string; color: string; groupByCategory: boolean; showDescription: boolean; autoUpdate: boolean; layout: 'fields' | 'list'; rules: string; posted?: { channelId: string; messageId: string } | null }
 
-const strip = (c: DiscordCfg) => ({ channelId: c.channelId, title: c.title, description: c.description, color: c.color, groupByCategory: c.groupByCategory, showDescription: c.showDescription, autoUpdate: c.autoUpdate });
+const strip = (c: DiscordCfg) => ({ channelId: c.channelId, title: c.title, description: c.description, color: c.color, groupByCategory: c.groupByCategory, showDescription: c.showDescription, autoUpdate: c.autoUpdate, layout: c.layout, rules: c.rules });
+
+/** Vorlage „Polizei-Funk“: Status-Liste (Status 0 = …) mit Funkdisziplin darunter – danach frei änderbar. */
+const POLICE_TEMPLATE: Partial<DiscordCfg> = {
+  title: 'Funksprüche des Polizei-Funks', description: '', layout: 'list', groupByCategory: false, showDescription: false,
+  rules: [
+    '## __Funkdisziplin beachten!__',
+    '- Wenn ihr einen Funkspruch abgebt, dann sagt ihr zuerst eure Dienstnummer und danach den Status.',
+    '',
+    '**Beispiel: EP01-Status 2.**',
+    '',
+    '- Wenn ihr den Funkspruch abgegeben habt, wartet ihr darauf, was die Leitstelle euch sagt, oder ihr führt euren Dienst weiter. Falls ihr z. B. eine Verkehrsanhaltung macht, sagt ihr der Leitstelle eure Dienstnummer und den jeweiligen Status.',
+  ].join('\n'),
+};
 
 /** Funk-Codes als Nachricht in einen Discord-Kanal senden (und später dieselbe Nachricht aktualisieren). */
 function RadioDiscordCard({ manage }: { manage: boolean }) {
@@ -44,9 +57,14 @@ function RadioDiscordCard({ manage }: { manage: boolean }) {
           <label className="grid gap-1 text-sm">Titel<Input aria-label="Titel der Funk-Code-Nachricht" disabled={!manage} maxLength={256} value={cfg.title} onChange={(e) => set({ title: e.target.value })} /></label>
           <label className="grid gap-1 text-sm">Farbe<input type="color" aria-label="Farbe" disabled={!manage} value={cfg.color} onChange={(e) => set({ color: e.target.value })} className="h-9 w-16 rounded border border-line bg-transparent" /></label>
         </div>
+        <label className="grid gap-1 text-sm">Darstellung<Select aria-label="Darstellung" disabled={!manage} value={cfg.layout} onChange={(e) => set({ layout: e.target.value as DiscordCfg['layout'] })}>
+          <option value="fields">Abschnitte je Kategorie</option><option value="list">Liste „Code = Bedeutung“</option>
+        </Select></label>
+        <div className="flex items-end"><Button variant="secondary" disabled={!manage} onClick={() => set(POLICE_TEMPLATE)}>Vorlage „Polizei-Funk“ übernehmen</Button></div>
         <label className="grid gap-1 text-sm md:col-span-2">Text oben (optional)<Textarea aria-label="Text oben" rows={2} disabled={!manage} maxLength={2000} value={cfg.description} onChange={(e) => set({ description: e.target.value })} /></label>
+        <label className="grid gap-1 text-sm md:col-span-2">Text unten, z. B. Funkdisziplin (optional, Markdown: ## Überschrift, - Aufzählung, **fett**)<Textarea aria-label="Text unten" rows={5} disabled={!manage} maxLength={3000} value={cfg.rules} onChange={(e) => set({ rules: e.target.value })} /></label>
         <div className="flex flex-wrap gap-4 text-sm md:col-span-2">
-          <label className="flex items-center gap-2"><Toggle label="Nach Kategorie gruppieren" checked={cfg.groupByCategory} onChange={(v) => set({ groupByCategory: v })} />Nach Kategorie gruppieren</label>
+          {cfg.layout === 'fields' && <label className="flex items-center gap-2"><Toggle label="Nach Kategorie gruppieren" checked={cfg.groupByCategory} onChange={(v) => set({ groupByCategory: v })} />Nach Kategorie gruppieren</label>}
           <label className="flex items-center gap-2"><Toggle label="Beschreibung anzeigen" checked={cfg.showDescription} onChange={(v) => set({ showDescription: v })} />Beschreibung anzeigen</label>
           <label className="flex items-center gap-2"><Toggle label="Automatisch aktualisieren" checked={cfg.autoUpdate} onChange={(v) => set({ autoUpdate: v })} />Bei Änderungen automatisch aktualisieren</label>
         </div>
@@ -103,7 +121,7 @@ export function RadioCodes() {
   const editable = (r: RadioCode) => manage && (!server || r.guildId === server || r.guildId === null);
   const onError = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Fehlgeschlagen');
   const add = useMutation({ mutationFn: () => api<RadioCode>('/radio-codes', { body: { code: newCode.code.trim(), meaning: newCode.meaning.trim(), category: newCode.category.trim() || null } }), onSuccess: () => { setErr(undefined); setNewCode({ code: '', meaning: '', category: '' }); void qc.invalidateQueries({ queryKey: KEY }); }, onError });
-  const defaults = useMutation({ mutationFn: () => api<{ added: number }>('/radio-codes/defaults', { method: 'POST' }), onSuccess: () => void qc.invalidateQueries({ queryKey: KEY }), onError });
+  const defaults = useMutation({ mutationFn: (set: 'ten' | 'status') => api<{ added: number }>('/radio-codes/defaults', { method: 'POST', body: { set } }), onSuccess: () => void qc.invalidateQueries({ queryKey: KEY }), onError });
   const remove = useMutation({ mutationFn: (r: RadioCode) => api(`/radio-codes/${r.id}`, { method: 'DELETE' }), onSuccess: () => { setDel(undefined); void qc.invalidateQueries({ queryKey: KEY }); }, onError });
   const patch = (r: RadioCode, p: Patch) => {
     qc.setQueryData<RadioCode[]>(KEY, (l) => l?.map((x) => (x.id === r.id ? { ...x, ...p } : x)));
@@ -121,7 +139,10 @@ export function RadioCodes() {
   return (
     <>
       <PageHeader title="📡 Funk-Codes" subtitle={`${server ? `Server ${guildName(guilds.data, server)}: eigene Codes überdecken gemeinsame.` : 'Gemeinsame Codes für alle Server.'}${manage ? ' Änderungen werden automatisch gespeichert.' : ''} In Discord: /funkcode`}
-        actions={manage && <Button variant="secondary" onClick={() => defaults.mutate()} disabled={defaults.isPending}>Standard-Codes einfügen</Button>} />
+        actions={manage && <>
+          <Button variant="secondary" onClick={() => defaults.mutate('status')} disabled={defaults.isPending}>Polizei-Status 0–11 einfügen</Button>
+          <Button variant="secondary" onClick={() => defaults.mutate('ten')} disabled={defaults.isPending}>10-Codes einfügen</Button>
+        </>} />
       {err && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</div>}
       {manage && <RadioDiscordCard manage={manage} />}
       <Card>
@@ -134,7 +155,7 @@ export function RadioCodes() {
             <Button type="submit" disabled={add.isPending || !newCode.code.trim() || !newCode.meaning.trim()}><Plus size={14} />Hinzufügen</Button>
           </form>
         )}
-        {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !shown.length ? <EmptyState text={t ? 'Kein Funk-Code passt.' : 'Noch keine Funk-Codes.'} hint={manage && !t ? '„Standard-Codes einfügen“ legt gängige 10-Codes an.' : undefined} /> : (
+        {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !shown.length ? <EmptyState text={t ? 'Kein Funk-Code passt.' : 'Noch keine Funk-Codes.'} hint={manage && !t ? '„Polizei-Status 0–11 einfügen“ bzw. „10-Codes einfügen“ legt eine fertige Liste an.' : undefined} /> : (
           <div className="table-scroll"><table className="w-full text-left text-sm">
             <thead className="border-b border-line text-xs uppercase text-muted"><tr>{manage && <th className="w-6" />}<th className="p-2">Code</th><th>Bedeutung</th><th>Kategorie</th><th>Beschreibung</th>{manage && <th />}</tr></thead>
             <tbody>{shown.map((r) => (

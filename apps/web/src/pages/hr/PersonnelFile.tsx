@@ -118,11 +118,13 @@ export function PersonnelFile() {
         </>} />
 
       <Card>
-        <div className="flex flex-wrap items-start gap-4">
+        {/* Handy: Foto + Name, darunter Angaben, darunter Zähler; breit: Zähler rechts daneben */}
+        <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-start">
+          <div className="flex min-w-0 items-start gap-4 xl:contents">
           <Avatar src={p.avatar} name={p.name} size={72} />
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold uppercase tracking-wide">{p.name}</h2>
-            <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <h2 className="break-words text-lg font-bold uppercase tracking-wide">{p.name}</h2>
+            <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm md:grid-cols-2 2xl:grid-cols-3">
               <Item label="Rang"><RankLabel name={p.rank} color={p.rankInfo?.color ?? null} icon={p.rankInfo?.icon ?? null} /></Item>
               <Item label="Abteilung">{p.department ?? '—'}</Item>
               <Item label="Status">{p.status ? <span style={{ color: st.color }}>{st.emoji} {st.label}</span> : '—'}</Item>
@@ -135,7 +137,8 @@ export function PersonnelFile() {
               {p.robloxId && <Item label="Roblox-ID"><code className="text-xs">{p.robloxId}</code></Item>}
             </dl>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-4">
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-4 xl:w-72 xl:grid-cols-2">
             {([['🎖️', 'Beförderungen', p.counts.promotions], ['📚', 'Ausbildungen', p.counts.trainings], ['🏅', 'Auszeichnungen', p.counts.awards], ...(p.warnings !== null ? [['⚠️', 'Verwarnungen', p.counts.warnings] as const] : [])] as const).map(([icon, label, n]) => (
               <div key={label} className="rounded-md border border-line bg-panel-2/50 px-3 py-2"><p className="text-lg font-semibold"><span aria-hidden>{icon}</span> {n}</p><p className="text-xs text-muted">{label}</p></div>
             ))}
@@ -164,7 +167,7 @@ export function PersonnelFile() {
   );
 }
 
-const Item = ({ label, children }: { label: string; children: ReactNode }) => <div className="flex gap-2"><dt className="w-28 shrink-0 text-muted">{label}</dt><dd className="min-w-0">{children}</dd></div>;
+const Item = ({ label, children }: { label: string; children: ReactNode }) => <div className="flex gap-2"><dt className="w-24 shrink-0 text-muted sm:w-28">{label}</dt><dd className="min-w-0 break-words [overflow-wrap:anywhere]">{children}</dd></div>;
 
 // ───────────── Bearbeiten (automatisch gespeichert) ─────────────
 interface Draft { department: string; status: string; joinDate: string; callsign: string }

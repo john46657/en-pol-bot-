@@ -51,6 +51,8 @@ declare const discordCfg: z.ZodObject<{
     groupByCategory: z.ZodBoolean;
     showDescription: z.ZodBoolean;
     autoUpdate: z.ZodBoolean;
+    layout: z.ZodDefault<z.ZodEnum<["fields", "list"]>>;
+    rules: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     color: string;
     title: string;
@@ -59,6 +61,8 @@ declare const discordCfg: z.ZodObject<{
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
+    layout: "list" | "fields";
+    rules: string;
 }, {
     color: string;
     title: string;
@@ -67,7 +71,16 @@ declare const discordCfg: z.ZodObject<{
     groupByCategory: boolean;
     showDescription: boolean;
     autoUpdate: boolean;
+    layout?: "list" | "fields" | undefined;
+    rules?: string | undefined;
 }>;
+declare const defaultsQ: z.ZodDefault<z.ZodObject<{
+    set: z.ZodDefault<z.ZodEnum<["ten", "status"]>>;
+}, "strip", z.ZodTypeAny, {
+    set: "status" | "ten";
+}, {
+    set?: "status" | "ten" | undefined;
+}>>;
 declare const order: z.ZodObject<{
     ids: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -101,6 +114,8 @@ export declare class RadioCodesController {
         groupByCategory: boolean;
         showDescription: boolean;
         autoUpdate: boolean;
+        layout: "fields" | "list";
+        rules: string;
     }>;
     saveDiscord(a: Actor, b: z.infer<typeof discordCfg>): Promise<{
         posted: {
@@ -114,6 +129,8 @@ export declare class RadioCodesController {
         groupByCategory: boolean;
         showDescription: boolean;
         autoUpdate: boolean;
+        layout: "fields" | "list";
+        rules: string;
     }>;
     send(a: Actor, b: {
         mode: 'update' | 'new';
@@ -131,7 +148,7 @@ export declare class RadioCodesController {
         position: number;
         meaning: string;
     }>;
-    defaults(a: Actor): Promise<{
+    defaults(a: Actor, b: z.infer<typeof defaultsQ>): Promise<{
         added: number;
     }>;
     reorder(a: Actor, b: z.infer<typeof order>): Promise<{

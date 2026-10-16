@@ -49,7 +49,8 @@ Eigener Bereich (`dashboard.voice.view`), getrennt von der Teamliste: Channels m
 
 ## 📡 Funk-Codes (Menü → Funk-Codes, Widget „📡 Funk-Codes“, Discord `/funkcode`)
 - Ansehen und suchen: `radio.view` (+ Bereich `dashboard.radio.view`); bearbeiten: `radio.manage`. Bestehende Rollen: sehen wie das Team (`team.view`), bearbeiten wie die Einstellungen (`settings.manage`).
-- „Standard-Codes einfügen“ legt gängige 10-Codes an (vorhandene bleiben). Inline bearbeiten (automatisch gespeichert), sortieren per Ziehen, löschen.
+- „Polizei-Status 0–11 einfügen“ (Status 0 = Notfall … Status 11 = Maulwurf) bzw. „10-Codes einfügen“ legt eine fertige Liste an (vorhandene bleiben). Inline bearbeiten (automatisch gespeichert), sortieren per Ziehen, löschen.
+- In Discord senden: Darstellung „Abschnitte je Kategorie“ oder „Liste „Code = Bedeutung““, Text oben/unten (Markdown). „Vorlage „Polizei-Funk“ übernehmen“ setzt Titel „Funksprüche des Polizei-Funks“, Listen-Darstellung und die Funkdisziplin-Regeln als Text unten – danach frei änderbar.
 - Je Server getrennt: Codes eines Servers überdecken gemeinsame Codes mit gleichem Namen. Auch in der globalen Suche (Strg+K).
 
 ## 📣 Team-Chance (Menü → Team-Chance, Widget, Discord `/teamchance`)

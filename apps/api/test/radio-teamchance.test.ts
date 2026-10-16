@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { RadioCodesService } from '../src/radio-codes/radio-codes.service';
 
 const TOKEN = 'c'.repeat(40);
 const G = '810000000000000001';
@@ -42,6 +43,24 @@ describe('Funk-Codes', () => {
     await prisma.discordLink.create({ data: { userId: id.x_off!, discordId: '820000000000000001' } });
     const viaBot = await request(app.getHttpServer()).get('/api/v1/radio-codes?q=10-99').set({ Authorization: `Bot ${TOKEN}`, 'X-Discord-User': '820000000000000001' });
     expect(viaBot.body[0]).toMatchObject({ code: '10-99', meaning: 'Beamter in Not' });
+  });
+
+  it('inserts police status 0–11 and renders the list layout with rules below', async () => {
+    const adm = (await login(app, 'x_admin')).agent;
+    const S = '850000000000000001';
+    expect((await adm.post('/api/v1/radio-codes/defaults').set('X-Guild-Id', S).send({ set: 'status' })).body.added).toBe(12);
+    expect((await adm.post('/api/v1/radio-codes/defaults').set('X-Guild-Id', S).send({ set: 'status' })).body.added).toBe(0);
+    const cfg = { channelId: '830000000000000002', title: 'Funksprüche des Polizei-Funks', description: '', color: '#3b82f6', groupByCategory: false, showDescription: false, autoUpdate: false, layout: 'list', rules: '## __Funkdisziplin beachten!__\n- Erst Dienstnummer, dann Status.' };
+    expect((await adm.put('/api/v1/radio-codes/discord').set('X-Guild-Id', S).send(cfg)).body).toMatchObject({ layout: 'list', rules: cfg.rules });
+    // ältere Clients ohne die neuen Felder werden weiter angenommen
+    expect((await adm.put('/api/v1/radio-codes/discord').set('X-Guild-Id', S).send({ ...cfg, layout: undefined, rules: undefined })).body).toMatchObject({ layout: 'fields', rules: '' });
+    const svc = app.get(RadioCodesService);
+    const rows = (await adm.get('/api/v1/radio-codes').set('X-Guild-Id', S)).body.filter((r: { category: string }) => r.category === 'Polizei-Status');
+    const msg = svc.message(rows, cfg as never);
+    expect(msg.embeds![0]!.title).toBe('Funksprüche des Polizei-Funks');
+    expect(msg.embeds![0]!.description).toContain('Status 0 = Notfall / Notruf\nStatus 1 = Einsatzbereit über Funk');
+    expect(msg.embeds![0]!.description).toContain('Status 11 = Maulwurf (Aktive Geiselnahme vor einem)');
+    expect(msg.embeds![0]!.description!.indexOf('Funkdisziplin')).toBeGreaterThan(msg.embeds![0]!.description!.indexOf('Status 11'));
   });
 });
 

@@ -23,7 +23,8 @@ const fields = { meaning: zod_1.z.string().trim().min(1).max(200), category: zod
 const create = zod_1.z.object({ code: zod_1.z.string().trim().min(1).max(32), ...fields, guildId: zod_1.z.string().regex(/^\d{15,25}$/).nullable().optional() });
 const update = zod_1.z.object({ code: zod_1.z.string().trim().min(1).max(32).optional(), meaning: fields.meaning.optional(), category: fields.category, description: fields.description });
 const listQ = zod_1.z.object({ q: zod_1.z.string().max(64).optional() });
-const discordCfg = zod_1.z.object({ channelId: zod_1.z.string().regex(/^\d{15,25}$/).nullable(), title: zod_1.z.string().max(256), description: zod_1.z.string().max(2000), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/), groupByCategory: zod_1.z.boolean(), showDescription: zod_1.z.boolean(), autoUpdate: zod_1.z.boolean() });
+const discordCfg = zod_1.z.object({ channelId: zod_1.z.string().regex(/^\d{15,25}$/).nullable(), title: zod_1.z.string().max(256), description: zod_1.z.string().max(2000), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/), groupByCategory: zod_1.z.boolean(), showDescription: zod_1.z.boolean(), autoUpdate: zod_1.z.boolean(), layout: zod_1.z.enum(['fields', 'list']).default('fields'), rules: zod_1.z.string().max(3000).default('') });
+const defaultsQ = zod_1.z.object({ set: zod_1.z.enum(['ten', 'status']).default('ten') }).default({ set: 'ten' });
 const order = zod_1.z.object({ ids: zod_1.z.array(zod_1.z.string().uuid()).min(1).max(500) });
 let RadioCodesController = class RadioCodesController {
     s;
@@ -35,7 +36,7 @@ let RadioCodesController = class RadioCodesController {
     saveDiscord(a, b) { return this.s.saveDiscordConfig(a, b); }
     send(a, b) { return this.s.sendToDiscord(a, b.mode); }
     create(a, b) { return this.s.create(a, b); }
-    defaults(a) { return this.s.insertDefaults(a); }
+    defaults(a, b) { return this.s.insertDefaults(a, b.set); }
     reorder(a, b) { return this.s.reorder(a, b.ids); }
     update(a, id, b) { return this.s.update(a, id, b); }
     remove(a, id) { return this.s.remove(a, id); }
@@ -89,8 +90,9 @@ __decorate([
     (0, common_1.HttpCode)(200),
     (0, decorators_1.RequirePermission)('radio.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(defaultsQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], RadioCodesController.prototype, "defaults", null);
 __decorate([

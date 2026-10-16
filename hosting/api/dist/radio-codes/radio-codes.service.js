@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadioCodesService = exports.DEFAULT_RADIO_CODES = exports.DEFAULT_RADIO_DISCORD = void 0;
+exports.RadioCodesService = exports.RADIO_CODE_SETS = exports.DEFAULT_STATUS_CODES = exports.DEFAULT_RADIO_CODES = exports.DEFAULT_RADIO_DISCORD = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -17,8 +17,8 @@ const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
 const discord_service_1 = require("../discord/discord.service");
-exports.DEFAULT_RADIO_DISCORD = { channelId: null, title: '📡 Funk-Codes', description: '', color: '#3b82f6', groupByCategory: true, showDescription: false, autoUpdate: true };
-/** Gängige Funkcodes als Startpunkt („Standard-Codes einfügen“) – alles änderbar. */
+exports.DEFAULT_RADIO_DISCORD = { channelId: null, title: '📡 Funk-Codes', description: '', color: '#3b82f6', groupByCategory: true, showDescription: false, autoUpdate: true, layout: 'fields', rules: '' };
+/** Gängige Funkcodes als Startpunkt („10-Codes einfügen“) – alles änderbar. */
 exports.DEFAULT_RADIO_CODES = [
     { code: '10-1', meaning: 'Schlechter Empfang', category: 'Funk' }, { code: '10-2', meaning: 'Guter Empfang', category: 'Funk' },
     { code: '10-3', meaning: 'Funkstille', category: 'Funk' }, { code: '10-4', meaning: 'Verstanden', category: 'Funk' },
@@ -29,6 +29,14 @@ exports.DEFAULT_RADIO_CODES = [
     { code: '10-50', meaning: 'Verkehrsunfall', category: 'Einsatz' }, { code: '10-80', meaning: 'Verfolgungsfahrt', category: 'Einsatz' },
     { code: '10-99', meaning: 'Beamter in Not', category: 'Notfall' }, { code: 'Code 3', meaning: 'Einsatzfahrt mit Sonderrechten', category: 'Einsatz' },
 ];
+/** Polizei-Status 0–11 („Status-Codes einfügen“). */
+exports.DEFAULT_STATUS_CODES = [
+    ['Status 0', 'Notfall / Notruf'], ['Status 1', 'Einsatzbereit über Funk'], ['Status 2', 'Einsatzbereit auf Wache'],
+    ['Status 3', 'Einsatzauftrag übernommen / Anfahrt zum Einsatzort'], ['Status 4', 'Am Einsatzort angekommen'], ['Status 5', 'Sprechwunsch'],
+    ['Status 6', 'Nicht einsatzbereit'], ['Status 7', 'Infowunsch, Datenabfrage'], ['Status 8', 'Bewaffneter Raub'], ['Status 9', 'Verstärkungs-Anforderung'],
+    ['Status 10', 'Fuchsbau (Schusswechsel / Angriff auf das Präsidium)'], ['Status 11', 'Maulwurf (Aktive Geiselnahme vor einem)'],
+].map(([code, meaning]) => ({ code: code, meaning: meaning, category: 'Polizei-Status' }));
+exports.RADIO_CODE_SETS = { ten: exports.DEFAULT_RADIO_CODES, status: exports.DEFAULT_STATUS_CODES };
 /**
  * Funk-Codes je Server (Server getrennt) oder für alle Server. Im Server-Kontext sieht man die Codes dieses Servers
  * und die gemeinsamen; ein Server-Code überdeckt einen gemeinsamen mit gleichem Code.
@@ -57,6 +65,8 @@ let RadioCodesService = class RadioCodesService {
     /** Discord-Nachricht: je Kategorie ein Abschnitt (Discord: max. 25 Abschnitte à 1024 Zeichen, 6000 je Embed → bei Bedarf mehrere Embeds). */
     message(codes, c) {
         const color = parseInt(c.color.slice(1), 16);
+        if (c.layout === 'list')
+            return this.listMessage(codes, c, color);
         const line = (r) => `\`${r.code}\` – ${r.meaning}${c.showDescription && r.description ? `\n> ${r.description}` : ''}`;
         const groups = new Map();
         for (const r of codes) {
@@ -89,6 +99,28 @@ let RadioCodesService = class RadioCodesService {
             size += f.name.length + f.value.length;
         }
         embeds.push(cur);
+        if (c.rules.trim())
+            embeds.push({ color, description: c.rules.trim().slice(0, 4000) });
+        embeds.at(-1).timestamp = new Date().toISOString();
+        embeds.at(-1).footer = 'Zuletzt aktualisiert';
+        return { embeds: embeds.slice(0, 10) };
+    }
+    /** Liste „Code = Bedeutung“ im Embed-Text, Trennlinien, Regeln darunter. Zu lang für ein Embed (4096 Zeichen) → Folge-Embeds. */
+    listMessage(codes, c, color) {
+        const rule = '━━━━━━━━━━━━━━━━━━━━';
+        const lines = codes.map((r) => `${r.code} = ${r.meaning}${c.showDescription && r.description ? `\n> ${r.description}` : ''}`);
+        const blocks = [c.description.trim(), lines.length ? lines.join('\n') : 'Noch keine Funk-Codes.', c.rules.trim()].filter(Boolean);
+        const embeds = [];
+        let text = '';
+        const flush = () => { if (text)
+            embeds.push({ color, description: text }); text = ''; };
+        for (const part of blocks.flatMap((b, i) => (i ? [rule, b] : [b])).flatMap((b) => b.split('\n'))) {
+            if (text.length + part.length + 1 > 4000)
+                flush();
+            text = text ? `${text}\n${part}` : part.slice(0, 4000);
+        }
+        flush();
+        embeds[0].title = c.title || undefined;
         embeds.at(-1).timestamp = new Date().toISOString();
         embeds.at(-1).footer = 'Zuletzt aktualisiert';
         return { embeds: embeds.slice(0, 10) };
@@ -168,15 +200,15 @@ let RadioCodesService = class RadioCodesService {
         void this.autoUpdate();
         return this.list();
     }
-    /** Standard-Codes für den gewählten Server (bzw. alle Server) einfügen – vorhandene Codes bleiben unverändert. */
-    async insertDefaults(actor) {
+    /** Standard-Codes (`ten`: 10-Codes, `status`: Polizei-Status 0–11) für den gewählten Server (bzw. alle Server) einfügen – vorhandene Codes bleiben unverändert. */
+    async insertDefaults(actor, set = 'ten') {
         const guildId = (0, guild_context_1.currentGuild)();
         const existing = new Set((await this.prisma.radioCode.findMany({ where: { guildId }, select: { code: true } })).map((r) => r.code.toLowerCase()));
-        const add = exports.DEFAULT_RADIO_CODES.filter((c) => !existing.has(c.code.toLowerCase()));
+        const add = exports.RADIO_CODE_SETS[set].filter((c) => !existing.has(c.code.toLowerCase()));
         const base = ((await this.prisma.radioCode.aggregate({ where: { guildId }, _max: { position: true } }))._max.position ?? 0) + 1;
         if (add.length)
             await this.prisma.radioCode.createMany({ data: add.map((c, i) => ({ ...c, guildId, position: base + i })) });
-        await this.audit.record(actor, { action: 'radiocode.defaults', module: 'radio', after: { added: add.length, guildId } });
+        await this.audit.record(actor, { action: 'radiocode.defaults', module: 'radio', after: { added: add.length, guildId, set } });
         void this.autoUpdate();
         return { added: add.length };
     }
