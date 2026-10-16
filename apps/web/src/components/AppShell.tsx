@@ -7,6 +7,7 @@ import { useMediaQuery } from '../lib/media';
 import { accentHex, useStudio } from '../lib/studio';
 import { useApplyPrefs, usePrefs } from '../lib/prefs';
 import { flush } from '../lib/autosave';
+import { badgeFor, useNavBadges } from '../lib/badges';
 import { useActivityHeartbeat } from '../lib/activity';
 import { GROUPS, href, isActive, NAV, navFor, searchNav, sectionFor, tr, visible, visibleTabs, type NavItem } from '../nav';
 import { DiscordLink } from './DiscordLink';
@@ -37,6 +38,8 @@ export function AppShell() {
   const toggleFav = (i: NavItem) => update({ favorites: isFav(i) ? prefs.favorites.filter((p) => navFor([i], p) !== i) : [...prefs.favorites, i.path].slice(0, 30) });
   const collapsed = prefs.sidebarCollapsed;
   const tablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const badges = useNavBadges();
+  const countFor = (i: NavItem) => badgeFor(badges, i.tabs ? visibleTabs(i, can).map((t) => t.path) : [i.path]);
   const collapsedGroups = prefs.collapsedGroups ?? [];
   const toggleGroup = (g: string) => update({ collapsedGroups: collapsedGroups.includes(g) ? collapsedGroups.filter((x) => x !== g) : [...collapsedGroups, g] });
   const [filter, setFilter] = useState('');
@@ -61,8 +64,9 @@ export function AppShell() {
       <NavLink to={to} onClick={() => { setOpen(false); setFilter(''); }} title={collapsed ? L(i.label) : via ? `${L(i.label)} › ${via}` : undefined}
         aria-current={isActive(i, loc.pathname) ? 'page' : undefined}
         className={() => `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ${collapsed ? 'justify-center' : ''} ${isActive(i, loc.pathname) ? 'bg-primary/15 font-medium text-fg shadow-[inset_2px_0_0_var(--color-primary)]' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
-        <i.icon size={16} aria-hidden className="shrink-0" />
+        <span className="relative shrink-0"><i.icon size={16} aria-hidden />{collapsed && countFor(i) > 0 && <span className="absolute -right-1.5 -top-1.5 size-2 rounded-full bg-warning" aria-hidden />}</span>
         {!collapsed && <span className="min-w-0 flex-1 truncate">{L(i.label)}{via && <span className="block truncate text-[11px] text-muted">› {via}</span>}</span>}
+        {!collapsed && !via && countFor(i) > 0 && <span className="mr-4 rounded-full bg-warning/20 px-1.5 text-[10px] font-semibold text-warning tabular-nums" title="Offene Vorgänge">{countFor(i) > 99 ? '99+' : countFor(i)}<span className="sr-only"> offen</span></span>}
       </NavLink>
       {!collapsed && !via && <button type="button" aria-label={isFav(i) ? `${L(i.label)} aus Favoriten entfernen` : `${L(i.label)} zu Favoriten`} onClick={() => toggleFav(i)}
         className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 ${isFav(i) ? 'text-warning' : 'text-muted opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-60'}`}>
@@ -116,7 +120,7 @@ export function AppShell() {
             {gi > 0 && <div className="my-1 h-px w-8 bg-line" aria-hidden />}
             {its.map((i) => (
               <NavLink key={i.path} to={href(i, can)} title={L(i.label)} aria-label={L(i.label)} className={() => `grid h-11 w-11 shrink-0 place-items-center rounded-md ${isActive(i, loc.pathname) ? 'bg-primary/15 text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
-                <i.icon size={20} aria-hidden />
+                <span className="relative"><i.icon size={20} aria-hidden />{countFor(i) > 0 && <span className="absolute -right-1 -top-1 size-2 rounded-full bg-warning" aria-hidden />}</span>
               </NavLink>
             ))}
           </div> : null;
