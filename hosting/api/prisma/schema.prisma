@@ -957,6 +957,8 @@ model RadioRequest {
   rank           String?
   department     String?
   reason         String
+  /// Antworten auf eigene Formularfelder ([{ key, label, value }], im Dashboard festgelegt)
+  answers        Json?
   /// PENDING | APPROVED | REJECTED | WITHDRAWN
   status         String    @default("PENDING")
   decidedById    String?   @db.Uuid
