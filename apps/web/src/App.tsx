@@ -41,6 +41,7 @@ const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) 
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
+const RadioWhitelist = lazy(() => import('./pages/RadioWhitelist').then((m) => ({ default: m.RadioWhitelist })));
 const WantedHits = lazy(() => import('./pages/WantedHits').then((m) => ({ default: m.WantedHits })));
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
 const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
@@ -149,6 +150,7 @@ export function App() {
           <Route path="duty-reports" element={<Guard perm="dutyreports.view"><DutyReports /></Guard>} />
           <Route path="offices" element={<Guard perm="team.view" area="dashboard.offices.view"><Offices /></Guard>} />
           <Route path="radio-codes" element={<Guard perm="radio.view" area="dashboard.radio.view"><RadioCodes /></Guard>} />
+          <Route path="radio-whitelist" element={<Guard perm="radiowhitelist.view"><RadioWhitelist /></Guard>} />
           <Route path="teamchance" element={<Guard perm="teamchance.view" area="dashboard.teamchance.view"><TeamChance /></Guard>} />
           <Route path="me/settings" element={<Guard perm="dashboard.view"><PersonalSettings /></Guard>} />
           <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>

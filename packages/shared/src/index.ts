@@ -20,3 +20,4 @@ export * from './backup';
 export * from './mdt';
 export * from './fleet';
 export * from './message-builder';
+export * from './radio-whitelist';

@@ -11,6 +11,7 @@ const features_2 = require("./features");
 const tickets_1 = require("./tickets");
 const duty_reports_1 = require("./duty-reports");
 const warnings_1 = require("./warnings");
+const radio_whitelist_1 = require("./radio-whitelist");
 const trainings_1 = require("./trainings");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
@@ -97,7 +98,7 @@ exports.COMMANDS = [
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
                             { name: 'Konto', value: '`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`' },
+                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
                             { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
@@ -529,6 +530,7 @@ exports.COMMANDS = [
     ...cad_1.CAD_COMMANDS,
     ...duty_reports_1.DUTY_REPORT_COMMANDS,
     ...warnings_1.WARNING_COMMANDS,
+    ...radio_whitelist_1.RADIO_WHITELIST_COMMANDS,
     ...trainings_1.TRAINING_COMMANDS,
     tickets_1.TICKET_COMMAND,
 ];

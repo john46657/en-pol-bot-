@@ -80137,6 +80137,12 @@ var PERMISSION_CATALOG = {
   sek: ["view", "report", "manage"],
   qualifications: ["view", "decide", "delete", "manage"],
   ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  /**
+   * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
+   * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
+   * integration = Funkdienst-Anbindung (Zugangsdaten), logs = Änderungsprotokoll.
+   */
+  radiowhitelist: ["view", "grant", "suspend", "remove", "requests", "roles", "integration", "logs"],
   /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
   radio: ["view", "manage"],
   /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
@@ -80193,7 +80199,7 @@ var TICKET_ACTIONS = {
 };
 var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
 var ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
-var isInputQuestion = (t) => !t || t === "TEXT" || t === "ROBLOX";
+var isInputQuestion = (t2) => !t2 || t2 === "TEXT" || t2 === "ROBLOX";
 var MAX_FORM_OPTIONS = 25;
 function normalizeField(f2) {
   const type = f2.type ?? "TEXT";
@@ -80326,9 +80332,9 @@ var DEFAULT_CAD_CONFIG = {
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
 function accountAge(created, now = Date.now()) {
-  const t = created ? new Date(created).getTime() : NaN;
-  if (!Number.isFinite(t)) return "\u2014";
-  const days = Math.max(0, Math.floor((now - t) / 864e5));
+  const t2 = created ? new Date(created).getTime() : NaN;
+  if (!Number.isFinite(t2)) return "\u2014";
+  const days = Math.max(0, Math.floor((now - t2) / 864e5));
   if (days === 0) return "heute erstellt";
   if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
   if (days < 730) return `${Math.floor(days / 30)} Monate`;
@@ -80415,7 +80421,7 @@ ${l.dividerText}
   }
   texts.push(cur || (l.sections.length ? "" : "Noch keine Rollen eingetragen."));
   const c = toInt(l.color);
-  const embeds = texts.map((t, i) => ({ color: c, ...i === 0 && l.title ? { title: l.title } : {}, description: t.trim() || "\u200B" }));
+  const embeds = texts.map((t2, i) => ({ color: c, ...i === 0 && l.title ? { title: l.title } : {}, description: t2.trim() || "\u200B" }));
   const last = embeds.at(-1);
   if (l.image) last.image = l.image;
   if (l.footer) last.footer = l.footer;
@@ -80535,9 +80541,9 @@ var reportTemplateSchema = external_exports.object({
 });
 var dd = (d) => d.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 function isoWeek(d) {
-  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
-  return Math.ceil(((t.getTime() - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+  const t2 = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  t2.setUTCDate(t2.getUTCDate() + 4 - (t2.getUTCDay() || 7));
+  return Math.ceil(((t2.getTime() - Date.UTC(t2.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
 function periodLabel(period, start2) {
   const s = new Date(start2);
@@ -80563,7 +80569,7 @@ var MODULES = [
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
-  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes", permissionPrefixes: ["communication", "announcements", "polls", "radio"] }
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "announcements", "polls", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var BOT_COMMAND_MODULES = {
@@ -80599,7 +80605,9 @@ var BOT_COMMAND_MODULES = {
   qualipanel: "applications",
   support: "support",
   funkcode: "communication",
-  funk: "communication"
+  funk: "communication",
+  funkantrag: "communication",
+  funkfreigabe: "communication"
 };
 var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
 var sf3 = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
@@ -80991,6 +80999,65 @@ function createStaffLists(client2, api2, log = console.log) {
     setInterval(tick, seconds * 1e3).unref?.();
   }
   return { refresh, changed, start: start2 };
+}
+
+// apps/bot/src/radio-roles.ts
+var CHUNK = 500;
+var TARGET_TTL_MS = 6e4;
+function createRadioRoleSync(api2, source, log = console.log) {
+  let cache = null;
+  async function targets(force = false) {
+    if (!force && cache && Date.now() - cache.at < TARGET_TTL_MS) return cache.t;
+    const t = await api2.service("GET", "/bot/radio-whitelist/sync-targets");
+    cache = { at: Date.now(), t };
+    return t;
+  }
+  const post = (guildId, members, full2) => api2.service("POST", "/bot/radio-whitelist/roles", { guildId, full: full2, members });
+  async function memberChanged(guildId, discordId, name, roleIds, before) {
+    const t = await targets();
+    if (!t.enabled || t.guildId && t.guildId !== guildId) return false;
+    const listed = t.discordIds.includes(discordId);
+    const touched = (r) => (r ?? []).some((x) => t.roleIds.includes(x));
+    const relevant = listed || touched(roleIds) || touched(before);
+    if (!relevant) return false;
+    if (before && roleIds && t.roleIds.every((r) => before.includes(r) === roleIds.includes(r)) && listed) return false;
+    await post(guildId, [{ discordId, name, roleIds }], false);
+    cache = null;
+    return true;
+  }
+  async function full(guildIdHint) {
+    const t = await targets(true);
+    const guildId = t.guildId ?? guildIdHint;
+    if (!t.enabled || !guildId) return { checked: 0, changed: 0, failed: 0 };
+    const all = await source.members(guildId);
+    const byId = new Map(all.map((m) => [m.id, m]));
+    const relevant = all.filter((m) => m.roleIds.some((r) => t.roleIds.includes(r)) || t.discordIds.includes(m.id));
+    const list = relevant.map((m) => ({ discordId: m.id, name: m.name ?? null, roleIds: m.roleIds }));
+    for (const id3 of t.discordIds) if (!byId.has(id3)) list.push({ discordId: id3, roleIds: null });
+    let changed = 0, failed = 0;
+    for (let i = 0; i < list.length || i === 0; i += CHUNK) {
+      const part = list.slice(i, i + CHUNK);
+      const r = await post(guildId, part, i + CHUNK >= list.length);
+      changed += r.changed ?? 0;
+      failed += r.failed ?? 0;
+      if (!list.length) break;
+    }
+    cache = null;
+    if (changed || failed) log(`radio whitelist role sync: ${list.length} checked, ${changed} changed, ${failed} failed`);
+    return { checked: list.length, changed, failed };
+  }
+  function start2(minutes = 30) {
+    const run2 = () => void full().catch((e) => log(`radio whitelist role sync failed: ${e instanceof Error ? e.message : e}`));
+    const first = setTimeout(run2, 3e4);
+    const timer = setInterval(run2, minutes * 6e4);
+    first.unref?.();
+    timer.unref?.();
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }
+  return { memberChanged, full, start: start2, targets };
 }
 
 // apps/bot/src/guilds.ts
@@ -83122,6 +83189,74 @@ var TRAINING_INTERACTION = {
   }
 };
 
+// apps/bot/src/commands/radio-whitelist.ts
+var STATUS_DE2 = { ACTIVE: "\u2705 aktiv", PENDING: "\u{1F553} ausstehend", DISABLED: "\u23F8\uFE0F deaktiviert", SUSPENDED: "\u26D4 gesperrt", EXPIRED: "\u231B abgelaufen", REVOKED: "\u274C entzogen" };
+var ts2 = (iso) => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:D>`;
+var apiError = (e) => e instanceof BotApiError && e.status === 503 ? errorReply(e.message) : mapError(e);
+var RADIO_WHITELIST_COMMANDS = [
+  {
+    name: "funkantrag",
+    description: "Funkfreigabe f\xFCr den externen Funkdienst beantragen",
+    opensModal: true,
+    async run(c) {
+      if (!c.guildId) return errorReply("Bitte stelle den Antrag auf dem Discord-Server, nicht per Direktnachricht.");
+      try {
+        const s = await c.api.service("GET", `/bot/radio-whitelist/status/${c.discordId}`);
+        if (!s.requestsEnabled) return errorReply("Antr\xE4ge auf Funkfreigabe sind derzeit deaktiviert.");
+        if (s.authorized) return okReply("Du bist bereits f\xFCr den Funk freigegeben.");
+        if (s.status === "SUSPENDED") return errorReply(`Deine Funkfreigabe ist gesperrt${s.suspendedUntil ? ` bis ${ts2(s.suspendedUntil)}` : ""} \u2013 ein Antrag ist derzeit nicht m\xF6glich.`);
+      } catch (e) {
+        return apiError(e);
+      }
+      return { modal: { id: "rwreq:submit", title: "Antrag auf Funkfreigabe", fields: [
+        { id: "reason", label: "Begr\xFCndung", paragraph: true, required: true, maxLength: 1e3, placeholder: "Warum brauchst du Zugang zum Funk?" },
+        { id: "rank", label: "Dienstgrad (falls relevant)", required: false, maxLength: 80 },
+        { id: "department", label: "Abteilung (falls relevant)", required: false, maxLength: 80 }
+      ] } };
+    }
+  },
+  {
+    name: "funkstatus",
+    description: "Deinen Status in der Funk-Whitelist anzeigen",
+    async run(c) {
+      try {
+        const s = await c.api.service("GET", `/bot/radio-whitelist/status/${c.discordId}`);
+        const lines = [
+          `**Status:** ${s.status ? STATUS_DE2[s.status] ?? s.status : "nicht freigegeben"}`,
+          ...s.expiresAt && s.status === "ACTIVE" ? [`**G\xFCltig bis:** ${ts2(s.expiresAt)}`] : [],
+          ...s.suspendedUntil && s.status === "SUSPENDED" ? [`**Gesperrt bis:** ${ts2(s.suspendedUntil)}`] : [],
+          ...s.pendingSince ? [`**Offener Antrag seit:** ${ts2(s.pendingSince)}`] : []
+        ];
+        return { ephemeral: true, embeds: [{ title: "\u{1F399}\uFE0F Funk-Whitelist", description: lines.join("\n"), color: s.authorized ? COLORS.success : COLORS.neutral }] };
+      } catch (e) {
+        return apiError(e);
+      }
+    }
+  }
+];
+var RADIO_WHITELIST_INTERACTION = {
+  prefix: "rwreq",
+  async run(c) {
+    if (c.args[0] !== "submit" || !c.fields) return errorReply("Ung\xFCltige Anfrage.");
+    const reason = (c.fields.reason ?? "").trim();
+    if (reason.length < 10) return errorReply("Bitte begr\xFCnde deinen Antrag etwas ausf\xFChrlicher (mind. 10 Zeichen).");
+    try {
+      await c.api.service("POST", "/bot/radio-whitelist/requests", {
+        guildId: c.guildId ?? null,
+        discordId: c.discordId,
+        discordName: c.userDisplayName ?? c.userName ?? null,
+        rank: (c.fields.rank ?? "").trim() || null,
+        department: (c.fields.department ?? "").trim() || null,
+        reason
+      });
+      return okReply(`\u{1F4E8} Dein Antrag auf Funkfreigabe ist eingegangen. Du bekommst eine Direktnachricht, sobald eine F\xFChrungskraft entschieden hat.
+> ${plain(reason).slice(0, 300)}`);
+    } catch (e) {
+      return apiError(e);
+    }
+  }
+};
+
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
@@ -83304,6 +83439,7 @@ var INTERACTIONS = [
     }
   },
   QUALI_INTERACTION,
+  RADIO_WHITELIST_INTERACTION,
   TICKET_INTERACTION,
   VOICE_INTERACTION,
   LEAVE_INTERACTION,
@@ -83445,7 +83581,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/cad`" },
+        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
         { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
@@ -83858,6 +83994,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   ...CAD_COMMANDS,
   ...DUTY_REPORT_COMMANDS,
   ...WARNING_COMMANDS,
+  ...RADIO_WHITELIST_COMMANDS,
   ...TRAINING_COMMANDS,
   TICKET_COMMAND
 ];
@@ -84627,6 +84764,13 @@ var platform = {
 };
 var live = createLive(api, platform);
 var staffLists = createStaffLists(() => client, api);
+var radioRoles = createRadioRoleSync(api, {
+  async members(guildId) {
+    const g = await client.guilds.fetch(guildId);
+    const list = await g.members.fetch().catch(() => g.members.cache);
+    return [...list.values()].filter((m) => !m.user.bot).map((m) => ({ id: m.id, name: m.displayName, roleIds: [...m.roles.cache.keys()].filter((r) => r !== g.id) }));
+  }
+});
 var welcome = createWelcome(api, {
   async post(channelId, m) {
     const ch = await client.channels.fetch(channelId);
@@ -84949,9 +85093,12 @@ function wire(c) {
     staffLists.changed();
     const e = memberEvent(m);
     if (e) void welcome.left(e).catch((x) => console.error("member leave failed:", x instanceof Error ? x.message : x));
+    void radioRoles.memberChanged(m.guild.id, m.id, null, null).catch((x) => console.error("radio whitelist (member left) failed:", x instanceof Error ? x.message : x));
   });
   c.on("guildMemberUpdate", (o, n) => {
-    if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r))) staffLists.changed();
+    const rolesChanged = o.roles.cache.size !== n.roles.cache.size || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r));
+    if (rolesChanged || o.displayName !== n.displayName) staffLists.changed();
+    if (rolesChanged && !n.user.bot) void radioRoles.memberChanged(n.guild.id, n.id, n.displayName, [...n.roles.cache.keys()], o.partial ? void 0 : [...o.roles.cache.keys()]).catch((x) => console.error("radio whitelist (roles) failed:", x instanceof Error ? x.message : x));
   });
   c.on("messageDelete", (m) => {
     if (m.partial || !m.inGuild() || !m.author) return;
@@ -85145,6 +85292,10 @@ function wireReady(client0) {
           });
           return true;
         }
+        if (type === "bot.radio.rolesync") {
+          await radioRoles.full(typeof p.guildId === "string" ? p.guildId : void 0);
+          return true;
+        }
         if (type === "bot.stafflist") {
           await staffLists.refresh({ id: String(p.id ?? ""), force: true, forceNew: p.forceNew === true });
           return true;
@@ -85213,6 +85364,7 @@ function wireReady(client0) {
     );
     live.start(cfg.LIVE_REFRESH_SECONDS);
     staffLists.start(300);
+    radioRoles.start(30);
     void tickets.refresh();
     startGuildDirectory(() => client, api);
     setInterval(() => void tickets.refresh(), 12e4).unref();

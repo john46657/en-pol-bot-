@@ -43,6 +43,12 @@ export const PERMISSION_CATALOG = {
   sek: ['view', 'report', 'manage'],
   qualifications: ['view', 'decide', 'delete', 'manage'],
   ticket: ['view', 'create', 'claim', 'close', 'reopen', 'delete', 'add_user', 'remove_user', 'change_status', 'change_priority', 'change_category', 'rename', 'move', 'lock', 'escalate', 'transcript', 'transcript_delete', 'internal_notes', 'rate', 'manage', 'settings'],
+  /**
+   * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
+   * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
+   * integration = Funkdienst-Anbindung (Zugangsdaten), logs = Änderungsprotokoll.
+   */
+  radiowhitelist: ['view', 'grant', 'suspend', 'remove', 'requests', 'roles', 'integration', 'logs'],
   /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
   radio: ['view', 'manage'],
   /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */

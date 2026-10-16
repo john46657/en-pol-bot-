@@ -93,21 +93,26 @@ describe('danger level (Gefahrenstatus)', () => {
   });
 });
 
-describe('radio whitelist (Funk-Freigabe)', () => {
-  it('needs personnel.edit to change, resolves by linked Discord id, rejects duplicates and unlinked accounts', async () => {
+describe('radio whitelist (Funk-Freigabe, bisherige Schnittstelle)', () => {
+  it('needs radiowhitelist.grant/remove to change, identifies by Discord id (also without dashboard account), rejects duplicates', async () => {
     const adm = (await login(app, 'f_admin')).agent;
     expect((await http().post('/api/v1/radio-whitelist').set(bot(D_OFF)).send({ discordId: D_OFF })).status).toBe(403);
     expect((await adm.post('/api/v1/radio-whitelist').send({ discordId: D_OFF })).status).toBe(200);
     expect((await adm.post('/api/v1/radio-whitelist').send({ discordId: D_OFF })).status).toBe(409);
-    expect((await adm.post('/api/v1/radio-whitelist').send({ discordId: '999999999999999999' })).status).toBe(404); // nicht verknüpft
+    // Identifikation über die Discord-ID: auch Mitglieder ohne Dashboard-Konto können freigeschaltet werden
+    expect((await adm.post('/api/v1/radio-whitelist').send({ discordId: '999999999999999999' })).status).toBe(200);
     expect((await adm.post('/api/v1/radio-whitelist').send({})).status).toBe(400);
     expect((await adm.post('/api/v1/radio-whitelist').send({ discordId: D_OFF, userId: '00000000-0000-4000-8000-000000000000' })).status).toBe(400);
     expect((await http().get(`/api/v1/radio-whitelist/check?discordId=${D_OFF}`).set(bot(D_DISP))).body).toMatchObject({ whitelisted: true });
     expect((await http().get(`/api/v1/radio-whitelist/check?discordId=${D_DISP}`).set(bot(D_DISP))).body).toMatchObject({ whitelisted: false });
-    expect((await http().get('/api/v1/radio-whitelist').set(bot(D_DISP))).body).toHaveLength(1);
+    // die Liste ist jetzt geschützt (radiowhitelist.view) – Police Member/Dispatch haben das Recht nicht
+    expect((await http().get('/api/v1/radio-whitelist').set(bot(D_DISP))).status).toBe(403);
+    expect((await adm.get('/api/v1/radio-whitelist')).body.map((r: { discordId: string }) => r.discordId)).toEqual(expect.arrayContaining([D_OFF, '999999999999999999']));
     expect((await adm.post('/api/v1/radio-whitelist/remove').send({ discordId: D_OFF })).status).toBe(200);
     expect((await adm.post('/api/v1/radio-whitelist/remove').send({ discordId: D_OFF })).status).toBe(404);
-    expect(await prisma.auditLog.count({ where: { action: { in: ['radio.add', 'radio.remove'] } } })).toBe(2);
+    expect(await prisma.auditLog.count({ where: { action: { in: ['radio.grant.created', 'radio.grant.revoked'] }, entityId: (await prisma.radioGrant.findUniqueOrThrow({ where: { discordId: D_OFF } })).id } })).toBe(2);
+    // entfernt = archiviert, nicht gelöscht
+    expect(await prisma.radioGrant.findUnique({ where: { discordId: D_OFF } })).toMatchObject({ status: 'REVOKED', archivedAt: expect.any(Date) });
   });
 });
 

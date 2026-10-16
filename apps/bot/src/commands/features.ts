@@ -11,6 +11,7 @@ import { FORM_PANEL_INTERACTION, INFO_PANEL_INTERACTION } from './panels';
 import { MB_INTERACTION } from '../message-builder';
 import { DUTY_REPORT_INTERACTION } from './duty-reports';
 import { TRAINING_INTERACTION } from './trainings';
+import { RADIO_WHITELIST_INTERACTION } from './radio-whitelist';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -176,6 +177,7 @@ export const INTERACTIONS: InteractionDef[] = [
     },
   },
   QUALI_INTERACTION,
+  RADIO_WHITELIST_INTERACTION,
   TICKET_INTERACTION,
   VOICE_INTERACTION,
   LEAVE_INTERACTION,

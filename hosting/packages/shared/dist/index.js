@@ -49,6 +49,7 @@ __export(index_exports, {
   DEFAULT_FLEET_CONFIG: () => DEFAULT_FLEET_CONFIG,
   DEFAULT_HR_CONFIG: () => DEFAULT_HR_CONFIG,
   DEFAULT_MDT_CONFIG: () => DEFAULT_MDT_CONFIG,
+  DEFAULT_RADIO_ROLE_RULES: () => DEFAULT_RADIO_ROLE_RULES,
   DEFAULT_VERIFY_CONFIG: () => DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG: () => DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS: () => DISCORD_LIMITS,
@@ -103,6 +104,11 @@ __export(index_exports, {
   PROFILE_SECTIONS: () => PROFILE_SECTIONS,
   PROFILE_SECTION_LABEL: () => PROFILE_SECTION_LABEL,
   QUESTION_TYPES: () => QUESTION_TYPES,
+  RADIO_CSV_COLUMNS: () => RADIO_CSV_COLUMNS,
+  RADIO_GRANT_SOURCES: () => RADIO_GRANT_SOURCES,
+  RADIO_GRANT_SOURCE_LABEL: () => RADIO_GRANT_SOURCE_LABEL,
+  RADIO_GRANT_STATUSES: () => RADIO_GRANT_STATUSES,
+  RADIO_GRANT_STATUS_LABEL: () => RADIO_GRANT_STATUS_LABEL,
   REPORT_FIELD_TYPES: () => REPORT_FIELD_TYPES,
   REPORT_STATUSES: () => REPORT_STATUSES,
   REPORT_STATUS_LABEL: () => REPORT_STATUS_LABEL,
@@ -158,6 +164,7 @@ __export(index_exports, {
   cloneWithNewIds: () => cloneWithNewIds,
   commandsForServer: () => commandsForServer,
   conditionMatches: () => conditionMatches,
+  csvCell: () => csvCell,
   dangerLevelOf: () => dangerLevelOf,
   defaultTicketButtons: () => defaultTicketButtons,
   departmentSchema: () => departmentSchema,
@@ -166,6 +173,7 @@ __export(index_exports, {
   dnSettingsSchema: () => dnSettingsSchema,
   dutyTimeText: () => dutyTimeText,
   effectivePermissions: () => effectivePermissions,
+  effectiveRadioStatus: () => effectiveRadioStatus,
   embedChars: () => embedChars,
   emptyMbDocument: () => emptyMbDocument,
   emptyMbEmbed: () => emptyMbEmbed,
@@ -198,6 +206,7 @@ __export(index_exports, {
   isHttpUrl: () => isHttpUrl,
   isInputQuestion: () => isInputQuestion,
   isPermissionKey: () => isPermissionKey,
+  isRadioAuthorized: () => isRadioAuthorized,
   isRobloxField: () => isRobloxField,
   isSupportOpen: () => isSupportOpen,
   isValidEmoji: () => isValidEmoji,
@@ -231,6 +240,7 @@ __export(index_exports, {
   normalizeField: () => normalizeField,
   notifyRuleSchema: () => notifyRuleSchema,
   panelFieldSchema: () => panelFieldSchema,
+  parseCsv: () => parseCsv,
   parsePlayer: () => parsePlayer,
   periodEnd: () => periodEnd,
   periodLabel: () => periodLabel,
@@ -241,6 +251,7 @@ __export(index_exports, {
   policeReportFields: () => policeReportFields,
   policyAllowsFlow: () => policyAllowsFlow,
   questionSchema: () => questionSchema,
+  radioRoleSyncAction: () => radioRoleSyncAction,
   rangeSchema: () => rangeSchema,
   rankSchema: () => rankSchema,
   renderApplicationText: () => renderApplicationText,
@@ -324,6 +335,12 @@ var PERMISSION_CATALOG = {
   sek: ["view", "report", "manage"],
   qualifications: ["view", "decide", "delete", "manage"],
   ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  /**
+   * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
+   * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
+   * integration = Funkdienst-Anbindung (Zugangsdaten), logs = Änderungsprotokoll.
+   */
+  radiowhitelist: ["view", "grant", "suspend", "remove", "requests", "roles", "integration", "logs"],
   /** Funk-Codes (Liste der Funkcodes, z. B. 10-4) */
   radio: ["view", "manage"],
   /** Team-Chance: Bewerbungsphase für das Team öffnen/schließen */
@@ -548,7 +565,7 @@ var ticketNumber = (n) => String(n).padStart(4, "0");
 // src/forms.ts
 var FORM_QUESTION_TYPES = { TEXT: "Text", CHOICE: "Multiple choice", ROLE: "Role select", ROBLOX: "Roblox User" };
 var ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
-var isInputQuestion = (t) => !t || t === "TEXT" || t === "ROBLOX";
+var isInputQuestion = (t2) => !t2 || t2 === "TEXT" || t2 === "ROBLOX";
 var MAX_FORM_QUESTIONS = 50;
 var MAX_FORM_OPTIONS = 25;
 function normalizeField(f) {
@@ -1055,9 +1072,9 @@ var WELCOME_VARIABLES = {
   "{accountAge}": "Alter des Discord-Kontos (z. B. \u201E3 Tage\u201C)"
 };
 function accountAge(created, now = Date.now()) {
-  const t = created ? new Date(created).getTime() : NaN;
-  if (!Number.isFinite(t)) return "\u2014";
-  const days = Math.max(0, Math.floor((now - t) / 864e5));
+  const t2 = created ? new Date(created).getTime() : NaN;
+  if (!Number.isFinite(t2)) return "\u2014";
+  const days = Math.max(0, Math.floor((now - t2) / 864e5));
   if (days === 0) return "heute erstellt";
   if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
   if (days < 730) return `${Math.floor(days / 30)} Monate`;
@@ -1103,16 +1120,16 @@ var minutes = (hhmm) => {
 };
 function localTime(d, timeZone = "Europe/Berlin") {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
-  const get = (t) => parts.find((p) => p.type === t)?.value ?? "";
+  const get = (t2) => parts.find((p) => p.type === t2)?.value ?? "";
   return { day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday")), minute: Number(get("hour")) * 60 + Number(get("minute")) };
 }
 function isSupportOpen(times, d = /* @__PURE__ */ new Date(), timeZone = "Europe/Berlin") {
   if (!times.length) return true;
   const { day, minute } = localTime(d, timeZone);
-  return times.some((t) => {
-    const from = minutes(t.from), to = minutes(t.to);
-    if (from <= to) return t.days.includes(day) && minute >= from && minute < to;
-    return t.days.includes(day) && minute >= from || t.days.includes((day + 6) % 7) && minute < to;
+  return times.some((t2) => {
+    const from = minutes(t2.from), to = minutes(t2.to);
+    if (from <= to) return t2.days.includes(day) && minute >= from && minute < to;
+    return t2.days.includes(day) && minute >= from || t2.days.includes((day + 6) % 7) && minute < to;
   });
 }
 
@@ -1224,7 +1241,7 @@ ${l.dividerText}
   }
   texts.push(cur || (l.sections.length ? "" : "Noch keine Rollen eingetragen."));
   const c = toInt(l.color);
-  const embeds = texts.map((t, i) => ({ color: c, ...i === 0 && l.title ? { title: l.title } : {}, description: t.trim() || "\u200B" }));
+  const embeds = texts.map((t2, i) => ({ color: c, ...i === 0 && l.title ? { title: l.title } : {}, description: t2.trim() || "\u200B" }));
   const last = embeds.at(-1);
   if (l.image) last.image = l.image;
   if (l.footer) last.footer = l.footer;
@@ -1386,9 +1403,9 @@ function periodStart(period, d = /* @__PURE__ */ new Date()) {
 }
 var dd = (d) => d.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 function isoWeek(d) {
-  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
-  return Math.ceil(((t.getTime() - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+  const t2 = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  t2.setUTCDate(t2.getUTCDate() + 4 - (t2.getUTCDay() || 7));
+  return Math.ceil(((t2.getTime() - Date.UTC(t2.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
 function periodLabel(period, start) {
   const s = new Date(start);
@@ -1439,13 +1456,13 @@ function dutyTimeText(period, sessions, from, to, timeZone = "Europe/Berlin", no
   if (!real.length) return null;
   const total = real.reduce((n, x) => n + x.work, 0);
   if (period === "WEEKLY") return `${fmtDur(total)} in ${real.length} ${real.length === 1 ? "Schicht" : "Schichten"}`;
-  const t = (ms) => new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone });
+  const t2 = (ms) => new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone });
   const open = sessions.some((x) => !x.endedAt);
-  return `${real.map((x, i) => `${t(x.s)}\u2013${open && i === real.length - 1 && x.e >= Math.min(now.getTime(), to.getTime()) - 6e4 ? "jetzt" : t(x.e)}`).join(", ")} (${fmtDur(total)})`;
+  return `${real.map((x, i) => `${t2(x.s)}\u2013${open && i === real.length - 1 && x.e >= Math.min(now.getTime(), to.getTime()) - 6e4 ? "jetzt" : t2(x.e)}`).join(", ")} (${fmtDur(total)})`;
 }
-function cleanReportValues(t, input) {
+function cleanReportValues(t2, input) {
   const values = {};
-  for (const f of t.fields) {
+  for (const f of t2.fields) {
     const v = String(input[f.id] ?? "").trim().slice(0, f.maxLength);
     if (f.required && !v) return { error: `\u201E${f.label}\u201C fehlt.` };
     if (v && f.type === "number" && !/^-?\d+([.,]\d+)?$/.test(v)) return { error: `\u201E${f.label}\u201C muss eine Zahl sein.` };
@@ -1460,9 +1477,9 @@ var LINE_SHORT = "\u23AF".repeat(12);
 var statusLines = (r) => r.status !== "SUBMITTED" ? `
 **${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ""}${r.reviewNote ? `
 > ${r.reviewNote.replace(/\n/g, "\n> ").slice(0, 900)}` : ""}` : "";
-function listEmbed(t, r) {
+function listEmbed(t2, r) {
   const parts = [LINE_LONG, ""];
-  t.fields.forEach((f, i) => {
+  t2.fields.forEach((f, i) => {
     if (f.separator && i > 0) parts.push("", LINE_SHORT, "");
     parts.push(`\u27A3 **${f.label}:** ${(r.values[f.id] ?? "").slice(0, 1e3)}`);
   });
@@ -1470,16 +1487,16 @@ function listEmbed(t, r) {
   let description = parts.join("\n");
   if (description.length + status.length > 4096) description = `${description.slice(0, 4090 - status.length)}\u2026`;
   return {
-    title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} ${r.authorName}`.slice(0, 256),
+    title: `${t2.emoji ? `${t2.emoji} ` : ""}${t2.name} ${r.authorName}`.slice(0, 256),
     description: `${description}${status ? `
 ${status}` : ""}`,
-    color: parseInt(t.color.slice(1), 16),
+    color: parseInt(t2.color.slice(1), 16),
     footer: `${r.number} | ${r.authorName}${r.authorDiscordId ? ` ( ${r.authorDiscordId} )` : ""}${r.edited ? " \xB7 bearbeitet" : ""}`.slice(0, 2048),
     timestamp: new Date(r.updatedAt).toISOString()
   };
 }
-function reportMessage(t, r, id3) {
-  const embed = t.layout === "LIST" ? listEmbed(t, r) : fieldsEmbed(t, r);
+function reportMessage(t2, r, id3) {
+  const embed = t2.layout === "LIST" ? listEmbed(t2, r) : fieldsEmbed(t2, r);
   embed.color = r.status === "REVIEWED" ? 2278750 : r.status === "RETURNED" ? 16096779 : embed.color;
   return { embeds: [embed], buttons: [
     { id: `drep:edit:${id3}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" },
@@ -1487,12 +1504,12 @@ function reportMessage(t, r, id3) {
     ...r.status !== "RETURNED" ? [{ id: `drep:ret:${id3}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
   ] };
 }
-function fieldsEmbed(t, r) {
-  const fields = t.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
+function fieldsEmbed(t2, r) {
+  const fields = t2.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
   return {
-    title: `${t.emoji ? `${t.emoji} ` : ""}${t.name} \u2013 ${periodLabel(t.period, r.periodStart)}`.slice(0, 256),
+    title: `${t2.emoji ? `${t2.emoji} ` : ""}${t2.name} \u2013 ${periodLabel(t2.period, r.periodStart)}`.slice(0, 256),
     description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${statusLines(r)}`,
-    color: parseInt(t.color.slice(1), 16),
+    color: parseInt(t2.color.slice(1), 16),
     fields: fields.slice(0, 25),
     footer: `${r.number}${r.edited ? " \xB7 bearbeitet" : ""}`,
     timestamp: new Date(r.updatedAt).toISOString()
@@ -1512,9 +1529,9 @@ function offsetMs(at, timeZone) {
 }
 function localMidnight(y, m, d, timeZone = WEEK_TIMEZONE) {
   const guess = Date.UTC(y, m - 1, d);
-  let t = guess - offsetMs(new Date(guess), timeZone);
-  t = guess - offsetMs(new Date(t), timeZone);
-  return new Date(t);
+  let t2 = guess - offsetMs(new Date(guess), timeZone);
+  t2 = guess - offsetMs(new Date(t2), timeZone);
+  return new Date(t2);
 }
 function weekStartOf(at, timeZone = WEEK_TIMEZONE) {
   const l = localParts(at, timeZone);
@@ -1575,7 +1592,7 @@ var MODULES = [
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
-  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes", permissionPrefixes: ["communication", "announcements", "polls", "radio"] }
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "announcements", "polls", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var moduleDef = (key3) => MODULES.find((m) => m.key === key3);
@@ -1645,7 +1662,10 @@ var BOT_COMMAND_MODULES = {
   qualipanel: "applications",
   support: "support",
   funkcode: "communication",
-  funk: "communication"
+  funk: "communication",
+  funkantrag: "communication",
+  funkstatus: "communication",
+  funkfreigabe: "communication"
 };
 var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
 
@@ -1877,8 +1897,8 @@ function gradeAnswer(q, a) {
   const norm = (x) => String(x ?? "").trim().toLowerCase();
   if (q.type === "TEXT") {
     if (!q.correct.length) return null;
-    const t = norm(a);
-    return q.correct.every((k) => t.includes(norm(k))) ? q.points : 0;
+    const t2 = norm(a);
+    return q.correct.every((k) => t2.includes(norm(k))) ? q.points : 0;
   }
   if (q.type === "NUMBER") return Number(String(a).replace(",", ".")) === Number(String(q.correct[0] ?? "").replace(",", ".")) ? q.points : 0;
   if (q.type === "MULTI") {
@@ -2263,10 +2283,10 @@ var loggingConfigSchema = import_zod4.z.object({
 });
 function logChannelFor(cfg, module2, action) {
   if (!cfg.enabled) return null;
-  const t = cfg.types[action];
-  if (t === "off") return null;
-  if (t && t !== "on") return t;
-  if (!t && LOG_DEFAULT_OFF.has(action)) return null;
+  const t2 = cfg.types[action];
+  if (t2 === "off") return null;
+  if (t2 && t2 !== "on") return t2;
+  if (!t2 && LOG_DEFAULT_OFF.has(action)) return null;
   return cfg.categories[logCategoryOf(module2)] ?? null;
 }
 
@@ -2627,10 +2647,10 @@ function validateMbDocument(d, o = {}) {
 }
 var hasErrors = (issues) => issues.some((i) => i.level === "error");
 function toPartialEmoji(e) {
-  const t = e.trim();
-  if (!t) return void 0;
-  const c = CUSTOM_EMOJI.exec(t);
-  return c ? { id: c[3], name: c[2], ...c[1] ? { animated: true } : {} } : { name: t };
+  const t2 = e.trim();
+  if (!t2) return void 0;
+  const c = CUSTOM_EMOJI.exec(t2);
+  return c ? { id: c[3], name: c[2], ...c[1] ? { animated: true } : {} } : { name: t2 };
 }
 var STYLE_NUM = { primary: 1, secondary: 2, success: 3, danger: 4 };
 function toDiscordPayload(m, o = {}) {
@@ -2724,6 +2744,102 @@ function describeDiscordError(e) {
   if (e.status && e.status >= 500) return "Discord ist gerade nicht erreichbar (Serverfehler) \u2013 sp\xE4ter erneut versuchen.";
   return detail || "Unbekannter Discord-Fehler.";
 }
+
+// src/radio-whitelist.ts
+var RADIO_GRANT_STATUSES = ["PENDING", "ACTIVE", "DISABLED", "SUSPENDED", "EXPIRED", "REVOKED"];
+var RADIO_GRANT_STATUS_LABEL = {
+  PENDING: "Ausstehend",
+  ACTIVE: "Aktiv",
+  DISABLED: "Deaktiviert",
+  SUSPENDED: "Gesperrt",
+  EXPIRED: "Abgelaufen",
+  REVOKED: "Entzogen (archiviert)"
+};
+var RADIO_GRANT_SOURCES = ["MANUAL", "ROLE", "REQUEST", "LEGACY"];
+var RADIO_GRANT_SOURCE_LABEL = { MANUAL: "Manuell", ROLE: "Discord-Rolle", REQUEST: "Antrag", LEGACY: "\xDCbernommen" };
+var t = (d) => d ? new Date(d).getTime() : null;
+function effectiveRadioStatus(g, now = /* @__PURE__ */ new Date()) {
+  const n = now.getTime();
+  if (g.status === "SUSPENDED") {
+    const until = t(g.suspendedUntil);
+    if (until === null || until > n) return "SUSPENDED";
+    return effectiveRadioStatus({ status: g.statusBeforeSuspend ?? "ACTIVE", expiresAt: g.expiresAt }, now);
+  }
+  if (g.status === "ACTIVE") {
+    const e = t(g.expiresAt);
+    if (e !== null && e <= n) return "EXPIRED";
+  }
+  return RADIO_GRANT_STATUSES.includes(g.status) ? g.status : "DISABLED";
+}
+var isRadioAuthorized = (g, now = /* @__PURE__ */ new Date()) => !!g && effectiveRadioStatus(g, now) === "ACTIVE";
+var DEFAULT_RADIO_ROLE_RULES = { enabled: false, grantRoleIds: [], requiredRoleIds: [], onRoleGain: "ACTIVATE", onRoleLoss: "REVOKE", manualOnRoleLoss: "KEEP" };
+function radioRoleSyncAction(rules, roleIds, grant, now = /* @__PURE__ */ new Date()) {
+  if (!rules.enabled) return { kind: "none", why: "Rollenabgleich ist ausgeschaltet." };
+  const has = (ids) => !!roleIds && ids.some((r) => roleIds.includes(r));
+  const hasGrantRole = rules.grantRoleIds.length > 0 && has(rules.grantRoleIds);
+  const required = rules.requiredRoleIds.length ? rules.requiredRoleIds : rules.grantRoleIds;
+  const keeps = required.length === 0 ? roleIds !== null : has(required);
+  const gainStatus = rules.onRoleGain === "PENDING" ? "PENDING" : "ACTIVE";
+  if (!grant) return hasGrantRole && rules.onRoleGain !== "NONE" ? { kind: "create", status: gainStatus } : { kind: "none", why: "Keine Freigabe und keine berechtigende Rolle." };
+  const status = effectiveRadioStatus(grant, now);
+  if (status === "SUSPENDED") return { kind: "none", why: "Gesperrt \u2013 Sperren hebt nur eine F\xFChrungskraft auf." };
+  if (grant.archived || status === "REVOKED" || status === "DISABLED") {
+    if (grant.roleRevoked && hasGrantRole && keeps && rules.onRoleGain !== "NONE") return { kind: "reactivate", status: gainStatus };
+    return { kind: "none", why: grant.roleRevoked ? "Berechtigende Rolle fehlt weiterhin." : "Manuell entzogen/deaktiviert \u2013 wird nicht automatisch wieder aktiv." };
+  }
+  if (keeps) return { kind: "none", why: "Erforderliche Rolle vorhanden." };
+  const policy = grant.source === "ROLE" ? rules.onRoleLoss : rules.manualOnRoleLoss;
+  if (policy === "REVOKE") return { kind: "revoke" };
+  if (policy === "DISABLE") return { kind: "disable" };
+  return { kind: "none", why: grant.source === "ROLE" ? "Regel: bei Rollenverlust nichts tun." : "Manuelle Freigabe bleibt laut Regel bestehen." };
+}
+var RADIO_CSV_COLUMNS = ["discord_id", "discord_name", "external_name", "status", "rank", "department", "expires_at", "reason"];
+function csvCell(v) {
+  let s = v === null || v === void 0 ? "" : v instanceof Date ? v.toISOString() : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function parseCsv(text) {
+  const src = text.replace(/^﻿/, "");
+  const firstLine = src.split(/\r?\n/, 1)[0] ?? "";
+  const sep = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ";" : ",";
+  const records = [];
+  let cur = [], cell = "", quoted = false, line = 1, start = 1;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (quoted) {
+      if (c === '"' && src[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else {
+        if (c === "\n") line++;
+        cell += c;
+      }
+      continue;
+    }
+    if (c === '"' && cell === "") quoted = true;
+    else if (c === sep) {
+      cur.push(cell);
+      cell = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && src[i + 1] === "\n") i++;
+      cur.push(cell);
+      records.push({ line: start, cells: cur });
+      cur = [];
+      cell = "";
+      line++;
+      start = line;
+    } else cell += c;
+  }
+  if (cell !== "" || cur.length) {
+    cur.push(cell);
+    records.push({ line: start, cells: cur });
+  }
+  const nonEmpty = records.filter((r) => r.cells.some((x) => x.trim() !== ""));
+  const header = (nonEmpty.shift()?.cells ?? []).map((h) => h.trim().toLowerCase());
+  return { header, rows: nonEmpty.map((r) => ({ line: r.line, cells: Object.fromEntries(header.map((h, i) => [h, (r.cells[i] ?? "").trim().replace(/^'(?=[=+\-@])/, "")])) })) };
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ALL_PERMISSIONS,
@@ -2755,6 +2871,7 @@ function describeDiscordError(e) {
   DEFAULT_FLEET_CONFIG,
   DEFAULT_HR_CONFIG,
   DEFAULT_MDT_CONFIG,
+  DEFAULT_RADIO_ROLE_RULES,
   DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS,
@@ -2809,6 +2926,11 @@ function describeDiscordError(e) {
   PROFILE_SECTIONS,
   PROFILE_SECTION_LABEL,
   QUESTION_TYPES,
+  RADIO_CSV_COLUMNS,
+  RADIO_GRANT_SOURCES,
+  RADIO_GRANT_SOURCE_LABEL,
+  RADIO_GRANT_STATUSES,
+  RADIO_GRANT_STATUS_LABEL,
   REPORT_FIELD_TYPES,
   REPORT_STATUSES,
   REPORT_STATUS_LABEL,
@@ -2864,6 +2986,7 @@ function describeDiscordError(e) {
   cloneWithNewIds,
   commandsForServer,
   conditionMatches,
+  csvCell,
   dangerLevelOf,
   defaultTicketButtons,
   departmentSchema,
@@ -2872,6 +2995,7 @@ function describeDiscordError(e) {
   dnSettingsSchema,
   dutyTimeText,
   effectivePermissions,
+  effectiveRadioStatus,
   embedChars,
   emptyMbDocument,
   emptyMbEmbed,
@@ -2904,6 +3028,7 @@ function describeDiscordError(e) {
   isHttpUrl,
   isInputQuestion,
   isPermissionKey,
+  isRadioAuthorized,
   isRobloxField,
   isSupportOpen,
   isValidEmoji,
@@ -2937,6 +3062,7 @@ function describeDiscordError(e) {
   normalizeField,
   notifyRuleSchema,
   panelFieldSchema,
+  parseCsv,
   parsePlayer,
   periodEnd,
   periodLabel,
@@ -2947,6 +3073,7 @@ function describeDiscordError(e) {
   policeReportFields,
   policyAllowsFlow,
   questionSchema,
+  radioRoleSyncAction,
   rangeSchema,
   rankSchema,
   renderApplicationText,

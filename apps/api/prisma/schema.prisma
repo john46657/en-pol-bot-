@@ -904,6 +904,103 @@ model RadioWhitelist {
 }
 
 /**
+ * Funk-Whitelist (externer Funkdienst): wer für den Funkdienst freigeschaltet ist. Identifikation ausschließlich über die
+ * Discord-ID (nie über den Namen). Ein Eintrag je Mitglied; „Entfernen“ archiviert (archivedAt), gelöscht wird nie.
+ * Löst die frühere Tabelle RadioWhitelist ab (bleibt als Altbestand unverändert erhalten, siehe docs/radio-whitelist.md).
+ */
+model RadioGrant {
+  id               String    @id @default(uuid()) @db.Uuid
+  /// Eindeutige Discord-ID; nur bei übernommenen Alt-Einträgen ohne verknüpftes Discord-Konto leer (muss nachgetragen werden)
+  discordId        String?   @unique
+  /// Zuletzt bekannter Discord-Anzeigename (nur Anzeige, nie zur Identifikation)
+  discordName      String?
+  /// verknüpftes Dashboard-Konto (optional)
+  userId           String?   @db.Uuid
+  rank             String?
+  department       String?
+  /// Benutzername beim externen Funkdienst (z. B. Zello)
+  externalName     String?
+  /// PENDING | ACTIVE | DISABLED | SUSPENDED | EXPIRED | REVOKED
+  status           String    @default("ACTIVE")
+  /// MANUAL | ROLE | REQUEST | LEGACY
+  source           String    @default("MANUAL")
+  reason           String?
+  expiresAt        DateTime?
+  suspendedUntil   DateTime?
+  suspendReason    String?
+  /// Status vor der Sperre (nach Ablauf/Aufhebung zurück)
+  statusBeforeSuspend String?
+  /// true = zuletzt durch den Discord-Rollenabgleich deaktiviert/entzogen (darf bei Rollengewinn wieder aktiviert werden)
+  roleRevoked      Boolean   @default(false)
+  grantedById      String?   @db.Uuid
+  grantedAt        DateTime?
+  archivedAt       DateTime?
+  /// NONE | PENDING | SYNCED | FAILED | MANUAL (nur manuell möglich) | MANUAL_DONE
+  externalStatus   String    @default("NONE")
+  externalSyncedAt DateTime?
+  externalError    String?
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status])
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+/** Antrag auf Funkfreigabe (über Discord gestellt). Entscheidungen werden nie gelöscht. */
+model RadioRequest {
+  id             String    @id @default(uuid()) @db.Uuid
+  discordId      String
+  discordName    String?
+  guildId        String?
+  rank           String?
+  department     String?
+  reason         String
+  /// PENDING | APPROVED | REJECTED | WITHDRAWN
+  status         String    @default("PENDING")
+  decidedById    String?   @db.Uuid
+  decidedAt      DateTime?
+  decisionReason String?
+  /// Ablaufdatum der Freigabe bei Genehmigung (optional)
+  grantExpiresAt DateTime?
+  grantId        String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([discordId])
+}
+
+/**
+ * Anbindung an den externen Funkdienst (genau eine Zeile, id = "default"). Zugangsdaten nur verschlüsselt
+ * (AES-256-GCM, siehe cad/erlc-crypto.ts) – sie verlassen den Server nie.
+ */
+model RadioIntegration {
+  id               String    @id @default("default")
+  /// NONE | ZELLO_WORK (Server-API, verifiziert) | ZELLO_APP (kein API → manuell) | OTHER_MANUAL
+  provider         String    @default("NONE")
+  displayName      String    @default("Funkdienst")
+  /// Zello Work: Netzwerkname (https://<netzwerk>.zellowork.com)
+  network          String?
+  /// Zello Work: Kanal, dem freigegebene Mitglieder hinzugefügt werden
+  channel          String?
+  adminUsername    String?
+  passwordEnc      String?
+  apiKeyEnc        String?
+  /// automatische Synchronisierung bei Änderungen (nur mit unterstützter API)
+  autoSync         Boolean   @default(false)
+  /// NOT_CONFIGURED | CONNECTED | ERROR | MANUAL
+  status           String    @default("NOT_CONFIGURED")
+  lastTestAt       DateTime?
+  lastSuccessAt    DateTime?
+  lastSyncAt       DateTime?
+  lastSyncStatus   String?
+  lastError        String?
+  version          Int       @default(1)
+  updatedAt        DateTime  @updatedAt
+}
+
+/**
  * SEK (Spezialeinsatzkommando): eigenes Roster und eigene Einsatzberichte (Bewerbung: QualificationApplication).
  */
 model SekMember {

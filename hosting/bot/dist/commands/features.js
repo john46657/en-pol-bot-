@@ -14,6 +14,7 @@ const panels_1 = require("./panels");
 const message_builder_1 = require("../message-builder");
 const duty_reports_1 = require("./duty-reports");
 const trainings_1 = require("./trainings");
+const radio_whitelist_1 = require("./radio-whitelist");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
@@ -220,6 +221,7 @@ exports.INTERACTIONS = [
         },
     },
     qualifications_1.QUALI_INTERACTION,
+    radio_whitelist_1.RADIO_WHITELIST_INTERACTION,
     tickets_1.TICKET_INTERACTION,
     voice_support_1.VOICE_INTERACTION,
     leave_1.LEAVE_INTERACTION,
