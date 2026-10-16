@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import { ApplicationAnalytics } from './ApplicationAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import { TrendChart } from '../components/TrendChart';
 import { Card, ErrorState, PageHeader, Select, Skeleton, Tabs } from '../components/ui';
 
 type Section = Record<string, number | null>;
@@ -31,6 +32,7 @@ export function Analytics() {
 function Overview() {
   const [days, setDays] = useState(30);
   const q = useQuery({ queryKey: ['analytics', days], queryFn: () => api<Overview>('/analytics/overview', { query: { days } }) });
+  const trend = useQuery({ queryKey: ['analytics-trend', days], queryFn: () => api<{ days: string[]; series: { key: string; label: string; unit: string; values: number[] }[] }>('/analytics/trend', { query: { days } }) });
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   // Strafzettel gibt es im Dashboard nicht mehr
   const sections = q.data ? (Object.entries(q.data).filter(([k, v]) => k !== 'days' && k !== 'tickets' && typeof v === 'object') as [string, Section][]) : [];
@@ -42,6 +44,12 @@ function Overview() {
           <Card key={name} title={SECTION_LABELS[name] ?? name[0]!.toUpperCase() + name.slice(1)}><dl className="grid grid-cols-2 gap-3">{Object.entries(s).map(([k, v]) => <div key={k}><dt className="text-xs text-muted">{LABELS[k] ?? k}</dt><dd className="text-2xl font-semibold">{v ?? '—'}</dd></div>)}</dl></Card>
         ))}
       </div>
+      {!!trend.data?.series.length && <>
+        <h2 className="mb-2 mt-6 text-sm font-semibold text-muted">Verlauf</h2>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {trend.data.series.map((s) => <Card key={s.key} title={s.label}><TrendChart days={trend.data.days} values={s.values} unit={s.unit} label={s.label} /></Card>)}
+        </div>
+      </>}
     </>
   );
 }
