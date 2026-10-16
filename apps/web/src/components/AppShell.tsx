@@ -144,8 +144,9 @@ export function AppShell() {
             <Button variant="ghost" aria-label="Abmelden" onClick={() => void flush().finally(() => void logout())}><LogOut size={16} /></Button>
           </div>
         </header>
-        <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 pb-20 sm:p-4 sm:pb-20 md:pb-4 lg:p-6">{can('dashboard.view') ? <><SectionTabs /><Outlet /></> : <NoAccess />}</main>
-        {!tablet && <BottomBar items={items} favs={favs} onMenu={() => setOpen(true)} />}
+        <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">{can('dashboard.view') ? <><SectionTabs /><Outlet /></> : <NoAccess />}</main>
+        {/* Platzhalter: der Inhalt (auch fixierte Speichern-Leisten) endet über der Handy-Leiste */}
+        {!tablet && <><div className="h-bottombar shrink-0 md:hidden" aria-hidden /><BottomBar items={items} favs={favs} onMenu={() => setOpen(true)} /></>}
         <Toasts />
       </div>
     </div>
@@ -177,7 +178,7 @@ function BottomBar({ items, favs, onMenu }: { items: NavItem[]; favs: NavItem[];
   const pick = [...new Set([...favs, ...defaults])].slice(0, 4);
   if (!pick.length) return null;
   return (
-    <nav aria-label="Schnellzugriff" className="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-panel/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" style={{ gridTemplateColumns: `repeat(${pick.length + 1}, minmax(0, 1fr))` }}>
+    <nav aria-label="Schnellzugriff" className="fixed inset-x-0 bottom-0 z-30 grid h-bottombar border-t border-line bg-panel/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" style={{ gridTemplateColumns: `repeat(${pick.length + 1}, minmax(0, 1fr))` }}>
       {pick.map((i) => {
         const on = isActive(i, loc.pathname);
         const Icon = i.icon;

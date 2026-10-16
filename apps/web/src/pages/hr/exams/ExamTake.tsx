@@ -380,7 +380,7 @@ function GradeView({ v, onDone }: { v: AttemptView; onDone: (v: AttemptView) => 
       </ol>
       {editable && <L label="Rückmeldung an die Person (optional)"><Textarea aria-label="Rückmeldung" rows={3} maxLength={2000} value={feedback} onChange={(e) => setFeedback(e.target.value)} /></L>}
       {err && <p role="alert" className="text-sm text-danger">{err}</p>}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-panel/95 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-20 max-md:bottom-bottombar border-t border-line bg-panel/95 backdrop-blur">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3 px-4 py-2.5">
           <div className="min-w-48 flex-1">
             <p className="text-sm"><b>{pts(total)}</b> von {pts(max)} · <b>{p} %</b> → {p >= v.passPercent ? '🟢 bestanden' : '🔴 nicht bestanden'} <span className="text-xs text-muted">(ab {v.passPercent} %)</span></p>

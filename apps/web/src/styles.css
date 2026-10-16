@@ -2,6 +2,8 @@
 
 @theme {
   --color-bg: #0b0e14;
+  /* Höhe der Handy-Schnellleiste unten (inkl. Home-Indikator) */
+  --spacing-bottombar: calc(3.5rem + env(safe-area-inset-bottom));
   --color-panel: #131823;
   --color-panel-2: #1a2130;
   --color-line: #263044;

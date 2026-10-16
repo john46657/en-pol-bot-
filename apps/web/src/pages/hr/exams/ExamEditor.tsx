@@ -233,7 +233,7 @@ function ExamEditor({ id, initial, updatedAt, attemptCount, fromImport }: { id?:
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-panel/95 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-20 max-md:bottom-bottombar border-t border-line bg-panel/95 backdrop-blur">
         <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center gap-3 px-4 py-2.5">
           <div className="min-w-0 flex-1 text-xs">
             {msg ? <span role={msg.ok ? 'status' : 'alert'} className={msg.ok ? 'text-success' : 'text-danger'}>{msg.text}</span>

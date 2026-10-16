@@ -22,7 +22,7 @@ export function Toasts() {
   }), [qc, enabled, muted.join()]);
   if (!list.length) return null;
   return (
-    <div className="fixed bottom-4 right-4 z-50 grid w-80 max-w-[calc(100vw-2rem)] gap-2" role="status" aria-live="polite">
+    <div className="fixed bottom-4 right-4 z-50 max-md:bottom-[calc(var(--spacing-bottombar)+0.5rem)] grid w-80 max-w-[calc(100vw-2rem)] gap-2" role="status" aria-live="polite">
       {list.map((t) => (
         <div key={t.id} className="card flex items-start gap-2 border border-line p-3 text-sm shadow-xl">
           <p className="min-w-0 flex-1">{t.title}</p>
