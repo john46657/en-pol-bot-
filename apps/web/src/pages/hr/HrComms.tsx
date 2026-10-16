@@ -57,7 +57,7 @@ function useRoles() {
   return useQuery({ queryKey: ['roles'], queryFn: () => api<Role[]>('/roles'), enabled: can('roles.view'), staleTime: 60_000 });
 }
 /** Zielgruppe: Dashboard-Rollen (leer = alle). */
-function AudiencePicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+export function AudiencePicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const roles = useRoles();
   const list = roles.data ?? [];
   const name = (id: string) => list.find((r) => r.id === id)?.name ?? `${id.slice(0, 8)}…`;

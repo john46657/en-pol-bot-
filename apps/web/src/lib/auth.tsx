@@ -53,7 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => { await api('/auth/logout', { method: 'POST' }).catch(() => undefined); resetAutosave(); qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' }); qc.setQueryData(['me'], null); }, [qc]);
   const value = useMemo<AuthCtx>(() => {
     const set = new Set(user?.permissions ?? []);
-    return { user, loading: q.isLoading, can: (p) => set.has(p), login, loginTwoFactor, logout };
+    // can('a|b'): eines der Rechte genügt
+    return { user, loading: q.isLoading, can: (p) => p.split('|').some((x) => set.has(x)), login, loginTwoFactor, logout };
   }, [user, q.isLoading, login, loginTwoFactor, logout]);
   // Öffentliche Seiten (Datenschutz, Nutzungsbedingungen) gehen auch, wenn der Server gerade nicht antwortet
   const publicPage = /^\/(datenschutz|nutzungsbedingungen)\/?$/.test(window.location.pathname);

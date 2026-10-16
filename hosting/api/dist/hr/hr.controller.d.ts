@@ -1,10 +1,11 @@
 import { z } from 'zod';
-import { type DnSettings, type HrConfig, type RangeInput, type RankInput } from '@enrp/shared';
+import { type DnSettings, type ExamInput, type HrConfig, type RangeInput, type RankInput } from '@enrp/shared';
 import type { Actor } from '../audit/audit.service';
 import { HrCoreService } from './hr-core.service';
 import { HrPeopleService } from './hr-people.service';
 import { HrRequestsService } from './hr-requests.service';
-import { examSchema, HrTrainingService, trainingSchema } from './hr-training.service';
+import { HrTrainingService, trainingSchema } from './hr-training.service';
+import { HrExamService } from './hr-exam.service';
 import { announcementSchema, HrCommsService, pollSchema } from './hr-comms.service';
 import { ServiceNumbersService } from './service-numbers.service';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
@@ -231,7 +232,7 @@ export declare class HrController {
         }[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
-        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
             dashboard: boolean;
             dm: boolean;
             roleIds: string[];
@@ -342,7 +343,7 @@ export declare class HrController {
         }[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
-        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
             dashboard: boolean;
             dm: boolean;
             roleIds: string[];
@@ -599,12 +600,19 @@ export declare class HrController {
             id: string;
             status: string;
             startedAt: Date;
+            voidReason: string | null;
+            voidedById: string | null;
             personnelId: string;
             examId: string;
+            snapshot: import("@prisma/client/runtime/library").JsonValue | null;
             score: number | null;
             passed: boolean | null;
             gradedById: string | null;
             questionIds: string[];
+            shuffle: import("@prisma/client/runtime/library").JsonValue;
+            flagged: string[];
+            questionScores: import("@prisma/client/runtime/library").JsonValue | null;
+            voidedAt: Date | null;
             maxScore: number | null;
             gradedAt: Date | null;
             feedback: string | null;
@@ -1229,25 +1237,156 @@ export declare class HrTrainingController {
         signature: string;
         status: string;
     }>;
-    exams(a: Actor): Promise<{
-        questions: import("@prisma/client/runtime/library").JsonValue | undefined;
+}
+declare const answersBody: z.ZodObject<{
+    answers: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+    flagged: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    answers: Record<string, unknown>;
+    flagged?: string[] | undefined;
+}, {
+    answers: Record<string, unknown>;
+    flagged?: string[] | undefined;
+}>;
+declare const gradeBody: z.ZodObject<{
+    scores: z.ZodRecord<z.ZodString, z.ZodNumber>;
+    feedback: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    scores: Record<string, number>;
+    feedback?: string | undefined;
+}, {
+    scores: Record<string, number>;
+    feedback?: string | undefined;
+}>;
+declare const attemptsQ: z.ZodObject<{
+    examId: z.ZodOptional<z.ZodString>;
+    status: z.ZodOptional<z.ZodEnum<["IN_PROGRESS", "SUBMITTED", "GRADED", "VOIDED"]>>;
+}, "strip", z.ZodTypeAny, {
+    status?: "SUBMITTED" | "GRADED" | "IN_PROGRESS" | "VOIDED" | undefined;
+    examId?: string | undefined;
+}, {
+    status?: "SUBMITTED" | "GRADED" | "IN_PROGRESS" | "VOIDED" | undefined;
+    examId?: string | undefined;
+}>;
+export declare class HrExamController {
+    private readonly s;
+    constructor(s: HrExamService);
+    list(a: Actor): Promise<{
+        id: string;
+        title: string;
+        description: string | null;
+        instructions: string | null;
+        category: string | null;
+        active: boolean;
         questionTotal: number;
-        myAttempts: {
-            status: string;
-            startedAt: Date;
-            examId: string;
-            score: number | null;
-            passed: boolean | null;
-            maxScore: number | null;
-            submittedAt: Date | null;
+        questionsPerAttempt: number;
+        passPercent: number;
+        timeLimitMin: number | null;
+        maxAttempts: number;
+        retryHours: number;
+        layout: string;
+        reviewMode: string;
+        showResult: boolean;
+        availableFrom: Date | null;
+        availableUntil: Date | null;
+        trainingId: string | null;
+        trainingName: string | null;
+        requiredExamId: string | null;
+        requiredExamTitle: string | null;
+        updatedAt: Date;
+        canEdit: boolean;
+        canGrade: boolean;
+        me: {
+            bestPercent: number | null;
+            last: {
+                status: string;
+                passed: boolean | null;
+                percent: number | null;
+                at: Date;
+            } | null;
+            state: import("./hr-exam.service").ExamState;
+            reason: string | null;
+            nextTryAt: string | null;
+            openAttemptId: string | null;
+            attemptsUsed: number;
+            attemptsLeft: number;
+        };
+        stats: {
+            participants: number;
+            attempts: number;
+            passed: number;
+            pending: number;
+            running: number;
+            avgPercent: number | null;
+            passRate: number | null;
+        } | null;
+    }[]>;
+    detail(a: Actor, id: string): Promise<{
+        questions: {
+            options: string[];
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            text: string;
+            id: string;
+            image: string | null;
+            partial: boolean;
+            matches: string[];
+            correct: string[];
+            points: number;
+            tolerance: number;
+            explanation: string | null;
+        }[];
+        attemptCount: number;
+        serverId: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        category: string | null;
+        description: string | null;
+        active: boolean;
+        instructions: string | null;
+        questionCount: number;
+        passPercent: number;
+        timeLimitMin: number | null;
+        maxAttempts: number;
+        retryHours: number;
+        autoGrade: boolean;
+        showResult: boolean;
+        reviewMode: string;
+        layout: string;
+        shuffleQuestions: boolean;
+        shuffleOptions: boolean;
+        examinerIds: string[];
+        audienceRoleIds: string[];
+        trainingId: string | null;
+        requiredExamId: string | null;
+        availableFrom: Date | null;
+        availableUntil: Date | null;
+        notifyExaminers: boolean;
+    }>;
+    create(a: Actor, b: ExamInput): Promise<{
+        questions: {
+            options: string[];
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            text: string;
+            id: string;
+            image: string | null;
+            partial: boolean;
+            matches: string[];
+            correct: string[];
+            points: number;
+            tolerance: number;
+            explanation: string | null;
         }[];
         serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
+        category: string | null;
         description: string | null;
         active: boolean;
+        instructions: string | null;
         questionCount: number;
         passPercent: number;
         timeLimitMin: number | null;
@@ -1255,17 +1394,71 @@ export declare class HrTrainingController {
         retryHours: number;
         autoGrade: boolean;
         showResult: boolean;
+        reviewMode: string;
+        layout: string;
+        shuffleQuestions: boolean;
+        shuffleOptions: boolean;
         examinerIds: string[];
+        audienceRoleIds: string[];
         trainingId: string | null;
-    }[]>;
-    createExam(a: Actor, b: z.infer<typeof examSchema>): Promise<{
+        requiredExamId: string | null;
+        availableFrom: Date | null;
+        availableUntil: Date | null;
+        notifyExaminers: boolean;
+    }>;
+    save(a: Actor, id: string, b: ExamInput): Promise<{
+        questions: {
+            options: string[];
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            text: string;
+            id: string;
+            image: string | null;
+            partial: boolean;
+            matches: string[];
+            correct: string[];
+            points: number;
+            tolerance: number;
+            explanation: string | null;
+        }[];
         serverId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
+        category: string | null;
         description: string | null;
         active: boolean;
+        instructions: string | null;
+        questionCount: number;
+        passPercent: number;
+        timeLimitMin: number | null;
+        maxAttempts: number;
+        retryHours: number;
+        autoGrade: boolean;
+        showResult: boolean;
+        reviewMode: string;
+        layout: string;
+        shuffleQuestions: boolean;
+        shuffleOptions: boolean;
+        examinerIds: string[];
+        audienceRoleIds: string[];
+        trainingId: string | null;
+        requiredExamId: string | null;
+        availableFrom: Date | null;
+        availableUntil: Date | null;
+        notifyExaminers: boolean;
+    }>;
+    remove(a: Actor, id: string): Promise<void>;
+    duplicate(a: Actor, id: string): Promise<{
+        serverId: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        category: string | null;
+        description: string | null;
+        active: boolean;
+        instructions: string | null;
         questions: import("@prisma/client/runtime/library").JsonValue;
         questionCount: number;
         passPercent: number;
@@ -1274,225 +1467,495 @@ export declare class HrTrainingController {
         retryHours: number;
         autoGrade: boolean;
         showResult: boolean;
+        reviewMode: string;
+        layout: string;
+        shuffleQuestions: boolean;
+        shuffleOptions: boolean;
         examinerIds: string[];
+        audienceRoleIds: string[];
         trainingId: string | null;
+        requiredExamId: string | null;
+        availableFrom: Date | null;
+        availableUntil: Date | null;
+        notifyExaminers: boolean;
     }>;
-    saveExam(a: Actor, id: string, b: z.infer<typeof examSchema>): Promise<{
-        serverId: string | null;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        active: boolean;
-        questions: import("@prisma/client/runtime/library").JsonValue;
-        questionCount: number;
-        passPercent: number;
-        timeLimitMin: number | null;
-        maxAttempts: number;
-        retryHours: number;
-        autoGrade: boolean;
-        showResult: boolean;
-        examinerIds: string[];
-        trainingId: string | null;
+    results(a: Actor, id: string): Promise<{
+        exam: {
+            id: string;
+            title: string;
+            passPercent: number;
+            maxAttempts: number;
+            questionTotal: number;
+            category: string | null;
+        };
+        stats: {
+            voided: number;
+            avgMinutes: number | null;
+            bestPercent: number | null;
+            participants: number;
+            attempts: number;
+            passed: number;
+            pending: number;
+            running: number;
+            avgPercent: number | null;
+            passRate: number | null;
+        };
+        people: {
+            personnelId: string;
+            name: string;
+            rank: string | null;
+            attempts: number;
+            bestPercent: number | null;
+            passed: boolean;
+            pending: boolean;
+            running: boolean;
+            lastAt: Date;
+        }[];
+        attempts: {
+            id: string;
+            personnelId: string;
+            name: string;
+            rank: string | null;
+            own: boolean;
+            status: string;
+            score: number | null;
+            maxScore: number | null;
+            percent: number | null;
+            passed: boolean | null;
+            startedAt: Date;
+            submittedAt: Date | null;
+            gradedAt: Date | null;
+            voidReason: string | null;
+            minutes: number | null;
+        }[];
+        questions: {
+            id: string;
+            text: string;
+            type: string;
+            points: number;
+            asked: number;
+            avgPercent: number | null;
+            correctRate: number | null;
+        }[];
     }>;
-    deleteExam(a: Actor, id: string): Promise<void>;
     start(a: Actor, id: string): Promise<{
         id: string;
         examId: string;
         title: string;
         description: string | null;
+        instructions: string | null;
         status: string;
         startedAt: Date;
         submittedAt: Date | null;
+        serverNow: Date;
+        deadline: Date | null;
         timeLimitMin: number | null;
         passPercent: number;
+        layout: string;
+        reviewMode: string;
         name: string;
-        answers: import("@prisma/client/runtime/library").JsonValue;
+        rank: string | null;
+        owner: boolean;
         grader: boolean;
+        answers: Record<string, unknown> | null;
+        flagged: string[];
         questions: {
+            auto?: number | null | undefined;
             correct?: string[] | undefined;
+            gaps?: string[][] | undefined;
+            tolerance?: number | undefined;
+            explanation?: string | null | undefined;
+            correctAnswer?: boolean | undefined;
+            earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER";
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
             text: string;
-            options: string[];
+            image: string | null;
             points: number;
+            partial: boolean;
+            options: {
+                i: number;
+                text: string;
+            }[];
+            matches: {
+                i: number;
+                text: string;
+            }[];
         }[];
         result: {
             score: number | null;
             maxScore: number | null;
+            percent: number | null;
             passed: boolean | null;
             feedback: string | null;
         } | {
             passed: boolean | null;
+            feedback: string | null;
             score?: undefined;
             maxScore?: undefined;
-            feedback?: undefined;
+            percent?: undefined;
+        } | null;
+        gradedBy: string | null;
+        gradedAt: Date | null;
+        voided: {
+            reason: string | null;
+            at: Date | null;
+            by: string | null;
         } | null;
     }>;
-    attempts(a: Actor, examId?: string): Promise<{
-        answers: undefined;
+    attempts(a: Actor, q: z.infer<typeof attemptsQ>): Promise<{
+        percent: number | null;
+        own: boolean;
         personnel: {
             user: {
                 displayName: string;
             };
-        };
-        exam: {
-            title: string;
+            userId: string;
+            rank: string | null;
         };
         id: string;
         status: string;
         startedAt: Date;
+        voidReason: string | null;
         personnelId: string;
         examId: string;
         score: number | null;
         passed: boolean | null;
-        gradedById: string | null;
-        questionIds: string[];
         maxScore: number | null;
         gradedAt: Date | null;
-        feedback: string | null;
         submittedAt: Date | null;
+        exam: {
+            title: string;
+            passPercent: number;
+        };
     }[]>;
     attempt(a: Actor, id: string): Promise<{
         id: string;
         examId: string;
         title: string;
         description: string | null;
+        instructions: string | null;
         status: string;
         startedAt: Date;
         submittedAt: Date | null;
+        serverNow: Date;
+        deadline: Date | null;
         timeLimitMin: number | null;
         passPercent: number;
+        layout: string;
+        reviewMode: string;
         name: string;
-        answers: import("@prisma/client/runtime/library").JsonValue;
+        rank: string | null;
+        owner: boolean;
         grader: boolean;
+        answers: Record<string, unknown> | null;
+        flagged: string[];
         questions: {
+            auto?: number | null | undefined;
             correct?: string[] | undefined;
+            gaps?: string[][] | undefined;
+            tolerance?: number | undefined;
+            explanation?: string | null | undefined;
+            correctAnswer?: boolean | undefined;
+            earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER";
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
             text: string;
-            options: string[];
+            image: string | null;
             points: number;
+            partial: boolean;
+            options: {
+                i: number;
+                text: string;
+            }[];
+            matches: {
+                i: number;
+                text: string;
+            }[];
         }[];
         result: {
             score: number | null;
             maxScore: number | null;
+            percent: number | null;
             passed: boolean | null;
             feedback: string | null;
         } | {
             passed: boolean | null;
+            feedback: string | null;
             score?: undefined;
             maxScore?: undefined;
-            feedback?: undefined;
+            percent?: undefined;
+        } | null;
+        gradedBy: string | null;
+        gradedAt: Date | null;
+        voided: {
+            reason: string | null;
+            at: Date | null;
+            by: string | null;
         } | null;
     }>;
-    answers(a: Actor, id: string, b: {
-        answers: Record<string, unknown>;
-    }): Promise<{
+    answers(a: Actor, id: string, b: z.infer<typeof answersBody>): Promise<{
         id: string;
         examId: string;
         title: string;
         description: string | null;
+        instructions: string | null;
         status: string;
         startedAt: Date;
         submittedAt: Date | null;
+        serverNow: Date;
+        deadline: Date | null;
         timeLimitMin: number | null;
         passPercent: number;
+        layout: string;
+        reviewMode: string;
         name: string;
-        answers: import("@prisma/client/runtime/library").JsonValue;
+        rank: string | null;
+        owner: boolean;
         grader: boolean;
+        answers: Record<string, unknown> | null;
+        flagged: string[];
         questions: {
+            auto?: number | null | undefined;
             correct?: string[] | undefined;
+            gaps?: string[][] | undefined;
+            tolerance?: number | undefined;
+            explanation?: string | null | undefined;
+            correctAnswer?: boolean | undefined;
+            earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER";
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
             text: string;
-            options: string[];
+            image: string | null;
             points: number;
+            partial: boolean;
+            options: {
+                i: number;
+                text: string;
+            }[];
+            matches: {
+                i: number;
+                text: string;
+            }[];
         }[];
         result: {
             score: number | null;
             maxScore: number | null;
+            percent: number | null;
             passed: boolean | null;
             feedback: string | null;
         } | {
             passed: boolean | null;
+            feedback: string | null;
             score?: undefined;
             maxScore?: undefined;
-            feedback?: undefined;
+            percent?: undefined;
+        } | null;
+        gradedBy: string | null;
+        gradedAt: Date | null;
+        voided: {
+            reason: string | null;
+            at: Date | null;
+            by: string | null;
         } | null;
     } | {
         saved: boolean;
     }>;
-    submit(a: Actor, id: string, b: {
-        answers: Record<string, unknown>;
-    }): Promise<{
+    submit(a: Actor, id: string, b: z.infer<typeof answersBody>): Promise<{
         id: string;
         examId: string;
         title: string;
         description: string | null;
+        instructions: string | null;
         status: string;
         startedAt: Date;
         submittedAt: Date | null;
+        serverNow: Date;
+        deadline: Date | null;
         timeLimitMin: number | null;
         passPercent: number;
+        layout: string;
+        reviewMode: string;
         name: string;
-        answers: import("@prisma/client/runtime/library").JsonValue;
+        rank: string | null;
+        owner: boolean;
         grader: boolean;
+        answers: Record<string, unknown> | null;
+        flagged: string[];
         questions: {
+            auto?: number | null | undefined;
             correct?: string[] | undefined;
+            gaps?: string[][] | undefined;
+            tolerance?: number | undefined;
+            explanation?: string | null | undefined;
+            correctAnswer?: boolean | undefined;
+            earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER";
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
             text: string;
-            options: string[];
+            image: string | null;
             points: number;
+            partial: boolean;
+            options: {
+                i: number;
+                text: string;
+            }[];
+            matches: {
+                i: number;
+                text: string;
+            }[];
         }[];
         result: {
             score: number | null;
             maxScore: number | null;
+            percent: number | null;
             passed: boolean | null;
             feedback: string | null;
         } | {
             passed: boolean | null;
+            feedback: string | null;
             score?: undefined;
             maxScore?: undefined;
-            feedback?: undefined;
+            percent?: undefined;
+        } | null;
+        gradedBy: string | null;
+        gradedAt: Date | null;
+        voided: {
+            reason: string | null;
+            at: Date | null;
+            by: string | null;
         } | null;
     }>;
-    grade(a: Actor, id: string, b: {
-        scores: Record<string, number>;
-        feedback?: string;
+    grade(a: Actor, id: string, b: z.infer<typeof gradeBody>): Promise<{
+        id: string;
+        examId: string;
+        title: string;
+        description: string | null;
+        instructions: string | null;
+        status: string;
+        startedAt: Date;
+        submittedAt: Date | null;
+        serverNow: Date;
+        deadline: Date | null;
+        timeLimitMin: number | null;
+        passPercent: number;
+        layout: string;
+        reviewMode: string;
+        name: string;
+        rank: string | null;
+        owner: boolean;
+        grader: boolean;
+        answers: Record<string, unknown> | null;
+        flagged: string[];
+        questions: {
+            auto?: number | null | undefined;
+            correct?: string[] | undefined;
+            gaps?: string[][] | undefined;
+            tolerance?: number | undefined;
+            explanation?: string | null | undefined;
+            correctAnswer?: boolean | undefined;
+            earned?: number | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            options: {
+                i: number;
+                text: string;
+            }[];
+            matches: {
+                i: number;
+                text: string;
+            }[];
+        }[];
+        result: {
+            score: number | null;
+            maxScore: number | null;
+            percent: number | null;
+            passed: boolean | null;
+            feedback: string | null;
+        } | {
+            passed: boolean | null;
+            feedback: string | null;
+            score?: undefined;
+            maxScore?: undefined;
+            percent?: undefined;
+        } | null;
+        gradedBy: string | null;
+        gradedAt: Date | null;
+        voided: {
+            reason: string | null;
+            at: Date | null;
+            by: string | null;
+        } | null;
+    }>;
+    void(a: Actor, id: string, b: {
+        reason: string;
     }): Promise<{
         id: string;
         examId: string;
         title: string;
         description: string | null;
+        instructions: string | null;
         status: string;
         startedAt: Date;
         submittedAt: Date | null;
+        serverNow: Date;
+        deadline: Date | null;
         timeLimitMin: number | null;
         passPercent: number;
+        layout: string;
+        reviewMode: string;
         name: string;
-        answers: import("@prisma/client/runtime/library").JsonValue;
+        rank: string | null;
+        owner: boolean;
         grader: boolean;
+        answers: Record<string, unknown> | null;
+        flagged: string[];
         questions: {
+            auto?: number | null | undefined;
             correct?: string[] | undefined;
+            gaps?: string[][] | undefined;
+            tolerance?: number | undefined;
+            explanation?: string | null | undefined;
+            correctAnswer?: boolean | undefined;
+            earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER";
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
             text: string;
-            options: string[];
+            image: string | null;
             points: number;
+            partial: boolean;
+            options: {
+                i: number;
+                text: string;
+            }[];
+            matches: {
+                i: number;
+                text: string;
+            }[];
         }[];
         result: {
             score: number | null;
             maxScore: number | null;
+            percent: number | null;
             passed: boolean | null;
             feedback: string | null;
         } | {
             passed: boolean | null;
+            feedback: string | null;
             score?: undefined;
             maxScore?: undefined;
-            feedback?: undefined;
+            percent?: undefined;
+        } | null;
+        gradedBy: string | null;
+        gradedAt: Date | null;
+        voided: {
+            reason: string | null;
+            at: Date | null;
+            by: string | null;
         } | null;
     }>;
 }
@@ -1513,8 +1976,8 @@ export declare class HrCommsController {
         priority: string;
         expiresAt: Date | null;
         attachments: string[];
-        body: string;
         audienceRoleIds: string[];
+        body: string;
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
@@ -1529,8 +1992,8 @@ export declare class HrCommsController {
         priority: string;
         expiresAt: Date | null;
         attachments: string[];
-        body: string;
         audienceRoleIds: string[];
+        body: string;
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
@@ -1545,8 +2008,8 @@ export declare class HrCommsController {
         priority: string;
         expiresAt: Date | null;
         attachments: string[];
-        body: string;
         audienceRoleIds: string[];
+        body: string;
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;

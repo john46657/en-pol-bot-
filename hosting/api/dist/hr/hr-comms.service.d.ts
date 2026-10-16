@@ -16,8 +16,8 @@ export declare const announcementSchema: z.ZodObject<{
     title: string;
     priority: "LOW" | "HIGH" | "CRITICAL" | "NORMAL";
     attachments: string[];
-    body: string;
     audienceRoleIds: string[];
+    body: string;
     requireAck: boolean;
     discordChannelId: string | null;
     expiresAt?: string | null | undefined;
@@ -88,8 +88,8 @@ export declare class HrCommsService {
         priority: string;
         expiresAt: Date | null;
         attachments: string[];
-        body: string;
         audienceRoleIds: string[];
+        body: string;
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;
@@ -104,8 +104,8 @@ export declare class HrCommsService {
         priority: string;
         expiresAt: Date | null;
         attachments: string[];
-        body: string;
         audienceRoleIds: string[];
+        body: string;
         publishAt: Date;
         requireAck: boolean;
         discordChannelId: string | null;

@@ -53,6 +53,10 @@ const Promotions = lazy(() => import('./pages/hr/Promotions').then((m) => ({ def
 const HrSettings = lazy(() => import('./pages/hr/HrSettings').then((m) => ({ default: m.HrSettings })));
 const Trainings = lazy(() => import('./pages/hr/Trainings').then((m) => ({ default: m.Trainings })));
 const Certificate = lazy(() => import('./pages/hr/Trainings').then((m) => ({ default: m.Certificate })));
+const ExamEditorPage = lazy(() => import('./pages/hr/exams/ExamEditor').then((m) => ({ default: m.ExamEditorPage })));
+const ExamStartPage = lazy(() => import('./pages/hr/exams/ExamTake').then((m) => ({ default: m.ExamStartPage })));
+const AttemptPage = lazy(() => import('./pages/hr/exams/ExamTake').then((m) => ({ default: m.AttemptPage })));
+const ExamResultsPage = lazy(() => import('./pages/hr/exams/ExamResults').then((m) => ({ default: m.ExamResultsPage })));
 const HrComms = lazy(() => import('./pages/hr/HrComms').then((m) => ({ default: m.HrComms })));
 const ServiceNumbers = lazy(() => import('./pages/hr/ServiceNumbers').then((m) => ({ default: m.ServiceNumbers })));
 const DutyReports = lazy(() => import('./pages/DutyReports').then((m) => ({ default: m.DutyReports })));
@@ -200,7 +204,12 @@ export function App() {
           <Route path="personnel/:id" element={<Guard perm="personnel.view"><PersonnelFile /></Guard>} />
           <Route path="warnings" element={<Guard perm="warning.view"><Warnings /></Guard>} />
           <Route path="promotions" element={<Guard perm="promotion.view"><Promotions /></Guard>} />
-          <Route path="trainings" element={<Guard perm="training.view"><Trainings /></Guard>} />
+          <Route path="trainings" element={<Guard perm="training.view|exam.view"><Trainings /></Guard>} />
+          <Route path="trainings/exams/new" element={<Guard perm="exam.create"><ExamEditorPage /></Guard>} />
+          <Route path="trainings/exams/:id" element={<Guard perm="exam.view"><ExamStartPage /></Guard>} />
+          <Route path="trainings/exams/:id/edit" element={<Guard perm="exam.manage"><ExamEditorPage /></Guard>} />
+          <Route path="trainings/exams/:id/results" element={<Guard perm="exam.view"><ExamResultsPage /></Guard>} />
+          <Route path="trainings/attempts/:id" element={<Guard perm="exam.view"><AttemptPage /></Guard>} />
           <Route path="certificates/:no" element={<Guard perm="dashboard.view"><Certificate /></Guard>} />
           <Route path="announcements" element={<Guard perm="announcements.view"><HrComms /></Guard>} />
           <Route path="service-numbers" element={<Guard perm="dienstnummer.view"><ServiceNumbers /></Guard>} />

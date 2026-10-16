@@ -170,7 +170,7 @@ let HrCoreService = class HrCoreService {
                 results.push({ ...base, label: r.label || `Ausbildung „${name}“ abgeschlossen`, met: !!ok, current: t ? t.status : 'nicht begonnen', needed: 'bestanden' });
             }
             else if (r.type === 'EXAM') {
-                const ok = r.ref ? await this.prisma.hrExamAttempt.count({ where: { personnelId, examId: r.ref, passed: true } }) : 0;
+                const ok = r.ref ? await this.prisma.hrExamAttempt.count({ where: { personnelId, examId: r.ref, passed: true, status: 'GRADED' } }) : 0;
                 const name = r.ref ? (await this.prisma.hrExam.findUnique({ where: { id: r.ref }, select: { title: true } }))?.title : null;
                 results.push({ ...base, label: r.label || `Prüfung „${name ?? 'Prüfung'}“ bestanden`, met: ok > 0, current: ok ? 'bestanden' : 'offen', needed: 'bestanden' });
             }
