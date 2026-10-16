@@ -239,13 +239,153 @@ declare const requestsB: z.ZodObject<{
         enabled: z.ZodBoolean;
         preventDuplicates: z.ZodBoolean;
         notifyChannelId: z.ZodNullable<z.ZodString>;
+        panel: z.ZodObject<{
+            channelId: z.ZodNullable<z.ZodString>;
+            title: z.ZodString;
+            text: z.ZodString;
+            buttonLabel: z.ZodString;
+            color: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        }, {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        }>;
+        form: z.ZodEffects<z.ZodEffects<z.ZodObject<{
+            title: z.ZodString;
+            fields: z.ZodArray<z.ZodObject<{
+                key: z.ZodString;
+                label: z.ZodString;
+                placeholder: z.ZodDefault<z.ZodString>;
+                paragraph: z.ZodBoolean;
+                required: z.ZodBoolean;
+                maxLength: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                key: string;
+                label: string;
+                placeholder: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+            }, {
+                key: string;
+                label: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+                placeholder?: string | undefined;
+            }>, "many">;
+        }, "strip", z.ZodTypeAny, {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                placeholder: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+            }[];
+        }, {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+                placeholder?: string | undefined;
+            }[];
+        }>, {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                placeholder: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+            }[];
+        }, {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+                placeholder?: string | undefined;
+            }[];
+        }>, {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                placeholder: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+            }[];
+        }, {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+                placeholder?: string | undefined;
+            }[];
+        }>;
     }, "strip", z.ZodTypeAny, {
         enabled: boolean;
         notifyChannelId: string | null;
+        form: {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                placeholder: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+            }[];
+        };
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         preventDuplicates: boolean;
     }, {
         enabled: boolean;
         notifyChannelId: string | null;
+        form: {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+                placeholder?: string | undefined;
+            }[];
+        };
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         preventDuplicates: boolean;
     }>;
     notifyMembers: z.ZodBoolean;
@@ -253,6 +393,24 @@ declare const requestsB: z.ZodObject<{
     requests: {
         enabled: boolean;
         notifyChannelId: string | null;
+        form: {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                placeholder: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+            }[];
+        };
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         preventDuplicates: boolean;
     };
     notifyMembers: boolean;
@@ -260,6 +418,24 @@ declare const requestsB: z.ZodObject<{
     requests: {
         enabled: boolean;
         notifyChannelId: string | null;
+        form: {
+            title: string;
+            fields: {
+                key: string;
+                label: string;
+                required: boolean;
+                maxLength: number;
+                paragraph: boolean;
+                placeholder?: string | undefined;
+            }[];
+        };
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         preventDuplicates: boolean;
     };
     notifyMembers: boolean;
@@ -394,6 +570,7 @@ export declare class RadioWhitelistController {
             decidedAt: Date | null;
             decidedById: string | null;
             decisionReason: string | null;
+            answers: import("@prisma/client/runtime/library").JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -747,6 +924,7 @@ export declare class RadioWhitelistController {
             decidedAt: Date | null;
             decidedById: string | null;
             decisionReason: string | null;
+            answers: import("@prisma/client/runtime/library").JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -768,12 +946,16 @@ export declare class RadioWhitelistController {
         decidedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
+        answers: import("@prisma/client/runtime/library").JsonValue | null;
         grantExpiresAt: Date | null;
         grantId: string | null;
     }>;
     config(): Promise<import("./radio-whitelist.service").RadioWhitelistConfig>;
     roles(a: Actor, b: Z<typeof rolesB>): Promise<import("./radio-whitelist.service").RadioWhitelistConfig>;
     requestConfig(a: Actor, b: Z<typeof requestsB>): Promise<import("./radio-whitelist.service").RadioWhitelistConfig>;
+    requestPanel(a: Actor): Promise<{
+        queued: boolean;
+    }>;
     roleSyncStatus(): Promise<Record<string, unknown>>;
     roleSync(a: Actor): Promise<{
         queued: boolean;
@@ -934,6 +1116,7 @@ declare const botRequestB: z.ZodObject<{
     rank: z.ZodEffects<z.ZodOptional<z.ZodNullable<z.ZodString>>, string | null, string | null | undefined>;
     department: z.ZodEffects<z.ZodOptional<z.ZodNullable<z.ZodString>>, string | null, string | null | undefined>;
     reason: z.ZodString;
+    answers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     reason: string;
     guildId: string | null;
@@ -941,6 +1124,7 @@ declare const botRequestB: z.ZodObject<{
     discordName: string | null;
     department: string | null;
     rank: string | null;
+    answers?: Record<string, string> | undefined;
 }, {
     reason: string;
     guildId: string | null;
@@ -948,6 +1132,7 @@ declare const botRequestB: z.ZodObject<{
     discordName?: string | null | undefined;
     department?: string | null | undefined;
     rank?: string | null | undefined;
+    answers?: Record<string, string> | undefined;
 }>;
 declare const snapshotB: z.ZodObject<{
     guildId: z.ZodString;
@@ -998,6 +1183,7 @@ export declare class RadioWhitelistBotController {
         suspendedUntil: Date | null;
         pendingSince: Date | null;
         requestsEnabled: boolean;
+        form: import("./radio-whitelist.service").RequestForm;
     }>;
     targets(): Promise<{
         enabled: boolean;

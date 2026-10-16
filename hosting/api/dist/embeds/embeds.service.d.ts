@@ -76,6 +76,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null;
     reactions: string[];
+    fields: {
+        name: string;
+        value: string;
+        inline: boolean;
+    }[];
     authorIcon: string;
     thumbnail: string;
     images: string[];
@@ -83,11 +88,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     timestamp: boolean;
     timestampAt: string | null;
     pingRoles: boolean;
-    fields: {
-        name: string;
-        value: string;
-        inline: boolean;
-    }[];
 }, {
     id: string;
     name: string;
@@ -107,6 +107,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null | undefined;
     reactions?: string[] | undefined;
+    fields?: {
+        name: string;
+        value: string;
+        inline?: boolean | undefined;
+    }[] | undefined;
     authorIcon?: string | undefined;
     thumbnail?: string | undefined;
     images?: (string | undefined)[] | undefined;
@@ -114,11 +119,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     timestamp?: boolean | undefined;
     timestampAt?: string | null | undefined;
     pingRoles?: boolean | undefined;
-    fields?: {
-        name: string;
-        value: string;
-        inline?: boolean | undefined;
-    }[] | undefined;
 }>, {
     id: string;
     color: string;
@@ -138,6 +138,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null;
     reactions: string[];
+    fields: {
+        name: string;
+        value: string;
+        inline: boolean;
+    }[];
     authorIcon: string;
     thumbnail: string;
     images: string[];
@@ -145,11 +150,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     timestamp: boolean;
     timestampAt: string | null;
     pingRoles: boolean;
-    fields: {
-        name: string;
-        value: string;
-        inline: boolean;
-    }[];
 }, {
     id: string;
     name: string;
@@ -169,6 +169,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null | undefined;
     reactions?: string[] | undefined;
+    fields?: {
+        name: string;
+        value: string;
+        inline?: boolean | undefined;
+    }[] | undefined;
     authorIcon?: string | undefined;
     thumbnail?: string | undefined;
     images?: (string | undefined)[] | undefined;
@@ -176,11 +181,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     timestamp?: boolean | undefined;
     timestampAt?: string | null | undefined;
     pingRoles?: boolean | undefined;
-    fields?: {
-        name: string;
-        value: string;
-        inline?: boolean | undefined;
-    }[] | undefined;
 }>;
 export type EmbedDoc = z.infer<typeof embedSchema>;
 /** Embed-Baukasten: Nachrichten im Dashboard bauen, in einen Kanal senden und später aktualisieren (der Bot bearbeitet dieselbe Nachricht). */
@@ -211,6 +211,11 @@ export declare class EmbedsService {
             messageId: string;
         } | null;
         reactions: string[];
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -218,11 +223,6 @@ export declare class EmbedsService {
         timestamp: boolean;
         timestampAt: string | null;
         pingRoles: boolean;
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
     }>;
     duplicate(actor: Actor, id: string): Promise<{
         id: string;
@@ -243,6 +243,11 @@ export declare class EmbedsService {
             messageId: string;
         } | null;
         reactions: string[];
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -250,11 +255,6 @@ export declare class EmbedsService {
         timestamp: boolean;
         timestampAt: string | null;
         pingRoles: boolean;
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
     }>;
     remove(actor: Actor, id: string): Promise<void>;
     message(e: EmbedDoc): MessageSpec;

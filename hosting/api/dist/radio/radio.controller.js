@@ -46,7 +46,12 @@ const rolesB = zod_1.z.object({
     roleSync: zod_1.z.object({ enabled: zod_1.z.boolean(), grantRoleIds: roleIds, requiredRoleIds: roleIds, onRoleGain: zod_1.z.enum(['ACTIVATE', 'PENDING', 'NONE']), onRoleLoss: zod_1.z.enum(['REVOKE', 'DISABLE', 'NONE']), manualOnRoleLoss: zod_1.z.enum(['KEEP', 'DISABLE', 'REVOKE']) }),
     radioRoleIds: roleIds,
 });
-const requestsB = zod_1.z.object({ requests: zod_1.z.object({ enabled: zod_1.z.boolean(), preventDuplicates: zod_1.z.boolean(), notifyChannelId: snowflake.nullable() }), notifyMembers: zod_1.z.boolean() });
+const panelB = zod_1.z.object({ channelId: snowflake.nullable(), title: text(256).min(1), text: text(4000).min(1), buttonLabel: text(80).min(1), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #RRGGBB.') });
+const formField = zod_1.z.object({ key: zod_1.z.string().regex(/^[a-z0-9_]{1,30}$/, 'Feld-Schlüssel: nur a–z, 0–9, _'), label: text(45).min(1), placeholder: text(100).default(''), paragraph: zod_1.z.boolean(), required: zod_1.z.boolean(), maxLength: zod_1.z.number().int().min(1).max(1000) });
+const formB = zod_1.z.object({ title: text(45).min(1), fields: zod_1.z.array(formField).min(1).max(5, 'Discord erlaubt höchstens 5 Felder.') })
+    .refine((f) => new Set(f.fields.map((x) => x.key)).size === f.fields.length, 'Jedes Feld braucht einen eigenen Schlüssel.')
+    .refine((f) => f.fields.some((x) => x.key === 'reason'), 'Das Feld „Begründung“ (reason) muss enthalten sein.');
+const requestsB = zod_1.z.object({ requests: zod_1.z.object({ enabled: zod_1.z.boolean(), preventDuplicates: zod_1.z.boolean(), notifyChannelId: snowflake.nullable(), panel: panelB, form: formB }), notifyMembers: zod_1.z.boolean() });
 const integrationB = zod_1.z.object({
     provider: zod_1.z.enum(['NONE', 'ZELLO_WORK', 'ZELLO_APP', 'OTHER_MANUAL']), displayName: text(80).min(1), network: optText(63), channel: optText(100), adminUsername: optText(100),
     password: zod_1.z.string().max(200).optional(), apiKey: zod_1.z.string().max(500).optional(), clearCredentials: zod_1.z.boolean().optional(), autoSync: zod_1.z.boolean(), version: zod_1.z.number().int().positive(),
@@ -79,6 +84,7 @@ let RadioWhitelistController = class RadioWhitelistController {
     config() { return this.s.config(); }
     roles(a, b) { return this.s.updateRoleConfig(a, b); }
     requestConfig(a, b) { return this.s.updateRequestConfig(a, b); }
+    requestPanel(a) { return this.s.postRequestPanel(a); }
     roleSyncStatus() { return this.s.roleSyncStatus(); }
     roleSync(a) { return this.s.requestRoleSync(a); }
     integration() { return this.s.integration(); }
@@ -284,6 +290,15 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], RadioWhitelistController.prototype, "requestConfig", null);
 __decorate([
+    (0, common_1.Post)('request-panel'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('radiowhitelist.requests'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], RadioWhitelistController.prototype, "requestPanel", null);
+__decorate([
     (0, common_1.Get)('role-sync'),
     (0, decorators_1.RequirePermission)('radiowhitelist.view'),
     __metadata("design:type", Function),
@@ -400,7 +415,7 @@ exports.RadioWhitelistController = RadioWhitelistController = __decorate([
     (0, common_1.Controller)('radio-whitelist'),
     __metadata("design:paramtypes", [radio_whitelist_service_1.RadioWhitelistService])
 ], RadioWhitelistController);
-const botRequestB = zod_1.z.object({ guildId: snowflake.nullable(), discordId: snowflake, discordName: optText(100), rank: optText(80), department: optText(80), reason: text(1000).min(10, 'Bitte begründe deinen Antrag (mind. 10 Zeichen).') });
+const botRequestB = zod_1.z.object({ guildId: snowflake.nullable(), discordId: snowflake, discordName: optText(100), rank: optText(80), department: optText(80), reason: text(1000).min(3, 'Bitte begründe deinen Antrag.'), answers: zod_1.z.record(zod_1.z.string().regex(/^[a-z0-9_]{1,30}$/), zod_1.z.string().max(1000)).optional() });
 const snapshotB = zod_1.z.object({ guildId: snowflake, full: zod_1.z.boolean().default(false), members: zod_1.z.array(zod_1.z.object({ discordId: snowflake, name: optText(100), roleIds: zod_1.z.array(snowflake).max(250).nullable() })).max(1000) });
 /** Bot-Dienst (nur mit Bot-Token): Anträge aus Discord, Rollenstände für den Abgleich, Status für das Mitglied. */
 let RadioWhitelistBotController = class RadioWhitelistBotController {

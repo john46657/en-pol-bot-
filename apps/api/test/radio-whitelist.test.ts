@@ -3,7 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { RadioWhitelistService } from '../src/radio/radio-whitelist.service';
+import { DEFAULT_FORM, DEFAULT_PANEL, RadioWhitelistService } from '../src/radio/radio-whitelist.service';
 import { ZelloError } from '../src/radio/zello-work.client';
 
 const TOKEN = 'r'.repeat(40);
@@ -150,7 +150,7 @@ describe('Anträge über Discord', () => {
     const a = await ask(M(30));
     expect(a.status).toBe(201);
     expect((await ask(M(30))).status).toBe(409);
-    expect((await ask(M(30), 'kurz')).status).toBe(400);
+    expect((await ask(M(30), 'x')).status).toBe(400);
     expect((await http().post('/api/v1/bot/radio-whitelist/requests').set(bot).send({ guildId: '870000000000000099', discordId: M(31), reason: 'Falscher Server Antrag' })).status).toBe(403);
     expect((await http().get(`/api/v1/bot/radio-whitelist/status/${M(30)}`).set(bot)).body).toMatchObject({ status: null, authorized: false, pendingSince: expect.any(String) });
     const list = (await lead.get('/api/v1/radio-whitelist/requests')).body;
@@ -180,18 +180,69 @@ describe('Anträge über Discord', () => {
     expect(await prisma.auditLog.count({ where: { action: 'radio.request.rejected', entityId: a.body.id } })).toBe(1);
 
     // Doppel-Anträge erlauben, wenn ausgeschaltet
-    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: false, notifyChannelId: '873000000000000001' }, notifyMembers: true }).expect(200);
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: false, notifyChannelId: '873000000000000001', panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
     expect((await ask(M(41))).status).toBe(201);
     expect((await ask(M(41))).status).toBe(201);
     expect(await prisma.discordOutbox.count({ where: { type: 'message.post', payload: { path: ['channelId'], equals: '873000000000000001' } } })).toBe(2);
     // Anträge aus
-    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: false, preventDuplicates: true, notifyChannelId: null }, notifyMembers: true }).expect(200);
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: false, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
     expect((await ask(M(42))).status).toBe(503);
-    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null }, notifyMembers: true }).expect(200);
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
     // gesperrt → kein Antrag
     const g = await lead.post('/api/v1/radio-whitelist/grants').send({ discordId: M(43), reason: 'x-test' });
     await lead.post(`/api/v1/radio-whitelist/grants/${g.body.id}/suspend`).send({ reason: 'Sperre' }).expect(200);
     expect((await ask(M(43))).body.message).toContain('gesperrt');
+  });
+});
+
+describe('Discord-Panels und eigenes Antragsformular', () => {
+  const CH = '873000000000000002', PANEL_CH = '873000000000000003', LEAD_DISCORD = '874000000000000001';
+  const form = { title: 'Funk beantragen', fields: [
+    { key: 'reason', label: 'Warum?', placeholder: 'kurz begründen', paragraph: true, required: false, maxLength: 500 },
+    { key: 'callsign', label: 'Funkrufname', placeholder: '', paragraph: false, required: true, maxLength: 20 },
+  ] };
+  it('Formular selbst gestalten; Antrag als Panel mit Buttons; Entscheidung per Discord-Button aktualisiert die Meldung', async () => {
+    const lead = as.rw_lead!;
+    // ungültige Formulare
+    expect((await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: CH, panel: DEFAULT_PANEL, form: { title: 'x', fields: [form.fields[1]] } }, notifyMembers: true })).status).toBe(400); // ohne Begründung
+    expect((await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: CH, panel: DEFAULT_PANEL, form: { title: 'x', fields: [...form.fields, ...['a', 'b', 'c', 'd'].map((k) => ({ ...form.fields[1], key: k }))] } }, notifyMembers: true })).status).toBe(400); // > 5 Felder
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: CH, panel: { ...DEFAULT_PANEL, channelId: PANEL_CH, title: 'Funk', text: 'Hier beantragen', buttonLabel: 'Los', color: '#ff0000' }, form }, notifyMembers: true }).expect(200);
+    const cfg = (await lead.get('/api/v1/radio-whitelist/config')).body;
+    expect(cfg.requests.form.fields[0]).toMatchObject({ key: 'reason', required: true }); // Begründung bleibt Pflicht
+    // der Bot bekommt das Formular mit dem Status
+    expect((await http().get(`/api/v1/bot/radio-whitelist/status/${M(85)}`).set(bot)).body.form).toMatchObject({ title: 'Funk beantragen', fields: [{ key: 'reason' }, { key: 'callsign', required: true }] });
+
+    // Antrags-Panel für Mitglieder
+    expect((await as.rw_grant!.post('/api/v1/radio-whitelist/request-panel')).status).toBe(403);
+    expect((await lead.post('/api/v1/radio-whitelist/request-panel')).status).toBe(202);
+    const panel = (await prisma.discordOutbox.findFirst({ where: { type: 'message.post', payload: { path: ['channelId'], equals: PANEL_CH } } }))!.payload as { stateKey: string; message: { embeds: { title: string; color: number }[]; buttons: { id: string; label: string }[] } };
+    expect(panel.stateKey).toBe('radio-request-panel');
+    expect(panel.message.embeds[0]).toMatchObject({ title: 'Funk', color: 0xff0000 });
+    expect(panel.message.buttons).toEqual([expect.objectContaining({ id: 'rwreq:open', label: 'Los' })]);
+
+    // Antrag: Pflicht-Zusatzfeld fehlt → abgelehnt; mit Feld → gespeichert und als Panel mit Buttons gemeldet
+    const ask = (answers?: Record<string, string>) => http().post('/api/v1/bot/radio-whitelist/requests').set(bot).send({ guildId: G, discordId: M(85), discordName: 'Panel Paula', reason: 'Neu im Team', ...(answers ? { answers } : {}) });
+    expect((await ask()).body.message).toContain('Funkrufname');
+    const a = await ask({ callsign: 'ADLER 12', unbekannt: 'wird ignoriert' });
+    expect(a.status).toBe(201);
+    expect((await prisma.radioRequest.findUniqueOrThrow({ where: { id: a.body.id } })).answers).toEqual([{ key: 'callsign', label: 'Funkrufname', value: 'ADLER 12' }]);
+    const note = (await prisma.discordOutbox.findFirst({ where: { type: 'message.post', payload: { path: ['stateKey'], equals: `rwreq-${a.body.id}` } } }))!.payload as { channelId: string; message: { embeds: { description: string }[]; buttons: { id: string }[] } };
+    expect(note.channelId).toBe(CH);
+    expect(note.message.embeds[0]!.description).toContain('**Funkrufname:** ADLER 12');
+    expect(note.message.buttons.map((b) => b.id)).toEqual([`rwreq:approve:${a.body.id}`, `rwreq:reject:${a.body.id}`]);
+
+    // Entscheidung per Discord-Button: nur mit verknüpftem Konto UND Recht
+    const viaBot = (discordId: string) => http().post(`/api/v1/radio-whitelist/requests/${a.body.id}/decision`).set({ ...bot, 'X-Discord-User': discordId }).send({ decision: 'APPROVE' });
+    await prisma.discordLink.create({ data: { userId: (await prisma.user.findUniqueOrThrow({ where: { username: 'rw_off' } })).id, discordId: '874000000000000002' } });
+    expect((await viaBot('874000000000000002')).status).toBe(403); // Police Member ohne radiowhitelist.requests
+    await prisma.discordLink.create({ data: { userId: (await prisma.user.findUniqueOrThrow({ where: { username: 'rw_lead' } })).id, discordId: LEAD_DISCORD } });
+    const ok = await viaBot(LEAD_DISCORD);
+    expect(ok.body).toMatchObject({ status: 'APPROVED', decidedByName: 'rw_lead' });
+    // Meldung wird aktualisiert: Entscheidung drin, Buttons weg
+    const updated = (await prisma.discordOutbox.findMany({ where: { type: 'message.post', payload: { path: ['stateKey'], equals: `rwreq-${a.body.id}` } }, orderBy: { createdAt: 'asc' } })).at(-1)!.payload as { message: { embeds: { description: string; color: number }[]; buttons: unknown[] } };
+    expect(updated.message.buttons).toEqual([]);
+    expect(updated.message.embeds[0]!.description).toContain(`✅ Genehmigt von <@${LEAD_DISCORD}> (rw_lead)`);
+    expect(updated.message.embeds[0]!.color).toBe(0x22c55e);
   });
 });
 

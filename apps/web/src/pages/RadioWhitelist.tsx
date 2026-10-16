@@ -15,10 +15,13 @@ interface Grant {
   archivedAt: string | null; externalStatus: string; externalSyncedAt: string | null; externalError: string | null; version: number; createdAt: string; updatedAt: string;
 }
 interface HistoryEntry { id: string; action: string; reason: string | null; createdAt: string; actorName: string; result: string }
-interface RequestRow { id: string; discordId: string; discordName: string | null; rank: string | null; department: string | null; reason: string; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null; decisionReason: string | null; grantExpiresAt: string | null }
+interface RequestRow { id: string; discordId: string; discordName: string | null; rank: string | null; department: string | null; reason: string; answers: { key: string; label: string; value: string }[] | null; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null; decisionReason: string | null; grantExpiresAt: string | null }
 interface GrantDetail extends Grant { history: HistoryEntry[]; requests: RequestRow[] }
 interface Summary { active: number; suspended: number; expired: number; pending: number; disabled: number; revoked: number; openRequests: number; manualTodo: number }
-interface Config { roleSync: RadioRoleRules; radioRoleIds: string[]; requests: { enabled: boolean; preventDuplicates: boolean; notifyChannelId: string | null }; notifyMembers: boolean }
+interface FormField { key: string; label: string; placeholder: string; paragraph: boolean; required: boolean; maxLength: number }
+interface RequestForm { title: string; fields: FormField[] }
+interface RequestPanel { channelId: string | null; title: string; text: string; buttonLabel: string; color: string }
+interface Config { roleSync: RadioRoleRules; radioRoleIds: string[]; requests: { enabled: boolean; preventDuplicates: boolean; notifyChannelId: string | null; panel: RequestPanel; form: RequestForm }; notifyMembers: boolean }
 interface Provider { key: string; name: string; apiSupported: boolean; note: string; verified?: string }
 interface Integration {
   provider: string; displayName: string; network: string | null; channel: string | null; endpoint: string | null; adminUsername: string | null; hasPassword: boolean; hasApiKey: boolean;
@@ -311,7 +314,7 @@ function RequestsTab() {
   const list = useQuery({ queryKey: ['radiowl', 'requests', status, q], queryFn: () => api<Page<RequestRow>>('/radio-whitelist/requests', { query: { status, q: q.trim() || undefined, pageSize: 100 } }) });
   const [decide, setDecide] = useState<{ r: RequestRow; d: 'APPROVE' | 'REJECT' } | null>(null);
   return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_22rem]">
+    <div className="space-y-4">
       <Card title="Anträge auf Funkfreigabe" actions={<div className="flex gap-1">{(['PENDING', 'DONE', 'ALL'] as const).map((s) => <Button key={s} size="sm" variant={status === s ? 'primary' : 'secondary'} onClick={() => setStatus(s)}>{s === 'PENDING' ? 'Offen' : s === 'DONE' ? 'Bearbeitet' : 'Alle'}</Button>)}</div>}>
         <Input aria-label="Anträge durchsuchen" className="mb-3" placeholder="Discord-ID, Name, Dienstgrad, Abteilung …" value={q} onChange={(e) => setQ(e.target.value)} />
         {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text={status === 'PENDING' ? 'Keine offenen Anträge.' : 'Keine Anträge.'} hint="Mitglieder stellen Anträge in Discord mit /funkantrag." /> : (
@@ -324,6 +327,7 @@ function RequestsTab() {
               </div>
               {(r.rank || r.department) && <p className="text-xs text-muted">{[r.rank, r.department].filter(Boolean).join(' · ')}</p>}
               <p className="whitespace-pre-wrap">{r.reason}</p>
+              {!!r.answers?.length && <dl className="text-xs">{r.answers.map((a) => <div key={a.key}><dt className="inline font-medium">{a.label}: </dt><dd className="inline whitespace-pre-wrap">{a.value}</dd></div>)}</dl>}
               {r.status !== 'PENDING' && <p className="text-xs text-muted">{r.status === 'APPROVED' ? 'Genehmigt' : 'Abgelehnt'} {fmt(r.decidedAt)}{r.decidedByName ? ` von ${r.decidedByName}` : ''}{r.decisionReason ? ` – „${r.decisionReason}“` : ''}{r.grantExpiresAt ? ` · gültig bis ${fmt(r.grantExpiresAt)}` : ''}</p>}
               {r.status === 'PENDING' && <div className="flex gap-2 pt-1"><Button size="sm" onClick={() => setDecide({ r, d: 'APPROVE' })}>Genehmigen</Button><Button size="sm" variant="danger" onClick={() => setDecide({ r, d: 'REJECT' })}>Ablehnen</Button></div>}
             </li>
@@ -362,19 +366,108 @@ function RequestSettings() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
   useEffect(() => { if (cfg.data && !d) setD({ requests: cfg.data.requests, notifyMembers: cfg.data.notifyMembers }); }, [cfg.data, d]);
   const save = useMutation({ mutationFn: () => api('/radio-whitelist/config/requests', { method: 'PUT', body: d }), onSuccess: () => { setMsg({ ok: true, text: 'Gespeichert.' }); refresh(); }, onError: (e) => setMsg({ ok: false, text: errText(e) }) });
+  const post = useMutation({
+    mutationFn: async () => { await api('/radio-whitelist/config/requests', { method: 'PUT', body: d }); return api('/radio-whitelist/request-panel', { method: 'POST' }); },
+    onSuccess: () => { setMsg({ ok: true, text: 'Panel wird vom Bot in den Kanal gesetzt (bzw. dort aktualisiert).' }); refresh(); }, onError: (e) => setMsg({ ok: false, text: errText(e) }),
+  });
   if (!d) return <Card title="Einstellungen"><SkeletonRows rows={3} /></Card>;
+  const panel = d.requests.panel;
+  const setPanel = (p: Partial<RequestPanel>) => setD({ ...d, requests: { ...d.requests, panel: { ...panel, ...p } } });
   const chk = (label: string, value: boolean, on: (v: boolean) => void, hint?: string) => <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={value} onChange={(e) => on(e.target.checked)} /><span>{label}{hint && <span className="block text-xs text-muted">{hint}</span>}</span></label>;
+  const saveBtn = (label: string) => <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>{label}</Button>;
   return (
-    <Card title="Einstellungen für Anträge">
-      <div className="space-y-3">
-        {chk('Anträge über Discord erlauben (/funkantrag)', d.requests.enabled, (v) => setD({ ...d, requests: { ...d.requests, enabled: v } }))}
-        {chk('Doppelte offene Anträge verhindern', d.requests.preventDuplicates, (v) => setD({ ...d, requests: { ...d.requests, preventDuplicates: v } }), 'Ein Mitglied kann erst wieder beantragen, wenn sein offener Antrag bearbeitet ist.')}
-        {chk('Mitglieder per Direktnachricht über Änderungen informieren', d.notifyMembers, (v) => setD({ ...d, notifyMembers: v }), 'Entscheidungen über Anträge werden immer mitgeteilt.')}
-        <Field label="Neue Anträge zusätzlich in diesen Kanal melden">{() => <ChannelPicker ariaLabel="Kanal für neue Anträge" value={d.requests.notifyChannelId} onChange={(id) => setD({ ...d, requests: { ...d.requests, notifyChannelId: id } })} />}</Field>
-        <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>Speichern</Button>
-        <Msg msg={msg} />
+    <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      <Card title="Einstellungen für Anträge">
+        <div className="space-y-3">
+          {chk('Anträge über Discord erlauben (/funkantrag und Panel)', d.requests.enabled, (v) => setD({ ...d, requests: { ...d.requests, enabled: v } }))}
+          {chk('Doppelte offene Anträge verhindern', d.requests.preventDuplicates, (v) => setD({ ...d, requests: { ...d.requests, preventDuplicates: v } }), 'Ein Mitglied kann erst wieder beantragen, wenn sein offener Antrag bearbeitet ist.')}
+          {chk('Mitglieder per Direktnachricht über Änderungen informieren', d.notifyMembers, (v) => setD({ ...d, notifyMembers: v }), 'Entscheidungen über Anträge werden immer mitgeteilt.')}
+          <Field label="Neue Anträge als Panel in diesen Kanal melden" hint="Jeder Antrag erscheint dort mit „Genehmigen“ und „Ablehnen“ (Ablehnen fragt nach dem Grund). Nach der Entscheidung – auch im Dashboard – wird die Meldung aktualisiert. Wer klickt, braucht ein verknüpftes Konto mit dem Recht „Anträge bearbeiten“.">{() => <ChannelPicker ariaLabel="Kanal für neue Anträge" value={d.requests.notifyChannelId} onChange={(id) => setD({ ...d, requests: { ...d.requests, notifyChannelId: id } })} />}</Field>
+          {saveBtn('Speichern')}
+        </div>
+      </Card>
+      <Card title="Antragsformular in Discord">
+        <div className="space-y-3">
+          <FormEditor form={d.requests.form} onChange={(form) => setD({ ...d, requests: { ...d.requests, form } })} />
+          {saveBtn('Formular speichern')}
+        </div>
+      </Card>
+      <Card title="Antrags-Panel für Mitglieder">
+        <div className="space-y-3">
+          <p className="text-xs text-muted">Nachricht mit Button – Mitglieder klicken, füllen das Formular aus und der Antrag landet hier (wie /funkantrag).</p>
+          <Field label="Kanal">{() => <ChannelPicker ariaLabel="Kanal für das Antrags-Panel" value={panel.channelId} onChange={(id) => setPanel({ channelId: id })} />}</Field>
+          <Field label="Titel">{(id) => <Input id={id} maxLength={256} value={panel.title} onChange={(e) => setPanel({ title: e.target.value })} />}</Field>
+          <Field label="Text">{(id) => <Textarea id={id} rows={3} maxLength={4000} value={panel.text} onChange={(e) => setPanel({ text: e.target.value })} />}</Field>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <Field label="Button-Text">{(id) => <Input id={id} maxLength={80} value={panel.buttonLabel} onChange={(e) => setPanel({ buttonLabel: e.target.value })} />}</Field>
+            <Field label="Farbe">{(id) => <input id={id} type="color" className="h-10 w-14 cursor-pointer rounded border border-line bg-transparent" value={panel.color} onChange={(e) => setPanel({ color: e.target.value })} />}</Field>
+          </div>
+          <div className="rounded border-l-4 bg-[#2b2d31] p-3 text-sm text-[#dbdee1]" style={{ borderLeftColor: panel.color }} aria-label="Vorschau des Panels">
+            <p className="font-semibold text-white">{panel.title}</p><p className="mt-1 whitespace-pre-wrap">{panel.text}</p>
+            <span className="mt-2 inline-block rounded bg-[#5865f2] px-3 py-1 text-xs text-white">🎙️ {panel.buttonLabel}</span>
+          </div>
+          <Button size="sm" disabled={post.isPending || !panel.channelId || !panel.title.trim() || !panel.text.trim() || !panel.buttonLabel.trim() || !d.requests.enabled} onClick={() => post.mutate()}>Panel senden / aktualisieren</Button>
+        </div>
+      </Card>
+      <div className="lg:col-span-2 2xl:col-span-3"><Msg msg={msg} /></div>
+    </div>
+  );
+}
+
+const BUILTIN: Record<string, FormField> = {
+  rank: { key: 'rank', label: 'Dienstgrad (falls relevant)', placeholder: '', paragraph: false, required: false, maxLength: 80 },
+  department: { key: 'department', label: 'Abteilung (falls relevant)', placeholder: '', paragraph: false, required: false, maxLength: 80 },
+};
+/** Antragsformular (Discord-Modal) selbst gestalten: Titel, bis zu 5 Felder; „Begründung“ ist immer dabei und Pflicht. */
+function FormEditor({ form, onChange }: { form: RequestForm; onChange: (f: RequestForm) => void }) {
+  const set = (i: number, p: Partial<FormField>) => onChange({ ...form, fields: form.fields.map((f, j) => (j === i ? { ...f, ...p } : f)) });
+  const move = (i: number, d: -1 | 1) => { const f = [...form.fields]; const j = i + d; if (j < 0 || j >= f.length) return; [f[i], f[j]] = [f[j]!, f[i]!]; onChange({ ...form, fields: f }); };
+  const add = (kind: string) => {
+    if (form.fields.length >= 5) return;
+    const used = new Set(form.fields.map((f) => f.key));
+    let key = kind; for (let n = 1; kind === 'custom' && (key === 'custom' || used.has(key)); n++) key = `feld_${n}`;
+    const field = BUILTIN[kind] ?? { key, label: 'Neues Feld', placeholder: '', paragraph: false, required: false, maxLength: 200 };
+    onChange({ ...form, fields: [...form.fields, field] });
+  };
+  const missing = Object.keys(BUILTIN).filter((k) => !form.fields.some((f) => f.key === k));
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted">So sieht das Formular bei /funkantrag und beim Panel-Button aus. Discord erlaubt höchstens 5 Felder und 45 Zeichen je Beschriftung.</p>
+      <Field label="Titel des Formulars">{(id) => <Input id={id} maxLength={45} value={form.title} onChange={(e) => onChange({ ...form, title: e.target.value })} />}</Field>
+      <ol className="space-y-2">{form.fields.map((f, i) => (
+        <li key={f.key} className="space-y-2 rounded border border-line p-2">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted">{i + 1}.</span>
+            <Input aria-label={`Beschriftung Feld ${i + 1}`} maxLength={45} value={f.label} onChange={(e) => set(i, { label: e.target.value })} />
+            <Button type="button" size="sm" variant="ghost" aria-label="nach oben" disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
+            <Button type="button" size="sm" variant="ghost" aria-label="nach unten" disabled={i === form.fields.length - 1} onClick={() => move(i, 1)}>↓</Button>
+            {f.key !== 'reason' && <Button type="button" size="sm" variant="ghost" aria-label={`${f.label} entfernen`} onClick={() => onChange({ ...form, fields: form.fields.filter((_, j) => j !== i) })}>✕</Button>}
+          </div>
+          <Input aria-label={`Platzhalter Feld ${i + 1}`} maxLength={100} placeholder="Platzhalter (grauer Hinweistext, optional)" value={f.placeholder} onChange={(e) => set(i, { placeholder: e.target.value })} />
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <label className="flex items-center gap-1"><input type="checkbox" checked={f.paragraph} onChange={(e) => set(i, { paragraph: e.target.checked })} />mehrzeilig</label>
+            <label className="flex items-center gap-1"><input type="checkbox" checked={f.key === 'reason' || f.required} disabled={f.key === 'reason'} onChange={(e) => set(i, { required: e.target.checked })} />Pflichtfeld</label>
+            <label className="flex items-center gap-1">max. <input type="number" min={1} max={1000} className="w-16 rounded border border-line bg-transparent px-1" value={f.maxLength} onChange={(e) => set(i, { maxLength: Math.max(1, Math.min(1000, Number(e.target.value) || 1)) })} /> Zeichen</label>
+            {f.key === 'reason' && <span className="text-muted">immer dabei</span>}
+          </div>
+        </li>
+      ))}</ol>
+      {form.fields.length < 5 && (
+        <div className="flex flex-wrap gap-2">
+          {missing.map((k) => <Button key={k} type="button" size="sm" variant="secondary" onClick={() => add(k)}>+ {k === 'rank' ? 'Dienstgrad' : 'Abteilung'}</Button>)}
+          <Button type="button" size="sm" variant="secondary" onClick={() => add('custom')}>+ Eigenes Feld</Button>
+        </div>
+      )}
+      <div className="rounded-lg bg-[#313338] p-4 text-[#dbdee1]" aria-label="Vorschau des Formulars">
+        <p className="mb-3 text-base font-semibold text-white">{form.title || '—'}</p>
+        {form.fields.map((f) => (
+          <div key={f.key} className="mb-3">
+            <p className="mb-1 text-xs font-semibold uppercase">{f.label}{(f.required || f.key === 'reason') && <span className="text-[#f23f43]"> *</span>}</p>
+            <div className={`rounded bg-[#1e1f22] px-2 py-1.5 text-sm text-[#87898c] ${f.paragraph ? 'min-h-14' : ''}`}>{f.placeholder || '\u00a0'}</div>
+          </div>
+        ))}
       </div>
-    </Card>
+    </div>
   );
 }
 

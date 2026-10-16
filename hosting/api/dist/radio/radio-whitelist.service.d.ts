@@ -14,10 +14,40 @@ export interface RadioWhitelistConfig {
         enabled: boolean;
         preventDuplicates: boolean;
         notifyChannelId: string | null;
+        panel: RequestPanel;
+        form: RequestForm;
     };
     /** Mitglieder per Discord-DM über Änderungen informieren (Antragsentscheidungen immer). */
     notifyMembers: boolean;
 }
+/** Antrags-Panel in Discord: Nachricht mit Button „Funkfreigabe beantragen“ (öffnet das Formular). */
+export interface RequestPanel {
+    channelId: string | null;
+    title: string;
+    text: string;
+    buttonLabel: string;
+    color: string;
+}
+export declare const DEFAULT_PANEL: RequestPanel;
+/**
+ * Antragsformular in Discord (Modal, höchstens 5 Felder). `reason` ist immer dabei und Pflicht; `rank`/`department` landen in
+ * eigenen Spalten, alle anderen Felder als Antworten (`answers`).
+ */
+export interface RequestFormField {
+    key: string;
+    label: string;
+    placeholder: string;
+    paragraph: boolean;
+    required: boolean;
+    maxLength: number;
+}
+export interface RequestForm {
+    title: string;
+    fields: RequestFormField[];
+}
+export declare const DEFAULT_FORM: RequestForm;
+/** Formular immer gültig halten: Begründung vorhanden und Pflicht, höchstens 5 Felder, Schlüssel eindeutig. */
+export declare function normalizeForm(f: Partial<RequestForm> | undefined): RequestForm;
 export declare const DEFAULT_CONFIG: RadioWhitelistConfig;
 /** Funkdienste, für die die Anbindung angeboten wird – mit ehrlicher Angabe, was per API möglich ist. */
 export declare const RADIO_PROVIDERS: readonly [{
@@ -79,6 +109,12 @@ export declare class RadioWhitelistService {
         requests: RadioWhitelistConfig['requests'];
         notifyMembers: boolean;
     }): Promise<RadioWhitelistConfig>;
+    /** Antrags-Panel in den eingestellten Kanal setzen bzw. dort aktualisieren (gleiche Nachricht, kein Doppel). */
+    postRequestPanel(actor: Actor): Promise<{
+        queued: boolean;
+    }>;
+    /** Meldung eines Antrags für die Leitung: offen mit Buttons Genehmigen/Ablehnen, nach der Entscheidung ohne Buttons. */
+    private requestMessage;
     /** Der eine fest konfigurierte Discord-Server: DISCORD_GUILD_ID, sonst Einstellungen → Discord, sonst der einzige gemeldete Server. */
     mainGuildId(): Promise<string | null>;
     private radioRoleIds;
@@ -149,6 +185,7 @@ export declare class RadioWhitelistService {
             decidedAt: Date | null;
             decidedById: string | null;
             decisionReason: string | null;
+            answers: Prisma.JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -564,6 +601,7 @@ export declare class RadioWhitelistService {
             decidedAt: Date | null;
             decidedById: string | null;
             decisionReason: string | null;
+            answers: Prisma.JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -579,6 +617,7 @@ export declare class RadioWhitelistService {
         rank?: string | null;
         department?: string | null;
         reason: string;
+        answers?: Record<string, string>;
     }): Promise<{
         id: string;
         status: string;
@@ -602,6 +641,7 @@ export declare class RadioWhitelistService {
         decidedAt: Date | null;
         decidedById: string | null;
         decisionReason: string | null;
+        answers: Prisma.JsonValue | null;
         grantExpiresAt: Date | null;
         grantId: string | null;
     }>;
@@ -613,6 +653,7 @@ export declare class RadioWhitelistService {
         suspendedUntil: Date | null;
         pendingSince: Date | null;
         requestsEnabled: boolean;
+        form: RequestForm;
     }>;
     syncTargets(): Promise<{
         enabled: boolean;

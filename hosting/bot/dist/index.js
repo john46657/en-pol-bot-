@@ -403,7 +403,7 @@ async function markDecided(message, d) {
     for (const row of message.components) {
         if (!('components' in row))
             continue;
-        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ''));
+        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ''));
         if (kept.length)
             rows.push(new discord_js_1.ActionRowBuilder().addComponents(kept.map((c) => discord_js_1.ButtonBuilder.from(c))));
     }
