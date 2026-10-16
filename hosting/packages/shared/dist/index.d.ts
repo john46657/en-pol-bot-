@@ -1914,7 +1914,7 @@ declare const notifyRuleSchema: z.ZodObject<{
     roleIds?: string[] | undefined;
     channelId?: string | null | undefined;
 }>;
-declare const HR_EVENTS: readonly ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"];
+declare const HR_EVENTS: readonly ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed", "exam.submitted"];
 type HrEvent = (typeof HR_EVENTS)[number];
 declare const HR_EVENT_LABEL: Record<HrEvent, string>;
 declare const stageSchema: z.ZodObject<{
@@ -2189,7 +2189,7 @@ declare const hrConfigSchema: z.ZodObject<{
         dashboardRoles?: boolean | undefined;
         announceChannelId?: string | null | undefined;
     }>>;
-    notifications: z.ZodDefault<z.ZodRecord<z.ZodEnum<["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"]>, z.ZodObject<{
+    notifications: z.ZodDefault<z.ZodRecord<z.ZodEnum<["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed", "exam.submitted"]>, z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
         channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
         dm: z.ZodDefault<z.ZodBoolean>;
@@ -2364,7 +2364,7 @@ declare const hrConfigSchema: z.ZodObject<{
     }[];
     warningCategories: string[];
     showAbsenceInTeam: boolean;
-    notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+    notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
         dashboard: boolean;
         dm: boolean;
         roleIds: string[];
@@ -2468,7 +2468,7 @@ declare const hrConfigSchema: z.ZodObject<{
     }[] | undefined;
     warningCategories?: string[] | undefined;
     showAbsenceInTeam?: boolean | undefined;
-    notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+    notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
         dashboard?: boolean | undefined;
         dm?: boolean | undefined;
         roleIds?: string[] | undefined;
@@ -2597,34 +2597,6 @@ interface PromotionCheck {
     total: number;
     eligible: boolean;
 }
-declare const EXAM_QUESTION_TYPES: readonly ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"];
-declare const EXAM_QUESTION_TYPE_LABEL: Record<(typeof EXAM_QUESTION_TYPES)[number], string>;
-declare const questionSchema: z.ZodObject<{
-    id: z.ZodString;
-    type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"]>;
-    text: z.ZodString;
-    options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext → manuell) */
-    correct: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    points: z.ZodDefault<z.ZodNumber>;
-}, "strip", z.ZodTypeAny, {
-    options: string[];
-    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
-    text: string;
-    id: string;
-    correct: string[];
-    points: number;
-}, {
-    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER";
-    text: string;
-    id: string;
-    options?: string[] | undefined;
-    correct?: string[] | undefined;
-    points?: number | undefined;
-}>;
-type Question = z.infer<typeof questionSchema>;
-/** Automatische Auswertung einer Antwort; `null` = muss manuell bewertet werden (Freitext ohne Musterlösung). */
-declare function gradeAnswer(q: Question, a: unknown): number | null;
 declare const DN_STATUSES: readonly ["ACTIVE", "RESERVED", "FREE", "BLOCKED", "FORMER"];
 type DnStatus = (typeof DN_STATUSES)[number];
 declare const DN_STATUS_LABEL: Record<DnStatus, {
@@ -2874,6 +2846,325 @@ declare const WARNING_VARIABLES: readonly ["{mitglied}", "{name}", "{grund}", "{
 declare const DN_VARIABLES: readonly ["{user}", "{name}", "{dienstnummer}", "{rang}", "{abteilung}", "{bewerbung}", "{datum}"];
 /** Platzhalter füllen (DM, Nickname, Ankündigungen). Unbekannte Platzhalter bleiben stehen. */
 declare function fillTemplate(tpl: string, vars: Record<string, string | null | undefined>): string;
+
+declare const EXAM_QUESTION_TYPES: readonly ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+type ExamQuestionType = (typeof EXAM_QUESTION_TYPES)[number];
+declare const EXAM_QUESTION_TYPE_LABEL: Record<ExamQuestionType, string>;
+declare const EXAM_QUESTION_TYPE_HINT: Record<ExamQuestionType, string>;
+/** Typen, bei denen die Antwortmöglichkeiten gemischt werden können. */
+declare const EXAM_SHUFFLE_TYPES: readonly ExamQuestionType[];
+declare const questionSchema: z.ZodObject<{
+    id: z.ZodString;
+    type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"]>;
+    text: z.ZodString;
+    /** Antwortmöglichkeiten (Choice), Einträge in richtiger Reihenfolge (ORDER) oder linke Seite (MATCH) */
+    options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** MATCH: rechte Seite – matches[i] gehört zu options[i] */
+    matches: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext ohne Stichworte → Prüfer) */
+    correct: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    points: z.ZodDefault<z.ZodNumber>;
+    /** Teilpunkte (Multiple Choice, Freitext-Stichworte, Reihenfolge, Zuordnung, Lückentext) */
+    partial: z.ZodDefault<z.ZodBoolean>;
+    /** NUMBER: erlaubte Abweichung */
+    tolerance: z.ZodDefault<z.ZodNumber>;
+    /** Erklärung, die nach der Bewertung (Einsicht mit Lösungen) angezeigt wird */
+    explanation: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** optionales Bild (nur https) */
+    image: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    options: string[];
+    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+    text: string;
+    id: string;
+    image: string | null;
+    partial: boolean;
+    matches: string[];
+    correct: string[];
+    points: number;
+    tolerance: number;
+    explanation: string | null;
+}, {
+    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+    text: string;
+    id: string;
+    options?: string[] | undefined;
+    image?: string | null | undefined;
+    partial?: boolean | undefined;
+    matches?: string[] | undefined;
+    correct?: string[] | undefined;
+    points?: number | undefined;
+    tolerance?: number | undefined;
+    explanation?: string | null | undefined;
+}>;
+type Question = z.infer<typeof questionSchema>;
+/** Gespeicherte Fragen lesen (ältere Einträge ohne neue Felder bekommen die Standardwerte, kaputte fallen weg). */
+declare function parseQuestions(raw: unknown): Question[];
+/** Akzeptierte Antworten je Lücke („{{50|fünfzig}}“ → ['50', 'fünfzig']). */
+declare const gapAnswers: (text: string) => string[][];
+/** Text ohne Lösungen (für Teilnehmer). */
+declare const maskGaps: (text: string) => string;
+/** Text in Abschnitte zerlegen: Zeichenketten und Lücken-Nummern. */
+declare function splitGaps(text: string): (string | number)[];
+/** Ist die Frage beantwortet? (Reihenfolge/Zuordnung/Lücken: alle Teile ausgefüllt) */
+declare function isAnswered(q: {
+    type: ExamQuestionType;
+    text: string;
+    options: readonly unknown[];
+}, a: unknown): boolean;
+/** Automatische Auswertung einer Antwort; `null` = muss manuell bewertet werden (Freitext ohne Stichworte). */
+declare function gradeAnswer(q: Question, a: unknown): number | null;
+/** Probleme einer Frage (für Editor und Server). `label` z. B. „Frage 3“. */
+declare function questionProblems(q: Question, label: string): string[];
+/** Einsicht nach der Bewertung: nichts, eigene Antworten (richtig/falsch) oder zusätzlich Lösungen und Erklärungen. */
+declare const EXAM_REVIEW_MODES: readonly ["NONE", "ANSWERS", "SOLUTIONS"];
+type ExamReviewMode = (typeof EXAM_REVIEW_MODES)[number];
+declare const EXAM_REVIEW_LABEL: Record<ExamReviewMode, string>;
+declare const EXAM_LAYOUTS: readonly ["PAGED", "LIST"];
+type ExamLayout = (typeof EXAM_LAYOUTS)[number];
+declare const EXAM_LAYOUT_LABEL: Record<ExamLayout, string>;
+declare const EXAM_ATTEMPT_STATUSES: readonly ["IN_PROGRESS", "SUBMITTED", "GRADED", "VOIDED"];
+type ExamAttemptStatus = (typeof EXAM_ATTEMPT_STATUSES)[number];
+declare const EXAM_ATTEMPT_STATUS_LABEL: Record<ExamAttemptStatus, string>;
+declare const examSchema: z.ZodEffects<z.ZodObject<{
+    title: z.ZodString;
+    description: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** Hinweise auf der Startseite vor Beginn */
+    instructions: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    category: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    questions: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"]>;
+        text: z.ZodString;
+        /** Antwortmöglichkeiten (Choice), Einträge in richtiger Reihenfolge (ORDER) oder linke Seite (MATCH) */
+        options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** MATCH: rechte Seite – matches[i] gehört zu options[i] */
+        matches: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext ohne Stichworte → Prüfer) */
+        correct: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        points: z.ZodDefault<z.ZodNumber>;
+        /** Teilpunkte (Multiple Choice, Freitext-Stichworte, Reihenfolge, Zuordnung, Lückentext) */
+        partial: z.ZodDefault<z.ZodBoolean>;
+        /** NUMBER: erlaubte Abweichung */
+        tolerance: z.ZodDefault<z.ZodNumber>;
+        /** Erklärung, die nach der Bewertung (Einsicht mit Lösungen) angezeigt wird */
+        explanation: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        /** optionales Bild (nur https) */
+        image: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        options: string[];
+        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        text: string;
+        id: string;
+        image: string | null;
+        partial: boolean;
+        matches: string[];
+        correct: string[];
+        points: number;
+        tolerance: number;
+        explanation: string | null;
+    }, {
+        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        text: string;
+        id: string;
+        options?: string[] | undefined;
+        image?: string | null | undefined;
+        partial?: boolean | undefined;
+        matches?: string[] | undefined;
+        correct?: string[] | undefined;
+        points?: number | undefined;
+        tolerance?: number | undefined;
+        explanation?: string | null | undefined;
+    }>, "many">>;
+    questionCount: z.ZodDefault<z.ZodNumber>;
+    passPercent: z.ZodDefault<z.ZodNumber>;
+    timeLimitMin: z.ZodDefault<z.ZodNullable<z.ZodNumber>>;
+    maxAttempts: z.ZodDefault<z.ZodNumber>;
+    retryHours: z.ZodDefault<z.ZodNumber>;
+    autoGrade: z.ZodDefault<z.ZodBoolean>;
+    showResult: z.ZodDefault<z.ZodBoolean>;
+    reviewMode: z.ZodDefault<z.ZodEnum<["NONE", "ANSWERS", "SOLUTIONS"]>>;
+    layout: z.ZodDefault<z.ZodEnum<["PAGED", "LIST"]>>;
+    shuffleQuestions: z.ZodDefault<z.ZodBoolean>;
+    shuffleOptions: z.ZodDefault<z.ZodBoolean>;
+    examinerIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Dashboard-Rollen, die die Prüfung sehen/ablegen dürfen (leer = alle mit exam.view) */
+    audienceRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    trainingId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** muss vorher bestanden sein */
+    requiredExamId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    availableFrom: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    availableUntil: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** Prüfer bei Abgabe benachrichtigen, wenn manuell bewertet werden muss */
+    notifyExaminers: z.ZodDefault<z.ZodBoolean>;
+    active: z.ZodDefault<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    category: string | null;
+    title: string;
+    description: string | null;
+    active: boolean;
+    layout: "LIST" | "PAGED";
+    instructions: string | null;
+    questions: {
+        options: string[];
+        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        text: string;
+        id: string;
+        image: string | null;
+        partial: boolean;
+        matches: string[];
+        correct: string[];
+        points: number;
+        tolerance: number;
+        explanation: string | null;
+    }[];
+    questionCount: number;
+    passPercent: number;
+    timeLimitMin: number | null;
+    maxAttempts: number;
+    retryHours: number;
+    autoGrade: boolean;
+    showResult: boolean;
+    reviewMode: "NONE" | "ANSWERS" | "SOLUTIONS";
+    shuffleQuestions: boolean;
+    shuffleOptions: boolean;
+    examinerIds: string[];
+    audienceRoleIds: string[];
+    trainingId: string | null;
+    requiredExamId: string | null;
+    availableFrom: string | null;
+    availableUntil: string | null;
+    notifyExaminers: boolean;
+}, {
+    title: string;
+    category?: string | null | undefined;
+    description?: string | null | undefined;
+    active?: boolean | undefined;
+    layout?: "LIST" | "PAGED" | undefined;
+    instructions?: string | null | undefined;
+    questions?: {
+        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        text: string;
+        id: string;
+        options?: string[] | undefined;
+        image?: string | null | undefined;
+        partial?: boolean | undefined;
+        matches?: string[] | undefined;
+        correct?: string[] | undefined;
+        points?: number | undefined;
+        tolerance?: number | undefined;
+        explanation?: string | null | undefined;
+    }[] | undefined;
+    questionCount?: number | undefined;
+    passPercent?: number | undefined;
+    timeLimitMin?: number | null | undefined;
+    maxAttempts?: number | undefined;
+    retryHours?: number | undefined;
+    autoGrade?: boolean | undefined;
+    showResult?: boolean | undefined;
+    reviewMode?: "NONE" | "ANSWERS" | "SOLUTIONS" | undefined;
+    shuffleQuestions?: boolean | undefined;
+    shuffleOptions?: boolean | undefined;
+    examinerIds?: string[] | undefined;
+    audienceRoleIds?: string[] | undefined;
+    trainingId?: string | null | undefined;
+    requiredExamId?: string | null | undefined;
+    availableFrom?: string | null | undefined;
+    availableUntil?: string | null | undefined;
+    notifyExaminers?: boolean | undefined;
+}>, {
+    category: string | null;
+    title: string;
+    description: string | null;
+    active: boolean;
+    layout: "LIST" | "PAGED";
+    instructions: string | null;
+    questions: {
+        options: string[];
+        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        text: string;
+        id: string;
+        image: string | null;
+        partial: boolean;
+        matches: string[];
+        correct: string[];
+        points: number;
+        tolerance: number;
+        explanation: string | null;
+    }[];
+    questionCount: number;
+    passPercent: number;
+    timeLimitMin: number | null;
+    maxAttempts: number;
+    retryHours: number;
+    autoGrade: boolean;
+    showResult: boolean;
+    reviewMode: "NONE" | "ANSWERS" | "SOLUTIONS";
+    shuffleQuestions: boolean;
+    shuffleOptions: boolean;
+    examinerIds: string[];
+    audienceRoleIds: string[];
+    trainingId: string | null;
+    requiredExamId: string | null;
+    availableFrom: string | null;
+    availableUntil: string | null;
+    notifyExaminers: boolean;
+}, {
+    title: string;
+    category?: string | null | undefined;
+    description?: string | null | undefined;
+    active?: boolean | undefined;
+    layout?: "LIST" | "PAGED" | undefined;
+    instructions?: string | null | undefined;
+    questions?: {
+        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        text: string;
+        id: string;
+        options?: string[] | undefined;
+        image?: string | null | undefined;
+        partial?: boolean | undefined;
+        matches?: string[] | undefined;
+        correct?: string[] | undefined;
+        points?: number | undefined;
+        tolerance?: number | undefined;
+        explanation?: string | null | undefined;
+    }[] | undefined;
+    questionCount?: number | undefined;
+    passPercent?: number | undefined;
+    timeLimitMin?: number | null | undefined;
+    maxAttempts?: number | undefined;
+    retryHours?: number | undefined;
+    autoGrade?: boolean | undefined;
+    showResult?: boolean | undefined;
+    reviewMode?: "NONE" | "ANSWERS" | "SOLUTIONS" | undefined;
+    shuffleQuestions?: boolean | undefined;
+    shuffleOptions?: boolean | undefined;
+    examinerIds?: string[] | undefined;
+    audienceRoleIds?: string[] | undefined;
+    trainingId?: string | null | undefined;
+    requiredExamId?: string | null | undefined;
+    availableFrom?: string | null | undefined;
+    availableUntil?: string | null | undefined;
+    notifyExaminers?: boolean | undefined;
+}>;
+type ExamInput = z.infer<typeof examSchema>;
+/** Alle Probleme einer Prüfung (Editor zeigt sie an, Server lehnt ab). */
+declare function examProblems(e: Pick<ExamInput, 'title' | 'questions' | 'questionCount'>): string[];
+/** Austauschformat für Import/Export einer Prüfung als JSON-Datei. */
+declare const EXAM_EXPORT_FORMAT = "enrp.exam";
+declare const examExportSchema: z.ZodObject<{
+    format: z.ZodLiteral<"enrp.exam">;
+    version: z.ZodLiteral<1>;
+    exam: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+}, "strip", z.ZodTypeAny, {
+    exam: Record<string, unknown>;
+    format: "enrp.exam";
+    version: 1;
+}, {
+    exam: Record<string, unknown>;
+    format: "enrp.exam";
+    version: 1;
+}>;
 
 /**
  * Logging (wie bei Xenon/Dyno): jede protokollierte Aktion im System kann in einen Discord-Kanal gemeldet werden –
@@ -5029,4 +5320,4 @@ declare function parseCsv(text: string): {
     }[];
 };
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_LABEL, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, SYNC_DATA_TYPES, SYNC_DIRECTIONS, type StaffList, type StaffMember, type StatusKind, type SupportTime, type SyncDataType, type SyncDirection, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parseCsv, parsePlayer, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, policeReportFields, policyAllowsFlow, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, SYNC_DATA_TYPES, SYNC_DIRECTIONS, type StaffList, type StaffMember, type StatusKind, type SupportTime, type SyncDataType, type SyncDirection, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldValue, fillTemplate, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, panelFieldSchema, parseCsv, parsePlayer, parseQuestions, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, policeReportFields, policyAllowsFlow, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

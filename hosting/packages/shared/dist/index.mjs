@@ -475,7 +475,7 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
-var gameToPixel = (m, x, z9) => ({ px: m.originX + x * m.scale, py: m.originY + z9 * m.scale });
+var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -919,14 +919,14 @@ function renderStaffList(l, members, roleName = (id3) => `<@&${id3}>`, now = /* 
   const used = /* @__PURE__ */ new Set();
   const blocks = [];
   l.sections.forEach((s, i) => {
-    let list = members.filter((m) => m.roleIds.includes(s.roleId));
+    let list2 = members.filter((m) => m.roleIds.includes(s.roleId));
     if (l.onlyHighest) {
-      list = list.filter((m) => !used.has(m.id));
-      list.forEach((m) => used.add(m.id));
+      list2 = list2.filter((m) => !used.has(m.id));
+      list2.forEach((m) => used.add(m.id));
     }
-    list.sort((a, b) => a.name.localeCompare(b.name, "de"));
+    list2.sort((a, b) => a.name.localeCompare(b.name, "de"));
     const head = s.label ? `**${s.label}**` : roleName(s.roleId);
-    const lines = list.length ? list.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
+    const lines = list2.length ? list2.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
     blocks.push(`${head}
 ${lines.join("\n")}${s.divider && i < l.sections.length - 1 ? `
 
@@ -1428,7 +1428,7 @@ var PROFILE_FIELD_LABEL = {
   callsign: "Rufname"
 };
 var notifyRuleSchema = z3.object({ dashboard: z3.boolean().default(true), channelId: sf3.nullable().default(null), dm: z3.boolean().default(false), roleIds: z3.array(uuid).max(20).default([]) });
-var HR_EVENTS = ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"];
+var HR_EVENTS = ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed", "exam.submitted"];
 var HR_EVENT_LABEL = {
   "promotion.requested": "Neuer Bef\xF6rderungsantrag",
   "promotion.approved": "Bef\xF6rderung genehmigt",
@@ -1440,7 +1440,8 @@ var HR_EVENT_LABEL = {
   "warning.created": "Verwarnung erstellt",
   "award.granted": "Auszeichnung verliehen",
   "training.passed": "Ausbildung bestanden",
-  "exam.passed": "Pr\xFCfung bestanden"
+  "exam.passed": "Pr\xFCfung bestanden",
+  "exam.submitted": "Pr\xFCfung abgegeben (wartet auf Bewertung)"
 };
 var stageSchema = z3.object({ id: uuid, name: z3.string().trim().min(1).max(60), roleIds: z3.array(uuid).max(20).default([]) });
 var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
@@ -1590,32 +1591,6 @@ var rankSchema = z3.object({
   requirements: z3.array(requirementSchema).max(30).default([]),
   active: z3.boolean().default(true)
 });
-var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"];
-var EXAM_QUESTION_TYPE_LABEL = { SINGLE: "Single Choice", MULTI: "Multiple Choice", YESNO: "Ja/Nein", TEXT: "Freitext", NUMBER: "Zahl" };
-var questionSchema = z3.object({
-  id: z3.string().min(1).max(40),
-  type: z3.enum(EXAM_QUESTION_TYPES),
-  text: z3.string().trim().min(1).max(1e3),
-  options: z3.array(z3.string().trim().min(1).max(200)).max(10).default([]),
-  /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext → manuell) */
-  correct: z3.array(z3.string().max(200)).max(10).default([]),
-  points: z3.number().min(0).max(100).default(1)
-});
-function gradeAnswer(q, a) {
-  const norm = (x) => String(x ?? "").trim().toLowerCase();
-  if (q.type === "TEXT") {
-    if (!q.correct.length) return null;
-    const t2 = norm(a);
-    return q.correct.every((k) => t2.includes(norm(k))) ? q.points : 0;
-  }
-  if (q.type === "NUMBER") return Number(String(a).replace(",", ".")) === Number(String(q.correct[0] ?? "").replace(",", ".")) ? q.points : 0;
-  if (q.type === "MULTI") {
-    const got = new Set((Array.isArray(a) ? a : []).map(norm));
-    const want = new Set(q.correct.map(norm));
-    return got.size === want.size && [...want].every((x) => got.has(x)) ? q.points : 0;
-  }
-  return norm(Array.isArray(a) ? a[0] : a) === norm(q.correct[0]) ? q.points : 0;
-}
 var DN_STATUSES = ["ACTIVE", "RESERVED", "FREE", "BLOCKED", "FORMER"];
 var DN_STATUS_LABEL = {
   ACTIVE: { label: "Aktiv", emoji: "\u{1F7E2}" },
@@ -1669,8 +1644,206 @@ function fillTemplate(tpl, vars) {
   return tpl.replace(/\{([\w.]{1,40})\}/g, (m, k) => vars[k] !== void 0 && vars[k] !== null ? String(vars[k]) : m).replace(/@(everyone|here)/g, "@\u200B$1");
 }
 
-// src/logging.ts
+// src/exams.ts
 import { z as z4 } from "zod";
+var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+var EXAM_QUESTION_TYPE_LABEL = {
+  SINGLE: "Single Choice",
+  MULTI: "Multiple Choice",
+  YESNO: "Ja/Nein",
+  TEXT: "Freitext",
+  NUMBER: "Zahl",
+  ORDER: "Reihenfolge",
+  MATCH: "Zuordnung",
+  GAP: "L\xFCckentext"
+};
+var EXAM_QUESTION_TYPE_HINT = {
+  SINGLE: "Genau eine Antwort ist richtig.",
+  MULTI: "Mehrere Antworten k\xF6nnen richtig sein.",
+  YESNO: "Ja oder Nein.",
+  TEXT: "Freie Antwort \u2013 automatisch \xFCber Stichworte oder durch einen Pr\xFCfer.",
+  NUMBER: "Zahl, optional mit Toleranz.",
+  ORDER: "Eintr\xE4ge in die richtige Reihenfolge bringen. Im Editor in der richtigen Reihenfolge eintragen \u2013 sie werden beim Versuch gemischt.",
+  MATCH: "Jedem Begriff links das passende Gegenst\xFCck rechts zuordnen. Im Editor jeweils als richtiges Paar eintragen.",
+  GAP: "L\xFCcken im Text mit {{Antwort}} markieren, Alternativen mit | trennen, z. B. \u201EInnerorts gilt {{50|f\xFCnfzig}} km/h\u201C."
+};
+var EXAM_SHUFFLE_TYPES = ["SINGLE", "MULTI", "ORDER", "MATCH"];
+var questionSchema = z4.object({
+  id: z4.string().min(1).max(40),
+  type: z4.enum(EXAM_QUESTION_TYPES),
+  text: z4.string().trim().min(1).max(2e3),
+  /** Antwortmöglichkeiten (Choice), Einträge in richtiger Reihenfolge (ORDER) oder linke Seite (MATCH) */
+  options: z4.array(z4.string().trim().min(1).max(200)).max(12).default([]),
+  /** MATCH: rechte Seite – matches[i] gehört zu options[i] */
+  matches: z4.array(z4.string().trim().min(1).max(200)).max(12).default([]),
+  /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext ohne Stichworte → Prüfer) */
+  correct: z4.array(z4.string().max(200)).max(12).default([]),
+  points: z4.number().min(0).max(100).default(1),
+  /** Teilpunkte (Multiple Choice, Freitext-Stichworte, Reihenfolge, Zuordnung, Lückentext) */
+  partial: z4.boolean().default(false),
+  /** NUMBER: erlaubte Abweichung */
+  tolerance: z4.number().min(0).max(1e9).default(0),
+  /** Erklärung, die nach der Bewertung (Einsicht mit Lösungen) angezeigt wird */
+  explanation: z4.string().max(2e3).nullable().default(null),
+  /** optionales Bild (nur https) */
+  image: z4.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null)
+});
+function parseQuestions(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((q) => {
+    const r = questionSchema.safeParse(q);
+    return r.success ? [r.data] : [];
+  });
+}
+var GAP = /\{\{([^{}]*)\}\}/g;
+var gapAnswers = (text) => [...text.matchAll(GAP)].map((m) => (m[1] ?? "").split("|").map((s) => s.trim()).filter(Boolean));
+var maskGaps = (text) => text.replace(GAP, "{{}}");
+function splitGaps(text) {
+  const out = [];
+  let last = 0;
+  let n = 0;
+  for (const m of text.matchAll(GAP)) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(n++);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+var norm = (x) => String(x ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+var num = (x) => {
+  const s = String(x ?? "").trim().replace(",", ".");
+  return s === "" ? NaN : Number(s);
+};
+var list = (a) => Array.isArray(a) ? a.map((x) => String(x ?? "")) : a == null || a === "" ? [] : [String(a)];
+var round = (n) => Math.round(n * 100) / 100;
+function isAnswered(q, a) {
+  const l = list(a);
+  if (q.type === "ORDER" || q.type === "MATCH") return l.length === q.options.length && l.every((x) => x !== "");
+  if (q.type === "GAP") {
+    const n = splitGaps(q.text).filter((s) => typeof s === "number").length;
+    return l.filter((x) => x.trim()).length >= n && n > 0;
+  }
+  return l.some((x) => x.trim() !== "");
+}
+function gradeAnswer(q, a) {
+  const pts = q.points;
+  const partial = q.partial ?? false;
+  const score = (hits, total) => total <= 0 ? 0 : partial ? round(pts * Math.max(0, Math.min(1, hits / total))) : hits >= total ? pts : 0;
+  switch (q.type) {
+    case "TEXT": {
+      if (!q.correct.length) return null;
+      const t2 = norm(a);
+      return score(q.correct.filter((k) => t2.includes(norm(k))).length, q.correct.length);
+    }
+    case "NUMBER": {
+      const n = num(Array.isArray(a) ? a[0] : a);
+      const c = num(q.correct[0]);
+      return !Number.isNaN(n) && !Number.isNaN(c) && Math.abs(n - c) <= (q.tolerance ?? 0) + 1e-9 ? pts : 0;
+    }
+    case "MULTI": {
+      const got = new Set(list(a).map(norm));
+      const want = new Set(q.correct.map(norm));
+      const right = [...got].filter((x) => want.has(x)).length;
+      const wrong = got.size - right;
+      if (!partial) return wrong === 0 && right === want.size ? pts : 0;
+      return score(right - wrong, want.size);
+    }
+    case "ORDER":
+    case "MATCH": {
+      const got = list(a);
+      const n = q.options.length;
+      return score(Array.from({ length: n }, (_, i) => got[i] === String(i)).filter(Boolean).length, n);
+    }
+    case "GAP": {
+      const gaps = gapAnswers(q.text);
+      const got = list(a);
+      return score(gaps.filter((alts, i) => alts.map(norm).includes(norm(got[i]))).length, gaps.length);
+    }
+    default:
+      return norm(Array.isArray(a) ? a[0] : a) === norm(q.correct[0]) ? pts : 0;
+  }
+}
+function questionProblems(q, label) {
+  const out = [];
+  const opts = q.options ?? [];
+  if (!q.text.trim()) out.push(`${label}: Text fehlt`);
+  if (q.type === "SINGLE" || q.type === "MULTI") {
+    if (opts.length < 2) out.push(`${label}: mindestens 2 Antworten`);
+    if (opts.some((o) => !o.trim())) out.push(`${label}: leere Antwortm\xF6glichkeit`);
+    const valid = q.correct.filter((c) => /^\d+$/.test(c) && Number(c) < opts.length);
+    if (q.type === "SINGLE" && valid.length !== 1) out.push(`${label}: richtige Antwort w\xE4hlen`);
+    if (q.type === "MULTI" && !valid.length) out.push(`${label}: mindestens eine richtige Antwort w\xE4hlen`);
+  }
+  if (q.type === "YESNO" && !["ja", "nein"].includes(norm(q.correct[0]))) out.push(`${label}: richtige Antwort w\xE4hlen`);
+  if (q.type === "NUMBER" && Number.isNaN(num(q.correct[0]))) out.push(`${label}: richtige Zahl fehlt`);
+  if (q.type === "ORDER") {
+    if (opts.length < 2) out.push(`${label}: mindestens 2 Eintr\xE4ge`);
+    if (opts.some((o) => !o.trim())) out.push(`${label}: leerer Eintrag`);
+    if (new Set(opts.map(norm)).size !== opts.length) out.push(`${label}: Eintr\xE4ge m\xFCssen unterschiedlich sein`);
+  }
+  if (q.type === "MATCH") {
+    if (opts.length < 2) out.push(`${label}: mindestens 2 Paare`);
+    if (opts.some((o) => !o.trim()) || (q.matches ?? []).some((o) => !o.trim()) || (q.matches ?? []).length !== opts.length) out.push(`${label}: jedes Paar braucht beide Seiten`);
+  }
+  if (q.type === "GAP") {
+    const gaps = gapAnswers(q.text);
+    if (!gaps.length) out.push(`${label}: mindestens eine L\xFCcke {{\u2026}} im Text`);
+    else if (gaps.some((g) => !g.length)) out.push(`${label}: leere L\xFCcke {{}} \u2013 Antwort eintragen`);
+  }
+  return out;
+}
+var EXAM_REVIEW_MODES = ["NONE", "ANSWERS", "SOLUTIONS"];
+var EXAM_REVIEW_LABEL = { NONE: "Keine Einsicht", ANSWERS: "Eigene Antworten (richtig/falsch)", SOLUTIONS: "Antworten mit L\xF6sungen und Erkl\xE4rungen" };
+var EXAM_LAYOUTS = ["PAGED", "LIST"];
+var EXAM_LAYOUT_LABEL = { PAGED: "Eine Frage pro Seite", LIST: "Alle Fragen auf einer Seite" };
+var EXAM_ATTEMPT_STATUSES = ["IN_PROGRESS", "SUBMITTED", "GRADED", "VOIDED"];
+var EXAM_ATTEMPT_STATUS_LABEL = { IN_PROGRESS: "L\xE4uft", SUBMITTED: "Wartet auf Bewertung", GRADED: "Bewertet", VOIDED: "Annulliert" };
+var isoDate = z4.string().datetime({ offset: true });
+var examSchema = z4.object({
+  title: z4.string().trim().min(1).max(120),
+  description: z4.string().max(3e3).nullable().default(null),
+  /** Hinweise auf der Startseite vor Beginn */
+  instructions: z4.string().max(4e3).nullable().default(null),
+  category: z4.string().trim().max(60).nullable().default(null),
+  questions: z4.array(questionSchema).max(200).default([]),
+  questionCount: z4.number().int().min(0).max(200).default(0),
+  passPercent: z4.number().int().min(1).max(100).default(70),
+  timeLimitMin: z4.number().int().min(1).max(600).nullable().default(null),
+  maxAttempts: z4.number().int().min(1).max(50).default(3),
+  retryHours: z4.number().int().min(0).max(24 * 90).default(24),
+  autoGrade: z4.boolean().default(true),
+  showResult: z4.boolean().default(true),
+  reviewMode: z4.enum(EXAM_REVIEW_MODES).default("ANSWERS"),
+  layout: z4.enum(EXAM_LAYOUTS).default("PAGED"),
+  shuffleQuestions: z4.boolean().default(false),
+  shuffleOptions: z4.boolean().default(false),
+  examinerIds: z4.array(z4.string().uuid()).max(30).default([]),
+  /** Dashboard-Rollen, die die Prüfung sehen/ablegen dürfen (leer = alle mit exam.view) */
+  audienceRoleIds: z4.array(z4.string().uuid()).max(30).default([]),
+  trainingId: z4.string().uuid().nullable().default(null),
+  /** muss vorher bestanden sein */
+  requiredExamId: z4.string().uuid().nullable().default(null),
+  availableFrom: isoDate.nullable().default(null),
+  availableUntil: isoDate.nullable().default(null),
+  /** Prüfer bei Abgabe benachrichtigen, wenn manuell bewertet werden muss */
+  notifyExaminers: z4.boolean().default(true),
+  active: z4.boolean().default(true)
+}).refine((e) => !e.availableFrom || !e.availableUntil || new Date(e.availableFrom) < new Date(e.availableUntil), { message: "\u201EVerf\xFCgbar bis\u201C muss nach \u201EVerf\xFCgbar ab\u201C liegen.", path: ["availableUntil"] });
+function examProblems(e) {
+  const out = [];
+  if (!e.title.trim()) out.push("Titel fehlt");
+  const ids = e.questions.map((q) => q.id);
+  if (new Set(ids).size !== ids.length) out.push("Fragen-IDs m\xFCssen eindeutig sein");
+  e.questions.forEach((q, i) => out.push(...questionProblems(q, `Frage ${i + 1}`)));
+  if (e.questions.length && e.questions.reduce((n, q) => n + q.points, 0) <= 0) out.push("Die Fragen haben zusammen 0 Punkte");
+  return out;
+}
+var EXAM_EXPORT_FORMAT = "enrp.exam";
+var examExportSchema = z4.object({ format: z4.literal(EXAM_EXPORT_FORMAT), version: z4.literal(1), exam: z4.record(z4.unknown()) });
+
+// src/logging.ts
+import { z as z5 } from "zod";
 var LOG_CATEGORIES = [
   { key: "einsaetze", label: "Eins\xE4tze & Leitstelle", emoji: "\u{1F6A8}", modules: ["cad", "dispatch", "incidents", "erlc", "radio", "fleet"] },
   { key: "akten", label: "Akten & Ermittlungen", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "weapons", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"] },
@@ -1981,13 +2154,13 @@ function logTypeLabel(action) {
   const noun = [...new Set(nouns.map((p) => WORDS[p] ?? p))].slice(-2).join(" ");
   return verb ? `${noun} ${verb}` : noun || action;
 }
-var sf4 = z4.string().regex(/^\d{15,25}$/, "Discord-Kanal-ID");
-var loggingConfigSchema = z4.object({
-  enabled: z4.boolean().default(true),
+var sf4 = z5.string().regex(/^\d{15,25}$/, "Discord-Kanal-ID");
+var loggingConfigSchema = z5.object({
+  enabled: z5.boolean().default(true),
   /** Kanal je Kategorie */
-  categories: z4.record(z4.string().max(32), sf4).default({}),
+  categories: z5.record(z5.string().max(32), sf4).default({}),
   /** Abweichung je Typ: eigener Kanal oder 'off' (aus); fehlt = Kanal der Kategorie */
-  types: z4.record(z4.string().max(80), z4.union([sf4, z4.literal("off"), z4.literal("on")])).default({})
+  types: z5.record(z5.string().max(80), z5.union([sf4, z5.literal("off"), z5.literal("on")])).default({})
 });
 function logChannelFor(cfg, module, action) {
   if (!cfg.enabled) return null;
@@ -1999,27 +2172,27 @@ function logChannelFor(cfg, module, action) {
 }
 
 // src/backup.ts
-import { z as z5 } from "zod";
+import { z as z6 } from "zod";
 var BACKUP_PARTS = ["roles", "channels", "settings"];
 var BACKUP_PART_LABEL = { roles: "Rollen", channels: "Kategorien & Kan\xE4le (mit Rechten)", settings: "Servereinstellungen (Name, Verifizierung, AFK \u2026)" };
-var backupConfigSchema = z5.object({
+var backupConfigSchema = z6.object({
   /** Dashboard-Daten täglich automatisch sichern */
-  dataAuto: z5.boolean().default(true),
+  dataAuto: z6.boolean().default(true),
   /** Discord-Server täglich automatisch sichern */
-  discordAuto: z5.boolean().default(false),
+  discordAuto: z6.boolean().default(false),
   /** so viele automatische Backups behalten (je Art bzw. Server) */
-  keep: z5.number().int().min(1).max(60).default(14)
+  keep: z6.number().int().min(1).max(60).default(14)
 });
 
 // src/mdt.ts
-import { z as z6 } from "zod";
-var option = z6.object({ key: z6.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: z6.string().trim().min(1).max(40) });
+import { z as z7 } from "zod";
+var option = z7.object({ key: z7.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: z7.string().trim().min(1).max(40) });
 var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
-var mdtConfigSchema = z6.object({
-  licenses: z6.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
-  flags: z6.array(option.extend({ tone: z6.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
-  weaponTypes: z6.array(option).max(40).refine(unique, "Schl\xFCssel doppelt"),
-  genders: z6.array(z6.string().trim().min(1).max(30)).max(10)
+var mdtConfigSchema = z7.object({
+  licenses: z7.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  flags: z7.array(option.extend({ tone: z7.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  weaponTypes: z7.array(option).max(40).refine(unique, "Schl\xFCssel doppelt"),
+  genders: z7.array(z7.string().trim().min(1).max(30)).max(10)
 });
 var DEFAULT_MDT_CONFIG = {
   licenses: [
@@ -2054,17 +2227,17 @@ var WEAPON_STATUSES = [
   { key: "DESTROYED", label: "Vernichtet", tone: "neutral" }
 ];
 var WEAPON_STATUS_KEYS = WEAPON_STATUSES.map((s) => s.key);
-var personDetailsSchema = z6.object({
-  fullName: z6.string().trim().max(80).nullish(),
-  dateOfBirth: z6.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
-  gender: z6.string().trim().max(30).nullish(),
-  phone: z6.string().trim().max(30).nullish(),
-  job: z6.string().trim().max(60).nullish(),
-  nationality: z6.string().trim().max(60).nullish(),
-  address: z6.string().trim().max(200).nullish(),
-  appearance: z6.object({ skinTone: z6.string().max(40).optional(), hairColor: z6.string().max(40).optional(), eyeColor: z6.string().max(40).optional(), height: z6.string().max(20).optional(), features: z6.string().max(300).optional() }).nullish(),
-  licenses: z6.array(z6.string().max(32)).max(30).optional(),
-  flags: z6.array(z6.string().max(32)).max(30).optional()
+var personDetailsSchema = z7.object({
+  fullName: z7.string().trim().max(80).nullish(),
+  dateOfBirth: z7.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
+  gender: z7.string().trim().max(30).nullish(),
+  phone: z7.string().trim().max(30).nullish(),
+  job: z7.string().trim().max(60).nullish(),
+  nationality: z7.string().trim().max(60).nullish(),
+  address: z7.string().trim().max(200).nullish(),
+  appearance: z7.object({ skinTone: z7.string().max(40).optional(), hairColor: z7.string().max(40).optional(), eyeColor: z7.string().max(40).optional(), height: z7.string().max(20).optional(), features: z7.string().max(300).optional() }).nullish(),
+  licenses: z7.array(z7.string().max(32)).max(30).optional(),
+  flags: z7.array(z7.string().max(32)).max(30).optional()
 });
 function ageOf(dob, now = /* @__PURE__ */ new Date()) {
   if (!dob || !/^\d{4}-\d{2}-\d{2}/.test(dob)) return null;
@@ -2075,16 +2248,16 @@ function ageOf(dob, now = /* @__PURE__ */ new Date()) {
 }
 
 // src/fleet.ts
-import { z as z7 } from "zod";
-var key2 = z7.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _");
+import { z as z8 } from "zod";
+var key2 = z8.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _");
 var unique2 = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
-var fleetConfigSchema = z7.object({
-  categories: z7.array(z7.object({ key: key2, label: z7.string().trim().min(1).max(40), icon: z7.string().trim().min(1).max(8) })).min(1).max(30).refine(unique2, "Schl\xFCssel doppelt"),
-  internalStatuses: z7.array(z7.object({ key: key2, label: z7.string().trim().min(1).max(40), color: z7.string().regex(/^#[0-9a-fA-F]{6}$/) })).min(1).max(20).refine(unique2, "Schl\xFCssel doppelt"),
+var fleetConfigSchema = z8.object({
+  categories: z8.array(z8.object({ key: key2, label: z8.string().trim().min(1).max(40), icon: z8.string().trim().min(1).max(8) })).min(1).max(30).refine(unique2, "Schl\xFCssel doppelt"),
+  internalStatuses: z8.array(z8.object({ key: key2, label: z8.string().trim().min(1).max(40), color: z8.string().regex(/^#[0-9a-fA-F]{6}$/) })).min(1).max(20).refine(unique2, "Schl\xFCssel doppelt"),
   /** Mindestabstand zwischen zwei Abgleichen der Live-Fahrzeuge (Sekunden); der ER:LC-Abruf selbst läuft im eingestellten Server-Intervall. */
-  syncSeconds: z7.number().int().min(5).max(600),
+  syncSeconds: z8.number().int().min(5).max(600),
   /** Nicht mehr gemeldete Fahrzeuge ohne interne Daten nach so vielen Tagen löschen. */
-  keepInactiveDays: z7.number().int().min(1).max(90)
+  keepInactiveDays: z8.number().int().min(1).max(90)
 });
 var DEFAULT_FLEET_CONFIG = {
   categories: [
@@ -2112,27 +2285,27 @@ var DRIVER_STATES = {
 };
 var DRIVER_HINT = "ER:LC meldet nur, wer das Fahrzeug gespawnt hat (Besitzer) \u2013 nicht, wer gerade f\xE4hrt.";
 var POSITION_HINT = "Position des Besitzers laut ER:LC \u2013 keine Fahrzeugposition (die API liefert keine).";
-var fleetModelSchema = z7.object({
-  name: z7.string().trim().min(1).max(80),
+var fleetModelSchema = z8.object({
+  name: z8.string().trim().min(1).max(80),
   /** Modellname genau so, wie ER:LC ihn meldet (z. B. „Falcon Interceptor Utility 2019“) – darüber werden Live-Fahrzeuge zugeordnet. */
-  erlcName: z7.string().trim().min(1).max(120),
+  erlcName: z8.string().trim().min(1).max(120),
   category: key2,
-  description: z7.string().trim().max(1e3).nullish(),
-  internalCode: z7.string().trim().max(40).nullish(),
-  active: z7.boolean().optional(),
-  tags: z7.array(z7.string().trim().min(1).max(30)).max(20).optional(),
-  department: z7.string().trim().max(60).nullish()
+  description: z8.string().trim().max(1e3).nullish(),
+  internalCode: z8.string().trim().max(40).nullish(),
+  active: z8.boolean().optional(),
+  tags: z8.array(z8.string().trim().min(1).max(30)).max(20).optional(),
+  department: z8.string().trim().max(60).nullish()
 });
-var fleetInternalSchema = z7.object({
-  unitId: z7.string().uuid().nullish(),
+var fleetInternalSchema = z8.object({
+  unitId: z8.string().uuid().nullish(),
   internalStatus: key2.optional(),
-  internalCode: z7.string().trim().max(40).nullish(),
-  notes: z7.string().trim().max(3e3).nullish(),
-  tags: z7.array(z7.string().trim().min(1).max(30)).max(20).optional()
+  internalCode: z8.string().trim().max(40).nullish(),
+  notes: z8.string().trim().max(3e3).nullish(),
+  tags: z8.array(z8.string().trim().min(1).max(30)).max(20).optional()
 });
 
 // src/message-builder.ts
-import { z as z8 } from "zod";
+import { z as z9 } from "zod";
 var DISCORD_LIMITS = {
   content: 2e3,
   embedsPerMessage: 10,
@@ -2157,33 +2330,33 @@ var DISCORD_LIMITS = {
   webhookUsername: 80
 };
 var MB_LIMITS = { messagesPerGroup: 10, url: 2048, replyText: 2e3 };
-var str = (max) => z8.string().max(max).default("");
-var id2 = z8.string().min(1).max(64);
+var str = (max) => z9.string().max(max).default("");
+var id2 = z9.string().min(1).max(64);
 var MB_BUTTON_STYLES = ["primary", "secondary", "success", "danger"];
-var mbActionSchema = z8.discriminatedUnion("type", [
+var mbActionSchema = z9.discriminatedUnion("type", [
   /** Antwort nur für die klickende Person sichtbar (ephemeral). */
-  z8.object({ type: z8.literal("reply"), text: str(4e3) }),
+  z9.object({ type: z9.literal("reply"), text: str(4e3) }),
   /** Discord-Rolle der klickenden Person geben bzw. wieder nehmen (Umschalter). */
-  z8.object({ type: z8.literal("role"), roleId: str(32), mode: z8.enum(["toggle", "add", "remove"]).default("toggle") })
+  z9.object({ type: z9.literal("role"), roleId: str(32), mode: z9.enum(["toggle", "add", "remove"]).default("toggle") })
 ]);
-var mbButtonSchema = z8.object({
+var mbButtonSchema = z9.object({
   id: id2,
   /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
-  kind: z8.enum(["link", "action"]).default("link"),
+  kind: z9.enum(["link", "action"]).default("link"),
   label: str(500),
   emoji: str(100),
-  style: z8.enum(MB_BUTTON_STYLES).default("primary"),
+  style: z9.enum(MB_BUTTON_STYLES).default("primary"),
   url: str(4e3),
-  disabled: z8.boolean().default(false),
+  disabled: z9.boolean().default(false),
   action: mbActionSchema.default({ type: "reply", text: "" })
 });
-var mbSelectOptionSchema = z8.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
-var mbRowSchema = z8.discriminatedUnion("type", [
-  z8.object({ id: id2, type: z8.literal("buttons"), buttons: z8.array(mbButtonSchema).max(25).default([]) }),
-  z8.object({ id: id2, type: z8.literal("select"), placeholder: str(500), disabled: z8.boolean().default(false), options: z8.array(mbSelectOptionSchema).max(50).default([]) })
+var mbSelectOptionSchema = z9.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
+var mbRowSchema = z9.discriminatedUnion("type", [
+  z9.object({ id: id2, type: z9.literal("buttons"), buttons: z9.array(mbButtonSchema).max(25).default([]) }),
+  z9.object({ id: id2, type: z9.literal("select"), placeholder: str(500), disabled: z9.boolean().default(false), options: z9.array(mbSelectOptionSchema).max(50).default([]) })
 ]);
-var mbFieldSchema = z8.object({ id: id2, name: str(2e3), value: str(4e3), inline: z8.boolean().default(false) });
-var mbEmbedSchema = z8.object({
+var mbFieldSchema = z9.object({ id: id2, name: str(2e3), value: str(4e3), inline: z9.boolean().default(false) });
+var mbEmbedSchema = z9.object({
   id: id2,
   title: str(2e3),
   url: str(4e3),
@@ -2198,22 +2371,22 @@ var mbEmbedSchema = z8.object({
   footerText: str(4e3),
   footerIconUrl: str(4e3),
   /** none = ohne, send = Zeitpunkt des Versands, custom = `timestampAt` */
-  timestamp: z8.enum(["none", "send", "custom"]).default("none"),
+  timestamp: z9.enum(["none", "send", "custom"]).default("none"),
   timestampAt: str(64),
-  fields: z8.array(mbFieldSchema).max(50).default([])
+  fields: z9.array(mbFieldSchema).max(50).default([])
 });
-var mbMessageSchema = z8.object({
+var mbMessageSchema = z9.object({
   id: id2,
   content: str(1e4),
-  embeds: z8.array(mbEmbedSchema).max(20).default([]),
-  rows: z8.array(mbRowSchema).max(10).default([]),
+  embeds: z9.array(mbEmbedSchema).max(20).default([]),
+  rows: z9.array(mbRowSchema).max(10).default([]),
   /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
-  mentions: z8.object({ users: z8.boolean().default(true), roles: z8.boolean().default(false), everyone: z8.boolean().default(false) }).default({})
+  mentions: z9.object({ users: z9.boolean().default(true), roles: z9.boolean().default(false), everyone: z9.boolean().default(false) }).default({})
 });
-var mbDocumentDataSchema = z8.object({
-  messages: z8.array(mbMessageSchema).max(MB_LIMITS.messagesPerGroup).default([]),
+var mbDocumentDataSchema = z9.object({
+  messages: z9.array(mbMessageSchema).max(MB_LIMITS.messagesPerGroup).default([]),
   /** Name/Profilbild nur beim Versand über einen Webhook (der Bot sendet immer als er selbst). */
-  webhookProfile: z8.object({ username: str(200), avatarUrl: str(4e3) }).default({})
+  webhookProfile: z9.object({ username: str(200), avatarUrl: str(4e3) }).default({})
 });
 var counter = 0;
 var mbId = () => `${Date.now().toString(36)}${(counter++).toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -2601,8 +2774,17 @@ export {
   ERLC_STATUS_LABEL,
   EVIDENCE_CUSTODY_STATES,
   EVIDENCE_TRANSITIONS,
+  EXAM_ATTEMPT_STATUSES,
+  EXAM_ATTEMPT_STATUS_LABEL,
+  EXAM_EXPORT_FORMAT,
+  EXAM_LAYOUTS,
+  EXAM_LAYOUT_LABEL,
   EXAM_QUESTION_TYPES,
+  EXAM_QUESTION_TYPE_HINT,
   EXAM_QUESTION_TYPE_LABEL,
+  EXAM_REVIEW_LABEL,
+  EXAM_REVIEW_MODES,
+  EXAM_SHUFFLE_TYPES,
   FORM_PANEL_VARIABLES,
   FORM_QUESTION_TYPES,
   HR_EVENTS,
@@ -2707,6 +2889,9 @@ export {
   emptyMbDocument,
   emptyMbEmbed,
   emptyMbMessage,
+  examExportSchema,
+  examProblems,
+  examSchema,
   fieldValue,
   fillTemplate,
   fleetConfigSchema,
@@ -2719,6 +2904,7 @@ export {
   formatServiceNumber,
   freeFieldKey,
   gameToPixel,
+  gapAnswers,
   gradeAnswer,
   grantMatches,
   hasErrors,
@@ -2731,6 +2917,7 @@ export {
   infoPanelMessage,
   infoPanelSchema,
   interactiveComponents,
+  isAnswered,
   isDutyTimeField,
   isHttpUrl,
   isInputQuestion,
@@ -2747,6 +2934,7 @@ export {
   logChannelFor,
   logTypeLabel,
   loggingConfigSchema,
+  maskGaps,
   matchWantedPlayer,
   matchingBinds,
   mbActionSchema,
@@ -2771,6 +2959,7 @@ export {
   panelFieldSchema,
   parseCsv,
   parsePlayer,
+  parseQuestions,
   periodEnd,
   periodLabel,
   periodStart,
@@ -2779,6 +2968,7 @@ export {
   playerKey,
   policeReportFields,
   policyAllowsFlow,
+  questionProblems,
   questionSchema,
   radioRoleSyncAction,
   rangeSchema,
@@ -2798,6 +2988,7 @@ export {
   resolvePermission,
   rolesMatch,
   severitySchema,
+  splitGaps,
   staffListSchema,
   staffSectionSchema,
   stageSchema,

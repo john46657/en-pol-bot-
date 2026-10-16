@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BotTrainingSessionsController = exports.HrTrainingSessionsController = exports.ServiceNumbersController = exports.HrCommsController = exports.HrTrainingController = exports.HrRequestsController = exports.HrController = void 0;
+exports.BotTrainingSessionsController = exports.HrTrainingSessionsController = exports.ServiceNumbersController = exports.HrCommsController = exports.HrExamController = exports.HrTrainingController = exports.HrRequestsController = exports.HrController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -23,6 +23,7 @@ const hr_core_service_1 = require("./hr-core.service");
 const hr_people_service_1 = require("./hr-people.service");
 const hr_requests_service_1 = require("./hr-requests.service");
 const hr_training_service_1 = require("./hr-training.service");
+const hr_exam_service_1 = require("./hr-exam.service");
 const hr_comms_service_1 = require("./hr-comms.service");
 const service_numbers_service_1 = require("./service-numbers.service");
 const hr_training_sessions_service_1 = require("./hr-training-sessions.service");
@@ -351,16 +352,6 @@ let HrTrainingController = class HrTrainingController {
     progressOf(id) { return this.s.progressOf(id); }
     setProgress(a, b) { return this.s.setProgress(a, b); }
     certificate(a, no) { return this.s.certificate(a, no.slice(0, 20)); }
-    exams(a) { return this.s.exams(a); }
-    createExam(a, b) { return this.s.saveExam(a, b); }
-    saveExam(a, id, b) { return this.s.saveExam(a, b, id); }
-    deleteExam(a, id) { return this.s.deleteExam(a, id); }
-    start(a, id) { return this.s.start(a, id); }
-    attempts(a, examId) { return this.s.attempts(a, examId && /^[0-9a-f-]{36}$/.test(examId) ? examId : undefined); }
-    attempt(a, id) { return this.s.view(id, a); }
-    answers(a, id, b) { return this.s.saveAnswers(a, id, b.answers); }
-    submit(a, id, b) { return this.s.submit(a, id, b.answers); }
-    grade(a, id, b) { return this.s.grade(a, id, b); }
 };
 exports.HrTrainingController = HrTrainingController;
 __decorate([
@@ -425,6 +416,36 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], HrTrainingController.prototype, "certificate", null);
+exports.HrTrainingController = HrTrainingController = __decorate([
+    (0, swagger_1.ApiTags)('hr'),
+    (0, common_1.Controller)('hr'),
+    __metadata("design:paramtypes", [hr_training_service_1.HrTrainingService])
+], HrTrainingController);
+// ───────────── Prüfungen ─────────────
+const answersBody = zod_1.z.object({ answers: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.unknown()), flagged: zod_1.z.array(zod_1.z.string().max(40)).max(200).optional() });
+const gradeBody = zod_1.z.object({ scores: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.number().min(0).max(100)), feedback: zod_1.z.string().max(2000).optional() });
+const attemptsQ = zod_1.z.object({ examId: uuid.optional(), status: zod_1.z.enum(shared_1.EXAM_ATTEMPT_STATUSES).optional() });
+let HrExamController = class HrExamController {
+    s;
+    constructor(s) {
+        this.s = s;
+    }
+    list(a) { return this.s.list(a); }
+    detail(a, id) { return this.s.detail(a, id); }
+    create(a, b) { return this.s.save(a, b); }
+    save(a, id, b) { return this.s.save(a, b, id); }
+    remove(a, id) { return this.s.remove(a, id); }
+    duplicate(a, id) { return this.s.duplicate(a, id); }
+    results(a, id) { return this.s.results(a, id); }
+    start(a, id) { return this.s.start(a, id); }
+    attempts(a, q) { return this.s.attempts(a, q); }
+    attempt(a, id) { return this.s.view(id, a); }
+    answers(a, id, b) { return this.s.saveAnswers(a, id, b.answers, b.flagged); }
+    submit(a, id, b) { return this.s.submit(a, id, b.answers); }
+    grade(a, id, b) { return this.s.grade(a, id, b); }
+    void(a, id, b) { return this.s.void(a, id, b.reason); }
+};
+exports.HrExamController = HrExamController;
 __decorate([
     (0, common_1.Get)('exams'),
     (0, decorators_1.RequirePermission)('exam.view'),
@@ -432,26 +453,35 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "exams", null);
+], HrExamController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('exams/:id'),
+    (0, decorators_1.RequirePermission)('exam.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "detail", null);
 __decorate([
     (0, common_1.Post)('exams'),
     (0, decorators_1.RequirePermission)('exam.create'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(hr_training_service_1.examSchema))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(shared_1.examSchema))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "createExam", null);
+], HrExamController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)('exams/:id'),
     (0, decorators_1.RequirePermission)('exam.manage'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(hr_training_service_1.examSchema))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(shared_1.examSchema))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "saveExam", null);
+], HrExamController.prototype, "save", null);
 __decorate([
     (0, common_1.Delete)('exams/:id'),
     (0, common_1.HttpCode)(204),
@@ -461,7 +491,25 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "deleteExam", null);
+], HrExamController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)('exams/:id/duplicate'),
+    (0, decorators_1.RequirePermission)('exam.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "duplicate", null);
+__decorate([
+    (0, common_1.Get)('exams/:id/results'),
+    (0, decorators_1.RequirePermission)('exam.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "results", null);
 __decorate([
     (0, common_1.Post)('exams/:id/start'),
     (0, common_1.HttpCode)(200),
@@ -471,16 +519,16 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "start", null);
+], HrExamController.prototype, "start", null);
 __decorate([
     (0, common_1.Get)('attempts'),
     (0, decorators_1.RequirePermission)('exam.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Query)('examId')),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(attemptsQ))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "attempts", null);
+], HrExamController.prototype, "attempts", null);
 __decorate([
     (0, common_1.Get)('attempts/:id'),
     (0, decorators_1.RequirePermission)('exam.view'),
@@ -489,44 +537,55 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "attempt", null);
+], HrExamController.prototype, "attempt", null);
 __decorate([
     (0, common_1.Put)('attempts/:id/answers'),
     (0, decorators_1.RequirePermission)('exam.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ answers: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.unknown()) })))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(answersBody))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "answers", null);
+], HrExamController.prototype, "answers", null);
 __decorate([
     (0, common_1.Post)('attempts/:id/submit'),
     (0, common_1.HttpCode)(200),
     (0, decorators_1.RequirePermission)('exam.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ answers: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.unknown()) })))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(answersBody))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "submit", null);
+], HrExamController.prototype, "submit", null);
 __decorate([
     (0, common_1.Post)('attempts/:id/grade'),
     (0, common_1.HttpCode)(200),
     (0, decorators_1.RequirePermission)('exam.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ scores: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.number().min(0).max(100)), feedback: zod_1.z.string().max(2000).optional() })))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(gradeBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "grade", null);
+__decorate([
+    (0, common_1.Post)('attempts/:id/void'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('exam.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ reason: zod_1.z.string().trim().min(3).max(500) })))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
-], HrTrainingController.prototype, "grade", null);
-exports.HrTrainingController = HrTrainingController = __decorate([
+], HrExamController.prototype, "void", null);
+exports.HrExamController = HrExamController = __decorate([
     (0, swagger_1.ApiTags)('hr'),
     (0, common_1.Controller)('hr'),
-    __metadata("design:paramtypes", [hr_training_service_1.HrTrainingService])
-], HrTrainingController);
+    __metadata("design:paramtypes", [hr_exam_service_1.HrExamService])
+], HrExamController);
 // ───────────── Meldungen & Abstimmungen ─────────────
 let HrCommsController = class HrCommsController {
     s;

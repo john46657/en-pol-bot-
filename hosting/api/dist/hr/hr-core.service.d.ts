@@ -108,7 +108,7 @@ export declare class HrCoreService {
         }[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
-        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed", {
+        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
             dashboard: boolean;
             dm: boolean;
             roleIds: string[];

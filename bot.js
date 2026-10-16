@@ -80391,14 +80391,14 @@ function renderStaffList(l, members, roleName = (id3) => `<@&${id3}>`, now = /* 
   const used = /* @__PURE__ */ new Set();
   const blocks = [];
   l.sections.forEach((s, i) => {
-    let list = members.filter((m) => m.roleIds.includes(s.roleId));
+    let list2 = members.filter((m) => m.roleIds.includes(s.roleId));
     if (l.onlyHighest) {
-      list = list.filter((m) => !used.has(m.id));
-      list.forEach((m) => used.add(m.id));
+      list2 = list2.filter((m) => !used.has(m.id));
+      list2.forEach((m) => used.add(m.id));
     }
-    list.sort((a, b) => a.name.localeCompare(b.name, "de"));
+    list2.sort((a, b) => a.name.localeCompare(b.name, "de"));
     const head = s.label ? `**${s.label}**` : roleName(s.roleId);
-    const lines = list.length ? list.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
+    const lines = list2.length ? list2.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
     blocks.push(`${head}
 ${lines.join("\n")}${s.divider && i < l.sections.length - 1 ? `
 
@@ -80633,7 +80633,7 @@ var absenceTypeSchema = external_exports.object({ key, label: external_exports.s
 var PROFILE_SECTIONS = ["overview", "rank", "promotions", "trainings", "exams", "awards", "warnings", "absences", "transfers", "servicenumbers", "notes", "history"];
 var PROFILE_FIELDS = ["discordName", "discordId", "avatar", "robloxName", "robloxId", "rank", "department", "joinDate", "status", "serviceNumber", "callsign"];
 var notifyRuleSchema = external_exports.object({ dashboard: external_exports.boolean().default(true), channelId: sf3.nullable().default(null), dm: external_exports.boolean().default(false), roleIds: external_exports.array(uuid).max(20).default([]) });
-var HR_EVENTS = ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed"];
+var HR_EVENTS = ["promotion.requested", "promotion.approved", "promotion.rejected", "promotion.executed", "transfer.requested", "transfer.approved", "transfer.rejected", "warning.created", "award.granted", "training.passed", "exam.passed", "exam.submitted"];
 var stageSchema = external_exports.object({ id: uuid, name: external_exports.string().trim().min(1).max(60), roleIds: external_exports.array(uuid).max(20).default([]) });
 var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
 var requestStatusDefSchema = external_exports.object({ label: external_exports.string().max(40), emoji: external_exports.string().max(16) });
@@ -80746,16 +80746,6 @@ var rankSchema = external_exports.object({
   requirements: external_exports.array(requirementSchema).max(30).default([]),
   active: external_exports.boolean().default(true)
 });
-var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER"];
-var questionSchema = external_exports.object({
-  id: external_exports.string().min(1).max(40),
-  type: external_exports.enum(EXAM_QUESTION_TYPES),
-  text: external_exports.string().trim().min(1).max(1e3),
-  options: external_exports.array(external_exports.string().trim().min(1).max(200)).max(10).default([]),
-  /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext → manuell) */
-  correct: external_exports.array(external_exports.string().max(200)).max(10).default([]),
-  points: external_exports.number().min(0).max(100).default(1)
-});
 var rangeSchema = external_exports.object({
   name: external_exports.string().trim().min(1).max(60),
   prefix: external_exports.string().max(10).default(""),
@@ -80794,6 +80784,62 @@ var dnSettingsSchema = external_exports.object({
   /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
   changeNeedsApprover: external_exports.boolean().default(false)
 });
+var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+var questionSchema = external_exports.object({
+  id: external_exports.string().min(1).max(40),
+  type: external_exports.enum(EXAM_QUESTION_TYPES),
+  text: external_exports.string().trim().min(1).max(2e3),
+  /** Antwortmöglichkeiten (Choice), Einträge in richtiger Reihenfolge (ORDER) oder linke Seite (MATCH) */
+  options: external_exports.array(external_exports.string().trim().min(1).max(200)).max(12).default([]),
+  /** MATCH: rechte Seite – matches[i] gehört zu options[i] */
+  matches: external_exports.array(external_exports.string().trim().min(1).max(200)).max(12).default([]),
+  /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext ohne Stichworte → Prüfer) */
+  correct: external_exports.array(external_exports.string().max(200)).max(12).default([]),
+  points: external_exports.number().min(0).max(100).default(1),
+  /** Teilpunkte (Multiple Choice, Freitext-Stichworte, Reihenfolge, Zuordnung, Lückentext) */
+  partial: external_exports.boolean().default(false),
+  /** NUMBER: erlaubte Abweichung */
+  tolerance: external_exports.number().min(0).max(1e9).default(0),
+  /** Erklärung, die nach der Bewertung (Einsicht mit Lösungen) angezeigt wird */
+  explanation: external_exports.string().max(2e3).nullable().default(null),
+  /** optionales Bild (nur https) */
+  image: external_exports.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null)
+});
+var EXAM_REVIEW_MODES = ["NONE", "ANSWERS", "SOLUTIONS"];
+var EXAM_LAYOUTS = ["PAGED", "LIST"];
+var isoDate = external_exports.string().datetime({ offset: true });
+var examSchema = external_exports.object({
+  title: external_exports.string().trim().min(1).max(120),
+  description: external_exports.string().max(3e3).nullable().default(null),
+  /** Hinweise auf der Startseite vor Beginn */
+  instructions: external_exports.string().max(4e3).nullable().default(null),
+  category: external_exports.string().trim().max(60).nullable().default(null),
+  questions: external_exports.array(questionSchema).max(200).default([]),
+  questionCount: external_exports.number().int().min(0).max(200).default(0),
+  passPercent: external_exports.number().int().min(1).max(100).default(70),
+  timeLimitMin: external_exports.number().int().min(1).max(600).nullable().default(null),
+  maxAttempts: external_exports.number().int().min(1).max(50).default(3),
+  retryHours: external_exports.number().int().min(0).max(24 * 90).default(24),
+  autoGrade: external_exports.boolean().default(true),
+  showResult: external_exports.boolean().default(true),
+  reviewMode: external_exports.enum(EXAM_REVIEW_MODES).default("ANSWERS"),
+  layout: external_exports.enum(EXAM_LAYOUTS).default("PAGED"),
+  shuffleQuestions: external_exports.boolean().default(false),
+  shuffleOptions: external_exports.boolean().default(false),
+  examinerIds: external_exports.array(external_exports.string().uuid()).max(30).default([]),
+  /** Dashboard-Rollen, die die Prüfung sehen/ablegen dürfen (leer = alle mit exam.view) */
+  audienceRoleIds: external_exports.array(external_exports.string().uuid()).max(30).default([]),
+  trainingId: external_exports.string().uuid().nullable().default(null),
+  /** muss vorher bestanden sein */
+  requiredExamId: external_exports.string().uuid().nullable().default(null),
+  availableFrom: isoDate.nullable().default(null),
+  availableUntil: isoDate.nullable().default(null),
+  /** Prüfer bei Abgabe benachrichtigen, wenn manuell bewertet werden muss */
+  notifyExaminers: external_exports.boolean().default(true),
+  active: external_exports.boolean().default(true)
+}).refine((e) => !e.availableFrom || !e.availableUntil || new Date(e.availableFrom) < new Date(e.availableUntil), { message: "\u201EVerf\xFCgbar bis\u201C muss nach \u201EVerf\xFCgbar ab\u201C liegen.", path: ["availableUntil"] });
+var EXAM_EXPORT_FORMAT = "enrp.exam";
+var examExportSchema = external_exports.object({ format: external_exports.literal(EXAM_EXPORT_FORMAT), version: external_exports.literal(1), exam: external_exports.record(external_exports.unknown()) });
 var sf4 = external_exports.string().regex(/^\d{15,25}$/, "Discord-Kanal-ID");
 var loggingConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
