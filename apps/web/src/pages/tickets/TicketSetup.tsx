@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, QUESTION_TYPES, STATUS_KINDS, TICKET_ACTIONS, TICKET_PLACEHOLDERS, defaultTicketButtons, renderTicketText, ticketChannelName,
+  CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, QUESTION_TYPES, TICKET_ACTIONS, TICKET_PLACEHOLDERS, defaultTicketButtons, renderTicketText, ticketChannelName,
   type ButtonStyleName, type MessageSpec, type QuestionType, type TicketAction, type TicketQuestion, type TicketVars,
 } from '@enrp/shared';
 import { flush, onSaved, useAutosaveDraft } from '../../lib/autosave';
@@ -12,11 +12,11 @@ import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import {
   errText, fromHex, hex, idsFromText, idsToText, label, useTicketConfig,
-  type TicketCategoryCfg, type TicketConfig, type TicketPanelCfg, type TicketPriorityCfg, type TicketReasonCfg, type TicketSettingsCfg, type TicketStatusCfg,
+  type TicketCategoryCfg, type TicketConfig, type TicketPanelCfg, type TicketSettingsCfg,
   RATING_FIELDS, type RatingField,
 } from '../../lib/tickets';
 
-type Section = 'panels' | 'categories' | 'states' | 'settings';
+type Section = 'panels' | 'categories' | 'settings';
 const STYLES: ButtonStyleName[] = ['primary', 'secondary', 'success', 'danger'];
 const STYLE_LABEL: Record<ButtonStyleName, string> = { primary: 'Blau', secondary: 'Grau', success: 'Grün', danger: 'Rot' };
 /** Für die API: `null` → weglassen (leere Felder werden dort zu „nicht gesetzt“). */
@@ -34,7 +34,6 @@ export function TicketSetup({ section }: { section: Section }) {
     <div className="grid gap-4">
       {section === 'panels' && <Panels c={c} />}
       {section === 'categories' && <Categories c={c} />}
-      {section === 'states' && <States c={c} />}
       {section === 'settings' && <General c={c} />}
       <Placeholders />
     </div>
@@ -415,90 +414,6 @@ function ButtonsEditor({ value, onChange }: { value: TicketCategoryCfg['buttons'
         </div>
       )}
     </div>
-  );
-}
-
-// =============================== Status, Prioritäten, Gründe ===============================
-function States({ c }: { c: TicketConfig }) {
-  return (
-    <>
-      <ListEditor<TicketStatusCfg> title="Status" items={c.statuses} path="statuses" blank={{ name: '', emoji: '', color: 0x3b82f6, position: c.statuses.length, kind: 'OPEN', isDefault: false, isClaimed: false, isEscalation: false, isClose: false }}
-        hint="Jede Markierung gilt für genau einen Status (Setzen verschiebt sie): Standard = neue/wieder geöffnete Tickets, Übernommen = bei Übernahme, Eskalation = bei Eskalation, Schließen = beim Schließen."
-        render={(s, set) => (
-          <>
-            <div className="grid gap-2 sm:grid-cols-[80px_minmax(0,1fr)_150px_120px]">
-              <Field label="Emoji">{(id) => <Input id={id} value={s.emoji} maxLength={64} onChange={(e) => set({ emoji: e.target.value })} />}</Field>
-              <Field label="Name">{(id) => <Input id={id} value={s.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} />}</Field>
-              <Field label="Art">{(id) => <Select id={id} value={s.kind} onChange={(e) => set({ kind: e.target.value as TicketStatusCfg['kind'] })}>{Object.entries(STATUS_KINDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>}</Field>
-              <Num label="Reihenfolge" value={s.position} max={1000} onChange={(v) => set({ position: v })} />
-            </div>
-            <Color label="Farbe" value={s.color} onChange={(v) => set({ color: v })} />
-            <div className="flex flex-wrap gap-4">
-              <Check label="Standard" checked={s.isDefault} onChange={(v) => set({ isDefault: v })} /><Check label="Übernommen" checked={s.isClaimed} onChange={(v) => set({ isClaimed: v })} />
-              <Check label="Eskalation" checked={s.isEscalation} onChange={(v) => set({ isEscalation: v })} /><Check label="Schließen" checked={s.isClose} onChange={(v) => set({ isClose: v })} />
-            </div>
-          </>
-        )}
-        summary={(s) => <span>{label(s)} <span className="text-xs text-muted">· {STATUS_KINDS[s.kind]}{s.isDefault ? ' · Standard' : ''}{s.isClaimed ? ' · Übernommen' : ''}{s.isEscalation ? ' · Eskalation' : ''}{s.isClose ? ' · Schließen' : ''}</span></span>}
-      />
-      <ListEditor<TicketPriorityCfg> title="Prioritäten" items={c.priorities} path="priorities" blank={{ name: '', emoji: '', color: 0xf59e0b, position: c.priorities.length, isDefault: false, allowedRoleNames: [], notifyRoleIds: [] }}
-        render={(p, set) => (
-          <>
-            <div className="grid gap-2 sm:grid-cols-[80px_minmax(0,1fr)_120px]">
-              <Field label="Emoji">{(id) => <Input id={id} value={p.emoji} maxLength={64} onChange={(e) => set({ emoji: e.target.value })} />}</Field>
-              <Field label="Name">{(id) => <Input id={id} value={p.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} />}</Field>
-              <Num label="Reihenfolge" value={p.position} max={1000} onChange={(v) => set({ position: v })} />
-            </div>
-            <Color label="Farbe (auch die Embed-Farbe des Tickets)" value={p.color} onChange={(v) => set({ color: v })} />
-            <Names label="Setzbar durch Systemrollen (leer = alle mit ticket.change_priority)" value={p.allowedRoleNames} onChange={(v) => set({ allowedRoleNames: v })} />
-            <Roles label="Discord-Rollen beim Setzen benachrichtigen" value={p.notifyRoleIds} onChange={(v) => set({ notifyRoleIds: v })} />
-            <Check label="Standard für neue Tickets" checked={p.isDefault} onChange={(v) => set({ isDefault: v })} />
-          </>
-        )}
-        summary={(p) => <span>{label(p)}{p.isDefault && <span className="text-xs text-muted"> · Standard</span>}</span>}
-      />
-      <ListEditor<TicketReasonCfg> title="Feste Schließungsgründe" items={c.reasons} path="reasons" blank={{ text: '', position: c.reasons.length }}
-        render={(r, set) => (
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_120px]">
-            <Field label="Grund">{(id) => <Input id={id} value={r.text} maxLength={200} onChange={(e) => set({ text: e.target.value })} />}</Field>
-            <Num label="Reihenfolge" value={r.position} max={1000} onChange={(v) => set({ position: v })} />
-          </div>
-        )}
-        summary={(r) => <span>{r.text}</span>}
-      />
-    </>
-  );
-}
-
-/** Kleine Liste mit „Bearbeiten / Neu / Löschen“ direkt in der Karte. */
-function ListEditor<T extends { id: string }>({ title, items, path, blank, render, summary, hint }: { title: string; items: T[]; path: string; blank: Omit<T, 'id'>; render: (v: Omit<T, 'id'>, set: (p: Partial<T>) => void) => ReactNode; summary: (v: T) => ReactNode; hint?: string }) {
-  const [edit, setEdit] = useState<{ id?: string; v: Omit<T, 'id'> }>();
-  const [del, setDel] = useState<T>();
-  const save = useSave(() => api(edit?.id ? `/support-tickets/${path}/${edit.id}` : `/support-tickets/${path}`, { method: edit?.id ? 'PUT' : 'POST', body: clean(edit!.v as object) }), () => setEdit(undefined));
-  const remove = useSave((id: string) => api(`/support-tickets/${path}/${id}`, { method: 'DELETE' }), () => setDel(undefined));
-  useTicketAutosaveSync();
-  useAutosaveDraft(edit?.id ? `ticket:${path}:${edit.id}` : null, edit?.v, (v) => ({ method: 'PUT', path: `/support-tickets/${path}/${edit!.id}`, body: clean(v as object), label: title }));
-  return (
-    <Card title={title} actions={!edit && <Button size="sm" onClick={() => setEdit({ v: blank })}>Hinzufügen</Button>}>
-      {hint && <p className="mb-2 text-xs text-muted">{hint}</p>}
-      <Err error={remove.error} />
-      {edit && (
-        <div className="mb-3 grid gap-2 rounded-md border border-primary/40 p-3">
-          {render(edit.v, (p) => setEdit({ ...edit, v: { ...edit.v, ...p } }))}
-          <Err error={save.error} />
-          <div className="flex gap-2">{edit.id ? <Button size="sm" onClick={() => void flush().then(() => setEdit(undefined))}>Fertig (automatisch gespeichert)</Button> : <><Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}>Hinzufügen</Button><Button size="sm" variant="secondary" onClick={() => setEdit(undefined)}>Abbrechen</Button></>}</div>
-        </div>
-      )}
-      {!items.length ? <p className="text-sm text-muted">Noch keine Einträge.</p> : (
-        <ul className="divide-y divide-line">{items.map((x) => (
-          <li key={x.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm">
-            {summary(x)}
-            <span className="flex gap-1"><Button size="sm" variant="secondary" onClick={() => { const { id, ...v } = x; setEdit({ id, v: v as Omit<T, 'id'> }); }}>Bearbeiten</Button><Button size="sm" variant="ghost" onClick={() => setDel(x)}>Löschen</Button></span>
-          </li>
-        ))}</ul>
-      )}
-      <ConfirmDialog open={!!del} danger title={`Aus „${title}“ löschen?`} message="Einträge, die noch von Tickets verwendet werden, können nicht gelöscht werden." confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
-    </Card>
   );
 }
 

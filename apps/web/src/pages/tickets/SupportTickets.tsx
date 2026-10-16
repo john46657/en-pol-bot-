@@ -9,11 +9,11 @@ import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
 import { duration, errText, hex, label, useTicketConfig, type RatingSummary, type TicketRow, type TicketStats } from '../../lib/tickets';
 const TicketSetup = lazy(() => import('./TicketSetup').then((m) => ({ default: m.TicketSetup })));
 
-const TAB = { list: 'Tickets', transcripts: 'Transkripte', ratings: 'Bewertungen', stats: 'Statistik', panels: 'Panels', categories: 'Kategorien', states: 'Status & Prioritäten', settings: 'Allgemein' } as const;
+const TAB = { list: 'Tickets', transcripts: 'Transkripte', stats: 'Statistik', panels: 'Panels', categories: 'Kategorien', settings: 'Allgemein' } as const;
 type TabKey = keyof typeof TAB;
-const SETUP: TabKey[] = ['panels', 'categories', 'states', 'settings'];
+const SETUP: TabKey[] = ['panels', 'categories', 'settings'];
 
-/** Support-Tickets: Übersicht, Transkripte, Bewertungen, Statistik und die komplette Einrichtung des Ticket-Systems. */
+/** Support-Tickets: Übersicht, Transkripte, Statistik und die komplette Einrichtung des Ticket-Systems. */
 export function SupportTickets() {
   const { can } = useAuth();
   const [search, setSearch] = useSearchParams();
@@ -27,9 +27,8 @@ export function SupportTickets() {
       <div className="mt-4">
         {tab === 'list' && <TicketList />}
         {tab === 'transcripts' && <Transcripts />}
-        {tab === 'ratings' && <Ratings />}
         {tab === 'stats' && <Statistics />}
-        {SETUP.includes(tab) && <TicketSetup section={tab as 'panels' | 'categories' | 'states' | 'settings'} />}
+        {SETUP.includes(tab) && <TicketSetup section={tab as 'panels' | 'categories' | 'settings'} />}
       </div>
     </>
   );
@@ -179,39 +178,6 @@ function RatingCards({ s, names = {} }: { s: RatingSummary; names?: Record<strin
       </Card>
       <Card title="Pro Teammitglied">{s.perStaff.length ? <ul className="grid gap-1 text-sm">{s.perStaff.slice(0, 10).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={names} /><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
       <Card title="Pro Kategorie">{s.perCategory.length ? <ul className="grid gap-1 text-sm">{s.perCategory.map((x) => <li key={x.id} className="flex justify-between gap-2"><span>{x.name}</span><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
-    </div>
-  );
-}
-
-interface RatingRow { id: string; ticketId: string; stars: number; comment: string | null; createdAt: string; staffIds: string[]; ticket: { number: string; creatorName: string } | null; category: string }
-function Ratings() {
-  const nav = useNavigate();
-  const cfg = useTicketConfig();
-  const [f, setF] = useState({ stars: '', categoryId: '' });
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useTablePageSize();
-  const query = { ...f, page, pageSize };
-  const r = useQuery({ queryKey: ['ticket-ratings', query], queryFn: () => api<{ total: number; summary: RatingSummary; names: Record<string, string>; items: RatingRow[] }>('/support-tickets/ratings', { query }) });
-  return (
-    <div className="grid gap-4">
-      {r.data && <RatingCards s={r.data.summary} names={r.data.names} />}
-      <DataTable<RatingRow>
-        columns={[
-          { key: 'ticket', label: 'Ticket', render: (x) => (x.ticket ? <span className="font-mono">#{x.ticket.number}</span> : '—') },
-          { key: 'stars', label: 'Bewertung', render: (x) => <span aria-label={`${x.stars} Sterne`}>{'★'.repeat(x.stars)}{'☆'.repeat(5 - x.stars)}</span> },
-          { key: 'comment', label: 'Kommentar', render: (x) => x.comment ?? <span className="text-muted">—</span> },
-          { key: 'category', label: 'Kategorie' }, { key: 'creator', label: 'Ersteller', render: (x) => x.ticket?.creatorName ?? '—' },
-          { key: 'createdAt', label: 'Datum', render: (x) => fmt(x.createdAt) },
-        ]}
-        rows={r.data?.items ?? []} total={r.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }} loading={r.isLoading} error={r.error} onRetry={() => void r.refetch()}
-        onRowClick={(x) => void nav(`/support-tickets/${x.ticketId}`)} empty={{ text: 'Noch keine Bewertungen.' }}
-        toolbar={(
-          <div className="flex flex-wrap gap-2">
-            <div className="w-32"><Select aria-label="Sterne" value={f.stars} onChange={(e) => { setF({ ...f, stars: e.target.value }); setPage(1); }}><option value="">Alle Sterne</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} ★</option>)}</Select></div>
-            <div className="w-40"><Select aria-label="Kategorie" value={f.categoryId} onChange={(e) => { setF({ ...f, categoryId: e.target.value }); setPage(1); }}><option value="">Alle Kategorien</option>{cfg.data?.categories.map((c) => <option key={c.id} value={c.id}>{label(c)}</option>)}</Select></div>
-          </div>
-        )}
-      />
     </div>
   );
 }
