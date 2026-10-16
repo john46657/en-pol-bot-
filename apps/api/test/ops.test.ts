@@ -174,6 +174,27 @@ describe('investigations, wanted, evidence', () => {
     expect(active.body.items.find((x: { id: string }) => x.id === e.id)).toBeUndefined();
     expect((await prisma.wantedRecord.findUniqueOrThrow({ where: { id: e.id } })).status).toBe('EXPIRED');
   });
+  it('wanted and vehicles can be edited with version check and permission', async () => {
+    const admin = (await login(app, 'o_admin')).agent;
+    const officer = (await login(app, 'o_officer')).agent;
+    const pid = await person(admin, 'EditWanted');
+    const w = (await admin.post('/api/v1/wanted').send({ personId: pid, reason: 'Theft' })).body;
+    expect((await officer.patch(`/api/v1/wanted/${w.id}`).send({ reason: 'x y z' })).status).toBe(403);
+    const up = await admin.patch(`/api/v1/wanted/${w.id}`).send({ reason: 'Armed theft', priority: 'HIGH', version: w.version });
+    expect(up.status).toBe(200);
+    expect(up.body).toMatchObject({ reason: 'Armed theft', priority: 'HIGH' });
+    expect((await admin.patch(`/api/v1/wanted/${w.id}`).send({ reason: 'stale', version: w.version })).status).toBe(409);
+    expect((await admin.patch(`/api/v1/wanted/${w.id}`).send({ expiresAt: new Date(Date.now() - 60_000).toISOString() })).status).toBe(400);
+
+    const v1 = (await admin.post('/api/v1/vehicles').send({ plate: 'ED 100' })).body;
+    await admin.post('/api/v1/vehicles').send({ plate: 'ED 200' });
+    expect((await officer.patch(`/api/v1/vehicles/${v1.id}`).send({ color: 'Rot' })).status).toBe(403);
+    expect((await admin.patch(`/api/v1/vehicles/${v1.id}`).send({ plate: 'ed 200' })).status).toBe(409);
+    const v = await admin.patch(`/api/v1/vehicles/${v1.id}`).send({ color: 'Rot', ownerId: pid, version: v1.version });
+    expect(v.status).toBe(200);
+    expect(v.body).toMatchObject({ plate: 'ED100', color: 'Rot', ownerId: pid });
+    expect(await prisma.timelineEvent.count({ where: { entityType: 'Person', entityId: pid, action: 'vehicle.linked' } })).toBe(1);
+  });
   it('evidence: custody chain, release permission, handover confirmation', async () => {
     const admin = (await login(app, 'o_admin')).agent;
     const o2 = await prisma.user.findUniqueOrThrow({ where: { username: 'o_officer2' } });

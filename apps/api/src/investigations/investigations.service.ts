@@ -6,7 +6,7 @@ import { TimelineService } from '../timeline/timeline.service';
 import { AppError } from '../common/errors';
 import { linkPerson } from '../common/links';
 import { makeNumber } from '../common/numbering';
-import { nextStatus } from '../common/transition';
+import { changedFields, nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 
 export const INVESTIGATION_ROLES = ['SUSPECT', 'WITNESS', 'VICTIM', 'PERSON_OF_INTEREST'] as const;
@@ -42,7 +42,7 @@ export class InvestigationsService {
       if (d.version !== undefined && d.version !== inv.version) throw new AppError('CONFLICT', 'Der Fall wurde inzwischen geändert. Bitte neu laden.');
       if (inv.status === 'ARCHIVED') throw new AppError('CONFLICT', 'Archivierte Fälle können nicht bearbeitet werden.');
       if (d.leadId && !(await tx.user.findUnique({ where: { id: d.leadId } }))) throw new AppError('NOT_FOUND', 'Benutzer für die Leitung nicht gefunden.');
-      const data = { ...(d.title !== undefined ? { title: d.title } : {}), ...(d.description !== undefined ? { description: d.description || null } : {}), ...(d.leadId !== undefined ? { leadId: d.leadId } : {}) };
+      const data = changedFields(inv, { ...(d.title !== undefined ? { title: d.title } : {}), ...(d.description !== undefined ? { description: d.description || null } : {}), ...(d.leadId !== undefined ? { leadId: d.leadId } : {}) });
       const after = await tx.investigation.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
       const changed = Object.keys(data).map((k) => ({ title: 'Titel', description: 'Beschreibung', leadId: 'Leitung' })[k]).join(', ');
       await this.timeline.add(tx, { entityType: 'Investigation', entityId: id, action: 'investigation.updated', summary: `Geändert: ${changed || 'nichts'}`, actorId: actor.userId });
