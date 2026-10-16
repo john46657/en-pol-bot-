@@ -46,13 +46,14 @@ test('public application → staff review workflow', async ({ page, browser }) =
 
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.goto('/applications');
-  // Entscheidung direkt in der Liste (wie die Buttons in Discord), mit Grund per DM
+  // Entscheidung direkt in der Liste (wie die Buttons in Discord), mit Grund per DM – Eintrag erst aufklappen
+  await page.getByRole('button', { name: /E2E_Applicants Bewerbung/ }).click();
   const card = page.locator('div').filter({ has: page.getByText('E2E_Applicant', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Annehmen mit Grund' }) }).last();
   await card.getByRole('button', { name: 'Annehmen mit Grund' }).click();
   await page.getByLabel(/^Grund/).fill('Strong interview');
   await page.getByRole('button', { name: 'Bestätigen' }).click();
   await page.getByLabel('Status').selectOption({ label: 'Angenommen' });
-  await expect(page.locator('h2').getByText('Angenommen', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /E2E_Applicants Bewerbung/ })).toContainText('Angenommen');
 });
 
 
@@ -208,13 +209,13 @@ test('dashboard: edit mode adds the voice widget separately from the team list; 
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.getByRole('button', { name: 'Dashboard bearbeiten' }).click();
   await page.getByRole('button', { name: 'Auf Standard zurücksetzen' }).click();
-  await expect(page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '🎙️ Aktive Sprachkanäle' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '👥 Teamliste' })).toBeVisible();
-  const voice = page.locator('section').filter({ has: page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' }) });
+  const voice = page.locator('section').filter({ has: page.getByRole('heading', { name: '🎙️ Aktive Sprachkanäle' }) });
   await voice.getByRole('button', { name: 'Entfernen' }).click();
-  await expect(page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' })).toHaveCount(0);
-  await page.getByLabel('Widget hinzufügen').selectOption({ label: '🎙️ Aktive Voice-Channels' });
-  await expect(page.getByRole('heading', { name: '🎙️ Aktive Voice-Channels' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '🎙️ Aktive Sprachkanäle' })).toHaveCount(0);
+  await page.getByLabel('Widget hinzufügen').selectOption({ label: '🎙️ Aktive Sprachkanäle' });
+  await expect(page.getByRole('heading', { name: '🎙️ Aktive Sprachkanäle' })).toBeVisible();
   await page.getByRole('button', { name: 'Fertig' }).click();
   await page.goto('/teamlist');
   await expect(page.getByPlaceholder('🔍 Teammitglied suchen')).toBeVisible();
@@ -224,7 +225,8 @@ test('dashboard: edit mode adds the voice widget separately from the team list; 
 
 test('Funk-Codes: standard codes, edit with autosave, find via global search', async ({ page }) => {
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
-  await page.getByRole('link', { name: 'Funk-Codes' }).click();
+  await page.getByRole('navigation', { name: 'Hauptmenü' }).getByRole('link', { name: 'Funk', exact: true }).click();
+  await expect(page).toHaveURL(/\/radio-codes/);
   await page.getByRole('button', { name: 'Standard-Codes einfügen' }).click();
   await expect(page.getByLabel('Bedeutung 10-4')).toHaveValue('Verstanden');
   await page.getByLabel('Bedeutung 10-4').fill('Verstanden, Ende');
