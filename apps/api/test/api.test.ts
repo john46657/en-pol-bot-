@@ -92,6 +92,16 @@ describe('authorization (mandatory tests 1-3, 8)', () => {
     const { agent } = await login(app, 'admin');
     expect((await agent.delete(`/api/v1/audit/${row.id}`)).status).toBe(404);
   });
+  it('audit list filters by free text, user and time range', async () => {
+    const { agent } = await login(app, 'admin');
+    const admin = await prisma.user.findUniqueOrThrow({ where: { username: 'admin' } });
+    const all = (await agent.get('/api/v1/audit?pageSize=500')).body.total as number;
+    const mine = (await agent.get(`/api/v1/audit?actorUserId=${admin.id}`)).body;
+    expect(mine.items.every((x: { actorUserId: string }) => x.actorUserId === admin.id)).toBe(true);
+    expect((await agent.get('/api/v1/audit?q=override')).body.items.every((x: { action: string; reason: string | null }) => /override/i.test(x.action) || /override/i.test(x.reason ?? ''))).toBe(true);
+    expect((await agent.get(`/api/v1/audit?from=${new Date(Date.now() + 86_400_000).toISOString()}`)).body.total).toBe(0);
+    expect((await agent.get('/api/v1/audit?from=2000-01-01')).body.total).toBe(all);
+  });
   it('rejects mutating requests from foreign origins (CSRF)', async () => {
     const { agent } = await login(app, 'officer');
     const res = await agent.post('/api/v1/persons').set('Origin', 'https://evil.example').send({ robloxUsername: 'x' });

@@ -6,7 +6,7 @@ import { RequirePermission } from '../authz/decorators';
 import { zodBody } from '../common/zod.pipe';
 import { pageQuery, pageResult, skipTake } from '../common/pagination';
 
-const q = pageQuery.extend({ module: z.string().optional(), entityType: z.string().optional(), entityId: z.string().optional(), action: z.string().max(60).optional() });
+const q = pageQuery.extend({ module: z.string().optional(), entityType: z.string().optional(), entityId: z.string().optional(), action: z.string().max(60).optional(), actorUserId: z.string().uuid().optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional() });
 
 type J = Record<string, unknown> | null;
 const obj = (v: unknown): J => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null);
@@ -46,7 +46,13 @@ export class AuditController {
 
   @Get() @RequirePermission('audit.view')
   async list(@Query(zodBody(q)) f: z.infer<typeof q>) {
-    const where = { ...(f.module ? { module: f.module } : {}), ...(f.entityType ? { entityType: f.entityType } : {}), ...(f.entityId ? { entityId: f.entityId } : {}), ...(f.action ? { action: { startsWith: f.action } } : {}) };
+    const where = {
+      ...(f.module ? { module: f.module } : {}), ...(f.entityType ? { entityType: f.entityType } : {}), ...(f.entityId ? { entityId: f.entityId } : {}), ...(f.action ? { action: { startsWith: f.action } } : {}),
+      ...(f.actorUserId ? { actorUserId: f.actorUserId } : {}),
+      ...(f.from || f.to ? { createdAt: { ...(f.from ? { gte: f.from } : {}), ...(f.to ? { lte: f.to } : {}) } } : {}),
+      // Freitext: Aktion, Grund oder Objekt-ID
+      ...(f.q ? { OR: [{ action: { contains: f.q, mode: 'insensitive' as const } }, { reason: { contains: f.q, mode: 'insensitive' as const } }, { entityId: { startsWith: f.q } }] } : {}),
+    };
     const [items, total] = await Promise.all([this.prisma.auditLog.findMany({ where, orderBy: { createdAt: 'desc' }, ...skipTake(f) }), this.prisma.auditLog.count({ where })]);
     // Handelnde Person und betroffener Benutzer mit Name und Discord-ID
     const ids = [...new Set(items.flatMap((i) => [i.actorUserId, i.entityType === 'User' ? i.entityId : null]).filter((x): x is string => !!x && /^[0-9a-f-]{36}$/i.test(x)))];
