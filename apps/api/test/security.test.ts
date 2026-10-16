@@ -18,7 +18,7 @@ afterAll(async () => { await app.close(); });
 
 /** Jede HTTP-Route muss entweder öffentlich sein, eine Permission verlangen oder explizit als „nur authentifiziert, Prüfung im Service“ gelistet sein. */
 const AUTH_ONLY_ALLOWLIST = new Set([
-  'AuthController.logout', 'AuthController.me', 'AuthController.twoFactorStatus', 'AuthController.twoFactorSetup', 'AuthController.twoFactorEnable', 'AuthController.twoFactorDisable', 'AuthController.twoFactorRecovery', // nur das eigene Konto
+  'AuthController.logout', 'AuthController.me', 'AuthController.twoFactorStatus', 'AuthController.twoFactorSetup', 'AuthController.twoFactorEnable', 'AuthController.twoFactorDisable', 'AuthController.twoFactorRecovery', 'AuthController.changePassword', 'AuthController.sessions', 'AuthController.revokeSessions', // nur das eigene Konto
   'LocksController.status', 'LocksController.acquire', 'LocksController.release', // Recht je Datensatzart im Service
   'AuthController.discordLink', // discordLink: verknüpft nur das eigene Konto
   'AuthController.servers', 'AuthController.discordAddServer', // eigene Server-Übersicht; „+“ nur für eigene Discord-Server mit Verwaltungsrecht (Freischaltung nur durch globale Admins)
