@@ -4,6 +4,7 @@ const discord_js_1 = require("discord.js");
 const discord_tickets_1 = require("./discord-tickets");
 const messages_1 = require("./messages");
 const staff_lists_1 = require("./staff-lists");
+const radio_roles_1 = require("./radio-roles");
 const guilds_1 = require("./guilds");
 const presence_1 = require("./presence");
 const api_1 = require("./api");
@@ -202,6 +203,15 @@ const platform = {
 };
 const live = (0, live_1.createLive)(api, platform);
 const staffLists = (0, staff_lists_1.createStaffLists)(() => client, api);
+/** Funk-Whitelist: Discord-Rollenstände an die API melden (die Regeln wendet nur das System an). */
+const radioRoles = (0, radio_roles_1.createRadioRoleSync)(api, {
+    async members(guildId) {
+        const g = await client.guilds.fetch(guildId);
+        // ohne Intent „Server Members“ nur der Cache – das System bekommt dann nur, was der Bot kennt
+        const list = await g.members.fetch().catch(() => g.members.cache);
+        return [...list.values()].filter((m) => !m.user.bot).map((m) => ({ id: m.id, name: m.displayName, roleIds: [...m.roles.cache.keys()].filter((r) => r !== g.id) }));
+    },
+});
 /** Willkommen & Abschied, Aktion beim Verlassen (braucht den „Server Members“-Intent). */
 const welcome = (0, welcome_1.createWelcome)(api, {
     async post(channelId, m) {
@@ -544,11 +554,22 @@ function wire(c) {
             return;
         void welcome.joined(e).catch((x) => console.error('member join failed:', x instanceof Error ? x.message : x));
     });
-    c.on('guildMemberRemove', (m) => { staffLists.changed(); const e = memberEvent(m); if (e)
-        void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x)); });
+    c.on('guildMemberRemove', (m) => {
+        staffLists.changed();
+        const e = memberEvent(m);
+        if (e)
+            void welcome.left(e).catch((x) => console.error('member leave failed:', x instanceof Error ? x.message : x));
+        void radioRoles.memberChanged(m.guild.id, m.id, null, null).catch((x) => console.error('radio whitelist (member left) failed:', x instanceof Error ? x.message : x));
+    });
     // Staff-Listen: Rollen oder Name geändert → neu zeichnen (gesammelt)
-    c.on('guildMemberUpdate', (o, n) => { if (o.roles.cache.size !== n.roles.cache.size || o.displayName !== n.displayName || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r)))
-        staffLists.changed(); });
+    c.on('guildMemberUpdate', (o, n) => {
+        const rolesChanged = o.roles.cache.size !== n.roles.cache.size || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r));
+        if (rolesChanged || o.displayName !== n.displayName)
+            staffLists.changed();
+        // Funk-Whitelist: Rollenänderung sofort melden (o kann ein Teil-Objekt ohne Rollen sein → dann ohne Vorher-Stand)
+        if (rolesChanged && !n.user.bot)
+            void radioRoles.memberChanged(n.guild.id, n.id, n.displayName, [...n.roles.cache.keys()], o.partial ? undefined : [...o.roles.cache.keys()]).catch((x) => console.error('radio whitelist (roles) failed:', x instanceof Error ? x.message : x));
+    });
     // Ghost-Ping: nur Nachrichten aus dem Cache (Erwähnungen bekannt); Teil-Nachrichten ohne Daten werden übergangen
     c.on('messageDelete', (m) => {
         if (m.partial || !m.inGuild() || !m.author)
@@ -770,6 +791,10 @@ function wireReady(client0) {
                 });
                 return true;
             }
+            if (type === 'bot.radio.rolesync') {
+                await radioRoles.full(typeof p.guildId === 'string' ? p.guildId : undefined);
+                return true;
+            }
             if (type === 'bot.stafflist') {
                 await staffLists.refresh({ id: String(p.id ?? ''), force: true, forceNew: p.forceNew === true });
                 return true;
@@ -850,6 +875,7 @@ function wireReady(client0) {
         });
         live.start(cfg.LIVE_REFRESH_SECONDS);
         staffLists.start(300);
+        radioRoles.start(30);
         void tickets.refresh();
         (0, guilds_1.startGuildDirectory)(() => client, api);
         setInterval(() => void tickets.refresh(), 120_000).unref();

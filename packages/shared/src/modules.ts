@@ -18,7 +18,7 @@ export const MODULES = [
   { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },
   { key: 'message_builder', name: 'Discord Message Builder', description: 'Nachrichten und Embeds bauen, Vorlagen, Versand über den Bot, Versandhistorie', permissionPrefixes: ['messagebuilder'] },
-  { key: 'communication', name: 'Kommunikation', description: 'Nachrichten, Meldungen, Abstimmungen, Funk-Codes', permissionPrefixes: ['communication', 'announcements', 'polls', 'radio'] },
+  { key: 'communication', name: 'Kommunikation', description: 'Nachrichten, Meldungen, Abstimmungen, Funk-Codes, Funk-Whitelist', permissionPrefixes: ['communication', 'announcements', 'polls', 'radio', 'radiowhitelist'] },
 ] as const satisfies readonly ModuleDef[];
 
 export type ModuleKey = (typeof MODULES)[number]['key'];
@@ -83,7 +83,7 @@ export const BOT_COMMAND_MODULES: Record<string, string> = {
   abmeldung: 'personnel', leave: 'personnel', ausbildung: 'personnel', verwarnen: 'personnel',
   teamchance: 'applications', bewerbung: 'applications', bewerbungspanel: 'applications', qualipanel: 'applications',
   support: 'support',
-  funkcode: 'communication', funk: 'communication',
+  funkcode: 'communication', funk: 'communication', funkantrag: 'communication', funkstatus: 'communication', funkfreigabe: 'communication',
 };
 /** Befehle, die auf einem Server mit diesen abgeschalteten Modulen registriert werden. */
 export const commandsForServer = <T extends { name: string }>(all: T[], disabledModules: readonly string[]): T[] =>
