@@ -52,6 +52,29 @@ declare const status: z.ZodObject<{
     status: "ACTIVE" | "CLOSED" | "OPEN" | "ARCHIVED" | "SUSPENDED";
     reason?: string | undefined;
 }>;
+declare const update: z.ZodObject<{
+    title: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    leadId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    version: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    version?: number | undefined;
+    title?: string | undefined;
+    description?: string | null | undefined;
+    leadId?: string | null | undefined;
+}, {
+    version?: number | undefined;
+    title?: string | undefined;
+    description?: string | null | undefined;
+    leadId?: string | null | undefined;
+}>;
+declare const note: z.ZodObject<{
+    text: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    text: string;
+}, {
+    text: string;
+}>;
 declare const listQ: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
@@ -91,6 +114,10 @@ export declare class InvestigationsController {
     }>;
     get(id: string): Promise<{
         investigation: {
+            lead: {
+                id: string;
+                displayName: string;
+            } | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -123,6 +150,7 @@ export declare class InvestigationsController {
             custodyState: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -143,6 +171,21 @@ export declare class InvestigationsController {
         description: string | null;
         caseNumber: string;
         leadId: string | null;
+    }>;
+    update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
+        serverId: string | null;
+        id: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        title: string;
+        description: string | null;
+        caseNumber: string;
+        leadId: string | null;
+    }>;
+    addNote(a: Actor, id: string, b: z.infer<typeof note>): Promise<{
+        ok: boolean;
     }>;
     addPerson(a: Actor, id: string, b: z.infer<typeof addPerson>): Promise<void>;
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{

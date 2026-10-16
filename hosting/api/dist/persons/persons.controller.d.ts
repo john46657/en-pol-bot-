@@ -176,6 +176,7 @@ export declare class PersonsController {
             entityType: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

@@ -78,6 +78,27 @@ let WantedService = class WantedService {
             return w;
         });
     }
+    /** Grund, Beschreibung, Priorität und Ablauf einer aktiven Fahndung ändern (Versionsprüfung). */
+    async update(actor, id, d) {
+        await this.expireDue();
+        if (d.expiresAt && d.expiresAt <= new Date())
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Das Ablaufdatum muss in der Zukunft liegen.');
+        return this.prisma.$transaction(async (tx) => {
+            const w = await tx.wantedRecord.findUnique({ where: { id } });
+            if (!w)
+                throw new errors_1.AppError('NOT_FOUND', 'Fahndung nicht gefunden.');
+            if (w.status !== 'ACTIVE')
+                throw new errors_1.AppError('CONFLICT', 'Nur aktive Fahndungen können bearbeitet werden.');
+            if (d.version !== undefined && d.version !== w.version)
+                throw new errors_1.AppError('CONFLICT', 'Die Fahndung wurde inzwischen geändert. Bitte neu laden.');
+            const data = (0, transition_1.changedFields)(w, { ...(d.reason !== undefined ? { reason: d.reason } : {}), ...(d.description !== undefined ? { description: d.description || null } : {}), ...(d.priority !== undefined ? { priority: d.priority } : {}), ...(d.expiresAt !== undefined ? { expiresAt: d.expiresAt } : {}) });
+            const after = await tx.wantedRecord.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+            const changed = Object.keys(data).map((k) => ({ reason: 'Grund', description: 'Beschreibung', priority: 'Priorität', expiresAt: 'Ablauf' })[k]).join(', ');
+            await this.timeline.add(tx, { entityType: 'Wanted', entityId: id, action: 'wanted.updated', summary: `Geändert: ${changed || 'nichts'}`, actorId: actor.userId });
+            await this.audit.record(actor, { action: 'wanted.update', module: 'wanted', entityType: 'Wanted', entityId: id, before: { reason: w.reason, description: w.description, priority: w.priority, expiresAt: w.expiresAt }, after: data }, tx);
+            return after;
+        });
+    }
     async setStatus(actor, id, to, reason) {
         await this.expireDue();
         return this.prisma.$transaction(async (tx) => {

@@ -2,6 +2,13 @@ import { z } from 'zod';
 import { UsersService } from './users.service';
 import { TwoFactorService } from '../auth/two-factor.service';
 import type { Actor } from '../audit/audit.service';
+declare const passwordBody: z.ZodObject<{
+    password: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    password: string;
+}, {
+    password: string;
+}>;
 export declare const nameBody: z.ZodObject<{
     displayName: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -257,6 +264,7 @@ export declare class UsersController {
             effect: string;
         }[];
     }>;
+    setPassword(a: Actor, id: string, b: z.infer<typeof passwordBody>): Promise<void>;
     setActive(a: Actor, id: string, b: z.infer<typeof active>): Promise<{
         id: string;
         robloxUserId: string | null;

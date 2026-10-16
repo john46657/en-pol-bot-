@@ -27,6 +27,28 @@ declare const create: z.ZodObject<{
     ownerId?: string | undefined;
     erlcReference?: string | undefined;
 }>;
+declare const update: z.ZodObject<{
+    plate: z.ZodOptional<z.ZodString>;
+    model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    color: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    ownerId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    version: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    model?: string | null | undefined;
+    notes?: string | null | undefined;
+    version?: number | undefined;
+    plate?: string | undefined;
+    color?: string | null | undefined;
+    ownerId?: string | null | undefined;
+}, {
+    model?: string | null | undefined;
+    notes?: string | null | undefined;
+    version?: number | undefined;
+    plate?: string | undefined;
+    color?: string | null | undefined;
+    ownerId?: string | null | undefined;
+}>;
 declare const archive: z.ZodObject<{
     reason: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -105,6 +127,7 @@ export declare class VehiclesController {
             erlcReference: string | null;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -115,6 +138,21 @@ export declare class VehiclesController {
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        serverId: string | null;
+        model: string | null;
+        id: string;
+        status: string;
+        notes: string | null;
+        custom: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        plate: string;
+        color: string | null;
+        ownerId: string | null;
+        erlcReference: string | null;
+    }>;
+    update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         serverId: string | null;
         model: string | null;
         id: string;

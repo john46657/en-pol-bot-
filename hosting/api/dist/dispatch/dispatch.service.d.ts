@@ -217,6 +217,7 @@ export declare class DispatchService {
             entityType: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

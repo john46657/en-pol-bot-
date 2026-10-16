@@ -29,6 +29,8 @@ const env_1 = require("../config/env");
 const OAUTH_COOKIE = 'enrp_oauth';
 const codeSchema = zod_1.z.object({ code: zod_1.z.string().trim().min(6).max(20) });
 const login2faSchema = zod_1.z.object({ ticket: zod_1.z.string().min(10).max(300), code: zod_1.z.string().trim().min(6).max(20) });
+const passwordSchema = zod_1.z.object({ current: zod_1.z.string().min(1).max(256), next: zod_1.z.string().min(12, 'Mindestens 12 Zeichen').max(256) });
+const revokeSchema = zod_1.z.object({ sessionId: zod_1.z.string().uuid().optional() });
 const loginSchema = zod_1.z.object({ username: zod_1.z.string().min(1).max(64), password: zod_1.z.string().min(1).max(256) });
 let AuthController = class AuthController {
     auth;
@@ -143,6 +145,18 @@ let AuthController = class AuthController {
     twoFactorEnable(actor, body) { return this.twoFactor.enable(actor, body.code); }
     async twoFactorDisable(actor, body) { await this.twoFactor.disable(actor, body.code); }
     twoFactorRecovery(actor, body) { return this.twoFactor.regenerate(actor, body.code); }
+    // ---- eigenes Passwort und eigene Sitzungen ----
+    async changePassword(user, actor, body) {
+        if (user.sessionId === 'bot')
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Nur im Dashboard möglich.');
+        await this.auth.changePassword(actor, user.sessionId, body.current, body.next);
+    }
+    sessions(user) { return this.auth.sessions(user.id, user.sessionId); }
+    revokeSessions(user, actor, body) {
+        if (user.sessionId === 'bot')
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Nur im Dashboard möglich.');
+        return this.auth.revokeOwnSessions(actor, user.sessionId, body.sessionId);
+    }
     async logout(user, actor, res) {
         await this.auth.logout(actor, user.sessionId);
         res.clearCookie(guards_1.SESSION_COOKIE, { path: '/' });
@@ -290,6 +304,34 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "twoFactorRecovery", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } }),
+    (0, common_1.Put)('password'),
+    (0, common_1.HttpCode)(204),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, decorators_1.CurrentActor)()),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(passwordSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, void 0]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "changePassword", null);
+__decorate([
+    (0, common_1.Get)('sessions'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sessions", null);
+__decorate([
+    (0, common_1.Post)('sessions/revoke'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, decorators_1.CurrentActor)()),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(revokeSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, void 0]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "revokeSessions", null);
 __decorate([
     (0, common_1.Post)('logout'),
     (0, common_1.HttpCode)(204),

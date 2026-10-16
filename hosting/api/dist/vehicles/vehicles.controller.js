@@ -21,6 +21,7 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
 const create = zod_1.z.object({ plate: zod_1.z.string().trim().min(2).max(16), model: zod_1.z.string().max(64).optional(), color: zod_1.z.string().max(32).optional(), ownerId: zod_1.z.string().uuid().optional(), notes: zod_1.z.string().max(2000).optional(), erlcReference: zod_1.z.string().max(64).optional(), custom: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional() });
+const update = zod_1.z.object({ plate: zod_1.z.string().trim().min(2).max(16).optional(), model: zod_1.z.string().max(64).nullable().optional(), color: zod_1.z.string().max(32).nullable().optional(), ownerId: zod_1.z.string().uuid().nullable().optional(), notes: zod_1.z.string().max(2000).nullable().optional(), version: zod_1.z.number().int().positive().optional() });
 const archive = zod_1.z.object({ reason: zod_1.z.string().trim().min(3).max(500) });
 let VehiclesController = class VehiclesController {
     vehicles;
@@ -30,6 +31,7 @@ let VehiclesController = class VehiclesController {
     list(q) { return this.vehicles.list(q); }
     get(id) { return this.vehicles.get(id); }
     create(a, b) { return this.vehicles.create(a, b); }
+    update(a, id, b) { return this.vehicles.update(a, id, b); }
     archive(a, id, b) { return this.vehicles.archive(a, id, b.reason); }
 };
 exports.VehiclesController = VehiclesController;
@@ -58,6 +60,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], VehiclesController.prototype, "create", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, decorators_1.RequirePermission)('vehicles.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(update))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], VehiclesController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/archive'),
     (0, decorators_1.RequirePermission)('vehicles.archive'),

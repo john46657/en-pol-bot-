@@ -9,6 +9,9 @@ declare const q: z.ZodObject<{
     entityType: z.ZodOptional<z.ZodString>;
     entityId: z.ZodOptional<z.ZodString>;
     action: z.ZodOptional<z.ZodString>;
+    actorUserId: z.ZodOptional<z.ZodString>;
+    from: z.ZodOptional<z.ZodDate>;
+    to: z.ZodOptional<z.ZodDate>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
@@ -16,12 +19,18 @@ declare const q: z.ZodObject<{
     module?: string | undefined;
     entityType?: string | undefined;
     action?: string | undefined;
+    actorUserId?: string | undefined;
+    from?: Date | undefined;
+    to?: Date | undefined;
     q?: string | undefined;
 }, {
     entityId?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
     action?: string | undefined;
+    actorUserId?: string | undefined;
+    from?: Date | undefined;
+    to?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;

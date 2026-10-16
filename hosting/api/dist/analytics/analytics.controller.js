@@ -56,6 +56,43 @@ let AnalyticsController = class AnalyticsController {
         }
         return out;
     }
+    /**
+     * Tagesverlauf für Diagramme (Tage in Europe/Berlin). Gleiche Rechte wie die Übersicht – je Reihe die Fachpermission.
+     * Über Prisma-Abfragen (nicht SQL), damit die Server-Trennung automatisch greift.
+     */
+    async trend(u, f) {
+        const ctx = await this.perms.contextFor(u.id);
+        const key = (d) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+        const days = Array.from({ length: f.days }, (_, i) => key(new Date(Date.now() - (f.days - 1 - i) * 86_400_000)));
+        const since = new Date(`${days[0]}T00:00:00Z`);
+        since.setTime(since.getTime() - 2 * 3_600_000); // Berlin ist UTC+1/+2
+        const count = (dates) => { const m = new Map(days.map((d) => [d, 0])); for (const d of dates) {
+            const k = key(d);
+            if (m.has(k))
+                m.set(k, m.get(k) + 1);
+        } return [...m.values()]; };
+        const series = [];
+        if ((0, shared_1.can)(ctx, 'incidents.view'))
+            series.push({ key: 'incidents', label: 'Einsätze erstellt', unit: 'Einsätze', values: count((await this.prisma.incident.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+        if ((0, shared_1.can)(ctx, 'reports.review'))
+            series.push({ key: 'reports', label: 'Berichte erstellt', unit: 'Berichte', values: count((await this.prisma.report.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+        if ((0, shared_1.can)(ctx, 'applications.view'))
+            series.push({ key: 'applications', label: 'Bewerbungen eingegangen', unit: 'Bewerbungen', values: count((await this.prisma.application.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+        if ((0, shared_1.can)(ctx, 'wanted.view'))
+            series.push({ key: 'wanted', label: 'Fahndungen angelegt', unit: 'Fahndungen', values: count((await this.prisma.wantedRecord.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+        if ((0, shared_1.can)(ctx, 'personnel.view')) {
+            // Dienststunden je Tag nach Dienstbeginn (Schichten über Mitternacht zählen zum Starttag)
+            const sessions = await this.prisma.dutySession.findMany({ where: { startedAt: { gte: since }, status: 'ON_DUTY' }, select: { startedAt: true, endedAt: true } });
+            const m = new Map(days.map((d) => [d, 0]));
+            for (const x of sessions) {
+                const k = key(x.startedAt);
+                if (m.has(k))
+                    m.set(k, m.get(k) + ((x.endedAt ?? new Date()).getTime() - x.startedAt.getTime()) / 3_600_000);
+            }
+            series.push({ key: 'duty', label: 'Dienststunden', unit: 'Stunden', values: [...m.values()].map((h) => Math.round(h * 10) / 10) });
+        }
+        return { days, series };
+    }
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
@@ -67,6 +104,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", Promise)
 ], AnalyticsController.prototype, "overview", null);
+__decorate([
+    (0, common_1.Get)('trend'),
+    (0, decorators_1.RequirePermission)('analytics.view'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(q))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "trend", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('analytics'),
     (0, common_1.Controller)('analytics'),

@@ -28,6 +28,10 @@ export declare class InvestigationsService {
     }>;
     get(id: string): Promise<{
         investigation: {
+            lead: {
+                id: string;
+                displayName: string;
+            } | null;
             serverId: string | null;
             id: string;
             status: string;
@@ -60,6 +64,7 @@ export declare class InvestigationsService {
             custodyState: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -68,6 +73,28 @@ export declare class InvestigationsService {
             action: string;
             actorId: string | null;
         }[];
+    }>;
+    /** Titel, Beschreibung und Leitung ändern (mit Versionsprüfung gegen gleichzeitiges Bearbeiten). */
+    update(actor: Actor, id: string, d: {
+        title?: string;
+        description?: string | null;
+        leadId?: string | null;
+        version?: number;
+    }): Promise<{
+        serverId: string | null;
+        id: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        title: string;
+        description: string | null;
+        caseNumber: string;
+        leadId: string | null;
+    }>;
+    /** Fallnotiz im Verlauf (unveränderlich, mit Verfasser). */
+    addNote(actor: Actor, id: string, text: string): Promise<{
+        ok: boolean;
     }>;
     create(actor: Actor, d: {
         title: string;

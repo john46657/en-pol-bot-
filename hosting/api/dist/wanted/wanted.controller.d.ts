@@ -23,6 +23,25 @@ declare const create: z.ZodObject<{
     priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
     expiresAt?: Date | undefined;
 }>;
+declare const update: z.ZodObject<{
+    reason: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    priority: z.ZodOptional<z.ZodEnum<["LOW", "MEDIUM", "HIGH", "URGENT", "CRITICAL"]>>;
+    expiresAt: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+    version: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    version?: number | undefined;
+    description?: string | null | undefined;
+    reason?: string | undefined;
+    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
+    expiresAt?: Date | null | undefined;
+}, {
+    version?: number | undefined;
+    description?: string | null | undefined;
+    reason?: string | undefined;
+    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
+    expiresAt?: Date | null | undefined;
+}>;
 declare const reason: z.ZodObject<{
     reason: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -89,6 +108,7 @@ export declare class WantedController {
             expiresAt: Date | null;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -99,6 +119,22 @@ export declare class WantedController {
         }[];
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        number: string | null;
+        serverId: string | null;
+        id: string;
+        status: string;
+        createdById: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        description: string | null;
+        personId: string | null;
+        vehicleId: string | null;
+        reason: string;
+        priority: string;
+        expiresAt: Date | null;
+    }>;
+    update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         number: string | null;
         serverId: string | null;
         id: string;

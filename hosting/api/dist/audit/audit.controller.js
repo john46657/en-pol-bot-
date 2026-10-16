@@ -21,7 +21,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
-const q = pagination_1.pageQuery.extend({ module: zod_1.z.string().optional(), entityType: zod_1.z.string().optional(), entityId: zod_1.z.string().optional(), action: zod_1.z.string().max(60).optional() });
+const q = pagination_1.pageQuery.extend({ module: zod_1.z.string().optional(), entityType: zod_1.z.string().optional(), entityId: zod_1.z.string().optional(), action: zod_1.z.string().max(60).optional(), actorUserId: zod_1.z.string().uuid().optional(), from: zod_1.z.coerce.date().optional(), to: zod_1.z.coerce.date().optional() });
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
 const EFFECT = { ALLOW: 'erlaubt', DENY: 'verweigert' };
 /** Lesbarer Satz für Rechteänderungen („Max hat der Rolle Moderator die Berechtigung ticket.delete entzogen.“). */
@@ -56,7 +56,13 @@ let AuditController = class AuditController {
         this.prisma = prisma;
     }
     async list(f) {
-        const where = { ...(f.module ? { module: f.module } : {}), ...(f.entityType ? { entityType: f.entityType } : {}), ...(f.entityId ? { entityId: f.entityId } : {}), ...(f.action ? { action: { startsWith: f.action } } : {}) };
+        const where = {
+            ...(f.module ? { module: f.module } : {}), ...(f.entityType ? { entityType: f.entityType } : {}), ...(f.entityId ? { entityId: f.entityId } : {}), ...(f.action ? { action: { startsWith: f.action } } : {}),
+            ...(f.actorUserId ? { actorUserId: f.actorUserId } : {}),
+            ...(f.from || f.to ? { createdAt: { ...(f.from ? { gte: f.from } : {}), ...(f.to ? { lte: f.to } : {}) } } : {}),
+            // Freitext: Aktion, Grund oder Objekt-ID
+            ...(f.q ? { OR: [{ action: { contains: f.q, mode: 'insensitive' } }, { reason: { contains: f.q, mode: 'insensitive' } }, { entityId: { startsWith: f.q } }] } : {}),
+        };
         const [items, total] = await Promise.all([this.prisma.auditLog.findMany({ where, orderBy: { createdAt: 'desc' }, ...(0, pagination_1.skipTake)(f) }), this.prisma.auditLog.count({ where })]);
         // Handelnde Person und betroffener Benutzer mit Name und Discord-ID
         const ids = [...new Set(items.flatMap((i) => [i.actorUserId, i.entityType === 'User' ? i.entityId : null]).filter((x) => !!x && /^[0-9a-f-]{36}$/i.test(x)))];

@@ -45,7 +45,41 @@ let InvestigationsService = class InvestigationsService {
             this.prisma.evidence.findMany({ where: { caseRef: inv.caseNumber }, select: { id: true, number: true, type: true, custodyState: true } }),
             this.timeline.list('Investigation', id),
         ]);
-        return { investigation: inv, links, evidence, timeline };
+        const lead = inv.leadId ? await this.prisma.user.findUnique({ where: { id: inv.leadId }, select: { id: true, displayName: true } }) : null;
+        return { investigation: { ...inv, lead }, links, evidence, timeline };
+    }
+    /** Titel, Beschreibung und Leitung ändern (mit Versionsprüfung gegen gleichzeitiges Bearbeiten). */
+    async update(actor, id, d) {
+        return this.prisma.$transaction(async (tx) => {
+            const inv = await tx.investigation.findUnique({ where: { id } });
+            if (!inv)
+                throw new errors_1.AppError('NOT_FOUND', 'Ermittlung nicht gefunden.');
+            if (d.version !== undefined && d.version !== inv.version)
+                throw new errors_1.AppError('CONFLICT', 'Der Fall wurde inzwischen geändert. Bitte neu laden.');
+            if (inv.status === 'ARCHIVED')
+                throw new errors_1.AppError('CONFLICT', 'Archivierte Fälle können nicht bearbeitet werden.');
+            if (d.leadId && !(await tx.user.findUnique({ where: { id: d.leadId } })))
+                throw new errors_1.AppError('NOT_FOUND', 'Benutzer für die Leitung nicht gefunden.');
+            const data = (0, transition_1.changedFields)(inv, { ...(d.title !== undefined ? { title: d.title } : {}), ...(d.description !== undefined ? { description: d.description || null } : {}), ...(d.leadId !== undefined ? { leadId: d.leadId } : {}) });
+            const after = await tx.investigation.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+            const changed = Object.keys(data).map((k) => ({ title: 'Titel', description: 'Beschreibung', leadId: 'Leitung' })[k]).join(', ');
+            await this.timeline.add(tx, { entityType: 'Investigation', entityId: id, action: 'investigation.updated', summary: `Geändert: ${changed || 'nichts'}`, actorId: actor.userId });
+            await this.audit.record(actor, { action: 'investigation.update', module: 'investigations', entityType: 'Investigation', entityId: id, before: { title: inv.title, description: inv.description, leadId: inv.leadId }, after: data }, tx);
+            return after;
+        });
+    }
+    /** Fallnotiz im Verlauf (unveränderlich, mit Verfasser). */
+    async addNote(actor, id, text) {
+        const inv = await this.prisma.investigation.findUnique({ where: { id } });
+        if (!inv)
+            throw new errors_1.AppError('NOT_FOUND', 'Ermittlung nicht gefunden.');
+        if (inv.status === 'ARCHIVED')
+            throw new errors_1.AppError('CONFLICT', 'Archivierte Fälle können nicht ergänzt werden.');
+        await this.prisma.$transaction(async (tx) => {
+            await this.timeline.add(tx, { entityType: 'Investigation', entityId: id, action: 'investigation.note', summary: text, actorId: actor.userId });
+            await this.audit.record(actor, { action: 'investigation.note', module: 'investigations', entityType: 'Investigation', entityId: id, after: { note: text } }, tx);
+        });
+        return { ok: true };
     }
     async create(actor, d) {
         return this.prisma.$transaction(async (tx) => {

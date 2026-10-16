@@ -73,6 +73,7 @@ export declare class MdtService {
     }>;
     profile(actor: Actor, id: string): Promise<{
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -281,6 +282,7 @@ export declare class MdtService {
             title: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

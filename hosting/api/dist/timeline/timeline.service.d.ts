@@ -9,7 +9,9 @@ export declare class TimelineService {
         summary: string;
         actorId: string | null;
     }): Promise<void>;
-    list(entityType: string, entityId: string, take?: number): import("@prisma/client").Prisma.PrismaPromise<{
+    /** Verlauf mit Anzeigenamen der handelnden Person (`actorName`, null bei System/Bot). */
+    list(entityType: string, entityId: string, take?: number): Promise<{
+        actorName: string | null;
         id: string;
         createdAt: Date;
         entityId: string;

@@ -30,6 +30,7 @@ export declare const preferencesSchema: z.ZodObject<{
     animations: z.ZodOptional<z.ZodBoolean>;
     sidebarWidth: z.ZodOptional<z.ZodEnum<["narrow", "normal", "wide"]>>;
     sidebarCollapsed: z.ZodOptional<z.ZodBoolean>;
+    collapsedGroups: z.ZodOptional<z.ZodArray<z.ZodEnum<["Operations", "Records", "Organisation", "Administration", "Account"]>, "many">>;
     fontSize: z.ZodOptional<z.ZodNumber>;
     density: z.ZodOptional<z.ZodEnum<["compact", "comfortable"]>>;
     language: z.ZodOptional<z.ZodEnum<["de", "en"]>>;
@@ -289,6 +290,7 @@ export declare const preferencesSchema: z.ZodObject<{
     animations?: boolean | undefined;
     sidebarWidth?: "narrow" | "normal" | "wide" | undefined;
     sidebarCollapsed?: boolean | undefined;
+    collapsedGroups?: ("Operations" | "Records" | "Organisation" | "Administration" | "Account")[] | undefined;
     fontSize?: number | undefined;
     density?: "compact" | "comfortable" | undefined;
     language?: "de" | "en" | undefined;
@@ -366,6 +368,7 @@ export declare const preferencesSchema: z.ZodObject<{
     animations?: boolean | undefined;
     sidebarWidth?: "narrow" | "normal" | "wide" | undefined;
     sidebarCollapsed?: boolean | undefined;
+    collapsedGroups?: ("Operations" | "Records" | "Organisation" | "Administration" | "Account")[] | undefined;
     fontSize?: number | undefined;
     density?: "compact" | "comfortable" | undefined;
     language?: "de" | "en" | undefined;

@@ -157,7 +157,9 @@ let LeaveService = class LeaveService {
             ...(member ? { userId: member.id } : all ? {} : { userId: actor.userId }),
             ...(f.status === 'ACTIVE' ? { status: 'APPROVED', startsAt: { lte: now }, endsAt: { gt: now } }
                 : f.status === 'UPCOMING' ? { status: 'APPROVED', startsAt: { gt: now } }
-                    : f.status && f.status !== 'ALL' ? { status: f.status } : {}),
+                    // Kalender: offene und genehmigte Abmeldungen, die in den nächsten 4 Wochen (ab gestern) liegen
+                    : f.status === 'CALENDAR' ? { status: { in: ['PENDING', 'APPROVED'] }, endsAt: { gte: new Date(now.getTime() - 86_400_000) }, startsAt: { lte: new Date(now.getTime() + 28 * 86_400_000) } }
+                        : f.status && f.status !== 'ALL' ? { status: f.status } : {}),
         };
         const rows = await this.withDiscord(await this.prisma.leaveRequest.findMany({ where, include, orderBy: [{ startsAt: 'desc' }], take: 200 }));
         const deciders = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.decidedById).filter((x) => !!x) } }, select: { id: true, displayName: true } });

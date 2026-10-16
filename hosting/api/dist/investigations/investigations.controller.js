@@ -25,6 +25,8 @@ const role = zod_1.z.enum(investigations_service_1.INVESTIGATION_ROLES);
 const create = zod_1.z.object({ title: zod_1.z.string().trim().min(3).max(200), description: zod_1.z.string().max(10000).optional(), leadId: zod_1.z.string().uuid().optional(), persons: zod_1.z.array(zod_1.z.object({ personId: zod_1.z.string().uuid(), role })).max(100).optional() });
 const addPerson = zod_1.z.object({ personId: zod_1.z.string().uuid(), role });
 const status = zod_1.z.object({ status: zod_1.z.enum(shared_1.INVESTIGATION_STATUSES).refine((s) => s !== 'CLOSED', 'Abschließen bitte über die Abschließen-Aktion.'), reason: zod_1.z.string().max(500).optional() });
+const update = zod_1.z.object({ title: zod_1.z.string().trim().min(3).max(200).optional(), description: zod_1.z.string().max(10000).nullable().optional(), leadId: zod_1.z.string().uuid().nullable().optional(), version: zod_1.z.number().int().positive().optional() });
+const note = zod_1.z.object({ text: zod_1.z.string().trim().min(2).max(2000) });
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.enum(shared_1.INVESTIGATION_STATUSES).optional() });
 let InvestigationsController = class InvestigationsController {
     i;
@@ -34,6 +36,8 @@ let InvestigationsController = class InvestigationsController {
     list(q) { return this.i.list(q, q.status); }
     get(id) { return this.i.get(id); }
     create(a, b) { return this.i.create(a, b); }
+    update(a, id, b) { return this.i.update(a, id, b); }
+    addNote(a, id, b) { return this.i.addNote(a, id, b.text); }
     addPerson(a, id, b) { return this.i.addPerson(a, id, b.personId, b.role); }
     setStatus(a, id, b) { return this.i.setStatus(a, id, b.status, b.reason); }
     close(a, id, b) { return this.i.setStatus(a, id, 'CLOSED', b.reason); }
@@ -64,6 +68,26 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], InvestigationsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, decorators_1.RequirePermission)('investigations.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(update))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], InvestigationsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/notes'),
+    (0, decorators_1.RequirePermission)('investigations.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(note))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], InvestigationsController.prototype, "addNote", null);
 __decorate([
     (0, common_1.Post)(':id/persons'),
     (0, decorators_1.RequirePermission)('investigations.edit'),

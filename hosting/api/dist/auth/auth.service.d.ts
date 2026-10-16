@@ -89,6 +89,21 @@ export declare class AuthService {
     }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
     /** Beendet alle Sessions eines Benutzers (Session Invalidation). */
+    /** Eigenes Passwort ändern: altes Passwort nötig; alle anderen Sitzungen werden beendet. */
+    changePassword(actor: Actor, sessionId: string, current: string, next: string): Promise<void>;
+    /** Eigene aktive Sitzungen (Gerät/IP, angemeldet seit) – die aktuelle ist markiert. */
+    sessions(userId: string, currentId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        expiresAt: Date;
+        ip: string | null;
+        userAgent: string | null;
+        current: boolean;
+    }[]>;
+    /** Eigene Sitzung(en) beenden: eine bestimmte oder alle außer der aktuellen. */
+    revokeOwnSessions(actor: Actor, currentId: string, sessionId?: string): Promise<{
+        revoked: number;
+    }>;
     revokeAllSessions(userId: string): Promise<void>;
     profile(userId: string): Promise<{
         id: string;

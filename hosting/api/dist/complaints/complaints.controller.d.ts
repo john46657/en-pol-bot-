@@ -144,6 +144,7 @@ export declare class ComplaintsController {
             resolution: string | null;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

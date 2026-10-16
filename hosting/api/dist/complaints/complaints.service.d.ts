@@ -89,6 +89,7 @@ export declare class ComplaintsService {
             resolution: string | null;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

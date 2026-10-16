@@ -51,6 +51,7 @@ export declare class WantedService {
             expiresAt: Date | null;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -67,6 +68,29 @@ export declare class WantedService {
         description?: string;
         priority?: string;
         expiresAt?: Date;
+    }): Promise<{
+        number: string | null;
+        serverId: string | null;
+        id: string;
+        status: string;
+        createdById: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        description: string | null;
+        personId: string | null;
+        vehicleId: string | null;
+        reason: string;
+        priority: string;
+        expiresAt: Date | null;
+    }>;
+    /** Grund, Beschreibung, Priorität und Ablauf einer aktiven Fahndung ändern (Versionsprüfung). */
+    update(actor: Actor, id: string, d: {
+        reason?: string;
+        description?: string | null;
+        priority?: string;
+        expiresAt?: Date | null;
+        version?: number;
     }): Promise<{
         number: string | null;
         serverId: string | null;
