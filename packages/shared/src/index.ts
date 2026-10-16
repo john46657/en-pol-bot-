@@ -15,6 +15,7 @@ export * from './duty-reports';
 export * from './duty-week';
 export * from './modules';
 export * from './hr';
+export * from './exams';
 export * from './logging';
 export * from './backup';
 export * from './mdt';

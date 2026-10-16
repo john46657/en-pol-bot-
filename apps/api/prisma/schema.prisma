@@ -1885,27 +1885,43 @@ model HrTrainingProgress {
 }
 
 model HrExam {
-  id            String          @id @default(uuid()) @db.Uuid
+  id               String          @id @default(uuid()) @db.Uuid
   /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
-  serverId      String?         @db.Uuid
-  title         String
-  description   String?
-  /// [{ id, type: SINGLE|MULTI|YESNO|TEXT|NUMBER, text, options[], correct[], points }]
-  questions     Json            @default("[]")
+  serverId         String?         @db.Uuid
+  title            String
+  description      String?
+  /// Hinweise auf der Startseite vor Beginn
+  instructions     String?
+  category         String?
+  /// [{ id, type: SINGLE|MULTI|YESNO|TEXT|NUMBER|ORDER|MATCH|GAP, text, options[], matches[], correct[], points, partial, tolerance, explanation, image }]
+  questions        Json            @default("[]")
   /// zufällig gezogene Fragen je Versuch (0 = alle)
-  questionCount Int             @default(0)
-  passPercent   Int             @default(70)
-  timeLimitMin  Int?
-  maxAttempts   Int             @default(3)
-  retryHours    Int             @default(24)
-  autoGrade     Boolean         @default(true)
-  showResult    Boolean         @default(true)
-  examinerIds   String[]        @default([])
-  trainingId    String?         @db.Uuid
-  active        Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  attempts      HrExamAttempt[]
+  questionCount    Int             @default(0)
+  passPercent      Int             @default(70)
+  timeLimitMin     Int?
+  maxAttempts      Int             @default(3)
+  retryHours       Int             @default(24)
+  autoGrade        Boolean         @default(true)
+  showResult       Boolean         @default(true)
+  /// Einsicht nach der Bewertung: NONE | ANSWERS | SOLUTIONS
+  reviewMode       String          @default("ANSWERS")
+  /// PAGED (eine Frage pro Seite) | LIST
+  layout           String          @default("PAGED")
+  shuffleQuestions Boolean         @default(false)
+  shuffleOptions   Boolean         @default(false)
+  examinerIds      String[]        @default([])
+  /// Dashboard-Rollen (leer = alle mit exam.view)
+  audienceRoleIds  String[]        @default([])
+  trainingId       String?         @db.Uuid
+  /// muss vorher bestanden sein
+  requiredExamId   String?         @db.Uuid
+  availableFrom    DateTime?
+  availableUntil   DateTime?
+  notifyExaminers  Boolean         @default(true)
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  attempts         HrExamAttempt[]
 
   @@index([serverId])
 }
@@ -1917,7 +1933,18 @@ model HrExamAttempt {
   /// Fragen-IDs dieses Versuchs (bei Zufallsauswahl)
   questionIds String[]  @default([])
   answers     Json      @default("{}")
-  status      String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED
+  status      String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED | VOIDED
+  /// Fragen zum Zeitpunkt des Starts (spätere Änderungen an der Prüfung verändern alte Versuche nicht)
+  snapshot    Json?
+  /// gemischte Reihenfolge je Frage: { o: { [frageId]: number[] }, m: { [frageId]: number[] } }
+  shuffle     Json      @default("{}")
+  /// vom Teilnehmer markierte Fragen
+  flagged     String[]  @default([])
+  /// erreichte Punkte je Frage (nach der Bewertung)
+  questionScores Json?
+  voidReason  String?
+  voidedById  String?   @db.Uuid
+  voidedAt    DateTime?
   score       Float?
   maxScore    Float?
   passed      Boolean?
@@ -1930,6 +1957,7 @@ model HrExamAttempt {
   personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
 
   @@index([examId, personnelId])
+  @@index([status])
 }
 
 /// Interne Meldung (z. B. neue Dienstanweisung) mit optionaler Lesebestätigung.

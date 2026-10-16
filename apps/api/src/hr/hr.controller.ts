@@ -1,14 +1,15 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { dnSettingsSchema, DN_STATUSES, hrConfigSchema, rangeSchema, rankSchema, type DnSettings, type HrConfig, type RangeInput, type RankInput } from '@enrp/shared';
+import { dnSettingsSchema, DN_STATUSES, EXAM_ATTEMPT_STATUSES, examSchema, hrConfigSchema, rangeSchema, rankSchema, type DnSettings, type ExamInput, type HrConfig, type RangeInput, type RankInput } from '@enrp/shared';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { HrCoreService } from './hr-core.service';
 import { HrPeopleService, RECORD_TYPES } from './hr-people.service';
 import { HrRequestsService } from './hr-requests.service';
-import { examSchema, HrTrainingService, trainingSchema, TRAINING_STATUSES } from './hr-training.service';
+import { HrTrainingService, trainingSchema, TRAINING_STATUSES } from './hr-training.service';
+import { HrExamService } from './hr-exam.service';
 import { announcementSchema, HrCommsService, pollSchema } from './hr-comms.service';
 import { ServiceNumbersService } from './service-numbers.service';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
@@ -90,17 +91,31 @@ export class HrTrainingController {
   @Get('trainings/:id/progress') @RequirePermission('training.view') progressOf(@Param('id', ParseUUIDPipe) id: string) { return this.s.progressOf(id); }
   @Put('training-progress') @RequirePermission('training.view') setProgress(@CurrentActor() a: Actor, @Body(zodBody(progress)) b: z.infer<typeof progress>) { return this.s.setProgress(a, b); }
   @Get('certificates/:no') @RequirePermission('dashboard.view') certificate(@CurrentActor() a: Actor, @Param('no') no: string) { return this.s.certificate(a, no.slice(0, 20)); }
+}
 
-  @Get('exams') @RequirePermission('exam.view') exams(@CurrentActor() a: Actor) { return this.s.exams(a); }
-  @Post('exams') @RequirePermission('exam.create') createExam(@CurrentActor() a: Actor, @Body(zodBody(examSchema)) b: z.infer<typeof examSchema>) { return this.s.saveExam(a, b); }
-  @Put('exams/:id') @RequirePermission('exam.manage') saveExam(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(examSchema)) b: z.infer<typeof examSchema>) { return this.s.saveExam(a, b, id); }
-  @Delete('exams/:id') @HttpCode(204) @RequirePermission('exam.manage') deleteExam(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.deleteExam(a, id); }
+// ───────────── Prüfungen ─────────────
+const answersBody = z.object({ answers: z.record(z.string().max(40), z.unknown()), flagged: z.array(z.string().max(40)).max(200).optional() });
+const gradeBody = z.object({ scores: z.record(z.string().max(40), z.number().min(0).max(100)), feedback: z.string().max(2000).optional() });
+const attemptsQ = z.object({ examId: uuid.optional(), status: z.enum(EXAM_ATTEMPT_STATUSES).optional() });
+
+@ApiTags('hr')
+@Controller('hr')
+export class HrExamController {
+  constructor(private readonly s: HrExamService) {}
+  @Get('exams') @RequirePermission('exam.view') list(@CurrentActor() a: Actor) { return this.s.list(a); }
+  @Get('exams/:id') @RequirePermission('exam.view') detail(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.detail(a, id); }
+  @Post('exams') @RequirePermission('exam.create') create(@CurrentActor() a: Actor, @Body(zodBody(examSchema)) b: ExamInput) { return this.s.save(a, b); }
+  @Put('exams/:id') @RequirePermission('exam.manage') save(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(examSchema)) b: ExamInput) { return this.s.save(a, b, id); }
+  @Delete('exams/:id') @HttpCode(204) @RequirePermission('exam.manage') remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.remove(a, id); }
+  @Post('exams/:id/duplicate') @RequirePermission('exam.create') duplicate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.duplicate(a, id); }
+  @Get('exams/:id/results') @RequirePermission('exam.view') results(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.results(a, id); }
   @Post('exams/:id/start') @HttpCode(200) @RequirePermission('exam.view') start(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.start(a, id); }
-  @Get('attempts') @RequirePermission('exam.view') attempts(@CurrentActor() a: Actor, @Query('examId') examId?: string) { return this.s.attempts(a, examId && /^[0-9a-f-]{36}$/.test(examId) ? examId : undefined); }
+  @Get('attempts') @RequirePermission('exam.view') attempts(@CurrentActor() a: Actor, @Query(zodBody(attemptsQ)) q: z.infer<typeof attemptsQ>) { return this.s.attempts(a, q); }
   @Get('attempts/:id') @RequirePermission('exam.view') attempt(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.view(id, a); }
-  @Put('attempts/:id/answers') @RequirePermission('exam.view') answers(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ answers: z.record(z.string().max(40), z.unknown()) }))) b: { answers: Record<string, unknown> }) { return this.s.saveAnswers(a, id, b.answers); }
-  @Post('attempts/:id/submit') @HttpCode(200) @RequirePermission('exam.view') submit(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ answers: z.record(z.string().max(40), z.unknown()) }))) b: { answers: Record<string, unknown> }) { return this.s.submit(a, id, b.answers); }
-  @Post('attempts/:id/grade') @HttpCode(200) @RequirePermission('exam.view') grade(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ scores: z.record(z.string().max(40), z.number().min(0).max(100)), feedback: z.string().max(2000).optional() }))) b: { scores: Record<string, number>; feedback?: string }) { return this.s.grade(a, id, b); }
+  @Put('attempts/:id/answers') @RequirePermission('exam.view') answers(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(answersBody)) b: z.infer<typeof answersBody>) { return this.s.saveAnswers(a, id, b.answers, b.flagged); }
+  @Post('attempts/:id/submit') @HttpCode(200) @RequirePermission('exam.view') submit(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(answersBody)) b: z.infer<typeof answersBody>) { return this.s.submit(a, id, b.answers); }
+  @Post('attempts/:id/grade') @HttpCode(200) @RequirePermission('exam.view') grade(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(gradeBody)) b: z.infer<typeof gradeBody>) { return this.s.grade(a, id, b); }
+  @Post('attempts/:id/void') @HttpCode(200) @RequirePermission('exam.view') void(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ reason: z.string().trim().min(3).max(500) }))) b: { reason: string }) { return this.s.void(a, id, b.reason); }
 }
 
 // ───────────── Meldungen & Abstimmungen ─────────────

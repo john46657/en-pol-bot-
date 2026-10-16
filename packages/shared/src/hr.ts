@@ -30,12 +30,12 @@ export const PROFILE_FIELD_LABEL: Record<(typeof PROFILE_FIELDS)[number], string
 
 /** Benachrichtigung je Ereignis: Dashboard, Discord-Kanal, Direktnachricht; welche Dashboard-Rollen sie bekommen. */
 export const notifyRuleSchema = z.object({ dashboard: z.boolean().default(true), channelId: sf.nullable().default(null), dm: z.boolean().default(false), roleIds: z.array(uuid).max(20).default([]) });
-export const HR_EVENTS = ['promotion.requested', 'promotion.approved', 'promotion.rejected', 'promotion.executed', 'transfer.requested', 'transfer.approved', 'transfer.rejected', 'warning.created', 'award.granted', 'training.passed', 'exam.passed'] as const;
+export const HR_EVENTS = ['promotion.requested', 'promotion.approved', 'promotion.rejected', 'promotion.executed', 'transfer.requested', 'transfer.approved', 'transfer.rejected', 'warning.created', 'award.granted', 'training.passed', 'exam.passed', 'exam.submitted'] as const;
 export type HrEvent = (typeof HR_EVENTS)[number];
 export const HR_EVENT_LABEL: Record<HrEvent, string> = {
   'promotion.requested': 'Neuer Beförderungsantrag', 'promotion.approved': 'Beförderung genehmigt', 'promotion.rejected': 'Beförderung abgelehnt', 'promotion.executed': 'Beförderung durchgeführt',
   'transfer.requested': 'Neuer Versetzungsantrag', 'transfer.approved': 'Versetzung genehmigt', 'transfer.rejected': 'Versetzung abgelehnt', 'warning.created': 'Verwarnung erstellt',
-  'award.granted': 'Auszeichnung verliehen', 'training.passed': 'Ausbildung bestanden', 'exam.passed': 'Prüfung bestanden',
+  'award.granted': 'Auszeichnung verliehen', 'training.passed': 'Ausbildung bestanden', 'exam.passed': 'Prüfung bestanden', 'exam.submitted': 'Prüfung abgegeben (wartet auf Bewertung)',
 };
 
 export const stageSchema = z.object({ id: uuid, name: z.string().trim().min(1).max(60), roleIds: z.array(uuid).max(20).default([]) });
@@ -172,33 +172,6 @@ export type RankInput = z.infer<typeof rankSchema>;
 export interface RequirementResult { id: string; type: RequirementType; label: string; met: boolean; current: string; needed: string; manual: boolean }
 /** Ergebnis der automatischen Prüfung für den nächsten Rang. */
 export interface PromotionCheck { rankId: string; rankName: string; results: RequirementResult[]; met: number; total: number; eligible: boolean }
-
-// ───────────── Prüfungen ─────────────
-
-export const EXAM_QUESTION_TYPES = ['SINGLE', 'MULTI', 'YESNO', 'TEXT', 'NUMBER'] as const;
-export const EXAM_QUESTION_TYPE_LABEL: Record<(typeof EXAM_QUESTION_TYPES)[number], string> = { SINGLE: 'Single Choice', MULTI: 'Multiple Choice', YESNO: 'Ja/Nein', TEXT: 'Freitext', NUMBER: 'Zahl' };
-export const questionSchema = z.object({
-  id: z.string().min(1).max(40), type: z.enum(EXAM_QUESTION_TYPES), text: z.string().trim().min(1).max(1000), options: z.array(z.string().trim().min(1).max(200)).max(10).default([]),
-  /** richtige Antwort(en): Option-Index als Text, „ja“/„nein“, Zahl oder Stichworte (Freitext → manuell) */
-  correct: z.array(z.string().max(200)).max(10).default([]), points: z.number().min(0).max(100).default(1),
-});
-export type Question = z.infer<typeof questionSchema>;
-/** Automatische Auswertung einer Antwort; `null` = muss manuell bewertet werden (Freitext ohne Musterlösung). */
-export function gradeAnswer(q: Question, a: unknown): number | null {
-  const norm = (x: unknown) => String(x ?? '').trim().toLowerCase();
-  if (q.type === 'TEXT') {
-    if (!q.correct.length) return null;
-    const t = norm(a);
-    return q.correct.every((k) => t.includes(norm(k))) ? q.points : 0;
-  }
-  if (q.type === 'NUMBER') return Number(String(a).replace(',', '.')) === Number(String(q.correct[0] ?? '').replace(',', '.')) ? q.points : 0;
-  if (q.type === 'MULTI') {
-    const got = new Set((Array.isArray(a) ? a : []).map(norm));
-    const want = new Set(q.correct.map(norm));
-    return got.size === want.size && [...want].every((x) => got.has(x)) ? q.points : 0;
-  }
-  return norm(Array.isArray(a) ? a[0] : a) === norm(q.correct[0]) ? q.points : 0;
-}
 
 // ───────────── Dienstnummern ─────────────
 

@@ -26,7 +26,7 @@ const blocks = (p: number) => { const n = Math.round(Math.max(0, Math.min(100, p
 const TRAINING_STATUS: Record<string, [string, Tone]> = {
   NOT_STARTED: ['Nicht begonnen', 'neutral'], IN_PROGRESS: ['In Bearbeitung', 'info'], PASSED: ['Bestanden', 'success'], FAILED: ['Nicht bestanden', 'danger'], ABORTED: ['Abgebrochen', 'neutral'], EXPIRED: ['Abgelaufen', 'warning'],
 };
-const EXAM_STATUS: Record<string, string> = { IN_PROGRESS: 'Läuft', SUBMITTED: 'Abgegeben – wird bewertet', GRADED: 'Bewertet' };
+const EXAM_STATUS: Record<string, string> = { IN_PROGRESS: 'Läuft', SUBMITTED: 'Abgegeben – wird bewertet', GRADED: 'Bewertet', VOIDED: 'Annulliert' };
 const DN_ACTION: Record<string, string> = { ASSIGNED_AUTO: 'Automatisch vergeben', ASSIGNED_MANUAL: 'Manuell vergeben', CHANGED: 'Geändert', RELEASED: 'Freigegeben', BLOCKED: 'Gesperrt', UNBLOCKED: 'Entsperrt', RESERVED: 'Reserviert', FORMER: 'Ehemalig', PENDING: 'Ausstehend' };
 const WARN_STATE: Record<string, [string, Tone]> = { ACTIVE: ['Aktiv', 'danger'], EXPIRED: ['Abgelaufen', 'neutral'], REVOKED: ['Aufgehoben', 'neutral'] };
 
@@ -446,7 +446,7 @@ function ExamsTab({ p }: { p: Profile }) {
               <span><b>{a.exam.title}</b> <span className="text-xs text-muted">· begonnen {fmt(a.startedAt)}{a.submittedAt ? ` · abgegeben ${fmt(a.submittedAt)}` : ''}</span></span>
               <span className="flex items-center gap-2">
                 {a.score !== null && a.maxScore !== null && <span className="text-xs">{a.score}/{a.maxScore} Punkte{a.maxScore ? ` (${Math.round((a.score / a.maxScore) * 100)} %)` : ''}</span>}
-                {a.passed === null ? <Badge>{EXAM_STATUS[a.status] ?? a.status}</Badge> : a.passed ? <Badge tone="success">✅ Bestanden</Badge> : <Badge tone="danger">❌ Nicht bestanden</Badge>}
+                {a.passed === null || a.status === 'VOIDED' ? <Badge>{EXAM_STATUS[a.status] ?? a.status}</Badge> : a.passed ? <Badge tone="success">✅ Bestanden</Badge> : <Badge tone="danger">❌ Nicht bestanden</Badge>}
               </span>
             </li>
           ))}

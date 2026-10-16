@@ -47,7 +47,7 @@ export const NAV: NavItem[] = [
     { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
   ]),
   grp('Ausbildung', GraduationCap, 'Organisation', [
-    { path: '/trainings', label: 'Ausbildungen & Prüfungen', perm: 'training.view' },
+    { path: '/trainings', label: 'Ausbildungen & Prüfungen', perm: 'training.view|exam.view' },
     { path: '/academy', label: 'Akademie', perm: 'academy.view' },
   ]),
   grp('Bewerbungen', ClipboardList, 'Organisation', [
