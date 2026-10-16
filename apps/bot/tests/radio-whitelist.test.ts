@@ -45,12 +45,46 @@ describe('/funkantrag', () => {
     expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api: dup.api, args: ['submit'], fields: { reason: 'Bitte um Freigabe für den Funk' } })).content).toContain('offenen Antrag');
     const off = fakeApi({ 'POST /bot/radio-whitelist/requests': new BotApiError(503, 'CAPABILITY_UNAVAILABLE', 'Anträge auf Funkfreigabe sind derzeit deaktiviert.') });
     expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api: off.api, args: ['submit'], fields: { reason: 'Bitte um Freigabe für den Funk' } })).content).toContain('deaktiviert');
-    expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api: off.api, args: ['submit'], fields: { reason: 'kurz' } })).content).toContain('ausführlicher');
+    expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api: off.api, args: ['submit'], fields: { reason: 'x' } })).content).toContain('begründe');
   });
   it('/funkstatus zeigt Status und Ablaufdatum', async () => {
     const r = await cmd('funkstatus').run({ discordId: ME, opts: {}, api: fakeApi({ [`GET /bot/radio-whitelist/status/${ME}`]: status({ status: 'ACTIVE', authorized: true, expiresAt: '2026-12-01T00:00:00Z' }) }).api });
     expect(r.embeds?.[0]?.description).toContain('aktiv');
     expect(r.embeds?.[0]?.description).toContain('<t:1796083200:D>');
+  });
+});
+
+describe('Panels: Antrags-Button, eigenes Formular, Entscheidung per Button', () => {
+  const RID = '11111111-1111-4111-8111-111111111111';
+  it('Panel-Button öffnet das im Dashboard gestaltete Formular; eigene Felder gehen als answers mit', async () => {
+    const form = { title: 'Funk beantragen', fields: [{ key: 'reason', label: 'Warum?', placeholder: 'kurz', paragraph: true, required: true, maxLength: 500 }, { key: 'callsign', label: 'Funkrufname', placeholder: '', paragraph: false, required: true, maxLength: 20 }] };
+    const { api, calls } = fakeApi({ [`GET /bot/radio-whitelist/status/${ME}`]: status({ form }), 'POST /bot/radio-whitelist/requests': { id: RID } });
+    expect(RADIO_WHITELIST_INTERACTION.opensModal?.(['open'])).toBe(true);
+    const r = await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api, args: ['open'] });
+    expect(r.modal).toEqual({ id: 'rwreq:submit', title: 'Funk beantragen', fields: [
+      { id: 'reason', label: 'Warum?', paragraph: true, required: true, maxLength: 500, placeholder: 'kurz' },
+      { id: 'callsign', label: 'Funkrufname', paragraph: false, required: true, maxLength: 20 },
+    ] });
+    await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api, args: ['submit'], fields: { reason: 'Neu', callsign: ' ADLER 12 ' } });
+    expect(calls.at(-1)!.body).toMatchObject({ reason: 'Neu', answers: { callsign: 'ADLER 12' } });
+    // offener Antrag → kein zweites Formular
+    const pending = fakeApi({ [`GET /bot/radio-whitelist/status/${ME}`]: status({ pendingSince: '2026-10-16T10:00:00Z' }) });
+    expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api: pending.api, args: ['open'] })).content).toContain('offenen Antrag');
+  });
+  it('Genehmigen/Ablehnen per Button – mit den Rechten des Klickenden; Ablehnen fragt nach dem Grund', async () => {
+    const calls: unknown[] = [];
+    const api: Api = { async asUser<T>(discordId: string, method: string, path: string, body?: unknown) { calls.push([discordId, method, path, body]); return { decidedByName: 'Leitung' } as T; }, async service() { throw new Error('unused'); } };
+    const ok = await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api, args: ['approve', RID] });
+    expect(ok.decided?.text).toContain('Genehmigt');
+    expect(calls[0]).toEqual([ME, 'POST', `/radio-whitelist/requests/${RID}/decision`, { decision: 'APPROVE' }]);
+    expect(RADIO_WHITELIST_INTERACTION.opensModal?.(['reject', RID])).toBe(true);
+    expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api, args: ['reject', RID] })).modal?.id).toBe(`rwreq:rejectsubmit:${RID}`);
+    const no = await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api, args: ['rejectsubmit', RID], fields: { reason: 'Erst Ausbildung' } });
+    expect(no.decided?.text).toContain('Erst Ausbildung');
+    expect(calls[1]).toEqual([ME, 'POST', `/radio-whitelist/requests/${RID}/decision`, { decision: 'REJECT', reason: 'Erst Ausbildung' }]);
+    const denied = { async asUser() { throw new BotApiError(403, 'PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.'); }, async service() { throw new Error('unused'); } } as Api;
+    expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api: denied, args: ['approve', RID] })).content).toContain('keine Berechtigung');
+    expect((await RADIO_WHITELIST_INTERACTION.run({ discordId: ME, guildId: G, opts: {}, api, args: ['approve', 'kaputt'] })).content).toContain('Unbekannter Antrag');
   });
 });
 

@@ -80607,6 +80607,7 @@ var BOT_COMMAND_MODULES = {
   funkcode: "communication",
   funk: "communication",
   funkantrag: "communication",
+  funkstatus: "communication",
   funkfreigabe: "communication"
 };
 var commandsForServer = (all, disabledModules) => all.filter((c) => !disabledModules.includes(BOT_COMMAND_MODULES[c.name] ?? "core"));
@@ -83190,30 +83191,55 @@ var TRAINING_INTERACTION = {
 };
 
 // apps/bot/src/commands/radio-whitelist.ts
+var DEFAULT_FORM = { title: "Antrag auf Funkfreigabe", fields: [
+  { key: "reason", label: "Begr\xFCndung", placeholder: "Warum brauchst du Zugang zum Funk?", paragraph: true, required: true, maxLength: 1e3 },
+  { key: "rank", label: "Dienstgrad (falls relevant)", placeholder: "", paragraph: false, required: false, maxLength: 80 },
+  { key: "department", label: "Abteilung (falls relevant)", placeholder: "", paragraph: false, required: false, maxLength: 80 }
+] };
 var STATUS_DE2 = { ACTIVE: "\u2705 aktiv", PENDING: "\u{1F553} ausstehend", DISABLED: "\u23F8\uFE0F deaktiviert", SUSPENDED: "\u26D4 gesperrt", EXPIRED: "\u231B abgelaufen", REVOKED: "\u274C entzogen" };
 var ts2 = (iso) => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:D>`;
 var apiError = (e) => e instanceof BotApiError && e.status === 503 ? errorReply(e.message) : mapError(e);
+async function openRequestForm(c) {
+  if (!c.guildId) return errorReply("Bitte stelle den Antrag auf dem Discord-Server, nicht per Direktnachricht.");
+  let s;
+  try {
+    s = await c.api.service("GET", `/bot/radio-whitelist/status/${c.discordId}`);
+    if (!s.requestsEnabled) return errorReply("Antr\xE4ge auf Funkfreigabe sind derzeit deaktiviert.");
+    if (s.authorized) return okReply("Du bist bereits f\xFCr den Funk freigegeben.");
+    if (s.status === "SUSPENDED") return errorReply(`Deine Funkfreigabe ist gesperrt${s.suspendedUntil ? ` bis ${ts2(s.suspendedUntil)}` : ""} \u2013 ein Antrag ist derzeit nicht m\xF6glich.`);
+    if (s.pendingSince) return okReply(`Du hast bereits einen offenen Antrag (seit ${ts2(s.pendingSince)}). Du bekommst eine Direktnachricht, sobald entschieden ist.`);
+  } catch (e) {
+    return apiError(e);
+  }
+  const form = s.form?.fields?.length ? s.form : DEFAULT_FORM;
+  return { modal: { id: "rwreq:submit", title: form.title.slice(0, 45), fields: form.fields.slice(0, 5).map((f2) => ({
+    id: f2.key,
+    label: f2.label.slice(0, 45),
+    paragraph: f2.paragraph,
+    required: f2.required,
+    maxLength: Math.min(f2.maxLength, 4e3),
+    ...f2.placeholder ? { placeholder: f2.placeholder.slice(0, 100) } : {}
+  })) } };
+}
+async function decide3(c, id3, decision, reason) {
+  try {
+    const r = await c.api.asUser(c.discordId, "POST", `/radio-whitelist/requests/${id3}/decision`, { decision, ...reason ? { reason } : {} });
+    const ok = decision === "APPROVE";
+    return {
+      ...okReply(ok ? "\u2705 Antrag genehmigt \u2013 das Mitglied wurde per Direktnachricht informiert." : "\u274C Antrag abgelehnt \u2013 das Mitglied wurde per Direktnachricht informiert."),
+      decided: { color: ok ? COLORS.success : COLORS.danger, text: `${ok ? "\u2705 Genehmigt" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`.slice(0, 1024) }
+    };
+  } catch (e) {
+    return apiError(e);
+  }
+}
 var RADIO_WHITELIST_COMMANDS = [
   {
     name: "funkantrag",
     description: "Funkfreigabe f\xFCr den externen Funkdienst beantragen",
     opensModal: true,
-    async run(c) {
-      if (!c.guildId) return errorReply("Bitte stelle den Antrag auf dem Discord-Server, nicht per Direktnachricht.");
-      try {
-        const s = await c.api.service("GET", `/bot/radio-whitelist/status/${c.discordId}`);
-        if (!s.requestsEnabled) return errorReply("Antr\xE4ge auf Funkfreigabe sind derzeit deaktiviert.");
-        if (s.authorized) return okReply("Du bist bereits f\xFCr den Funk freigegeben.");
-        if (s.status === "SUSPENDED") return errorReply(`Deine Funkfreigabe ist gesperrt${s.suspendedUntil ? ` bis ${ts2(s.suspendedUntil)}` : ""} \u2013 ein Antrag ist derzeit nicht m\xF6glich.`);
-      } catch (e) {
-        return apiError(e);
-      }
-      return { modal: { id: "rwreq:submit", title: "Antrag auf Funkfreigabe", fields: [
-        { id: "reason", label: "Begr\xFCndung", paragraph: true, required: true, maxLength: 1e3, placeholder: "Warum brauchst du Zugang zum Funk?" },
-        { id: "rank", label: "Dienstgrad (falls relevant)", required: false, maxLength: 80 },
-        { id: "department", label: "Abteilung (falls relevant)", required: false, maxLength: 80 }
-      ] } };
-    }
+    run: openRequestForm
   },
   {
     name: "funkstatus",
@@ -83234,12 +83260,25 @@ var RADIO_WHITELIST_COMMANDS = [
     }
   }
 ];
+var UUID2 = /^[0-9a-f-]{36}$/;
 var RADIO_WHITELIST_INTERACTION = {
   prefix: "rwreq",
+  opensModal: (args) => args[0] === "open" || args[0] === "reject",
   async run(c) {
-    if (c.args[0] !== "submit" || !c.fields) return errorReply("Ung\xFCltige Anfrage.");
+    const [action, id3] = c.args;
+    if (action === "open") return openRequestForm(c);
+    if (action === "approve" || action === "reject" || action === "rejectsubmit") {
+      if (!UUID2.test(id3 ?? "")) return errorReply("Unbekannter Antrag.");
+      if (action === "approve") return decide3(c, id3, "APPROVE");
+      if (action === "reject") return { modal: { id: `rwreq:rejectsubmit:${id3}`, title: "Antrag ablehnen", fields: [{ id: "reason", label: "Grund (geht per DM an das Mitglied)", paragraph: true, required: true, minLength: 3, maxLength: 1e3 }] } };
+      const reason2 = (c.fields?.reason ?? "").trim();
+      if (reason2.length < 3) return errorReply("Bitte einen Grund angeben.");
+      return decide3(c, id3, "REJECT", reason2);
+    }
+    if (action !== "submit" || !c.fields) return errorReply("Ung\xFCltige Anfrage.");
     const reason = (c.fields.reason ?? "").trim();
-    if (reason.length < 10) return errorReply("Bitte begr\xFCnde deinen Antrag etwas ausf\xFChrlicher (mind. 10 Zeichen).");
+    if (reason.length < 3) return errorReply("Bitte begr\xFCnde deinen Antrag.");
+    const answers = Object.fromEntries(Object.entries(c.fields).filter(([k]) => !["reason", "rank", "department"].includes(k)).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v));
     try {
       await c.api.service("POST", "/bot/radio-whitelist/requests", {
         guildId: c.guildId ?? null,
@@ -83247,7 +83286,8 @@ var RADIO_WHITELIST_INTERACTION = {
         discordName: c.userDisplayName ?? c.userName ?? null,
         rank: (c.fields.rank ?? "").trim() || null,
         department: (c.fields.department ?? "").trim() || null,
-        reason
+        reason,
+        ...Object.keys(answers).length ? { answers } : {}
       });
       return okReply(`\u{1F4E8} Dein Antrag auf Funkfreigabe ist eingegangen. Du bekommst eine Direktnachricht, sobald eine F\xFChrungskraft entschieden hat.
 > ${plain(reason).slice(0, 300)}`);
@@ -84957,7 +84997,7 @@ async function markDecided(message, d) {
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ""));
+    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ""));
     if (kept.length) rows.push(new import_discord6.ActionRowBuilder().addComponents(kept.map((c) => import_discord6.ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });

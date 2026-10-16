@@ -350,7 +350,7 @@ async function markDecided(message: Message, d: { text: string; color: number })
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (const row of message.components) {
     if (!('components' in row)) continue;
-    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):(decide|reason):/.test(c.customId ?? ''));
+    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ''));
     if (kept.length) rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(kept.map((c) => ButtonBuilder.from(c))));
   }
   await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });

@@ -9,7 +9,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RadioWhitelistService = exports.RADIO_PROVIDERS = exports.DEFAULT_CONFIG = void 0;
+exports.RadioWhitelistService = exports.RADIO_PROVIDERS = exports.DEFAULT_CONFIG = exports.DEFAULT_FORM = exports.DEFAULT_PANEL = void 0;
+exports.normalizeForm = normalizeForm;
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -26,7 +27,24 @@ const CONFIG_KEY = 'radiowhitelist.config';
 const ROLESYNC_STATUS_KEY = 'radiowhitelist.rolesync.status';
 const SYSTEM = { userId: null };
 const DISCORD_ID = /^\d{15,25}$/;
-exports.DEFAULT_CONFIG = { roleSync: shared_1.DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null }, notifyMembers: true };
+exports.DEFAULT_PANEL = { channelId: null, title: '🎙️ Funkfreigabe beantragen', text: 'Du brauchst Zugang zum Funk? Klicke unten auf den Button, begründe kurz deinen Antrag – die Leitung entscheidet und du bekommst eine Direktnachricht.', buttonLabel: 'Funkfreigabe beantragen', color: '#3b82f6' };
+exports.DEFAULT_FORM = { title: 'Antrag auf Funkfreigabe', fields: [
+        { key: 'reason', label: 'Begründung', placeholder: 'Warum brauchst du Zugang zum Funk?', paragraph: true, required: true, maxLength: 1000 },
+        { key: 'rank', label: 'Dienstgrad (falls relevant)', placeholder: '', paragraph: false, required: false, maxLength: 80 },
+        { key: 'department', label: 'Abteilung (falls relevant)', placeholder: '', paragraph: false, required: false, maxLength: 80 },
+    ] };
+/** Formular immer gültig halten: Begründung vorhanden und Pflicht, höchstens 5 Felder, Schlüssel eindeutig. */
+function normalizeForm(f) {
+    const seen = new Set();
+    const fields = (Array.isArray(f?.fields) ? f.fields : exports.DEFAULT_FORM.fields).filter((x) => x && typeof x.key === 'string' && !seen.has(x.key) && seen.add(x.key)).slice(0, 5);
+    if (!fields.some((x) => x.key === 'reason'))
+        fields.unshift(exports.DEFAULT_FORM.fields[0]);
+    return { title: (f?.title || exports.DEFAULT_FORM.title).slice(0, 45), fields: fields.slice(0, 5).map((x) => (x.key === 'reason' ? { ...x, required: true, maxLength: Math.max(10, Math.min(x.maxLength, 1000)) } : x)) };
+}
+exports.DEFAULT_CONFIG = { roleSync: shared_1.DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: exports.DEFAULT_PANEL, form: exports.DEFAULT_FORM }, notifyMembers: true };
+const PANEL_STATE_KEY = 'radio-request-panel';
+const requestStateKey = (id) => `rwreq-${id}`;
+const hexColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? parseInt(c.slice(1), 16) : 0x3b82f6);
 /** Funkdienste, für die die Anbindung angeboten wird – mit ehrlicher Angabe, was per API möglich ist. */
 exports.RADIO_PROVIDERS = [
     { key: 'NONE', name: 'Kein Funkdienst angebunden', apiSupported: false, note: 'Die Whitelist wird nur im Dashboard und in Discord geführt.' },
@@ -67,7 +85,7 @@ let RadioWhitelistService = class RadioWhitelistService {
     // ================= Einstellungen =================
     async config() {
         const v = (await (0, guild_context_1.unscoped)(() => this.prisma.systemSetting.findUnique({ where: { key: CONFIG_KEY } })))?.value;
-        return { ...exports.DEFAULT_CONFIG, ...v, roleSync: { ...exports.DEFAULT_CONFIG.roleSync, ...v?.roleSync }, requests: { ...exports.DEFAULT_CONFIG.requests, ...v?.requests } };
+        return { ...exports.DEFAULT_CONFIG, ...v, roleSync: { ...exports.DEFAULT_CONFIG.roleSync, ...v?.roleSync }, requests: { ...exports.DEFAULT_CONFIG.requests, ...v?.requests, panel: { ...exports.DEFAULT_PANEL, ...v?.requests?.panel }, form: normalizeForm(v?.requests?.form) } };
     }
     async saveConfig(actor, next, action, before, after) {
         await this.prisma.$transaction(async (tx) => {
@@ -82,7 +100,38 @@ let RadioWhitelistService = class RadioWhitelistService {
     }
     async updateRequestConfig(actor, b) {
         const cur = await this.config();
-        return this.saveConfig(actor, { ...cur, requests: b.requests, notifyMembers: b.notifyMembers }, 'radio.config.requests', { requests: cur.requests, notifyMembers: cur.notifyMembers }, b);
+        return this.saveConfig(actor, { ...cur, requests: { ...b.requests, form: normalizeForm(b.requests.form) }, notifyMembers: b.notifyMembers }, 'radio.config.requests', { requests: cur.requests, notifyMembers: cur.notifyMembers }, b);
+    }
+    /** Antrags-Panel in den eingestellten Kanal setzen bzw. dort aktualisieren (gleiche Nachricht, kein Doppel). */
+    async postRequestPanel(actor) {
+        const cfg = await this.config();
+        const p = cfg.requests.panel;
+        if (!p.channelId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte zuerst einen Kanal für das Antrags-Panel wählen und speichern.');
+        if (!cfg.requests.enabled)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Anträge über Discord sind ausgeschaltet – das Panel hätte keine Funktion.');
+        await this.prisma.$transaction(async (tx) => {
+            await tx.discordOutbox.create({ data: { type: 'message.post', channelKey: 'announcements', payload: { channelId: p.channelId, stateKey: PANEL_STATE_KEY, message: {
+                            embeds: [{ title: p.title.slice(0, 256), description: p.text.slice(0, 4000), color: hexColor(p.color) }],
+                            buttons: [{ id: 'rwreq:open', label: p.buttonLabel.slice(0, 80), style: 'primary', emoji: '🎙️' }],
+                        } } } });
+            await this.audit.record(actor, { action: 'radio.panel.posted', module: MODULE, entityType: 'RadioWhitelistConfig', after: { channelId: p.channelId }, serverId: null }, tx);
+        });
+        return { queued: true };
+    }
+    /** Meldung eines Antrags für die Leitung: offen mit Buttons Genehmigen/Ablehnen, nach der Entscheidung ohne Buttons. */
+    requestMessage(r, decidedBy) {
+        const answers = Array.isArray(r.answers) ? r.answers : [];
+        const lines = [`**Mitglied:** <@${r.discordId}> (${r.discordId})`, ...(r.rank ? [`**Dienstgrad:** ${r.rank}`] : []), ...(r.department ? [`**Abteilung:** ${r.department}`] : []), `**Begründung:** ${r.reason}`, ...answers.map((a) => `**${a.label}:** ${a.value}`)];
+        if (r.status === 'PENDING') {
+            return {
+                embeds: [{ title: '🎙️ Antrag auf Funkfreigabe', description: lines.join('\n').slice(0, 3900), color: 0x3b82f6 }],
+                buttons: [{ id: `rwreq:approve:${r.id}`, label: 'Genehmigen', style: 'success', emoji: '✅' }, { id: `rwreq:reject:${r.id}`, label: 'Ablehnen', style: 'danger', emoji: '❌' }],
+            };
+        }
+        const ok = r.status === 'APPROVED';
+        const head = `${ok ? '✅ Genehmigt' : '❌ Abgelehnt'}${decidedBy ? ` von ${decidedBy}` : ''}${r.decisionReason ? `\n**Grund:** ${r.decisionReason}` : ''}${ok && r.grantExpiresAt ? `\n**Gültig bis:** ${this.day(r.grantExpiresAt)}` : ''}`;
+        return { embeds: [{ title: '🎙️ Antrag auf Funkfreigabe', description: `${lines.join('\n')}\n\n${head}`.slice(0, 3900), color: ok ? 0x22c55e : 0xef4444 }], buttons: [] };
     }
     /** Der eine fest konfigurierte Discord-Server: DISCORD_GUILD_ID, sonst Einstellungen → Discord, sonst der einzige gemeldete Server. */
     async mainGuildId() {
@@ -433,13 +482,19 @@ let RadioWhitelistService = class RadioWhitelistService {
                 if (open)
                     throw new errors_1.AppError('CONFLICT', `Du hast bereits einen offenen Antrag (seit ${this.day(open.createdAt)}).`);
             }
-            const r = await tx.radioRequest.create({ data: { discordId: b.discordId, discordName: clip(b.discordName, 100), guildId: b.guildId, rank: clip(b.rank, 80), department: clip(b.department, 80), reason: b.reason.slice(0, 1000) } });
+            // eigene Felder nur so, wie sie im Formular eingestellt sind (Beschriftung zum Zeitpunkt des Antrags gespeichert)
+            const custom = cfg.requests.form.fields.filter((f) => !['reason', 'rank', 'department'].includes(f.key));
+            for (const f of custom)
+                if (f.required && !(b.answers?.[f.key] ?? '').trim())
+                    throw new errors_1.AppError('VALIDATION_FAILED', `Bitte „${f.label}“ ausfüllen.`);
+            const answers = custom.map((f) => ({ key: f.key, label: f.label, value: (b.answers?.[f.key] ?? '').trim().slice(0, f.maxLength) })).filter((a) => a.value);
+            const r = await tx.radioRequest.create({ data: { discordId: b.discordId, discordName: clip(b.discordName, 100), guildId: b.guildId, rank: clip(b.rank, 80), department: clip(b.department, 80), reason: b.reason.slice(0, 1000), ...(answers.length ? { answers } : {}) } });
             await this.audit.record(SYSTEM, { action: 'radio.request.created', module: MODULE, entityType: 'RadioRequest', entityId: r.id, after: { discordId: r.discordId, discordName: r.discordName, rank: r.rank, department: r.department }, reason: r.reason, serverId: null }, tx);
             return r;
         });
         void this.notify.notifyPermission('radiowhitelist.requests', { type: 'RADIO_REQUEST', title: `🎙️ Neuer Antrag auf Funkfreigabe: ${req.discordName ?? req.discordId}`, body: req.reason.slice(0, 200), entityType: 'RadioRequest', entityId: req.id }).catch(() => undefined);
         if (cfg.requests.notifyChannelId) {
-            await this.prisma.discordOutbox.create({ data: { type: 'message.post', channelKey: 'announcements', payload: { channelId: cfg.requests.notifyChannelId, forceNew: true, message: { embeds: [{ title: '🎙️ Neuer Antrag auf Funkfreigabe', description: `**Mitglied:** <@${req.discordId}> (${req.discordId})\n${req.rank ? `**Dienstgrad:** ${req.rank}\n` : ''}${req.department ? `**Abteilung:** ${req.department}\n` : ''}**Begründung:** ${req.reason}`.slice(0, 3900), color: 0x3b82f6 }] } } } }).catch(() => undefined);
+            await this.prisma.discordOutbox.create({ data: { type: 'message.post', channelKey: 'announcements', payload: { channelId: cfg.requests.notifyChannelId, stateKey: requestStateKey(req.id), message: this.requestMessage(req) } } }).catch(() => undefined);
         }
         return { id: req.id, status: req.status, createdAt: req.createdAt };
     }
@@ -475,7 +530,16 @@ let RadioWhitelistService = class RadioWhitelistService {
             await this.afterChange(out.grant.row, out.grant.before, text, b.reason, { forceDm: true });
         else
             await this.prisma.discordOutbox.create({ data: { type: 'bot.dm', channelKey: 'announcements', payload: { discordId: out.req.discordId, message: { embeds: [{ title: '🎙️ Funk-Whitelist', description: text.slice(0, 3900), color: 0xef4444 }] } } } }).catch(() => undefined);
-        return (await this.requestViews([(await this.prisma.radioRequest.findUnique({ where: { id } }))]))[0];
+        const final = (await this.prisma.radioRequest.findUnique({ where: { id } }));
+        const [view] = await this.requestViews([final]);
+        // Meldung im Leitungskanal anpassen (Entscheidung eintragen, Buttons weg) – egal ob im Dashboard oder in Discord entschieden
+        const cfg = await this.config();
+        if (cfg.requests.notifyChannelId) {
+            const link = actor.userId ? await this.prisma.discordLink.findUnique({ where: { userId: actor.userId } }) : null;
+            const by = link ? `<@${link.discordId}>${view.decidedByName ? ` (${view.decidedByName})` : ''}` : view.decidedByName;
+            await this.prisma.discordOutbox.create({ data: { type: 'message.post', channelKey: 'announcements', payload: { channelId: cfg.requests.notifyChannelId, stateKey: requestStateKey(id), message: this.requestMessage(final, by) } } }).catch(() => undefined);
+        }
+        return view;
     }
     /** Status für das Mitglied selbst (Bot: `/funkantrag status`). */
     async memberStatus(discordId) {
@@ -486,7 +550,7 @@ let RadioWhitelistService = class RadioWhitelistService {
         ]);
         return {
             status: grant ? (grant.archivedAt ? 'REVOKED' : (0, shared_1.effectiveRadioStatus)(grant)) : null, authorized: !!grant && !grant.archivedAt && (0, shared_1.isRadioAuthorized)(grant),
-            expiresAt: grant?.expiresAt ?? null, suspendedUntil: grant?.suspendedUntil ?? null, pendingSince: pending?.createdAt ?? null, requestsEnabled: cfg.requests.enabled,
+            expiresAt: grant?.expiresAt ?? null, suspendedUntil: grant?.suspendedUntil ?? null, pendingSince: pending?.createdAt ?? null, requestsEnabled: cfg.requests.enabled, form: cfg.requests.form,
         };
     }
     // ================= Discord-Rollenabgleich =================

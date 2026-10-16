@@ -24,6 +24,11 @@ export declare class EmbedsController {
             messageId: string;
         } | null;
         reactions: string[];
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -31,11 +36,6 @@ export declare class EmbedsController {
         timestamp: boolean;
         timestampAt: string | null;
         pingRoles: boolean;
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
     }[]>;
     save(a: Actor, id: string, b: EmbedDoc): Promise<{
         id: string;
@@ -56,6 +56,11 @@ export declare class EmbedsController {
             messageId: string;
         } | null;
         reactions: string[];
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -63,11 +68,6 @@ export declare class EmbedsController {
         timestamp: boolean;
         timestampAt: string | null;
         pingRoles: boolean;
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
     }>;
     duplicate(a: Actor, id: string): Promise<{
         id: string;
@@ -88,6 +88,11 @@ export declare class EmbedsController {
             messageId: string;
         } | null;
         reactions: string[];
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -95,11 +100,6 @@ export declare class EmbedsController {
         timestamp: boolean;
         timestampAt: string | null;
         pingRoles: boolean;
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
     }>;
     remove(a: Actor, id: string): Promise<void>;
     send(a: Actor, id: string, b: {

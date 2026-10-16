@@ -35,7 +35,12 @@ const rolesB = z.object({
   roleSync: z.object({ enabled: z.boolean(), grantRoleIds: roleIds, requiredRoleIds: roleIds, onRoleGain: z.enum(['ACTIVATE', 'PENDING', 'NONE']), onRoleLoss: z.enum(['REVOKE', 'DISABLE', 'NONE']), manualOnRoleLoss: z.enum(['KEEP', 'DISABLE', 'REVOKE']) }),
   radioRoleIds: roleIds,
 });
-const requestsB = z.object({ requests: z.object({ enabled: z.boolean(), preventDuplicates: z.boolean(), notifyChannelId: snowflake.nullable() }), notifyMembers: z.boolean() });
+const panelB = z.object({ channelId: snowflake.nullable(), title: text(256).min(1), text: text(4000).min(1), buttonLabel: text(80).min(1), color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #RRGGBB.') });
+const formField = z.object({ key: z.string().regex(/^[a-z0-9_]{1,30}$/, 'Feld-Schlüssel: nur a–z, 0–9, _'), label: text(45).min(1), placeholder: text(100).default(''), paragraph: z.boolean(), required: z.boolean(), maxLength: z.number().int().min(1).max(1000) });
+const formB = z.object({ title: text(45).min(1), fields: z.array(formField).min(1).max(5, 'Discord erlaubt höchstens 5 Felder.') })
+  .refine((f) => new Set(f.fields.map((x) => x.key)).size === f.fields.length, 'Jedes Feld braucht einen eigenen Schlüssel.')
+  .refine((f) => f.fields.some((x) => x.key === 'reason'), 'Das Feld „Begründung“ (reason) muss enthalten sein.');
+const requestsB = z.object({ requests: z.object({ enabled: z.boolean(), preventDuplicates: z.boolean(), notifyChannelId: snowflake.nullable(), panel: panelB, form: formB }), notifyMembers: z.boolean() });
 const integrationB = z.object({
   provider: z.enum(['NONE', 'ZELLO_WORK', 'ZELLO_APP', 'OTHER_MANUAL']), displayName: text(80).min(1), network: optText(63), channel: optText(100), adminUsername: optText(100),
   password: z.string().max(200).optional(), apiKey: z.string().max(500).optional(), clearCredentials: z.boolean().optional(), autoSync: z.boolean(), version: z.number().int().positive(),
@@ -92,6 +97,8 @@ export class RadioWhitelistController {
   roles(@CurrentActor() a: Actor, @Body(zodBody(rolesB)) b: Z<typeof rolesB>) { return this.s.updateRoleConfig(a, b); }
   @Put('config/requests') @RequirePermission('radiowhitelist.requests')
   requestConfig(@CurrentActor() a: Actor, @Body(zodBody(requestsB)) b: Z<typeof requestsB>) { return this.s.updateRequestConfig(a, b); }
+  @Post('request-panel') @HttpCode(202) @RequirePermission('radiowhitelist.requests')
+  requestPanel(@CurrentActor() a: Actor) { return this.s.postRequestPanel(a); }
   @Get('role-sync') @RequirePermission('radiowhitelist.view')
   roleSyncStatus() { return this.s.roleSyncStatus(); }
   @Post('role-sync/run') @HttpCode(202) @RequirePermission('radiowhitelist.roles')
@@ -129,7 +136,7 @@ export class RadioWhitelistController {
   remove(@CurrentActor() a: Actor, @Body(zodBody(target)) b: Z<typeof target>) { return this.s.legacyRemove(a, b); }
 }
 
-const botRequestB = z.object({ guildId: snowflake.nullable(), discordId: snowflake, discordName: optText(100), rank: optText(80), department: optText(80), reason: text(1000).min(10, 'Bitte begründe deinen Antrag (mind. 10 Zeichen).') });
+const botRequestB = z.object({ guildId: snowflake.nullable(), discordId: snowflake, discordName: optText(100), rank: optText(80), department: optText(80), reason: text(1000).min(3, 'Bitte begründe deinen Antrag.'), answers: z.record(z.string().regex(/^[a-z0-9_]{1,30}$/), z.string().max(1000)).optional() });
 const snapshotB = z.object({ guildId: snowflake, full: z.boolean().default(false), members: z.array(z.object({ discordId: snowflake, name: optText(100), roleIds: z.array(snowflake).max(250).nullable() })).max(1000) });
 
 /** Bot-Dienst (nur mit Bot-Token): Anträge aus Discord, Rollenstände für den Abgleich, Status für das Mitglied. */
