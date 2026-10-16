@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { INVESTIGATION_STATUSES } from '@enrp/shared';
@@ -12,6 +12,8 @@ const role = z.enum(INVESTIGATION_ROLES);
 const create = z.object({ title: z.string().trim().min(3).max(200), description: z.string().max(10000).optional(), leadId: z.string().uuid().optional(), persons: z.array(z.object({ personId: z.string().uuid(), role })).max(100).optional() });
 const addPerson = z.object({ personId: z.string().uuid(), role });
 const status = z.object({ status: z.enum(INVESTIGATION_STATUSES).refine((s) => s !== 'CLOSED', 'Abschließen bitte über die Abschließen-Aktion.'), reason: z.string().max(500).optional() });
+const update = z.object({ title: z.string().trim().min(3).max(200).optional(), description: z.string().max(10000).nullable().optional(), leadId: z.string().uuid().nullable().optional(), version: z.number().int().positive().optional() });
+const note = z.object({ text: z.string().trim().min(2).max(2000) });
 const listQ = pageQuery.extend({ status: z.enum(INVESTIGATION_STATUSES).optional() });
 
 @ApiTags('investigations')
@@ -24,6 +26,10 @@ export class InvestigationsController {
   get(@Param('id', ParseUUIDPipe) id: string) { return this.i.get(id); }
   @Post() @RequirePermission('investigations.create')
   create(@CurrentActor() a: Actor, @Body(zodBody(create)) b: z.infer<typeof create>) { return this.i.create(a, b); }
+  @Patch(':id') @RequirePermission('investigations.edit')
+  update(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(update)) b: z.infer<typeof update>) { return this.i.update(a, id, b); }
+  @Post(':id/notes') @RequirePermission('investigations.edit')
+  addNote(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(note)) b: z.infer<typeof note>) { return this.i.addNote(a, id, b.text); }
   @Post(':id/persons') @RequirePermission('investigations.edit')
   addPerson(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(addPerson)) b: z.infer<typeof addPerson>) { return this.i.addPerson(a, id, b.personId, b.role); }
   @Put(':id/status') @RequirePermission('investigations.edit')

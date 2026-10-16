@@ -1,7 +1,7 @@
 import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
-import { InvestigationPersons } from '../components/InvestigationPersons';
+import { InvestigationEdit, InvestigationPersons } from '../components/InvestigationPersons';
 import { WantedHitList, WantedHitsNotice } from './WantedHits';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
@@ -89,7 +89,9 @@ export const records: Record<string, RecordConfig> = {
       { label: 'Schließen', perm: 'complaints.close', path: (id) => `/complaints/${id}/close`, show: (r) => r.status === 'RESOLVED' || r.status === 'SCREENING' },
     ] },
   investigations: { endpoint: '/investigations', queryKey: 'investigations', back: '/investigations', title: (r) => `Fall ${r.caseNumber}`, pick: nested('investigation'),
-    fields: [{ key: 'title', label: 'Titel' }, { key: 'description', label: 'Beschreibung' }, { key: 'leadId', label: 'Leitung', render: (_v, r) => link(r, 'leadId') }, { key: 'createdAt', label: 'Eröffnet' }],
+    fields: [{ key: 'title', label: 'Titel' }, { key: 'description', label: 'Beschreibung', render: (v) => (v ? <span className="whitespace-pre-wrap">{String(v)}</span> : '—') }, { key: 'lead', label: 'Leitung', render: (v) => s((v as Row | null)?.displayName) }, { key: 'createdAt', label: 'Eröffnet' }, { key: 'updatedAt', label: 'Zuletzt geändert' }],
+    headerExtra: (r) => <InvestigationEdit record={r} />,
+    notes: { perm: 'investigations.edit', path: (id) => `/investigations/${id}/notes`, show: (r) => r.status !== 'ARCHIVED' },
     actions: [
       { label: 'Ermittlung aufnehmen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ACTIVE' }, reason: 'optional', show: (r) => r.status === 'OPEN' || r.status === 'SUSPENDED' },
       { label: 'Ruhen lassen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'SUSPENDED' }, reason: 'optional', show: (r) => r.status === 'ACTIVE' },

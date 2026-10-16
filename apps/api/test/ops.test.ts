@@ -137,6 +137,24 @@ describe('investigations, wanted, evidence', () => {
     expect((await admin.put(`/api/v1/investigations/${inv.id}/status`).send({ status: 'CLOSED' })).status).toBe(400);
     expect((await admin.put(`/api/v1/investigations/${inv.id}/status`).send({ status: 'ACTIVE' })).status).toBe(200);
   });
+  it('investigation: edit with version check, lead by name, notes with author in the timeline', async () => {
+    const admin = (await login(app, 'o_admin')).agent;
+    const officer = (await login(app, 'o_officer')).agent;
+    const sup = await prisma.user.findUniqueOrThrow({ where: { username: 'o_sup' } });
+    const inv = (await admin.post('/api/v1/investigations').send({ title: 'Bank job' })).body;
+    expect((await admin.get(`/api/v1/investigations/${inv.id}`)).body.investigation.lead.displayName).toBe('o_admin');
+    const up = await admin.patch(`/api/v1/investigations/${inv.id}`).send({ title: 'Bank job (Downtown)', leadId: sup.id, version: inv.version });
+    expect(up.status).toBe(200);
+    expect((await admin.patch(`/api/v1/investigations/${inv.id}`).send({ title: 'stale', version: inv.version })).status).toBe(409);
+    expect((await officer.patch(`/api/v1/investigations/${inv.id}`).send({ title: 'nope' })).status).toBe(403);
+    expect((await admin.post(`/api/v1/investigations/${inv.id}/notes`).send({ text: 'x' })).status).toBe(400);
+    expect((await admin.post(`/api/v1/investigations/${inv.id}/notes`).send({ text: 'Zeuge befragt' })).status).toBe(201);
+    const d = (await admin.get(`/api/v1/investigations/${inv.id}`)).body;
+    expect(d.investigation.title).toBe('Bank job (Downtown)');
+    expect(d.investigation.lead.displayName).toBe('o_sup');
+    const note = d.timeline.find((t: { action: string }) => t.action === 'investigation.note');
+    expect(note).toMatchObject({ summary: 'Zeuge befragt', actorName: 'o_admin' });
+  });
   it('wanted: one active record per subject, clear needs permission+reason, expiry honoured', async () => {
     const admin = (await login(app, 'o_admin')).agent;
     const o = (await login(app, 'o_officer')).agent;

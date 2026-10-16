@@ -123,7 +123,8 @@ function Guard({ perm, area, children }: { perm?: string; area?: string; childre
   return <ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<SkeletonRows />}>{children}</Suspense></ErrorBoundary>;
 }
 
-const list = (cfg: Parameters<typeof ResourcePage>[0]['cfg'], perm: string) => <Guard perm={perm}><ResourcePage cfg={cfg} /></Guard>;
+// key: beim Wechsel zwischen Listen (Personen → Fahrzeuge) startet die Seite frisch statt Suche/Seite mitzunehmen
+const list = (cfg: Parameters<typeof ResourcePage>[0]['cfg'], perm: string) => <Guard perm={perm}><ResourcePage key={cfg.endpoint + (cfg.detailPath?.({ id: '' }) ?? '')} cfg={cfg} /></Guard>;
 const rec = (key: keyof typeof R.records, perm: string) => <Guard perm={perm}><RecordPage cfg={R.records[key]!} /></Guard>;
 
 export function App() {

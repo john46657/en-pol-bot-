@@ -165,7 +165,7 @@ export function PageHeader({ title, subtitle, actions, icon }: { title: string; 
         {icon ? <IconTile icon={icon} /> : icon !== false && inRouter && <SectionIcon />}
         <div className="min-w-0"><h1 className="text-xl font-semibold leading-tight">{stripEmoji(title)}</h1>{subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}</div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:[&>*]:flex-1">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:[&>a]:flex-1 max-sm:[&>button]:flex-1">{actions}</div>}
     </div>
   );
 }

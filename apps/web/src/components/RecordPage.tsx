@@ -14,6 +14,10 @@ export interface RecordConfig {
   pick: (d: Record<string, unknown>) => { record: Record<string, unknown>; timeline?: TimelineItem[] };
   fields: { key: string; label: string; render?: (v: unknown, r: Record<string, unknown>) => ReactNode }[];
   actions?: RecordAction[]; extra?: (r: Record<string, unknown>, d: Record<string, unknown>) => ReactNode;
+  /** Zusätzliche Schaltflächen im Seitenkopf (z. B. Bearbeiten). */
+  headerExtra?: (r: Record<string, unknown>) => ReactNode;
+  /** Notizen in den Verlauf schreiben (unveränderlich, mit Verfasser). */
+  notes?: { perm: string; path: (id: string) => string; show?: (r: Record<string, unknown>) => boolean };
 }
 
 export function RecordPage({ cfg }: { cfg: RecordConfig }) {
@@ -39,7 +43,7 @@ export function RecordPage({ cfg }: { cfg: RecordConfig }) {
     <>
       <Button variant="ghost" size="sm" onClick={() => nav(cfg.back)} className="mb-2"><ArrowLeft size={14} />Zurück</Button>
       <PageHeader title={cfg.title(record)} subtitle={typeof record.status === 'string' ? undefined : undefined}
-        actions={<>{typeof record.status === 'string' && <StatusBadge status={record.status} />}{visible.map((a) => <Button key={a.label} variant={a.danger ? 'danger' : 'secondary'} onClick={() => click(a)} disabled={run.isPending}>{a.label}</Button>)}</>} />
+        actions={<>{typeof record.status === 'string' && <StatusBadge status={record.status} />}{cfg.headerExtra?.(record)}{visible.map((a) => <Button key={a.label} variant={a.danger ? 'danger' : 'secondary'} onClick={() => click(a)} disabled={run.isPending}>{a.label}</Button>)}</>} />
       {err && !pending && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err.message}{err.requestId && <span className="ml-2 text-xs opacity-70">Anfrage-ID: {err.requestId}</span>}</div>}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Details" className="lg:col-span-2">
@@ -48,7 +52,10 @@ export function RecordPage({ cfg }: { cfg: RecordConfig }) {
           </dl>
           {cfg.extra?.(record, q.data)}
         </Card>
-        <Card title="Verlauf"><Timeline items={timeline} /></Card>
+        <Card title="Verlauf">
+          {cfg.notes && can(cfg.notes.perm) && (cfg.notes.show?.(record) ?? true) && <NoteForm path={cfg.notes.path(id)} onDone={() => void qc.invalidateQueries({ queryKey: [cfg.queryKey] })} />}
+          <Timeline items={timeline} />
+        </Card>
       </div>
       <Modal open={!!pending} title={pending?.label ?? ''} onClose={() => { setPending(undefined); setErr(undefined); }}>
         <Field label={`Begründung${pending?.reason === 'required' ? ' *' : ''}`}>{(fid) => <Textarea id={fid} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>
@@ -56,5 +63,17 @@ export function RecordPage({ cfg }: { cfg: RecordConfig }) {
         <div className="mt-4 flex justify-end gap-2"><Button variant="secondary" onClick={() => setPending(undefined)}>Abbrechen</Button><Button variant={pending?.danger ? 'danger' : 'primary'} disabled={run.isPending || (pending?.reason === 'required' && reason.trim().length < 3)} onClick={() => pending && run.mutate(pending)}>Bestätigen</Button></div>
       </Modal>
     </>
+  );
+}
+
+function NoteForm({ path, onDone }: { path: string; onDone: () => void }) {
+  const [text, setText] = useState('');
+  const add = useMutation({ mutationFn: () => api(path, { method: 'POST', body: { text: text.trim() } }), onSuccess: () => { setText(''); onDone(); } });
+  return (
+    <form className="mb-4 space-y-2" onSubmit={(e) => { e.preventDefault(); if (text.trim().length >= 2) add.mutate(); }}>
+      <Textarea aria-label="Notiz" rows={2} maxLength={2000} placeholder="Notiz zum Verlauf hinzufügen…" value={text} onChange={(e) => setText(e.target.value)} />
+      {add.error && <p role="alert" className="text-xs text-danger">{add.error instanceof ApiError ? add.error.message : 'Fehlgeschlagen'}</p>}
+      <div className="flex justify-end"><Button size="sm" type="submit" disabled={add.isPending || text.trim().length < 2}>Notiz speichern</Button></div>
+    </form>
   );
 }
