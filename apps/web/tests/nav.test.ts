@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { href, isActive, NAV, navFor, sectionFor, visible, visibleTabs } from '../src/nav';
+import { GROUPS, href, isActive, NAV, navFor, searchNav, sectionFor, visible, visibleTabs } from '../src/nav';
 
 const canOnly = (...perms: string[]) => (p: string) => perms.includes(p);
 const leit = NAV.find((n) => n.label === 'Leitstelle')!;
@@ -25,6 +25,28 @@ describe('Menü mit zusammengefassten Punkten', () => {
   });
   it('alte Favoriten zeigen auf den neuen Menüpunkt', () => {
     expect(navFor(NAV, '/teamlist')?.label).toBe('Team');
-    expect(navFor(NAV, '/admin/audit')?.label).toBe('Protokolle & Backups');
+    expect(navFor(NAV, '/admin/audit')?.label).toBe('Protokolle');
+  });
+});
+
+describe('Menüsuche und Gruppen', () => {
+  const all = () => true;
+  it('findet Menüpunkte über Namen, Suchbegriffe und Reiter (ohne Akzente/Groß-Klein)', () => {
+    expect(searchNav(NAV, 'ermittl', all)[0]?.item.label).toBe('Ermittlungen');
+    expect(searchNav(NAV, 'abstimmung', all)[0]?.item.path).toBe('/announcements');
+    const hit = searchNav(NAV, 'Beforderung', all)[0]!;
+    expect(hit.item.label).toBe('Personal');
+    expect(hit.to).toBe('/promotions');
+    expect(hit.via).toBe('Beförderungen');
+    expect(searchNav(NAV, '  ', all)).toEqual([]);
+  });
+  it('Reiter-Treffer nur mit Recht für den Reiter', () => {
+    expect(searchNav(NAV, 'backups', (p) => p !== 'settings.manage').some((h) => h.to === '/admin/backups')).toBe(false);
+  });
+  it('jeder Menüpunkt gehört zu einer bekannten Gruppe; Menünamen ohne Emojis', () => {
+    for (const n of NAV) {
+      expect(GROUPS).toContain(n.group);
+      for (const l of [n.label, ...(n.tabs ?? []).map((t) => t.label)]) expect(l).not.toMatch(/\p{Extended_Pictographic}/u);
+    }
   });
 });

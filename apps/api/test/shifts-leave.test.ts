@@ -142,6 +142,10 @@ describe('Leave of Absences', () => {
     expect(await svc.tick()).toEqual({ started: 0, ended: 0 });
     expect(await lastOutbox('member.roles')).toMatchObject({ discordId: OFF_D, add: [R.loa], remove: [] });
     expect((await lead.get('/api/v1/leave?status=ACTIVE')).body.items.map((x: { id: string }) => x.id)).toEqual([mine.id]);
+    // Kalender: laufende/genehmigte ja, abgelehnte nicht
+    const cal = (await lead.get('/api/v1/leave?status=CALENDAR')).body.items.map((x: { id: string }) => x.id);
+    expect(cal).toContain(mine.id);
+    expect(cal).not.toContain(other.id);
     // vorzeitig beenden (eigene) → Rolle weg, Log
     const end = await off.post(`/api/v1/leave/${mine.id}/cancel`);
     expect(end.body.status).toBe('ENDED');

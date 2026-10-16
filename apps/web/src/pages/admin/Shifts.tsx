@@ -7,7 +7,7 @@ import { errText } from '../../lib/tickets';
 import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { Toggle } from '../../components/ApplicationSettings';
 import { WeeklyResetSettings } from '../../components/WeeklyRanking';
-import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Modal, Select, SkeletonRows, StatusBadge } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Modal, Select, SkeletonRows, StatusBadge, confirmDialog } from '../../components/ui';
 
 export interface ShiftType { id: string; name: string; isDefault: boolean; onShiftRoleIds: string[]; onBreakRoleIds: string[]; logChannelId?: string | null }
 export interface ShiftReminder { enabled: boolean; afterMinutes: number; autoOffMinutes: number }
@@ -56,7 +56,7 @@ export function Shifts() {
   if (q.isLoading || !q.data) return <SkeletonRows />;
   const cfg = q.data;
   const put = (types: ShiftType[], enabled = cfg.enabled, reminder = cfg.reminder) => save.mutate({ enabled, types, ...(reminder ? { reminder } : {}) });
-  const remove = (t: ShiftType) => { if (confirm(`Schichtart „${t.name}“ löschen?`)) put(cfg.types.filter((x) => x.id !== t.id).map((x, i) => ({ ...x, isDefault: t.isDefault ? i === 0 : x.isDefault }))); };
+  const remove = (t: ShiftType) => { void confirmDialog(`Schichtart „${t.name}“ löschen?`).then((ok) => { if (ok) put(cfg.types.filter((x) => x.id !== t.id).map((x, i) => ({ ...x, isDefault: t.isDefault ? i === 0 : x.isDefault }))); }) };
   const startNew = () => setEdit({ isNew: true, type: { id: '', name: '', isDefault: cfg.types.length === 0, onShiftRoleIds: [], onBreakRoleIds: [], logChannelId: null } });
   return (
     <>

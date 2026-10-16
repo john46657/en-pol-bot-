@@ -8,7 +8,7 @@ import { useAuth } from '../../lib/auth';
 import { useAutosaveDraft } from '../../lib/autosave';
 import { usePrefs, type Preferences } from '../../lib/prefs';
 import { ago, type CadIncidentRow, type CadUnitRow } from '../../lib/cad';
-import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea, fmt } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea, fmt, confirmDialog } from '../../components/ui';
 
 export interface FleetVehicle {
   id: string; erlcServerId: string; serverName: string; key: string; active: boolean; uncertain: boolean; stale: boolean;
@@ -278,7 +278,7 @@ function Catalog() {
               </div>
               {m.description && <p className="mt-2 text-sm">{m.description}</p>}
               {m.tags.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{m.tags.map((t) => <Badge key={t}>{t}</Badge>)}</div>}
-              {manage && <div className="mt-2 flex justify-end gap-1"><Button size="sm" variant="secondary" onClick={() => setEdit(m)}>Bearbeiten</Button><Button size="sm" variant="ghost" aria-label={`${m.name} löschen`} onClick={() => { if (confirm(`„${m.name}“ aus dem Katalog löschen?`)) del.mutate(m.id); }}><Trash2 size={14} /></Button></div>}
+              {manage && <div className="mt-2 flex justify-end gap-1"><Button size="sm" variant="secondary" onClick={() => setEdit(m)}>Bearbeiten</Button><Button size="sm" variant="ghost" aria-label={`${m.name} löschen`} onClick={() => { void confirmDialog(`„${m.name}“ aus dem Katalog löschen?`).then((ok) => { if (ok) del.mutate(m.id); }) }}><Trash2 size={14} /></Button></div>}
             </Card>
           ))}
         </div>

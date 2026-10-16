@@ -38,4 +38,30 @@ export class AnalyticsController {
     }
     return out;
   }
+
+  /**
+   * Tagesverlauf für Diagramme (Tage in Europe/Berlin). Gleiche Rechte wie die Übersicht – je Reihe die Fachpermission.
+   * Über Prisma-Abfragen (nicht SQL), damit die Server-Trennung automatisch greift.
+   */
+  @Get('trend') @RequirePermission('analytics.view')
+  async trend(@CurrentUser() u: AuthUser, @Query(zodBody(q)) f: z.infer<typeof q>) {
+    const ctx = await this.perms.contextFor(u.id);
+    const key = (d: Date) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+    const days = Array.from({ length: f.days }, (_, i) => key(new Date(Date.now() - (f.days - 1 - i) * 86_400_000)));
+    const since = new Date(`${days[0]}T00:00:00Z`); since.setTime(since.getTime() - 2 * 3_600_000); // Berlin ist UTC+1/+2
+    const count = (dates: Date[]) => { const m = new Map(days.map((d) => [d, 0])); for (const d of dates) { const k = key(d); if (m.has(k)) m.set(k, m.get(k)! + 1); } return [...m.values()]; };
+    const series: { key: string; label: string; unit: string; values: number[] }[] = [];
+    if (can(ctx, 'incidents.view')) series.push({ key: 'incidents', label: 'Einsätze erstellt', unit: 'Einsätze', values: count((await this.prisma.incident.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+    if (can(ctx, 'reports.review')) series.push({ key: 'reports', label: 'Berichte erstellt', unit: 'Berichte', values: count((await this.prisma.report.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+    if (can(ctx, 'applications.view')) series.push({ key: 'applications', label: 'Bewerbungen eingegangen', unit: 'Bewerbungen', values: count((await this.prisma.application.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+    if (can(ctx, 'wanted.view')) series.push({ key: 'wanted', label: 'Fahndungen angelegt', unit: 'Fahndungen', values: count((await this.prisma.wantedRecord.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } })).map((x) => x.createdAt)) });
+    if (can(ctx, 'personnel.view')) {
+      // Dienststunden je Tag nach Dienstbeginn (Schichten über Mitternacht zählen zum Starttag)
+      const sessions = await this.prisma.dutySession.findMany({ where: { startedAt: { gte: since }, status: 'ON_DUTY' }, select: { startedAt: true, endedAt: true } });
+      const m = new Map(days.map((d) => [d, 0]));
+      for (const x of sessions) { const k = key(x.startedAt); if (m.has(k)) m.set(k, m.get(k)! + ((x.endedAt ?? new Date()).getTime() - x.startedAt.getTime()) / 3_600_000); }
+      series.push({ key: 'duty', label: 'Dienststunden', unit: 'Stunden', values: [...m.values()].map((h) => Math.round(h * 10) / 10) });
+    }
+    return { days, series };
+  }
 }

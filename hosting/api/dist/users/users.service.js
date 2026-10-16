@@ -184,6 +184,19 @@ let UsersService = class UsersService {
             await this.audit.record(actor, { action: 'user.delete', module: 'users', entityType: 'User', entityId: id, before: { username: before.username, displayName: before.displayName, roles: before.roles.map((r) => r.role.name) } }, tx);
         });
     }
+    /** Passwort eines anderen Kontos neu setzen (nur unterhalb des eigenen Rangs); alle Sitzungen des Kontos enden, Sperre wird aufgehoben. */
+    async setPassword(actor, id, password) {
+        if (id === actor.userId)
+            throw new errors_1.AppError('CONFLICT', 'Dein eigenes Passwort änderst du unter Persönlich → Sicherheit.');
+        await this.get(id);
+        await this.perms.assertOutranksUser(actor.userId, id);
+        const passwordHash = await (0, password_1.hashPassword)(password);
+        await this.prisma.$transaction(async (tx) => {
+            await tx.user.update({ where: { id }, data: { passwordHash, failedLogins: 0, lockedUntil: null } });
+            await this.audit.record(actor, { action: 'user.password.reset', module: 'users', entityType: 'User', entityId: id }, tx);
+        });
+        await this.auth.revokeAllSessions(id);
+    }
     async setActive(actor, id, active, reason) {
         if (!active && id === actor.userId)
             throw new errors_1.AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');

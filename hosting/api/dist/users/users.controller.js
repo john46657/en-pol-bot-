@@ -21,6 +21,7 @@ const two_factor_service_1 = require("../auth/two-factor.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
+const passwordBody = zod_1.z.object({ password: zod_1.z.string().min(12, 'Mindestens 12 Zeichen').max(256) });
 exports.nameBody = zod_1.z.object({ displayName: zod_1.z.string().trim().min(1).max(64) });
 const createUser = zod_1.z.object({
     username: zod_1.z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9_.-]+$/),
@@ -51,6 +52,7 @@ let UsersController = class UsersController {
     permissions(id) { return this.users.permissions(id); }
     create(a, b) { return this.users.create(a, b); }
     setRoblox(a, id, b) { return this.users.setRoblox(a, id, b); }
+    async setPassword(a, id, b) { await this.users.setPassword(a, id, b.password); }
     setActive(a, id, b) { return this.users.setActive(a, id, b.active, b.reason); }
     /** Zwei-Faktor eines Kontos zurücksetzen (Handy verloren, keine Wiederherstellungscodes). */
     async resetTwoFactor(a, id) { await this.twoFactor.adminReset(a, id); }
@@ -104,6 +106,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "setRoblox", null);
+__decorate([
+    (0, common_1.Put)(':id/password'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('users.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(passwordBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "setPassword", null);
 __decorate([
     (0, common_1.Put)(':id/active'),
     (0, decorators_1.RequirePermission)('users.manage'),

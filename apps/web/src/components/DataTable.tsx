@@ -9,7 +9,7 @@ import { usePrefs } from '../lib/prefs';
 export const VIRTUAL_FROM = 60;
 export const PAGE_SIZES = [25, 50, 100, 250, 500] as const;
 
-export interface Column<T> { key: string; label: string; render?: (row: T) => ReactNode; className?: string }
+export interface Column<T> { key: string; label: string; render?: (row: T) => ReactNode; className?: string; /** Wert für den CSV-Export (sonst: Text der Anzeige bzw. Rohwert). */ csv?: (row: T) => unknown }
 
 /** Persönliche Zeilenzahl pro Seite (gilt für alle Tabellen, auf jedem Gerät). */
 export function useTablePageSize(): [number, (n: number) => void] {

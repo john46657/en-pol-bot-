@@ -6,7 +6,7 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { AppError } from '../common/errors';
 import { DiscordService } from '../discord/discord.service';
-import { nextStatus } from '../common/transition';
+import { changedFields, nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { makeNumber } from '../common/numbering';
 
@@ -55,6 +55,24 @@ export class WantedService {
       // Discord: Fahndungs-Channel (Einstellungen → Discord-Bot-Channels → Wanted) – egal ob aus Dashboard oder Discord angelegt
       await this.discord.enqueue('wanted', 'wanted.created', { id: w.id, reason: w.reason, description: w.description ?? null, priority: w.priority, subject: subject ?? 'unknown', kind: w.personId ? 'person' : 'vehicle', expiresAt: w.expiresAt?.toISOString() ?? null, createdBy: by ?? null, dashboardUrl: webUrl(`/wanted/${w.id}`) });
       return w;
+    });
+  }
+
+  /** Grund, Beschreibung, Priorität und Ablauf einer aktiven Fahndung ändern (Versionsprüfung). */
+  async update(actor: Actor, id: string, d: { reason?: string; description?: string | null; priority?: string; expiresAt?: Date | null; version?: number }) {
+    await this.expireDue();
+    if (d.expiresAt && d.expiresAt <= new Date()) throw new AppError('VALIDATION_FAILED', 'Das Ablaufdatum muss in der Zukunft liegen.');
+    return this.prisma.$transaction(async (tx) => {
+      const w = await tx.wantedRecord.findUnique({ where: { id } });
+      if (!w) throw new AppError('NOT_FOUND', 'Fahndung nicht gefunden.');
+      if (w.status !== 'ACTIVE') throw new AppError('CONFLICT', 'Nur aktive Fahndungen können bearbeitet werden.');
+      if (d.version !== undefined && d.version !== w.version) throw new AppError('CONFLICT', 'Die Fahndung wurde inzwischen geändert. Bitte neu laden.');
+      const data = changedFields(w, { ...(d.reason !== undefined ? { reason: d.reason } : {}), ...(d.description !== undefined ? { description: d.description || null } : {}), ...(d.priority !== undefined ? { priority: d.priority } : {}), ...(d.expiresAt !== undefined ? { expiresAt: d.expiresAt } : {}) });
+      const after = await tx.wantedRecord.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+      const changed = Object.keys(data).map((k) => ({ reason: 'Grund', description: 'Beschreibung', priority: 'Priorität', expiresAt: 'Ablauf' })[k]).join(', ');
+      await this.timeline.add(tx, { entityType: 'Wanted', entityId: id, action: 'wanted.updated', summary: `Geändert: ${changed || 'nichts'}`, actorId: actor.userId });
+      await this.audit.record(actor, { action: 'wanted.update', module: 'wanted', entityType: 'Wanted', entityId: id, before: { reason: w.reason, description: w.description, priority: w.priority, expiresAt: w.expiresAt }, after: data }, tx);
+      return after;
     });
   }
 

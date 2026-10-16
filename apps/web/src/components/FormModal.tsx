@@ -13,6 +13,8 @@ import { LockBanner, useEditLock, type LockType } from '../lib/locks';
 export interface FieldDef {
   name: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'person' | 'legalCode' | 'datetime' | 'date' | 'password';
   required?: boolean; options?: readonly string[]; hint?: string; max?: number; min?: number;
+  /** Anzeigename des vorbelegten Werts (z. B. Name der ausgewählten Person). */
+  display?: string;
 }
 
 function buildSchema(fields: FieldDef[]) {
@@ -28,10 +30,10 @@ function buildSchema(fields: FieldDef[]) {
 }
 
 /** Person suchen (Name oder Roblox-ID). Keine Akte? → Roblox fragen und die Akte mit einem Klick anlegen. */
-export function PersonPicker({ value, onChange, id }: { value: string; onChange: (id: string, label: string) => void; id: string }) {
+export function PersonPicker({ value, onChange, id, initialLabel = '' }: { value: string; onChange: (id: string, label: string) => void; id: string; initialLabel?: string }) {
   const { can } = useAuth();
   const [term, setTerm] = useState('');
-  const [label, setLabel] = useState('');
+  const [label, setLabel] = useState(initialLabel);
   const [err, setErr] = useState<string>();
   const q = useDebounced(term.trim(), 250);
   const res = useQuery({ queryKey: ['persons-pick', q], queryFn: () => api<Page<{ id: string; robloxUsername: string; robloxUserId: string | null }>>('/persons', { query: { q, pageSize: 8 } }), enabled: q.length >= 2 });
@@ -46,7 +48,7 @@ export function PersonPicker({ value, onChange, id }: { value: string; onChange:
   return (
     <div>
       <Input id={id} placeholder={value ? label : 'Roblox-Name oder Roblox-ID…'} value={term} onChange={(e) => setTerm(e.target.value)} autoComplete="off" />
-      {value && <p className="mt-1 text-xs text-success">Ausgewählt: {label || value}</p>}
+      {value && <p className="mt-1 flex items-center gap-2 text-xs text-success">Ausgewählt: {label || value}<button type="button" className="text-muted underline hover:text-fg" onClick={() => { onChange('', ''); setLabel(''); }}>entfernen</button></p>}
       {q.length >= 2 && res.data && (
         <ul role="listbox" className="mt-1 max-h-40 overflow-auto rounded border border-line bg-bg">
           {noMatch && !p && <li className="px-3 py-2 text-xs text-muted">{rb.isFetching ? 'Suche bei Roblox…' : 'Kein Treffer.'}</li>}
@@ -114,7 +116,7 @@ export function FormModal({ open, onClose, title, fields, endpoint, method, toBo
           <Field key={f.name} label={`${f.label}${f.required ? ' *' : ''}`} error={err(f.name)} hint={f.hint}>
             {(id) => f.type === 'textarea' ? <Textarea id={id} {...register(f.name)} />
               : f.type === 'select' ? <Select id={id} {...register(f.name)}><option value="">—</option>{f.options?.map((o) => <option key={o} value={o}>{optionLabel(o)}</option>)}</Select>
-              : f.type === 'person' ? <PersonPicker id={id} value={String(watch(f.name) ?? '')} onChange={(v) => setValue(f.name, v, { shouldValidate: true })} />
+              : f.type === 'person' ? <PersonPicker id={id} initialLabel={f.display} value={String(watch(f.name) ?? '')} onChange={(v) => setValue(f.name, v, { shouldValidate: true })} />
               : f.type === 'legalCode' ? <LegalCodePicker id={id} value={String(watch(f.name) ?? '')} onChange={(v) => setValue(f.name, v, { shouldValidate: true })} />
               : <Input id={id} type={f.type === 'number' ? 'number' : f.type === 'password' ? 'password' : f.type === 'datetime' ? 'datetime-local' : f.type === 'date' ? 'date' : 'text'} step={f.type === 'number' ? 'any' : undefined} {...register(f.name)} />}
           </Field>

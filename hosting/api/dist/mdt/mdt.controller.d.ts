@@ -199,6 +199,7 @@ export declare class MdtController {
     }>;
     citizen(a: Actor, id: string): Promise<{
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -395,6 +396,7 @@ export declare class MdtController {
             title: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

@@ -6,6 +6,7 @@ import { TimelineService } from '../timeline/timeline.service';
 import { StudioService } from '../studio/studio.service';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../common/errors';
+import { changedFields } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 
 const normPlate = (p: string) => p.toUpperCase().replace(/\s+/g, '');
@@ -42,6 +43,26 @@ export class VehiclesService {
       if (d.ownerId) await this.timeline.add(tx, { entityType: 'Person', entityId: d.ownerId, action: 'vehicle.linked', summary: `Fahrzeug ${plate} als Besitzer verknüpft`, actorId: actor.userId });
       await this.audit.record(actor, { action: 'vehicle.create', module: 'vehicles', entityType: 'Vehicle', entityId: v.id, after: v }, tx);
       return v;
+    });
+  }
+
+  /** Kennzeichen, Modell, Farbe, Halter, Notizen ändern (Versionsprüfung; Kennzeichen bleibt je Server eindeutig). */
+  async update(actor: Actor, id: string, d: { plate?: string; model?: string | null; color?: string | null; ownerId?: string | null; notes?: string | null; version?: number }) {
+    return this.prisma.$transaction(async (tx) => {
+      const v = await tx.vehicle.findUnique({ where: { id } });
+      if (!v) throw new AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
+      if (v.status === 'ARCHIVED') throw new AppError('CONFLICT', 'Archivierte Fahrzeuge können nicht bearbeitet werden.');
+      if (d.version !== undefined && d.version !== v.version) throw new AppError('CONFLICT', 'Das Fahrzeug wurde inzwischen geändert. Bitte neu laden.');
+      const plate = d.plate !== undefined ? normPlate(d.plate) : undefined;
+      if (plate && plate !== v.plate && (await tx.vehicle.findFirst({ where: { plate, serverId: v.serverId, NOT: { id } } }))) throw new AppError('CONFLICT', 'Es gibt schon ein Fahrzeug mit diesem Kennzeichen.');
+      if (d.ownerId && !(await tx.person.findUnique({ where: { id: d.ownerId } }))) throw new AppError('NOT_FOUND', 'Halter nicht gefunden.');
+      const data = changedFields(v, { ...(plate !== undefined ? { plate } : {}), ...(d.model !== undefined ? { model: d.model || null } : {}), ...(d.color !== undefined ? { color: d.color || null } : {}), ...(d.ownerId !== undefined ? { ownerId: d.ownerId } : {}), ...(d.notes !== undefined ? { notes: d.notes || null } : {}) });
+      const after = await tx.vehicle.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+      const changed = Object.keys(data).map((k) => ({ plate: 'Kennzeichen', model: 'Modell', color: 'Farbe', ownerId: 'Halter', notes: 'Notizen' })[k]).join(', ');
+      await this.timeline.add(tx, { entityType: 'Vehicle', entityId: id, action: 'vehicle.updated', summary: `Geändert: ${changed || 'nichts'}`, actorId: actor.userId });
+      if (d.ownerId && d.ownerId !== v.ownerId) await this.timeline.add(tx, { entityType: 'Person', entityId: d.ownerId, action: 'vehicle.linked', summary: `Fahrzeug ${after.plate} als Besitzer verknüpft`, actorId: actor.userId });
+      await this.audit.record(actor, { action: 'vehicle.update', module: 'vehicles', entityType: 'Vehicle', entityId: id, before: { plate: v.plate, model: v.model, color: v.color, ownerId: v.ownerId, notes: v.notes }, after: data }, tx);
+      return after;
     });
   }
 

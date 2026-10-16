@@ -64,6 +64,7 @@ export declare class ReportsService {
             currentVersion: number;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

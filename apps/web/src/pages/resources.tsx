@@ -1,12 +1,12 @@
 import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
-import { InvestigationPersons } from '../components/InvestigationPersons';
+import { InvestigationEdit, InvestigationPersons } from '../components/InvestigationPersons';
 import { WantedHitList, WantedHitsNotice } from './WantedHits';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
 import type { ResourceConfig } from '../components/ResourcePage';
-import type { RecordConfig } from '../components/RecordPage';
+import { RecordEdit, type RecordConfig } from '../components/RecordPage';
 import { fmt, PriorityBadge, StatusBadge, Badge, statusLabel } from '../components/ui';
 
 type Row = Record<string, unknown> & { id?: string };
@@ -89,7 +89,9 @@ export const records: Record<string, RecordConfig> = {
       { label: 'Schließen', perm: 'complaints.close', path: (id) => `/complaints/${id}/close`, show: (r) => r.status === 'RESOLVED' || r.status === 'SCREENING' },
     ] },
   investigations: { endpoint: '/investigations', queryKey: 'investigations', back: '/investigations', title: (r) => `Fall ${r.caseNumber}`, pick: nested('investigation'),
-    fields: [{ key: 'title', label: 'Titel' }, { key: 'description', label: 'Beschreibung' }, { key: 'leadId', label: 'Leitung', render: (_v, r) => link(r, 'leadId') }, { key: 'createdAt', label: 'Eröffnet' }],
+    fields: [{ key: 'title', label: 'Titel' }, { key: 'description', label: 'Beschreibung', render: (v) => (v ? <span className="whitespace-pre-wrap">{String(v)}</span> : '—') }, { key: 'lead', label: 'Leitung', render: (v) => s((v as Row | null)?.displayName) }, { key: 'createdAt', label: 'Eröffnet' }, { key: 'updatedAt', label: 'Zuletzt geändert' }],
+    headerExtra: (r) => <InvestigationEdit record={r} />,
+    notes: { perm: 'investigations.edit', path: (id) => `/investigations/${id}/notes`, show: (r) => r.status !== 'ARCHIVED' },
     actions: [
       { label: 'Ermittlung aufnehmen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ACTIVE' }, reason: 'optional', show: (r) => r.status === 'OPEN' || r.status === 'SUSPENDED' },
       { label: 'Ruhen lassen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'SUSPENDED' }, reason: 'optional', show: (r) => r.status === 'ACTIVE' },
@@ -100,6 +102,8 @@ export const records: Record<string, RecordConfig> = {
     extra: (r, d) => <><InvestigationPersons id={String(r.id)} status={String(r.status)} links={(d.links as never) ?? []} />{((d.evidence as Row[] | undefined)?.length ? <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Beweismittel</h3><ul className="text-sm">{(d.evidence as Row[]).map((e) => <li key={String(e.id)}><Link className="text-primary underline" to={`/evidence/${e.id}`}>{String(e.number)}</Link> · {String(e.type)} · <Badge>{statusLabel(String(e.custodyState))}</Badge></li>)}</ul></div> : null)}</> },
   wanted: { endpoint: '/wanted', queryKey: 'wanted', back: '/wanted', title: (r) => `Fahndung${r.number ? ` ${r.number}` : ''}: ${r.reason}`, pick: nested('wanted'),
     extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Fahndungstreffer (ER:LC)</h3><WantedHitList wantedId={String(r.id)} compact /></div>,
+    headerExtra: (r) => <RecordEdit record={r} perm="wanted.edit" endpoint={`/wanted/${r.id}`} queryKey="wanted" title="Fahndung bearbeiten" show={r.status === 'ACTIVE'}
+      fields={[{ name: 'reason', label: 'Grund', required: true, min: 3, max: 500 }, { name: 'priority', label: 'Priorität', type: 'select', required: true, options: PRIORITIES }, { name: 'description', label: 'Beschreibung', type: 'textarea', max: 5000 }, { name: 'expiresAt', label: 'Läuft ab (leer = nie)', type: 'datetime' }]} />,
     fields: [{ key: 'number', label: 'Fahndungsnummer' }, { key: 'reason', label: 'Grund' }, { key: 'description', label: 'Beschreibung' }, { key: 'priority', label: 'Priorität', render: (v) => <PriorityBadge priority={String(v)} /> }, { key: 'personId', label: 'Person', render: (_v, r) => r.personId ? <Link className="text-primary underline" to={`/persons/${r.personId}`}>Akte öffnen</Link> : '—' }, { key: 'expiresAt', label: 'Läuft ab' }],
     actions: [
       { label: 'Erledigen', perm: 'wanted.clear', path: (id) => `/wanted/${id}/clear`, reason: 'required', show: (r) => r.status === 'ACTIVE' },
@@ -111,8 +115,10 @@ export const records: Record<string, RecordConfig> = {
     fields: [{ key: 'priority', label: 'Priorität', render: (v) => <PriorityBadge priority={String(v)} /> }, { key: 'location', label: 'Ort' }, { key: 'description', label: 'Beschreibung' }, { key: 'source', label: 'Quelle' }, { key: 'createdAt', label: 'Erstellt' }, { key: 'closedAt', label: 'Geschlossen' }],
     actions: [{ label: 'Einsatz abbrechen', perm: 'dispatch.edit', path: (id) => `/dispatch/incidents/${id}/status`, method: 'PUT', danger: true, reason: 'optional', reasonField: 'note', body: { status: 'CANCELLED' }, show: (r) => !['CLOSED', 'CANCELLED'].includes(String(r.status)) }] },
   vehicles: { endpoint: '/vehicles', queryKey: 'vehicles', back: '/vehicles', title: (r) => `Fahrzeug ${r.plate}`, pick: nested('vehicle'),
-    fields: [{ key: 'model', label: 'Modell' }, { key: 'color', label: 'Farbe' }, { key: 'ownerId', label: 'Halter', render: (_v, r) => r.ownerId ? <Link className="text-primary underline" to={`/persons/${r.ownerId}`}>Akte öffnen</Link> : '—' }, { key: 'erlcReference', label: 'ER:LC-Referenz' }, { key: 'notes', label: 'Notizen' }],
-    actions: [{ label: 'Archivieren', perm: 'vehicles.archive', path: (id) => `/vehicles/${id}/archive`, danger: true, reason: 'required', show: (r) => r.status !== 'ARCHIVED' }] },
+    fields: [{ key: 'model', label: 'Modell' }, { key: 'color', label: 'Farbe' }, { key: 'ownerId', label: 'Halter', render: (_v, r) => r.ownerId ? <Link className="text-primary underline" to={`/persons/${r.ownerId}`}>{String((r.owner as Row | null)?.robloxUsername ?? 'Akte öffnen')}</Link> : '—' }, { key: 'erlcReference', label: 'ER:LC-Referenz' }, { key: 'notes', label: 'Notizen' }],
+    actions: [{ label: 'Archivieren', perm: 'vehicles.archive', path: (id) => `/vehicles/${id}/archive`, danger: true, reason: 'required', show: (r) => r.status !== 'ARCHIVED' }],
+    headerExtra: (r) => <RecordEdit record={r} perm="vehicles.edit" endpoint={`/vehicles/${r.id}`} queryKey="vehicles" title="Fahrzeug bearbeiten" show={r.status !== 'ARCHIVED'}
+      fields={[{ name: 'plate', label: 'Kennzeichen', required: true, min: 2, max: 16 }, { name: 'model', label: 'Modell', max: 64 }, { name: 'color', label: 'Farbe', max: 32 }, { name: 'ownerId', label: 'Halter', type: 'person', display: (r.owner as Row | null)?.robloxUsername as string | undefined }, { name: 'notes', label: 'Notizen', type: 'textarea', max: 2000 }]} /> },
   evidence: { endpoint: '/evidence', queryKey: 'evidence', back: '/evidence', title: (r) => `Beweismittel ${r.number}`, pick: (d) => ({ record: d as Row, timeline: undefined }),
     fields: [{ key: 'type', label: 'Art' }, { key: 'description', label: 'Beschreibung' }, { key: 'caseRef', label: 'Fall' }, { key: 'storageLocation', label: 'Lagerort' }, { key: 'custodyState', label: 'Verwahrungsstatus', render: (v) => <StatusBadge status={String(v)} /> }],
     actions: [{ label: 'Freigeben', perm: 'evidence.release', path: (id) => `/evidence/${id}/release`, reason: 'required', show: (r) => r.custodyState !== 'RELEASED' && r.custodyState !== 'ARCHIVED' }],

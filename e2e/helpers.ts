@@ -6,7 +6,11 @@ export async function uiLogin(page: Page, username: string, password: string, op
   await page.getByLabel('Benutzername').fill(username);
   await page.getByLabel('Passwort').fill(password);
   await page.getByRole('button', { name: 'Anmelden' }).click();
-  if (opts.expectSuccess ?? true) await page.waitForURL((u) => !u.pathname.startsWith('/login'));
+  if (opts.expectSuccess ?? true) {
+    await page.waitForURL((u) => !u.pathname.startsWith('/login') && u.pathname !== '/');
+    // Ohne gewählten Discord-Server startet die App in der Server-Übersicht – die Tests arbeiten im Dashboard weiter
+    if (new URL(page.url()).pathname === '/servers') await page.goto('/dashboard');
+  }
 }
 
 /** API-Client mit Admin-Session für das Anlegen von Testdaten (Node-Requests senden keinen Origin-Header). */

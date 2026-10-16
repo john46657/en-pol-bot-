@@ -237,6 +237,8 @@ export declare class UsersService {
      * System Administrator bleibt. Sitzungen, Rollen, Personalakte usw. gehen mit; im Audit-Log bleibt festgehalten, wer gelöscht wurde.
      */
     remove(actor: Actor, id: string): Promise<void>;
+    /** Passwort eines anderen Kontos neu setzen (nur unterhalb des eigenen Rangs); alle Sitzungen des Kontos enden, Sperre wird aufgehoben. */
+    setPassword(actor: Actor, id: string, password: string): Promise<void>;
     setActive(actor: Actor, id: string, active: boolean, reason?: string): Promise<{
         id: string;
         robloxUserId: string | null;

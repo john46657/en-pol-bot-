@@ -212,6 +212,7 @@ export declare class IncidentsController {
             entityType: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

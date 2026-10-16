@@ -22,6 +22,7 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const pagination_1 = require("../common/pagination");
 const create = zod_1.z.object({ personId: zod_1.z.string().uuid().optional(), vehicleId: zod_1.z.string().uuid().optional(), reason: zod_1.z.string().trim().min(3).max(500), description: zod_1.z.string().max(5000).optional(), priority: zod_1.z.enum(shared_1.PRIORITIES).optional(), expiresAt: zod_1.z.coerce.date().optional() });
+const update = zod_1.z.object({ reason: zod_1.z.string().trim().min(3).max(500).optional(), description: zod_1.z.string().max(5000).nullable().optional(), priority: zod_1.z.enum(shared_1.PRIORITIES).optional(), expiresAt: zod_1.z.coerce.date().nullable().optional(), version: zod_1.z.number().int().positive().optional() });
 const reason = zod_1.z.object({ reason: zod_1.z.string().trim().min(3).max(500) });
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.enum(shared_1.WANTED_STATUSES).optional() });
 let WantedController = class WantedController {
@@ -32,6 +33,7 @@ let WantedController = class WantedController {
     list(q) { return this.w.list(q, q.status); }
     get(id) { return this.w.get(id); }
     create(a, b) { return this.w.create(a, b); }
+    update(a, id, b) { return this.w.update(a, id, b); }
     activate(a, id, b) { return this.w.setStatus(a, id, 'ACTIVE', b.reason); }
     clear(a, id, b) { return this.w.setStatus(a, id, 'CLEARED', b.reason); }
     cancel(a, id, b) { return this.w.setStatus(a, id, 'CANCELLED', b.reason); }
@@ -63,6 +65,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], WantedController.prototype, "create", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, decorators_1.RequirePermission)('wanted.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(update))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], WantedController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/activate'),
     (0, decorators_1.RequirePermission)('wanted.activate'),

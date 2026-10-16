@@ -15,5 +15,18 @@ export declare class AnalyticsController {
     private readonly perms;
     constructor(prisma: PrismaService, perms: PermissionService);
     overview(u: AuthUser, f: z.infer<typeof q>): Promise<Record<string, unknown>>;
+    /**
+     * Tagesverlauf für Diagramme (Tage in Europe/Berlin). Gleiche Rechte wie die Übersicht – je Reihe die Fachpermission.
+     * Über Prisma-Abfragen (nicht SQL), damit die Server-Trennung automatisch greift.
+     */
+    trend(u: AuthUser, f: z.infer<typeof q>): Promise<{
+        days: string[];
+        series: {
+            key: string;
+            label: string;
+            unit: string;
+            values: number[];
+        }[];
+    }>;
 }
 export {};

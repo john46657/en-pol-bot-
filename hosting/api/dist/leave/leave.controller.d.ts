@@ -27,15 +27,15 @@ declare const requestBody: z.ZodObject<{
     forDiscordId?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
-    status: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "DENIED", "CANCELLED", "ENDED", "ACTIVE", "UPCOMING", "ALL"]>>;
+    status: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "DENIED", "CANCELLED", "ENDED", "ACTIVE", "UPCOMING", "CALENDAR", "ALL"]>>;
     mine: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
     discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "CALENDAR" | "ALL" | undefined;
     discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }, {
-    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "ALL" | undefined;
+    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "CALENDAR" | "ALL" | undefined;
     discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }>;

@@ -5,7 +5,7 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
 import { Toggle } from '../../components/ApplicationSettings';
-import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows, confirmDialog } from '../../components/ui';
 
 interface ServerRow { id: string; guildId: string; name: string; status: 'ACTIVE' | 'DISABLED' | 'ERROR'; archivedAt: string | null; version: number }
 interface ModuleRow { key: string; name: string; description: string; system: boolean; enabled: boolean; version: number; updatedAt: string | null }
@@ -72,7 +72,7 @@ function ServerList({ servers, selected, onSelect, globalAdmin }: { servers: Ser
             {s.archivedAt ? <Badge>Archiviert</Badge> : <Badge tone={STATUS[s.status]?.tone}>{STATUS[s.status]?.label ?? s.status}</Badge>}
             {globalAdmin && !s.archivedAt && <>
               <Button size="sm" variant="secondary" disabled={status.isPending} onClick={() => status.mutate(s)}>{s.status === 'ACTIVE' ? 'Deaktivieren' : 'Freischalten'}</Button>
-              <Button size="sm" variant="ghost" aria-label={`${s.name} archivieren`} disabled={archive.isPending} onClick={() => { if (confirm(`„${s.name}“ archivieren? Daten bleiben erhalten, der Server ist danach nicht mehr wählbar.`)) archive.mutate(s); }}><Trash2 size={14} /></Button>
+              <Button size="sm" variant="ghost" aria-label={`${s.name} archivieren`} disabled={archive.isPending} onClick={() => { void confirmDialog(`„${s.name}“ archivieren? Daten bleiben erhalten, der Server ist danach nicht mehr wählbar.`).then((ok) => { if (ok) archive.mutate(s); }) }}><Trash2 size={14} /></Button>
             </>}
           </li>
         ))}</ul>

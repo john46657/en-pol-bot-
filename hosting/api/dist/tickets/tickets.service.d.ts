@@ -149,6 +149,7 @@ export declare class TicketsService {
             issuedAt: Date;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

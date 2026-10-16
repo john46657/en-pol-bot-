@@ -22,6 +22,23 @@ declare const login2faSchema: z.ZodObject<{
     ticket: string;
     code: string;
 }>;
+declare const passwordSchema: z.ZodObject<{
+    current: z.ZodString;
+    next: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    current: string;
+    next: string;
+}, {
+    current: string;
+    next: string;
+}>;
+declare const revokeSchema: z.ZodObject<{
+    sessionId: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    sessionId?: string | undefined;
+}, {
+    sessionId?: string | undefined;
+}>;
 declare const loginSchema: z.ZodObject<{
     username: z.ZodString;
     password: z.ZodString;
@@ -120,6 +137,18 @@ export declare class AuthController {
     twoFactorDisable(actor: Actor, body: z.infer<typeof codeSchema>): Promise<void>;
     twoFactorRecovery(actor: Actor, body: z.infer<typeof codeSchema>): Promise<{
         recoveryCodes: string[];
+    }>;
+    changePassword(user: AuthUser, actor: Actor, body: z.infer<typeof passwordSchema>): Promise<void>;
+    sessions(user: AuthUser): Promise<{
+        id: string;
+        createdAt: Date;
+        expiresAt: Date;
+        ip: string | null;
+        userAgent: string | null;
+        current: boolean;
+    }[]>;
+    revokeSessions(user: AuthUser, actor: Actor, body: z.infer<typeof revokeSchema>): Promise<{
+        revoked: number;
     }>;
     logout(user: AuthUser, actor: Actor, res: Response): Promise<void>;
     me(user: AuthUser): Promise<{

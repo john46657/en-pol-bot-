@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
-import { ArrowDown, ArrowUp, FileInput, LayoutGrid, Plus, Search, Table2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download, FileInput, LayoutGrid, Plus, Search, Table2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
+import { usePhone } from '../../lib/media';
+import { downloadCsv } from '../../lib/csv';
 import { fmtDate, statusInfo, useHrConfig, useRanks, type Overview, type PersonRow } from '../../lib/hr';
 import { Toggle } from '../../components/ApplicationSettings';
 import { Avatar } from '../../components/TeamRoster';
@@ -48,8 +50,11 @@ export function PersonnelOverview() {
   const storeKey = `hr.overview.${user?.id ?? 'anon'}`;
   const [st, setSt] = useState(() => ({ key: storeKey, v: loadView(storeKey) }));
   if (st.key !== storeKey) setSt({ key: storeKey, v: loadView(storeKey) }); // anderer Benutzer → dessen Ansicht
-  const v = st.v;
+  const phone = usePhone();
+  // Handy: immer Karten (die breite Tabelle wäre nur seitlich scrollbar)
+  const v = phone ? { ...st.v, view: 'cards' as const } : st.v;
   const setV = (nv: ViewPrefs) => {
+    if (phone) nv = { ...nv, view: st.v.view }; // die Wahl vom PC bleibt erhalten
     setSt({ key: storeKey, v: nv });
     try { localStorage.setItem(storeKey, JSON.stringify(nv)); } catch { /* privater Modus */ }
   };
@@ -92,9 +97,11 @@ export function PersonnelOverview() {
   return (
     <div>
       <PageHeader title="Personal" subtitle={data ? `${rows.length} Personalakten` : undefined}
-        actions={can('personnel.create') && <span className="flex flex-wrap gap-2">
-          <Button variant="secondary" disabled={fromApps.isPending} title="Für angenommene Bewerbungen ohne Personalakte eine anlegen" onClick={() => fromApps.mutate()}><FileInput size={16} aria-hidden />Aus Bewerbungen übernehmen</Button>
-          <Button onClick={() => setCreate(true)}><Plus size={16} aria-hidden />Personalakte anlegen</Button>
+        actions={<span className="flex flex-wrap gap-2">
+          {rows.length > 0 && <Button variant="secondary" title="Gefilterte Liste als CSV (Excel)" onClick={() => downloadCsv('personal', ['Name', 'Dienstnummer', 'Rufname', 'Rang', 'Abteilung', 'Status', 'Eingetreten', 'Discord', 'Roblox', 'Beförderungen', 'Auszeichnungen', 'Verwarnungen', 'Ausbildungen', 'Abwesend bis'],
+            rows.map((r) => [r.name, r.serviceNumber, r.callsign, r.rank, r.department, statusInfo(cfg, r.status).label, r.joinDate ? fmtDate(r.joinDate) : '', r.discordName, r.robloxName, r.counts.promotions, r.counts.awards, r.counts.warnings ?? '', r.counts.trainings, r.absentUntil ? fmtDate(r.absentUntil) : '']))}><Download size={16} aria-hidden />CSV</Button>}
+          {can('personnel.create') && <><Button variant="secondary" disabled={fromApps.isPending} title="Für angenommene Bewerbungen ohne Personalakte eine anlegen" onClick={() => fromApps.mutate()}><FileInput size={16} aria-hidden />Aus Bewerbungen übernehmen</Button>
+          <Button onClick={() => setCreate(true)}><Plus size={16} aria-hidden />Personalakte anlegen</Button></>}
         </span>} />
       {imported && <p role="status" className="mb-3 text-sm text-muted">{imported}</p>}
       <Card className="mb-4">
@@ -116,8 +123,8 @@ export function PersonnelOverview() {
             <option value="">Alle</option><option value="active">Aktiv</option><option value="inactive">Inaktiv</option><option value="absent">Abwesend</option>
           </Select>
           <div className="flex items-center gap-1" role="group" aria-label="Ansicht">
-            <Button size="sm" variant={v.view === 'cards' ? 'primary' : 'secondary'} aria-pressed={v.view === 'cards'} onClick={() => setV({ ...v, view: 'cards' })}><LayoutGrid size={14} aria-hidden />Karten</Button>
-            <Button size="sm" variant={v.view === 'table' ? 'primary' : 'secondary'} aria-pressed={v.view === 'table'} onClick={() => setV({ ...v, view: 'table' })}><Table2 size={14} aria-hidden />Tabelle</Button>
+            {!phone && <><Button size="sm" variant={v.view === 'cards' ? 'primary' : 'secondary'} aria-pressed={v.view === 'cards'} onClick={() => setV({ ...v, view: 'cards' })}><LayoutGrid size={14} aria-hidden />Karten</Button>
+            <Button size="sm" variant={v.view === 'table' ? 'primary' : 'secondary'} aria-pressed={v.view === 'table'} onClick={() => setV({ ...v, view: 'table' })}><Table2 size={14} aria-hidden />Tabelle</Button></>}
           </div>
           <span className="flex items-center gap-2 text-sm text-muted"><Toggle checked={v.compact} onChange={(c) => setV({ ...v, compact: c })} label="Kompakt" />Kompakt</span>
           {v.view === 'cards' && (

@@ -78,6 +78,7 @@ export declare class VehiclesService {
             erlcReference: string | null;
         };
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;
@@ -95,6 +96,29 @@ export declare class VehiclesService {
         notes?: string;
         erlcReference?: string;
         custom?: Record<string, unknown>;
+    }): Promise<{
+        serverId: string | null;
+        model: string | null;
+        id: string;
+        status: string;
+        notes: string | null;
+        custom: Prisma.JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        plate: string;
+        color: string | null;
+        ownerId: string | null;
+        erlcReference: string | null;
+    }>;
+    /** Kennzeichen, Modell, Farbe, Halter, Notizen ändern (Versionsprüfung; Kennzeichen bleibt je Server eindeutig). */
+    update(actor: Actor, id: string, d: {
+        plate?: string;
+        model?: string | null;
+        color?: string | null;
+        ownerId?: string | null;
+        notes?: string | null;
+        version?: number;
     }): Promise<{
         serverId: string | null;
         model: string | null;

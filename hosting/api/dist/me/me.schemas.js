@@ -21,6 +21,7 @@ exports.preferencesSchema = zod_1.z.object({
     animations: zod_1.z.boolean().optional(),
     sidebarWidth: zod_1.z.enum(['narrow', 'normal', 'wide']).optional(),
     sidebarCollapsed: zod_1.z.boolean().optional(),
+    collapsedGroups: zod_1.z.array(zod_1.z.enum(['Operations', 'Records', 'Organisation', 'Administration', 'Account'])).max(5).optional(),
     fontSize: zod_1.z.number().int().min(12).max(18).optional(),
     density: zod_1.z.enum(['compact', 'comfortable']).optional(),
     language: zod_1.z.enum(['de', 'en']).optional(),

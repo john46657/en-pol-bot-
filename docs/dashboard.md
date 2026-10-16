@@ -26,6 +26,21 @@
 - Teamliste, Voice-Widget, Team-Aktivität, Support-Tickets und Bewerbungen zeigen nur den gewählten Server.
 - Einstellungen je Server: Teams, Büros, Dienstgrade, Organisationsname, Akzentfarbe, Kanäle und die Konfiguration aller Module (`<key>@<serverId>`). Ohne eigenen Wert gelten die Standardwerte, **nicht** die Werte anderer Server.
 
+## Menü (Seitenleiste)
+- **Gruppen** Betrieb · Akten · Organisation · Verwaltung · Konto – jede Gruppe lässt sich einklappen (pro Benutzer gespeichert); die Gruppe der geöffneten Seite bleibt offen.
+- **Menüsuche** oben in der Leiste (Taste `/`): findet Menüpunkte auch über ihre Reiter (z. B. „Beförderungen“ → Personal › Beförderungen) und Suchbegriffe; Enter öffnet den ersten Treffer.
+- **Zähler offener Vorgänge** (gelb): offene Tickets, Bewerbungen, Abmeldungen, Berichte zur Prüfung, Beförderungsanträge, zu bestätigende Mitteilungen – nur für Benutzer mit dem jeweiligen Bearbeitungsrecht, Aktualisierung jede Minute.
+- **Handy** (< 768 px): feste Schnellleiste unten (Favoriten zuerst, sonst Dashboard/Leitstelle/Personen/MDT) + „Menü“. **Tablet** (768–1023 px): Symbolleiste mit Gruppen-Trennern, ☰ öffnet das Menü mit Beschriftungen.
+- Seitenköpfe zeigen das Symbol des Menüpunkts; Bestätigungen erscheinen als eigener Dialog (kein Browser-Popup); jede Seite lässt sich drucken bzw. als PDF speichern (nur Inhalt, hell).
+
+## Listen, Akten, Export
+- Personen, Fahrzeuge, Berichte, Ermittlungen, Fahndungen, Einsätze: Suche, Status und Seite stehen in der Adresse (Zurück aus der Detailansicht behält die Liste); **CSV** lädt alle Treffer (Excel, Semikolon). Ebenso CSV für Personal, Dienststunden (Team) und das Audit-Log (mit gewähltem Server).
+- **Bearbeiten** auf der Detailseite (mit Versionsprüfung): Fahrzeuge (`vehicles.edit`), Fahndungen (`wanted.edit`, nur aktive), Ermittlungen (`investigations.edit`: Titel, Beschreibung, Leitung, **Fall-Notizen**). Der Verlauf nennt, wer was geändert hat.
+- **Berichte**: Versionsvergleich (Unterschiede zwischen zwei Ständen), Drucken.
+- **Abmeldungen**: Kalender der nächsten 4 Wochen (wer ist wann weg, offene gestrichelt), Suche.
+- **Statistiken**: Tagesverlauf je Kennzahl (ab 90 Tagen je Woche), gleiche Rechte wie die Übersicht.
+- **Audit**: Suche, Filter nach Benutzer, Modul und Zeitraum.
+
 ## Persönliche Einstellungen (Menü → Persönlich)
 Nur für einen selbst, je Benutzer (Discord-Konto) in der Datenbank – auf PC und Handy gleich: Hell/Dunkel/System, Akzentfarbe, Hintergrund (Farbe, Verlauf, Bild per https-Link), Kartenstil (voll/Glas/Rahmen), Transparenz, Eckenradius, Schatten, Glow, Animationen, Sidebar-Größe und einklappen, Schriftgröße, kompakt/komfortabel, Sprache (Datumsanzeige), Zeitzone, Datumsformat, Benachrichtigungsarten, Favoriten (auch per ☆ im Menü), Schnellaktionen, Teamlisten-Ansicht und -Filter, Voice-Widget.
 

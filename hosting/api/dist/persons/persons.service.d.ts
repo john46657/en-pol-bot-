@@ -155,6 +155,7 @@ export declare class PersonsService {
             entityType: string;
         }[];
         timeline: {
+            actorName: string | null;
             id: string;
             createdAt: Date;
             entityId: string;

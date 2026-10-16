@@ -153,4 +153,18 @@ describe('analytics', () => {
     expect(o.personnel).toBeUndefined(); // sensitive staff stats stay hidden
     expect(o.incidents).toBeDefined();
   });
+  it('trend: one value per day, series gated like the overview', async () => {
+    const adm = (await login(app, 'g_admin')).agent;
+    const off = (await login(app, 'g_off')).agent;
+    await adm.post('/api/v1/incidents').send({ title: 'Trend test' });
+    const t = (await adm.get('/api/v1/analytics/trend?days=7')).body as { days: string[]; series: { key: string; values: number[] }[] };
+    expect(t.days).toHaveLength(7);
+    expect(t.days[6]).toBe(new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }));
+    const inc = t.series.find((x) => x.key === 'incidents')!;
+    expect(inc.values).toHaveLength(7);
+    expect(inc.values[6]).toBeGreaterThanOrEqual(1);
+    expect(t.series.some((x) => x.key === 'duty')).toBe(true);
+    const o = (await off.get('/api/v1/analytics/trend?days=7')).body as { series: { key: string }[] };
+    expect(o.series.some((x) => x.key === 'duty')).toBe(false);
+  });
 });

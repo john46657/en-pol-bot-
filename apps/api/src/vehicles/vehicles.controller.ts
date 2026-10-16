@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { VehiclesService } from './vehicles.service';
@@ -8,6 +8,7 @@ import { zodBody } from '../common/zod.pipe';
 import { pageQuery } from '../common/pagination';
 
 const create = z.object({ plate: z.string().trim().min(2).max(16), model: z.string().max(64).optional(), color: z.string().max(32).optional(), ownerId: z.string().uuid().optional(), notes: z.string().max(2000).optional(), erlcReference: z.string().max(64).optional(), custom: z.record(z.string(), z.unknown()).optional() });
+const update = z.object({ plate: z.string().trim().min(2).max(16).optional(), model: z.string().max(64).nullable().optional(), color: z.string().max(32).nullable().optional(), ownerId: z.string().uuid().nullable().optional(), notes: z.string().max(2000).nullable().optional(), version: z.number().int().positive().optional() });
 const archive = z.object({ reason: z.string().trim().min(3).max(500) });
 
 @ApiTags('vehicles')
@@ -23,6 +24,9 @@ export class VehiclesController {
 
   @Post() @RequirePermission('vehicles.create')
   create(@CurrentActor() a: Actor, @Body(zodBody(create)) b: z.infer<typeof create>) { return this.vehicles.create(a, b); }
+
+  @Patch(':id') @RequirePermission('vehicles.edit')
+  update(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(update)) b: z.infer<typeof update>) { return this.vehicles.update(a, id, b); }
 
   @Post(':id/archive') @RequirePermission('vehicles.archive')
   archive(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(archive)) b: z.infer<typeof archive>) { return this.vehicles.archive(a, id, b.reason); }

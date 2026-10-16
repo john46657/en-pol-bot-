@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { PRIORITIES, WANTED_STATUSES } from '@enrp/shared';
@@ -9,6 +9,7 @@ import { zodBody } from '../common/zod.pipe';
 import { pageQuery } from '../common/pagination';
 
 const create = z.object({ personId: z.string().uuid().optional(), vehicleId: z.string().uuid().optional(), reason: z.string().trim().min(3).max(500), description: z.string().max(5000).optional(), priority: z.enum(PRIORITIES).optional(), expiresAt: z.coerce.date().optional() });
+const update = z.object({ reason: z.string().trim().min(3).max(500).optional(), description: z.string().max(5000).nullable().optional(), priority: z.enum(PRIORITIES).optional(), expiresAt: z.coerce.date().nullable().optional(), version: z.number().int().positive().optional() });
 const reason = z.object({ reason: z.string().trim().min(3).max(500) });
 const listQ = pageQuery.extend({ status: z.enum(WANTED_STATUSES).optional() });
 
@@ -22,6 +23,8 @@ export class WantedController {
   get(@Param('id', ParseUUIDPipe) id: string) { return this.w.get(id); }
   @Post() @RequirePermission('wanted.create')
   create(@CurrentActor() a: Actor, @Body(zodBody(create)) b: z.infer<typeof create>) { return this.w.create(a, b); }
+  @Patch(':id') @RequirePermission('wanted.edit')
+  update(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(update)) b: z.infer<typeof update>) { return this.w.update(a, id, b); }
   @Post(':id/activate') @RequirePermission('wanted.activate')
   activate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(reason)) b: z.infer<typeof reason>) { return this.w.setStatus(a, id, 'ACTIVE', b.reason); }
   @Post(':id/clear') @RequirePermission('wanted.clear')

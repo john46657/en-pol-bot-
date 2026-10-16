@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Car, ClipboardList, Crosshair, FileText, Fingerprint, Flag, LayoutDashboard, Menu, RefreshCw, Search, Settings, Shield, Siren, Smartphone, Truck, UserCheck, Users, X, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
-import { SkeletonRows } from '../../components/ui';
+import { ConfirmHost, SkeletonRows } from '../../components/ui';
 import { SaveStatus } from '../../components/SaveStatus';
 import { NotificationCenter } from '../../components/NotificationCenter';
 
@@ -101,7 +101,7 @@ export function MdtShell() {
           </div>
         </header>
         <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
-          <Suspense fallback={<SkeletonRows />}><Outlet /></Suspense>
+          <Suspense fallback={<SkeletonRows />}><Outlet /></Suspense><ConfirmHost />
         </main>
       </div>
     </div>
