@@ -172,6 +172,19 @@ export class UsersService {
     });
   }
 
+  /** Passwort eines anderen Kontos neu setzen (nur unterhalb des eigenen Rangs); alle Sitzungen des Kontos enden, Sperre wird aufgehoben. */
+  async setPassword(actor: Actor, id: string, password: string) {
+    if (id === actor.userId) throw new AppError('CONFLICT', 'Dein eigenes Passwort änderst du unter Persönlich → Sicherheit.');
+    await this.get(id);
+    await this.perms.assertOutranksUser(actor.userId!, id);
+    const passwordHash = await hashPassword(password);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id }, data: { passwordHash, failedLogins: 0, lockedUntil: null } });
+      await this.audit.record(actor, { action: 'user.password.reset', module: 'users', entityType: 'User', entityId: id }, tx);
+    });
+    await this.auth.revokeAllSessions(id);
+  }
+
   async setActive(actor: Actor, id: string, active: boolean, reason?: string) {
     if (!active && id === actor.userId) throw new AppError('CONFLICT', 'Du kannst dein eigenes Konto nicht deaktivieren.');
     await this.get(id);

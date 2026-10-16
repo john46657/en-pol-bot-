@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, Plus, ShieldCheck } from 'lucide-react';
 import { PERMISSION_CATALOG } from '@enrp/shared';
 import { api, ApiError, type Page } from '../../lib/api';
@@ -294,6 +294,7 @@ function Security({ u, manage, run, onDeleted, setErr }: { u: U; manage: boolean
       <Card title="Zwei-Faktor-Anmeldung">
         <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{u.totpEnabledAt ? <>Aktiv seit {fmt(u.totpEnabledAt)}</> : 'Nicht eingerichtet'}</span>{manage && u.totpEnabledAt && <Button variant="secondary" onClick={() => setConfirm2fa(true)}>Zurücksetzen</Button>}</div>
       </Card>
+      {manage && <ResetPassword u={u} />}
       <Card title="Kontostatus">
         <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
           <span>{u.active ? 'Aktiv – kann sich anmelden.' : 'Deaktiviert – Anmeldung gesperrt, alle Sitzungen beendet.'} <StatusBadge status={u.active ? 'ACTIVE' : 'SUSPENDED'} /></span>
@@ -309,5 +310,31 @@ function Security({ u, manage, run, onDeleted, setErr }: { u: U; manage: boolean
       <ConfirmDialog open={confirmDisable} danger title="Konto deaktivieren" message="Der Benutzer wird sofort abgemeldet und kann sich erst nach Reaktivierung wieder anmelden. Wird protokolliert." confirmLabel="Deaktivieren" onClose={() => setConfirmDisable(false)} onConfirm={() => { setConfirmDisable(false); void run(() => api(`/users/${u.id}/active`, { method: 'PUT', body: { active: false } })); }} />
       <ConfirmDialog open={confirm2fa} danger title="Zwei-Faktor zurücksetzen" message="Nur wenn die Person ihr Handy und ihre Wiederherstellungscodes verloren hat – Identität vorher prüfen. Danach reicht das Passwort, bis sie 2FA neu einrichtet. Wird protokolliert." confirmLabel="Zurücksetzen" onClose={() => setConfirm2fa(false)} onConfirm={() => { setConfirm2fa(false); void run(() => api(`/users/${u.id}/2fa/reset`, { method: 'POST' })); }} />
     </div>
+  );
+}
+
+/** Passwort eines Kontos neu setzen (z. B. vergessen) – alle Sitzungen der Person enden. */
+function ResetPassword({ u }: { u: U }) {
+  const [pw, setPw] = useState('');
+  const [ok, setOk] = useState(false);
+  // gut lesbar (ohne 0/O, 1/l/I), 16 Zeichen in 4er-Blöcken; Ablehnungsverfahren gegen Verzerrung
+  const gen = () => {
+    const abc = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const out: string[] = [];
+    while (out.length < 16) { const b = crypto.getRandomValues(new Uint8Array(1))[0]!; if (b < 256 - (256 % abc.length)) out.push(abc[b % abc.length]!); }
+    setPw(out.join('').replace(/(.{4})(?!$)/g, '$1-')); setOk(false);
+  };
+  const save = useMutation({ mutationFn: () => api(`/users/${u.id}/password`, { method: 'PUT', body: { password: pw } }), onSuccess: () => setOk(true) });
+  return (
+    <Card title="Passwort zurücksetzen">
+      <p className="mb-2 text-xs text-muted">Neues Passwort für @{u.username} festlegen und der Person sicher mitteilen. Sie wird überall abgemeldet; eine Sperre nach Fehlversuchen wird aufgehoben. Wird protokolliert.</p>
+      <div className="flex flex-wrap items-end gap-2">
+        <Field label="Neues Passwort (mind. 12 Zeichen)">{(id) => <Input id={id} className="w-64 font-mono" autoComplete="off" value={pw} onChange={(e) => { setPw(e.target.value); setOk(false); }} />}</Field>
+        <Button variant="secondary" onClick={gen}>Zufällig erzeugen</Button>
+        <Button disabled={save.isPending || pw.length < 12} onClick={() => save.mutate()}>Passwort setzen</Button>
+        {ok && <><span role="status" className="text-sm text-success">Gesetzt.</span><Button size="sm" variant="ghost" onClick={() => void navigator.clipboard?.writeText(pw)}>Kopieren</Button></>}
+      </div>
+      {save.error && <p role="alert" className="mt-2 text-sm text-danger">{save.error instanceof ApiError ? save.error.message : 'Fehlgeschlagen'}</p>}
+    </Card>
   );
 }

@@ -8,6 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { pageQuery } from '../common/pagination';
 
+const passwordBody = z.object({ password: z.string().min(12, 'Mindestens 12 Zeichen').max(256) });
 export const nameBody = z.object({ displayName: z.string().trim().min(1).max(64) });
 const createUser = z.object({
   username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9_.-]+$/),
@@ -46,6 +47,9 @@ export class UsersController {
 
   @Put(':id/roblox') @RequirePermission('users.manage')
   setRoblox(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(roblox)) b: z.infer<typeof roblox>) { return this.users.setRoblox(a, id, b); }
+
+  @Put(':id/password') @HttpCode(204) @RequirePermission('users.manage')
+  async setPassword(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(passwordBody)) b: z.infer<typeof passwordBody>) { await this.users.setPassword(a, id, b.password); }
 
   @Put(':id/active') @RequirePermission('users.manage')
   setActive(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(active)) b: z.infer<typeof active>) { return this.users.setActive(a, id, b.active, b.reason); }

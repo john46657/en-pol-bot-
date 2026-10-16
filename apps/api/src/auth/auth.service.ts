@@ -7,7 +7,7 @@ import { DiscordAccessService } from '../authz/discord-access.service';
 import { AuthorizationService } from '../authz/authorization.service';
 import { currentGuild } from '../common/guild-context';
 import { hashToken } from '../authz/guards';
-import { DUMMY_HASH, verifyPassword } from './password';
+import { DUMMY_HASH, hashPassword, verifyPassword } from './password';
 import { AppError } from '../common/errors';
 import { loadEnv } from '../config/env';
 import { TwoFactorService } from './two-factor.service';
@@ -83,6 +83,34 @@ export class AuthService {
   }
 
   /** Beendet alle Sessions eines Benutzers (Session Invalidation). */
+  /** Eigenes Passwort ändern: altes Passwort nötig; alle anderen Sitzungen werden beendet. */
+  async changePassword(actor: Actor, sessionId: string, current: string, next: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: actor.userId! } });
+    if (!user.passwordHash || !(await verifyPassword(current, user.passwordHash))) throw new AppError('VALIDATION_FAILED', 'Das aktuelle Passwort stimmt nicht.');
+    if (current === next) throw new AppError('VALIDATION_FAILED', 'Das neue Passwort muss sich vom alten unterscheiden.');
+    const passwordHash = await hashPassword(next);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: user.id }, data: { passwordHash, failedLogins: 0, lockedUntil: null } });
+      await tx.session.updateMany({ where: { userId: user.id, revokedAt: null, NOT: { id: sessionId } }, data: { revokedAt: new Date() } });
+      await this.audit.record(actor, { action: 'auth.password.change', module: 'auth', entityType: 'User', entityId: user.id }, tx);
+    });
+  }
+
+  /** Eigene aktive Sitzungen (Gerät/IP, angemeldet seit) – die aktuelle ist markiert. */
+  async sessions(userId: string, currentId: string) {
+    const rows = await this.prisma.session.findMany({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' }, take: 50 });
+    return rows.map((r) => ({ id: r.id, createdAt: r.createdAt, expiresAt: r.expiresAt, ip: r.ip, userAgent: r.userAgent, current: r.id === currentId }));
+  }
+
+  /** Eigene Sitzung(en) beenden: eine bestimmte oder alle außer der aktuellen. */
+  async revokeOwnSessions(actor: Actor, currentId: string, sessionId?: string) {
+    if (sessionId === currentId) throw new AppError('VALIDATION_FAILED', 'Die aktuelle Sitzung beendest du mit „Abmelden“.');
+    const r = await this.prisma.session.updateMany({ where: { userId: actor.userId!, revokedAt: null, ...(sessionId ? { id: sessionId } : { NOT: { id: currentId } }) }, data: { revokedAt: new Date() } });
+    if (sessionId && !r.count) throw new AppError('NOT_FOUND', 'Sitzung nicht gefunden.');
+    await this.audit.record(actor, { action: 'auth.sessions.revoke', module: 'auth', entityType: 'User', entityId: actor.userId ?? undefined, after: { count: r.count, single: !!sessionId } });
+    return { revoked: r.count };
+  }
+
   async revokeAllSessions(userId: string) {
     await this.prisma.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
   }

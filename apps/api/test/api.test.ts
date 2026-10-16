@@ -36,6 +36,44 @@ describe('auth', () => {
     const replay = await http().get('/api/v1/auth/me').set('Cookie', cookie);
     expect(replay.status).toBe(401);
   });
+  it('own password change (old password required, other sessions end) and own session management', async () => {
+    await makeUser(prisma, 'pwuser', ['Police Member']);
+    const a = (await login(app, 'pwuser')).agent;
+    const b = (await login(app, 'pwuser')).agent;
+    const c = (await login(app, 'pwuser')).agent;
+    const list = (await a.get('/api/v1/auth/sessions')).body as { id: string; current: boolean }[];
+    expect(list).toHaveLength(3);
+    expect(list.filter((x) => x.current)).toHaveLength(1);
+    // eine bestimmte Sitzung beenden, die aktuelle nicht
+    const other = list.find((x) => !x.current)!;
+    expect((await a.post('/api/v1/auth/sessions/revoke').send({ sessionId: list.find((x) => x.current)!.id })).status).toBe(400);
+    expect((await a.post('/api/v1/auth/sessions/revoke').send({ sessionId: other.id })).body.revoked).toBe(1);
+    expect((await a.get('/api/v1/auth/sessions')).body).toHaveLength(2);
+    // Passwort: falsches altes / zu kurzes neues abgelehnt
+    expect((await a.put('/api/v1/auth/password').send({ current: 'wrong-password-1', next: 'brand-new-password-42' })).status).toBe(400);
+    expect((await a.put('/api/v1/auth/password').send({ current: PASSWORD, next: 'short' })).status).toBe(400);
+    expect((await a.put('/api/v1/auth/password').send({ current: PASSWORD, next: 'brand-new-password-42' })).status).toBe(204);
+    expect((await a.get('/api/v1/auth/me')).status).toBe(200); // aktuelle Sitzung bleibt
+    expect((await b.get('/api/v1/auth/me')).status).toBe(401);
+    expect((await c.get('/api/v1/auth/me')).status).toBe(401);
+    expect((await login(app, 'pwuser')).res.status).toBe(401);
+    expect((await login(app, 'pwuser', 'brand-new-password-42')).res.status).toBe(200);
+    expect(await prisma.auditLog.count({ where: { action: 'auth.password.change' } })).toBe(1);
+  });
+  it('admin resets another account\'s password (sessions end), never their own or a higher rank', async () => {
+    await makeUser(prisma, 'pwtarget', ['Police Member']);
+    const adm = (await login(app, 'admin')).agent;
+    const sup = (await login(app, 'sup')).agent;
+    const t = (await login(app, 'pwtarget')).agent;
+    const target = await prisma.user.findUniqueOrThrow({ where: { username: 'pwtarget' } });
+    const admin = await prisma.user.findUniqueOrThrow({ where: { username: 'admin' } });
+    expect((await sup.put(`/api/v1/users/${target.id}/password`).send({ password: 'reset-password-123' })).status).toBe(403);
+    expect((await adm.put(`/api/v1/users/${admin.id}/password`).send({ password: 'reset-password-123' })).status).toBe(409);
+    expect((await adm.put(`/api/v1/users/${target.id}/password`).send({ password: 'short' })).status).toBe(400);
+    expect((await adm.put(`/api/v1/users/${target.id}/password`).send({ password: 'reset-password-123' })).status).toBe(204);
+    expect((await t.get('/api/v1/auth/me')).status).toBe(401);
+    expect((await login(app, 'pwtarget', 'reset-password-123')).res.status).toBe(200);
+  });
   it('rejects wrong password, records history + security event, locks after repeated failures', async () => {
     await makeUser(prisma, 'victim', ['Police Member']);
     for (let i = 0; i < 5; i++) expect((await login(app, 'victim', 'wrong-password-x')).res.status).toBe(401);

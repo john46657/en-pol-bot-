@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Put, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
@@ -18,6 +18,8 @@ import { loadEnv } from '../config/env';
 const OAUTH_COOKIE = 'enrp_oauth';
 const codeSchema = z.object({ code: z.string().trim().min(6).max(20) });
 const login2faSchema = z.object({ ticket: z.string().min(10).max(300), code: z.string().trim().min(6).max(20) });
+const passwordSchema = z.object({ current: z.string().min(1).max(256), next: z.string().min(12, 'Mindestens 12 Zeichen').max(256) });
+const revokeSchema = z.object({ sessionId: z.string().uuid().optional() });
 const loginSchema = z.object({ username: z.string().min(1).max(64), password: z.string().min(1).max(256) });
 
 @ApiTags('auth')
@@ -148,6 +150,23 @@ export class AuthController {
   @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
   @Post('2fa/recovery') @HttpCode(200)
   twoFactorRecovery(@CurrentActor() actor: Actor, @Body(zodBody(codeSchema)) body: z.infer<typeof codeSchema>) { return this.twoFactor.regenerate(actor, body.code); }
+
+  // ---- eigenes Passwort und eigene Sitzungen ----
+  @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } })
+  @Put('password') @HttpCode(204)
+  async changePassword(@CurrentUser() user: AuthUser, @CurrentActor() actor: Actor, @Body(zodBody(passwordSchema)) body: z.infer<typeof passwordSchema>) {
+    if (user.sessionId === 'bot') throw new AppError('PERMISSION_DENIED', 'Nur im Dashboard möglich.');
+    await this.auth.changePassword(actor, user.sessionId, body.current, body.next);
+  }
+
+  @Get('sessions')
+  sessions(@CurrentUser() user: AuthUser) { return this.auth.sessions(user.id, user.sessionId); }
+
+  @Post('sessions/revoke') @HttpCode(200)
+  revokeSessions(@CurrentUser() user: AuthUser, @CurrentActor() actor: Actor, @Body(zodBody(revokeSchema)) body: z.infer<typeof revokeSchema>) {
+    if (user.sessionId === 'bot') throw new AppError('PERMISSION_DENIED', 'Nur im Dashboard möglich.');
+    return this.auth.revokeOwnSessions(actor, user.sessionId, body.sessionId);
+  }
 
   @Post('logout')
   @HttpCode(204)
