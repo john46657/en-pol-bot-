@@ -2,7 +2,9 @@ import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes,
 import { PRIORITY_LABEL, STATUS_LABEL, statusLabel } from '@enrp/shared';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
-import { AlertTriangle, Inbox, X } from 'lucide-react';
+import { AlertTriangle, Inbox, X, type LucideIcon } from 'lucide-react';
+import { useInRouterContext, useLocation } from 'react-router';
+import { isActive, NAV } from '../nav';
 import { ApiError } from '../lib/api';
 import { formatDate } from '../lib/prefs';
 
@@ -151,9 +153,29 @@ export function Tabs({ tabs, active, onChange }: { tabs: string[]; active: strin
   );
 }
 
-export const PageHeader = ({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) => (
-  <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><div><h1 className="text-xl font-semibold">{title}</h1>{subtitle && <p className="text-sm text-muted">{subtitle}</p>}</div><div className="flex gap-2">{actions}</div></div>
-);
+/** Führende Emojis aus Seitentiteln entfernen – das Symbol kommt einheitlich aus dem Menü. */
+export const stripEmoji = (t: string) => t.replace(/^(?:[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\uFE0F\u200D]+\s*)+/u, '');
+
+/** Einheitlicher Seitenkopf: Bereichssymbol aus dem Menü, Titel, Untertitel; Aktionen brechen auf dem Handy in eine eigene Zeile um. */
+export function PageHeader({ title, subtitle, actions, icon }: { title: string; subtitle?: string; actions?: ReactNode; icon?: LucideIcon | false }) {
+  const inRouter = useInRouterContext();
+  return (
+    <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+      <div className="flex min-w-0 flex-1 basis-72 items-start gap-3">
+        {icon ? <IconTile icon={icon} /> : icon !== false && inRouter && <SectionIcon />}
+        <div className="min-w-0"><h1 className="text-xl font-semibold leading-tight">{stripEmoji(title)}</h1>{subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}</div>
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:[&>*]:flex-1">{actions}</div>}
+    </div>
+  );
+}
+const IconTile = ({ icon: I }: { icon: LucideIcon }) => <span className="mt-0.5 hidden size-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary sm:grid" aria-hidden><I size={18} /></span>;
+/** Symbol des Menüpunkts, zu dem die aktuelle Seite gehört. */
+function SectionIcon() {
+  const { pathname } = useLocation();
+  const item = NAV.filter((n) => isActive(n, pathname)).sort((x, y) => y.path.length - x.path.length)[0];
+  return item ? <IconTile icon={item.icon} /> : null;
+}
 
 /** Datum/Uhrzeit im persönlichen Format und in der persönlichen Zeitzone (Einstellungen → Persönlich). */
 export const fmt = (iso?: string | null) => (iso ? formatDate(iso) : '—');
