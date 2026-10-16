@@ -51,3 +51,12 @@ body { background: var(--app-bg, var(--color-bg)); color: var(--color-fg); font-
 @layer base { .grid > * { min-width: 0; } }
 /* Touch-Geräte (Handy/Tablet): Buttons groß genug für den Finger */
 @media (pointer: coarse) { button:not([role='tab']), select { min-height: 2.5rem; } }
+
+/* Drucken / „Als PDF speichern“: nur der Seiteninhalt, hell, ohne Menüs und Schaltflächen */
+@media print {
+  :root { --color-bg: #fff; --color-panel: #fff; --color-panel-2: #f3f4f6; --color-line: #d1d5db; --color-fg: #111827; --color-muted: #4b5563; }
+  html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
+  aside, header, nav, [role='tablist'], button, .print\:hidden { display: none !important; }
+  #root > div, main { display: block !important; overflow: visible !important; height: auto !important; padding: 0 !important; }
+  .card, section { box-shadow: none !important; break-inside: avoid; }
+}

@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
+import { ArrowLeft, Printer } from 'lucide-react';
+import { diffLines } from '../lib/diff';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { Button, Card, ErrorState, fmt, Field, PageHeader, SkeletonRows, StatusBadge, Tabs, Textarea, Input, Modal } from '../components/ui';
+import { Button, Card, ErrorState, fmt, Field, PageHeader, Select, SkeletonRows, StatusBadge, statusLabel, Tabs, Textarea, Input, Modal } from '../components/ui';
 import { Timeline, type TimelineItem } from '../components/Timeline';
 import { LockBanner, useEditLock } from '../lib/locks';
 
@@ -33,9 +35,11 @@ export function ReportDetail() {
   const editable = (r.status === 'DRAFT' || r.status === 'REJECTED') && (mine || can('reports.edit')) && can('reports.create');
   return (
     <>
-      <PageHeader title={`${r.number} — ${r.title}`} subtitle={`Bericht (${r.type}) · Version ${latest.version}`}
+      <Link to="/reports" className="mb-2 inline-flex items-center gap-1 text-sm text-muted hover:text-fg print:hidden"><ArrowLeft size={14} />Berichte</Link>
+      <PageHeader title={`${r.number} — ${r.title}`} subtitle={`Bericht (${statusLabel(r.type)}) · Version ${latest.version} · ${fmt(latest.createdAt)}`}
         actions={<>
           <StatusBadge status={r.status} />
+          <Button variant="secondary" className="print:hidden" onClick={() => window.print()} title="Drucken oder als PDF speichern"><Printer size={14} />Drucken</Button>
           {editable && <Button variant="secondary" onClick={() => { setText(latest.content.body ?? ''); setEditing(true); }}>Bearbeiten</Button>}
           {editable && can('reports.submit') && <Button onClick={() => act.mutate({ path: '/submit' })}>Einreichen</Button>}
           {r.status === 'SUBMITTED' && can('reports.review') && <Button onClick={() => act.mutate({ path: '/start-review' })}>Prüfung starten</Button>}
@@ -46,8 +50,8 @@ export function ReportDetail() {
       {err && !editing && !reject && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err.message} {err.requestId && <span className="text-xs opacity-70">Anfrage-ID: {err.requestId}</span>}</div>}
       <Tabs tabs={['Inhalt', 'Versionen', 'Verlauf']} active={tab} onChange={setTab} />
       <div className="mt-4">
-        {tab === 'Inhalt' && <Card><p className="whitespace-pre-wrap text-sm">{latest.content.body ?? JSON.stringify(latest.content, null, 2)}</p></Card>}
-        {tab === 'Versionen' && <Card><div className="table-scroll"><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted"><tr><th className="py-1">Ver.</th><th>Änderung</th><th>Datum</th><th>Hash</th></tr></thead><tbody>{r.versions.map((v) => <tr key={v.id} className="border-t border-line"><td className="py-1.5">{v.version}</td><td>{v.changeSummary}</td><td>{fmt(v.createdAt)}</td><td><code className="text-xs">{v.contentHash.slice(0, 12)}</code></td></tr>)}</tbody></table></div></Card>}
+        {tab === 'Inhalt' && <Card className="print:border-0"><p className="whitespace-pre-wrap text-sm">{latest.content.body ?? JSON.stringify(latest.content, null, 2)}</p></Card>}
+        {tab === 'Versionen' && <Versions versions={r.versions} />}
         {tab === 'Verlauf' && <Card><Timeline items={q.data.timeline} /></Card>}
       </div>
       <Modal open={editing} title="Bericht bearbeiten" onClose={() => setEditing(false)} wide>
@@ -64,5 +68,31 @@ export function ReportDetail() {
         <div className="mt-3 flex justify-end gap-2"><Button variant="secondary" onClick={() => setReject(false)}>Abbrechen</Button><Button variant="danger" disabled={reason.trim().length < 3} onClick={() => act.mutate({ path: '/reject', body: { reason } })}>Ablehnen</Button></div>
       </Modal>
     </>
+  );
+}
+
+/** Versionen: Liste und Unterschiede zwischen zwei Ständen (rot entfernt, grün hinzugefügt). */
+function Versions({ versions }: { versions: Version[] }) {
+  const [to, setTo] = useState(versions[0]?.version ?? 1);
+  const [from, setFrom] = useState(versions[1]?.version ?? versions[0]?.version ?? 1);
+  const text = (n: number) => versions.find((v) => v.version === n)?.content.body ?? '';
+  const lines = diffLines(text(from), text(to));
+  const changed = lines.filter((l) => l.kind !== 'same').length;
+  return (
+    <div className="grid gap-4">
+      <Card><div className="table-scroll"><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted"><tr><th className="py-1">Ver.</th><th>Änderung</th><th>Datum</th><th>Hash</th></tr></thead><tbody>{versions.map((v) => <tr key={v.id} className="border-t border-line"><td className="py-1.5">{v.version}</td><td>{v.changeSummary}</td><td>{fmt(v.createdAt)}</td><td><code className="text-xs">{v.contentHash.slice(0, 12)}</code></td></tr>)}</tbody></table></div></Card>
+      {versions.length > 1 && (
+        <Card title="Unterschiede" actions={<div className="flex items-center gap-2 text-xs">
+          <Select aria-label="Von Version" className="w-auto py-1 text-xs" value={from} onChange={(e) => setFrom(Number(e.target.value))}>{versions.map((v) => <option key={v.id} value={v.version}>Version {v.version}</option>)}</Select>→
+          <Select aria-label="Zu Version" className="w-auto py-1 text-xs" value={to} onChange={(e) => setTo(Number(e.target.value))}>{versions.map((v) => <option key={v.id} value={v.version}>Version {v.version}</option>)}</Select>
+        </div>}>
+          {!changed ? <p className="text-sm text-muted">Keine Unterschiede im Berichtstext.</p> : (
+            <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-md border border-line bg-bg p-2 font-mono text-xs leading-relaxed">
+              {lines.map((l, i) => <div key={i} className={l.kind === 'add' ? 'bg-success/15 text-success' : l.kind === 'del' ? 'bg-danger/15 text-danger line-through decoration-danger/50' : 'text-muted'}><span className="mr-2 select-none" aria-hidden>{l.kind === 'add' ? '+' : l.kind === 'del' ? '−' : ' '}</span>{l.text || ' '}<span className="sr-only">{l.kind === 'add' ? ' (hinzugefügt)' : l.kind === 'del' ? ' (entfernt)' : ''}</span></div>)}
+            </pre>
+          )}
+        </Card>
+      )}
+    </div>
   );
 }
