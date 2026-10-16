@@ -10,7 +10,7 @@ import { guildName, useGuilds, useServer } from '../../lib/guilds';
 import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { DiscordPreview } from '../../components/DiscordPreview';
 import { Toggle } from '../../components/ApplicationSettings';
-import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, SkeletonRows, Textarea } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, SkeletonRows, Textarea, confirmDialog } from '../../components/ui';
 import { Box } from './Shifts';
 
 type Cfg = VerifyConfig & { own: boolean; panelMessageId: string | null };
@@ -210,7 +210,7 @@ function Members({ manage }: { manage: boolean }) {
                   <td className="whitespace-nowrap text-xs text-muted">{fmt(l.verifiedAt)}</td>
                   {manage && <td className="whitespace-nowrap py-1 text-right">
                     <Button size="sm" variant="ghost" aria-label={`Rollen von ${l.robloxName} neu setzen`} title="Rollen und Nickname neu setzen" disabled={refresh.isPending} onClick={() => refresh.mutate(l)}><RefreshCw size={14} /></Button>
-                    <Button size="sm" variant="ghost" aria-label={`Verifizierung von ${l.robloxName} entfernen`} disabled={remove.isPending} onClick={() => { if (confirm(`Verifizierung von ${l.robloxName} entfernen? Die Person verliert die Verifiziert-Rollen.`)) remove.mutate(l); }}><Trash2 size={14} className="text-danger" /></Button>
+                    <Button size="sm" variant="ghost" aria-label={`Verifizierung von ${l.robloxName} entfernen`} disabled={remove.isPending} onClick={() => { void confirmDialog(`Verifizierung von ${l.robloxName} entfernen? Die Person verliert die Verifiziert-Rollen.`).then((ok) => { if (ok) remove.mutate(l); }) }}><Trash2 size={14} className="text-danger" /></Button>
                   </td>}
                 </tr>
               ))}</tbody>

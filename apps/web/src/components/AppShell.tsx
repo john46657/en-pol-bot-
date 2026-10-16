@@ -14,7 +14,7 @@ import { GlobalSearch } from './GlobalSearch';
 import { NotificationCenter } from './NotificationCenter';
 import { SaveStatus } from './SaveStatus';
 import { Toasts } from './Toasts';
-import { Button } from './ui';
+import { Button, ConfirmHost } from './ui';
 
 export function AppShell() {
   const { user, can, logout } = useAuth();
@@ -148,6 +148,7 @@ export function AppShell() {
         {/* Platzhalter: der Inhalt (auch fixierte Speichern-Leisten) endet über der Handy-Leiste */}
         {!tablet && <><div className="h-bottombar shrink-0 md:hidden" aria-hidden /><BottomBar items={items} favs={favs} onMenu={() => setOpen(true)} /></>}
         <Toasts />
+        <ConfirmHost />
       </div>
     </div>
   );

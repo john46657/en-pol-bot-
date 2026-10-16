@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, forwardRef, useId } from 'react';
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, forwardRef, useId } from 'react';
 import { PRIORITY_LABEL, STATUS_LABEL, statusLabel } from '@enrp/shared';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
@@ -111,6 +111,23 @@ export function ConfirmDialog({ open, title, message, confirmLabel = 'Bestätige
       <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>{cancelLabel}</Button><Button variant={danger ? 'danger' : 'primary'} disabled={busy} onClick={onConfirm}>{confirmLabel}</Button></div>
     </Modal>
   );
+}
+
+type ConfirmReq = { message: ReactNode; title: string; confirmLabel: string; danger: boolean; resolve: (ok: boolean) => void };
+let showConfirm: ((r: ConfirmReq) => void) | undefined;
+/**
+ * Bestätigung als eigener Dialog statt Browser-`confirm` (auf Handys/Tablets unschön, in eingebetteten Ansichten teils blockiert).
+ * `if (await confirmDialog('Wirklich löschen?')) …` – angezeigt von <ConfirmHost /> in der App-Hülle.
+ */
+export const confirmDialog = (message: ReactNode, o: { title?: string; confirmLabel?: string; danger?: boolean } = {}) => new Promise<boolean>((resolve) => {
+  const req = { message, title: o.title ?? 'Bitte bestätigen', confirmLabel: o.confirmLabel ?? 'Bestätigen', danger: o.danger ?? true, resolve };
+  if (showConfirm) showConfirm(req); else resolve(window.confirm(typeof message === 'string' ? message : req.title));
+});
+export function ConfirmHost() {
+  const [st, setSt] = useState<ConfirmReq>();
+  useEffect(() => { showConfirm = setSt; return () => { showConfirm = undefined; }; }, []);
+  const done = (ok: boolean) => { st?.resolve(ok); setSt(undefined); };
+  return <ConfirmDialog open={!!st} title={st?.title ?? ''} message={st?.message} confirmLabel={st?.confirmLabel} danger={st?.danger} onConfirm={() => done(true)} onClose={() => done(false)} />;
 }
 
 export const Skeleton = ({ className = 'h-4 w-full' }: { className?: string }) => <div aria-hidden className={cx('skeleton', className)} />;
