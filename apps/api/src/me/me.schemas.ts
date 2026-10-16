@@ -20,6 +20,7 @@ export const preferencesSchema = z.object({
   animations: z.boolean().optional(),
   sidebarWidth: z.enum(['narrow', 'normal', 'wide']).optional(),
   sidebarCollapsed: z.boolean().optional(),
+  collapsedGroups: z.array(z.enum(['Operations', 'Records', 'Organisation', 'Administration', 'Account'])).max(5).optional(),
   fontSize: z.number().int().min(12).max(18).optional(),
   density: z.enum(['compact', 'comfortable']).optional(),
   language: z.enum(['de', 'en']).optional(),

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -64,11 +64,16 @@ describe('permission-aware navigation', () => {
       ? json(200, { id: '1', username: 'o', displayName: 'Officer O', robloxUserId: null, robloxUsername: null, roles: ['Police Member'], permissions: ['persons.view', 'dashboard.view'], lastLogin: null })
       : json(200, { items: [], total: 0, unread: 0 }));
     render(wrap(<AuthProvider><Routes><Route element={<AppShell />}><Route index element={<p>home</p>} /></Route></Routes></AuthProvider>));
-    expect(await screen.findByRole('link', { name: /Personen/ })).toBeInTheDocument(); // Menü standardmäßig Deutsch
-    expect(screen.getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Audit/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /^Personal$/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Rollen/ })).not.toBeInTheDocument();
+    const menu = within(await screen.findByRole('navigation', { name: 'Hauptmenü' }));
+    expect(await menu.findByRole('link', { name: /Personen/ })).toBeInTheDocument(); // Menü standardmäßig Deutsch
+    expect(menu.getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
+    expect(menu.queryByRole('link', { name: /Audit/ })).not.toBeInTheDocument();
+    expect(menu.queryByRole('link', { name: /^Personal$/ })).not.toBeInTheDocument();
+    expect(menu.queryByRole('link', { name: /Rollen/ })).not.toBeInTheDocument();
+    // Handy-Schnellleiste zeigt nur erlaubte Bereiche
+    const bar = within(screen.getByRole('navigation', { name: 'Schnellzugriff' }));
+    expect(bar.getByRole('link', { name: /Personen/ })).toBeInTheDocument();
+    expect(bar.queryByRole('link', { name: /Leitstelle/ })).not.toBeInTheDocument();
   });
 });
 

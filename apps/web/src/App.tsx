@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router';
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import { useAuth } from './lib/auth';
 import { AppShell } from './components/AppShell';
 import { Forbidden, SkeletonRows } from './components/ui';
@@ -100,6 +100,18 @@ function AnalyticsGate() {
 /** Start: ohne gewählten Server erst die Server-Übersicht, sonst das Dashboard des Servers. */
 function Home() {
   return <Navigate to={getServer() ? '/dashboard' : '/servers'} replace />;
+}
+
+/** Unbekannte Adresse: Hinweis + Weg zurück (Menüsuche oder Dashboard). */
+function NotFound() {
+  return (
+    <div role="alert" className="mx-auto max-w-md py-16 text-center">
+      <p className="text-5xl font-bold text-muted">404</p>
+      <h1 className="mt-2 text-lg font-semibold">Seite nicht gefunden</h1>
+      <p className="mt-1 text-sm text-muted">Diese Adresse gibt es nicht (mehr). Nutze die Menüsuche links (Taste „/“) oder gehe zurück zum Dashboard.</p>
+      <Link to="/dashboard" className="mt-4 inline-block rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-fg">Zum Dashboard</Link>
+    </div>
+  );
 }
 
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
@@ -228,21 +240,21 @@ export function App() {
           <Route path="admin/overrides" element={<Navigate to="/admin/users" replace />} />
           <Route path="admin/permissions" element={<Navigate to="/admin/roles" replace />} />
           <Route path="admin/audit" element={<Guard perm="audit.view" area="dashboard.logs.view"><Audit /></Guard>} />
-          <Route path="admin/shifts" element={<Guard perm="settings.view"><Shifts /></Guard>} />
-          <Route path="admin/servers" element={<Guard perm="settings.view"><ServerLinks /></Guard>} />
-          <Route path="admin/multi-server" element={<MultiServer />} />
+          <Route path="admin/shifts" element={<Guard perm="settings.view" area="dashboard.settings.view"><Shifts /></Guard>} />
+          <Route path="admin/servers" element={<Guard perm="settings.view" area="dashboard.settings.view"><ServerLinks /></Guard>} />
+          <Route path="admin/multi-server" element={<Guard perm="servers.view" area="dashboard.settings.view"><MultiServer /></Guard>} />
           <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />
-          <Route path="admin/embeds" element={<Guard perm="settings.view"><Embeds /></Guard>} />
-          <Route path="admin/welcome" element={<Guard perm="settings.view"><WelcomeSettings /></Guard>} />
-          <Route path="admin/leave" element={<Guard perm="settings.view"><LeaveSettings /></Guard>} />
+          <Route path="admin/embeds" element={<Guard perm="settings.view" area="dashboard.settings.view"><Embeds /></Guard>} />
+          <Route path="admin/welcome" element={<Guard perm="settings.view" area="dashboard.settings.view"><WelcomeSettings /></Guard>} />
+          <Route path="admin/leave" element={<Guard perm="settings.view" area="dashboard.settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />
           <Route path="admin/danger-level" element={<Guard perm="settings.manage" area="dashboard.settings.view"><DangerSettingsPage /></Guard>} />
-          <Route path="admin/legal-codes" element={<Guard perm="settings.view"><LegalCodes /></Guard>} />
+          <Route path="admin/legal-codes" element={<Guard perm="settings.view" area="dashboard.settings.view"><LegalCodes /></Guard>} />
           <Route path="admin/settings" element={<Guard perm="settings.view" area="dashboard.settings.view"><Settings /></Guard>} />
           <Route path="admin/studio" element={<Guard perm="studio.view" area="dashboard.settings.view"><Studio /></Guard>} />
-          <Route path="*" element={<div className="py-16 text-center text-muted">404 – Seite nicht gefunden</div>} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -7,12 +7,13 @@ export interface NavTab { path: string; label: string; perm?: string; area?: str
  * `tabs`: mehrere Seiten unter einem Menüpunkt; sichtbar, wenn mindestens ein Reiter erlaubt ist. Der Menüpunkt führt
  * zum ersten erlaubten Reiter, oben auf der Seite erscheint die Reiterleiste.
  */
-export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; tabs?: NavTab[]; group: 'Operations' | 'Records' | 'Organisation' | 'Administration' }
+export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; tabs?: NavTab[]; group: Group; /** Suchbegriffe für die Menüsuche (zusätzlich zu Name und Reitern). */ keywords?: string }
+export type Group = 'Operations' | 'Records' | 'Organisation' | 'Administration' | 'Account';
 
-const grp = (label: string, icon: LucideIcon, group: NavItem['group'], tabs: NavTab[]): NavItem => ({ path: tabs[0]!.path, label, icon, group, tabs });
+const grp = (label: string, icon: LucideIcon, group: Group, tabs: NavTab[]): NavItem => ({ path: tabs[0]!.path, label, icon, group, tabs });
 
 export const NAV: NavItem[] = [
-  { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations' },
+  { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations', keywords: 'bürger haftbefehl waffen' },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
   grp('Leitstelle', MapPinned, 'Operations', [
     { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
@@ -26,19 +27,19 @@ export const NAV: NavItem[] = [
   ]),
   grp('Funk', RadioTower, 'Operations', [
     { path: '/radio-codes', label: 'Funk-Codes', perm: 'radio.view', area: 'dashboard.radio.view' },
-    { path: '/radio-whitelist', label: '🎙️ Funk-Whitelist', perm: 'radiowhitelist.view' },
+    { path: '/radio-whitelist', label: 'Funk-Whitelist', perm: 'radiowhitelist.view' },
   ]),
   { path: '/support-tickets', label: 'Support-Tickets', icon: LifeBuoy, perm: 'ticket.view', area: 'dashboard.tickets.view', group: 'Operations' },
   { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Records' },
   { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Records' },
   grp('Berichte', FileText, 'Records', [
-    { path: '/reports', label: '📄 Einsatzberichte', perm: 'reports.view' },
-    { path: '/duty-reports', label: '🗓️ Tages-/Wochenberichte', perm: 'dutyreports.view' },
+    { path: '/reports', label: 'Einsatzberichte', perm: 'reports.view' },
+    { path: '/duty-reports', label: 'Tages-/Wochenberichte', perm: 'dutyreports.view' },
   ]),
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   grp('Fahndungen', Flag, 'Records', [
     { path: '/wanted', label: 'Fahndungen', perm: 'wanted.view' },
-    { path: '/wanted/hits', label: '🎯 Fahndungstreffer (ER:LC)', perm: 'wanted.view' },
+    { path: '/wanted/hits', label: 'Fahndungstreffer (ER:LC)', perm: 'wanted.view' },
   ]),
   grp('Personal', UserCheck, 'Organisation', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
@@ -52,11 +53,11 @@ export const NAV: NavItem[] = [
   ]),
   grp('Bewerbungen', ClipboardList, 'Organisation', [
     { path: '/applications', label: 'Bewerbungen', perm: 'applications.view', area: 'dashboard.applications.view' },
-    { path: '/application-bans', label: '⛔ Sperren', perm: 'applications.view', area: 'dashboard.applications.view' },
+    { path: '/application-bans', label: 'Sperren', perm: 'applications.view', area: 'dashboard.applications.view' },
     { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
     { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
   ]),
-  { path: '/announcements', label: 'Meldungen & Abstimmungen', icon: BellRing, perm: 'announcements.view', group: 'Organisation' },
+  { path: '/announcements', label: 'Mitteilungen', icon: BellRing, perm: 'announcements.view', group: 'Organisation', keywords: 'meldungen abstimmungen umfragen ankündigungen' },
   { path: '/leave', label: 'Abmeldungen', icon: CalendarOff, perm: 'leave.request', group: 'Organisation' },
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
   grp('Benutzer & Rollen', Users, 'Administration', [
@@ -69,7 +70,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/servers', label: 'Server-Verbund', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/multi-server', label: 'Server & Module', perm: 'servers.view', area: 'dashboard.settings.view' },
-    { path: '/admin/personnel', label: 'Personal', perm: 'promotion.manage_settings', area: 'dashboard.settings.view' },
+    { path: '/admin/personnel', label: 'Personal', perm: 'personnel.view', area: 'dashboard.settings.view' },
     { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
   grp('Discord-Nachrichten', PanelTop, 'Administration', [
@@ -80,13 +81,13 @@ export const NAV: NavItem[] = [
     { path: '/admin/danger-level', label: 'Gefahrenstatus', perm: 'settings.manage', area: 'dashboard.settings.view' },
     { path: '/message-builder', label: 'Message Builder', perm: 'messagebuilder.view' },
   ]),
-  grp('Protokolle & Backups', ScrollText, 'Administration', [
+  grp('Protokolle', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },
     { path: '/admin/logging', label: 'Logging (Discord)', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/backups', label: 'Backups', perm: 'settings.manage', area: 'dashboard.settings.view' },
   ]),
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Administration' },
+  { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Account', keywords: 'design profil 2fa favoriten' },
 ];
 type Can = (p: string) => boolean;
 /** Sichtbar = Modul-Recht und (falls gesetzt) Bereichs-Recht. Nur Komfort – die API prüft selbst. */
@@ -102,9 +103,23 @@ export const isActive = (n: NavItem, pathname: string) => (n.tabs ? n.tabs.map((
 export const navFor = (items: NavItem[], path: string) => items.find((n) => n.path === path || n.tabs?.some((t) => t.path === path));
 /** Zusammengefasster Menüpunkt, zu dem die aktuelle Seite gehört (für die Reiterleiste). */
 export const sectionFor = (pathname: string) => NAV.find((n) => n.tabs && isActive(n, pathname));
-export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration'] as const;
+export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration', 'Account'] as const satisfies readonly Group[];
+
+const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+/** Menüsuche: Treffer im Namen, in Suchbegriffen oder in einem Reiter. Liefert das Ziel (bei Reiter-Treffer direkt den Reiter). */
+export function searchNav(items: NavItem[], q: string, can: Can): { item: NavItem; to: string; via?: string }[] {
+  const n = norm(q.trim());
+  if (!n) return [];
+  const out: { item: NavItem; to: string; via?: string }[] = [];
+  for (const i of items) {
+    if (norm(`${i.label} ${i.keywords ?? ''}`).includes(n)) { out.push({ item: i, to: href(i, can) }); continue; }
+    const t = visibleTabs(i, can).find((x) => norm(x.label).includes(n));
+    if (t) out.push({ item: i, to: t.path, via: t.label });
+  }
+  return out;
+}
 
 /** Deutsche Gruppennamen. Menünamen sind direkt deutsch; das Dashboard ist vollständig deutsch. */
-const DE: Record<string, string> = { Operations: 'Betrieb', Records: 'Akten', Organisation: 'Organisation', Administration: 'Verwaltung' };
+const DE: Record<string, string> = { Operations: 'Betrieb', Records: 'Akten', Organisation: 'Organisation', Administration: 'Verwaltung', Account: 'Konto' };
 // `lang` bleibt aus Kompatibilitätsgründen – es wird immer Deutsch ausgegeben.
 export const tr = (text: string, _lang?: string) => DE[text] ?? text;

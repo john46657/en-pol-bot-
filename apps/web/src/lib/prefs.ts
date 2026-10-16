@@ -17,6 +17,8 @@ export interface Preferences {
   animations: boolean;
   sidebarWidth: 'narrow' | 'normal' | 'wide';
   sidebarCollapsed: boolean;
+  /** Eingeklappte Menügruppen (z. B. 'Administration'). */
+  collapsedGroups?: string[];
   fontSize: number;
   density: 'compact' | 'comfortable';
   language: 'de' | 'en';
