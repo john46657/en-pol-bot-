@@ -68,6 +68,12 @@ let DutyReportsService = class DutyReportsService {
     async seeAll(userId) { return this.perms.has(userId, 'dutyreports.view_all'); }
     async list(actor, f, page = 1, pageSize = 50) {
         const all = await this.seeAll(actor.userId);
+        if (f.discordId && all && !f.mine) {
+            const link = await this.prisma.discordLink.findUnique({ where: { discordId: f.discordId }, select: { userId: true } });
+            if (!link)
+                return { items: [], total: 0, page, pageSize, seeAll: all };
+            f = { ...f, authorId: link.userId };
+        }
         const where = {
             ...(f.templateId ? { templateId: f.templateId } : {}),
             ...(f.status ? { status: f.status } : {}),
@@ -87,7 +93,7 @@ let DutyReportsService = class DutyReportsService {
             throw new errors_1.AppError('NOT_FOUND', 'Bericht nicht gefunden.');
         const [t, posted] = await Promise.all([this.templates.get(r.templateId), this.discord.posted(`drep-${r.id}`)]);
         const reviewerName = r.reviewedById ? (await this.prisma.user.findUnique({ where: { id: r.reviewedById }, select: { displayName: true } }))?.displayName ?? null : null;
-        return { ...r, template: t ?? null, posted, reviewerName, canEdit: await this.canEdit(actor.userId, r, t) };
+        return { ...r, template: t ?? null, posted, reviewerName, canEdit: await this.canEdit(actor.userId, r, t), canReview: await this.perms.has(actor.userId, 'dutyreports.review') };
     }
     async canEdit(userId, r, t) {
         if (await this.perms.has(userId, 'dutyreports.edit_all'))

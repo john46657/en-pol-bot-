@@ -83095,6 +83095,8 @@ var MB_INTERACTION = {
 };
 
 // apps/bot/src/commands/duty-reports.ts
+var STATUS_DE2 = { SUBMITTED: "\u{1F553} eingereicht", REVIEWED: "\u2705 gepr\xFCft", RETURNED: "\u21A9\uFE0F zur Nachbesserung" };
+var LIST_STATUS = { offen: "SUBMITTED", zurueckgegeben: "RETURNED", geprueft: "REVIEWED", alle: "" };
 var drafts = /* @__PURE__ */ new Map();
 var key3 = (c, mode, id3) => `${c.discordId}:${mode}:${id3}`;
 var sweep = () => {
@@ -83111,8 +83113,51 @@ function modal(t, mode, id3, page, values) {
     fields: t.fields.slice(page * PAGE, page * PAGE + PAGE).map((f2) => ({ id: f2.id, label: f2.label, paragraph: f2.type === "long", required: f2.required, maxLength: Math.min(f2.maxLength, 4e3), ...hint(f2) ? { placeholder: hint(f2) } : {}, ...values[f2.id] ? { value: values[f2.id].slice(0, 4e3) } : {} }))
   };
 }
-async function templates(c) {
-  return c.api.asUser(c.discordId, "GET", "/duty-reports/templates?active=1");
+async function showReport(c, idOrNumber) {
+  const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${encodeURIComponent(idOrNumber.trim())}`);
+  const t = r.template;
+  const head = [`**${r.number}** \xB7 ${STATUS_DE2[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain(r.author.displayName)}` : null, r.reviewerName ? `**Gepr\xFCft von:** ${plain(r.reviewerName)}` : null, r.status === "RETURNED" && r.reviewNote ? `**Nachbessern:** ${plain(r.reviewNote)}` : null].filter(Boolean).join("\n");
+  const buttons = [
+    ...r.canEdit ? [{ id: `drep:edit:${r.id}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
+    ...r.canReview && r.status !== "REVIEWED" ? [{ id: `drep:rev:${r.id}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
+    ...r.canReview && r.status !== "RETURNED" ? [{ id: `drep:ret:${r.id}`, label: "Zur Nachbesserung", emoji: "\u21A9\uFE0F", style: "secondary" }] : []
+  ];
+  return {
+    ephemeral: true,
+    embeds: [{
+      title: `${t?.emoji ?? "\u{1F4DD}"} ${r.templateName} \u2013 ${periodLabel(r.period, r.periodStart)}`.slice(0, 256),
+      color: r.status === "REVIEWED" ? COLORS.success : r.status === "RETURNED" ? COLORS.warning : COLORS.info,
+      description: head.slice(0, 4e3),
+      fields: (t?.fields ?? Object.keys(r.values).map((id3) => ({ id: id3, label: id3 }))).filter((f2) => r.values[f2.id]).slice(0, 25).map((f2) => ({ name: f2.label.slice(0, 256), value: r.values[f2.id].slice(0, 1024) }))
+    }],
+    ...buttons.length ? { buttons } : {}
+  };
+}
+async function listReply2(c) {
+  const statusKey = String(c.opts.status ?? "offen");
+  const status = LIST_STATUS[statusKey] ?? "SUBMITTED";
+  const params = new URLSearchParams({ pageSize: "25" });
+  if (status) params.set("status", status);
+  if (c.opts.mitglied) params.set("discordId", String(c.opts.mitglied));
+  const days2 = Number(c.opts.tage ?? 0);
+  if (days2 > 0) params.set("from", new Date(Date.now() - days2 * 864e5).toISOString().slice(0, 10));
+  const name = String(c.opts.vorlage ?? "").trim().toLowerCase();
+  if (name) {
+    const all = await templates(c, false);
+    const t = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
+    if (!t) return errorReply(`Keine Vorlage \u201E${plain(name)}\u201C gefunden.`);
+    params.set("templateId", t.id);
+  }
+  const r = await c.api.asUser(c.discordId, "GET", `/duty-reports?${params}`);
+  const label2 = statusKey in LIST_STATUS ? { offen: "Offen", zurueckgegeben: "Zur Nachbesserung", geprueft: "Gepr\xFCft", alle: "Alle" }[statusKey] : "Offen";
+  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain(x.author.displayName)} \xB7 ` : ""}${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
+  const embed = listEmbed(`\u{1F5D3}\uFE0F ${r.seeAll ? "Berichte" : "Deine Berichte"} \u2013 ${label2} (${r.total})`, lines, "Keine Berichte gefunden.");
+  if (r.total > r.items.length) embed.footer = `${r.total - r.items.length} weitere \u2013 Filter eingrenzen oder im Dashboard ansehen`;
+  if (!r.items.length) return { ephemeral: true, embeds: [embed] };
+  return { ephemeral: true, embeds: [embed], select: { id: "drep:open", placeholder: "Bericht \xF6ffnen \u2026", options: r.items.slice(0, 25).map((x) => ({ label: `${x.number} \xB7 ${r.seeAll ? x.author.displayName : x.templateName}`.slice(0, 100), value: x.id, description: `${x.templateName} \u2013 ${periodLabel(x.period, x.periodStart)}`.slice(0, 100) })) } };
+}
+async function templates(c, onlyActive = true) {
+  return c.api.asUser(c.discordId, "GET", `/duty-reports/templates${onlyActive ? "?active=1" : ""}`);
 }
 async function load(c, mode, id3) {
   if (mode === "n") {
@@ -83139,7 +83184,13 @@ var DUTY_REPORT_COMMANDS = [{
   subcommands: [
     { name: "ausfuellen", description: "Neuen Bericht nach einer Vorlage ausf\xFCllen" },
     { name: "meine", description: "Deine letzten Berichte" },
-    { name: "anzeigen", description: "Einen Bericht ansehen (und bearbeiten)", options: [{ name: "nummer", description: "Berichtsnummer, z. B. TB-2026-K7M2QX", type: "string", required: true, maxLength: 40 }] }
+    { name: "anzeigen", description: "Einen Bericht ansehen (bearbeiten bzw. pr\xFCfen)", options: [{ name: "nummer", description: "Berichtsnummer, z. B. TB-2026-K7M2QX", type: "string", required: true, maxLength: 40 }] },
+    { name: "liste", description: "Berichte des Teams: offen, zur Nachbesserung, gepr\xFCft \u2013 zum Ansehen und Pr\xFCfen", options: [
+      { name: "status", description: "Welche Berichte? (Standard: offen)", type: "string", choices: Object.keys(LIST_STATUS).map((k) => ({ name: k === "zurueckgegeben" ? "zur Nachbesserung" : k === "geprueft" ? "gepr\xFCft" : k, value: k })) },
+      { name: "mitglied", description: "Nur Berichte dieses Mitglieds", type: "user" },
+      { name: "vorlage", description: "Nur diese Vorlage (Name)", type: "string", maxLength: 64 },
+      { name: "tage", description: "Nur Zeitr\xE4ume der letzten \u2026 Tage", type: "integer", min: 1, max: 365 }
+    ] }
   ],
   opensModal: true,
   async run(c) {
@@ -83148,17 +83199,10 @@ var DUTY_REPORT_COMMANDS = [{
       const sub = String(c.opts._sub ?? "ausfuellen");
       if (sub === "meine") {
         const r = await c.api.asUser(c.discordId, "GET", "/duty-reports?mine=true&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : ""}`), "Noch keine Berichte.")] };
+        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : x.status === "RETURNED" ? " \u21A9\uFE0F nachbessern" : ""}`), "Noch keine Berichte.")] };
       }
-      if (sub === "anzeigen") {
-        const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${encodeURIComponent(String(c.opts.nummer ?? "").trim())}`);
-        const t = r.template;
-        return {
-          ephemeral: true,
-          embeds: [{ title: `${t?.emoji ?? "\u{1F4DD}"} ${r.templateName} \u2013 ${periodLabel(r.period, r.periodStart)}`, color: COLORS.info, description: `**${r.number}**${r.status === "REVIEWED" ? " \xB7 \u2705 gepr\xFCft" : ""}`, fields: (t?.fields ?? Object.keys(r.values).map((id3) => ({ id: id3, label: id3 }))).filter((f2) => r.values[f2.id]).map((f2) => ({ name: f2.label, value: r.values[f2.id].slice(0, 1024) })) }],
-          ...r.canEdit ? { buttons: [{ id: `drep:edit:${r.id}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] } : {}
-        };
-      }
+      if (sub === "anzeigen") return await showReport(c, String(c.opts.nummer ?? ""));
+      if (sub === "liste") return await listReply2(c);
       const list = await templates(c);
       if (!list.length) return errorReply("Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter \u201ETages-/Wochenberichte\u201C an.");
       if (list.length === 1) return openModal(c, list[0], "n", list[0].id, 0, await prefill(c, list[0]));
@@ -83174,6 +83218,11 @@ var DUTY_REPORT_INTERACTION = {
   async run(c) {
     const [action, a1, a2, a3] = c.args;
     try {
+      if (action === "open") {
+        const id4 = c.values?.[0] ?? "";
+        if (!/^[0-9a-f-]{36}$/.test(id4)) return errorReply("Bitte einen Bericht ausw\xE4hlen.");
+        return await showReport(c, id4);
+      }
       if (action === "pick") {
         const id4 = c.values?.[0] ?? "";
         const { t: t2 } = await load(c, "n", id4);
@@ -83288,7 +83337,7 @@ var DEFAULT_FORM = { title: "Antrag auf Funkfreigabe", fields: [
   { key: "rank", label: "Dienstgrad (falls relevant)", placeholder: "", paragraph: false, required: false, maxLength: 80 },
   { key: "department", label: "Abteilung (falls relevant)", placeholder: "", paragraph: false, required: false, maxLength: 80 }
 ] };
-var STATUS_DE2 = { ACTIVE: "\u2705 aktiv", PENDING: "\u{1F553} ausstehend", DISABLED: "\u23F8\uFE0F deaktiviert", SUSPENDED: "\u26D4 gesperrt", EXPIRED: "\u231B abgelaufen", REVOKED: "\u274C entzogen" };
+var STATUS_DE3 = { ACTIVE: "\u2705 aktiv", PENDING: "\u{1F553} ausstehend", DISABLED: "\u23F8\uFE0F deaktiviert", SUSPENDED: "\u26D4 gesperrt", EXPIRED: "\u231B abgelaufen", REVOKED: "\u274C entzogen" };
 var ts2 = (iso) => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:D>`;
 var apiError = (e) => e instanceof BotApiError && e.status === 503 ? errorReply(e.message) : mapError(e);
 async function openRequestForm(c) {
@@ -83340,7 +83389,7 @@ var RADIO_WHITELIST_COMMANDS = [
       try {
         const s = await c.api.service("GET", `/bot/radio-whitelist/status/${c.discordId}`);
         const lines = [
-          `**Status:** ${s.status ? STATUS_DE2[s.status] ?? s.status : "nicht freigegeben"}`,
+          `**Status:** ${s.status ? STATUS_DE3[s.status] ?? s.status : "nicht freigegeben"}`,
           ...s.expiresAt && s.status === "ACTIVE" ? [`**G\xFCltig bis:** ${ts2(s.expiresAt)}`] : [],
           ...s.suspendedUntil && s.status === "SUSPENDED" ? [`**Gesperrt bis:** ${ts2(s.suspendedUntil)}`] : [],
           ...s.pendingSince ? [`**Offener Antrag seit:** ${ts2(s.pendingSince)}`] : []
@@ -83866,7 +83915,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/schicht` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
-        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
+        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
