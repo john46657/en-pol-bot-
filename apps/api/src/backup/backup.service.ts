@@ -16,12 +16,40 @@ const KEY = 'backup.config';
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
 const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
+/**
+ * Bewusst entfernte Tabellen: ältere Backups enthalten sie noch – beim Einspielen werden sie übersprungen und die Zeilen,
+ * die die zugehörige Migration ebenfalls gelöscht hat, herausgefiltert (sonst kämen z. B. gelöschte Rechte zurück).
+ */
+const REMOVED_TABLES = new Set(['HrAnnouncement', 'HrAnnouncementRead', 'HrPoll', 'HrPollVote']);
+const removedPermission = (key: unknown) => typeof key === 'string' && /^(announcements|polls)\./.test(key);
+const REMOVED_ROWS: Record<string, (r: Record<string, unknown>) => boolean> = {
+  Notification: (r) => r.entityType === 'HrAnnouncement' || r.entityType === 'HrPoll',
+  Permission: (r) => removedPermission(r.key),
+  RolePermission: (r) => removedPermission(r.permissionKey),
+  UserPermissionOverride: (r) => removedPermission(r.permissionKey),
+};
 const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver|vor-zusammenfuehrung)-(\d{8}-\d{6})\.json\.gz$/;
 export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver' | 'vor-zusammenfuehrung';
 /** Nach dem Einspielen (z. B. eines Backups aus dem Ein-Server-Betrieb): gesetzt vom MultiServerRestoreService. */
 let afterRestore: (() => Promise<unknown>) | null = null;
 export const setAfterRestore = (fn: (() => Promise<unknown>) | null) => { afterRestore = fn; };
 const delegate = (name: string) => name.charAt(0).toLowerCase() + name.slice(1);
+
+/**
+ * Aufbewahrung der stündlichen Daten-Backups: die letzten 48 Stunden vollständig, davor das jeweils neueste Backup
+ * eines Tages für `keep` Tage. `list` neueste zuerst.
+ */
+export function autoBackupsToDelete<T extends { createdAt: string }>(list: T[], keep: number, now = new Date()): T[] {
+  const recent = now.getTime() - 48 * 60 * 60_000;
+  const days = new Set<string>();
+  return list.filter((f) => {
+    if (new Date(f.createdAt).getTime() >= recent) return false;
+    const d = f.createdAt.slice(0, 10);
+    if (days.has(d) || days.size >= keep) return true;
+    days.add(d);
+    return false;
+  });
+}
 
 /** Tabellen in einer Reihenfolge, in der jede Tabelle nach denen kommt, auf die sie verweist (zum Einspielen). */
 function modelOrder() {
@@ -73,8 +101,9 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     const cfg = await this.config();
     const day = 23 * 60 * 60_000;
     if (cfg.dataAuto) {
+      // Dashboard-Daten stündlich (der Timer läuft jede Stunde – kleine Verschiebungen dürfen keinen Lauf auslassen)
       const last = (await this.listData()).find((f) => f.kind === 'auto');
-      if (!last || now.getTime() - new Date(last.createdAt).getTime() > day) await this.createData(null, 'auto');
+      if (!last || now.getTime() - new Date(last.createdAt).getTime() > 50 * 60_000) await this.createData(null, 'auto');
     }
     if (cfg.discordAuto) {
       for (const g of await this.discord.guilds()) {
@@ -118,7 +147,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     await writeFile(path.join(this.dir, name), data);
     if (kind === 'auto') {
       const keep = (await this.config()).keep;
-      for (const f of (await this.listData()).filter((x) => x.kind === 'auto').slice(keep)) await unlink(path.join(this.dir, f.name)).catch(() => undefined);
+      for (const f of autoBackupsToDelete((await this.listData()).filter((x) => x.kind === 'auto'), keep)) await unlink(path.join(this.dir, f.name)).catch(() => undefined);
     }
     if (actor) await this.audit.record(actor, { action: 'backup.data.create', module: 'settings', entityType: 'Backup', entityId: name, after: { rows, size: data.length } });
     return { name, rows, size: data.length };
@@ -145,7 +174,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     try { body = JSON.parse((raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw) : raw).toString('utf8')); } catch { throw new AppError('VALIDATION_FAILED', 'Die Datei ist kein gültiges Backup.'); }
     if (body.app !== 'en-polizei' || body.version !== 1 || !body.tables) throw new AppError('VALIDATION_FAILED', 'Die Datei ist kein Backup dieses Dashboards.');
     const order = modelOrder().filter((m) => !KEEP_ON_RESTORE.has(m.name));
-    const unknown = Object.keys(body.tables).filter((t) => !order.some((m) => m.name === t) && !SKIP.has(t) && !KEEP_ON_RESTORE.has(t));
+    const unknown = Object.keys(body.tables).filter((t) => !order.some((m) => m.name === t) && !SKIP.has(t) && !KEEP_ON_RESTORE.has(t) && !REMOVED_TABLES.has(t));
     if (unknown.length) throw new AppError('VALIDATION_FAILED', `Das Backup passt nicht zu dieser Version (unbekannte Tabellen: ${unknown.slice(0, 5).join(', ')}).`);
     const safety = await this.createData(null, 'vor-wiederherstellung');
     let rows = 0;
@@ -156,7 +185,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       const sessions = await tx.session.findMany();
       for (const m of [...order].reverse()) await db[delegate(m.name)]!.deleteMany();
       for (const m of order) {
-        const list = body.tables![m.name] ?? [];
+        const list = (body.tables![m.name] ?? []).filter((r) => !REMOVED_ROWS[m.name]?.(r));
         const fields = new Map(m.fields.filter((f) => f.kind === 'scalar' || f.kind === 'enum').map((f) => [f.name, f]));
         const data = list.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => fields.has(k)).map(([k, v]) => [k, v === null && fields.get(k)!.type === 'Json' ? Prisma.DbNull : v])));
         for (let i = 0; i < data.length; i += 500) await db[delegate(m.name)]!.createMany({ data: data.slice(i, i + 500) });

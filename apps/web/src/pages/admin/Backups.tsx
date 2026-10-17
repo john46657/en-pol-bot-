@@ -28,9 +28,10 @@ export function Backups() {
       <PageHeader title="💾 Backups" subtitle="Discord-Server und Dashboard-Daten sichern – und bei Bedarf wiederherstellen." />
       {c && (
         <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-line bg-panel p-3 text-sm">
-          <label className="flex items-center gap-2"><Toggle label="Dashboard-Daten täglich sichern" checked={c.dataAuto} onChange={(v) => saveCfg.mutate({ ...c, dataAuto: v })} />Dashboard-Daten täglich sichern</label>
+          <label className="flex items-center gap-2"><Toggle label="Dashboard-Daten stündlich sichern" checked={c.dataAuto} onChange={(v) => saveCfg.mutate({ ...c, dataAuto: v })} />Dashboard-Daten stündlich sichern</label>
           <label className="flex items-center gap-2"><Toggle label="Discord-Server täglich sichern" checked={c.discordAuto} onChange={(v) => saveCfg.mutate({ ...c, discordAuto: v })} />Discord-Server täglich sichern</label>
-          <label className="flex items-center gap-2">Behalten<div className="w-20"><Select aria-label="Automatische Backups behalten" value={c.keep} onChange={(e) => saveCfg.mutate({ ...c, keep: Number(e.target.value) })}>{[3, 7, 14, 30, 60].map((n) => <option key={n} value={n}>{n}</option>)}</Select></div>automatische</label>
+          <label className="flex items-center gap-2">Behalten<div className="w-20"><Select aria-label="Automatische Backups behalten" value={c.keep} onChange={(e) => saveCfg.mutate({ ...c, keep: Number(e.target.value) })}>{[3, 7, 14, 30, 60].map((n) => <option key={n} value={n}>{n}</option>)}</Select></div>Tage</label>
+          <p className="basis-full text-xs text-muted">Dashboard-Daten: die letzten 48 Stunden jede Stunde, davor ein Backup pro Tag. Discord: so viele Backups je Server.</p>
           {saveCfg.error && <span role="alert" className="text-danger">{errText(saveCfg.error)}</span>}
         </div>
       )}

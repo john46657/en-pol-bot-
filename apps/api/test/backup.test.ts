@@ -3,7 +3,9 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { createTestApp, login, makeUser } from './helpers';
+import { autoBackupsToDelete } from '../src/backup/backup.service';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { loadEnv } from '../src/config/env';
 
@@ -52,6 +54,29 @@ describe('Backups', () => {
     expect((await admin.get('/api/v1/auth/me')).status).toBe(200); // Sitzung bleibt
     // hochgeladene Datei ohne Bestätigung / kaputt
     expect((await admin.post('/api/v1/backups/data-upload/restore').attach('file', Buffer.from('kaputt'), 'x.json.gz').field('confirm', 'WIEDERHERSTELLEN')).status).toBe(400);
+  });
+
+  it('dashboard data: backups from before removed tables still restore (removed tables and their rights are skipped)', async () => {
+    const admin = (await login(app, 'bk_admin')).agent;
+    const made = await admin.post('/api/v1/backups/data');
+    const dl = await admin.get(`/api/v1/backups/data/${made.body.name}`).buffer(true).parse((res, cb) => { const c: Buffer[] = []; res.on('data', (d: Buffer) => c.push(d)); res.on('end', () => cb(null, Buffer.concat(c))); });
+    const body = JSON.parse(gunzipSync(dl.body as Buffer).toString('utf8')) as { tables: Record<string, Record<string, unknown>[]> };
+    // Stand eines älteren Backups: Mitteilungen/Abstimmungen samt Rechten gab es noch
+    body.tables.HrPoll = [{ id: '00000000-0000-4000-8000-000000000001', title: 'Alt' }];
+    body.tables.HrPollVote = []; body.tables.HrAnnouncement = []; body.tables.HrAnnouncementRead = [];
+    body.tables.Permission = [...(body.tables.Permission ?? []), { key: 'polls.view', module: 'polls', description: 'alt' }];
+    const res = await admin.post('/api/v1/backups/data-upload/restore').attach('file', gzipSync(JSON.stringify(body)), 'alt.json.gz').field('confirm', 'WIEDERHERSTELLEN');
+    expect(res.status).toBe(200);
+    expect(await prisma.permission.findUnique({ where: { key: 'polls.view' } })).toBeNull();
+  });
+
+  it('hourly data backups: last 48 hours kept in full, older ones thinned to one per day for `keep` days', () => {
+    const now = new Date('2026-10-20T12:00:00Z');
+    const list = Array.from({ length: 24 * 6 }, (_, i) => ({ createdAt: new Date(now.getTime() - i * 60 * 60_000).toISOString() }));
+    const del = new Set(autoBackupsToDelete(list, 2, now));
+    const kept = list.filter((f) => !del.has(f));
+    expect(kept.filter((f) => new Date(f.createdAt).getTime() >= now.getTime() - 48 * 60 * 60_000)).toHaveLength(49);
+    expect(kept.filter((f) => new Date(f.createdAt).getTime() < now.getTime() - 48 * 60 * 60_000).map((f) => f.createdAt)).toEqual(['2026-10-18T11:00:00.000Z', '2026-10-17T23:00:00.000Z']);
   });
 
   it('discord: the bot delivers the server data; restore is queued for the bot and the result is stored', async () => {
