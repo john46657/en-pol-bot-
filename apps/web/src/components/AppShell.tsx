@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Menu, Monitor, Search, Shield, Star } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, MapPinned, Menu, Monitor, Search, Shield, Star } from 'lucide-react';
 import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
@@ -140,6 +140,7 @@ export function AppShell() {
           <Button variant="ghost" className="lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></Button>
           <GlobalSearch />
           <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+            {can('cad.view') && can('dashboard.cad.view') && <Link to="/cad" className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium hover:bg-panel-2" title="CAD-Leitstelle öffnen"><MapPinned size={14} aria-hidden /><span className="hidden sm:inline">Leitstelle öffnen</span></Link>}
             {can('dashboard.view') && <Link to="/mdt" className="flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-fg hover:opacity-90" title="Polizei-MDT öffnen"><Monitor size={14} aria-hidden /><span className="hidden sm:inline">MDT öffnen</span></Link>}
             <SaveStatus />
             <DiscordLink />

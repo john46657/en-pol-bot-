@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BackupService = exports.setAfterRestore = void 0;
+exports.autoBackupsToDelete = autoBackupsToDelete;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const promises_1 = require("node:fs/promises");
@@ -30,12 +31,41 @@ const KEY = 'backup.config';
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
 const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
+/**
+ * Bewusst entfernte Tabellen: ältere Backups enthalten sie noch – beim Einspielen werden sie übersprungen und die Zeilen,
+ * die die zugehörige Migration ebenfalls gelöscht hat, herausgefiltert (sonst kämen z. B. gelöschte Rechte zurück).
+ */
+const REMOVED_TABLES = new Set(['HrAnnouncement', 'HrAnnouncementRead', 'HrPoll', 'HrPollVote']);
+const removedPermission = (key) => typeof key === 'string' && /^(announcements|polls)\./.test(key);
+const REMOVED_ROWS = {
+    Notification: (r) => r.entityType === 'HrAnnouncement' || r.entityType === 'HrPoll',
+    Permission: (r) => removedPermission(r.key),
+    RolePermission: (r) => removedPermission(r.permissionKey),
+    UserPermissionOverride: (r) => removedPermission(r.permissionKey),
+};
 const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver|vor-zusammenfuehrung)-(\d{8}-\d{6})\.json\.gz$/;
 /** Nach dem Einspielen (z. B. eines Backups aus dem Ein-Server-Betrieb): gesetzt vom MultiServerRestoreService. */
 let afterRestore = null;
 const setAfterRestore = (fn) => { afterRestore = fn; };
 exports.setAfterRestore = setAfterRestore;
 const delegate = (name) => name.charAt(0).toLowerCase() + name.slice(1);
+/**
+ * Aufbewahrung der stündlichen Daten-Backups: die letzten 48 Stunden vollständig, davor das jeweils neueste Backup
+ * eines Tages für `keep` Tage. `list` neueste zuerst.
+ */
+function autoBackupsToDelete(list, keep, now = new Date()) {
+    const recent = now.getTime() - 48 * 60 * 60_000;
+    const days = new Set();
+    return list.filter((f) => {
+        if (new Date(f.createdAt).getTime() >= recent)
+            return false;
+        const d = f.createdAt.slice(0, 10);
+        if (days.has(d) || days.size >= keep)
+            return true;
+        days.add(d);
+        return false;
+    });
+}
 /** Tabellen in einer Reihenfolge, in der jede Tabelle nach denen kommt, auf die sie verweist (zum Einspielen). */
 function modelOrder() {
     const models = client_1.Prisma.dmmf.datamodel.models.filter((m) => !SKIP.has(m.name));
@@ -93,8 +123,9 @@ let BackupService = class BackupService {
         const cfg = await this.config();
         const day = 23 * 60 * 60_000;
         if (cfg.dataAuto) {
+            // Dashboard-Daten stündlich (der Timer läuft jede Stunde – kleine Verschiebungen dürfen keinen Lauf auslassen)
             const last = (await this.listData()).find((f) => f.kind === 'auto');
-            if (!last || now.getTime() - new Date(last.createdAt).getTime() > day)
+            if (!last || now.getTime() - new Date(last.createdAt).getTime() > 50 * 60_000)
                 await this.createData(null, 'auto');
         }
         if (cfg.discordAuto) {
@@ -139,7 +170,7 @@ let BackupService = class BackupService {
         await (0, promises_1.writeFile)(node_path_1.default.join(this.dir, name), data);
         if (kind === 'auto') {
             const keep = (await this.config()).keep;
-            for (const f of (await this.listData()).filter((x) => x.kind === 'auto').slice(keep))
+            for (const f of autoBackupsToDelete((await this.listData()).filter((x) => x.kind === 'auto'), keep))
                 await (0, promises_1.unlink)(node_path_1.default.join(this.dir, f.name)).catch(() => undefined);
         }
         if (actor)
@@ -174,7 +205,7 @@ let BackupService = class BackupService {
         if (body.app !== 'en-polizei' || body.version !== 1 || !body.tables)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Die Datei ist kein Backup dieses Dashboards.');
         const order = modelOrder().filter((m) => !KEEP_ON_RESTORE.has(m.name));
-        const unknown = Object.keys(body.tables).filter((t) => !order.some((m) => m.name === t) && !SKIP.has(t) && !KEEP_ON_RESTORE.has(t));
+        const unknown = Object.keys(body.tables).filter((t) => !order.some((m) => m.name === t) && !SKIP.has(t) && !KEEP_ON_RESTORE.has(t) && !REMOVED_TABLES.has(t));
         if (unknown.length)
             throw new errors_1.AppError('VALIDATION_FAILED', `Das Backup passt nicht zu dieser Version (unbekannte Tabellen: ${unknown.slice(0, 5).join(', ')}).`);
         const safety = await this.createData(null, 'vor-wiederherstellung');
@@ -187,7 +218,7 @@ let BackupService = class BackupService {
             for (const m of [...order].reverse())
                 await db[delegate(m.name)].deleteMany();
             for (const m of order) {
-                const list = body.tables[m.name] ?? [];
+                const list = (body.tables[m.name] ?? []).filter((r) => !REMOVED_ROWS[m.name]?.(r));
                 const fields = new Map(m.fields.filter((f) => f.kind === 'scalar' || f.kind === 'enum').map((f) => [f.name, f]));
                 const data = list.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => fields.has(k)).map(([k, v]) => [k, v === null && fields.get(k).type === 'Json' ? client_1.Prisma.DbNull : v])));
                 for (let i = 0; i < data.length; i += 500)

@@ -7,6 +7,13 @@ import { DiscordService } from '../discord/discord.service';
 export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver' | 'vor-zusammenfuehrung';
 export declare const setAfterRestore: (fn: (() => Promise<unknown>) | null) => void;
 /**
+ * Aufbewahrung der stündlichen Daten-Backups: die letzten 48 Stunden vollständig, davor das jeweils neueste Backup
+ * eines Tages für `keep` Tage. `list` neueste zuerst.
+ */
+export declare function autoBackupsToDelete<T extends {
+    createdAt: string;
+}>(list: T[], keep: number, now?: Date): T[];
+/**
  * Backups: Dashboard-Daten (alle Tabellen als komprimierte JSON-Datei im Speicherordner, herunterladbar und wieder einspielbar)
  * und Discord-Server (wie Xenon – der Bot liest Rollen/Kanäle/Rechte/Einstellungen und stellt sie wieder her).
  */

@@ -154,6 +154,25 @@ export function App() {
           <Route path="officers" element={list(R.personnel, 'personnel.view')} />
           <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
         </Route>
+        {/* CAD-Leitstelle: ebenfalls eigene Vollbild-Oberfläche */}
+        <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>
+          <Route index element={<Guard perm="cad.view"><CadDashboard /></Guard>} />
+          <Route path="tablet" element={<Guard perm="cad.view"><CadTablet /></Guard>} />
+          <Route path="incidents" element={<Guard perm="cad.view"><CadIncidents /></Guard>} />
+          <Route path="map" element={<Guard perm="cad.view"><CadMapPage /></Guard>} />
+          <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
+          <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
+          <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
+          <Route path="mdt" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
+          <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
+          <Route path="handover" element={<Guard perm="cad.view"><CadHandover /></Guard>} />
+          <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
+          <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
+          <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
+          <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
+          <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
+          <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
+        </Route>
         <Route element={<Guard><AppShell /></Guard>}>
           <Route index element={<Home />} />
           <Route path="servers" element={<ServerOverview />} />
@@ -169,24 +188,6 @@ export function App() {
           <Route path="radio-whitelist" element={<Guard perm="radiowhitelist.view"><RadioWhitelist /></Guard>} />
           <Route path="teamchance" element={<Guard perm="teamchance.view" area="dashboard.teamchance.view"><TeamChance /></Guard>} />
           <Route path="me/settings" element={<Guard perm="dashboard.view"><PersonalSettings /></Guard>} />
-          <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>
-            <Route index element={<Guard perm="cad.view"><CadDashboard /></Guard>} />
-            <Route path="tablet" element={<Guard perm="cad.view"><CadTablet /></Guard>} />
-            <Route path="incidents" element={<Guard perm="cad.view"><CadIncidents /></Guard>} />
-            <Route path="map" element={<Guard perm="cad.view"><CadMapPage /></Guard>} />
-            <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
-            <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
-            <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
-            <Route path="mdt" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
-            <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
-            <Route path="handover" element={<Guard perm="cad.view"><CadHandover /></Guard>} />
-            <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
-            <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
-            <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
-            <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
-            <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
-            <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
-          </Route>
           {/* „Leitstelle (klassisch)“ ist im CAD aufgegangen – alte Links landen dort */}
           <Route path="dispatch" element={<Navigate to="/cad" replace />} />
           <Route path="support-tickets" element={<Guard perm="ticket.view" area="dashboard.tickets.view"><SupportTickets /></Guard>} />

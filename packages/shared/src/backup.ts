@@ -18,11 +18,11 @@ export const BACKUP_PART_LABEL: Record<BackupPart, string> = { roles: 'Rollen', 
 export interface BackupRestoreResult { created: number; updated: number; failed: number; errors: string[]; parts: BackupPart[]; at: string }
 
 export const backupConfigSchema = z.object({
-  /** Dashboard-Daten täglich automatisch sichern */
+  /** Dashboard-Daten stündlich automatisch sichern */
   dataAuto: z.boolean().default(true),
   /** Discord-Server täglich automatisch sichern */
   discordAuto: z.boolean().default(false),
-  /** so viele automatische Backups behalten (je Art bzw. Server) */
+  /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
   keep: z.number().int().min(1).max(60).default(14),
 });
 export type BackupConfig = z.infer<typeof backupConfigSchema>;

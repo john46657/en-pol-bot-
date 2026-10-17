@@ -3295,11 +3295,11 @@ interface BackupRestoreResult {
     at: string;
 }
 declare const backupConfigSchema: z.ZodObject<{
-    /** Dashboard-Daten täglich automatisch sichern */
+    /** Dashboard-Daten stündlich automatisch sichern */
     dataAuto: z.ZodDefault<z.ZodBoolean>;
     /** Discord-Server täglich automatisch sichern */
     discordAuto: z.ZodDefault<z.ZodBoolean>;
-    /** so viele automatische Backups behalten (je Art bzw. Server) */
+    /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
     keep: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     dataAuto: boolean;
