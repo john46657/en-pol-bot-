@@ -180,7 +180,7 @@ async function shiftTypes(c) {
 }
 /** Mehrere Schicht-Arten (Admin → Shifts)? Dann erst auswählen lassen; sonst `null` (Standard-Schicht). */
 async function shiftPicker(c) {
-    const types = await shiftTypes(c);
+    const types = (await shiftTypes(c))?.filter((t) => (0, shifts_1.permittedFor)(c, t));
     if (!types || types.length < 2)
         return null;
     return { ephemeral: true, content: 'Welche Schicht beginnst du?', select: { id: 'duty:type', placeholder: 'Schicht wählen …', options: types.slice(0, 25).map((t) => ({ label: (0, format_1.clip)(t.name, 100), value: t.id, ...(t.isDefault ? { description: 'Standard' } : {}) })) } };

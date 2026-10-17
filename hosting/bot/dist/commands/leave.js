@@ -78,30 +78,32 @@ function parseDuration(input) {
     return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
 }
 const ts = (iso, style = 'F') => `<t:${Math.floor(new Date(iso).getTime() / 1000)}:${style}>`;
-/** `/leave manage`: eigene Abmeldung ansehen, starten, zurückziehen oder vorzeitig beenden (wie Trident). */
+/** Abschnitt „Aktuelle Abmeldung“ wie bei Trident: Status, Beginn, Ende, Dauer, Grund, ID. */
+function currentBlock(r) {
+    const status = r.active ? '🟢 Aktiv' : r.status === 'PENDING' ? '🟡 Wartet auf Freigabe' : '📅 Geplant';
+    return [`### Aktuelle Abmeldung`, `**Status**: ${status}`, `**Beginn**: ${ts(r.startsAt, 'f')}`, `**Ende**: ${ts(r.endsAt, 'f')} (${ts(r.endsAt, 'R')})`,
+        `**Dauer**: ${(0, format_1.humanDuration)(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`, `**Grund**: ${(0, format_1.clip)((0, format_1.plain)(r.reason), 800)}`,
+        ...(r.extensionMinutes ? [`**Verlängerung**: ⏳ +${(0, format_1.humanDuration)(r.extensionMinutes * 60_000)} beantragt – wartet auf die Leitung`] : []), `-# ID: ${r.number}`].join('\n');
+}
+/** „Verlängern“ + „Vorzeitig beenden“ / „Antrag zurückziehen“ / „Absagen“ zur aktuellen Abmeldung. */
+const currentButtons = (r) => [
+    { id: `leave:extend:${r.id}`, label: 'Verlängern', style: 'primary', emoji: '🕒' },
+    { id: `leave:cancel:${r.id}`, label: r.active ? 'Vorzeitig beenden' : r.status === 'PENDING' ? 'Antrag zurückziehen' : 'Absagen', style: 'danger', emoji: '⏹️' },
+];
+/** Offene, laufende oder geplante Abmeldung (in dieser Reihenfolge). */
+const currentOf = (items) => items.find((r) => r.status === 'APPROVED' && r.active) ?? items.find((r) => r.status === 'PENDING') ?? items.find((r) => r.status === 'APPROVED' && new Date(r.startsAt).getTime() > Date.now());
+/** `/leave manage`: eigene Abmeldung ansehen, starten, verlängern, zurückziehen oder vorzeitig beenden (wie Trident). */
 async function manageReply(c) {
     const { items } = await c.api.asUser(c.discordId, 'GET', '/leave?mine=true');
-    const now = Date.now();
-    const pending = items.find((r) => r.status === 'PENDING');
-    const active = items.find((r) => r.status === 'APPROVED' && r.active);
-    const upcoming = items.find((r) => r.status === 'APPROVED' && new Date(r.startsAt).getTime() > now);
+    const current = currentOf(items);
     const last = items.find((r) => r.status === 'ENDED');
-    const head = c.userName ? { author: { name: `@${c.userName}`, ...(c.userAvatar ? { iconUrl: c.userAvatar } : {}) } } : {};
-    const embed = (description, color = format_1.COLORS.neutral, fields, footer) => ({ ...head, title: 'Abmeldungen verwalten', description, color, ...(fields ? { fields } : {}), ...(footer ? { footer } : {}) });
-    const reason = (r) => [{ name: 'Grund', value: (0, format_1.clip)((0, format_1.plain)(r.reason), 1024) }];
-    if (active)
-        return { ephemeral: true, embeds: [embed(`Du bist gerade abgemeldet – bis ungefähr ${ts(active.endsAt)} (${ts(active.endsAt, 'R')}).\nDu kannst die Abmeldung jederzeit vorzeitig beenden.`, format_1.COLORS.success, reason(active), `ID: ${active.number}`)],
-            buttons: [{ id: `leave:cancel:${active.id}`, label: 'Vorzeitig beenden', style: 'danger', emoji: '⏹️' }] };
-    if (pending)
-        return { ephemeral: true, embeds: [embed(`Deine Abmeldung wartet auf die Freigabe durch die Leitung.\nWenn sie angenommen wird, endet sie ungefähr ${ts(pending.endsAt)}.`, format_1.COLORS.warning, reason(pending), `ID: ${pending.number}`)],
-            buttons: [{ id: `leave:cancel:${pending.id}`, label: 'Antrag zurückziehen', style: 'danger', emoji: '↩️' }] };
-    if (upcoming)
-        return { ephemeral: true, embeds: [embed(`Deine Abmeldung beginnt ${ts(upcoming.startsAt)} und endet ${ts(upcoming.endsAt)}.`, format_1.COLORS.info, reason(upcoming), `ID: ${upcoming.number}`)],
-            buttons: [{ id: `leave:cancel:${upcoming.id}`, label: 'Absagen', style: 'danger', emoji: '↩️' }] };
+    const box = (description) => ({ box: true, heading: 'small', ...(c.userName ? { author: { name: `@${c.userName}`, ...(c.userAvatar ? { iconUrl: c.userAvatar } : {}) } } : {}), title: 'Abmeldungen verwalten', description });
+    if (current)
+        return { ephemeral: true, embeds: [box(currentBlock(current))], buttons: currentButtons(current) };
     const start = [{ id: 'leave:start', label: 'Start', style: 'primary', emoji: '🕒' }];
     if (!items.length)
-        return { ephemeral: true, embeds: [embed('Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.')], buttons: start };
-    return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : 'Du hast gerade keine Abmeldung.'}\nUm eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start };
+        return { ephemeral: true, embeds: [box('Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.')], buttons: start };
+    return { ephemeral: true, embeds: [box(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : 'Du hast gerade keine Abmeldung.'}\nUm eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start };
 }
 const DAY_MS = 24 * HOUR;
 /** Dauer kurz wie bei Trident: „[3 Tage]“, „[6 Std.]“. */
@@ -109,23 +111,21 @@ const span = (ms) => { const d = Math.round(ms / DAY_MS); if (d >= 1)
     return `${d} ${d === 1 ? 'Tag' : 'Tage'}`; const h = Math.max(1, Math.round(ms / HOUR)); return `${h} Std.`; };
 const STATE_DE = { PENDING: '⏳ ausstehend', DENIED: '❌ abgelehnt', CANCELLED: '↩️ zurückgezogen' };
 const leaveState = (r) => (r.active ? '🟢 läuft' : r.status === 'APPROVED' && new Date(r.startsAt).getTime() > Date.now() ? '📅 geplant' : STATE_DE[r.status] ?? '');
-const memberHead = async (c, discordId) => ({ name: `Abmeldungen: @${(await c.userNameOf?.(discordId)) ?? discordId}` });
+const memberHead = async (c, discordId) => ({ name: `Abmeldungsverwaltung: @${(await c.userNameOf?.(discordId)) ?? discordId}` });
 /** `/leave admin`: Abmeldungen eines Mitglieds verwalten (Leitung) – Verlauf, Abmeldung starten, beenden, erweiterter Verlauf (wie Trident). */
 async function adminReply(c, discordId) {
     if (!/^\d{15,25}$/.test(discordId))
         return (0, format_1.errorReply)('Bitte ein Mitglied auswählen.');
     const { items } = await c.api.asUser(c.discordId, 'GET', `/leave?discordId=${discordId}&status=ALL`);
-    const current = items.find((r) => r.active) ?? items.find((r) => r.status === 'PENDING') ?? items.find((r) => r.status === 'APPROVED' && new Date(r.startsAt).getTime() > Date.now());
+    const current = currentOf(items);
     const list = items.slice(0, 10).map((r, i) => {
         const end = r.endedAt && r.status === 'ENDED' ? r.endedAt : r.endsAt;
         const st = leaveState(r);
         return `\`${i + 1}.\` ${ts(r.startsAt, 'f')} [${span(new Date(end).getTime() - new Date(r.startsAt).getTime())}]${st ? ` ${st}` : ''}`;
     });
-    const description = `**Verlauf**\n${list.length ? list.join('\n') : 'Noch keine Abmeldungen.'}${items.length > 10 ? `\n… und ${items.length - 10} ältere` : ''}`;
+    const description = current ? currentBlock(current) : `**Verlauf**\n${list.length ? list.join('\n') : 'Noch keine Abmeldungen.'}${items.length > 10 ? `\n… und ${items.length - 10} ältere` : ''}`;
     const buttons = [
-        current
-            ? { id: `leave:cancel:${current.id}`, label: current.active ? 'Beenden' : current.status === 'PENDING' ? 'Antrag zurückziehen' : 'Absagen', style: 'danger', emoji: '⏹️' }
-            : { id: `leave:astart:${discordId}`, label: 'Start', style: 'primary', emoji: '🕒' },
+        ...(current ? currentButtons(current) : [{ id: `leave:astart:${discordId}`, label: 'Start', style: 'primary', emoji: '🕒' }]),
         ...(items.length ? [{ id: `leave:ahist:${discordId}`, label: 'Erweiterten Verlauf ansehen', style: 'secondary', emoji: '📜' }] : []),
     ];
     return { ephemeral: true, embeds: [{ box: true, heading: 'small', author: await memberHead(c, discordId), title: 'Abmeldungen verwalten', description }], buttons };
@@ -196,14 +196,14 @@ exports.LEAVE_COMMANDS = [
     {
         name: 'leave', description: 'Abmeldungen (Leave of Absence)',
         subcommands: [
-            { name: 'manage', description: 'Eigene Abmeldung ansehen, starten oder beenden' },
+            { name: 'manage', description: 'Deine Abmeldung verwalten: starten, verlängern, beenden' },
             { name: 'liste', description: 'Übersicht: offene Anträge, gerade abgemeldet, bevorstehend, Kalender', options: [{ name: 'ansicht', description: 'Was anzeigen? (Standard: offen)', type: 'string', choices: Object.keys(LIST_VIEWS).map((k) => ({ name: k, value: k })) }] },
-            { name: 'admin', description: 'Leitung: Abmeldungen eines Mitglieds ansehen, starten oder beenden', options: [{ name: 'mitglied', description: 'Discord-Mitglied', type: 'user', required: true }] },
+            { name: 'admin', description: 'Abmeldung eines Teammitglieds verwalten', options: [{ name: 'user', description: 'Das Teammitglied', type: 'user', required: true }] },
         ],
         async run(c) {
             try {
                 if (c.opts._sub === 'admin')
-                    return await adminReply(c, String(c.opts.mitglied ?? ''));
+                    return await adminReply(c, String(c.opts.user ?? ''));
                 if (c.opts._sub === 'liste')
                     return await listReply(c, String(c.opts.ansicht ?? 'offen'));
                 return await manageReply(c);
@@ -218,9 +218,35 @@ async function decide(c, id, status, reason) {
     try {
         const r = await c.api.asUser(c.discordId, 'POST', `/leave/${id}/decision`, { status, ...(reason ? { reason } : {}) });
         const ok = status === 'APPROVED';
+        const now = `<t:${Math.floor(Date.now() / 1000)}:f>`;
         return {
-            ...(0, format_1.okReply)(`Abmeldung **${r.number}** von ${(0, format_1.plain)(r.name)} ${ok ? '**angenommen**' : '**abgelehnt**'}. Die Person bekommt eine Direktnachricht.`),
-            decided: { color: ok ? format_1.COLORS.success : format_1.COLORS.danger, text: (0, format_1.clip)(`${ok ? '✅ Angenommen' : '❌ Abgelehnt'} von <@${c.discordId}>${r.decidedByName ? ` (${(0, format_1.plain)(r.decidedByName)})` : ''}${reason ? `\n**Grund:** ${(0, format_1.plain)(reason)}` : ''}`, 1024) },
+            ephemeral: true,
+            embeds: [ok
+                    ? { title: 'Abmeldung angenommen', color: format_1.COLORS.success, description: `Diese Abmeldung endet ungefähr ${ts(r.endsAt)}.\nUm sie anzusehen oder zu ändern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` }
+                    : { title: 'Abmeldung abgelehnt', color: format_1.COLORS.danger, description: `Die Abmeldung von ${(0, format_1.plain)(r.name)} wurde abgelehnt. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+            // wie Trident: über dem Antrag „Angenommen von @… am …“, statt der Buttons ein ausgegrautes „Angenommen“
+            decided: { color: ok ? format_1.COLORS.success : format_1.COLORS.danger, note: `${ok ? 'Angenommen' : 'Abgelehnt'} von <@${c.discordId}> am ${now}`,
+                badge: ok ? { label: 'Angenommen', style: 'success', emoji: '✔️' } : { label: 'Abgelehnt', style: 'danger', emoji: '✖️' },
+                text: (0, format_1.clip)(`${ok ? '✅ Angenommen' : '❌ Abgelehnt'} von <@${c.discordId}>${r.decidedByName ? ` (${(0, format_1.plain)(r.decidedByName)})` : ''}${reason ? `\n**Grund:** ${(0, format_1.plain)(reason)}` : ''}`, 1024) },
+        };
+    }
+    catch (e) {
+        return (0, errors_1.mapError)(e);
+    }
+}
+/** Leitung: Verlängerung annehmen/ablehnen; Antrag wie bei Trident markieren, Mitglied bekommt eine DM. */
+async function decideExtension(c, id, status, reason) {
+    try {
+        const r = await c.api.asUser(c.discordId, 'POST', `/leave/${id}/extension-decision`, { status, ...(reason ? { reason } : {}) });
+        const ok = status === 'APPROVED';
+        return {
+            ephemeral: true,
+            embeds: [ok
+                    ? { title: 'Verlängerung angenommen', color: format_1.COLORS.success, description: `Die Abmeldung von ${(0, format_1.plain)(r.name)} endet jetzt ungefähr ${ts(r.endsAt)}.\nUm sie anzusehen oder zu ändern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` }
+                    : { title: 'Verlängerung abgelehnt', color: format_1.COLORS.danger, description: `Die Abmeldung von ${(0, format_1.plain)(r.name)} endet weiterhin ungefähr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+            decided: { color: ok ? format_1.COLORS.success : format_1.COLORS.danger, note: `${ok ? 'Angenommen' : 'Abgelehnt'} von <@${c.discordId}> am <t:${Math.floor(Date.now() / 1000)}:f>`,
+                badge: ok ? { label: 'Angenommen', style: 'success', emoji: '✔️' } : { label: 'Abgelehnt', style: 'danger', emoji: '✖️' },
+                text: (0, format_1.clip)(`${ok ? '✅ Angenommen' : '❌ Abgelehnt'} von <@${c.discordId}>${reason ? `\n**Grund:** ${(0, format_1.plain)(reason)}` : ''}`, 1024) },
         };
     }
     catch (e) {
@@ -233,7 +259,7 @@ async function decide(c, id, status, reason) {
  */
 exports.LEAVE_INTERACTION = {
     prefix: 'leave',
-    opensModal: (args) => args[0] === 'reason' || args[0] === 'start' || args[0] === 'astart',
+    opensModal: (args) => args[0] === 'reason' || args[0] === 'xreason' || args[0] === 'start' || args[0] === 'astart' || args[0] === 'extend',
     async run(c) {
         const [action, id, st] = c.args;
         // Leitung (/leave admin): Abmeldung für ein Mitglied starten (gilt sofort) bzw. erweiterten Verlauf zeigen
@@ -301,6 +327,41 @@ exports.LEAVE_INTERACTION = {
         }
         if (!id || !/^[0-9a-f-]{36}$/.test(id))
             return (0, format_1.errorReply)('Unbekannte Aktion.');
+        if (action === 'extend')
+            return { modal: { id: `leave:extendsubmit:${id}`, title: 'Abmeldung verlängern', fields: [
+                        { id: 'duration', label: 'Zusätzliche Dauer', paragraph: true, required: true, maxLength: 20, placeholder: "Hinweis: Wird zur bisherigen Zeit hinzugefügt.\nFormat: '6h', '4d' oder '2w'" },
+                        { id: 'reason', label: 'Grund', paragraph: true, required: true, minLength: 3, maxLength: 1000, placeholder: 'z. B. Urlaub verlängert sich' },
+                    ] } };
+        if (action === 'extendsubmit') {
+            const ms = parseDuration(c.fields?.duration ?? '');
+            if (!ms)
+                return (0, format_1.errorReply)('Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).');
+            const reason = (c.fields?.reason ?? '').trim();
+            if (reason.length < 3)
+                return (0, format_1.errorReply)('Bitte einen Grund angeben.');
+            try {
+                const r = await c.api.asUser(c.discordId, 'POST', `/leave/${id}/extend`, { minutes: Math.round(ms / 60_000), reason });
+                if (r.extensionPending)
+                    return { ephemeral: true, embeds: [{ title: `Verlängerung beantragt · ${(0, format_1.humanDuration)(ms)}`, color: format_1.COLORS.neutral, footer: `ID: ${r.number}`,
+                                description: 'Deine Verlängerung wurde der Leitung zur Freigabe vorgelegt. Bis dahin bleibt das bisherige Ende.\nUm benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.' }] };
+                return (0, format_1.okReply)(`Abmeldung **${r.number}** um ${(0, format_1.humanDuration)(ms)} verlängert – sie endet jetzt ungefähr ${ts(r.endsAt)} (${ts(r.endsAt, 'R')}).`);
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        }
+        // Verlängerungsantrag (Freigabe-Channel): `leave:xdecide:<id>:<status>`, `leave:xreason:<id>:DENIED` (Formular) → `leave:xreasonsubmit:<id>:<status>`
+        if (action === 'xdecide' || action === 'xreasonsubmit') {
+            const status = st === 'APPROVED' || st === 'DENIED' ? st : null;
+            if (!status)
+                return (0, format_1.errorReply)('Unbekannte Aktion.');
+            const reason = action === 'xreasonsubmit' ? (c.fields?.reason ?? '').trim() : undefined;
+            if (action === 'xreasonsubmit' && !reason)
+                return (0, format_1.errorReply)('Bitte einen Grund angeben.');
+            return decideExtension(c, id, status, reason);
+        }
+        if (action === 'xreason')
+            return { modal: { id: `leave:xreasonsubmit:${id}:DENIED`, title: 'Verlängerung ablehnen', fields: [{ id: 'reason', label: 'Grund', paragraph: true, required: true, maxLength: 1000 }] } };
         if (action === 'cancel') {
             try {
                 const r = await c.api.asUser(c.discordId, 'POST', `/leave/${id}/cancel`);

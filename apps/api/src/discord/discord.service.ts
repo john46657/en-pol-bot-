@@ -99,7 +99,7 @@ export class DiscordService {
    * Antrags-/Bewerbungsnachricht in Discord nach der Entscheidung anpassen (egal ob im Dashboard oder in Discord entschieden):
    * Farbe, Feld „Entscheidung“, Annehmen/Ablehnen-Buttons weg. Der Bot hat sich beim Posten gemerkt, wo sie steht (`msg-<art>-<id>`).
    */
-  async markDecided(kind: 'leave' | 'application' | 'qualification', id: string, actor: Actor, outcome: 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN', reason?: string | null) {
+  async markDecided(kind: 'leave' | 'extension' | 'application' | 'qualification', id: string, actor: Actor, outcome: 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN', reason?: string | null) {
     let by = 'Automatik';
     if (actor.userId) {
       const [user, link] = await Promise.all([this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }), this.prisma.discordLink.findUnique({ where: { userId: actor.userId } })]);
@@ -108,7 +108,12 @@ export class DiscordService {
     const head = outcome === 'ACCEPTED' ? `✅ Angenommen von ${by}` : outcome === 'REJECTED' ? `❌ Abgelehnt von ${by}` : '↩️ Zurückgezogen';
     const text = `${head}${reason ? `\n**Grund:** ${reason}` : ''}`.slice(0, 1024);
     const color = outcome === 'ACCEPTED' ? 0x22c55e : outcome === 'REJECTED' ? 0xef4444 : 0x64748b;
-    await this.enqueue('applications', 'message.decided', { key: `msg-${kind[0]}-${id}`, text, color }, { always: true });
+    // Abmeldungen wie bei Trident: „Angenommen von @… am …“ über der Nachricht und ein ausgegrauter Status-Button
+    const trident = kind === 'leave' || kind === 'extension'
+      ? { note: `${outcome === 'ACCEPTED' ? 'Angenommen' : outcome === 'REJECTED' ? 'Abgelehnt' : 'Zurückgezogen'}${outcome === 'WITHDRAWN' ? '' : ` von ${by.replace(/ \(.*\)$/, '')}`} am <t:${Math.floor(Date.now() / 1000)}:f>`,
+        badge: outcome === 'ACCEPTED' ? { label: 'Angenommen', style: 'success', emoji: '✔️' } : outcome === 'REJECTED' ? { label: 'Abgelehnt', style: 'danger', emoji: '✖️' } : { label: 'Zurückgezogen', style: 'secondary', emoji: '↩️' } }
+      : {};
+    await this.enqueue('applications', 'message.decided', { key: `msg-${kind[0]}-${id}`, text, color, ...trident }, { always: true });
   }
 
   /**

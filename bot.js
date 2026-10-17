@@ -85,16 +85,16 @@ var require_dist = __commonJS({
     __name(lazy, "lazy");
     function* range(range2) {
       let rangeEnd;
-      let start3 = 0;
+      let start2 = 0;
       let step = 1;
       if (typeof range2 === "number") {
         rangeEnd = range2;
       } else {
-        start3 = range2.start;
+        start2 = range2.start;
         rangeEnd = range2.end;
         step = range2.step ?? 1;
       }
-      for (let index = start3; index < rangeEnd; index += step) {
+      for (let index = start2; index < rangeEnd; index += step) {
         yield index;
       }
     }
@@ -3786,13 +3786,13 @@ var require_data_url = __commonJS({
     }
     function collectASequenceOfCodePointsFast(char, input, position) {
       const idx = input.indexOf(char, position.position);
-      const start3 = position.position;
+      const start2 = position.position;
       if (idx === -1) {
         position.position = input.length;
-        return input.slice(start3);
+        return input.slice(start2);
       }
       position.position = idx;
-      return input.slice(start3, position.position);
+      return input.slice(start2, position.position);
     }
     function stringPercentDecode(input) {
       const bytes = encoder.encode(input);
@@ -5798,11 +5798,11 @@ var require_formdata_parser = __commonJS({
       return name;
     }
     function collectASequenceOfBytes(condition, input, position) {
-      let start3 = position.position;
-      while (start3 < input.length && condition(input[start3])) {
-        ++start3;
+      let start2 = position.position;
+      while (start2 < input.length && condition(input[start2])) {
+        ++start2;
       }
-      return input.subarray(position.position, position.position = start3);
+      return input.subarray(position.position, position.position = start2);
     }
     function removeChars(buf, leading, trailing, predicate) {
       let lead = 0;
@@ -5815,12 +5815,12 @@ var require_formdata_parser = __commonJS({
       }
       return lead === 0 && trail === buf.length - 1 ? buf : buf.subarray(lead, trail + 1);
     }
-    function bufferStartsWith(buffer, start3, position) {
-      if (buffer.length < start3.length) {
+    function bufferStartsWith(buffer, start2, position) {
+      if (buffer.length < start2.length) {
         return false;
       }
-      for (let i = 0; i < start3.length; i++) {
-        if (start3[i] !== buffer[position.position + i]) {
+      for (let i = 0; i < start2.length; i++) {
+        if (start2[i] !== buffer[position.position + i]) {
           return false;
         }
       }
@@ -6226,8 +6226,8 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_status: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_message_begin: (p) => {
             assert(currentParser.ptr === p);
@@ -6235,13 +6235,13 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_header_field: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_header_value: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_headers_complete: (p, statusCode, upgrade, shouldKeepAlive) => {
             assert(currentParser.ptr === p);
@@ -6249,8 +6249,8 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_body: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
+            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
           },
           wasm_on_message_complete: (p) => {
             assert(currentParser.ptr === p);
@@ -6584,7 +6584,7 @@ var require_client_h1 = __commonJS({
         } else {
           socket[kReset] = true;
         }
-        const pause2 = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
+        const pause = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
         if (request.aborted) {
           return -1;
         }
@@ -6598,7 +6598,7 @@ var require_client_h1 = __commonJS({
           socket[kBlocking] = false;
           client2[kResume]();
         }
-        return pause2 ? constants.ERROR.PAUSED : 0;
+        return pause ? constants.ERROR.PAUSED : 0;
       }
       onBody(buf) {
         const { client: client2, socket, statusCode, maxResponseSize } = this;
@@ -9697,8 +9697,8 @@ var require_retry_handler = __commonJS({
             this.abort(contentLengthError);
             return false;
           }
-          const { start: start3, size, end = size - 1 } = contentRange;
-          if (this.start !== start3 || this.end != null && this.end !== end) {
+          const { start: start2, size, end = size - 1 } = contentRange;
+          if (this.start !== start2 || this.end != null && this.end !== end) {
             this.abort(
               new RequestRetryError("Content-Range mismatch", statusCode, {
                 headers,
@@ -9727,13 +9727,13 @@ var require_retry_handler = __commonJS({
               this.abort(contentLengthError);
               return false;
             }
-            const { start: start3, size, end = size - 1 } = range;
+            const { start: start2, size, end = size - 1 } = range;
             assert(
-              start3 != null && Number.isFinite(start3),
+              start2 != null && Number.isFinite(start2),
               "content-range mismatch"
             );
             assert(end != null && Number.isFinite(end), "invalid content-length");
-            this.start = start3;
+            this.start = start2;
             this.end = end;
           }
           if (this.end == null) {
@@ -10059,9 +10059,9 @@ var require_readable = __commonJS({
       }
       const { _readableState: state } = consume2.stream;
       if (state.bufferIndex) {
-        const start3 = state.bufferIndex;
+        const start2 = state.bufferIndex;
         const end = state.buffer.length;
-        for (let n = start3; n < end; n++) {
+        for (let n = start2; n < end; n++) {
           consumePush(consume2, state.buffer[n]);
         }
       } else {
@@ -10086,8 +10086,8 @@ var require_readable = __commonJS({
       }
       const buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks, length);
       const bufferLength = buffer.length;
-      const start3 = bufferLength > 2 && buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191 ? 3 : 0;
-      return buffer.utf8Slice(start3, bufferLength);
+      const start2 = bufferLength > 2 && buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191 ? 3 : 0;
+      return buffer.utf8Slice(start2, bufferLength);
     }
     function chunksConcat(chunks, length) {
       if (chunks.length === 0 || length === 0) {
@@ -18724,19 +18724,19 @@ var require_eventsource_stream = __commonJS({
     var EVENT = Buffer.from("event");
     var ID = Buffer.from("id");
     var RETRY = Buffer.from("retry");
-    function isASCIINumberBytes(buffer, start3) {
-      if (start3 >= buffer.length) {
+    function isASCIINumberBytes(buffer, start2) {
+      if (start2 >= buffer.length) {
         return false;
       }
-      for (let i = start3; i < buffer.length; i++) {
+      for (let i = start2; i < buffer.length; i++) {
         if (buffer[i] < 48 || buffer[i] > 57) {
           return false;
         }
       }
       return true;
     }
-    function isValidLastEventIdBytes(buffer, start3) {
-      for (let i = start3; i < buffer.length; i++) {
+    function isValidLastEventIdBytes(buffer, start2) {
+      for (let i = start2; i < buffer.length; i++) {
         if (buffer[i] === 0) {
           return false;
         }
@@ -18979,9 +18979,9 @@ ${value}`;
         let length = 0;
         for (let i = this.lineChunkIndex; i <= this.chunkIndex; i++) {
           const chunk = this.chunks[i];
-          const start3 = i === this.lineChunkIndex ? this.linePos : 0;
+          const start2 = i === this.lineChunkIndex ? this.linePos : 0;
           const end = i === this.chunkIndex ? this.pos : chunk.length;
-          const slice = chunk.subarray(start3, end);
+          const slice = chunk.subarray(start2, end);
           length += slice.length;
           chunks.push(slice);
         }
@@ -40728,20 +40728,20 @@ ${givenBlock}`;
       return arrayLengthComparator(notEqual, "s.array(T).lengthNotEqual()", expected, value, options2);
     }
     __name(arrayLengthNotEqual, "arrayLengthNotEqual");
-    function arrayLengthRange(start3, endBefore, options2) {
-      const expected = `expected.length >= ${start3} && expected.length < ${endBefore}`;
+    function arrayLengthRange(start2, endBefore, options2) {
+      const expected = `expected.length >= ${start2} && expected.length < ${endBefore}`;
       return {
         run(input) {
-          return input.length >= start3 && input.length < endBefore ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.array(T).lengthRange()", options2?.message ?? "Invalid Array length", input, expected));
+          return input.length >= start2 && input.length < endBefore ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.array(T).lengthRange()", options2?.message ?? "Invalid Array length", input, expected));
         }
       };
     }
     __name(arrayLengthRange, "arrayLengthRange");
-    function arrayLengthRangeInclusive(start3, end, options2) {
-      const expected = `expected.length >= ${start3} && expected.length <= ${end}`;
+    function arrayLengthRangeInclusive(start2, end, options2) {
+      const expected = `expected.length >= ${start2} && expected.length <= ${end}`;
       return {
         run(input) {
-          return input.length >= start3 && input.length <= end ? Result.ok(input) : Result.err(
+          return input.length >= start2 && input.length <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError("s.array(T).lengthRangeInclusive()", options2?.message ?? "Invalid Array length", input, expected)
           );
         }
@@ -40865,8 +40865,8 @@ ${givenBlock}`;
       lengthNotEqual(length, options2 = this.validatorOptions) {
         return this.addConstraint(arrayLengthNotEqual(length, options2));
       }
-      lengthRange(start3, endBefore, options2 = this.validatorOptions) {
-        return this.addConstraint(arrayLengthRange(start3, endBefore, options2));
+      lengthRange(start2, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthRange(start2, endBefore, options2));
       }
       lengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
         return this.addConstraint(arrayLengthRangeInclusive(startAt, endAt, options2));
@@ -42411,11 +42411,11 @@ ${pairsBlock}`;
       return typedArrayByteLengthComparator(notEqual, "s.typedArray(T).byteLengthNotEqual()", expected, value, options2);
     }
     __name(typedArrayByteLengthNotEqual, "typedArrayByteLengthNotEqual");
-    function typedArrayByteLengthRange(start3, endBefore, options2) {
-      const expected = `expected.byteLength >= ${start3} && expected.byteLength < ${endBefore}`;
+    function typedArrayByteLengthRange(start2, endBefore, options2) {
+      const expected = `expected.byteLength >= ${start2} && expected.byteLength < ${endBefore}`;
       return {
         run(input) {
-          return input.byteLength >= start3 && input.byteLength < endBefore ? Result.ok(input) : Result.err(
+          return input.byteLength >= start2 && input.byteLength < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRange()",
               options2?.message ?? "Invalid Typed Array byte length",
@@ -42427,11 +42427,11 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayByteLengthRange, "typedArrayByteLengthRange");
-    function typedArrayByteLengthRangeInclusive(start3, end, options2) {
-      const expected = `expected.byteLength >= ${start3} && expected.byteLength <= ${end}`;
+    function typedArrayByteLengthRangeInclusive(start2, end, options2) {
+      const expected = `expected.byteLength >= ${start2} && expected.byteLength <= ${end}`;
       return {
         run(input) {
-          return input.byteLength >= start3 && input.byteLength <= end ? Result.ok(input) : Result.err(
+          return input.byteLength >= start2 && input.byteLength <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRangeInclusive()",
               options2?.message ?? "Invalid Typed Array byte length",
@@ -42497,11 +42497,11 @@ ${pairsBlock}`;
       return typedArrayLengthComparator(notEqual, "s.typedArray(T).lengthNotEqual()", expected, value, options2);
     }
     __name(typedArrayLengthNotEqual, "typedArrayLengthNotEqual");
-    function typedArrayLengthRange(start3, endBefore, options2) {
-      const expected = `expected.length >= ${start3} && expected.length < ${endBefore}`;
+    function typedArrayLengthRange(start2, endBefore, options2) {
+      const expected = `expected.length >= ${start2} && expected.length < ${endBefore}`;
       return {
         run(input) {
-          return input.length >= start3 && input.length < endBefore ? Result.ok(input) : Result.err(
+          return input.length >= start2 && input.length < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRange()",
               options2?.message ?? "Invalid Typed Array length",
@@ -42513,11 +42513,11 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayLengthRange, "typedArrayLengthRange");
-    function typedArrayLengthRangeInclusive(start3, end, options2) {
-      const expected = `expected.length >= ${start3} && expected.length <= ${end}`;
+    function typedArrayLengthRangeInclusive(start2, end, options2) {
+      const expected = `expected.length >= ${start2} && expected.length <= ${end}`;
       return {
         run(input) {
-          return input.length >= start3 && input.length <= end ? Result.ok(input) : Result.err(
+          return input.length >= start2 && input.length <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRangeInclusive()",
               options2?.message ?? "Invalid Typed Array length",
@@ -42586,8 +42586,8 @@ ${pairsBlock}`;
       byteLengthNotEqual(length, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayByteLengthNotEqual(length, options2));
       }
-      byteLengthRange(start3, endBefore, options2 = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthRange(start3, endBefore, options2));
+      byteLengthRange(start2, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthRange(start2, endBefore, options2));
       }
       byteLengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayByteLengthRangeInclusive(startAt, endAt, options2));
@@ -42613,8 +42613,8 @@ ${pairsBlock}`;
       lengthNotEqual(length, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayLengthNotEqual(length, options2));
       }
-      lengthRange(start3, endBefore, options2 = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthRange(start3, endBefore, options2));
+      lengthRange(start2, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthRange(start2, endBefore, options2));
       }
       lengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayLengthRangeInclusive(startAt, endAt, options2));
@@ -62733,7 +62733,7 @@ var require_extension = __commonJS({
       let inQuotes = false;
       let extensionName;
       let paramName;
-      let start3 = -1;
+      let start2 = -1;
       let code = -1;
       let end = -1;
       let i = 0;
@@ -62741,45 +62741,45 @@ var require_extension = __commonJS({
         code = header.charCodeAt(i);
         if (extensionName === void 0) {
           if (end === -1 && tokenChars[code] === 1) {
-            if (start3 === -1) start3 = i;
+            if (start2 === -1) start2 = i;
           } else if (i !== 0 && (code === 32 || code === 9)) {
-            if (end === -1 && start3 !== -1) end = i;
+            if (end === -1 && start2 !== -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start3 === -1) {
+            if (start2 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            const name = header.slice(start3, end);
+            const name = header.slice(start2, end);
             if (code === 44) {
               push(offers, name, params);
               params = /* @__PURE__ */ Object.create(null);
             } else {
               extensionName = name;
             }
-            start3 = end = -1;
+            start2 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
         } else if (paramName === void 0) {
           if (end === -1 && tokenChars[code] === 1) {
-            if (start3 === -1) start3 = i;
+            if (start2 === -1) start2 = i;
           } else if (code === 32 || code === 9) {
-            if (end === -1 && start3 !== -1) end = i;
+            if (end === -1 && start2 !== -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start3 === -1) {
+            if (start2 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            push(params, header.slice(start3, end), true);
+            push(params, header.slice(start2, end), true);
             if (code === 44) {
               push(offers, extensionName, params);
               params = /* @__PURE__ */ Object.create(null);
               extensionName = void 0;
             }
-            start3 = end = -1;
-          } else if (code === 61 && start3 !== -1 && end === -1) {
-            paramName = header.slice(start3, i);
-            start3 = end = -1;
+            start2 = end = -1;
+          } else if (code === 61 && start2 !== -1 && end === -1) {
+            paramName = header.slice(start2, i);
+            start2 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
@@ -62788,13 +62788,13 @@ var require_extension = __commonJS({
             if (tokenChars[code] !== 1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
-            if (start3 === -1) start3 = i;
+            if (start2 === -1) start2 = i;
             else if (!mustUnescape) mustUnescape = true;
             isEscaping = false;
           } else if (inQuotes) {
             if (tokenChars[code] === 1) {
-              if (start3 === -1) start3 = i;
-            } else if (code === 34 && start3 !== -1) {
+              if (start2 === -1) start2 = i;
+            } else if (code === 34 && start2 !== -1) {
               inQuotes = false;
               end = i;
             } else if (code === 92) {
@@ -62805,15 +62805,15 @@ var require_extension = __commonJS({
           } else if (code === 34 && header.charCodeAt(i - 1) === 61) {
             inQuotes = true;
           } else if (end === -1 && tokenChars[code] === 1) {
-            if (start3 === -1) start3 = i;
-          } else if (start3 !== -1 && (code === 32 || code === 9)) {
+            if (start2 === -1) start2 = i;
+          } else if (start2 !== -1 && (code === 32 || code === 9)) {
             if (end === -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start3 === -1) {
+            if (start2 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            let value = header.slice(start3, end);
+            let value = header.slice(start2, end);
             if (mustUnescape) {
               value = value.replace(/\\/g, "");
               mustUnescape = false;
@@ -62825,17 +62825,17 @@ var require_extension = __commonJS({
               extensionName = void 0;
             }
             paramName = void 0;
-            start3 = end = -1;
+            start2 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
         }
       }
-      if (start3 === -1 || inQuotes || code === 32 || code === 9) {
+      if (start2 === -1 || inQuotes || code === 32 || code === 9) {
         throw new SyntaxError("Unexpected end of input");
       }
       if (end === -1) end = i;
-      const token = header.slice(start3, end);
+      const token = header.slice(start2, end);
       if (extensionName === void 0) {
         push(offers, token, params);
       } else {
@@ -63870,34 +63870,34 @@ var require_subprotocol = __commonJS({
     var { tokenChars } = require_validation();
     function parse(header) {
       const protocols = /* @__PURE__ */ new Set();
-      let start3 = -1;
+      let start2 = -1;
       let end = -1;
       let i = 0;
       for (i; i < header.length; i++) {
         const code = header.charCodeAt(i);
         if (end === -1 && tokenChars[code] === 1) {
-          if (start3 === -1) start3 = i;
+          if (start2 === -1) start2 = i;
         } else if (i !== 0 && (code === 32 || code === 9)) {
-          if (end === -1 && start3 !== -1) end = i;
+          if (end === -1 && start2 !== -1) end = i;
         } else if (code === 44) {
-          if (start3 === -1) {
+          if (start2 === -1) {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
           if (end === -1) end = i;
-          const protocol2 = header.slice(start3, end);
+          const protocol2 = header.slice(start2, end);
           if (protocols.has(protocol2)) {
             throw new SyntaxError(`The "${protocol2}" subprotocol is duplicated`);
           }
           protocols.add(protocol2);
-          start3 = end = -1;
+          start2 = end = -1;
         } else {
           throw new SyntaxError(`Unexpected character at index ${i}`);
         }
       }
-      if (start3 === -1 || end !== -1) {
+      if (start2 === -1 || end !== -1) {
         throw new SyntaxError("Unexpected end of input");
       }
-      const protocol = header.slice(start3, i);
+      const protocol = header.slice(start2, i);
       if (protocols.has(protocol)) {
         throw new SyntaxError(`The "${protocol}" subprotocol is duplicated`);
       }
@@ -65801,8 +65801,8 @@ var require_dist9 = __commonJS({
           if (Array.isArray(this.options.shardIds)) {
             shardIds = this.options.shardIds;
           } else {
-            const { start: start3, end } = this.options.shardIds;
-            shardIds = [...(0, import_util32.range)({ start: start3, end: end + 1 })];
+            const { start: start2, end } = this.options.shardIds;
+            shardIds = [...(0, import_util32.range)({ start: start2, end: end + 1 })];
           }
         } else {
           const data = await this.fetchGatewayInformation();
@@ -80541,8 +80541,8 @@ function isoWeek(d) {
   t2.setUTCDate(t2.getUTCDate() + 4 - (t2.getUTCDay() || 7));
   return Math.ceil(((t2.getTime() - Date.UTC(t2.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
-function periodLabel(period2, start3) {
-  const s = new Date(start3);
+function periodLabel(period2, start2) {
+  const s = new Date(start2);
   if (period2 === "WEEKLY") {
     const e = new Date(s);
     e.setUTCDate(e.getUTCDate() + 6);
@@ -80576,6 +80576,7 @@ var BOT_COMMAND_MODULES = {
   kennzeichen: "mdt",
   fahndungen: "mdt",
   fahndung: "mdt",
+  shift: "shift_logs",
   dienst: "shift_logs",
   dienststunden: "shift_logs",
   team: "shift_logs",
@@ -80845,11 +80846,11 @@ var loggingConfigSchema = external_exports.object({
   types: external_exports.record(external_exports.string().max(80), external_exports.union([sf4, external_exports.literal("off"), external_exports.literal("on")])).default({})
 });
 var backupConfigSchema = external_exports.object({
-  /** Dashboard-Daten täglich automatisch sichern */
+  /** Dashboard-Daten stündlich automatisch sichern */
   dataAuto: external_exports.boolean().default(true),
   /** Discord-Server täglich automatisch sichern */
   discordAuto: external_exports.boolean().default(false),
-  /** so viele automatische Backups behalten (je Art bzw. Server) */
+  /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
   keep: external_exports.number().int().min(1).max(60).default(14)
 });
 var option = external_exports.object({ key: external_exports.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: external_exports.string().trim().min(1).max(40) });
@@ -81027,7 +81028,7 @@ function createStaffLists(client2, api2, log = console.log) {
     timer = setTimeout(() => void refresh().catch((e) => log(`staff lists: ${e instanceof Error ? e.message : e}`)), 1e4);
     timer.unref?.();
   }
-  function start3(seconds = 300) {
+  function start2(seconds = 300) {
     let lastError;
     const tick = () => void refresh().then(() => {
       lastError = void 0;
@@ -81041,7 +81042,7 @@ function createStaffLists(client2, api2, log = console.log) {
     setTimeout(tick, 15e3).unref?.();
     setInterval(tick, seconds * 1e3).unref?.();
   }
-  return { refresh, changed, start: start3 };
+  return { refresh, changed, start: start2 };
 }
 
 // apps/bot/src/radio-roles.ts
@@ -81089,7 +81090,7 @@ function createRadioRoleSync(api2, source, log = console.log) {
     if (changed || failed) log(`radio whitelist role sync: ${list.length} checked, ${changed} changed, ${failed} failed`);
     return { checked: list.length, changed, failed };
   }
-  function start3(minutes = 30) {
+  function start2(minutes = 30) {
     const run2 = () => void full().catch((e) => log(`radio whitelist role sync failed: ${e instanceof Error ? e.message : e}`));
     const first = setTimeout(run2, 3e4);
     const timer = setInterval(run2, minutes * 6e4);
@@ -81100,7 +81101,7 @@ function createRadioRoleSync(api2, source, log = console.log) {
       clearInterval(timer);
     };
   }
-  return { memberChanged, full, start: start3, targets };
+  return { memberChanged, full, start: start2, targets };
 }
 
 // apps/bot/src/guilds.ts
@@ -81420,12 +81421,39 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
         fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
         footer: `ID: ${String(p.number)}`
       };
+    case "leave.extension": {
+      const add = Number(p.extensionMinutes) * 6e4;
+      return {
+        title: "Verl\xE4ngerungsantrag",
+        color: COLORS.warning,
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte die Abmeldung verl\xE4ngern.`, 4e3),
+        fields: [
+          { name: "Grund", value: clip(plain(p.extensionReason), 1024) },
+          { name: "Zus\xE4tzliche Dauer", value: Number.isFinite(add) && add > 0 ? humanDuration(add) : "\u2014" },
+          { name: "Ende", value: `bisher <t:${unixOf(p.endsAt)}:f> \u2192 neu <t:${unixOf(p.newEndsAt)}:f>` }
+        ],
+        footer: `ID: ${String(p.number)}`
+      };
+    }
     case "leave.log": {
       const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
+      const by = p.event === "approved" ? "Angenommen von" : p.event === "denied" ? "Abgelehnt von" : p.event === "extended" ? "Verl\xE4ngert von" : "Entschieden von";
+      const t = (v, style = "f") => `<t:${unixOf(v)}:${style}>`;
       return {
-        title: clip(`${ev.text}: ${plain(p.name)} (${String(p.number)})`, 256),
+        author: { name: clip(`@${String(p.name ?? "\u2014")}`, 200) },
+        title: ev.text,
         color: ev.color,
-        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} \u2013 ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${plain(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begr\xFCndung:** ${plain(p.decisionReason)}` : null].filter(Boolean).join("\n"), 4e3)
+        footer: `ID: ${String(p.number)}`,
+        description: clip([
+          p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null,
+          `**Beginn**: ${t(p.startsAt)}`,
+          `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ""}`,
+          `**Dauer**: ${leaveSpan(p)}`,
+          `**Grund**: ${plain(p.reason)}`,
+          p.extendReason ? `**Grund der Verl\xE4ngerung**: ${plain(p.extendReason)}` : null,
+          p.decidedByName ? `**${by}**: ${plain(p.decidedByName)}` : null,
+          p.decisionReason ? `**Begr\xFCndung**: ${plain(p.decisionReason)}` : null
+        ].filter(Boolean).join("\n"), 4e3)
       };
     }
     case "sek.report":
@@ -81495,17 +81523,15 @@ ${piece}` : clip(piece, 4e3);
   embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
   return embeds.slice(0, 10);
 }
-var berlinDate = (v) => {
-  const d = new Date(String(v));
-  return Number.isNaN(d.getTime()) ? "\u2014" : d.toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-};
 var LEAVE_EVENTS = {
   approved: { text: "\u2705 Abmeldung angenommen", color: COLORS.success },
   denied: { text: "\u274C Abmeldung abgelehnt", color: COLORS.danger },
   started: { text: "\u{1F3DD}\uFE0F Abmeldung beginnt", color: COLORS.info },
   ended: { text: "\u{1F44B} Abmeldung beendet", color: COLORS.neutral },
   ended_early: { text: "\u21A9\uFE0F Abmeldung vorzeitig beendet", color: COLORS.neutral },
-  cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral }
+  cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral },
+  extended: { text: "\u{1F552} Abmeldung verl\xE4ngert", color: COLORS.info },
+  extension_denied: { text: "\u274C Verl\xE4ngerung abgelehnt", color: COLORS.danger }
 };
 var unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1e3);
 function humanDuration(ms) {
@@ -81555,6 +81581,27 @@ Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
     ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
 }
+function leaveExtensionDirectEmbed(p) {
+  const author = guildAuthor(p);
+  const server = plain(p.guildName ?? "dem Server");
+  const end = unixOf(p.endsAt);
+  const add = humanDuration(Number(p.extensionMinutes) * 6e4);
+  const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
+  if (p.status === "APPROVED") return {
+    ...base,
+    title: "Verl\xE4ngerung angenommen",
+    color: COLORS.success,
+    description: `Deine Abmeldung wurde um ${add} verl\xE4ngert und endet jetzt ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
+Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
+  };
+  return {
+    ...base,
+    title: "Verl\xE4ngerung abgelehnt",
+    color: COLORS.danger,
+    description: `Deine Abmeldung wird nicht verl\xE4ngert und endet weiterhin ungef\xE4hr <t:${end}:F> (<t:${end}:R>).`,
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
+  };
+}
 function renderOutboxEmbeds(type, p) {
   if (type === "qualification.submitted") return applicationEmbeds(p, "q");
   if (type === "application.submitted") return applicationEmbeds(p, "p");
@@ -81585,6 +81632,10 @@ function outboxButtons(type, p) {
     { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
     { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
+  ];
+  if (type === "leave.extension" && typeof p.id === "string") return [
+    { id: `leave:xdecide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
+    { id: `leave:xreason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" }
   ];
   if (type === "academy.course" && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
   if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
@@ -82527,37 +82578,34 @@ function parseDuration(input) {
   return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
 }
 var ts = (iso, style = "F") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
+function currentBlock(r) {
+  const status = r.active ? "\u{1F7E2} Aktiv" : r.status === "PENDING" ? "\u{1F7E1} Wartet auf Freigabe" : "\u{1F4C5} Geplant";
+  return [
+    `### Aktuelle Abmeldung`,
+    `**Status**: ${status}`,
+    `**Beginn**: ${ts(r.startsAt, "f")}`,
+    `**Ende**: ${ts(r.endsAt, "f")} (${ts(r.endsAt, "R")})`,
+    `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`,
+    `**Grund**: ${clip(plain(r.reason), 800)}`,
+    ...r.extensionMinutes ? [`**Verl\xE4ngerung**: \u23F3 +${humanDuration(r.extensionMinutes * 6e4)} beantragt \u2013 wartet auf die Leitung`] : [],
+    `-# ID: ${r.number}`
+  ].join("\n");
+}
+var currentButtons = (r) => [
+  { id: `leave:extend:${r.id}`, label: "Verl\xE4ngern", style: "primary", emoji: "\u{1F552}" },
+  { id: `leave:cancel:${r.id}`, label: r.active ? "Vorzeitig beenden" : r.status === "PENDING" ? "Antrag zur\xFCckziehen" : "Absagen", style: "danger", emoji: "\u23F9\uFE0F" }
+];
+var currentOf = (items) => items.find((r) => r.status === "APPROVED" && r.active) ?? items.find((r) => r.status === "PENDING") ?? items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now());
 async function manageReply(c) {
   const { items } = await c.api.asUser(c.discordId, "GET", "/leave?mine=true");
-  const now = Date.now();
-  const pending = items.find((r) => r.status === "PENDING");
-  const active2 = items.find((r) => r.status === "APPROVED" && r.active);
-  const upcoming = items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > now);
+  const current = currentOf(items);
   const last = items.find((r) => r.status === "ENDED");
-  const head = c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {};
-  const embed = (description, color3 = COLORS.neutral, fields, footer) => ({ ...head, title: "Abmeldungen verwalten", description, color: color3, ...fields ? { fields } : {}, ...footer ? { footer } : {} });
-  const reason = (r) => [{ name: "Grund", value: clip(plain(r.reason), 1024) }];
-  if (active2) return {
-    ephemeral: true,
-    embeds: [embed(`Du bist gerade abgemeldet \u2013 bis ungef\xE4hr ${ts(active2.endsAt)} (${ts(active2.endsAt, "R")}).
-Du kannst die Abmeldung jederzeit vorzeitig beenden.`, COLORS.success, reason(active2), `ID: ${active2.number}`)],
-    buttons: [{ id: `leave:cancel:${active2.id}`, label: "Vorzeitig beenden", style: "danger", emoji: "\u23F9\uFE0F" }]
-  };
-  if (pending) return {
-    ephemeral: true,
-    embeds: [embed(`Deine Abmeldung wartet auf die Freigabe durch die Leitung.
-Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.warning, reason(pending), `ID: ${pending.number}`)],
-    buttons: [{ id: `leave:cancel:${pending.id}`, label: "Antrag zur\xFCckziehen", style: "danger", emoji: "\u21A9\uFE0F" }]
-  };
-  if (upcoming) return {
-    ephemeral: true,
-    embeds: [embed(`Deine Abmeldung beginnt ${ts(upcoming.startsAt)} und endet ${ts(upcoming.endsAt)}.`, COLORS.info, reason(upcoming), `ID: ${upcoming.number}`)],
-    buttons: [{ id: `leave:cancel:${upcoming.id}`, label: "Absagen", style: "danger", emoji: "\u21A9\uFE0F" }]
-  };
-  const start3 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
-  if (!items.length) return { ephemeral: true, embeds: [embed("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start3 };
-  return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
-Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start3 };
+  const box = (description) => ({ box: true, heading: "small", ...c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {}, title: "Abmeldungen verwalten", description });
+  if (current) return { ephemeral: true, embeds: [box(currentBlock(current))], buttons: currentButtons(current) };
+  const start2 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
+  if (!items.length) return { ephemeral: true, embeds: [box("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start2 };
+  return { ephemeral: true, embeds: [box(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
+Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
 }
 var DAY_MS = 24 * HOUR;
 var span = (ms) => {
@@ -82568,21 +82616,21 @@ var span = (ms) => {
 };
 var STATE_DE = { PENDING: "\u23F3 ausstehend", DENIED: "\u274C abgelehnt", CANCELLED: "\u21A9\uFE0F zur\xFCckgezogen" };
 var leaveState = (r) => r.active ? "\u{1F7E2} l\xE4uft" : r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now() ? "\u{1F4C5} geplant" : STATE_DE[r.status] ?? "";
-var memberHead = async (c, discordId) => ({ name: `Abmeldungen: @${await c.userNameOf?.(discordId) ?? discordId}` });
+var memberHead = async (c, discordId) => ({ name: `Abmeldungsverwaltung: @${await c.userNameOf?.(discordId) ?? discordId}` });
 async function adminReply(c, discordId) {
   if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
   const { items } = await c.api.asUser(c.discordId, "GET", `/leave?discordId=${discordId}&status=ALL`);
-  const current = items.find((r) => r.active) ?? items.find((r) => r.status === "PENDING") ?? items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > Date.now());
+  const current = currentOf(items);
   const list = items.slice(0, 10).map((r, i) => {
     const end = r.endedAt && r.status === "ENDED" ? r.endedAt : r.endsAt;
     const st = leaveState(r);
     return `\`${i + 1}.\` ${ts(r.startsAt, "f")} [${span(new Date(end).getTime() - new Date(r.startsAt).getTime())}]${st ? ` ${st}` : ""}`;
   });
-  const description = `**Verlauf**
+  const description = current ? currentBlock(current) : `**Verlauf**
 ${list.length ? list.join("\n") : "Noch keine Abmeldungen."}${items.length > 10 ? `
 \u2026 und ${items.length - 10} \xE4ltere` : ""}`;
   const buttons = [
-    current ? { id: `leave:cancel:${current.id}`, label: current.active ? "Beenden" : current.status === "PENDING" ? "Antrag zur\xFCckziehen" : "Absagen", style: "danger", emoji: "\u23F9\uFE0F" } : { id: `leave:astart:${discordId}`, label: "Start", style: "primary", emoji: "\u{1F552}" },
+    ...current ? currentButtons(current) : [{ id: `leave:astart:${discordId}`, label: "Start", style: "primary", emoji: "\u{1F552}" }],
     ...items.length ? [{ id: `leave:ahist:${discordId}`, label: "Erweiterten Verlauf ansehen", style: "secondary", emoji: "\u{1F4DC}" }] : []
   ];
   return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Abmeldungen verwalten", description }], buttons };
@@ -82667,13 +82715,13 @@ Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
     name: "leave",
     description: "Abmeldungen (Leave of Absence)",
     subcommands: [
-      { name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" },
+      { name: "manage", description: "Deine Abmeldung verwalten: starten, verl\xE4ngern, beenden" },
       { name: "liste", description: "\xDCbersicht: offene Antr\xE4ge, gerade abgemeldet, bevorstehend, Kalender", options: [{ name: "ansicht", description: "Was anzeigen? (Standard: offen)", type: "string", choices: Object.keys(LIST_VIEWS).map((k) => ({ name: k, value: k })) }] },
-      { name: "admin", description: "Leitung: Abmeldungen eines Mitglieds ansehen, starten oder beenden", options: [{ name: "mitglied", description: "Discord-Mitglied", type: "user", required: true }] }
+      { name: "admin", description: "Abmeldung eines Teammitglieds verwalten", options: [{ name: "user", description: "Das Teammitglied", type: "user", required: true }] }
     ],
     async run(c) {
       try {
-        if (c.opts._sub === "admin") return await adminReply(c, String(c.opts.mitglied ?? ""));
+        if (c.opts._sub === "admin") return await adminReply(c, String(c.opts.user ?? ""));
         if (c.opts._sub === "liste") return await listReply(c, String(c.opts.ansicht ?? "offen"));
         return await manageReply(c);
       } catch (e) {
@@ -82686,10 +82734,39 @@ async function decide2(c, id3, status, reason) {
   try {
     const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/decision`, { status, ...reason ? { reason } : {} });
     const ok = status === "APPROVED";
+    const now = `<t:${Math.floor(Date.now() / 1e3)}:f>`;
     return {
-      ...okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${ok ? "**angenommen**" : "**abgelehnt**"}. Die Person bekommt eine Direktnachricht.`),
-      decided: { color: ok ? COLORS.success : COLORS.danger, text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain(reason)}` : ""}`, 1024) }
+      ephemeral: true,
+      embeds: [ok ? { title: "Abmeldung angenommen", color: COLORS.success, description: `Diese Abmeldung endet ungef\xE4hr ${ts(r.endsAt)}.
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Abmeldung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} wurde abgelehnt. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+      // wie Trident: über dem Antrag „Angenommen von @… am …“, statt der Buttons ein ausgegrautes „Angenommen“
+      decided: {
+        color: ok ? COLORS.success : COLORS.danger,
+        note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am ${now}`,
+        badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
+      }
+    };
+  } catch (e) {
+    return mapError(e);
+  }
+}
+async function decideExtension(c, id3, status, reason) {
+  try {
+    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/extension-decision`, { status, ...reason ? { reason } : {} });
+    const ok = status === "APPROVED";
+    return {
+      ephemeral: true,
+      embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Verl\xE4ngerung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} endet weiterhin ungef\xE4hr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+      decided: {
+        color: ok ? COLORS.success : COLORS.danger,
+        note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am <t:${Math.floor(Date.now() / 1e3)}:f>`,
+        badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
+      }
     };
   } catch (e) {
     return mapError(e);
@@ -82697,7 +82774,7 @@ async function decide2(c, id3, status, reason) {
 }
 var LEAVE_INTERACTION = {
   prefix: "leave",
-  opensModal: (args) => args[0] === "reason" || args[0] === "start" || args[0] === "astart",
+  opensModal: (args) => args[0] === "reason" || args[0] === "xreason" || args[0] === "start" || args[0] === "astart" || args[0] === "extend",
   async run(c) {
     const [action, id3, st] = c.args;
     if (action === "ahist" && id3) {
@@ -82758,6 +82835,36 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
       }
     }
     if (!id3 || !/^[0-9a-f-]{36}$/.test(id3)) return errorReply("Unbekannte Aktion.");
+    if (action === "extend") return { modal: { id: `leave:extendsubmit:${id3}`, title: "Abmeldung verl\xE4ngern", fields: [
+      { id: "duration", label: "Zus\xE4tzliche Dauer", paragraph: true, required: true, maxLength: 20, placeholder: "Hinweis: Wird zur bisherigen Zeit hinzugef\xFCgt.\nFormat: '6h', '4d' oder '2w'" },
+      { id: "reason", label: "Grund", paragraph: true, required: true, minLength: 3, maxLength: 1e3, placeholder: "z. B. Urlaub verl\xE4ngert sich" }
+    ] } };
+    if (action === "extendsubmit") {
+      const ms = parseDuration(c.fields?.duration ?? "");
+      if (!ms) return errorReply("Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).");
+      const reason = (c.fields?.reason ?? "").trim();
+      if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
+      try {
+        const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/extend`, { minutes: Math.round(ms / 6e4), reason });
+        if (r.extensionPending) return { ephemeral: true, embeds: [{
+          title: `Verl\xE4ngerung beantragt \xB7 ${humanDuration(ms)}`,
+          color: COLORS.neutral,
+          footer: `ID: ${r.number}`,
+          description: "Deine Verl\xE4ngerung wurde der Leitung zur Freigabe vorgelegt. Bis dahin bleibt das bisherige Ende.\nUm benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen."
+        }] };
+        return okReply(`Abmeldung **${r.number}** um ${humanDuration(ms)} verl\xE4ngert \u2013 sie endet jetzt ungef\xE4hr ${ts(r.endsAt)} (${ts(r.endsAt, "R")}).`);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (action === "xdecide" || action === "xreasonsubmit") {
+      const status2 = st === "APPROVED" || st === "DENIED" ? st : null;
+      if (!status2) return errorReply("Unbekannte Aktion.");
+      const reason = action === "xreasonsubmit" ? (c.fields?.reason ?? "").trim() : void 0;
+      if (action === "xreasonsubmit" && !reason) return errorReply("Bitte einen Grund angeben.");
+      return decideExtension(c, id3, status2, reason);
+    }
+    if (action === "xreason") return { modal: { id: `leave:xreasonsubmit:${id3}:DENIED`, title: "Verl\xE4ngerung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
     if (action === "cancel") {
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/cancel`);
@@ -83437,12 +83544,13 @@ var RADIO_WHITELIST_INTERACTION = {
 // apps/bot/src/commands/shifts.ts
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var ts3 = (iso, style = "f") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
-var days = (c) => Number(c.opts.tage ?? 7);
+var days = (c) => Number(c.opts.days ?? 7);
 var period = (d) => d === 1 ? "letzte 24 Stunden" : `letzte ${d} Tage`;
 async function shiftTypes(c) {
   const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
   return cfg2?.enabled ? cfg2.types : [];
 }
+var permittedFor = (c, t) => !t.permittedRoleIds?.length || !c.memberRoleIds || t.permittedRoleIds.some((r) => c.memberRoleIds.includes(r));
 var line = (s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \xB7 **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` \xB7 ${plain(s.shiftType)}` : ""}${s.breaks ? ` \xB7 ${s.breaks}\xD7 Pause (${hm(s.breakMinutes)})` : ""}${s.active ? ` \xB7 ${DUTY_DE[s.status]?.emoji ?? "\u{1F7E2}"} l\xE4uft` : ""}`;
 function logEmbed(title, log, emptyText) {
   const items = log.items;
@@ -83460,40 +83568,61 @@ function logEmbed(title, log, emptyText) {
 \u2026 und ${items.length - 15} weitere` : ""}` : emptyText, 4e3)
   };
 }
-async function setStatus(c, status, shiftType) {
-  try {
-    await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
-    return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`);
-  } catch (e) {
-    if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
-    return mapError(e);
-  }
+var findType = (types, wanted) => {
+  const w = wanted.trim().toLowerCase();
+  return types.find((x) => x.id === w || x.name.toLowerCase() === w);
+};
+var long = (min) => {
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  const parts = [...h ? [`${h} ${h === 1 ? "Stunde" : "Stunden"}`] : [], ...m || !h ? [`${m} ${m === 1 ? "Minute" : "Minuten"}`] : []];
+  return parts.join(", ");
+};
+var pickType = (c, types, wanted) => {
+  if (wanted) return findType(types, wanted);
+  const usable = types.filter((t) => permittedFor(c, t));
+  return usable.find((t) => t.isDefault) ?? usable[0];
+};
+async function manageReply2(c, type, notice) {
+  const [log, stats] = await Promise.all([
+    c.api.asUser(c.discordId, "GET", "/team/me/shifts?days=1"),
+    c.api.asUser(c.discordId, "GET", "/team/me/shift-stats")
+  ]);
+  const current = log.items.find((s) => s.active);
+  const onBreak = current?.status === "BREAK";
+  const st = current ? DUTY_DE[current.status] : void 0;
+  const typeName = current ? current.shiftType : type?.name ?? null;
+  const description = [
+    ...notice ? [notice, ""] : [],
+    ...current ? [
+      "### \u{1F552} Aktuelle Schicht",
+      `**Status**: ${st?.emoji ?? "\u{1F7E2}"} ${st?.label ?? current.status}`,
+      `**Begonnen**: ${ts3(current.startedAt, "R")}`,
+      `**Dauer**: ${long(current.minutes - current.breakMinutes)}`,
+      `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : "keine"}`,
+      ""
+    ] : [],
+    "### \u{1F4CB} Gesamt\xFCbersicht",
+    `**Anzahl Schichten**: ${stats.count}`,
+    `**Gesamtdauer**: ${long(stats.minutes)}`,
+    `**Durchschnittliche Dauer**: ${long(stats.count ? stats.minutes / stats.count : 0)}`,
+    ...typeName ? ["", `-# Schichtart: ${plain(typeName)}`] : []
+  ].join("\n");
+  const buttons = [
+    { id: `shift:on${!current && type ? `:${type.id}` : ""}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
+    { id: "shift:break", label: onBreak ? "Pause beenden" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
+    { id: "shift:off", label: "Beenden", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
+  ];
+  return { ephemeral: true, buttons, embeds: [{ box: true, heading: "small", title: "Schichtverwaltung", description: clip(description, 3900) }] };
 }
-async function start(c) {
-  const types = await shiftTypes(c);
-  const wanted = String(c.opts.art ?? "").trim().toLowerCase();
-  if (wanted) {
-    const t = types.find((x) => x.id === wanted || x.name.toLowerCase() === wanted);
-    if (!t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/schicht start` ohne Art.");
-    try {
-      await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: "ON_DUTY", shiftType: t.id });
-      return okReply(`\u{1F7E2} Schicht **${plain(t.name)}** gestartet.`);
-    } catch (e) {
-      if (e instanceof BotApiError && e.status === 409) return okReply(`Deine Schicht **${plain(t.name)}** l\xE4uft bereits.`);
-      return mapError(e);
-    }
-  }
-  if (types.length >= 2) return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
-  return setStatus(c, "ON_DUTY");
-}
-async function pause(c) {
+async function switchTo(c, status, type) {
+  let notice;
   try {
-    const me = await c.api.asUser(c.discordId, "GET", "/team/me");
-    if (!me) return errorReply("Du bist gerade nicht im Dienst. Starte mit `/schicht start`.");
-    return setStatus(c, me.status === "BREAK" ? "ON_DUTY" : "BREAK");
+    await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...type ? { shiftType: type.id } : {} });
+    notice = status === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`;
   } catch (e) {
-    return mapError(e);
+    notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
+  return manageReply2(c, type, notice);
 }
 async function active(c) {
   try {
@@ -83512,6 +83641,24 @@ async function active(c) {
     return mapError(e);
   }
 }
+var MEDALS = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+async function leaderboard(c) {
+  try {
+    const d = days(c);
+    const r = await c.api.asUser(c.discordId, "GET", `/team/leaderboard?days=${d}`);
+    const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${plain(u.callsign ?? u.name)}**${u.callsign ? ` (${plain(u.name)})` : ""} \xB7 ${hm(u.minutes)}${u.userId === r.me ? " \u2190 du" : ""}`);
+    const mine = r.users.findIndex((u) => u.userId === r.me);
+    return { ephemeral: true, embeds: [{
+      title: `\u{1F3C6} Rangliste (${period(r.days)})`,
+      color: COLORS.info,
+      description: clip(lines.length ? `${lines.join("\n")}${r.users.length > 20 ? `
+\u2026 und ${r.users.length - 20} weitere` : ""}` : "Im Zeitraum war niemand im Dienst.", 4e3),
+      ...r.users.length ? { footer: mine >= 0 ? `Dein Platz: ${mine + 1} von ${r.users.length} \xB7 ${hm(r.users[mine].minutes)}` : "Du warst im Zeitraum nicht im Dienst." } : {}
+    }] };
+  } catch (e) {
+    return mapError(e);
+  }
+}
 async function adminReply2(c, discordId, d = 7) {
   if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
   const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=${d}`);
@@ -83522,45 +83669,46 @@ async function adminReply2(c, discordId, d = 7) {
 }
 var SHIFT_COMMANDS = [
   {
-    name: "schicht",
-    description: "Schichten: starten, Pause, beenden, Verlauf und wer gerade im Dienst ist",
+    name: "shift",
+    description: "Schichten: starten, Pause, beenden, wer im Dienst ist und Rangliste",
     subcommands: [
-      { name: "start", description: "Schicht beginnen", options: [{ name: "art", description: "Schichtart (leer = Auswahl bzw. Standard)", type: "string", maxLength: 40 }] },
-      { name: "pause", description: "Pause beginnen bzw. beenden" },
-      { name: "ende", description: "Schicht beenden (au\xDFer Dienst)" },
-      { name: "status", description: "Deine aktuelle Schicht und deine Zeit der letzten 7 Tage" },
-      { name: "verlauf", description: "Deine letzten Schichten", options: [{ name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }] },
-      { name: "aktiv", description: "Wer gerade eine Schicht hat" },
-      { name: "admin", description: "Leitung: Schichten eines Mitglieds ansehen und beenden", options: [
-        { name: "mitglied", description: "Discord-Mitglied", type: "user", required: true },
-        { name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }
-      ] }
+      { name: "manage", description: "Deine Schicht verwalten: starten, Pause machen, beenden", options: [{ name: "type", description: "Die Schichtart (leer = Auswahl bzw. Standard)", type: "string", maxLength: 40, autocomplete: true }] },
+      { name: "active", description: "Alle, die gerade eine Schicht haben" },
+      { name: "admin", description: "Schichten eines Mitglieds verwalten und Infos ansehen", options: [
+        { name: "member", description: "Discord-Mitglied", type: "user", required: true },
+        { name: "days", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }
+      ] },
+      { name: "leaderboard", description: "Alle Mitglieder nach ihrer Zeit im Dienst", options: [{ name: "days", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }] }
     ],
+    async complete(c, option2, value) {
+      if (option2 !== "type") return [];
+      const v = value.trim().toLowerCase();
+      return (await shiftTypes(c)).filter((t) => permittedFor(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
+    },
     async run(c) {
       switch (c.opts._sub) {
-        case "start":
-          return start(c);
-        case "pause":
-          return pause(c);
-        case "ende":
-          return setStatus(c, "OFF_DUTY");
-        case "aktiv":
+        case "active":
           return active(c);
+        case "leaderboard":
+          return leaderboard(c);
         case "admin":
           try {
-            return await adminReply2(c, String(c.opts.mitglied ?? ""), days(c));
+            return await adminReply2(c, String(c.opts.member ?? ""), days(c));
           } catch (e) {
             return mapError(e);
           }
-        case "status":
-        case "verlauf":
+        case "manage": {
+          const wanted = String(c.opts.type ?? "").trim();
           try {
-            const d = c.opts._sub === "status" ? 7 : days(c);
-            const log = await c.api.asUser(c.discordId, "GET", `/team/me/shifts?days=${d}`);
-            return { ephemeral: true, embeds: [logEmbed("\u{1F552} Deine Schichten", log, "Im Zeitraum hattest du keine Schicht. Starte mit `/schicht start`.")] };
+            const types = await shiftTypes(c);
+            const t = pickType(c, types, wanted || void 0);
+            if (t && !permittedFor(c, t)) return errorReply(`F\xFCr die Schichtart **${plain(t.name)}** fehlt dir die passende Rolle.`);
+            if (wanted && !t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
+            return await manageReply2(c, t);
           } catch (e) {
             return mapError(e);
           }
+        }
         default:
           return errorReply("Unbekannter Unterbefehl.");
       }
@@ -83569,8 +83717,23 @@ var SHIFT_COMMANDS = [
 ];
 var SHIFT_INTERACTION = {
   prefix: "shift",
+  updatesMessage: (args) => args[0] === "on" || args[0] === "break" || args[0] === "off",
   async run(c) {
     const [action, userId, discordId] = c.args;
+    try {
+      if (action === "on") {
+        const types = await shiftTypes(c);
+        const t = userId ? findType(types, userId) : void 0;
+        return await switchTo(c, "ON_DUTY", t);
+      }
+      if (action === "break") {
+        const me = await c.api.asUser(c.discordId, "GET", "/team/me");
+        return await switchTo(c, me?.status === "BREAK" ? "ON_DUTY" : "BREAK");
+      }
+      if (action === "off") return await switchTo(c, "OFF_DUTY");
+    } catch (e) {
+      return mapError(e);
+    }
     if (action !== "end" || !userId || !/^[0-9a-f-]{36}$/i.test(userId)) return errorReply("Unbekannte Aktion.");
     try {
       await c.api.asUser(c.discordId, "PUT", `/team/${userId}/status`, { status: "OFF_DUTY" });
@@ -83733,7 +83896,7 @@ async function shiftTypes2(c) {
   return cfg2?.enabled ? cfg2.types : null;
 }
 async function shiftPicker(c) {
-  const types = await shiftTypes2(c);
+  const types = (await shiftTypes2(c))?.filter((t) => permittedFor(c, t));
   if (!types || types.length < 2) return null;
   return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
 }
@@ -83910,7 +84073,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/schicht` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
+        { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
         { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
@@ -84399,7 +84562,7 @@ function createLive(api2, platform2, log = console.log) {
     if (!sameSpot || stored?.messageId !== messageId) await api2.service("PUT", `/bot/state/${STATE_KEY[kind2]}`, { value: placement });
     return placement;
   }
-  function start3(seconds) {
+  function start2(seconds) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -84422,7 +84585,7 @@ function createLive(api2, platform2, log = console.log) {
     void tick();
     return () => clearInterval(timer);
   }
-  return { refresh, start: start3 };
+  return { refresh, start: start2 };
 }
 
 // apps/bot/src/outbox.ts
@@ -84437,7 +84600,8 @@ var DIRECT = {
   "application.decided": applicationDecisionText,
   "qualification.decided": qualificationDecisionText,
   "leave.decided": (p) => leaveDirectEmbed("leave.decided", p),
-  "leave.pending": (p) => leaveDirectEmbed("leave.pending", p)
+  "leave.pending": (p) => leaveDirectEmbed("leave.pending", p),
+  "leave.extension.decided": leaveExtensionDirectEmbed
 };
 async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
@@ -84556,9 +84720,9 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? "")}`.slice(0, 100) : void 0;
-      const authorUserId = item.type === "leave.requested" && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
+      const authorUserId = (item.type === "leave.requested" || item.type === "leave.extension") && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const replaceKey = item.type === "danger.changed" ? "danger" : void 0;
-      const trackKind = { "leave.requested": "l", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
+      const trackKind = { "leave.requested": "l", "leave.extension": "e", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
       const trackKey = trackKind && typeof item.payload.id === "string" && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : void 0;
       const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {}, ...replaceKey ? { replaceKey } : {}, ...trackKey ? { trackKey } : {} } : void 0;
       const results = await Promise.allSettled(channelIds.map((id3) => opts ? send(id3, embeds, buttons, opts) : send(id3, embeds, buttons)));
@@ -84984,6 +85148,7 @@ var toRows = (buttons = []) => {
     rows.push(new import_discord6.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
       const x = b.url ? new import_discord6.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord6.ButtonStyle.Link) : new import_discord6.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
       if (b.emoji) x.setEmoji(b.emoji);
+      if (b.disabled) x.setDisabled(true);
       return x;
     })));
   }
@@ -85238,7 +85403,8 @@ function addOptions(b, options2 = []) {
     if (o.type === "string") b.addStringOption((x) => {
       common(x);
       if (o.maxLength) x.setMaxLength(o.maxLength);
-      if (o.choices) x.addChoices(...o.choices);
+      if (o.autocomplete) x.setAutocomplete(true);
+      else if (o.choices) x.addChoices(...o.choices);
       return x;
     });
     else if (o.type === "integer") b.addIntegerOption((x) => {
@@ -85284,13 +85450,19 @@ async function markDecided(message, d) {
     if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
     return b;
   });
+  const badge = d.badge ? new import_discord6.ButtonBuilder().setCustomId("decided").setLabel(d.badge.label).setStyle(STYLE2[d.badge.style]).setDisabled(true) : null;
+  if (badge && d.badge?.emoji) badge.setEmoji(d.badge.emoji);
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ""));
+    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? "") && !(badge && c.customId === "decided"));
     if (kept.length) rows.push(new import_discord6.ActionRowBuilder().addComponents(kept.map((c) => import_discord6.ButtonBuilder.from(c))));
   }
-  await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+  if (badge) {
+    if (rows[0] && rows[0].components.length < 5) rows[0].components.unshift(badge);
+    else rows.unshift(new import_discord6.ActionRowBuilder().addComponents(badge));
+  }
+  await message.edit({ ...d.note ? { content: d.note.slice(0, 2e3) } : {}, embeds, components: rows, allowedMentions: { parse: [] } });
 }
 function baseCtx(i) {
   const perms = i.memberPermissions;
@@ -85381,6 +85553,13 @@ async function handleCommand(i) {
   const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
   await i.editReply(replyPayload(reply));
 }
+async function handleAutocomplete(i) {
+  const def = byName(i.commandName);
+  const focused = i.options.getFocused(true);
+  const sub = def?.subcommands?.length ? i.options.getSubcommand(false) ?? void 0 : void 0;
+  const list = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? "")).catch(() => []) : [];
+  await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
+}
 async function handleComponent(i) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
@@ -85391,6 +85570,14 @@ async function handleComponent(i) {
       const p = replyPayload(reply2);
       await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
     }
+    return;
+  }
+  if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
+    await i.deferUpdate();
+    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const p = replyPayload(reply2);
+    if (reply2.embeds?.[0]?.box) await i.editReply(p);
+    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
     return;
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
@@ -85406,7 +85593,7 @@ function wire(c) {
   c.on("error", (e) => console.error("discord client error:", e.message));
   c.on("shardError", (e, id3) => console.error(`discord shard ${id3} error:`, e.message));
   c.on("interactionCreate", (i) => {
-    const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
+    const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isAutocomplete() ? handleAutocomplete(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : void 0));
     void task?.catch((e) => console.error("interaction failed:", e instanceof Error ? e.message : e));
   });
   c.on("voiceStateUpdate", (o, n) => {
@@ -85583,13 +85770,20 @@ function wireReady(client0) {
         }
         if (type === "message.decided") {
           const key4 = String(p.key ?? "");
-          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key4)) throw new Error("invalid key");
+          if (!/^msg-[laqe]-[0-9a-f-]{36}$/.test(key4)) throw new Error("invalid key");
           const spots = await api.service("GET", `/bot/state/${key4}`).then((r) => Array.isArray(r.value) ? r.value : []);
           for (const spot of spots) {
             const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
             if (!ch?.isTextBased() || !("messages" in ch) || !spot.messageId) continue;
             const msg = await ch.messages.fetch(spot.messageId).catch(() => null);
-            if (msg) await markDecided(msg, { text: String(p.text ?? "Entschieden"), color: typeof p.color === "number" ? p.color : 6583435 });
+            const badge = p.badge;
+            const style = badge && ["primary", "secondary", "success", "danger"].includes(String(badge.style)) ? String(badge.style) : "secondary";
+            if (msg) await markDecided(msg, {
+              text: String(p.text ?? "Entschieden"),
+              color: typeof p.color === "number" ? p.color : 6583435,
+              ...typeof p.note === "string" ? { note: p.note } : {},
+              ...badge && typeof badge.label === "string" ? { badge: { label: badge.label, style, ...typeof badge.emoji === "string" ? { emoji: badge.emoji } : {} } } : {}
+            });
           }
           return true;
         }
@@ -85713,7 +85907,7 @@ process.on("uncaughtException", (e) => {
     process.exit(1);
   }
 });
-async function start2() {
+async function start() {
   for (const [n, step] of INTENT_STEPS.entries()) {
     if (n > 0) {
       await client.destroy().catch(() => void 0);
@@ -85732,7 +85926,7 @@ async function start2() {
   const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
   if (off.length) console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot \u2192 Privileged Gateway Intents): ${off.join(", ")}.`);
 }
-void start2().catch((e) => {
+void start().catch((e) => {
   console.error("Discord login failed:", e instanceof Error ? e.message : e);
   process.exit(1);
 });

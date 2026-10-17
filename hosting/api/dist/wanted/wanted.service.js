@@ -21,6 +21,7 @@ const discord_service_1 = require("../discord/discord.service");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
 const numbering_1 = require("../common/numbering");
+const guild_context_1 = require("../common/guild-context");
 let WantedService = class WantedService {
     prisma;
     audit;
@@ -55,14 +56,15 @@ let WantedService = class WantedService {
         if (d.expiresAt && d.expiresAt <= new Date())
             throw new errors_1.AppError('VALIDATION_FAILED', 'Das Ablaufdatum muss in der Zukunft liegen.');
         return this.prisma.$transaction(async (tx) => {
-            if (d.personId && !(await tx.person.findUnique({ where: { id: d.personId } })))
-                throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
-            if (d.vehicleId && !(await tx.vehicle.findUnique({ where: { id: d.vehicleId } })))
-                throw new errors_1.AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
+            const subject = d.personId ? await tx.person.findUnique({ where: { id: d.personId } }) : await tx.vehicle.findUnique({ where: { id: d.vehicleId } });
+            if (!subject)
+                throw new errors_1.AppError('NOT_FOUND', d.personId ? 'Person nicht gefunden.' : 'Fahrzeug nicht gefunden.');
             const dup = await tx.wantedRecord.findFirst({ where: { status: 'ACTIVE', personId: d.personId ?? undefined, vehicleId: d.vehicleId ?? undefined } });
             if (dup)
                 throw new errors_1.AppError('CONFLICT', 'Es gibt schon eine aktive Fahndung.', { existingId: dup.id });
-            const w = await tx.wantedRecord.create({ data: { ...d, number: (0, numbering_1.makeNumber)('F'), priority: d.priority ?? 'MEDIUM', createdById: actor.userId } });
+            // Unter „Alle Server“ angelegt: die Fahndung gehört in den Akten-Bereich der Person bzw. des Fahrzeugs (sonst findet sie z. B. der ER:LC-Abgleich nicht)
+            const space = (0, guild_context_1.recordSpace)() === undefined ? { serverId: subject.serverId } : {};
+            const w = await tx.wantedRecord.create({ data: { ...d, ...space, number: (0, numbering_1.makeNumber)('F'), priority: d.priority ?? 'MEDIUM', createdById: actor.userId } });
             if (d.personId) {
                 await tx.recordLink.upsert({ where: { personId_entityType_entityId_role: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' } }, create: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' }, update: {} });
                 await this.timeline.add(tx, { entityType: 'Person', entityId: d.personId, action: 'wanted.created', summary: `Fahndung: ${d.reason}`, actorId: actor.userId });

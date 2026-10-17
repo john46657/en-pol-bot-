@@ -18,6 +18,7 @@ function dutyRoleChanges(status, cfg) {
 const DIRECT = {
     'application.decided': format_1.applicationDecisionText, 'qualification.decided': format_1.qualificationDecisionText,
     'leave.decided': (p) => (0, format_1.leaveDirectEmbed)('leave.decided', p), 'leave.pending': (p) => (0, format_1.leaveDirectEmbed)('leave.pending', p),
+    'leave.extension.decided': format_1.leaveExtensionDirectEmbed,
 };
 /**
  * Holt offene Benachrichtigungen aus der System-API, postet sie und quittiert.
@@ -169,11 +170,11 @@ async function pollOnce(api, send, log = console.log, dm, grantRole, syncRoles, 
             const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
             // Staff-Thread je Bewerbung (wie bei Appy)
             const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
-            const authorUserId = item.type === 'leave.requested' && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+            const authorUserId = (item.type === 'leave.requested' || item.type === 'leave.extension') && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
             // Gefahrenstatus: vorherige Meldung im Kanal löschen, damit nur der aktuelle Status dort steht
             const replaceKey = item.type === 'danger.changed' ? 'danger' : undefined;
             // Anträge/Bewerbungen mit Entscheidungs-Buttons: Ort merken, damit eine Entscheidung im Dashboard die Nachricht anpassen kann
-            const trackKind = { 'leave.requested': 'l', 'application.submitted': 'a', 'qualification.submitted': 'q' }[item.type];
+            const trackKind = { 'leave.requested': 'l', 'leave.extension': 'e', 'application.submitted': 'a', 'qualification.submitted': 'q' }[item.type];
             const trackKey = trackKind && typeof item.payload.id === 'string' && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : undefined;
             const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...(pingRoleIds.length ? { pingRoleIds } : {}), ...(avatarUserId ? { avatarUserId } : {}), ...(thread ? { thread } : {}), ...(authorUserId ? { authorUserId } : {}), ...(replaceKey ? { replaceKey } : {}), ...(trackKey ? { trackKey } : {}) } : undefined;
             const results = await Promise.allSettled(channelIds.map((id) => (opts ? send(id, embeds, buttons, opts) : send(id, embeds, buttons))));

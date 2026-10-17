@@ -63,6 +63,7 @@ export class LeaveService {
       startsAt: r.startsAt, endsAt: r.endsAt, reason: r.reason, type: r.type, comment: r.comment, status: r.status, active, guildId: r.guildId,
       decidedAt: r.decidedAt, decisionReason: r.decisionReason, decidedByName: r.decidedByName ?? null, endedAt: r.endedAt, createdAt: r.createdAt,
       days: Math.max(1, Math.round((r.endsAt.getTime() - r.startsAt.getTime()) / DAY)),
+      extensionMinutes: r.extensionMinutes, extensionReason: r.extensionReason, extensionRequestedAt: r.extensionRequestedAt,
     };
   }
 
@@ -185,7 +186,7 @@ export class LeaveService {
     const running = r.status === 'APPROVED' && r.startsAt.getTime() <= Date.now();
     const status = running ? 'ENDED' : 'CANCELLED';
     const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.leaveRequest.update({ where: { id }, data: { status, endedAt: new Date() } });
+      await tx.leaveRequest.update({ where: { id }, data: { status, endedAt: new Date(), extensionMinutes: null, extensionReason: null, extensionRequestedAt: null } });
       await this.audit.record(actor, { action: running ? 'leave.end_early' : 'leave.cancel', module: 'leave', entityType: 'LeaveRequest', entityId: id }, tx);
       return tx.leaveRequest.findUniqueOrThrow({ where: { id }, include });
     }).then((x) => this.one(x));
@@ -193,7 +194,77 @@ export class LeaveService {
     if (r.roleApplied) await this.roles(updated, [], cfg.roleIds, `Abmeldung ${r.number} beendet`);
     await this.log(cfg, updated, running ? 'ended_early' : 'cancelled');
     if (r.status === 'PENDING') await this.discord.markDecided('leave', id, actor, 'WITHDRAWN'); // offener Antrag zurückgezogen → Buttons weg
+    if (r.extensionMinutes) await this.discord.markDecided('extension', id, actor, 'WITHDRAWN'); // offene Verlängerung erledigt sich mit
     return this.view(updated);
+  }
+
+  /** Neues Ende nach einer Verlängerung prüfen: Höchstdauer und keine Überschneidung mit anderen Abmeldungen. */
+  private async checkExtension(cfg: LeaveConfig, r: Row, endsAt: Date) {
+    if (endsAt.getTime() - r.startsAt.getTime() > cfg.maxDays * DAY) throw new AppError('VALIDATION_FAILED', `Eine Abmeldung darf höchstens ${cfg.maxDays} Tage lang sein.`);
+    const overlap = await this.prisma.leaveRequest.findFirst({ where: { id: { not: r.id }, userId: r.userId, status: { in: ['PENDING', 'APPROVED'] }, startsAt: { lt: endsAt }, endsAt: { gt: r.endsAt } } });
+    if (overlap) throw new AppError('CONFLICT', `Die Verlängerung überschneidet sich mit ${overlap.number}.`);
+  }
+  private async apply(actor: Actor, r: Row, minutes: number, reason: string, decidedByName: string | null, cfg: LeaveConfig) {
+    const endsAt = new Date(r.endsAt.getTime() + minutes * 60_000);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.leaveRequest.update({ where: { id: r.id }, data: { endsAt, extensionMinutes: null, extensionReason: null, extensionRequestedAt: null } });
+      await this.audit.record(actor, { action: 'leave.extend', module: 'leave', entityType: 'LeaveRequest', entityId: r.id, before: { endsAt: r.endsAt }, after: { endsAt, reason } }, tx);
+      return tx.leaveRequest.findUniqueOrThrow({ where: { id: r.id }, include });
+    }).then((x) => this.one(x));
+    await this.log(cfg, updated, 'extended', { previousEndsAt: r.endsAt.toISOString(), extendReason: reason, decidedByName });
+    return updated;
+  }
+
+  /**
+   * Verlängern (wie Trident „Extend“). Leitung (leave.manage) und noch offene Anträge: sofort.
+   * Eigene genehmigte Abmeldung: Verlängerungsantrag an die Leitung (Freigabe-Channel, Annehmen/Ablehnen), bis dahin bleibt das Ende.
+   */
+  async extend(actor: Actor, id: string, minutes: number, reason: string) {
+    const r = await this.load(id);
+    const manager = await this.perms.has(actor.userId!, 'leave.manage');
+    if (r.userId !== actor.userId && !manager) throw new AppError('PERMISSION_DENIED', 'Das ist nicht deine Abmeldung.');
+    if (!['PENDING', 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now()) throw new AppError('CONFLICT', 'Diese Abmeldung ist schon abgeschlossen.');
+    const cfg = await this.config();
+    await this.checkExtension(cfg, r, new Date(r.endsAt.getTime() + minutes * 60_000));
+    if (manager || r.status === 'PENDING') {
+      const by = r.userId === actor.userId ? null : (await this.prisma.user.findUnique({ where: { id: actor.userId! }, select: { displayName: true } }))?.displayName ?? null;
+      return { ...this.view(await this.apply(actor, r, minutes, reason, by, cfg)), extensionPending: false };
+    }
+    if (r.extensionMinutes) throw new AppError('CONFLICT', 'Für diese Abmeldung wartet schon eine Verlängerung auf die Leitung.');
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const n = await tx.leaveRequest.updateMany({ where: { id, extensionMinutes: null }, data: { extensionMinutes: minutes, extensionReason: reason, extensionRequestedAt: new Date() } });
+      if (!n.count) throw new AppError('CONFLICT', 'Für diese Abmeldung wartet schon eine Verlängerung auf die Leitung.');
+      await this.audit.record(actor, { action: 'leave.extension.request', module: 'leave', entityType: 'LeaveRequest', entityId: id, after: { minutes, reason } }, tx);
+      return tx.leaveRequest.findUniqueOrThrow({ where: { id }, include });
+    }).then((x) => this.one(x));
+    const newEndsAt = new Date(r.endsAt.getTime() + minutes * 60_000).toISOString();
+    if (cfg.approvalChannelId) await this.discord.enqueue('duty', 'leave.extension', this.payload(updated, { channelId: cfg.approvalChannelId, extensionMinutes: minutes, extensionReason: reason, newEndsAt }), { always: true });
+    return { ...this.view(updated), extensionPending: true };
+  }
+
+  /** Leitung entscheidet über eine beantragte Verlängerung; das Mitglied bekommt eine DM. */
+  async decideExtension(actor: Actor, id: string, status: 'APPROVED' | 'DENIED', reason?: string) {
+    const r = await this.load(id);
+    if (!r.extensionMinutes) throw new AppError('CONFLICT', 'Für diese Abmeldung wartet keine Verlängerung (mehr).');
+    if (!['PENDING', 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now()) throw new AppError('CONFLICT', 'Diese Abmeldung ist schon abgeschlossen.');
+    const cfg = await this.config();
+    const by = (await this.prisma.user.findUnique({ where: { id: actor.userId! }, select: { displayName: true } }))?.displayName ?? null;
+    const minutes = r.extensionMinutes, extendReason = r.extensionReason ?? '';
+    let updated: Row;
+    if (status === 'APPROVED') {
+      await this.checkExtension(cfg, r, new Date(r.endsAt.getTime() + minutes * 60_000));
+      updated = await this.apply(actor, r, minutes, extendReason, by, cfg);
+    } else {
+      updated = await this.prisma.$transaction(async (tx) => {
+        await tx.leaveRequest.update({ where: { id }, data: { extensionMinutes: null, extensionReason: null, extensionRequestedAt: null } });
+        await this.audit.record(actor, { action: 'leave.extension.deny', module: 'leave', entityType: 'LeaveRequest', entityId: id, after: { minutes, reason: reason ?? null } }, tx);
+        return tx.leaveRequest.findUniqueOrThrow({ where: { id }, include });
+      }).then((x) => this.one(x));
+      await this.log(cfg, updated, 'extension_denied', { extendReason, decidedByName: by, decisionReason: reason || null });
+    }
+    if (updated.discordId) await this.discord.enqueue('duty', 'leave.extension.decided', this.payload(updated, { status, extensionMinutes: minutes, decisionReason: reason || null, ...(await this.server(updated.guildId)) }), { always: true });
+    await this.discord.markDecided('extension', id, actor, status === 'APPROVED' ? 'ACCEPTED' : 'REJECTED', reason);
+    return { ...this.view(updated), decidedByName: by };
   }
 
   /** Jede Minute: Rolle zu Beginn vergeben, am Ende entfernen und die Abmeldung abschließen. */
@@ -211,8 +282,9 @@ export class LeaveService {
     }
     const ending = await this.withDiscord(await this.prisma.leaveRequest.findMany({ where: { status: 'APPROVED', endsAt: { lte: now } }, include, take: 100 }));
     for (const r of ending) {
-      const n = await this.prisma.leaveRequest.updateMany({ where: { id: r.id, status: 'APPROVED' }, data: { status: 'ENDED', endedAt: now } });
+      const n = await this.prisma.leaveRequest.updateMany({ where: { id: r.id, status: 'APPROVED' }, data: { status: 'ENDED', endedAt: now, extensionMinutes: null, extensionReason: null, extensionRequestedAt: null } });
       if (!n.count) continue;
+      if (r.extensionMinutes) await this.discord.markDecided('extension', r.id, { userId: null }, 'WITHDRAWN'); // Verlängerung kam zu spät
       if (r.roleApplied) await this.roles(r, [], cfg.roleIds, `Abmeldung ${r.number} beendet`);
       await this.log(cfg, r, 'ended');
       ended++;

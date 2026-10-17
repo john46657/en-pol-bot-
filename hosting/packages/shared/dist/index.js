@@ -1653,6 +1653,7 @@ var BOT_COMMAND_MODULES = {
   kennzeichen: "mdt",
   fahndungen: "mdt",
   fahndung: "mdt",
+  shift: "shift_logs",
   dienst: "shift_logs",
   dienststunden: "shift_logs",
   team: "shift_logs",

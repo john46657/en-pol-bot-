@@ -32,7 +32,7 @@ const UUID = '[0-9a-fA-F-]{36}';
 const BOT_USER_ROUTES = [
     ['GET', /^\/persons\/?$/], ['GET', new RegExp(`^/persons/${UUID}$`)], ['GET', /^\/vehicles\/?$/], ['GET', new RegExp(`^/vehicles/${UUID}$`)],
     ['GET', /^\/wanted\/?$/], ['GET', /^\/search\/?$/], ['GET', /^\/incidents\/?$/], ['POST', /^\/incidents\/?$/],
-    ['GET', /^\/team\/(overview|me|me\/hours|me\/shifts|hours|shifts)$/], ['PUT', /^\/team\/me\/status$/], ['PUT', new RegExp(`^/team/${UUID}/status$`)],
+    ['GET', /^\/team\/(overview|me|me\/hours|me\/shifts|me\/shift-stats|hours|shifts|leaderboard)$/], ['PUT', /^\/team\/me\/status$/], ['PUT', new RegExp(`^/team/${UUID}/status$`)],
     ['GET', /^\/dispatch\/units\/?$/], ['PUT', new RegExp(`^/dispatch/units/${UUID}/status$`)],
     ['POST', /^\/tickets\/?$/],
     ['GET', /^\/auth\/me$/], ['DELETE', /^\/discord\/link$/], ['GET', /^\/notifications\/?$/],
@@ -46,7 +46,7 @@ const BOT_USER_ROUTES = [
     ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)], ['GET', new RegExp(`^/qualifications/applications/${UUID}$`)], ['GET', /^\/qualifications\/history$/],
     ['POST', new RegExp(`^/applications/${UUID}/discord-decision$`)], ['GET', new RegExp(`^/applications/${UUID}$`)], ['GET', /^\/applications\/history$/],
     ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
-    ['GET', /^\/leave$/], ['POST', /^\/leave$/], ['POST', new RegExp(`^/leave/${UUID}/(decision|cancel)$`)],
+    ['GET', /^\/leave$/], ['POST', /^\/leave$/], ['POST', new RegExp(`^/leave/${UUID}/(decision|cancel|extend|extension-decision)$`)],
     ['GET', /^\/cad\/(units|incidents|calls|config)$/], ['GET', /^\/fleet\/vehicles$/], ['POST', /^\/cad\/radio$/], ['POST', new RegExp(`^/cad/units/${UUID}/(status|feedback)$`)],
     ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
     ['GET', /^\/duty-reports(\/templates)?$/], ['GET', new RegExp(`^/duty-reports/templates/${UUID}/prefill$`)], ['GET', /^\/duty-reports\/[A-Za-z0-9-]{1,40}$/],

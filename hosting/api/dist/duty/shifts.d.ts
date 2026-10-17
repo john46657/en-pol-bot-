@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
-/** Schicht-Art (wie bei Melonly/ERM): Rolle im Dienst, Rolle in der Pause, Log-Channel. */
+/** Schicht-Art (wie bei Melonly/ERM/Trident): Rolle im Dienst, Rolle in der Pause, Log-Channel, erlaubte Rollen. */
 export declare const shiftTypeSchema: z.ZodObject<{
     id: z.ZodString;
     name: z.ZodString;
@@ -9,12 +9,15 @@ export declare const shiftTypeSchema: z.ZodObject<{
     onShiftRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     onBreakRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     logChannelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    /** Nur Mitglieder mit einer dieser Discord-Rollen dürfen die Schichtart starten (leer = alle). */
+    permittedRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     id: string;
     name: string;
     isDefault: boolean;
     onShiftRoleIds: string[];
     onBreakRoleIds: string[];
+    permittedRoleIds: string[];
     logChannelId?: string | null | undefined;
 }, {
     id: string;
@@ -23,6 +26,7 @@ export declare const shiftTypeSchema: z.ZodObject<{
     logChannelId?: string | null | undefined;
     onShiftRoleIds?: string[] | undefined;
     onBreakRoleIds?: string[] | undefined;
+    permittedRoleIds?: string[] | undefined;
 }>;
 /** Erinnerung, wenn jemand „Im Dienst“ ist, aber länger nichts gemacht hat (Dashboard/MDT, Discord). */
 export declare const reminderSchema: z.ZodDefault<z.ZodObject<{
@@ -49,12 +53,15 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         onShiftRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         onBreakRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         logChannelId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        /** Nur Mitglieder mit einer dieser Discord-Rollen dürfen die Schichtart starten (leer = alle). */
+        permittedRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
         isDefault: boolean;
         onShiftRoleIds: string[];
         onBreakRoleIds: string[];
+        permittedRoleIds: string[];
         logChannelId?: string | null | undefined;
     }, {
         id: string;
@@ -63,6 +70,7 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
         onBreakRoleIds?: string[] | undefined;
+        permittedRoleIds?: string[] | undefined;
     }>, "many">>;
     reminder: z.ZodDefault<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -87,6 +95,7 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         isDefault: boolean;
         onShiftRoleIds: string[];
         onBreakRoleIds: string[];
+        permittedRoleIds: string[];
         logChannelId?: string | null | undefined;
     }[];
     reminder: {
@@ -103,6 +112,7 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
         onBreakRoleIds?: string[] | undefined;
+        permittedRoleIds?: string[] | undefined;
     }[] | undefined;
     reminder?: {
         enabled?: boolean | undefined;
@@ -117,6 +127,7 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         isDefault: boolean;
         onShiftRoleIds: string[];
         onBreakRoleIds: string[];
+        permittedRoleIds: string[];
         logChannelId?: string | null | undefined;
     }[];
     reminder: {
@@ -133,6 +144,7 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         logChannelId?: string | null | undefined;
         onShiftRoleIds?: string[] | undefined;
         onBreakRoleIds?: string[] | undefined;
+        permittedRoleIds?: string[] | undefined;
     }[] | undefined;
     reminder?: {
         enabled?: boolean | undefined;
@@ -155,6 +167,7 @@ export declare class ShiftsService {
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
+            permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
         reminder: {
@@ -165,6 +178,8 @@ export declare class ShiftsService {
     }>;
     /** Welche Schicht-Art gilt? Gewählte → bei Pause die laufende → Standard. `null`, wenn das Modul aus ist. */
     resolve(cfg: ShiftsConfig, requested: string | undefined, current: string | null | undefined): Promise<ShiftType | null>;
+    /** Darf jemand mit diesen Discord-Rollen die Schichtart nutzen? Ohne erlaubte Rollen: alle. */
+    static permitted(type: ShiftType, discordRoleIds: readonly string[]): boolean;
     /** Discord-Rollen je Status: Schicht-Rolle im Dienst, Pausen-Rolle in der Pause; alle anderen Schicht-Rollen weg. */
     static roleChanges(cfg: ShiftsConfig, type: ShiftType | null, status: string): {
         add: string[];
@@ -183,6 +198,7 @@ export declare class ShiftsController {
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
+            permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
         reminder: {
@@ -199,6 +215,7 @@ export declare class ShiftsController {
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
+            permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
         reminder: {
@@ -219,6 +236,7 @@ export declare class BotShiftsController {
             isDefault: boolean;
             onShiftRoleIds: string[];
             onBreakRoleIds: string[];
+            permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
         reminder: {

@@ -67,6 +67,8 @@ const toRows = (buttons = []) => {
             const x = b.url ? new discord_js_1.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(discord_js_1.ButtonStyle.Link) : new discord_js_1.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
             if (b.emoji)
                 x.setEmoji(b.emoji);
+            if (b.disabled)
+                x.setDisabled(true);
             return x;
         })));
     }
@@ -360,7 +362,9 @@ function addOptions(b, options = []) {
         const common = (x) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
         if (o.type === 'string')
             b.addStringOption((x) => { common(x); if (o.maxLength)
-                x.setMaxLength(o.maxLength); if (o.choices)
+                x.setMaxLength(o.maxLength); if (o.autocomplete)
+                x.setAutocomplete(true);
+            else if (o.choices)
                 x.addChoices(...o.choices); return x; });
         else if (o.type === 'integer')
             b.addIntegerOption((x) => { common(x); if (o.min !== undefined)
@@ -399,15 +403,25 @@ async function markDecided(message, d) {
             b.setFields([...(e.fields ?? []).filter((f) => f.name !== 'Entscheidung'), { name: 'Entscheidung', value: d.text.slice(0, 1024) }]); // nur einmal, auch wenn Button und Dashboard beide melden
         return b;
     });
+    // Entscheidungs-Buttons weg; mit `badge` stattdessen ein ausgegrauter Button wie bei Trident („Angenommen“)
+    const badge = d.badge ? new discord_js_1.ButtonBuilder().setCustomId('decided').setLabel(d.badge.label).setStyle(STYLE[d.badge.style]).setDisabled(true) : null;
+    if (badge && d.badge?.emoji)
+        badge.setEmoji(d.badge.emoji);
     const rows = [];
     for (const row of message.components) {
         if (!('components' in row))
             continue;
-        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ''));
+        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? '') && !(badge && c.customId === 'decided'));
         if (kept.length)
             rows.push(new discord_js_1.ActionRowBuilder().addComponents(kept.map((c) => discord_js_1.ButtonBuilder.from(c))));
     }
-    await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+    if (badge) {
+        if (rows[0] && rows[0].components.length < 5)
+            rows[0].components.unshift(badge);
+        else
+            rows.unshift(new discord_js_1.ActionRowBuilder().addComponents(badge));
+    }
+    await message.edit({ ...(d.note ? { content: d.note.slice(0, 2000) } : {}), embeds, components: rows, allowedMentions: { parse: [] } });
 }
 /** Gemeinsamer Kontext für Befehle, Buttons und Formulare. */
 function baseCtx(i) {
@@ -506,6 +520,14 @@ async function handleCommand(i) {
     const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     await i.editReply(replyPayload(reply));
 }
+/** Vorschläge beim Tippen (z. B. Schichtart bei `/shift manage`). */
+async function handleAutocomplete(i) {
+    const def = (0, commands_1.byName)(i.commandName);
+    const focused = i.options.getFocused(true);
+    const sub = def?.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
+    const list = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? '')).catch(() => []) : [];
+    await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
+}
 async function handleComponent(i) {
     const hit = (0, features_1.interactionFor)(i.customId);
     if (!hit)
@@ -519,6 +541,17 @@ async function handleComponent(i) {
             const p = replyPayload(reply);
             await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
         }
+        return;
+    }
+    if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
+        // Panel an Ort und Stelle neu zeichnen (wie bei Trident); Fehler o. Ä. ohne Kasten als eigene Antwort
+        await i.deferUpdate();
+        const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+        const p = replyPayload(reply);
+        if (reply.embeds?.[0]?.box)
+            await i.editReply(p);
+        else
+            await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
         return;
     }
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
@@ -538,7 +571,7 @@ function wire(c) {
     c.on('shardError', (e, id) => console.error(`discord shard ${id} error:`, e.message));
     c.on('interactionCreate', (i) => {
         // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
-        const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
+        const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isAutocomplete() ? handleAutocomplete(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
     c.on('voiceStateUpdate', (o, n) => {
@@ -744,7 +777,7 @@ function wireReady(client0) {
             if (type === 'message.decided') {
                 // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
                 const key = String(p.key ?? '');
-                if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key))
+                if (!/^msg-[laqe]-[0-9a-f-]{36}$/.test(key))
                     throw new Error('invalid key');
                 const spots = await api.service('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value : []));
                 for (const spot of spots) {
@@ -752,8 +785,11 @@ function wireReady(client0) {
                     if (!ch?.isTextBased() || !('messages' in ch) || !spot.messageId)
                         continue;
                     const msg = await ch.messages.fetch(spot.messageId).catch(() => null); // gelöscht → nichts zu tun
+                    const badge = p.badge;
+                    const style = badge && ['primary', 'secondary', 'success', 'danger'].includes(String(badge.style)) ? String(badge.style) : 'secondary';
                     if (msg)
-                        await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b });
+                        await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b,
+                            ...(typeof p.note === 'string' ? { note: p.note } : {}), ...(badge && typeof badge.label === 'string' ? { badge: { label: badge.label, style, ...(typeof badge.emoji === 'string' ? { emoji: badge.emoji } : {}) } } : {}) });
                 }
                 return true;
             }

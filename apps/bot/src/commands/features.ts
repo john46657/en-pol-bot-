@@ -12,7 +12,7 @@ import { MB_INTERACTION } from '../message-builder';
 import { DUTY_REPORT_INTERACTION } from './duty-reports';
 import { TRAINING_INTERACTION } from './trainings';
 import { RADIO_WHITELIST_INTERACTION } from './radio-whitelist';
-import { SHIFT_INTERACTION } from './shifts';
+import { permittedFor, SHIFT_INTERACTION } from './shifts';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -139,14 +139,14 @@ export const FEATURE_COMMANDS: CommandDef[] = [
   },
 ];
 
-interface ShiftTypeInfo { id: string; name: string; isDefault: boolean }
+interface ShiftTypeInfo { id: string; name: string; isDefault: boolean; permittedRoleIds?: string[] }
 async function shiftTypes(c: Ctx): Promise<ShiftTypeInfo[] | null> {
   const cfg = await c.api.service<{ enabled: boolean; types: ShiftTypeInfo[] }>('GET', '/bot/shifts').catch(() => null);
   return cfg?.enabled ? cfg.types : null;
 }
 /** Mehrere Schicht-Arten (Admin → Shifts)? Dann erst auswählen lassen; sonst `null` (Standard-Schicht). */
 export async function shiftPicker(c: Ctx): Promise<Reply | null> {
-  const types = await shiftTypes(c);
+  const types = (await shiftTypes(c))?.filter((t) => permittedFor(c, t));
   if (!types || types.length < 2) return null;
   return { ephemeral: true, content: 'Welche Schicht beginnst du?', select: { id: 'duty:type', placeholder: 'Schicht wählen …', options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...(t.isDefault ? { description: 'Standard' } : {}) })) } };
 }

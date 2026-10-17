@@ -421,7 +421,7 @@ export declare class BotController {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "secondary" | "primary";
         }[];
         panel: {
             title: string;

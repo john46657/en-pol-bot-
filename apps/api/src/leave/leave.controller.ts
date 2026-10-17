@@ -8,6 +8,7 @@ import { zodBody } from '../common/zod.pipe';
 
 const requestBody = z.object({ startsAt: z.coerce.date(), endsAt: z.coerce.date(), reason: z.string().trim().min(3).max(1000), guildId: z.string().regex(/^\d{15,25}$/).optional(), type: z.string().regex(/^[A-Z0-9_]{1,32}$/).optional(), comment: z.string().trim().max(1000).optional(), forDiscordId: z.string().regex(/^\d{15,25}$/).optional() });
 const listQ = z.object({ status: z.enum([...LEAVE_STATUSES, 'ACTIVE', 'UPCOMING', 'CALENDAR', 'ALL']).optional(), mine: z.enum(['true', 'false']).optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() });
+const extendBody = z.object({ minutes: z.number().int().min(60).max(365 * 24 * 60), reason: z.string().trim().min(3).max(1000) });
 const decision = z.object({ status: z.enum(['APPROVED', 'DENIED']), reason: z.string().trim().max(1000).optional() });
 
 /** Abmeldungen (Leave of Absences). Beantragen: leave.request · alle sehen: leave.view · entscheiden: leave.manage. */
@@ -25,6 +26,12 @@ export class LeaveController {
   request(@CurrentActor() a: Actor, @Body(zodBody(requestBody)) b: z.infer<typeof requestBody>) { return this.s.request(a, b); }
   @Post(':id/decision') @HttpCode(200) @RequirePermission('leave.manage')
   decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.s.decide(a, id, b.status, b.reason); }
+  /** Verlängern um `minutes` mit Grund (eigene; Leitung jede). */
+  @Post(':id/extend') @HttpCode(200) @RequirePermission('leave.request')
+  extend(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(extendBody)) b: z.infer<typeof extendBody>) { return this.s.extend(a, id, b.minutes, b.reason); }
+  /** Leitung: über eine beantragte Verlängerung entscheiden. */
+  @Post(':id/extension-decision') @HttpCode(200) @RequirePermission('leave.manage')
+  decideExtension(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.s.decideExtension(a, id, b.status, b.reason); }
   /** Eigene zurückziehen; Leitung (leave.manage) kann jede beenden. */
   @Post(':id/cancel') @HttpCode(200) @RequirePermission('leave.request')
   cancel(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.cancel(a, id); }

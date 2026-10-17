@@ -9,6 +9,7 @@ import { DiscordService } from '../discord/discord.service';
 import { changedFields, nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { makeNumber } from '../common/numbering';
+import { recordSpace } from '../common/guild-context';
 
 @Injectable()
 export class WantedService {
@@ -37,11 +38,13 @@ export class WantedService {
     if (!!d.personId === !!d.vehicleId) throw new AppError('VALIDATION_FAILED', 'Bitte genau eine Person oder ein Fahrzeug angeben.');
     if (d.expiresAt && d.expiresAt <= new Date()) throw new AppError('VALIDATION_FAILED', 'Das Ablaufdatum muss in der Zukunft liegen.');
     return this.prisma.$transaction(async (tx) => {
-      if (d.personId && !(await tx.person.findUnique({ where: { id: d.personId } }))) throw new AppError('NOT_FOUND', 'Person nicht gefunden.');
-      if (d.vehicleId && !(await tx.vehicle.findUnique({ where: { id: d.vehicleId } }))) throw new AppError('NOT_FOUND', 'Fahrzeug nicht gefunden.');
+      const subject = d.personId ? await tx.person.findUnique({ where: { id: d.personId } }) : await tx.vehicle.findUnique({ where: { id: d.vehicleId! } });
+      if (!subject) throw new AppError('NOT_FOUND', d.personId ? 'Person nicht gefunden.' : 'Fahrzeug nicht gefunden.');
       const dup = await tx.wantedRecord.findFirst({ where: { status: 'ACTIVE', personId: d.personId ?? undefined, vehicleId: d.vehicleId ?? undefined } });
       if (dup) throw new AppError('CONFLICT', 'Es gibt schon eine aktive Fahndung.', { existingId: dup.id });
-      const w = await tx.wantedRecord.create({ data: { ...d, number: makeNumber('F'), priority: d.priority ?? 'MEDIUM', createdById: actor.userId! } });
+      // Unter „Alle Server“ angelegt: die Fahndung gehört in den Akten-Bereich der Person bzw. des Fahrzeugs (sonst findet sie z. B. der ER:LC-Abgleich nicht)
+      const space = recordSpace() === undefined ? { serverId: subject.serverId } : {};
+      const w = await tx.wantedRecord.create({ data: { ...d, ...space, number: makeNumber('F'), priority: d.priority ?? 'MEDIUM', createdById: actor.userId! } });
       if (d.personId) {
         await tx.recordLink.upsert({ where: { personId_entityType_entityId_role: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' } }, create: { personId: d.personId, entityType: 'Wanted', entityId: w.id, role: 'SUBJECT' }, update: {} });
         await this.timeline.add(tx, { entityType: 'Person', entityId: d.personId, action: 'wanted.created', summary: `Fahndung: ${d.reason}`, actorId: actor.userId });

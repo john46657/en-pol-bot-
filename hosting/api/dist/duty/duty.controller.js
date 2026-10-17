@@ -22,6 +22,11 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const hoursQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7) });
 const logQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7), userId: zod_1.z.string().uuid().optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+/** Vom Bot: Discord-Rollen des Aufrufers auf dem Server (für die erlaubten Rollen einer Schichtart); sonst gespeicherte Mitgliedschaften. */
+const discordRolesOf = (r) => {
+    const auth = r.headers.authorization, raw = r.headers['x-discord-roles'];
+    return typeof auth === 'string' && auth.startsWith('Bot ') && typeof raw === 'string' ? { discordRoleIds: raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) } : {};
+};
 const body = zod_1.z.object({ status: zod_1.z.enum(shared_1.DUTY_STATUSES), unitId: zod_1.z.string().uuid().optional(), callsign: zod_1.z.string().max(16).optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 let DutyController = class DutyController {
     d;
@@ -33,15 +38,19 @@ let DutyController = class DutyController {
     mine(a) { return this.d.mine(a.userId); }
     /** Eigene Dienststunden. */
     myHours(a, f) { return this.d.hours(f.days, a.userId); }
-    /** Eigene Schichten (Discord: `/schicht verlauf`). */
+    /** Eigene Schichten (Discord: `/shift manage`). */
     myShifts(a, f) { return this.d.shiftLog({ days: f.days, userId: a.userId }); }
+    /** Eigene Gesamtwerte aller Schichten (Discord: `/shift manage`). */
+    myShiftStats(a) { return this.d.shiftStats(a.userId); }
+    /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
+    leaderboard(a, f) { return this.d.leaderboard(f.days, a.userId); }
     /** Dienststunden aller Beamten (Schichtleitung). */
     hours(f) { return this.d.hours(f.days); }
     /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
     shiftLog(f) { return this.d.shiftLog(f); }
     /** „Bin noch im Dienst“ (Erinnerung) bzw. echte Aktivität im Dashboard/MDT. */
     active(a) { return this.d.active(a.userId); }
-    set(a, b) { return this.d.setStatus(a, b.status, b); }
+    set(a, b, r) { return this.d.setStatus(a, b.status, { ...b, ...discordRolesOf(r) }); }
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a, userId, b) { return this.d.setStatus(a, b.status, b, userId); }
 };
@@ -87,6 +96,23 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "myShifts", null);
 __decorate([
+    (0, common_1.Get)('me/shift-stats'),
+    (0, decorators_1.RequirePermission)('team.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "myShiftStats", null);
+__decorate([
+    (0, common_1.Get)('leaderboard'),
+    (0, decorators_1.RequirePermission)('team.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(hoursQuery))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "leaderboard", null);
+__decorate([
     (0, common_1.Get)('hours'),
     (0, decorators_1.RequirePermission)('team.manage'),
     __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(hoursQuery))),
@@ -116,8 +142,9 @@ __decorate([
     (0, decorators_1.RequirePermission)('team.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(body))),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:paramtypes", [Object, void 0, Object]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "set", null);
 __decorate([

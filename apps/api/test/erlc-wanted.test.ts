@@ -230,6 +230,20 @@ describe('ER:LC-Fahndungsabgleich', () => {
     expect(view[0]).toMatchObject({ wantedStatus: 'CLEARED' });
   });
 
+  it('Fahndung unter „Alle Server“ angelegt → gehört zum Bereich der Person und wird abgeglichen; Status zeigt Spieler und Anzahl', async () => {
+    const admin = (await login(app, 'wh_admin')).agent;
+    const person = (await admin.post('/api/v1/persons').set({ 'X-Guild-Id': HOME }).send({ robloxUsername: 'AllServers', robloxUserId: '779009' })).body.person.id as string;
+    const w = await admin.post('/api/v1/wanted').send({ personId: person, reason: 'Diebstahl', priority: 'MEDIUM' }); // ohne X-Guild-Id
+    expect(w.status).toBe(201);
+    const p = await prisma.person.findUniqueOrThrow({ where: { id: person } });
+    expect((await prisma.wantedRecord.findUniqueOrThrow({ where: { id: w.body.id } })).serverId).toBe(p.serverId);
+    await poll(server(['AllServers:779009']));
+    expect((await hits()).filter((x) => x.wantedId === w.body.id)).toHaveLength(1);
+    const st = (await admin.get('/api/v1/wanted-hits/status').set({ 'X-Guild-Id': HOME })).body.servers.find((x: { id: string }) => x.id === serverId);
+    expect(st.players).toEqual([{ name: 'AllServers', robloxUserId: '779009' }]);
+    expect(st.activeWanted).toBeGreaterThan(0);
+  });
+
   it('es wird nie ein Befehl an den ER:LC-Server gesendet (kein Kick, kein Bann)', () => {
     expect(sent.length).toBeGreaterThan(5);
     expect(sent.every((c) => c.method === 'GET' && c.path.startsWith('/v2/server'))).toBe(true);

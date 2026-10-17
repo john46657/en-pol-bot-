@@ -18,6 +18,7 @@ export declare class DutyService {
         unitId?: string;
         callsign?: string;
         shiftType?: string;
+        discordRoleIds?: string[];
     }, targetUserId?: string): Promise<{
         serverId: string | null;
         id: string;
@@ -97,10 +98,29 @@ export declare class DutyService {
         days: number;
         since: Date;
         users: {
+            userId: string;
+            name: string;
+            rank: string | null;
+            callsign: string | null;
             minutes: number;
-            byStatus: {
-                [k: string]: number;
-            };
+            byStatus: Record<string, number>;
+            sessions: number;
+        }[];
+    }>;
+    /** Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`): Anzahl und Zeit im Dienst ohne Pausen. */
+    shiftStats(userId: string): Promise<{
+        count: number;
+        minutes: number;
+    }>;
+    /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
+    leaderboard(days: number, me: string): Promise<{
+        days: number;
+        me: string;
+        users: {
+            userId: string;
+            name: string;
+            callsign: string | null;
+            minutes: number;
         }[];
     }>;
     /**

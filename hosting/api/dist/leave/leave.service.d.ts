@@ -80,6 +80,9 @@ export declare class LeaveService {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
     private create;
     list(actor: Actor, f: {
@@ -107,6 +110,9 @@ export declare class LeaveService {
             endedAt: Date | null;
             createdAt: Date;
             days: number;
+            extensionMinutes: number | null;
+            extensionReason: string | null;
+            extensionRequestedAt: Date | null;
         }[];
         member?: {
             userId: string;
@@ -135,6 +141,9 @@ export declare class LeaveService {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
     /** Zurückziehen (eigene) bzw. vorzeitig beenden (Leitung). Eine laufende Abmeldung endet sofort und die Rolle wird entfernt. */
     cancel(actor: Actor, id: string): Promise<{
@@ -157,6 +166,66 @@ export declare class LeaveService {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
+    }>;
+    /** Neues Ende nach einer Verlängerung prüfen: Höchstdauer und keine Überschneidung mit anderen Abmeldungen. */
+    private checkExtension;
+    private apply;
+    /**
+     * Verlängern (wie Trident „Extend“). Leitung (leave.manage) und noch offene Anträge: sofort.
+     * Eigene genehmigte Abmeldung: Verlängerungsantrag an die Leitung (Freigabe-Channel, Annehmen/Ablehnen), bis dahin bleibt das Ende.
+     */
+    extend(actor: Actor, id: string, minutes: number, reason: string): Promise<{
+        extensionPending: boolean;
+        id: string;
+        number: string;
+        userId: string;
+        name: string;
+        discordId: string | null;
+        startsAt: Date;
+        endsAt: Date;
+        reason: string;
+        type: string | null;
+        comment: string | null;
+        status: string;
+        active: boolean;
+        guildId: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
+        decidedByName: string | null;
+        endedAt: Date | null;
+        createdAt: Date;
+        days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
+    }>;
+    /** Leitung entscheidet über eine beantragte Verlängerung; das Mitglied bekommt eine DM. */
+    decideExtension(actor: Actor, id: string, status: 'APPROVED' | 'DENIED', reason?: string): Promise<{
+        decidedByName: string | null;
+        id: string;
+        number: string;
+        userId: string;
+        name: string;
+        discordId: string | null;
+        startsAt: Date;
+        endsAt: Date;
+        reason: string;
+        type: string | null;
+        comment: string | null;
+        status: string;
+        active: boolean;
+        guildId: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
+        endedAt: Date | null;
+        createdAt: Date;
+        days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
     /** Jede Minute: Rolle zu Beginn vergeben, am Ende entfernen und die Abmeldung abschließen. */
     tick(): Promise<{

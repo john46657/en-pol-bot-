@@ -46,6 +46,15 @@ let DutyService = class DutyService {
             const sameType = !type || status === 'OFF_DUTY' || type.id === open?.shiftType;
             if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId && sameType)
                 throw new errors_1.AppError('CONFLICT', `Dieser Status ist bereits gesetzt (${status}).`);
+            // Erlaubte Rollen der Schichtart (wie Trident „Permitted Roles“): beim Start bzw. Wechsel der Art; die Leitung darf für andere setzen
+            if (type && status !== 'OFF_DUTY' && type.id !== open?.shiftType && !targetUserId && type.permittedRoleIds.length) {
+                const roles = d.discordRoleIds ?? (await tx.serverMembership.findMany({ where: { userId, status: 'MEMBER' }, select: { discordRoleIds: true } })).flatMap((m) => m.discordRoleIds);
+                // ohne Auswahl: statt der Standard-Art die erste, die erlaubt ist
+                if (!d.shiftType && !shifts_1.ShiftsService.permitted(type, roles))
+                    type = cfg.types.find((t) => shifts_1.ShiftsService.permitted(t, roles)) ?? type;
+                if (!shifts_1.ShiftsService.permitted(type, roles))
+                    throw new errors_1.AppError('PERMISSION_DENIED', `Für die Schichtart „${type.name}“ fehlt dir die passende Discord-Rolle.`);
+            }
             if (targetUserId && !(await tx.user.findUnique({ where: { id: targetUserId, active: true } })))
                 throw new errors_1.AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
             const at = new Date(); // gleicher Zeitpunkt für Ende und Beginn → Schicht-Logs erkennen zusammenhängende Sitzungen
@@ -193,12 +202,35 @@ let DutyService = class DutyService {
         const users = [...rows.values()].map(round).sort((a, b) => b.minutes - a.minutes);
         return { days, since, users };
     }
+    /** Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`): Anzahl und Zeit im Dienst ohne Pausen. */
+    async shiftStats(userId) {
+        const sessions = await this.prisma.dutySession.findMany({ where: { userId, ...(0, guild_context_1.recordWhere)() }, select: { startedAt: true, endedAt: true, status: true }, orderBy: { startedAt: 'asc' } });
+        const now = Date.now();
+        let count = 0, ms = 0, prevEnd = null;
+        for (const s of sessions) {
+            // nahtloser Statuswechsel (Im Dienst ↔ Pause) gehört zur selben Schicht – wie in `shiftLog`
+            if (prevEnd !== s.startedAt.getTime())
+                count++;
+            const end = s.endedAt?.getTime() ?? now;
+            if (s.status !== 'BREAK')
+                ms += Math.max(0, end - s.startedAt.getTime());
+            prevEnd = s.endedAt?.getTime() ?? null;
+        }
+        return { count, minutes: Math.round(ms / 60_000) };
+    }
+    /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
+    async leaderboard(days, me) {
+        const { users } = await this.hours(days);
+        const rows = users.map((u) => ({ userId: u.userId, name: u.name, callsign: u.callsign, minutes: u.minutes - (u.byStatus.BREAK ?? 0) }))
+            .filter((u) => u.minutes > 0).sort((a, b) => b.minutes - a.minutes);
+        return { days, me, users: rows };
+    }
     /**
      * Schicht-Logs: zusammenhängende Dienst-Sitzungen (Im Dienst ↔ Pause ↔ Schichtwechsel) bis „Außer Dienst“ ergeben eine Schicht.
      * Je Schicht: wer, Schichtart, Beginn/Ende, Dauer, Pausen und wer sie gestartet/beendet hat (aus dem Audit-Log).
      */
     async shiftLog(f) {
-        // Discord-Mitglied (`/schicht admin`) → Benutzer; nicht verknüpft = keine Schichten
+        // Discord-Mitglied (`/shift admin`) → Benutzer; nicht verknüpft = keine Schichten
         let member;
         if (f.discordId) {
             const link = await this.prisma.discordLink.findUnique({ where: { discordId: f.discordId }, select: { userId: true } });

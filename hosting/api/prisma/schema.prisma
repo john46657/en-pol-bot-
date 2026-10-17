@@ -664,6 +664,10 @@ model LeaveRequest {
   comment        String?
   roleApplied    Boolean   @default(false)
   endedAt        DateTime?
+  /// offene Verlängerung (beantragt vom Mitglied, wartet auf die Leitung)
+  extensionMinutes     Int?
+  extensionReason      String?
+  extensionRequestedAt DateTime?
   createdAt      DateTime  @default(now())
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
