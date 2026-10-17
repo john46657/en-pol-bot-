@@ -2480,11 +2480,11 @@ var import_zod6 = require("zod");
 var BACKUP_PARTS = ["roles", "channels", "settings"];
 var BACKUP_PART_LABEL = { roles: "Rollen", channels: "Kategorien & Kan\xE4le (mit Rechten)", settings: "Servereinstellungen (Name, Verifizierung, AFK \u2026)" };
 var backupConfigSchema = import_zod6.z.object({
-  /** Dashboard-Daten täglich automatisch sichern */
+  /** Dashboard-Daten stündlich automatisch sichern */
   dataAuto: import_zod6.z.boolean().default(true),
   /** Discord-Server täglich automatisch sichern */
   discordAuto: import_zod6.z.boolean().default(false),
-  /** so viele automatische Backups behalten (je Art bzw. Server) */
+  /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
   keep: import_zod6.z.number().int().min(1).max(60).default(14)
 });
 
