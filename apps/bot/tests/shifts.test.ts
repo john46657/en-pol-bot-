@@ -89,6 +89,19 @@ describe('/shift', () => {
     expect(await def.complete!({ discordId: ME, api, opts: {} } as Ctx, 'type', '')).toEqual([{ name: 'Streife', value: 'streife' }, { name: 'SEK', value: 'sek' }]);
     expect(await def.complete!({ discordId: ME, api, opts: {} } as Ctx, 'type', 'se')).toEqual([{ name: 'SEK', value: 'sek' }]);
   });
+  it('shift types with permitted roles: only offered to members who have one of them', async () => {
+    const SEK_ROLE = '600000000000000001';
+    const restricted = { enabled: true, types: [{ id: 'streife', name: 'Streife', isDefault: true, permittedRoleIds: [SEK_ROLE] }, { id: 'sek', name: 'SEK', isDefault: false, permittedRoleIds: [SEK_ROLE] }, { id: 'buero', name: 'Büro', isDefault: false, permittedRoleIds: [] }] };
+    const { api } = fakeApi({ 'GET /bot/shifts': restricted, 'GET /team/me/shifts': { days: 1, items: [] }, 'GET /team/me/shift-stats': { count: 0, minutes: 0 } });
+    const def = byName('shift')!;
+    const member = (roles: string[]) => ({ discordId: ME, api, opts: {}, memberRoleIds: roles }) as unknown as Ctx;
+    expect((await def.complete!(member([]), 'type', '')).map((t) => t.value)).toEqual(['buero']);
+    expect((await def.complete!(member([SEK_ROLE]), 'type', '')).map((t) => t.value)).toEqual(['streife', 'sek', 'buero']);
+    // ohne die Rolle: Standard (Streife) ist gesperrt → erste erlaubte Art; ausdrücklich gewählte gesperrte Art → Hinweis
+    const r = await def.run({ ...member([]), opts: { _sub: 'manage' } });
+    expect(r.buttons?.[0]?.id).toBe('shift:on:buero');
+    expect(text(await def.run({ ...member([]), opts: { _sub: 'manage', type: 'sek' } }))).toContain('fehlt dir die passende Rolle');
+  });
   it('leaderboard ranks by time on duty and shows your place', async () => {
     const { api, calls } = fakeApi({ 'GET /team/leaderboard': { days: 30, me: 'b', users: [{ userId: 'a', name: 'Max', callsign: 'ADAM-1', minutes: 300 }, { userId: 'b', name: 'Eva', callsign: null, minutes: 120 }] } });
     const r = await run(api, 'leaderboard', { days: 30 });

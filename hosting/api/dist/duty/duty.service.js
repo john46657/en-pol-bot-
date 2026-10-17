@@ -46,6 +46,15 @@ let DutyService = class DutyService {
             const sameType = !type || status === 'OFF_DUTY' || type.id === open?.shiftType;
             if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId && sameType)
                 throw new errors_1.AppError('CONFLICT', `Dieser Status ist bereits gesetzt (${status}).`);
+            // Erlaubte Rollen der Schichtart (wie Trident „Permitted Roles“): beim Start bzw. Wechsel der Art; die Leitung darf für andere setzen
+            if (type && status !== 'OFF_DUTY' && type.id !== open?.shiftType && !targetUserId && type.permittedRoleIds.length) {
+                const roles = d.discordRoleIds ?? (await tx.serverMembership.findMany({ where: { userId, status: 'MEMBER' }, select: { discordRoleIds: true } })).flatMap((m) => m.discordRoleIds);
+                // ohne Auswahl: statt der Standard-Art die erste, die erlaubt ist
+                if (!d.shiftType && !shifts_1.ShiftsService.permitted(type, roles))
+                    type = cfg.types.find((t) => shifts_1.ShiftsService.permitted(t, roles)) ?? type;
+                if (!shifts_1.ShiftsService.permitted(type, roles))
+                    throw new errors_1.AppError('PERMISSION_DENIED', `Für die Schichtart „${type.name}“ fehlt dir die passende Discord-Rolle.`);
+            }
             if (targetUserId && !(await tx.user.findUnique({ where: { id: targetUserId, active: true } })))
                 throw new errors_1.AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
             const at = new Date(); // gleicher Zeitpunkt für Ende und Beginn → Schicht-Logs erkennen zusammenhängende Sitzungen

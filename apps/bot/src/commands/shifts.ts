@@ -6,7 +6,7 @@ import { mapError } from './errors';
 /** Eine Schicht aus `/team/me/shifts` bzw. `/team/shifts` (zusammenhängende Dienst-Sitzungen bis „Außer Dienst“). */
 interface ShiftRow { id: string; userId: string; name: string; callsign: string | null; shiftType: string | null; startedAt: string; endedAt: string | null; active: boolean; status: string; minutes: number; breakMinutes: number; breaks: number; startedBy: string | null; endedBy: string | null }
 interface ShiftLog { days: number; items: ShiftRow[]; member?: { userId: string; name: string } | null }
-interface ShiftTypeInfo { id: string; name: string; isDefault: boolean }
+interface ShiftTypeInfo { id: string; name: string; isDefault: boolean; permittedRoleIds?: string[] }
 interface OverviewRow { userId: string; name: string; callsign: string | null; dutyStatus: string; onDutySince: string | null; shiftType: string | null }
 
 /** Minuten → „3 h 05 min“. */
@@ -19,6 +19,8 @@ async function shiftTypes(c: Ctx): Promise<ShiftTypeInfo[]> {
   const cfg = await c.api.service<{ enabled: boolean; types: ShiftTypeInfo[] }>('GET', '/bot/shifts').catch(() => null);
   return cfg?.enabled ? cfg.types : [];
 }
+/** Darf der Aufrufer die Schichtart nutzen (erlaubte Rollen)? Außerhalb eines Servers entscheidet die API. */
+export const permittedFor = (c: Ctx, t: ShiftTypeInfo) => !t.permittedRoleIds?.length || !c.memberRoleIds || t.permittedRoleIds.some((r) => c.memberRoleIds!.includes(r));
 
 /** Eine Zeile im Verlauf: Beginn, Dauer, Schichtart, Pausen. */
 const line = (s: ShiftRow, i: number) => `\`${i + 1}.\` ${ts(s.startedAt)} · **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` · ${plain(s.shiftType)}` : ''}${s.breaks ? ` · ${s.breaks}× Pause (${hm(s.breakMinutes)})` : ''}${s.active ? ` · ${DUTY_DE[s.status]?.emoji ?? '🟢'} läuft` : ''}`;
@@ -47,7 +49,11 @@ const long = (min: number) => {
 };
 
 /** Schichtart fürs Panel: gewählte, sonst Standard bzw. erste (wie Trident „Shift Type“); ohne eingerichtete Arten keine. */
-const pickType = (types: ShiftTypeInfo[], wanted?: string) => (wanted ? findType(types, wanted) : types.find((t) => t.isDefault) ?? types[0]);
+const pickType = (c: Ctx, types: ShiftTypeInfo[], wanted?: string) => {
+  if (wanted) return findType(types, wanted);
+  const usable = types.filter((t) => permittedFor(c, t));
+  return usable.find((t) => t.isDefault) ?? usable[0];
+};
 
 /**
  * `/shift manage`: Panel wie bei Trident – laufende Schicht, Gesamtübersicht (Anzahl, Gesamt- und Durchschnittsdauer),
@@ -144,7 +150,7 @@ export const SHIFT_COMMANDS: CommandDef[] = [
     async complete(c, option, value) {
       if (option !== 'type') return [];
       const v = value.trim().toLowerCase();
-      return (await shiftTypes(c)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
+      return (await shiftTypes(c)).filter((t) => permittedFor(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
     },
     async run(c): Promise<Reply> {
       switch (c.opts._sub) {
@@ -155,7 +161,8 @@ export const SHIFT_COMMANDS: CommandDef[] = [
           const wanted = String(c.opts.type ?? '').trim();
           try {
             const types = await shiftTypes(c);
-            const t = pickType(types, wanted || undefined);
+            const t = pickType(c, types, wanted || undefined);
+            if (t && !permittedFor(c, t)) return errorReply(`Für die Schichtart **${plain(t.name)}** fehlt dir die passende Rolle.`);
             if (wanted && !t) return errorReply(types.length ? `Unbekannte Schichtart. Verfügbar: ${types.map((x) => `**${plain(x.name)}**`).join(', ')}.` : 'Auf diesem Server sind keine Schichtarten eingerichtet – einfach `/shift manage` ohne Schichtart.');
             return await manageReply(c, t);
           } catch (e) { return mapError(e); }

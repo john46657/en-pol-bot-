@@ -246,3 +246,24 @@ describe('Abmeldung verlängern (wie Trident „Extend“)', () => {
     expect(Date.parse(direct.body.endsAt) - Date.parse(ok.body.endsAt)).toBe(60 * 60_000);
   });
 });
+
+describe('Schichtart mit erlaubten Rollen (wie Trident „Permitted Roles“)', () => {
+  it('only members with a permitted Discord role may start it; without a choice the first permitted type is used', async () => {
+    const admin = (await login(app, 'sl_admin')).agent;
+    const PERMIT = '540000000000000001';
+    await admin.put('/api/v1/shifts/config').send({ enabled: true, types: [
+      { id: 'sek', name: 'SEK', isDefault: true, permittedRoleIds: [PERMIT] },
+      { id: 'streife', name: 'Streife', permittedRoleIds: [] },
+    ] });
+    const asBot = (roles: string[]) => ({ ...bot(OFF_D), 'X-Discord-Roles': roles.join(',') });
+    await http().put('/api/v1/team/me/status').set(bot(OFF_D)).send({ status: 'OFF_DUTY' });
+    const denied = await http().put('/api/v1/team/me/status').set(asBot(['540000000000000099'])).send({ status: 'ON_DUTY', shiftType: 'sek' });
+    expect(denied.status).toBe(403);
+    // ohne Auswahl: Standard (SEK) ist gesperrt → Streife
+    expect((await http().put('/api/v1/team/me/status').set(asBot(['540000000000000099'])).send({ status: 'ON_DUTY' })).body).toMatchObject({ shiftType: 'streife' });
+    await http().put('/api/v1/team/me/status').set(bot(OFF_D)).send({ status: 'OFF_DUTY' });
+    expect((await http().put('/api/v1/team/me/status').set(asBot([PERMIT])).send({ status: 'ON_DUTY', shiftType: 'sek' })).body).toMatchObject({ shiftType: 'sek' });
+    await http().put('/api/v1/team/me/status').set(bot(OFF_D)).send({ status: 'OFF_DUTY' });
+    await admin.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
+  });
+});

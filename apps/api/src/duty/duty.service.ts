@@ -14,7 +14,7 @@ import { SyncService, versionAt } from '../multi-server/sync.service';
 export class DutyService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly shifts: ShiftsService, private readonly sync: SyncService) {}
 
-  async setStatus(actor: Actor, status: DutyStatus, d: { unitId?: string; callsign?: string; shiftType?: string }, targetUserId?: string) {
+  async setStatus(actor: Actor, status: DutyStatus, d: { unitId?: string; callsign?: string; shiftType?: string; discordRoleIds?: string[] }, targetUserId?: string) {
     const userId = targetUserId ?? actor.userId!;
     let previous: { status: string; startedAt: Date; shiftType: string | null } | null = null;
     const cfg = await this.shifts.config();
@@ -24,6 +24,13 @@ export class DutyService {
       type = status === 'OFF_DUTY' ? (cfg.types.find((t) => t.id === open?.shiftType) ?? null) : await this.shifts.resolve(cfg, d.shiftType, open?.shiftType);
       const sameType = !type || status === 'OFF_DUTY' || type.id === open?.shiftType;
       if ((open?.status ?? 'OFF_DUTY') === status && !d.unitId && sameType) throw new AppError('CONFLICT', `Dieser Status ist bereits gesetzt (${status}).`);
+      // Erlaubte Rollen der Schichtart (wie Trident „Permitted Roles“): beim Start bzw. Wechsel der Art; die Leitung darf für andere setzen
+      if (type && status !== 'OFF_DUTY' && type.id !== open?.shiftType && !targetUserId && type.permittedRoleIds.length) {
+        const roles = d.discordRoleIds ?? (await tx.serverMembership.findMany({ where: { userId, status: 'MEMBER' }, select: { discordRoleIds: true } })).flatMap((m) => m.discordRoleIds);
+        // ohne Auswahl: statt der Standard-Art die erste, die erlaubt ist
+        if (!d.shiftType && !ShiftsService.permitted(type, roles)) type = cfg.types.find((t) => ShiftsService.permitted(t, roles)) ?? type;
+        if (!ShiftsService.permitted(type, roles)) throw new AppError('PERMISSION_DENIED', `Für die Schichtart „${type.name}“ fehlt dir die passende Discord-Rolle.`);
+      }
       if (targetUserId && !(await tx.user.findUnique({ where: { id: targetUserId, active: true } }))) throw new AppError('NOT_FOUND', 'Benutzer nicht gefunden.');
       const at = new Date(); // gleicher Zeitpunkt für Ende und Beginn → Schicht-Logs erkennen zusammenhängende Sitzungen
       if (open) await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: at } });

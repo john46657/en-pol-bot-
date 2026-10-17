@@ -24,7 +24,7 @@ const errors_1 = require("../common/errors");
 const KEY = 'shifts.config';
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const roles = zod_1.z.array(sf).max(25).default([]);
-/** Schicht-Art (wie bei Melonly/ERM): Rolle im Dienst, Rolle in der Pause, Log-Channel. */
+/** Schicht-Art (wie bei Melonly/ERM/Trident): Rolle im Dienst, Rolle in der Pause, Log-Channel, erlaubte Rollen. */
 exports.shiftTypeSchema = zod_1.z.object({
     id: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/),
     name: zod_1.z.string().trim().min(1).max(60),
@@ -32,6 +32,8 @@ exports.shiftTypeSchema = zod_1.z.object({
     onShiftRoleIds: roles,
     onBreakRoleIds: roles,
     logChannelId: sf.nullish(),
+    /** Nur Mitglieder mit einer dieser Discord-Rollen dürfen die Schichtart starten (leer = alle). */
+    permittedRoleIds: roles,
 });
 /** Erinnerung, wenn jemand „Im Dienst“ ist, aber länger nichts gemacht hat (Dashboard/MDT, Discord). */
 exports.reminderSchema = zod_1.z.object({
@@ -87,6 +89,10 @@ let ShiftsService = class ShiftsService {
             return t;
         }
         return cfg.types.find((x) => x.id === current) ?? cfg.types.find((x) => x.isDefault) ?? cfg.types[0];
+    }
+    /** Darf jemand mit diesen Discord-Rollen die Schichtart nutzen? Ohne erlaubte Rollen: alle. */
+    static permitted(type, discordRoleIds) {
+        return !type.permittedRoleIds.length || type.permittedRoleIds.some((r) => discordRoleIds.includes(r));
     }
     /** Discord-Rollen je Status: Schicht-Rolle im Dienst, Pausen-Rolle in der Pause; alle anderen Schicht-Rollen weg. */
     static roleChanges(cfg, type, status) {

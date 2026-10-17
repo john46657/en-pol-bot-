@@ -18,6 +18,7 @@ export declare class DutyService {
         unitId?: string;
         callsign?: string;
         shiftType?: string;
+        discordRoleIds?: string[];
     }, targetUserId?: string): Promise<{
         serverId: string | null;
         id: string;

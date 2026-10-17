@@ -9,7 +9,7 @@ import { Toggle } from '../../components/ApplicationSettings';
 import { WeeklyResetSettings } from '../../components/WeeklyRanking';
 import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Modal, Select, SkeletonRows, StatusBadge, confirmDialog } from '../../components/ui';
 
-export interface ShiftType { id: string; name: string; isDefault: boolean; onShiftRoleIds: string[]; onBreakRoleIds: string[]; logChannelId?: string | null }
+export interface ShiftType { id: string; name: string; isDefault: boolean; onShiftRoleIds: string[]; onBreakRoleIds: string[]; logChannelId?: string | null; permittedRoleIds?: string[] }
 export interface ShiftReminder { enabled: boolean; afterMinutes: number; autoOffMinutes: number }
 export interface ShiftsConfig { enabled: boolean; types: ShiftType[]; reminder?: ShiftReminder }
 
@@ -57,7 +57,7 @@ export function Shifts() {
   const cfg = q.data;
   const put = (types: ShiftType[], enabled = cfg.enabled, reminder = cfg.reminder) => save.mutate({ enabled, types, ...(reminder ? { reminder } : {}) });
   const remove = (t: ShiftType) => { void confirmDialog(`Schichtart „${t.name}“ löschen?`).then((ok) => { if (ok) put(cfg.types.filter((x) => x.id !== t.id).map((x, i) => ({ ...x, isDefault: t.isDefault ? i === 0 : x.isDefault }))); }) };
-  const startNew = () => setEdit({ isNew: true, type: { id: '', name: '', isDefault: cfg.types.length === 0, onShiftRoleIds: [], onBreakRoleIds: [], logChannelId: null } });
+  const startNew = () => setEdit({ isNew: true, type: { id: '', name: '', isDefault: cfg.types.length === 0, onShiftRoleIds: [], onBreakRoleIds: [], logChannelId: null, permittedRoleIds: [] } });
   return (
     <>
       <ModuleHeader title="Schichten" desc="Konfiguriere das Schichtmodul für deinen Server." enabled={cfg.enabled} disabled={!manage} onToggle={(v) => put(cfg.types, v)} />
@@ -67,7 +67,7 @@ export function Shifts() {
         {manage && <Button variant="secondary" onClick={startNew}>Neue Schichtart<Plus size={16} aria-hidden /></Button>}
       </div>}>
         {help && <p className="mb-3 rounded-md bg-panel-2 p-3 text-sm text-muted">
-          Eine Schichtart legt fest, welche Discord-Rolle jemand <b>während der Schicht</b> und <b>in der Pause</b> bekommt und wohin das Schicht-Log gepostet wird. Schichten starten über das Dienstpanel (<code>/dienstpanel</code>), <code>/dienst</code> oder auf der Team-Seite; bei mehreren Arten wird eine gewählt, sonst gilt der <b>Standard</b>. Außer Dienst entfernt alle Schichtrollen.
+          Eine Schichtart legt fest, welche Discord-Rolle jemand <b>während der Schicht</b> und <b>in der Pause</b> bekommt, wohin das Schicht-Log gepostet wird und – mit <b>erlaubten Rollen</b> – wer sie überhaupt nutzen darf. Schichten starten über <code>/shift manage</code>, das Dienstpanel (<code>/dienstpanel</code>), <code>/dienst</code> oder auf der Team-Seite; bei mehreren Arten wird eine gewählt, sonst gilt der <b>Standard</b>. Außer Dienst entfernt alle Schichtrollen.
           {!cfg.enabled && <> Das Modul ist <b>aus</b> – stattdessen gelten die Dienstrollen aus den Einstellungen.</>}
         </p>}
         {!cfg.types.length ? <p className="text-sm text-muted">Noch keine Schichtarten.{manage && ' Lege eine mit „Neue Schichtart“ an.'}</p> : (
@@ -179,6 +179,7 @@ function ShiftTypeModal({ value, isNew, busy, error, onClose, onSave }: { value:
         <Box title="Schichtrolle" desc="Rolle während der Schicht"><RolePicker ariaLabel="Schichtrolle" value={t.onShiftRoleIds} onChange={(ids) => set({ onShiftRoleIds: ids })} /></Box>
         <Box title="Pausenrolle" desc="Rolle während der Pause"><RolePicker ariaLabel="Pausenrolle" value={t.onBreakRoleIds} onChange={(ids) => set({ onBreakRoleIds: ids })} /></Box>
         <Box title="Schicht-Log-Kanal" desc="Kanal für Schicht-Logs (leer = Dienst-Kanal aus den Einstellungen)"><ChannelPicker ariaLabel="Schicht-Log-Kanal" value={t.logChannelId} onChange={(id) => set({ logChannelId: id })} /></Box>
+        <Box title="Erlaubte Rollen" desc="Nur wer eine dieser Rollen hat, darf diese Schichtart nutzen (leer = alle)"><RolePicker ariaLabel="Erlaubte Rollen" value={t.permittedRoleIds ?? []} onChange={(ids) => set({ permittedRoleIds: ids })} /></Box>
         <Box title="Standard" desc="Wird genutzt, wenn jemand eine Schicht ohne Auswahl startet"><Toggle label="Standard-Schichtart" checked={t.isDefault} onChange={(v) => set({ isDefault: v })} /></Box>
       </div>
       {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}

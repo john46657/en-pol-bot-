@@ -217,7 +217,9 @@ export declare class DutyController {
         onDuty: boolean;
         status: string;
     }>;
-    set(a: Actor, b: z.infer<typeof body>): Promise<{
+    set(a: Actor, b: z.infer<typeof body>, r: {
+        headers: Record<string, string | string[] | undefined>;
+    }): Promise<{
         serverId: string | null;
         id: string;
         status: string;

@@ -83550,6 +83550,7 @@ async function shiftTypes(c) {
   const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
   return cfg2?.enabled ? cfg2.types : [];
 }
+var permittedFor = (c, t) => !t.permittedRoleIds?.length || !c.memberRoleIds || t.permittedRoleIds.some((r) => c.memberRoleIds.includes(r));
 var line = (s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \xB7 **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` \xB7 ${plain(s.shiftType)}` : ""}${s.breaks ? ` \xB7 ${s.breaks}\xD7 Pause (${hm(s.breakMinutes)})` : ""}${s.active ? ` \xB7 ${DUTY_DE[s.status]?.emoji ?? "\u{1F7E2}"} l\xE4uft` : ""}`;
 function logEmbed(title, log, emptyText) {
   const items = log.items;
@@ -83576,7 +83577,11 @@ var long = (min) => {
   const parts = [...h ? [`${h} ${h === 1 ? "Stunde" : "Stunden"}`] : [], ...m || !h ? [`${m} ${m === 1 ? "Minute" : "Minuten"}`] : []];
   return parts.join(", ");
 };
-var pickType = (types, wanted) => wanted ? findType(types, wanted) : types.find((t) => t.isDefault) ?? types[0];
+var pickType = (c, types, wanted) => {
+  if (wanted) return findType(types, wanted);
+  const usable = types.filter((t) => permittedFor(c, t));
+  return usable.find((t) => t.isDefault) ?? usable[0];
+};
 async function manageReply2(c, type, notice) {
   const [log, stats] = await Promise.all([
     c.api.asUser(c.discordId, "GET", "/team/me/shifts?days=1"),
@@ -83678,7 +83683,7 @@ var SHIFT_COMMANDS = [
     async complete(c, option2, value) {
       if (option2 !== "type") return [];
       const v = value.trim().toLowerCase();
-      return (await shiftTypes(c)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
+      return (await shiftTypes(c)).filter((t) => permittedFor(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
     },
     async run(c) {
       switch (c.opts._sub) {
@@ -83696,7 +83701,8 @@ var SHIFT_COMMANDS = [
           const wanted = String(c.opts.type ?? "").trim();
           try {
             const types = await shiftTypes(c);
-            const t = pickType(types, wanted || void 0);
+            const t = pickType(c, types, wanted || void 0);
+            if (t && !permittedFor(c, t)) return errorReply(`F\xFCr die Schichtart **${plain(t.name)}** fehlt dir die passende Rolle.`);
             if (wanted && !t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
             return await manageReply2(c, t);
           } catch (e) {
@@ -83890,7 +83896,7 @@ async function shiftTypes2(c) {
   return cfg2?.enabled ? cfg2.types : null;
 }
 async function shiftPicker(c) {
-  const types = await shiftTypes2(c);
+  const types = (await shiftTypes2(c))?.filter((t) => permittedFor(c, t));
   if (!types || types.length < 2) return null;
   return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
 }

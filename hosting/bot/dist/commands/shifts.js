@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SHIFT_INTERACTION = exports.SHIFT_COMMANDS = void 0;
+exports.SHIFT_INTERACTION = exports.SHIFT_COMMANDS = exports.permittedFor = void 0;
 exports.manageReply = manageReply;
 exports.adminReply = adminReply;
 const api_1 = require("../api");
@@ -15,6 +15,9 @@ async function shiftTypes(c) {
     const cfg = await c.api.service('GET', '/bot/shifts').catch(() => null);
     return cfg?.enabled ? cfg.types : [];
 }
+/** Darf der Aufrufer die Schichtart nutzen (erlaubte Rollen)? Außerhalb eines Servers entscheidet die API. */
+const permittedFor = (c, t) => !t.permittedRoleIds?.length || !c.memberRoleIds || t.permittedRoleIds.some((r) => c.memberRoleIds.includes(r));
+exports.permittedFor = permittedFor;
 /** Eine Zeile im Verlauf: Beginn, Dauer, Schichtart, Pausen. */
 const line = (s, i) => `\`${i + 1}.\` ${ts(s.startedAt)} · **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` · ${(0, format_1.plain)(s.shiftType)}` : ''}${s.breaks ? ` · ${s.breaks}× Pause (${hm(s.breakMinutes)})` : ''}${s.active ? ` · ${format_1.DUTY_DE[s.status]?.emoji ?? '🟢'} läuft` : ''}`;
 /** Übersicht: laufende Schicht oben, darunter Summe und die letzten Schichten. */
@@ -39,7 +42,12 @@ const long = (min) => {
     return parts.join(', ');
 };
 /** Schichtart fürs Panel: gewählte, sonst Standard bzw. erste (wie Trident „Shift Type“); ohne eingerichtete Arten keine. */
-const pickType = (types, wanted) => (wanted ? findType(types, wanted) : types.find((t) => t.isDefault) ?? types[0]);
+const pickType = (c, types, wanted) => {
+    if (wanted)
+        return findType(types, wanted);
+    const usable = types.filter((t) => (0, exports.permittedFor)(c, t));
+    return usable.find((t) => t.isDefault) ?? usable[0];
+};
 /**
  * `/shift manage`: Panel wie bei Trident – laufende Schicht, Gesamtübersicht (Anzahl, Gesamt- und Durchschnittsdauer),
  * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Klicks zeichnen das Panel neu.
@@ -139,7 +147,7 @@ exports.SHIFT_COMMANDS = [
             if (option !== 'type')
                 return [];
             const v = value.trim().toLowerCase();
-            return (await shiftTypes(c)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
+            return (await shiftTypes(c)).filter((t) => (0, exports.permittedFor)(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
         },
         async run(c) {
             switch (c.opts._sub) {
@@ -155,7 +163,9 @@ exports.SHIFT_COMMANDS = [
                     const wanted = String(c.opts.type ?? '').trim();
                     try {
                         const types = await shiftTypes(c);
-                        const t = pickType(types, wanted || undefined);
+                        const t = pickType(c, types, wanted || undefined);
+                        if (t && !(0, exports.permittedFor)(c, t))
+                            return (0, format_1.errorReply)(`Für die Schichtart **${(0, format_1.plain)(t.name)}** fehlt dir die passende Rolle.`);
                         if (wanted && !t)
                             return (0, format_1.errorReply)(types.length ? `Unbekannte Schichtart. Verfügbar: ${types.map((x) => `**${(0, format_1.plain)(x.name)}**`).join(', ')}.` : 'Auf diesem Server sind keine Schichtarten eingerichtet – einfach `/shift manage` ohne Schichtart.');
                         return await manageReply(c, t);
