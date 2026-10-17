@@ -27,6 +27,9 @@ export class DutyController {
   /** Eigene Schichten (Discord: `/shift manage`). */
   @Get('me/shifts') @RequirePermission('team.view')
   myShifts(@CurrentActor() a: Actor, @Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.shiftLog({ days: f.days, userId: a.userId! }); }
+  /** Eigene Gesamtwerte aller Schichten (Discord: `/shift manage`). */
+  @Get('me/shift-stats') @RequirePermission('team.view')
+  myShiftStats(@CurrentActor() a: Actor) { return this.d.shiftStats(a.userId!); }
   /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
   @Get('leaderboard') @RequirePermission('team.view')
   leaderboard(@CurrentActor() a: Actor, @Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.leaderboard(f.days, a.userId!); }

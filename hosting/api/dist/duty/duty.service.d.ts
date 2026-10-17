@@ -106,6 +106,11 @@ export declare class DutyService {
             sessions: number;
         }[];
     }>;
+    /** Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`): Anzahl und Zeit im Dienst ohne Pausen. */
+    shiftStats(userId: string): Promise<{
+        count: number;
+        minutes: number;
+    }>;
     /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
     leaderboard(days: number, me: string): Promise<{
         days: number;

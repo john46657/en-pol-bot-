@@ -35,6 +35,8 @@ let DutyController = class DutyController {
     myHours(a, f) { return this.d.hours(f.days, a.userId); }
     /** Eigene Schichten (Discord: `/shift manage`). */
     myShifts(a, f) { return this.d.shiftLog({ days: f.days, userId: a.userId }); }
+    /** Eigene Gesamtwerte aller Schichten (Discord: `/shift manage`). */
+    myShiftStats(a) { return this.d.shiftStats(a.userId); }
     /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
     leaderboard(a, f) { return this.d.leaderboard(f.days, a.userId); }
     /** Dienststunden aller Beamten (Schichtleitung). */
@@ -88,6 +90,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "myShifts", null);
+__decorate([
+    (0, common_1.Get)('me/shift-stats'),
+    (0, decorators_1.RequirePermission)('team.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "myShiftStats", null);
 __decorate([
     (0, common_1.Get)('leaderboard'),
     (0, decorators_1.RequirePermission)('team.view'),

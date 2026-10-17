@@ -83465,35 +83465,43 @@ var findType = (types, wanted) => {
   const w = wanted.trim().toLowerCase();
   return types.find((x) => x.id === w || x.name.toLowerCase() === w);
 };
+var long = (min) => {
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  const parts = [...h ? [`${h} ${h === 1 ? "Stunde" : "Stunden"}`] : [], ...m || !h ? [`${m} ${m === 1 ? "Minute" : "Minuten"}`] : []];
+  return parts.join(", ");
+};
+var pickType = (types, wanted) => wanted ? findType(types, wanted) : types.find((t) => t.isDefault) ?? types[0];
 async function manageReply2(c, type, notice) {
-  const log = await c.api.asUser(c.discordId, "GET", "/team/me/shifts?days=7");
+  const [log, stats] = await Promise.all([
+    c.api.asUser(c.discordId, "GET", "/team/me/shifts?days=1"),
+    c.api.asUser(c.discordId, "GET", "/team/me/shift-stats")
+  ]);
   const current = log.items.find((s) => s.active);
-  const total = log.items.reduce((n, s) => n + s.minutes - s.breakMinutes, 0);
-  const st = current ? DUTY_DE[current.status] : DUTY_DE.OFF_DUTY;
-  const fields = [{ name: "Status", value: `${st?.emoji ?? "\u{1F7E2}"} ${st?.label ?? current?.status}`, inline: true }];
-  if (current) {
-    fields.push({ name: "Seit", value: ts3(current.startedAt, "R"), inline: true });
-    if (current.shiftType) fields.push({ name: "Schicht", value: plain(current.shiftType), inline: true });
-    fields.push({ name: "Dauer", value: hm(current.minutes - current.breakMinutes), inline: true }, { name: "Pausen", value: current.breaks ? `${current.breaks}\xD7 (${hm(current.breakMinutes)})` : "keine", inline: true });
-  } else if (type) fields.push({ name: "Schicht", value: plain(type.name), inline: true });
-  fields.push({ name: "Letzte 7 Tage", value: `**${hm(total)}** in ${log.items.length} ${log.items.length === 1 ? "Schicht" : "Schichten"}` });
-  const buttons = !current ? [{ id: `shift:on${type ? `:${type.id}` : ""}`, label: "Schicht starten", style: "success", emoji: "\u{1F7E2}" }] : [
-    current.status === "BREAK" ? { id: "shift:on", label: "Pause beenden", style: "success", emoji: "\u{1F7E2}" } : { id: "shift:break", label: "Pause", style: "secondary", emoji: "\u{1F7E1}" },
-    { id: "shift:off", label: "Schicht beenden", style: "danger", emoji: "\u23F9\uFE0F" }
+  const onBreak = current?.status === "BREAK";
+  const st = current ? DUTY_DE[current.status] : void 0;
+  const typeName = current ? current.shiftType : type?.name ?? null;
+  const description = [
+    ...notice ? [notice, ""] : [],
+    ...current ? [
+      "### \u{1F552} Aktuelle Schicht",
+      `**Status**: ${st?.emoji ?? "\u{1F7E2}"} ${st?.label ?? current.status}`,
+      `**Begonnen**: ${ts3(current.startedAt, "R")}`,
+      `**Dauer**: ${long(current.minutes - current.breakMinutes)}`,
+      `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : "keine"}`,
+      ""
+    ] : [],
+    "### \u{1F4CB} Gesamt\xFCbersicht",
+    `**Anzahl Schichten**: ${stats.count}`,
+    `**Gesamtdauer**: ${long(stats.minutes)}`,
+    `**Durchschnittliche Dauer**: ${long(stats.count ? stats.minutes / stats.count : 0)}`,
+    ...typeName ? ["", `-# Schichtart: ${plain(typeName)}`] : []
+  ].join("\n");
+  const buttons = [
+    { id: `shift:on${!current && type ? `:${type.id}` : ""}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
+    { id: "shift:break", label: onBreak ? "Pause beenden" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
+    { id: "shift:off", label: "Beenden", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
   ];
-  const head = c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {};
-  return {
-    ephemeral: true,
-    ...notice ? { content: notice } : {},
-    buttons,
-    embeds: [{
-      ...head,
-      title: "Schicht verwalten",
-      color: current ? st?.color ?? COLORS.success : COLORS.neutral,
-      fields,
-      description: current ? void 0 : "Du bist gerade nicht im Dienst. Um eine Schicht zu beginnen, klicke auf `Schicht starten`."
-    }]
-  };
+  return { ephemeral: true, buttons, embeds: [{ box: true, heading: "small", title: "Schichtverwaltung", description: clip(description, 3900) }] };
 }
 async function switchTo(c, status, type) {
   let notice;
@@ -83501,25 +83509,9 @@ async function switchTo(c, status, type) {
     await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...type ? { shiftType: type.id } : {} });
     notice = status === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`;
   } catch (e) {
-    if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
-    notice = `Du bist bereits **${DUTY_DE[status].label}**.`;
+    notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
-  try {
-    return await manageReply2(c, void 0, notice);
-  } catch {
-    return okReply(notice.replace(/^\S+ /, ""));
-  }
-}
-async function goOnDuty(c, typeId) {
-  const types = await shiftTypes(c);
-  if (typeId) {
-    const t = findType(types, typeId);
-    if (!t) return errorReply("Diese Schichtart gibt es nicht mehr.");
-    return switchTo(c, "ON_DUTY", t);
-  }
-  const me = await c.api.asUser(c.discordId, "GET", "/team/me");
-  if (!me && types.length >= 2) return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "shift:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
-  return switchTo(c, "ON_DUTY");
+  return manageReply2(c, type, notice);
 }
 async function active(c) {
   try {
@@ -83597,10 +83589,9 @@ var SHIFT_COMMANDS = [
         case "manage": {
           const wanted = String(c.opts.type ?? "").trim();
           try {
-            if (!wanted) return await manageReply2(c);
             const types = await shiftTypes(c);
-            const t = findType(types, wanted);
-            if (!t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
+            const t = pickType(types, wanted || void 0);
+            if (wanted && !t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
             return await manageReply2(c, t);
           } catch (e) {
             return mapError(e);
@@ -83614,12 +83605,19 @@ var SHIFT_COMMANDS = [
 ];
 var SHIFT_INTERACTION = {
   prefix: "shift",
+  updatesMessage: (args) => args[0] === "on" || args[0] === "break" || args[0] === "off",
   async run(c) {
     const [action, userId, discordId] = c.args;
     try {
-      if (action === "on") return await goOnDuty(c, userId);
-      if (action === "type") return c.values?.[0] ? await goOnDuty(c, c.values[0]) : errorReply("Bitte eine Schicht w\xE4hlen.");
-      if (action === "break") return await switchTo(c, "BREAK");
+      if (action === "on") {
+        const types = await shiftTypes(c);
+        const t = userId ? findType(types, userId) : void 0;
+        return await switchTo(c, "ON_DUTY", t);
+      }
+      if (action === "break") {
+        const me = await c.api.asUser(c.discordId, "GET", "/team/me");
+        return await switchTo(c, me?.status === "BREAK" ? "ON_DUTY" : "BREAK");
+      }
       if (action === "off") return await switchTo(c, "OFF_DUTY");
     } catch (e) {
       return mapError(e);
@@ -85037,6 +85035,7 @@ var toRows = (buttons = []) => {
     rows.push(new import_discord6.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
       const x = b.url ? new import_discord6.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord6.ButtonStyle.Link) : new import_discord6.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
       if (b.emoji) x.setEmoji(b.emoji);
+      if (b.disabled) x.setDisabled(true);
       return x;
     })));
   }
@@ -85452,6 +85451,14 @@ async function handleComponent(i) {
       const p = replyPayload(reply2);
       await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
     }
+    return;
+  }
+  if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
+    await i.deferUpdate();
+    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const p = replyPayload(reply2);
+    if (reply2.embeds?.[0]?.box) await i.editReply(p);
+    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
     return;
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });

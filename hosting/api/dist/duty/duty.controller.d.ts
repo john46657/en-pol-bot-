@@ -150,6 +150,11 @@ export declare class DutyController {
         days: number;
         since: Date;
     }>;
+    /** Eigene Gesamtwerte aller Schichten (Discord: `/shift manage`). */
+    myShiftStats(a: Actor): Promise<{
+        count: number;
+        minutes: number;
+    }>;
     /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
     leaderboard(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
         days: number;

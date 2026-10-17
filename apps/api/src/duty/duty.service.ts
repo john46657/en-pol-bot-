@@ -163,6 +163,21 @@ export class DutyService {
     return { days, since, users };
   }
 
+  /** Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`): Anzahl und Zeit im Dienst ohne Pausen. */
+  async shiftStats(userId: string) {
+    const sessions = await this.prisma.dutySession.findMany({ where: { userId, ...recordWhere() }, select: { startedAt: true, endedAt: true, status: true }, orderBy: { startedAt: 'asc' } });
+    const now = Date.now();
+    let count = 0, ms = 0, prevEnd: number | null = null;
+    for (const s of sessions) {
+      // nahtloser Statuswechsel (Im Dienst ↔ Pause) gehört zur selben Schicht – wie in `shiftLog`
+      if (prevEnd !== s.startedAt.getTime()) count++;
+      const end = s.endedAt?.getTime() ?? now;
+      if (s.status !== 'BREAK') ms += Math.max(0, end - s.startedAt.getTime());
+      prevEnd = s.endedAt?.getTime() ?? null;
+    }
+    return { count, minutes: Math.round(ms / 60_000) };
+  }
+
   /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
   async leaderboard(days: number, me: string) {
     const { users } = await this.hours(days);

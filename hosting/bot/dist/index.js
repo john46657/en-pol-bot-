@@ -67,6 +67,8 @@ const toRows = (buttons = []) => {
             const x = b.url ? new discord_js_1.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(discord_js_1.ButtonStyle.Link) : new discord_js_1.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE[b.style]);
             if (b.emoji)
                 x.setEmoji(b.emoji);
+            if (b.disabled)
+                x.setDisabled(true);
             return x;
         })));
     }
@@ -529,6 +531,17 @@ async function handleComponent(i) {
             const p = replyPayload(reply);
             await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
         }
+        return;
+    }
+    if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
+        // Panel an Ort und Stelle neu zeichnen (wie bei Trident); Fehler o. Ä. ohne Kasten als eigene Antwort
+        await i.deferUpdate();
+        const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+        const p = replyPayload(reply);
+        if (reply.embeds?.[0]?.box)
+            await i.editReply(p);
+        else
+            await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
         return;
     }
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });

@@ -39,56 +39,57 @@ function logEmbed(title: string, log: ShiftLog, emptyText: string): EmbedData {
 /** Schichtart aus der Eingabe (ID oder Name, ohne Groß-/Kleinschreibung). */
 const findType = (types: ShiftTypeInfo[], wanted: string) => { const w = wanted.trim().toLowerCase(); return types.find((x) => x.id === w || x.name.toLowerCase() === w); };
 
+/** Minuten → „2 Stunden, 5 Minuten“ (wie bei Trident ausgeschrieben). */
+const long = (min: number) => {
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  const parts = [...(h ? [`${h} ${h === 1 ? 'Stunde' : 'Stunden'}`] : []), ...(m || !h ? [`${m} ${m === 1 ? 'Minute' : 'Minuten'}`] : [])];
+  return parts.join(', ');
+};
+
+/** Schichtart fürs Panel: gewählte, sonst Standard bzw. erste (wie Trident „Shift Type“); ohne eingerichtete Arten keine. */
+const pickType = (types: ShiftTypeInfo[], wanted?: string) => (wanted ? findType(types, wanted) : types.find((t) => t.isDefault) ?? types[0]);
+
 /**
- * `/shift manage`: eigene Schicht wie bei Trident – Status, laufende Schicht und Zeit der letzten 7 Tage,
- * darunter je nach Status „Schicht starten“ bzw. „Pause“ / „Pause beenden“ und „Schicht beenden“.
+ * `/shift manage`: Panel wie bei Trident – laufende Schicht, Gesamtübersicht (Anzahl, Gesamt- und Durchschnittsdauer),
+ * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Klicks zeichnen das Panel neu.
  */
 export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string): Promise<Reply> {
-  const log = await c.api.asUser<ShiftLog>(c.discordId, 'GET', '/team/me/shifts?days=7');
+  const [log, stats] = await Promise.all([
+    c.api.asUser<ShiftLog>(c.discordId, 'GET', '/team/me/shifts?days=1'),
+    c.api.asUser<{ count: number; minutes: number }>(c.discordId, 'GET', '/team/me/shift-stats'),
+  ]);
   const current = log.items.find((s) => s.active);
-  const total = log.items.reduce((n, s) => n + s.minutes - s.breakMinutes, 0);
-  const st = current ? DUTY_DE[current.status] : DUTY_DE.OFF_DUTY!;
-  const fields: EmbedData['fields'] = [{ name: 'Status', value: `${st?.emoji ?? '🟢'} ${st?.label ?? current?.status}`, inline: true }];
-  if (current) {
-    fields.push({ name: 'Seit', value: ts(current.startedAt, 'R'), inline: true });
-    if (current.shiftType) fields.push({ name: 'Schicht', value: plain(current.shiftType), inline: true });
-    fields.push({ name: 'Dauer', value: hm(current.minutes - current.breakMinutes), inline: true }, { name: 'Pausen', value: current.breaks ? `${current.breaks}× (${hm(current.breakMinutes)})` : 'keine', inline: true });
-  } else if (type) fields.push({ name: 'Schicht', value: plain(type.name), inline: true });
-  fields.push({ name: 'Letzte 7 Tage', value: `**${hm(total)}** in ${log.items.length} ${log.items.length === 1 ? 'Schicht' : 'Schichten'}` });
-  const buttons: ButtonSpec[] = !current
-    ? [{ id: `shift:on${type ? `:${type.id}` : ''}`, label: 'Schicht starten', style: 'success', emoji: '🟢' }]
-    : [current.status === 'BREAK' ? { id: 'shift:on', label: 'Pause beenden', style: 'success', emoji: '🟢' } : { id: 'shift:break', label: 'Pause', style: 'secondary', emoji: '🟡' },
-      { id: 'shift:off', label: 'Schicht beenden', style: 'danger', emoji: '⏹️' }];
-  const head: Pick<EmbedData, 'author'> = c.userName ? { author: { name: `@${c.userName}`, ...(c.userAvatar ? { iconUrl: c.userAvatar } : {}) } } : {};
-  return { ephemeral: true, ...(notice ? { content: notice } : {}), buttons,
-    embeds: [{ ...head, title: 'Schicht verwalten', color: current ? st?.color ?? COLORS.success : COLORS.neutral, fields,
-      description: current ? undefined : 'Du bist gerade nicht im Dienst. Um eine Schicht zu beginnen, klicke auf `Schicht starten`.' }] };
+  const onBreak = current?.status === 'BREAK';
+  const st = current ? DUTY_DE[current.status] : undefined;
+  const typeName = current ? current.shiftType : type?.name ?? null;
+  const description = [
+    ...(notice ? [notice, ''] : []),
+    ...(current ? ['### 🕒 Aktuelle Schicht', `**Status**: ${st?.emoji ?? '🟢'} ${st?.label ?? current.status}`, `**Begonnen**: ${ts(current.startedAt, 'R')}`,
+      `**Dauer**: ${long(current.minutes - current.breakMinutes)}`, `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : 'keine'}`, ''] : []),
+    '### 📋 Gesamtübersicht',
+    `**Anzahl Schichten**: ${stats.count}`,
+    `**Gesamtdauer**: ${long(stats.minutes)}`,
+    `**Durchschnittliche Dauer**: ${long(stats.count ? stats.minutes / stats.count : 0)}`,
+    ...(typeName ? ['', `-# Schichtart: ${plain(typeName)}`] : []),
+  ].join('\n');
+  const buttons: ButtonSpec[] = [
+    { id: `shift:on${!current && type ? `:${type.id}` : ''}`, label: 'Start', style: 'success', emoji: '▶️', disabled: !!current },
+    { id: 'shift:break', label: onBreak ? 'Pause beenden' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
+    { id: 'shift:off', label: 'Beenden', style: 'danger', emoji: '⏹️', disabled: !current },
+  ];
+  return { ephemeral: true, buttons, embeds: [{ box: true, heading: 'small', title: 'Schichtverwaltung', description: clip(description, 3900) }] };
 }
 
-/** Status setzen und das Verwaltungs-Panel neu zeigen; „schon so“ (409) ist kein Fehler. */
+/** Status setzen und das Panel neu zeichnen; „schon so“ (409) und Fehler stehen oben im Panel. */
 async function switchTo(c: Ctx, status: 'ON_DUTY' | 'BREAK' | 'OFF_DUTY', type?: ShiftTypeInfo): Promise<Reply> {
   let notice: string;
   try {
     await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status, ...(type ? { shiftType: type.id } : {}) });
     notice = status === 'ON_DUTY' && type ? `🟢 Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status]!.emoji} Du bist jetzt **${DUTY_DE[status]!.label}**.`;
   } catch (e) {
-    if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
-    notice = `Du bist bereits **${DUTY_DE[status]!.label}**.`;
+    notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status]!.label}**.` : mapError(e).content ?? '❌ Das hat nicht geklappt.';
   }
-  try { return await manageReply(c, undefined, notice); } catch { return okReply(notice.replace(/^\S+ /, '')); }
-}
-
-/** „Schicht starten“ / „Pause beenden“: aus der Pause zurück (gleiche Schichtart), sonst ggf. erst die Schichtart wählen. */
-async function goOnDuty(c: Ctx, typeId?: string): Promise<Reply> {
-  const types = await shiftTypes(c);
-  if (typeId) {
-    const t = findType(types, typeId);
-    if (!t) return errorReply('Diese Schichtart gibt es nicht mehr.');
-    return switchTo(c, 'ON_DUTY', t);
-  }
-  const me = await c.api.asUser<{ status: string } | null>(c.discordId, 'GET', '/team/me');
-  if (!me && types.length >= 2) return { ephemeral: true, content: 'Welche Schicht beginnst du?', select: { id: 'shift:type', placeholder: 'Schicht wählen …', options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...(t.isDefault ? { description: 'Standard' } : {}) })) } };
-  return switchTo(c, 'ON_DUTY');
+  return manageReply(c, type, notice);
 }
 
 async function active(c: Ctx): Promise<Reply> {
@@ -153,10 +154,9 @@ export const SHIFT_COMMANDS: CommandDef[] = [
         case 'manage': {
           const wanted = String(c.opts.type ?? '').trim();
           try {
-            if (!wanted) return await manageReply(c);
             const types = await shiftTypes(c);
-            const t = findType(types, wanted);
-            if (!t) return errorReply(types.length ? `Unbekannte Schichtart. Verfügbar: ${types.map((x) => `**${plain(x.name)}**`).join(', ')}.` : 'Auf diesem Server sind keine Schichtarten eingerichtet – einfach `/shift manage` ohne Schichtart.');
+            const t = pickType(types, wanted || undefined);
+            if (wanted && !t) return errorReply(types.length ? `Unbekannte Schichtart. Verfügbar: ${types.map((x) => `**${plain(x.name)}**`).join(', ')}.` : 'Auf diesem Server sind keine Schichtarten eingerichtet – einfach `/shift manage` ohne Schichtart.');
             return await manageReply(c, t);
           } catch (e) { return mapError(e); }
         }
@@ -167,17 +167,24 @@ export const SHIFT_COMMANDS: CommandDef[] = [
 ];
 
 /**
- * Buttons aus `/shift manage`: `shift:on[:<schichtart>]`, `shift:break`, `shift:off`, Auswahl `shift:type`;
+ * Buttons aus `/shift manage` (zeichnen das Panel neu): `shift:on[:<schichtart>]`, `shift:break` (Pause an/aus), `shift:off`;
  * aus `/shift admin`: `shift:end:<userId>:<discordId>` (Schicht eines Mitglieds beenden).
  */
 export const SHIFT_INTERACTION: InteractionDef = {
   prefix: 'shift',
+  updatesMessage: (args) => args[0] === 'on' || args[0] === 'break' || args[0] === 'off',
   async run(c): Promise<Reply> {
     const [action, userId, discordId] = c.args;
     try {
-      if (action === 'on') return await goOnDuty(c, userId);
-      if (action === 'type') return c.values?.[0] ? await goOnDuty(c, c.values[0]) : errorReply('Bitte eine Schicht wählen.');
-      if (action === 'break') return await switchTo(c, 'BREAK');
+      if (action === 'on') {
+        const types = await shiftTypes(c);
+        const t = userId ? findType(types, userId) : undefined;
+        return await switchTo(c, 'ON_DUTY', t);
+      }
+      if (action === 'break') {
+        const me = await c.api.asUser<{ status: string } | null>(c.discordId, 'GET', '/team/me');
+        return await switchTo(c, me?.status === 'BREAK' ? 'ON_DUTY' : 'BREAK');
+      }
       if (action === 'off') return await switchTo(c, 'OFF_DUTY');
     } catch (e) { return mapError(e); }
     if (action !== 'end' || !userId || !/^[0-9a-f-]{36}$/i.test(userId)) return errorReply('Unbekannte Aktion.');

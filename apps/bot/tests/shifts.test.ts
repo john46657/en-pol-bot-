@@ -30,53 +30,58 @@ const shift = (o: Record<string, unknown> = {}) => ({ id: 's1', userId: UID, nam
 const types = { enabled: true, types: [{ id: 'streife', name: 'Streife', isDefault: true }, { id: 'sek', name: 'SEK', isDefault: false }] };
 
 describe('/shift', () => {
-  const off = { days: 7, items: [shift({ id: 's2', active: false, endedAt: '2026-10-16T12:00:00Z', status: 'OFF_DUTY', minutes: 60, breakMinutes: 0, breaks: 0 })] };
-  it('manage while off duty shows the week total and a start button (with the chosen type)', async () => {
-    const { api, calls } = fakeApi({ 'GET /team/me/shifts': off, 'GET /bot/shifts': types });
+  const none = { days: 1, items: [] };
+  const stats = { count: 4, minutes: 250 };
+  const ids = (r: Reply) => r.buttons?.map((b) => `${b.id}${b.disabled ? ' (aus)' : ''}`);
+  it('manage while off duty: all-time overview, default shift type and only Start clickable', async () => {
+    const { api, calls } = fakeApi({ 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
     const r = await run(api, 'manage');
-    expect(calls[0]!.path).toBe('/team/me/shifts?days=7');
-    expect(text(r)).toContain('nicht im Dienst');
-    expect(text(r)).toContain('1 h 00 min');
-    expect(r.buttons?.map((b) => b.id)).toEqual(['shift:on']);
+    expect(calls.map((x) => x.path)).toContain('/team/me/shifts?days=1');
+    expect(r.embeds?.[0]).toMatchObject({ box: true, title: 'Schichtverwaltung' });
+    const t = text(r);
+    expect(t).toContain('**Anzahl Schichten**: 4');
+    expect(t).toContain('**Gesamtdauer**: 4 Stunden, 10 Minuten');
+    expect(t).toContain('**Durchschnittliche Dauer**: 1 Stunde, 3 Minuten'); // 62,5 → 63 Minuten
+    expect(t).toContain('Schichtart: Streife');
+    expect(ids(r)).toEqual(['shift:on:streife', 'shift:break (aus)', 'shift:off (aus)']);
     expect((await run(api, 'manage', { type: 'SEK' })).buttons?.[0]?.id).toBe('shift:on:sek');
     expect(text(await run(api, 'manage', { type: 'gibtsnicht' }))).toContain('Unbekannte Schichtart');
+    const fresh = fakeApi({ 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': { count: 0, minutes: 0 }, 'GET /bot/shifts': { enabled: false, types: [] } });
+    const f = text(await run(fresh.api, 'manage'));
+    expect(f).toContain('**Gesamtdauer**: 0 Minuten');
+    expect(f).not.toContain('Schichtart');
   });
-  it('manage while on duty offers break and end; on break offers to end the break', async () => {
-    const on = fakeApi({ 'GET /team/me/shifts': { days: 7, items: [shift()] } });
+  it('manage while on duty shows the running shift; Start is greyed out, Pause/Beenden clickable', async () => {
+    const on = fakeApi({ 'GET /team/me/shifts': { days: 1, items: [shift()] }, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
     const r = await run(on.api, 'manage');
-    expect(text(r)).toContain('SEK');
-    expect(text(r)).toContain('1 h 15 min'); // 90 − 15 Minuten Pause
-    expect(r.buttons?.map((b) => b.id)).toEqual(['shift:break', 'shift:off']);
-    const brk = fakeApi({ 'GET /team/me/shifts': { days: 7, items: [shift({ status: 'BREAK' })] } });
-    expect((await run(brk.api, 'manage')).buttons?.map((b) => b.id)).toEqual(['shift:on', 'shift:off']);
+    expect(text(r)).toContain('Aktuelle Schicht');
+    expect(text(r)).toContain('**Dauer**: 1 Stunde, 15 Minuten'); // 90 − 15 Minuten Pause
+    expect(text(r)).toContain('Schichtart: SEK');
+    expect(ids(r)).toEqual(['shift:on (aus)', 'shift:break', 'shift:off']);
+    const brk = fakeApi({ 'GET /team/me/shifts': { days: 1, items: [shift({ status: 'BREAK' })] }, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
+    expect((await run(brk.api, 'manage')).buttons?.[1]?.label).toBe('Pause beenden');
   });
-  it('start button: with a type sends it, otherwise asks for the type when off duty and there are several', async () => {
-    const { api, calls } = fakeApi({ 'GET /bot/shifts': types, 'GET /team/me/shifts': off, 'GET /team/me': undefined, 'PUT /team/me/status': {} });
+  it('buttons update the panel in place and set the status', async () => {
+    const { api, calls } = fakeApi({ 'GET /bot/shifts': types, 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /team/me': { status: 'ON_DUTY' }, 'PUT /team/me/status': {} });
+    const start = interactionFor('shift:on:sek')!;
+    expect(start.def.updatesMessage?.(start.args)).toBe(true);
     const r = await click(api, 'shift:on:sek');
     expect(calls.find((x) => x.method === 'PUT')).toMatchObject({ body: { status: 'ON_DUTY', shiftType: 'sek' } });
-    expect(r.content).toContain('**SEK** gestartet');
-    expect(r.embeds?.[0]?.title).toBe('Schicht verwalten');
-    const pick = await click(api, 'shift:on');
-    expect(pick.select?.id).toBe('shift:type');
-    await click(api, 'shift:type', ['streife']);
-    expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'ON_DUTY', shiftType: 'streife' } });
-  });
-  it('start without shift types goes straight on duty; back from break keeps the type; already on duty is not an error', async () => {
-    const { api, calls } = fakeApi({ 'GET /bot/shifts': { enabled: false, types: [] }, 'GET /team/me/shifts': off, 'GET /team/me': undefined, 'PUT /team/me/status': {} });
-    expect((await click(api, 'shift:on')).content).toContain('im Dienst');
-    expect(calls.find((x) => x.method === 'PUT')).toMatchObject({ body: { status: 'ON_DUTY' } });
-    const brk = fakeApi({ 'GET /bot/shifts': types, 'GET /team/me/shifts': off, 'GET /team/me': { status: 'BREAK' }, 'PUT /team/me/status': {} });
-    await click(brk.api, 'shift:on');
-    expect(brk.calls.find((x) => x.method === 'PUT')!.body).toEqual({ status: 'ON_DUTY' });
-    const busy = fakeApi({ 'GET /bot/shifts': { enabled: false, types: [] }, 'GET /team/me/shifts': off, 'GET /team/me': { status: 'ON_DUTY' }, 'PUT /team/me/status': new BotApiError(409, 'CONFLICT', 'x') });
-    expect((await click(busy.api, 'shift:on')).content).toContain('bereits');
-  });
-  it('break and end buttons set the status', async () => {
-    const { api, calls } = fakeApi({ 'GET /team/me/shifts': off, 'PUT /team/me/status': {} });
+    expect(text(r)).toContain('**SEK** gestartet');
+    expect(r.embeds?.[0]?.box).toBe(true);
     await click(api, 'shift:break');
-    expect(calls.find((x) => x.method === 'PUT')).toMatchObject({ body: { status: 'BREAK' } });
-    expect((await click(api, 'shift:off')).content).toContain('außer Dienst');
+    expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'BREAK' } });
+    expect(text(await click(api, 'shift:off'))).toContain('außer Dienst');
     expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'OFF_DUTY' } });
+  });
+  it('pause button ends a break; without types start goes on duty; 409 is shown as a hint', async () => {
+    const brk = fakeApi({ 'GET /bot/shifts': { enabled: false, types: [] }, 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /team/me': { status: 'BREAK' }, 'PUT /team/me/status': {} });
+    await click(brk.api, 'shift:break');
+    expect(brk.calls.find((x) => x.method === 'PUT')!.body).toEqual({ status: 'ON_DUTY' });
+    await click(brk.api, 'shift:on');
+    expect(brk.calls.filter((x) => x.method === 'PUT').at(-1)!.body).toEqual({ status: 'ON_DUTY' });
+    const busy = fakeApi({ 'GET /bot/shifts': { enabled: false, types: [] }, 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'PUT /team/me/status': new BotApiError(409, 'CONFLICT', 'x') });
+    expect(text(await click(busy.api, 'shift:on'))).toContain('bereits');
   });
   it('type autocomplete suggests the configured shift types', async () => {
     const { api } = fakeApi({ 'GET /bot/shifts': types });

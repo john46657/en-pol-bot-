@@ -62,4 +62,5 @@ export interface CommandDef {
   run(ctx: Ctx): Promise<Reply>;
 }
 /** Buttons/Formulare/Auswahlmenüs: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen, `values` nur bei Auswahlmenüs. */
-export interface InteractionDef { prefix: string; /** true: Antwort ist ein Formular (kein deferReply vorher). */ opensModal?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[] }): Promise<Reply> }
+export interface InteractionDef { prefix: string; /** true: Antwort ist ein Formular (kein deferReply vorher). */ opensModal?: (args: string[]) => boolean;
+  /** true: Antwort ersetzt die Nachricht mit dem Button (z. B. Panel von `/shift manage`) statt einer neuen Antwort. */ updatesMessage?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[] }): Promise<Reply> }
