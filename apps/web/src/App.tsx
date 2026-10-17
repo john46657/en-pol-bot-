@@ -57,7 +57,6 @@ const ExamEditorPage = lazy(() => import('./pages/hr/exams/ExamEditor').then((m)
 const ExamStartPage = lazy(() => import('./pages/hr/exams/ExamTake').then((m) => ({ default: m.ExamStartPage })));
 const AttemptPage = lazy(() => import('./pages/hr/exams/ExamTake').then((m) => ({ default: m.AttemptPage })));
 const ExamResultsPage = lazy(() => import('./pages/hr/exams/ExamResults').then((m) => ({ default: m.ExamResultsPage })));
-const HrComms = lazy(() => import('./pages/hr/HrComms').then((m) => ({ default: m.HrComms })));
 const ServiceNumbers = lazy(() => import('./pages/hr/ServiceNumbers').then((m) => ({ default: m.ServiceNumbers })));
 const DutyReports = lazy(() => import('./pages/DutyReports').then((m) => ({ default: m.DutyReports })));
 const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.Offices })));
@@ -224,7 +223,6 @@ export function App() {
           <Route path="trainings/exams/:id/results" element={<Guard perm="exam.view"><ExamResultsPage /></Guard>} />
           <Route path="trainings/attempts/:id" element={<Guard perm="exam.view"><AttemptPage /></Guard>} />
           <Route path="certificates/:no" element={<Guard perm="dashboard.view"><Certificate /></Guard>} />
-          <Route path="announcements" element={<Guard perm="announcements.view"><HrComms /></Guard>} />
           <Route path="service-numbers" element={<Guard perm="dienstnummer.view"><ServiceNumbers /></Guard>} />
           <Route path="admin/personnel" element={<Guard perm="personnel.view" area="dashboard.settings.view"><HrSettings /></Guard>} />
           <Route path="applications" element={<Guard perm="applications.view" area="dashboard.applications.view"><Applications /></Guard>} />
