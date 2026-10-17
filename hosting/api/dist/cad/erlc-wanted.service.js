@@ -29,6 +29,13 @@ const validId = (id) => !!id && /^\d{1,20}$/.test(id);
  */
 const wantedSpaceWhere = (space) => (space === null ? { serverId: null } : { OR: [{ serverId: space }, { serverId: null }] });
 exports.wantedSpaceWhere = wantedSpaceWhere;
+/** Wanted-Sterne eines Spielers laut letztem Abruf (für die Anzeige). */
+const starsOf = (snap, id, name) => {
+    const p = (snap?.players ?? []).find((x) => (id ? x.id === id : x.name === name));
+    return Math.max(0, Math.floor(p?.wantedStars ?? 0));
+};
+/** Priorität nach Wanted-Sternen: 1–2 mittel, 3–4 hoch, ab 5 dringend. */
+const inGamePriority = (n) => (n >= 5 ? 'URGENT' : n >= 3 ? 'HIGH' : 'MEDIUM');
 const activePersonWanted = (space, now) => ({ AND: [(0, exports.wantedSpaceWhere)(space), { status: 'ACTIVE', personId: { not: null }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }] });
 /**
  * Automatischer Fahndungsabgleich ER:LC ↔ eigene Fahndungen.
@@ -76,6 +83,8 @@ let ErlcWantedService = class ErlcWantedService {
     async run(s, snap) {
         const now = new Date();
         const players = (snap.players ?? []).filter((p) => p.name?.trim()).map((p) => ({ name: p.name.trim(), id: validId(p.id) ? p.id : null }));
+        // Wanted-Sterne im Spiel (ER:LC) je Spieler
+        const stars = new Map((snap.players ?? []).filter((p) => p.name?.trim()).map((p) => [(0, shared_1.playerKey)({ name: p.name.trim(), id: validId(p.id) ? p.id : null }), Math.max(0, Math.floor(p.wantedStars ?? 0))]));
         // Beitritte laut Join-Logs (nur wenn freigegeben): erkennt „kurz raus und wieder rein“ zwischen zwei Abfragen
         const joins = new Map();
         for (const j of snap.joinLogs ?? [])
@@ -103,18 +112,21 @@ let ErlcWantedService = class ErlcWantedService {
         const sessions = await this.prisma.erlcPlayerPresence.findMany({ where: { serverId: s.id } });
         if (!sessions.length)
             return 0;
-        // Aktive Personen-Fahndungen im Akten-Bereich des Discord-Servers dieses ER:LC-Servers
         const space = (0, guild_context_1.recordSpace)(s.guildId) ?? null;
+        let created = await this.inGameWanted(s, sessions, stars, space, now);
+        // Aktive Personen-Fahndungen im Akten-Bereich des Discord-Servers dieses ER:LC-Servers
         const wanted = await this.prisma.wantedRecord.findMany({ where: activePersonWanted(space, now) });
-        if (!wanted.length)
-            return 0;
+        if (!wanted.length) {
+            if (created)
+                this.rt.publish('cad', 'wanted.hits', { serverId: s.id, count: created });
+            return created;
+        }
         const persons = await this.prisma.person.findMany({ where: { id: { in: wanted.map((w) => w.personId) } }, select: { id: true, robloxUserId: true, robloxUsername: true, aliases: true } });
         const byPerson = new Map(persons.map((p) => [p.id, p]));
         const subjects = wanted.flatMap((w) => { const p = byPerson.get(w.personId); return p ? [{ wantedId: w.id, personId: p.id, robloxUserId: validId(p.robloxUserId) ? p.robloxUserId : null, robloxUsername: p.robloxUsername, aliases: p.aliases }] : []; });
         const wantedById = new Map(wanted.map((w) => [w.id, w]));
         const existing = await this.prisma.erlcWantedHit.findMany({ where: { sessionId: { in: sessions.map((x) => x.id) } }, select: { sessionId: true, wantedId: true } });
         const done = new Set(existing.map((h) => `${h.sessionId}|${h.wantedId}`));
-        let created = 0;
         for (const sess of sessions) {
             for (const m of (0, shared_1.matchWantedPlayer)({ name: sess.playerName, id: sess.robloxUserId }, subjects)) {
                 if (done.has(`${sess.id}|${m.wantedId}`))
@@ -140,6 +152,38 @@ let ErlcWantedService = class ErlcWantedService {
         return created;
     }
     /**
+     * Im Spiel gesucht: Spieler mit ER:LC-Wanted-Sternen → ein Treffer je Aufenthalt (Roblox-ID von der API, ohne eigene Fahndung).
+     * Steigen die Sterne während des Aufenthalts, wird nur der Treffer nachgezogen – keine neue Meldung.
+     */
+    async inGameWanted(s, sessions, stars, space, now) {
+        const wantedNow = sessions.filter((x) => (stars.get(x.playerKey) ?? 0) > 0);
+        if (!wantedNow.length)
+            return 0;
+        const existing = new Map((await this.prisma.erlcWantedHit.findMany({ where: { sessionId: { in: wantedNow.map((x) => x.id) }, matchType: 'ERLC_WANTED' }, select: { id: true, sessionId: true, wantedReason: true } })).map((h) => [h.sessionId, h]));
+        const ids = wantedNow.map((x) => x.robloxUserId).filter((x) => !!x);
+        const persons = ids.length ? await this.prisma.person.findMany({ where: { serverId: space, robloxUserId: { in: ids } }, select: { id: true, robloxUserId: true } }) : [];
+        let created = 0;
+        for (const sess of wantedNow) {
+            const n = stars.get(sess.playerKey);
+            const reason = `Im Spiel gesucht (${n} ${n === 1 ? 'Stern' : 'Sterne'} ★)`;
+            const old = existing.get(sess.id);
+            if (old) {
+                const before = Number(/\((\d+)/.exec(old.wantedReason)?.[1] ?? 0);
+                if (n > before)
+                    await this.prisma.erlcWantedHit.update({ where: { id: old.id }, data: { wantedReason: reason, wantedPriority: inGamePriority(n) } }).catch(() => undefined);
+                continue;
+            }
+            const hit = await this.prisma.erlcWantedHit.create({ data: {
+                    guildId: s.guildId, erlcServerId: s.id, serverName: s.name, wantedId: null, wantedNumber: null, wantedReason: reason, wantedPriority: inGamePriority(n),
+                    personId: persons.find((p) => p.robloxUserId === sess.robloxUserId)?.id ?? null, sessionId: sess.id, sessionStartedAt: sess.joinedAt, playerName: sess.playerName,
+                    robloxUserId: sess.robloxUserId, matchType: 'ERLC_WANTED', identified: true, reviewStatus: 'NEW', detectedAt: now,
+                } });
+            created++;
+            await this.notifyHit(hit, s, 'ACTIVE');
+        }
+        return created;
+    }
+    /**
      * Discord (über den vorhandenen Bot, Ausgang/Outbox): Kanäle aus CAD → Einstellungen → Discord-Kanäle, Ereignis „Fahndungstreffer“
      * bzw. „Mögliche Fahndungsübereinstimmung“. Nie an verbundene Server. Nur das Nötigste: keine Beschreibung, keine Personalien.
      * Einmal je Treffer; ein Fehler beim Einreihen wird am Treffer vermerkt, der Treffer selbst bleibt.
@@ -147,9 +191,12 @@ let ErlcWantedService = class ErlcWantedService {
     async notifyHit(hit, s, wantedStatus) {
         let status = 'NOT_CONFIGURED', outboxId = null;
         try {
-            const event = hit.identified ? 'wanted.hit' : 'wanted.possible';
-            // Kanalzuordnungen gelten je Discord-Server → Konfiguration dieses Servers lesen
-            const t = await (0, guild_context_1.runInGuild)(s.guildId, () => this.notify.targets(event, s.guildId));
+            const inGame = hit.matchType === 'ERLC_WANTED';
+            const event = inGame ? 'wanted.erlc' : hit.identified ? 'wanted.hit' : 'wanted.possible';
+            // Kanalzuordnungen gelten je Discord-Server → Konfiguration dieses Servers lesen; „im Spiel gesucht“ ohne eigenen Kanal → Fahndungstreffer
+            let t = await (0, guild_context_1.runInGuild)(s.guildId, () => this.notify.targets(event, s.guildId));
+            if (inGame && !t.channelIds.length)
+                t = await (0, guild_context_1.runInGuild)(s.guildId, () => this.notify.targets('wanted.hit', s.guildId));
             if (t.channelIds.length) {
                 const row = await this.prisma.discordOutbox.create({ data: { type: `cad.${event}`, channelKey: 'wanted', payload: {
                             id: hit.id, playerName: hit.playerName, robloxUserId: hit.robloxUserId, wantedNumber: hit.wantedNumber, reason: hit.wantedReason, priority: hit.wantedPriority, wantedStatus,
@@ -188,7 +235,7 @@ let ErlcWantedService = class ErlcWantedService {
         return {
             id: r.id, serverName: r.serverName, erlcServerId: r.erlcServerId, playerName: r.playerName, robloxUserId: r.robloxUserId,
             matchType: r.matchType, matchLabel: shared_1.WANTED_MATCH_LABELS[r.matchType] ?? r.matchType, identified: r.identified,
-            identification: r.identified ? (r.matchType === 'ROBLOX_ID' ? 'Bestätigt (Roblox-ID)' : 'Manuell bestätigt') : r.reviewStatus === 'REJECTED' ? 'Verworfen' : 'Mögliche Übereinstimmung – manuelle Prüfung erforderlich',
+            identification: r.matchType === 'ERLC_WANTED' ? 'Im Spiel gesucht (ER:LC)' : r.identified ? (r.matchType === 'ROBLOX_ID' ? 'Bestätigt (Roblox-ID)' : 'Manuell bestätigt') : r.reviewStatus === 'REJECTED' ? 'Verworfen' : 'Mögliche Übereinstimmung – manuelle Prüfung erforderlich',
             reviewStatus: r.reviewStatus, reviewLabel: shared_1.WANTED_HIT_STATUS_LABELS[r.reviewStatus] ?? r.reviewStatus, reviewedBy: reviewer, reviewedAt: r.reviewedAt, reviewNote: r.reviewNote,
             detectedAt: r.detectedAt, sessionStartedAt: r.sessionStartedAt,
             wantedId: r.wantedId, wantedNumber: r.wanted?.number ?? r.wantedNumber, reason: r.wantedReason, priority: r.wanted?.priority ?? r.wantedPriority,
@@ -198,7 +245,7 @@ let ErlcWantedService = class ErlcWantedService {
     }
     /** Verbindungs- und Abgleichsstatus je ER:LC-Server (keine Geheimnisse). */
     async status() {
-        const servers = await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, guildId: true, active: true, status: true, lastSyncAt: true, lastError: true, lastErrorAt: true, features: true, wantedCheckAt: true, wantedCheckError: true, _count: { select: { presence: true } }, presence: { select: { playerName: true, robloxUserId: true }, orderBy: { joinedAt: 'asc' }, take: 20 } } });
+        const servers = await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, guildId: true, active: true, status: true, lastSyncAt: true, lastError: true, lastErrorAt: true, features: true, wantedCheckAt: true, wantedCheckError: true, snapshot: true, _count: { select: { presence: true } }, presence: { select: { playerName: true, robloxUserId: true }, orderBy: { joinedAt: 'asc' }, take: 20 } } });
         // Zur Fehlersuche: wie viele Fahndungen dieser Server abgleicht (ohne Server-Filter der Anfrage – maßgeblich ist der Bereich des ER:LC-Servers)
         const now = new Date();
         const wantedCounts = await (0, guild_context_1.unscoped)(() => Promise.all(servers.map((s) => this.prisma.wantedRecord.count({ where: activePersonWanted((0, guild_context_1.recordSpace)(s.guildId) ?? null, now) }))));
@@ -208,7 +255,7 @@ let ErlcWantedService = class ErlcWantedService {
             servers: servers.map((s, i) => ({
                 id: s.id, name: s.name, active: s.active, status: s.active ? s.status : 'DISABLED', lastSyncAt: s.lastSyncAt, lastError: s.status === 'CONNECTED' ? null : s.lastError, lastErrorAt: s.lastErrorAt,
                 playersEnabled: s.features.includes('players'), joinLogsEnabled: s.features.includes('joinLogs'), wantedCheckAt: s.wantedCheckAt, wantedCheckError: s.wantedCheckError, online: s._count.presence,
-                players: s.presence.map((p) => ({ name: p.playerName, robloxUserId: p.robloxUserId })), activeWanted: wantedCounts[i] ?? 0,
+                players: s.presence.map((p) => ({ name: p.playerName, robloxUserId: p.robloxUserId, wantedStars: starsOf(s.snapshot, p.robloxUserId, p.playerName) })), activeWanted: wantedCounts[i] ?? 0,
             })),
         };
     }

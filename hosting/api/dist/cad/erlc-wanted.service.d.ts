@@ -46,6 +46,11 @@ export declare class ErlcWantedService {
     serverEmpty(serverId: string): Promise<void>;
     private run;
     /**
+     * Im Spiel gesucht: Spieler mit ER:LC-Wanted-Sternen → ein Treffer je Aufenthalt (Roblox-ID von der API, ohne eigene Fahndung).
+     * Steigen die Sterne während des Aufenthalts, wird nur der Treffer nachgezogen – keine neue Meldung.
+     */
+    private inGameWanted;
+    /**
      * Discord (über den vorhandenen Bot, Ausgang/Outbox): Kanäle aus CAD → Einstellungen → Discord-Kanäle, Ereignis „Fahndungstreffer“
      * bzw. „Mögliche Fahndungsübereinstimmung“. Nie an verbundene Server. Nur das Nötigste: keine Beschreibung, keine Personalien.
      * Einmal je Treffer; ein Fehler beim Einreihen wird am Treffer vermerkt, der Treffer selbst bleibt.
@@ -117,6 +122,7 @@ export declare class ErlcWantedService {
             players: {
                 name: string;
                 robloxUserId: string | null;
+                wantedStars: number;
             }[];
             activeWanted: number;
         }[];

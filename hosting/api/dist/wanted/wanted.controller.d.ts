@@ -13,14 +13,14 @@ declare const create: z.ZodObject<{
     description?: string | undefined;
     personId?: string | undefined;
     vehicleId?: string | undefined;
-    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
+    priority?: "URGENT" | "HIGH" | "MEDIUM" | "LOW" | "CRITICAL" | undefined;
     expiresAt?: Date | undefined;
 }, {
     reason: string;
     description?: string | undefined;
     personId?: string | undefined;
     vehicleId?: string | undefined;
-    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
+    priority?: "URGENT" | "HIGH" | "MEDIUM" | "LOW" | "CRITICAL" | undefined;
     expiresAt?: Date | undefined;
 }>;
 declare const update: z.ZodObject<{
@@ -33,13 +33,13 @@ declare const update: z.ZodObject<{
     version?: number | undefined;
     description?: string | null | undefined;
     reason?: string | undefined;
-    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
+    priority?: "URGENT" | "HIGH" | "MEDIUM" | "LOW" | "CRITICAL" | undefined;
     expiresAt?: Date | null | undefined;
 }, {
     version?: number | undefined;
     description?: string | null | undefined;
     reason?: string | undefined;
-    priority?: "MEDIUM" | "LOW" | "HIGH" | "URGENT" | "CRITICAL" | undefined;
+    priority?: "URGENT" | "HIGH" | "MEDIUM" | "LOW" | "CRITICAL" | undefined;
     expiresAt?: Date | null | undefined;
 }>;
 declare const reason: z.ZodObject<{

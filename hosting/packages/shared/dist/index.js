@@ -652,7 +652,7 @@ var formatMinutes = (min) => {
 var rolesMatch = (have, ids, mode) => mode === "ALL" ? ids.every((r) => have.includes(r)) : ids.some((r) => have.includes(r));
 
 // src/cad.ts
-var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible"];
+var CAD_EVENTS = ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible", "wanted.erlc"];
 var CAD_EVENT_LABELS = {
   "incident.created": "Neuer Einsatz",
   "incident.status": "Einsatzstatus ge\xE4ndert",
@@ -665,7 +665,8 @@ var CAD_EVENT_LABELS = {
   radio: "Funkmeldung",
   handover: "Schicht\xFCbergabe",
   "wanted.hit": "Fahndungstreffer (Roblox-ID best\xE4tigt)",
-  "wanted.possible": "M\xF6gliche Fahndungs\xFCbereinstimmung (nur Name \u2013 Pr\xFCfung n\xF6tig)"
+  "wanted.possible": "M\xF6gliche Fahndungs\xFCbereinstimmung (nur Name \u2013 Pr\xFCfung n\xF6tig)",
+  "wanted.erlc": "Im Spiel gesucht (ER:LC-Wanted-Sterne; ohne eigenen Kanal \u2192 Kanal \u201EFahndungstreffer\u201C)"
 };
 var CAD_FEEDBACK = [
   { key: "accepted", label: "Auftrag angenommen", emoji: "\u2705", unitStatus: "EN_ROUTE" },
@@ -809,12 +810,13 @@ function parsePlayer(v) {
   const i = s.lastIndexOf(":");
   return i > 0 && /^\d+$/.test(s.slice(i + 1)) ? { name: s.slice(0, i), id: s.slice(i + 1) } : { name: s, id: null };
 }
-var WANTED_MATCH_TYPES = ["ROBLOX_ID", "NAME", "ALIAS", "NAME_ID_MISMATCH"];
+var WANTED_MATCH_TYPES = ["ROBLOX_ID", "NAME", "ALIAS", "NAME_ID_MISMATCH", "ERLC_WANTED"];
 var WANTED_MATCH_LABELS = {
   ROBLOX_ID: "Roblox-ID stimmt \xFCberein",
   NAME: "Nur Roblox-Name stimmt \xFCberein",
   ALIAS: "Nur Alias stimmt \xFCberein",
-  NAME_ID_MISMATCH: "Name gleich, Roblox-ID abweichend"
+  NAME_ID_MISMATCH: "Name gleich, Roblox-ID abweichend",
+  ERLC_WANTED: "Im Spiel gesucht (ER:LC-Wanted-Sterne)"
 };
 var WANTED_HIT_STATUSES = ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"];
 var WANTED_HIT_STATUS_LABELS = {

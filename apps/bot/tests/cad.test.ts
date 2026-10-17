@@ -77,6 +77,10 @@ describe('/cad', () => {
     expect(maybe.title).toContain('MÖGLICHER');
     expect(JSON.stringify(maybe.fields)).toContain('Manuelle Prüfung erforderlich');
     expect(JSON.stringify(maybe.fields)).toContain('keine ID von ER:LC geliefert');
+    const inGame = renderCadOutbox('cad.wanted.erlc', { playerName: 'Robber', robloxUserId: '775005', reason: 'Im Spiel gesucht (3 Sterne ★)', priority: 'HIGH', server: 'EN' })!;
+    expect(inGame.title).toBe('🚨 IM SPIEL GESUCHT');
+    expect(inGame.fields?.map((x) => x.value)).toEqual(expect.arrayContaining(['Robber', 'Roblox-ID 775005', 'Im Spiel gesucht (3 Sterne ★)']));
+    expect(cadButtons('cad.wanted.erlc', { dashboardUrl: 'https://x.test/wanted/hits?id=2' })?.[0]?.url).toBe('https://x.test/wanted/hits?id=2');
     expect(cadButtons('cad.wanted.hit', { dashboardUrl: 'https://x.test/wanted/hits?id=1' })).toEqual([expect.objectContaining({ label: 'Im Dashboard öffnen', url: 'https://x.test/wanted/hits?id=1' })]);
   });
 });
