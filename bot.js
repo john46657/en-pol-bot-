@@ -85,16 +85,16 @@ var require_dist = __commonJS({
     __name(lazy, "lazy");
     function* range(range2) {
       let rangeEnd;
-      let start2 = 0;
+      let start3 = 0;
       let step = 1;
       if (typeof range2 === "number") {
         rangeEnd = range2;
       } else {
-        start2 = range2.start;
+        start3 = range2.start;
         rangeEnd = range2.end;
         step = range2.step ?? 1;
       }
-      for (let index = start2; index < rangeEnd; index += step) {
+      for (let index = start3; index < rangeEnd; index += step) {
         yield index;
       }
     }
@@ -3786,13 +3786,13 @@ var require_data_url = __commonJS({
     }
     function collectASequenceOfCodePointsFast(char, input, position) {
       const idx = input.indexOf(char, position.position);
-      const start2 = position.position;
+      const start3 = position.position;
       if (idx === -1) {
         position.position = input.length;
-        return input.slice(start2);
+        return input.slice(start3);
       }
       position.position = idx;
-      return input.slice(start2, position.position);
+      return input.slice(start3, position.position);
     }
     function stringPercentDecode(input) {
       const bytes = encoder.encode(input);
@@ -5798,11 +5798,11 @@ var require_formdata_parser = __commonJS({
       return name;
     }
     function collectASequenceOfBytes(condition, input, position) {
-      let start2 = position.position;
-      while (start2 < input.length && condition(input[start2])) {
-        ++start2;
+      let start3 = position.position;
+      while (start3 < input.length && condition(input[start3])) {
+        ++start3;
       }
-      return input.subarray(position.position, position.position = start2);
+      return input.subarray(position.position, position.position = start3);
     }
     function removeChars(buf, leading, trailing, predicate) {
       let lead = 0;
@@ -5815,12 +5815,12 @@ var require_formdata_parser = __commonJS({
       }
       return lead === 0 && trail === buf.length - 1 ? buf : buf.subarray(lead, trail + 1);
     }
-    function bufferStartsWith(buffer, start2, position) {
-      if (buffer.length < start2.length) {
+    function bufferStartsWith(buffer, start3, position) {
+      if (buffer.length < start3.length) {
         return false;
       }
-      for (let i = 0; i < start2.length; i++) {
-        if (start2[i] !== buffer[position.position + i]) {
+      for (let i = 0; i < start3.length; i++) {
+        if (start3[i] !== buffer[position.position + i]) {
           return false;
         }
       }
@@ -6226,8 +6226,8 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_status: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
+            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
           },
           wasm_on_message_begin: (p) => {
             assert(currentParser.ptr === p);
@@ -6235,13 +6235,13 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_header_field: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
+            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
           },
           wasm_on_header_value: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
+            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
           },
           wasm_on_headers_complete: (p, statusCode, upgrade, shouldKeepAlive) => {
             assert(currentParser.ptr === p);
@@ -6249,8 +6249,8 @@ var require_client_h1 = __commonJS({
           },
           wasm_on_body: (p, at, len) => {
             assert(currentParser.ptr === p);
-            const start2 = at - currentBufferPtr + currentBufferRef.byteOffset;
-            return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start2, len)) || 0;
+            const start3 = at - currentBufferPtr + currentBufferRef.byteOffset;
+            return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start3, len)) || 0;
           },
           wasm_on_message_complete: (p) => {
             assert(currentParser.ptr === p);
@@ -6584,7 +6584,7 @@ var require_client_h1 = __commonJS({
         } else {
           socket[kReset] = true;
         }
-        const pause = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
+        const pause2 = request.onHeaders(statusCode, headers, this.resume, statusText) === false;
         if (request.aborted) {
           return -1;
         }
@@ -6598,7 +6598,7 @@ var require_client_h1 = __commonJS({
           socket[kBlocking] = false;
           client2[kResume]();
         }
-        return pause ? constants.ERROR.PAUSED : 0;
+        return pause2 ? constants.ERROR.PAUSED : 0;
       }
       onBody(buf) {
         const { client: client2, socket, statusCode, maxResponseSize } = this;
@@ -9697,8 +9697,8 @@ var require_retry_handler = __commonJS({
             this.abort(contentLengthError);
             return false;
           }
-          const { start: start2, size, end = size - 1 } = contentRange;
-          if (this.start !== start2 || this.end != null && this.end !== end) {
+          const { start: start3, size, end = size - 1 } = contentRange;
+          if (this.start !== start3 || this.end != null && this.end !== end) {
             this.abort(
               new RequestRetryError("Content-Range mismatch", statusCode, {
                 headers,
@@ -9727,13 +9727,13 @@ var require_retry_handler = __commonJS({
               this.abort(contentLengthError);
               return false;
             }
-            const { start: start2, size, end = size - 1 } = range;
+            const { start: start3, size, end = size - 1 } = range;
             assert(
-              start2 != null && Number.isFinite(start2),
+              start3 != null && Number.isFinite(start3),
               "content-range mismatch"
             );
             assert(end != null && Number.isFinite(end), "invalid content-length");
-            this.start = start2;
+            this.start = start3;
             this.end = end;
           }
           if (this.end == null) {
@@ -10059,9 +10059,9 @@ var require_readable = __commonJS({
       }
       const { _readableState: state } = consume2.stream;
       if (state.bufferIndex) {
-        const start2 = state.bufferIndex;
+        const start3 = state.bufferIndex;
         const end = state.buffer.length;
-        for (let n = start2; n < end; n++) {
+        for (let n = start3; n < end; n++) {
           consumePush(consume2, state.buffer[n]);
         }
       } else {
@@ -10086,8 +10086,8 @@ var require_readable = __commonJS({
       }
       const buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks, length);
       const bufferLength = buffer.length;
-      const start2 = bufferLength > 2 && buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191 ? 3 : 0;
-      return buffer.utf8Slice(start2, bufferLength);
+      const start3 = bufferLength > 2 && buffer[0] === 239 && buffer[1] === 187 && buffer[2] === 191 ? 3 : 0;
+      return buffer.utf8Slice(start3, bufferLength);
     }
     function chunksConcat(chunks, length) {
       if (chunks.length === 0 || length === 0) {
@@ -18724,31 +18724,31 @@ var require_eventsource_stream = __commonJS({
     var EVENT = Buffer.from("event");
     var ID = Buffer.from("id");
     var RETRY = Buffer.from("retry");
-    function isASCIINumberBytes(buffer, start2) {
-      if (start2 >= buffer.length) {
+    function isASCIINumberBytes(buffer, start3) {
+      if (start3 >= buffer.length) {
         return false;
       }
-      for (let i = start2; i < buffer.length; i++) {
+      for (let i = start3; i < buffer.length; i++) {
         if (buffer[i] < 48 || buffer[i] > 57) {
           return false;
         }
       }
       return true;
     }
-    function isValidLastEventIdBytes(buffer, start2) {
-      for (let i = start2; i < buffer.length; i++) {
+    function isValidLastEventIdBytes(buffer, start3) {
+      for (let i = start3; i < buffer.length; i++) {
         if (buffer[i] === 0) {
           return false;
         }
       }
       return true;
     }
-    function isFieldName(line, length, field2) {
+    function isFieldName(line2, length, field2) {
       if (length !== field2.length) {
         return false;
       }
       for (let i = 0; i < length; i++) {
-        if (line[i] !== field2[i]) {
+        if (line2[i] !== field2[i]) {
           return false;
         }
       }
@@ -18859,25 +18859,25 @@ var require_eventsource_stream = __commonJS({
        * @param {Buffer} line
        * @param {EventStreamEvent} event
        */
-      parseLine(line, event) {
-        if (line.length === 0) {
+      parseLine(line2, event) {
+        if (line2.length === 0) {
           return;
         }
-        const colonPosition = line.indexOf(COLON);
+        const colonPosition = line2.indexOf(COLON);
         if (colonPosition === 0) {
           return;
         }
-        let fieldLength = line.length;
-        let valueStart = line.length;
+        let fieldLength = line2.length;
+        let valueStart = line2.length;
         if (colonPosition !== -1) {
           fieldLength = colonPosition;
           valueStart = colonPosition + 1;
-          if (line[valueStart] === SPACE) {
+          if (line2[valueStart] === SPACE) {
             ++valueStart;
           }
         }
-        if (isFieldName(line, fieldLength, DATA)) {
-          const value = line.toString("utf8", valueStart);
+        if (isFieldName(line2, fieldLength, DATA)) {
+          const value = line2.toString("utf8", valueStart);
           if (event.data === void 0) {
             event.data = value;
           } else {
@@ -18886,20 +18886,20 @@ ${value}`;
           }
           return;
         }
-        if (isFieldName(line, fieldLength, RETRY)) {
-          if (isASCIINumberBytes(line, valueStart)) {
-            event.retry = line.toString("utf8", valueStart);
+        if (isFieldName(line2, fieldLength, RETRY)) {
+          if (isASCIINumberBytes(line2, valueStart)) {
+            event.retry = line2.toString("utf8", valueStart);
           }
           return;
         }
-        if (isFieldName(line, fieldLength, ID)) {
-          if (isValidLastEventIdBytes(line, valueStart)) {
-            event.id = line.toString("utf8", valueStart);
+        if (isFieldName(line2, fieldLength, ID)) {
+          if (isValidLastEventIdBytes(line2, valueStart)) {
+            event.id = line2.toString("utf8", valueStart);
           }
           return;
         }
-        if (isFieldName(line, fieldLength, EVENT)) {
-          const value = line.toString("utf8", valueStart);
+        if (isFieldName(line2, fieldLength, EVENT)) {
+          const value = line2.toString("utf8", valueStart);
           if (value.length > 0) {
             event.event = value;
           }
@@ -18979,9 +18979,9 @@ ${value}`;
         let length = 0;
         for (let i = this.lineChunkIndex; i <= this.chunkIndex; i++) {
           const chunk = this.chunks[i];
-          const start2 = i === this.lineChunkIndex ? this.linePos : 0;
+          const start3 = i === this.lineChunkIndex ? this.linePos : 0;
           const end = i === this.chunkIndex ? this.pos : chunk.length;
-          const slice = chunk.subarray(start2, end);
+          const slice = chunk.subarray(start3, end);
           length += slice.length;
           chunks.push(slice);
         }
@@ -40728,20 +40728,20 @@ ${givenBlock}`;
       return arrayLengthComparator(notEqual, "s.array(T).lengthNotEqual()", expected, value, options2);
     }
     __name(arrayLengthNotEqual, "arrayLengthNotEqual");
-    function arrayLengthRange(start2, endBefore, options2) {
-      const expected = `expected.length >= ${start2} && expected.length < ${endBefore}`;
+    function arrayLengthRange(start3, endBefore, options2) {
+      const expected = `expected.length >= ${start3} && expected.length < ${endBefore}`;
       return {
         run(input) {
-          return input.length >= start2 && input.length < endBefore ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.array(T).lengthRange()", options2?.message ?? "Invalid Array length", input, expected));
+          return input.length >= start3 && input.length < endBefore ? Result.ok(input) : Result.err(new ExpectedConstraintError("s.array(T).lengthRange()", options2?.message ?? "Invalid Array length", input, expected));
         }
       };
     }
     __name(arrayLengthRange, "arrayLengthRange");
-    function arrayLengthRangeInclusive(start2, end, options2) {
-      const expected = `expected.length >= ${start2} && expected.length <= ${end}`;
+    function arrayLengthRangeInclusive(start3, end, options2) {
+      const expected = `expected.length >= ${start3} && expected.length <= ${end}`;
       return {
         run(input) {
-          return input.length >= start2 && input.length <= end ? Result.ok(input) : Result.err(
+          return input.length >= start3 && input.length <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError("s.array(T).lengthRangeInclusive()", options2?.message ?? "Invalid Array length", input, expected)
           );
         }
@@ -40865,8 +40865,8 @@ ${givenBlock}`;
       lengthNotEqual(length, options2 = this.validatorOptions) {
         return this.addConstraint(arrayLengthNotEqual(length, options2));
       }
-      lengthRange(start2, endBefore, options2 = this.validatorOptions) {
-        return this.addConstraint(arrayLengthRange(start2, endBefore, options2));
+      lengthRange(start3, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(arrayLengthRange(start3, endBefore, options2));
       }
       lengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
         return this.addConstraint(arrayLengthRangeInclusive(startAt, endAt, options2));
@@ -42411,11 +42411,11 @@ ${pairsBlock}`;
       return typedArrayByteLengthComparator(notEqual, "s.typedArray(T).byteLengthNotEqual()", expected, value, options2);
     }
     __name(typedArrayByteLengthNotEqual, "typedArrayByteLengthNotEqual");
-    function typedArrayByteLengthRange(start2, endBefore, options2) {
-      const expected = `expected.byteLength >= ${start2} && expected.byteLength < ${endBefore}`;
+    function typedArrayByteLengthRange(start3, endBefore, options2) {
+      const expected = `expected.byteLength >= ${start3} && expected.byteLength < ${endBefore}`;
       return {
         run(input) {
-          return input.byteLength >= start2 && input.byteLength < endBefore ? Result.ok(input) : Result.err(
+          return input.byteLength >= start3 && input.byteLength < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRange()",
               options2?.message ?? "Invalid Typed Array byte length",
@@ -42427,11 +42427,11 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayByteLengthRange, "typedArrayByteLengthRange");
-    function typedArrayByteLengthRangeInclusive(start2, end, options2) {
-      const expected = `expected.byteLength >= ${start2} && expected.byteLength <= ${end}`;
+    function typedArrayByteLengthRangeInclusive(start3, end, options2) {
+      const expected = `expected.byteLength >= ${start3} && expected.byteLength <= ${end}`;
       return {
         run(input) {
-          return input.byteLength >= start2 && input.byteLength <= end ? Result.ok(input) : Result.err(
+          return input.byteLength >= start3 && input.byteLength <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).byteLengthRangeInclusive()",
               options2?.message ?? "Invalid Typed Array byte length",
@@ -42497,11 +42497,11 @@ ${pairsBlock}`;
       return typedArrayLengthComparator(notEqual, "s.typedArray(T).lengthNotEqual()", expected, value, options2);
     }
     __name(typedArrayLengthNotEqual, "typedArrayLengthNotEqual");
-    function typedArrayLengthRange(start2, endBefore, options2) {
-      const expected = `expected.length >= ${start2} && expected.length < ${endBefore}`;
+    function typedArrayLengthRange(start3, endBefore, options2) {
+      const expected = `expected.length >= ${start3} && expected.length < ${endBefore}`;
       return {
         run(input) {
-          return input.length >= start2 && input.length < endBefore ? Result.ok(input) : Result.err(
+          return input.length >= start3 && input.length < endBefore ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRange()",
               options2?.message ?? "Invalid Typed Array length",
@@ -42513,11 +42513,11 @@ ${pairsBlock}`;
       };
     }
     __name(typedArrayLengthRange, "typedArrayLengthRange");
-    function typedArrayLengthRangeInclusive(start2, end, options2) {
-      const expected = `expected.length >= ${start2} && expected.length <= ${end}`;
+    function typedArrayLengthRangeInclusive(start3, end, options2) {
+      const expected = `expected.length >= ${start3} && expected.length <= ${end}`;
       return {
         run(input) {
-          return input.length >= start2 && input.length <= end ? Result.ok(input) : Result.err(
+          return input.length >= start3 && input.length <= end ? Result.ok(input) : Result.err(
             new ExpectedConstraintError(
               "s.typedArray(T).lengthRangeInclusive()",
               options2?.message ?? "Invalid Typed Array length",
@@ -42586,8 +42586,8 @@ ${pairsBlock}`;
       byteLengthNotEqual(length, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayByteLengthNotEqual(length, options2));
       }
-      byteLengthRange(start2, endBefore, options2 = this.validatorOptions) {
-        return this.addConstraint(typedArrayByteLengthRange(start2, endBefore, options2));
+      byteLengthRange(start3, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayByteLengthRange(start3, endBefore, options2));
       }
       byteLengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayByteLengthRangeInclusive(startAt, endAt, options2));
@@ -42613,8 +42613,8 @@ ${pairsBlock}`;
       lengthNotEqual(length, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayLengthNotEqual(length, options2));
       }
-      lengthRange(start2, endBefore, options2 = this.validatorOptions) {
-        return this.addConstraint(typedArrayLengthRange(start2, endBefore, options2));
+      lengthRange(start3, endBefore, options2 = this.validatorOptions) {
+        return this.addConstraint(typedArrayLengthRange(start3, endBefore, options2));
       }
       lengthRangeInclusive(startAt, endAt, options2 = this.validatorOptions) {
         return this.addConstraint(typedArrayLengthRangeInclusive(startAt, endAt, options2));
@@ -62733,7 +62733,7 @@ var require_extension = __commonJS({
       let inQuotes = false;
       let extensionName;
       let paramName;
-      let start2 = -1;
+      let start3 = -1;
       let code = -1;
       let end = -1;
       let i = 0;
@@ -62741,45 +62741,45 @@ var require_extension = __commonJS({
         code = header.charCodeAt(i);
         if (extensionName === void 0) {
           if (end === -1 && tokenChars[code] === 1) {
-            if (start2 === -1) start2 = i;
+            if (start3 === -1) start3 = i;
           } else if (i !== 0 && (code === 32 || code === 9)) {
-            if (end === -1 && start2 !== -1) end = i;
+            if (end === -1 && start3 !== -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start2 === -1) {
+            if (start3 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            const name = header.slice(start2, end);
+            const name = header.slice(start3, end);
             if (code === 44) {
               push(offers, name, params);
               params = /* @__PURE__ */ Object.create(null);
             } else {
               extensionName = name;
             }
-            start2 = end = -1;
+            start3 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
         } else if (paramName === void 0) {
           if (end === -1 && tokenChars[code] === 1) {
-            if (start2 === -1) start2 = i;
+            if (start3 === -1) start3 = i;
           } else if (code === 32 || code === 9) {
-            if (end === -1 && start2 !== -1) end = i;
+            if (end === -1 && start3 !== -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start2 === -1) {
+            if (start3 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            push(params, header.slice(start2, end), true);
+            push(params, header.slice(start3, end), true);
             if (code === 44) {
               push(offers, extensionName, params);
               params = /* @__PURE__ */ Object.create(null);
               extensionName = void 0;
             }
-            start2 = end = -1;
-          } else if (code === 61 && start2 !== -1 && end === -1) {
-            paramName = header.slice(start2, i);
-            start2 = end = -1;
+            start3 = end = -1;
+          } else if (code === 61 && start3 !== -1 && end === -1) {
+            paramName = header.slice(start3, i);
+            start3 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
@@ -62788,13 +62788,13 @@ var require_extension = __commonJS({
             if (tokenChars[code] !== 1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
-            if (start2 === -1) start2 = i;
+            if (start3 === -1) start3 = i;
             else if (!mustUnescape) mustUnescape = true;
             isEscaping = false;
           } else if (inQuotes) {
             if (tokenChars[code] === 1) {
-              if (start2 === -1) start2 = i;
-            } else if (code === 34 && start2 !== -1) {
+              if (start3 === -1) start3 = i;
+            } else if (code === 34 && start3 !== -1) {
               inQuotes = false;
               end = i;
             } else if (code === 92) {
@@ -62805,15 +62805,15 @@ var require_extension = __commonJS({
           } else if (code === 34 && header.charCodeAt(i - 1) === 61) {
             inQuotes = true;
           } else if (end === -1 && tokenChars[code] === 1) {
-            if (start2 === -1) start2 = i;
-          } else if (start2 !== -1 && (code === 32 || code === 9)) {
+            if (start3 === -1) start3 = i;
+          } else if (start3 !== -1 && (code === 32 || code === 9)) {
             if (end === -1) end = i;
           } else if (code === 59 || code === 44) {
-            if (start2 === -1) {
+            if (start3 === -1) {
               throw new SyntaxError(`Unexpected character at index ${i}`);
             }
             if (end === -1) end = i;
-            let value = header.slice(start2, end);
+            let value = header.slice(start3, end);
             if (mustUnescape) {
               value = value.replace(/\\/g, "");
               mustUnescape = false;
@@ -62825,17 +62825,17 @@ var require_extension = __commonJS({
               extensionName = void 0;
             }
             paramName = void 0;
-            start2 = end = -1;
+            start3 = end = -1;
           } else {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
         }
       }
-      if (start2 === -1 || inQuotes || code === 32 || code === 9) {
+      if (start3 === -1 || inQuotes || code === 32 || code === 9) {
         throw new SyntaxError("Unexpected end of input");
       }
       if (end === -1) end = i;
-      const token = header.slice(start2, end);
+      const token = header.slice(start3, end);
       if (extensionName === void 0) {
         push(offers, token, params);
       } else {
@@ -63870,34 +63870,34 @@ var require_subprotocol = __commonJS({
     var { tokenChars } = require_validation();
     function parse(header) {
       const protocols = /* @__PURE__ */ new Set();
-      let start2 = -1;
+      let start3 = -1;
       let end = -1;
       let i = 0;
       for (i; i < header.length; i++) {
         const code = header.charCodeAt(i);
         if (end === -1 && tokenChars[code] === 1) {
-          if (start2 === -1) start2 = i;
+          if (start3 === -1) start3 = i;
         } else if (i !== 0 && (code === 32 || code === 9)) {
-          if (end === -1 && start2 !== -1) end = i;
+          if (end === -1 && start3 !== -1) end = i;
         } else if (code === 44) {
-          if (start2 === -1) {
+          if (start3 === -1) {
             throw new SyntaxError(`Unexpected character at index ${i}`);
           }
           if (end === -1) end = i;
-          const protocol2 = header.slice(start2, end);
+          const protocol2 = header.slice(start3, end);
           if (protocols.has(protocol2)) {
             throw new SyntaxError(`The "${protocol2}" subprotocol is duplicated`);
           }
           protocols.add(protocol2);
-          start2 = end = -1;
+          start3 = end = -1;
         } else {
           throw new SyntaxError(`Unexpected character at index ${i}`);
         }
       }
-      if (start2 === -1 || end !== -1) {
+      if (start3 === -1 || end !== -1) {
         throw new SyntaxError("Unexpected end of input");
       }
-      const protocol = header.slice(start2, i);
+      const protocol = header.slice(start3, i);
       if (protocols.has(protocol)) {
         throw new SyntaxError(`The "${protocol}" subprotocol is duplicated`);
       }
@@ -65801,8 +65801,8 @@ var require_dist9 = __commonJS({
           if (Array.isArray(this.options.shardIds)) {
             shardIds = this.options.shardIds;
           } else {
-            const { start: start2, end } = this.options.shardIds;
-            shardIds = [...(0, import_util32.range)({ start: start2, end: end + 1 })];
+            const { start: start3, end } = this.options.shardIds;
+            shardIds = [...(0, import_util32.range)({ start: start3, end: end + 1 })];
           }
         } else {
           const data = await this.fetchGatewayInformation();
@@ -69849,9 +69849,9 @@ var require_GuildMemberManager = __commonJS({
        *    .then(pruned => console.log(`I just pruned ${pruned} people!`))
        *    .catch(console.error);
        */
-      async prune({ days, dry = false, count: compute_prune_count, roles = [], reason } = {}) {
-        if (typeof days !== "number") throw new DiscordjsTypeError2(ErrorCodes2.PruneDaysType);
-        const query = { days };
+      async prune({ days: days2, dry = false, count: compute_prune_count, roles = [], reason } = {}) {
+        if (typeof days2 !== "number") throw new DiscordjsTypeError2(ErrorCodes2.PruneDaysType);
+        const query = { days: days2 };
         const resolvedRoles = [];
         for (const role of roles) {
           const resolvedRole = this.guild.roles.resolveId(role);
@@ -80334,11 +80334,11 @@ var DEFAULT_CAD_CONFIG = {
 function accountAge(created, now = Date.now()) {
   const t2 = created ? new Date(created).getTime() : NaN;
   if (!Number.isFinite(t2)) return "\u2014";
-  const days = Math.max(0, Math.floor((now - t2) / 864e5));
-  if (days === 0) return "heute erstellt";
-  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
-  if (days < 730) return `${Math.floor(days / 30)} Monate`;
-  return `${Math.floor(days / 365)} Jahre`;
+  const days2 = Math.max(0, Math.floor((now - t2) / 864e5));
+  if (days2 === 0) return "heute erstellt";
+  if (days2 < 60) return `${days2} ${days2 === 1 ? "Tag" : "Tage"}`;
+  if (days2 < 730) return `${Math.floor(days2 / 30)} Monate`;
+  return `${Math.floor(days2 / 365)} Jahre`;
 }
 function renderWelcomeText(text, m, now = Date.now()) {
   const vars = {
@@ -80545,9 +80545,9 @@ function isoWeek(d) {
   t2.setUTCDate(t2.getUTCDate() + 4 - (t2.getUTCDay() || 7));
   return Math.ceil(((t2.getTime() - Date.UTC(t2.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
-function periodLabel(period, start2) {
-  const s = new Date(start2);
-  if (period === "WEEKLY") {
+function periodLabel(period2, start3) {
+  const s = new Date(start3);
+  if (period2 === "WEEKLY") {
     const e = new Date(s);
     e.setUTCDate(e.getUTCDate() + 6);
     return `KW ${isoWeek(s)} (${dd(s).slice(0, 6)}\u2013${dd(e)})`;
@@ -81031,7 +81031,7 @@ function createStaffLists(client2, api2, log = console.log) {
     timer = setTimeout(() => void refresh().catch((e) => log(`staff lists: ${e instanceof Error ? e.message : e}`)), 1e4);
     timer.unref?.();
   }
-  function start2(seconds = 300) {
+  function start3(seconds = 300) {
     let lastError;
     const tick = () => void refresh().then(() => {
       lastError = void 0;
@@ -81045,7 +81045,7 @@ function createStaffLists(client2, api2, log = console.log) {
     setTimeout(tick, 15e3).unref?.();
     setInterval(tick, seconds * 1e3).unref?.();
   }
-  return { refresh, changed, start: start2 };
+  return { refresh, changed, start: start3 };
 }
 
 // apps/bot/src/radio-roles.ts
@@ -81093,7 +81093,7 @@ function createRadioRoleSync(api2, source, log = console.log) {
     if (changed || failed) log(`radio whitelist role sync: ${list.length} checked, ${changed} changed, ${failed} failed`);
     return { checked: list.length, changed, failed };
   }
-  function start2(minutes = 30) {
+  function start3(minutes = 30) {
     const run2 = () => void full().catch((e) => log(`radio whitelist role sync failed: ${e instanceof Error ? e.message : e}`));
     const first = setTimeout(run2, 3e4);
     const timer = setInterval(run2, minutes * 6e4);
@@ -81104,7 +81104,7 @@ function createRadioRoleSync(api2, source, log = console.log) {
       clearInterval(timer);
     };
   }
-  return { memberChanged, full, start: start2, targets };
+  return { memberChanged, full, start: start3, targets };
 }
 
 // apps/bot/src/guilds.ts
@@ -81408,10 +81408,10 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
     }
     case "duty.changed": {
       const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
-      const who = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
+      const who2 = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
       const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
       return {
-        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
+        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who2} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
         color: DUTY_DE[st]?.color ?? COLORS.neutral,
         description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
       };
@@ -81467,8 +81467,8 @@ function applicationEmbeds(p, kind2) {
 ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
   let sections = qa.map((q2, i) => section(q2, i));
-  const who = p.discordName ? `${plain(p.discordName)}s ` : "";
-  const title = clip(kind2 === "p" ? `\u{1F4CB} ${who}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
+  const who2 = p.discordName ? `${plain(p.discordName)}s ` : "";
+  const title = clip(kind2 === "p" ? `\u{1F4CB} ${who2}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who2}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
   if (size(sections) > room) {
@@ -82535,17 +82535,17 @@ async function manageReply(c) {
   const { items } = await c.api.asUser(c.discordId, "GET", "/leave?mine=true");
   const now = Date.now();
   const pending = items.find((r) => r.status === "PENDING");
-  const active = items.find((r) => r.status === "APPROVED" && r.active);
+  const active2 = items.find((r) => r.status === "APPROVED" && r.active);
   const upcoming = items.find((r) => r.status === "APPROVED" && new Date(r.startsAt).getTime() > now);
   const last = items.find((r) => r.status === "ENDED");
   const head = c.userName ? { author: { name: `@${c.userName}`, ...c.userAvatar ? { iconUrl: c.userAvatar } : {} } } : {};
   const embed = (description, color3 = COLORS.neutral, fields, footer) => ({ ...head, title: "Abmeldungen verwalten", description, color: color3, ...fields ? { fields } : {}, ...footer ? { footer } : {} });
   const reason = (r) => [{ name: "Grund", value: clip(plain(r.reason), 1024) }];
-  if (active) return {
+  if (active2) return {
     ephemeral: true,
-    embeds: [embed(`Du bist gerade abgemeldet \u2013 bis ungef\xE4hr ${ts(active.endsAt)} (${ts(active.endsAt, "R")}).
-Du kannst die Abmeldung jederzeit vorzeitig beenden.`, COLORS.success, reason(active), `ID: ${active.number}`)],
-    buttons: [{ id: `leave:cancel:${active.id}`, label: "Vorzeitig beenden", style: "danger", emoji: "\u23F9\uFE0F" }]
+    embeds: [embed(`Du bist gerade abgemeldet \u2013 bis ungef\xE4hr ${ts(active2.endsAt)} (${ts(active2.endsAt, "R")}).
+Du kannst die Abmeldung jederzeit vorzeitig beenden.`, COLORS.success, reason(active2), `ID: ${active2.number}`)],
+    buttons: [{ id: `leave:cancel:${active2.id}`, label: "Vorzeitig beenden", style: "danger", emoji: "\u23F9\uFE0F" }]
   };
   if (pending) return {
     ephemeral: true,
@@ -82558,10 +82558,10 @@ Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(pending.endsAt)}.`, COLORS.
     embeds: [embed(`Deine Abmeldung beginnt ${ts(upcoming.startsAt)} und endet ${ts(upcoming.endsAt)}.`, COLORS.info, reason(upcoming), `ID: ${upcoming.number}`)],
     buttons: [{ id: `leave:cancel:${upcoming.id}`, label: "Absagen", style: "danger", emoji: "\u21A9\uFE0F" }]
   };
-  const start2 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
-  if (!items.length) return { ephemeral: true, embeds: [embed("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start2 };
+  const start3 = [{ id: "leave:start", label: "Start", style: "primary", emoji: "\u{1F552}" }];
+  if (!items.length) return { ephemeral: true, embeds: [embed("Du warst noch nie abgemeldet.\nUm jetzt eine Abmeldung zu starten, klicke auf `Start`.")], buttons: start3 };
   return { ephemeral: true, embeds: [embed(`${last ? `Deine letzte Abmeldung endete ${ts(last.endedAt ?? last.endsAt)}.` : "Du hast gerade keine Abmeldung."}
-Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start2 };
+Um eine neue Abmeldung zu starten, klicke auf \`Start\`.`)], buttons: start3 };
 }
 var DAY_MS = 24 * HOUR;
 var span = (ms) => {
@@ -82606,6 +82606,40 @@ async function adminHistory(c, discordId) {
   });
   return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip(blocks.join("\n\n"), 3900) }] };
 }
+var LIST_VIEWS = { offen: ["PENDING", "Offene Antr\xE4ge"], aktiv: ["ACTIVE", "Gerade abgemeldet"], geplant: ["UPCOMING", "Bevorstehend"], kalender: ["CALENDAR", "N\xE4chste 4 Wochen"], alle: ["ALL", "Alle Abmeldungen"] };
+var who = (r) => r.discordId ? `<@${r.discordId}>` : `**${plain(r.name)}**`;
+async function listReply(c, view) {
+  const [status, title] = LIST_VIEWS[view] ?? LIST_VIEWS.offen;
+  const { all, items } = await c.api.asUser(c.discordId, "GET", `/leave?status=${status}`);
+  const rows = status === "PENDING" ? [...items].reverse() : status === "CALENDAR" || status === "UPCOMING" ? [...items].sort((a, b) => a.startsAt.localeCompare(b.startsAt)) : items;
+  const lines = rows.slice(0, 20).map((r) => `\`${r.number}\` ${all ? `${who(r)} \xB7 ` : ""}${ts(r.startsAt, "d")} \u2013 ${ts(r.endsAt, "d")} [${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}]${status === "ACTIVE" ? ` \xB7 bis ${ts(r.endsAt, "R")}` : ""}${status === "ALL" || status === "CALENDAR" ? ` ${leaveState(r)}` : ""}
+> ${clip(plain(r.reason), 120)}`);
+  const embed = {
+    title: `\u{1F4C5} ${all ? title : `Deine Abmeldungen \u2013 ${title}`} (${items.length})`,
+    color: status === "PENDING" && items.length ? COLORS.warning : COLORS.info,
+    description: clip(lines.length ? `${lines.join("\n")}${rows.length > 20 ? `
+\u2026 und ${rows.length - 20} weitere (im Dashboard)` : ""}` : "Keine Eintr\xE4ge.", 4e3)
+  };
+  if (status !== "PENDING" || !all || !rows.length) return { ephemeral: true, embeds: [embed] };
+  return { ephemeral: true, embeds: [embed], select: { id: "leave:pick", placeholder: "Antrag zum Entscheiden w\xE4hlen \u2026", options: rows.slice(0, 25).map((r) => ({ label: clip(`${r.number} \xB7 ${r.name}`, 100), value: r.id, description: clip(`${fmt(r.startsAt)} \u2013 ${fmt(r.endsAt)} \xB7 ${r.reason}`, 100) })) } };
+}
+async function pickReply(c, id3) {
+  const { items } = await c.api.asUser(c.discordId, "GET", "/leave?status=PENDING");
+  const r = items.find((x) => x.id === id3);
+  if (!r) return errorReply("Dieser Antrag ist nicht mehr offen.");
+  return {
+    ephemeral: true,
+    embeds: [{
+      title: "Abmeldeantrag",
+      color: COLORS.warning,
+      footer: `ID: ${r.number}`,
+      description: `${who(r)}${r.discordId ? ` (${plain(r.name)})` : ""}
+**${ts(r.startsAt, "f")}** bis **${ts(r.endsAt, "f")}** (${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())})`,
+      fields: [{ name: "Grund", value: clip(plain(r.reason), 1024) }]
+    }],
+    buttons: [{ id: `leave:decide:${r.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2705" }, { id: `leave:reason:${r.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u274C" }]
+  };
+}
 var LEAVE_COMMANDS = [
   {
     name: "abmeldung",
@@ -82638,11 +82672,14 @@ Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
     description: "Abmeldungen (Leave of Absence)",
     subcommands: [
       { name: "manage", description: "Eigene Abmeldung ansehen, starten oder beenden" },
+      { name: "liste", description: "\xDCbersicht: offene Antr\xE4ge, gerade abgemeldet, bevorstehend, Kalender", options: [{ name: "ansicht", description: "Was anzeigen? (Standard: offen)", type: "string", choices: Object.keys(LIST_VIEWS).map((k) => ({ name: k, value: k })) }] },
       { name: "admin", description: "Leitung: Abmeldungen eines Mitglieds ansehen, starten oder beenden", options: [{ name: "mitglied", description: "Discord-Mitglied", type: "user", required: true }] }
     ],
     async run(c) {
       try {
-        return c.opts._sub === "admin" ? await adminReply(c, String(c.opts.mitglied ?? "")) : await manageReply(c);
+        if (c.opts._sub === "admin") return await adminReply(c, String(c.opts.mitglied ?? ""));
+        if (c.opts._sub === "liste") return await listReply(c, String(c.opts.ansicht ?? "offen"));
+        return await manageReply(c);
       } catch (e) {
         return mapError(e);
       }
@@ -82711,6 +82748,15 @@ var LEAVE_INTERACTION = {
 Wenn sie angenommen wird, endet sie ungef\xE4hr ${ts(r.endsAt)}.
 Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.`
         }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (action === "pick") {
+      const picked = c.values?.[0] ?? "";
+      if (!/^[0-9a-f-]{36}$/.test(picked)) return errorReply("Bitte einen Antrag ausw\xE4hlen.");
+      try {
+        return await pickReply(c, picked);
       } catch (e) {
         return mapError(e);
       }
@@ -83343,6 +83389,157 @@ var RADIO_WHITELIST_INTERACTION = {
   }
 };
 
+// apps/bot/src/commands/shifts.ts
+var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
+var ts3 = (iso, style = "f") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
+var days = (c) => Number(c.opts.tage ?? 7);
+var period = (d) => d === 1 ? "letzte 24 Stunden" : `letzte ${d} Tage`;
+async function shiftTypes(c) {
+  const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
+  return cfg2?.enabled ? cfg2.types : [];
+}
+var line = (s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \xB7 **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` \xB7 ${plain(s.shiftType)}` : ""}${s.breaks ? ` \xB7 ${s.breaks}\xD7 Pause (${hm(s.breakMinutes)})` : ""}${s.active ? ` \xB7 ${DUTY_DE[s.status]?.emoji ?? "\u{1F7E2}"} l\xE4uft` : ""}`;
+function logEmbed(title, log, emptyText) {
+  const items = log.items;
+  const current = items.find((s) => s.active);
+  const total = items.reduce((n, s) => n + s.minutes - s.breakMinutes, 0);
+  const fields = [];
+  if (current) fields.push({ name: "Aktuelle Schicht", value: clip([`${DUTY_DE[current.status]?.emoji ?? "\u{1F7E2}"} **${DUTY_DE[current.status]?.label ?? current.status}** seit ${ts3(current.startedAt, "R")}`, current.shiftType ? `Schicht: **${plain(current.shiftType)}**` : null, `Dauer: ${hm(current.minutes)}${current.breakMinutes ? ` (davon Pause ${hm(current.breakMinutes)})` : ""}`].filter(Boolean).join("\n"), 1024) });
+  fields.push({ name: `Gesamt (${period(log.days)})`, value: `**${hm(total)}** in ${items.length} ${items.length === 1 ? "Schicht" : "Schichten"}`, inline: true });
+  const lines = items.slice(0, 15).map(line);
+  return {
+    title,
+    color: current ? COLORS.success : COLORS.info,
+    fields,
+    description: clip(lines.length ? `${lines.join("\n")}${items.length > 15 ? `
+\u2026 und ${items.length - 15} weitere` : ""}` : emptyText, 4e3)
+  };
+}
+async function setStatus(c, status, shiftType) {
+  try {
+    await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
+    return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`);
+  } catch (e) {
+    if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
+    return mapError(e);
+  }
+}
+async function start(c) {
+  const types = await shiftTypes(c);
+  const wanted = String(c.opts.art ?? "").trim().toLowerCase();
+  if (wanted) {
+    const t = types.find((x) => x.id === wanted || x.name.toLowerCase() === wanted);
+    if (!t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/schicht start` ohne Art.");
+    try {
+      await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: "ON_DUTY", shiftType: t.id });
+      return okReply(`\u{1F7E2} Schicht **${plain(t.name)}** gestartet.`);
+    } catch (e) {
+      if (e instanceof BotApiError && e.status === 409) return okReply(`Deine Schicht **${plain(t.name)}** l\xE4uft bereits.`);
+      return mapError(e);
+    }
+  }
+  if (types.length >= 2) return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
+  return setStatus(c, "ON_DUTY");
+}
+async function pause(c) {
+  try {
+    const me = await c.api.asUser(c.discordId, "GET", "/team/me");
+    if (!me) return errorReply("Du bist gerade nicht im Dienst. Starte mit `/schicht start`.");
+    return setStatus(c, me.status === "BREAK" ? "ON_DUTY" : "BREAK");
+  } catch (e) {
+    return mapError(e);
+  }
+}
+async function active(c) {
+  try {
+    const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
+    const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY").sort((a, b) => (a.onDutySince ?? "").localeCompare(b.onDutySince ?? ""));
+    const lines = on.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? "\u2022"} **${plain(r.callsign ?? r.name)}**${r.callsign ? ` (${plain(r.name)})` : ""}${r.shiftType ? ` \xB7 ${plain(r.shiftType)}` : ""}${r.onDutySince ? ` \xB7 seit ${ts3(r.onDutySince, "R")}` : ""}`);
+    const onBreak = on.filter((r) => r.dutyStatus === "BREAK").length;
+    return { ephemeral: true, embeds: [{
+      title: `\u{1F46E} Laufende Schichten (${on.length})`,
+      color: on.length ? COLORS.success : COLORS.neutral,
+      description: clip(lines.length ? `${lines.join("\n")}${on.length > 30 ? `
+\u2026 und ${on.length - 30} weitere` : ""}` : "Gerade ist niemand im Dienst.", 4e3),
+      ...onBreak ? { footer: `${onBreak} davon in der Pause` } : {}
+    }] };
+  } catch (e) {
+    return mapError(e);
+  }
+}
+async function adminReply2(c, discordId, d = 7) {
+  if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
+  const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=${d}`);
+  if (!log.member) return errorReply(`<@${discordId}> ist mit keinem Konto im System verkn\xFCpft.`);
+  const current = log.items.find((s) => s.active);
+  const buttons = current ? [{ id: `shift:end:${log.member.userId}:${discordId}`, label: "Schicht beenden", style: "danger", emoji: "\u23F9\uFE0F" }] : [];
+  return { ephemeral: true, embeds: [logEmbed(clip(`\u{1F552} Schichten von ${plain(log.member.name)}`, 256), log, "Im Zeitraum keine Schichten.")], ...buttons.length ? { buttons } : {} };
+}
+var SHIFT_COMMANDS = [
+  {
+    name: "schicht",
+    description: "Schichten: starten, Pause, beenden, Verlauf und wer gerade im Dienst ist",
+    subcommands: [
+      { name: "start", description: "Schicht beginnen", options: [{ name: "art", description: "Schichtart (leer = Auswahl bzw. Standard)", type: "string", maxLength: 40 }] },
+      { name: "pause", description: "Pause beginnen bzw. beenden" },
+      { name: "ende", description: "Schicht beenden (au\xDFer Dienst)" },
+      { name: "status", description: "Deine aktuelle Schicht und deine Zeit der letzten 7 Tage" },
+      { name: "verlauf", description: "Deine letzten Schichten", options: [{ name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }] },
+      { name: "aktiv", description: "Wer gerade eine Schicht hat" },
+      { name: "admin", description: "Leitung: Schichten eines Mitglieds ansehen und beenden", options: [
+        { name: "mitglied", description: "Discord-Mitglied", type: "user", required: true },
+        { name: "tage", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }
+      ] }
+    ],
+    async run(c) {
+      switch (c.opts._sub) {
+        case "start":
+          return start(c);
+        case "pause":
+          return pause(c);
+        case "ende":
+          return setStatus(c, "OFF_DUTY");
+        case "aktiv":
+          return active(c);
+        case "admin":
+          try {
+            return await adminReply2(c, String(c.opts.mitglied ?? ""), days(c));
+          } catch (e) {
+            return mapError(e);
+          }
+        case "status":
+        case "verlauf":
+          try {
+            const d = c.opts._sub === "status" ? 7 : days(c);
+            const log = await c.api.asUser(c.discordId, "GET", `/team/me/shifts?days=${d}`);
+            return { ephemeral: true, embeds: [logEmbed("\u{1F552} Deine Schichten", log, "Im Zeitraum hattest du keine Schicht. Starte mit `/schicht start`.")] };
+          } catch (e) {
+            return mapError(e);
+          }
+        default:
+          return errorReply("Unbekannter Unterbefehl.");
+      }
+    }
+  }
+];
+var SHIFT_INTERACTION = {
+  prefix: "shift",
+  async run(c) {
+    const [action, userId, discordId] = c.args;
+    if (action !== "end" || !userId || !/^[0-9a-f-]{36}$/i.test(userId)) return errorReply("Unbekannte Aktion.");
+    try {
+      await c.api.asUser(c.discordId, "PUT", `/team/${userId}/status`, { status: "OFF_DUTY" });
+    } catch (e) {
+      if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
+    }
+    try {
+      return discordId ? { ...await adminReply2(c, discordId), content: "\u2705 Schicht beendet." } : okReply("Schicht beendet.");
+    } catch {
+      return okReply("Schicht beendet.");
+    }
+  }
+};
+
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
@@ -83486,12 +83683,12 @@ var FEATURE_COMMANDS = [
     }
   }
 ];
-async function shiftTypes(c) {
+async function shiftTypes2(c) {
   const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
   return cfg2?.enabled ? cfg2.types : null;
 }
 async function shiftPicker(c) {
-  const types = await shiftTypes(c);
+  const types = await shiftTypes2(c);
   if (!types || types.length < 2) return null;
   return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
 }
@@ -83516,7 +83713,7 @@ var INTERACTIONS = [
       }
       try {
         const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
-        const name = shiftType ? (await shiftTypes(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : void 0;
+        const name = shiftType ? (await shiftTypes2(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : void 0;
         return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**${name ? ` (Schicht: **${plain(name)}**)` : ""}.`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
@@ -83557,7 +83754,8 @@ var INTERACTIONS = [
   INFO_PANEL_INTERACTION,
   MB_INTERACTION,
   DUTY_REPORT_INTERACTION,
-  TRAINING_INTERACTION
+  TRAINING_INTERACTION,
+  SHIFT_INTERACTION
 ];
 var interactionFor = (customId) => {
   const [prefix, ...args] = customId.split(":");
@@ -83585,7 +83783,7 @@ var WARNING_COMMANDS = [{
 }];
 
 // apps/bot/src/commands/index.ts
-var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
+var hm2 = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str3 = (c, k) => String(c.opts[k] ?? "").trim();
 async function resolvePerson(c, term) {
@@ -83667,7 +83865,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
+        { name: "Dienst & Leitstelle", value: "`/schicht` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
         { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
@@ -83748,19 +83946,19 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       { name: "alle", description: "Alle Beamten anzeigen (nur Schichtleitung)", type: "boolean" }
     ],
     async run(c) {
-      const days = Number(c.opts.tage ?? 7);
+      const days2 = Number(c.opts.tage ?? 7);
       const all = c.opts.alle === true;
       try {
-        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
-        const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
+        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days2}`);
+        const period2 = days2 === 1 ? "letzte 24 Stunden" : `letzte ${days2} Tage`;
         if (all) {
-          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
-          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
+          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm2(u.minutes)} \xB7 im Dienst ${hm2(u.byStatus.ON_DUTY ?? 0)}`);
+          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period2})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
         }
         const me = r.users[0];
-        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
-        const lines = Object.entries(me.byStatus).sort((a, b) => b[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm(m)}`);
-        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [`**Gesamt: ${hm(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
+        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period2})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
+        const lines = Object.entries(me.byStatus).sort((a, b) => b[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm2(m)}`);
+        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period2})`, [`**Gesamt: ${hm2(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
       } catch (e) {
         return mapError(e);
       }
@@ -84082,6 +84280,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   ...WARNING_COMMANDS,
   ...RADIO_WHITELIST_COMMANDS,
   ...TRAINING_COMMANDS,
+  ...SHIFT_COMMANDS,
   TICKET_COMMAND
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
@@ -84102,9 +84301,9 @@ var schema = external_exports.object({
 var guildIds = (cfg2) => [...new Set((cfg2.DISCORD_GUILD_ID ?? "").split(/[\s,;]+/).filter(Boolean))];
 function parseDotEnv(text) {
   const out = {};
-  for (const line of text.split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (m && !line.trim().startsWith("#")) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  for (const line2 of text.split(/\r?\n/)) {
+    const m = line2.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !line2.trim().startsWith("#")) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
   return out;
 }
@@ -84155,7 +84354,7 @@ function createLive(api2, platform2, log = console.log) {
     if (!sameSpot || stored?.messageId !== messageId) await api2.service("PUT", `/bot/state/${STATE_KEY[kind2]}`, { value: placement });
     return placement;
   }
-  function start2(seconds) {
+  function start3(seconds) {
     let running = false;
     let lastError;
     const tick = async () => {
@@ -84178,7 +84377,7 @@ function createLive(api2, platform2, log = console.log) {
     void tick();
     return () => clearInterval(timer);
   }
-  return { refresh, start: start2 };
+  return { refresh, start: start3 };
 }
 
 // apps/bot/src/outbox.ts
@@ -85469,7 +85668,7 @@ process.on("uncaughtException", (e) => {
     process.exit(1);
   }
 });
-async function start() {
+async function start2() {
   for (const [n, step] of INTENT_STEPS.entries()) {
     if (n > 0) {
       await client.destroy().catch(() => void 0);
@@ -85488,7 +85687,7 @@ async function start() {
   const off = [!intents.content && '"Message Content" (ticket transcripts without texts)', !intents.members && '"Server Members" (dashboard team list only shows cached members; no welcome/goodbye messages, auto roles or actions when someone leaves)', !intents.presences && '"Presence" (no online status in the team list)'].filter(Boolean);
   if (off.length) console.warn(`Discord: privileged intents not enabled in the Developer Portal (Bot \u2192 Privileged Gateway Intents): ${off.join(", ")}.`);
 }
-void start().catch((e) => {
+void start2().catch((e) => {
   console.error("Discord login failed:", e instanceof Error ? e.message : e);
   process.exit(1);
 });
