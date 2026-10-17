@@ -180,7 +180,7 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
         </div>
       </div>
       <div className="mb-2 mt-5 flex flex-wrap items-end justify-between gap-2">
-        <h3 className="text-sm font-semibold">Berechtigungen <span className="text-xs font-normal text-muted">– {allowed} erlaubt · {denied} verweigert · klicken: nicht gesetzt → ✓ erlaubt → ✕ verweigert. Gestrichelt = gilt über „alle“. Verweigern schlägt Erlauben – auch aus anderen Rollen derselben Person.</span></h3>
+        <h3 className="text-sm font-semibold">Berechtigungen <span className="text-xs font-normal text-muted">– {allowed} erlaubt · {denied} verweigert · klicken: nicht gesetzt → ✓ erlaubt → ✕ verweigert. Gestrichelt = gilt über „alle“. Hat jemand mehrere Rollen, entscheidet die höchste, die das Recht setzt (wie bei Discord).</span></h3>
         <Input aria-label="Berechtigung suchen" className="w-52 py-1 text-xs" placeholder="Berechtigung suchen…" value={pf} onChange={(e) => setPf(e.target.value)} />
       </div>
       {wildcard && <p className="mb-3 rounded bg-warning/10 p-2 text-xs text-warning">Diese Rolle hat das Generalrecht (*) – sie darf alles.</p>}

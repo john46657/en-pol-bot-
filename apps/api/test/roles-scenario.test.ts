@@ -72,6 +72,18 @@ describe('Rollen & Rechte im Server-Kontext', () => {
     expect((await lead.patch(`/api/v1/roles/${pm.id}/permissions`).set(h).send({ permission: 'cad.view', effect: 'ALLOW' })).status).toBe(200);
     expect((await lead.patch(`/api/v1/roles/${enp.id}/permissions`).set(h).send({ permission: 'cad.view', effect: 'DENY' })).status).toBe(403);
 
+    // Leitung hat zusätzlich noch eine niedrigere Rolle mit ✕ – die höhere Rolle entscheidet, nichts geht verloren
+    expect((await own.patch(`/api/v1/roles/${pm.id}/permissions`).set(h).send({ permission: 'cad.manage_settings', effect: 'DENY' })).status).toBe(200);
+    expect((await own.patch(`/api/v1/roles/${pm.id}`).set(h).send({ discordRoleIds: [D.member] })).status).toBe(200);
+    members.set('770000000000000001', [D.praes, D.member]);
+    const both = (await lead.get('/api/v1/auth/me').set(h)).body as { roles: string[]; permissions: string[] };
+    expect(both.roles).toEqual(expect.arrayContaining(['enp Leitung', 'Police Member']));
+    expect(both.permissions).toContain('cad.manage_settings');
+    // wer nur die niedrigere Rolle hat, bleibt ausgeschlossen
+    expect((await (await login(app, 'sc_mem')).agent.get('/api/v1/auth/me').set(h)).body.permissions).not.toContain('cad.manage_settings');
+    members.set('770000000000000001', [D.praes]);
+    await own.patch(`/api/v1/roles/${pm.id}`).set(h).send({ discordRoleIds: [] });
+
     // Discord-Rolle verliert die Verknüpfung → Rolle sofort weg
     expect((await own.patch(`/api/v1/roles/${enp.id}`).set(h).send({ discordRoleIds: [] })).status).toBe(200);
     expect((await lead.get('/api/v1/auth/me').set(h)).body.roles).toEqual([]);

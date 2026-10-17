@@ -83,7 +83,9 @@ function resolvePermission(ctx, permission) {
   const user = ctx.userOverrides.filter(matches);
   if (user.some((g) => g.effect === "DENY")) return { allowed: false, source: "USER_DENY" };
   if (user.some((g) => g.effect === "ALLOW")) return { allowed: true, source: "USER_ALLOW" };
-  const role = ctx.roleGrants.filter(matches);
+  const all = ctx.roleGrants.filter(matches);
+  const top = Math.min(...all.map((g) => g.rank ?? 0));
+  const role = all.filter((g) => (g.rank ?? 0) === top);
   if (role.some((g) => g.effect === "DENY")) return { allowed: false, source: "ROLE_DENY" };
   if (role.some((g) => g.effect === "ALLOW")) return { allowed: true, source: "ROLE_ALLOW" };
   return { allowed: false, source: "DEFAULT_DENY" };

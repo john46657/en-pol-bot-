@@ -48,11 +48,12 @@ let PermissionService = class PermissionService {
     }
     async contextFor(userId, guildId = (0, guild_context_1.currentGuild)()) {
         const [overrides, roleIds] = await Promise.all([this.prisma.userPermissionOverride.findMany({ where: { userId, guildId } }), this.roleIdsFor(userId, guildId)]);
-        const rolePerms = roleIds.length ? await this.prisma.rolePermission.findMany({ where: { roleId: { in: roleIds } } }) : [];
-        const toGrant = (p, e) => ({ permission: p, effect: e === 'DENY' ? 'DENY' : 'ALLOW' });
+        // mit Rang der Rolle: bei Widersprüchen zwischen Rollen entscheidet die höchste (resolvePermission)
+        const rolePerms = roleIds.length ? await this.prisma.rolePermission.findMany({ where: { roleId: { in: roleIds } }, include: { role: { select: { priority: true } } } }) : [];
+        const toGrant = (p, e, rank) => ({ permission: p, effect: e === 'DENY' ? 'DENY' : 'ALLOW', rank });
         return {
             userOverrides: overrides.map((o) => toGrant(o.permissionKey, o.effect)),
-            roleGrants: rolePerms.map((r) => toGrant(r.permissionKey, r.effect)),
+            roleGrants: rolePerms.map((r) => toGrant(r.permissionKey, r.effect, r.role.priority)),
         };
     }
     async check(userId, permission) {

@@ -53,7 +53,7 @@ let NotifyService = class NotifyService {
             this.prisma.userRole.findMany({ where: { userId: { in: ids } } }),
             this.prisma.groupMember.findMany({ where: { userId: { in: ids } }, select: { userId: true, group: { select: { roles: { select: { roleId: true } } } } } }),
             this.prisma.userPermissionOverride.findMany({ where: { userId: { in: ids }, guildId: g } }),
-            this.prisma.role.findMany({ where: { active: true, ...(g ? { OR: [{ guildId: g }, { guildId: null, name: 'System Administrator' }] } : { guildId: null }) }, select: { id: true, guildId: true, name: true } }),
+            this.prisma.role.findMany({ where: { active: true, ...(g ? { OR: [{ guildId: g }, { guildId: null, name: 'System Administrator' }] } : { guildId: null }) }, select: { id: true, guildId: true, name: true, priority: true } }),
             g ? this.prisma.discordServer.findUnique({ where: { guildId: g }, select: { id: true, memberships: { where: { status: 'MEMBER' }, select: { userId: true } } } }) : null,
         ]);
         const valid = new Set(roles.map((r) => r.id));
@@ -61,8 +61,9 @@ let NotifyService = class NotifyService {
         const members = server ? new Set(server.memberships.map((m) => m.userId)) : null;
         const grants = await this.prisma.rolePermission.findMany({ where: { roleId: { in: [...valid] } } });
         const byRole = new Map();
+        const rankOf = new Map(roles.map((r) => [r.id, r.priority]));
         for (const x of grants)
-            byRole.set(x.roleId, [...(byRole.get(x.roleId) ?? []), { permission: x.permissionKey, effect: x.effect === 'DENY' ? 'DENY' : 'ALLOW' }]);
+            byRole.set(x.roleId, [...(byRole.get(x.roleId) ?? []), { permission: x.permissionKey, effect: x.effect === 'DENY' ? 'DENY' : 'ALLOW', rank: rankOf.get(x.roleId) }]);
         const rolesOf = new Map();
         const add = (u, r) => { if (valid.has(r))
             rolesOf.set(u, (rolesOf.get(u) ?? new Set()).add(r)); };
