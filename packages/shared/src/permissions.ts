@@ -31,10 +31,6 @@ export const PERMISSION_CATALOG = {
   exam: ['view', 'create', 'manage', 'grade'],
   warning: ['view', 'create', 'manage'],
   awards: ['view', 'create', 'manage'],
-  /** Interne Meldungen mit Lesebestätigung */
-  announcements: ['view', 'create', 'manage'],
-  /** Interne Abstimmungen */
-  polls: ['view', 'create', 'manage'],
   /** Dienstnummern-System */
   dienstnummer: ['view', 'create', 'assign', 'edit', 'release', 'block', 'history', 'manage_ranges', 'manage_settings'],
   leave: ['view', 'request', 'manage'],

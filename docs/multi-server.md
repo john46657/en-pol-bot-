@@ -53,7 +53,7 @@ Getrennt wird zentral in der Datenbankschicht (`apps/api/src/prisma/server-scope
 | Akten & MDT | Personen, Fahrzeuge, Waffen, Haftbefehle, Bußgelder, **Tatbestände** |
 | Berichte & Ermittlungen | Berichte, Beschwerden, Ermittlungen, Beweismittel |
 | **Leitstelle (CAD)** | Einsätze, Einheiten (Rufnamen je Server), Karte, CAD-Mitglieder, Funk, Schichtübergaben, Statistik, ER:LC-Server samt Notrufen und Befehlslog |
-| **Personal & HR** | Personalakte (eine **je Server**: eigener Dienstgrad, Rufname, Dienstnummer), Beförderungen/Versetzungen, Ausbildungen, Prüfungen, Meldungen, Abstimmungen, Dienstgrade, Dienstnummern-Kreise, Einstellungs-Warteschlange, Academy |
+| **Personal & HR** | Personalakte (eine **je Server**: eigener Dienstgrad, Rufname, Dienstnummer), Beförderungen/Versetzungen, Ausbildungen, Prüfungen, Dienstgrade, Dienstnummern-Kreise, Einstellungs-Warteschlange, Academy |
 | Dienst | Dienstzeiten, Wochenranglisten |
 | Sonstiges | SEK, Funk-Freigaben, Workflows, Kommunikation |
 | **Rollen & Rechte** | Auf einem Server zählen **nur** dessen Rollen (plus globaler Systemadministrator). Persönliche Ausnahmen gelten je Server. |

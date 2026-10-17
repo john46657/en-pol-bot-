@@ -29,7 +29,7 @@
 ## Menü (Seitenleiste)
 - **Gruppen** Betrieb · Akten · Organisation · Verwaltung · Konto – jede Gruppe lässt sich einklappen (pro Benutzer gespeichert); die Gruppe der geöffneten Seite bleibt offen.
 - **Menüsuche** oben in der Leiste (Taste `/`): findet Menüpunkte auch über ihre Reiter (z. B. „Beförderungen“ → Personal › Beförderungen) und Suchbegriffe; Enter öffnet den ersten Treffer.
-- **Zähler offener Vorgänge** (gelb): offene Tickets, Bewerbungen, Abmeldungen, Berichte zur Prüfung, Beförderungsanträge, zu bestätigende Mitteilungen – nur für Benutzer mit dem jeweiligen Bearbeitungsrecht, Aktualisierung jede Minute.
+- **Zähler offener Vorgänge** (gelb): offene Tickets, Bewerbungen, Abmeldungen, Berichte zur Prüfung, Beförderungsanträge – nur für Benutzer mit dem jeweiligen Bearbeitungsrecht, Aktualisierung jede Minute.
 - **Handy** (< 768 px): feste Schnellleiste unten (Favoriten zuerst, sonst Dashboard/Leitstelle/Personen/MDT) + „Menü“. **Tablet** (768–1023 px): Symbolleiste mit Gruppen-Trennern, ☰ öffnet das Menü mit Beschriftungen.
 - Seitenköpfe zeigen das Symbol des Menüpunkts; Bestätigungen erscheinen als eigener Dialog (kein Browser-Popup); jede Seite lässt sich drucken bzw. als PDF speichern (nur Inhalt, hell).
 

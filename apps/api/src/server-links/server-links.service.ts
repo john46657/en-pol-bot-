@@ -28,7 +28,7 @@ export type ServerLinks = z.infer<typeof linksSchema>;
 /** Tabellen, die seit der vollständigen Trennung je Server gelten, mit ihren Eindeutigkeiten je Server. */
 const LEGACY_TABLES: [string, string[]][] = [
   ['Incident', []], ['Unit', ['callsign']], ['CadMapObject', []], ['CadMember', ['userId', 'discordId']], ['Ticket', []], ['LegalCode', ['code']],
-  ['Personnel', ['userId', 'callsign', 'serviceNumber']], ['HrRank', ['name']], ['HrRequest', []], ['HrTraining', []], ['HrExam', []], ['HrAnnouncement', []], ['HrPoll', []],
+  ['Personnel', ['userId', 'callsign', 'serviceNumber']], ['HrRank', ['name']], ['HrRequest', []], ['HrTraining', []], ['HrExam', []],
   ['ServiceNumberRange', []], ['ServiceNumber', ['display']], ['HireQueue', []], ['AcademyCourse', []], ['SekMember', ['userId']], ['SekReport', []],
   ['RadioWhitelist', ['userId']], ['Workflow', []], ['Conversation', []],
 ];

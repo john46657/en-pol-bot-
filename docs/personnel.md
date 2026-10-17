@@ -12,7 +12,6 @@ Alles Organisatorische wird im Dashboard eingestellt – nichts davon ist im Cod
 | Personalakte (Übersicht, Rang, Beförderungen, Ausbildungen, Prüfungen, Auszeichnungen, Verwarnungen, Abwesenheiten, Versetzungen, Dienstnummern, Notizen, Historie) | `/personnel/:id` | `personnel.view`, geschützte Bereiche `personnel.view_sensitive`, Verwarnungen `warning.view` |
 | 🎖️ Beförderungen: Anträge, Genehmigungsstufen, Durchführung, Ränge mit Voraussetzungen, Workflow & Benachrichtigungen | `/promotions` | `promotion.*`, `transfer.*` |
 | 🎓 Ausbildungen & Prüfungen (Fortschritt, Modul-Checkliste pro Rekrut, Fragetypen, Zeitlimit, Versuche, Wartezeit, automatische/manuelle Bewertung, Zertifikate `/certificates/:nr`) | `/trainings` | `training.*`, `exam.*` |
-| 📢 Interne Meldungen (Zielgruppe, Priorität, Zeitraum, Lesebestätigung „47 von 52 gelesen“, optional Discord) und 🗳️ Abstimmungen | `/announcements` | `announcements.*`, `polls.*` |
 | 🪪 Dienstnummern (Nummernkreise, Status, manuelle Vergabe, Änderung, Freigabe, Sperre, Historie, Automatik) | `/service-numbers` | `dienstnummer.*` |
 | Personal-Einstellungen (Status, Abteilungen, Abwesenheitsarten, Schweregrade, Kategorien, Auszeichnungen, sichtbare/geschützte Felder, Zertifikat) | `/admin/personnel` | `promotion.manage_settings` |
 

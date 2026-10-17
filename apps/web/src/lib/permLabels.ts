@@ -2,7 +2,7 @@
 export const MODULE_LABELS: Record<string, string> = {
   dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', cad: '🗺️ CAD-Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
   reports: '📄 Berichte', dutyreports: '🗓️ Tages-/Wochenberichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', investigations: '🔍 Ermittlungen', wanted: '🚩 Fahndungen', evidence: '💼 Beweismittel',
-  personnel: '🪪 Personal', promotion: '🎖️ Beförderungen', transfer: '🔀 Versetzungen', training: '🎓 Ausbildungen', exam: '📝 Prüfungen', warning: '⚠️ Verwarnungen', awards: '🏅 Auszeichnungen', announcements: '📢 Interne Meldungen', polls: '🗳️ Abstimmungen', dienstnummer: '🪪 Dienstnummern', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
+  personnel: '🪪 Personal', promotion: '🎖️ Beförderungen', transfer: '🔀 Versetzungen', training: '🎓 Ausbildungen', exam: '📝 Prüfungen', warning: '⚠️ Verwarnungen', awards: '🏅 Auszeichnungen', dienstnummer: '🪪 Dienstnummern', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
   settings: '⚙️ Bot-Einstellungen', users: '👤 Benutzer', roles: '🛡️ Rollen & Rechte',
   fleet: '🚓 Polizeifahrzeuge', weapons: '🔫 Waffenregister', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
