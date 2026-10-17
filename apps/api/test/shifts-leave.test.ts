@@ -205,3 +205,44 @@ describe('/leave admin (Leitung für ein Mitglied)', () => {
   });
 });
 
+
+describe('Abmeldung verlängern (wie Trident „Extend“)', () => {
+  const day = 86_400_000;
+  it('own approved leave → extension request for management; management extends at once', async () => {
+    const admin = (await login(app, 'sl_admin')).agent;
+    const off = (await login(app, 'sl_off')).agent;
+    const lead = (await login(app, 'sl_lead')).agent;
+    await admin.put('/api/v1/leave/config').send({ enabled: true, approvalChannelId: CH.approve, logChannelId: CH.loaLog, maxDays: 30 });
+    await prisma.leaveRequest.deleteMany({ where: { user: { username: 'sl_off' } } });
+    const r = await off.post('/api/v1/leave').send({ startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + 2 * day).toISOString(), reason: 'Urlaub' });
+    // noch offener Antrag: Verlängerung gilt sofort (die Leitung sieht beim Entscheiden das neue Ende)
+    const pend = await off.post(`/api/v1/leave/${r.body.id}/extend`).send({ minutes: 24 * 60, reason: 'Flug verschoben' });
+    expect(pend.body).toMatchObject({ extensionPending: false });
+    expect(Date.parse(pend.body.endsAt) - Date.parse(r.body.endsAt)).toBe(day);
+    await lead.post(`/api/v1/leave/${r.body.id}/decision`).send({ status: 'APPROVED' });
+    // genehmigt: eigene Verlängerung wird zum Antrag, das Ende bleibt bis zur Entscheidung
+    const req = await http().post(`/api/v1/leave/${r.body.id}/extend`).set(bot(OFF_D)).send({ minutes: 2 * 24 * 60, reason: 'Noch krank' });
+    expect(req.body).toMatchObject({ extensionPending: true, extensionMinutes: 2880, endsAt: pend.body.endsAt });
+    expect(await lastOutbox('leave.extension')).toMatchObject({ id: r.body.id, channelId: CH.approve, extensionMinutes: 2880, extensionReason: 'Noch krank' });
+    expect((await off.post(`/api/v1/leave/${r.body.id}/extend`).send({ minutes: 60, reason: 'noch mehr' })).status).toBe(409);
+    expect((await off.post(`/api/v1/leave/${r.body.id}/extend`).send({ minutes: 60 * 24 * 40, reason: 'zu lang' })).status).toBe(400);
+    expect((await off.post(`/api/v1/leave/${r.body.id}/extension-decision`).send({ status: 'APPROVED' })).status).toBe(403);
+    // Leitung nimmt an (per Button) → neues Ende, Log, DM, Antragsnachricht markiert
+    const ok = await http().post(`/api/v1/leave/${r.body.id}/extension-decision`).set(bot(LEAD_D)).send({ status: 'APPROVED' });
+    expect(ok.body).toMatchObject({ extensionMinutes: null, decidedByName: 'sl_lead' });
+    expect(Date.parse(ok.body.endsAt) - Date.parse(pend.body.endsAt)).toBe(2 * day);
+    expect(await lastOutbox('leave.log')).toMatchObject({ event: 'extended', extendReason: 'Noch krank', decidedByName: 'sl_lead' });
+    expect(await lastOutbox('leave.extension.decided')).toMatchObject({ discordId: OFF_D, status: 'APPROVED', extensionMinutes: 2880 });
+    expect(await lastOutbox('message.decided')).toMatchObject({ key: `msg-e-${r.body.id}`, badge: { label: 'Angenommen' } });
+    expect((await lead.post(`/api/v1/leave/${r.body.id}/extension-decision`).send({ status: 'APPROVED' })).status).toBe(409);
+    // abgelehnt: Ende bleibt
+    await off.post(`/api/v1/leave/${r.body.id}/extend`).send({ minutes: 24 * 60, reason: 'nochmal' });
+    const no = await lead.post(`/api/v1/leave/${r.body.id}/extension-decision`).send({ status: 'DENIED', reason: 'Personalmangel' });
+    expect(no.body).toMatchObject({ extensionMinutes: null, endsAt: ok.body.endsAt });
+    expect(await lastOutbox('leave.log')).toMatchObject({ event: 'extension_denied', decisionReason: 'Personalmangel' });
+    // Leitung verlängert selbst: sofort
+    const direct = await lead.post(`/api/v1/leave/${r.body.id}/extend`).send({ minutes: 60, reason: 'Absprache' });
+    expect(direct.body).toMatchObject({ extensionPending: false });
+    expect(Date.parse(direct.body.endsAt) - Date.parse(ok.body.endsAt)).toBe(60 * 60_000);
+  });
+});

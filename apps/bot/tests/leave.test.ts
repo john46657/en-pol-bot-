@@ -4,7 +4,7 @@ import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import { parseDuration, parseLeaveDate } from '../src/commands/leave';
 import type { Ctx } from '../src/commands/types';
-import { humanDuration, leaveDecisionText, leaveDirectEmbed, outboxButtons, renderOutboxEmbeds, type Reply } from '../src/format';
+import { humanDuration, leaveDecisionText, leaveDirectEmbed, leaveExtensionDirectEmbed, outboxButtons, renderOutboxEmbeds, type Reply } from '../src/format';
 import { pollOnce } from '../src/outbox';
 
 const ME = '123456789012345678', GUILD = '323456789012345678';
@@ -201,6 +201,37 @@ describe('/leave manage (wie Trident)', () => {
     const r = await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: '2d', reason: 'Urlaub verlängert' } });
     expect(calls[0]).toMatchObject({ method: 'POST', path: `/leave/${id}/extend`, body: { minutes: 2 * 24 * 60, reason: 'Urlaub verlängert' } });
     expect(text(r)).toContain('um 2 Tage verlängert');
+  });
+  it('extension of an approved leave becomes a request; management approves or denies it', async () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+    const { api, calls } = fakeApi({ [`POST /leave/${id}/extend`]: { number: 'LOA-2', endsAt: '2099-01-01T00:00:00Z', extensionPending: true },
+      [`POST /leave/${id}/extension-decision`]: { number: 'LOA-2', name: 'Max', endsAt: '2099-01-03T00:00:00Z' } });
+    const sub = interactionFor(`leave:extendsubmit:${id}`)!;
+    const r = await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: '2d', reason: 'Flug verschoben' } });
+    expect(r.embeds?.[0]?.title).toBe('Verlängerung beantragt · 2 Tage');
+    const p = { id, number: 'LOA-2', name: 'Max', discordId: ME, startsAt: '2026-12-23T23:00:00Z', endsAt: '2099-01-01T00:00:00Z', newEndsAt: '2099-01-03T00:00:00Z', reason: 'Urlaub', extensionMinutes: 2880, extensionReason: 'Flug verschoben' };
+    const req = renderOutboxEmbeds('leave.extension', p)![0]!;
+    expect(req).toMatchObject({ title: 'Verlängerungsantrag', footer: 'ID: LOA-2' });
+    expect(req.fields?.slice(0, 2).map((f) => f.value)).toEqual(['Flug verschoben', '2 Tage']);
+    expect(outboxButtons('leave.extension', p)?.map((b) => b.id)).toEqual([`leave:xdecide:${id}:APPROVED`, `leave:xreason:${id}:DENIED`]);
+    const ok = interactionFor(`leave:xdecide:${id}:APPROVED`)!;
+    const done = await ok.def.run({ ...ctx(api), args: ok.args });
+    expect(calls.at(-1)).toMatchObject({ path: `/leave/${id}/extension-decision`, body: { status: 'APPROVED' } });
+    expect(done.embeds?.[0]?.title).toBe('Verlängerung angenommen');
+    expect(done.decided).toMatchObject({ badge: { label: 'Angenommen' } });
+    const form = interactionFor(`leave:xreason:${id}:DENIED`)!;
+    expect(form.def.opensModal?.(form.args)).toBe(true);
+    expect((await form.def.run({ ...ctx(api), args: form.args })).modal?.id).toBe(`leave:xreasonsubmit:${id}:DENIED`);
+    const deny = interactionFor(`leave:xreasonsubmit:${id}:DENIED`)!;
+    await deny.def.run({ ...ctx(api), args: deny.args, fields: { reason: 'Personalmangel' } });
+    expect(calls.at(-1)).toMatchObject({ body: { status: 'DENIED', reason: 'Personalmangel' } });
+    expect(leaveExtensionDirectEmbed({ ...p, status: 'APPROVED' }).description).toContain('um 2 Tage verlängert');
+    expect(leaveExtensionDirectEmbed({ ...p, status: 'DENIED', decisionReason: 'Personalmangel' }).fields?.[0]?.value).toBe('Personalmangel');
+  });
+  it('a pending extension shows up in the panel', async () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+    const { api } = fakeApi({ 'GET /leave?mine=true': { items: [{ id, number: 'LOA-2', reason: 'Urlaub', startsAt: '2026-01-01T00:00:00Z', endsAt: '2099-01-01T00:00:00Z', endedAt: null, decisionReason: null, status: 'APPROVED', active: true, extensionMinutes: 1440 }] } });
+    expect((await byName('leave')!.run(ctx(api, { opts: { _sub: 'manage' } }))).embeds?.[0]?.description).toContain('+1 Tag beantragt');
   });
 });
 

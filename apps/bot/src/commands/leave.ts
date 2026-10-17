@@ -63,14 +63,15 @@ export function parseDuration(input: string): number | null {
   return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
 }
 
-interface LoaRow { id: string; number: string; status: string; active: boolean; startsAt: string; endsAt: string; reason: string; endedAt: string | null; decisionReason: string | null }
+interface LoaRow { id: string; number: string; status: string; active: boolean; startsAt: string; endsAt: string; reason: string; endedAt: string | null; decisionReason: string | null; extensionMinutes?: number | null }
 const ts = (iso: string, style = 'F') => `<t:${Math.floor(new Date(iso).getTime() / 1000)}:${style}>`;
 
 /** Abschnitt „Aktuelle Abmeldung“ wie bei Trident: Status, Beginn, Ende, Dauer, Grund, ID. */
 function currentBlock(r: LoaRow): string {
   const status = r.active ? '🟢 Aktiv' : r.status === 'PENDING' ? '🟡 Wartet auf Freigabe' : '📅 Geplant';
   return [`### Aktuelle Abmeldung`, `**Status**: ${status}`, `**Beginn**: ${ts(r.startsAt, 'f')}`, `**Ende**: ${ts(r.endsAt, 'f')} (${ts(r.endsAt, 'R')})`,
-    `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`, `**Grund**: ${clip(plain(r.reason), 800)}`, `-# ID: ${r.number}`].join('\n');
+    `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`, `**Grund**: ${clip(plain(r.reason), 800)}`,
+    ...(r.extensionMinutes ? [`**Verlängerung**: ⏳ +${humanDuration(r.extensionMinutes * 60_000)} beantragt – wartet auf die Leitung`] : []), `-# ID: ${r.number}`].join('\n');
 }
 /** „Verlängern“ + „Vorzeitig beenden“ / „Antrag zurückziehen“ / „Absagen“ zur aktuellen Abmeldung. */
 const currentButtons = (r: LoaRow): ButtonSpec[] => [
@@ -214,13 +215,30 @@ async function decide(c: Parameters<InteractionDef['run']>[0], id: string, statu
   } catch (e) { return mapError(e); }
 }
 
+/** Leitung: Verlängerung annehmen/ablehnen; Antrag wie bei Trident markieren, Mitglied bekommt eine DM. */
+async function decideExtension(c: Parameters<InteractionDef['run']>[0], id: string, status: Decision, reason?: string): Promise<Reply> {
+  try {
+    const r = await c.api.asUser<{ number: string; name: string; endsAt: string }>(c.discordId, 'POST', `/leave/${id}/extension-decision`, { status, ...(reason ? { reason } : {}) });
+    const ok = status === 'APPROVED';
+    return {
+      ephemeral: true,
+      embeds: [ok
+        ? { title: 'Verlängerung angenommen', color: COLORS.success, description: `Die Abmeldung von ${plain(r.name)} endet jetzt ungefähr ${ts(r.endsAt)}.\nUm sie anzusehen oder zu ändern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` }
+        : { title: 'Verlängerung abgelehnt', color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} endet weiterhin ungefähr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+      decided: { color: ok ? COLORS.success : COLORS.danger, note: `${ok ? 'Angenommen' : 'Abgelehnt'} von <@${c.discordId}> am <t:${Math.floor(Date.now() / 1000)}:f>`,
+        badge: ok ? { label: 'Angenommen', style: 'success', emoji: '✔️' } : { label: 'Abgelehnt', style: 'danger', emoji: '✖️' },
+        text: clip(`${ok ? '✅ Angenommen' : '❌ Abgelehnt'} von <@${c.discordId}>${reason ? `\n**Grund:** ${plain(reason)}` : ''}`, 1024) },
+    };
+  } catch (e) { return mapError(e); }
+}
+
 /**
  * Buttons/Formulare: `leave:start` (Formular Dauer/Grund) → `leave:create`, `leave:cancel:<id>`,
  * Antrag: `leave:decide:<id>:<status>`, `leave:reason:<id>:DENIED` (Formular) → `leave:reasonsubmit:<id>:<status>`.
  */
 export const LEAVE_INTERACTION: InteractionDef = {
   prefix: 'leave',
-  opensModal: (args) => args[0] === 'reason' || args[0] === 'start' || args[0] === 'astart' || args[0] === 'extend',
+  opensModal: (args) => args[0] === 'reason' || args[0] === 'xreason' || args[0] === 'start' || args[0] === 'astart' || args[0] === 'extend',
   async run(c): Promise<Reply> {
     const [action, id, st] = c.args;
     // Leitung (/leave admin): Abmeldung für ein Mitglied starten (gilt sofort) bzw. erweiterten Verlauf zeigen
@@ -272,10 +290,21 @@ export const LEAVE_INTERACTION: InteractionDef = {
       const reason = (c.fields?.reason ?? '').trim();
       if (reason.length < 3) return errorReply('Bitte einen Grund angeben.');
       try {
-        const r = await c.api.asUser<{ number: string; endsAt: string }>(c.discordId, 'POST', `/leave/${id}/extend`, { minutes: Math.round(ms / 60_000), reason });
+        const r = await c.api.asUser<{ number: string; endsAt: string; extensionPending?: boolean }>(c.discordId, 'POST', `/leave/${id}/extend`, { minutes: Math.round(ms / 60_000), reason });
+        if (r.extensionPending) return { ephemeral: true, embeds: [{ title: `Verlängerung beantragt · ${humanDuration(ms)}`, color: COLORS.neutral, footer: `ID: ${r.number}`,
+          description: 'Deine Verlängerung wurde der Leitung zur Freigabe vorgelegt. Bis dahin bleibt das bisherige Ende.\nUm benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.' }] };
         return okReply(`Abmeldung **${r.number}** um ${humanDuration(ms)} verlängert – sie endet jetzt ungefähr ${ts(r.endsAt)} (${ts(r.endsAt, 'R')}).`);
       } catch (e) { return mapError(e); }
     }
+    // Verlängerungsantrag (Freigabe-Channel): `leave:xdecide:<id>:<status>`, `leave:xreason:<id>:DENIED` (Formular) → `leave:xreasonsubmit:<id>:<status>`
+    if (action === 'xdecide' || action === 'xreasonsubmit') {
+      const status = st === 'APPROVED' || st === 'DENIED' ? st : null;
+      if (!status) return errorReply('Unbekannte Aktion.');
+      const reason = action === 'xreasonsubmit' ? (c.fields?.reason ?? '').trim() : undefined;
+      if (action === 'xreasonsubmit' && !reason) return errorReply('Bitte einen Grund angeben.');
+      return decideExtension(c, id, status, reason);
+    }
+    if (action === 'xreason') return { modal: { id: `leave:xreasonsubmit:${id}:DENIED`, title: 'Verlängerung ablehnen', fields: [{ id: 'reason', label: 'Grund', paragraph: true, required: true, maxLength: 1000 }] } };
     if (action === 'cancel') {
       try {
         const r = await c.api.asUser<{ number: string; status: string; name: string; discordId: string | null }>(c.discordId, 'POST', `/leave/${id}/cancel`);

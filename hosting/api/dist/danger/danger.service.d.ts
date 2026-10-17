@@ -37,7 +37,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        buttonStyle: "success" | "danger" | "secondary" | "primary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }, {
@@ -47,7 +47,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        buttonStyle: "success" | "danger" | "secondary" | "primary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }>, "many">, {
@@ -57,7 +57,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        buttonStyle: "success" | "danger" | "secondary" | "primary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[], {
@@ -67,7 +67,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        buttonStyle: "success" | "danger" | "secondary" | "primary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[]>;
@@ -83,7 +83,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        buttonStyle: "success" | "danger" | "secondary" | "primary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -100,7 +100,7 @@ export declare const dangerConfigSchema: z.ZodObject<{
         text: string;
         key: string;
         emoji: string;
-        buttonStyle: "success" | "danger" | "primary" | "secondary";
+        buttonStyle: "success" | "danger" | "secondary" | "primary";
         pingRoleIds?: string[] | undefined;
         allowRoleIds?: string[] | undefined;
     }[];
@@ -127,7 +127,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "secondary" | "primary";
         }[];
         panel: {
             title: string;
@@ -151,7 +151,7 @@ export declare class DangerService {
             title: string;
             emoji: string;
             color: string;
-            buttonStyle: "success" | "danger" | "primary" | "secondary";
+            buttonStyle: "success" | "danger" | "secondary" | "primary";
         }[];
         panel: {
             title: string;

@@ -98,6 +98,9 @@ export declare class LeaveController {
             endedAt: Date | null;
             createdAt: Date;
             days: number;
+            extensionMinutes: number | null;
+            extensionReason: string | null;
+            extensionRequestedAt: Date | null;
         }[];
         member?: {
             userId: string;
@@ -125,6 +128,9 @@ export declare class LeaveController {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
     decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
         id: string;
@@ -146,9 +152,13 @@ export declare class LeaveController {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
     /** Verlängern um `minutes` mit Grund (eigene; Leitung jede). */
     extend(a: Actor, id: string, b: z.infer<typeof extendBody>): Promise<{
+        extensionPending: boolean;
         id: string;
         number: string;
         userId: string;
@@ -168,6 +178,34 @@ export declare class LeaveController {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
+    }>;
+    /** Leitung: über eine beantragte Verlängerung entscheiden. */
+    decideExtension(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
+        decidedByName: string | null;
+        id: string;
+        number: string;
+        userId: string;
+        name: string;
+        discordId: string | null;
+        startsAt: Date;
+        endsAt: Date;
+        reason: string;
+        type: string | null;
+        comment: string | null;
+        status: string;
+        active: boolean;
+        guildId: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
+        endedAt: Date | null;
+        createdAt: Date;
+        days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
     /** Eigene zurückziehen; Leitung (leave.manage) kann jede beenden. */
     cancel(a: Actor, id: string): Promise<{
@@ -190,6 +228,9 @@ export declare class LeaveController {
         endedAt: Date | null;
         createdAt: Date;
         days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
     }>;
 }
 export {};

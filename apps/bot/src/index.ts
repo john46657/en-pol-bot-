@@ -354,7 +354,7 @@ async function markDecided(message: Message, d: NonNullable<Reply['decided']>) {
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (const row of message.components) {
     if (!('components' in row)) continue;
-    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):|^decided$/.test(c.customId ?? ''));
+    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? '') && !(badge && c.customId === 'decided'));
     if (kept.length) rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(kept.map((c) => ButtonBuilder.from(c))));
   }
   if (badge) { if (rows[0] && rows[0].components.length < 5) rows[0].components.unshift(badge); else rows.unshift(new ActionRowBuilder<ButtonBuilder>().addComponents(badge)); }
@@ -659,13 +659,16 @@ function wireReady(client0: Client) {
       if (type === 'message.decided') {
         // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
         const key = String(p.key ?? '');
-        if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key)) throw new Error('invalid key');
+        if (!/^msg-[laqe]-[0-9a-f-]{36}$/.test(key)) throw new Error('invalid key');
         const spots = await api.service<{ value: unknown }>('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value as { channelId?: string; messageId?: string }[] : []));
         for (const spot of spots) {
           const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
           if (!ch?.isTextBased() || !('messages' in ch) || !spot.messageId) continue;
           const msg = await ch.messages.fetch(spot.messageId).catch(() => null); // gelöscht → nichts zu tun
-          if (msg) await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b });
+          const badge = p.badge as { label?: unknown; style?: unknown; emoji?: unknown } | undefined;
+          const style = badge && ['primary', 'secondary', 'success', 'danger'].includes(String(badge.style)) ? String(badge.style) as ButtonSpec['style'] : 'secondary';
+          if (msg) await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b,
+            ...(typeof p.note === 'string' ? { note: p.note } : {}), ...(badge && typeof badge.label === 'string' ? { badge: { label: badge.label, style, ...(typeof badge.emoji === 'string' ? { emoji: badge.emoji } : {}) } } : {}) });
         }
         return true;
       }

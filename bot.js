@@ -81421,6 +81421,20 @@ ${clip(plain(p.description), 2e3)}` : ""}`,
         fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
         footer: `ID: ${String(p.number)}`
       };
+    case "leave.extension": {
+      const add = Number(p.extensionMinutes) * 6e4;
+      return {
+        title: "Verl\xE4ngerungsantrag",
+        color: COLORS.warning,
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte die Abmeldung verl\xE4ngern.`, 4e3),
+        fields: [
+          { name: "Grund", value: clip(plain(p.extensionReason), 1024) },
+          { name: "Zus\xE4tzliche Dauer", value: Number.isFinite(add) && add > 0 ? humanDuration(add) : "\u2014" },
+          { name: "Ende", value: `bisher <t:${unixOf(p.endsAt)}:f> \u2192 neu <t:${unixOf(p.newEndsAt)}:f>` }
+        ],
+        footer: `ID: ${String(p.number)}`
+      };
+    }
     case "leave.log": {
       const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
       const by = p.event === "approved" ? "Angenommen von" : p.event === "denied" ? "Abgelehnt von" : p.event === "extended" ? "Verl\xE4ngert von" : "Entschieden von";
@@ -81516,7 +81530,8 @@ var LEAVE_EVENTS = {
   ended: { text: "\u{1F44B} Abmeldung beendet", color: COLORS.neutral },
   ended_early: { text: "\u21A9\uFE0F Abmeldung vorzeitig beendet", color: COLORS.neutral },
   cancelled: { text: "\u21A9\uFE0F Abmeldung zur\xFCckgezogen", color: COLORS.neutral },
-  extended: { text: "\u{1F552} Abmeldung verl\xE4ngert", color: COLORS.info }
+  extended: { text: "\u{1F552} Abmeldung verl\xE4ngert", color: COLORS.info },
+  extension_denied: { text: "\u274C Verl\xE4ngerung abgelehnt", color: COLORS.danger }
 };
 var unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1e3);
 function humanDuration(ms) {
@@ -81566,6 +81581,27 @@ Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
     ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
 }
+function leaveExtensionDirectEmbed(p) {
+  const author = guildAuthor(p);
+  const server = plain(p.guildName ?? "dem Server");
+  const end = unixOf(p.endsAt);
+  const add = humanDuration(Number(p.extensionMinutes) * 6e4);
+  const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
+  if (p.status === "APPROVED") return {
+    ...base,
+    title: "Verl\xE4ngerung angenommen",
+    color: COLORS.success,
+    description: `Deine Abmeldung wurde um ${add} verl\xE4ngert und endet jetzt ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
+Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
+  };
+  return {
+    ...base,
+    title: "Verl\xE4ngerung abgelehnt",
+    color: COLORS.danger,
+    description: `Deine Abmeldung wird nicht verl\xE4ngert und endet weiterhin ungef\xE4hr <t:${end}:F> (<t:${end}:R>).`,
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
+  };
+}
 function renderOutboxEmbeds(type, p) {
   if (type === "qualification.submitted") return applicationEmbeds(p, "q");
   if (type === "application.submitted") return applicationEmbeds(p, "p");
@@ -81596,6 +81632,10 @@ function outboxButtons(type, p) {
     { id: `leave:decide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
     { id: `leave:reason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" },
     ...typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }] : []
+  ];
+  if (type === "leave.extension" && typeof p.id === "string") return [
+    { id: `leave:xdecide:${p.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2714\uFE0F" },
+    { id: `leave:xreason:${p.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u2716\uFE0F" }
   ];
   if (type === "academy.course" && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
   if (/^wanted\./.test(type) && typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: "link", label: "Im Dashboard ansehen", style: "secondary", url: p.dashboardUrl }];
@@ -82547,6 +82587,7 @@ function currentBlock(r) {
     `**Ende**: ${ts(r.endsAt, "f")} (${ts(r.endsAt, "R")})`,
     `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`,
     `**Grund**: ${clip(plain(r.reason), 800)}`,
+    ...r.extensionMinutes ? [`**Verl\xE4ngerung**: \u23F3 +${humanDuration(r.extensionMinutes * 6e4)} beantragt \u2013 wartet auf die Leitung`] : [],
     `-# ID: ${r.number}`
   ].join("\n");
 }
@@ -82711,9 +82752,29 @@ Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.n
     return mapError(e);
   }
 }
+async function decideExtension(c, id3, status, reason) {
+  try {
+    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/extension-decision`, { status, ...reason ? { reason } : {} });
+    const ok = status === "APPROVED";
+    return {
+      ephemeral: true,
+      embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Verl\xE4ngerung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} endet weiterhin ungef\xE4hr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+      decided: {
+        color: ok ? COLORS.success : COLORS.danger,
+        note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am <t:${Math.floor(Date.now() / 1e3)}:f>`,
+        badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
+      }
+    };
+  } catch (e) {
+    return mapError(e);
+  }
+}
 var LEAVE_INTERACTION = {
   prefix: "leave",
-  opensModal: (args) => args[0] === "reason" || args[0] === "start" || args[0] === "astart" || args[0] === "extend",
+  opensModal: (args) => args[0] === "reason" || args[0] === "xreason" || args[0] === "start" || args[0] === "astart" || args[0] === "extend",
   async run(c) {
     const [action, id3, st] = c.args;
     if (action === "ahist" && id3) {
@@ -82785,11 +82846,25 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
       if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/extend`, { minutes: Math.round(ms / 6e4), reason });
+        if (r.extensionPending) return { ephemeral: true, embeds: [{
+          title: `Verl\xE4ngerung beantragt \xB7 ${humanDuration(ms)}`,
+          color: COLORS.neutral,
+          footer: `ID: ${r.number}`,
+          description: "Deine Verl\xE4ngerung wurde der Leitung zur Freigabe vorgelegt. Bis dahin bleibt das bisherige Ende.\nUm benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen."
+        }] };
         return okReply(`Abmeldung **${r.number}** um ${humanDuration(ms)} verl\xE4ngert \u2013 sie endet jetzt ungef\xE4hr ${ts(r.endsAt)} (${ts(r.endsAt, "R")}).`);
       } catch (e) {
         return mapError(e);
       }
     }
+    if (action === "xdecide" || action === "xreasonsubmit") {
+      const status2 = st === "APPROVED" || st === "DENIED" ? st : null;
+      if (!status2) return errorReply("Unbekannte Aktion.");
+      const reason = action === "xreasonsubmit" ? (c.fields?.reason ?? "").trim() : void 0;
+      if (action === "xreasonsubmit" && !reason) return errorReply("Bitte einen Grund angeben.");
+      return decideExtension(c, id3, status2, reason);
+    }
+    if (action === "xreason") return { modal: { id: `leave:xreasonsubmit:${id3}:DENIED`, title: "Verl\xE4ngerung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
     if (action === "cancel") {
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/cancel`);
@@ -84519,7 +84594,8 @@ var DIRECT = {
   "application.decided": applicationDecisionText,
   "qualification.decided": qualificationDecisionText,
   "leave.decided": (p) => leaveDirectEmbed("leave.decided", p),
-  "leave.pending": (p) => leaveDirectEmbed("leave.pending", p)
+  "leave.pending": (p) => leaveDirectEmbed("leave.pending", p),
+  "leave.extension.decided": leaveExtensionDirectEmbed
 };
 async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles, onDutyChanged, ticketEffects, onMembersSync, onPanel, onTask) {
   const [channels, items] = await Promise.all([api2.service("GET", "/bot/config"), api2.service("GET", "/bot/outbox?limit=20")]);
@@ -84638,9 +84714,9 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? "")}`.slice(0, 100) : void 0;
-      const authorUserId = item.type === "leave.requested" && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
+      const authorUserId = (item.type === "leave.requested" || item.type === "leave.extension") && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const replaceKey = item.type === "danger.changed" ? "danger" : void 0;
-      const trackKind = { "leave.requested": "l", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
+      const trackKind = { "leave.requested": "l", "leave.extension": "e", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
       const trackKey = trackKind && typeof item.payload.id === "string" && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : void 0;
       const opts = pingRoleIds.length || avatarUserId || thread || authorUserId || replaceKey || trackKey ? { ...pingRoleIds.length ? { pingRoleIds } : {}, ...avatarUserId ? { avatarUserId } : {}, ...thread ? { thread } : {}, ...authorUserId ? { authorUserId } : {}, ...replaceKey ? { replaceKey } : {}, ...trackKey ? { trackKey } : {} } : void 0;
       const results = await Promise.allSettled(channelIds.map((id3) => opts ? send(id3, embeds, buttons, opts) : send(id3, embeds, buttons)));
@@ -85373,7 +85449,7 @@ async function markDecided(message, d) {
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):|^decided$/.test(c.customId ?? ""));
+    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? "") && !(badge && c.customId === "decided"));
     if (kept.length) rows.push(new import_discord6.ActionRowBuilder().addComponents(kept.map((c) => import_discord6.ButtonBuilder.from(c))));
   }
   if (badge) {
@@ -85688,13 +85764,20 @@ function wireReady(client0) {
         }
         if (type === "message.decided") {
           const key4 = String(p.key ?? "");
-          if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key4)) throw new Error("invalid key");
+          if (!/^msg-[laqe]-[0-9a-f-]{36}$/.test(key4)) throw new Error("invalid key");
           const spots = await api.service("GET", `/bot/state/${key4}`).then((r) => Array.isArray(r.value) ? r.value : []);
           for (const spot of spots) {
             const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
             if (!ch?.isTextBased() || !("messages" in ch) || !spot.messageId) continue;
             const msg = await ch.messages.fetch(spot.messageId).catch(() => null);
-            if (msg) await markDecided(msg, { text: String(p.text ?? "Entschieden"), color: typeof p.color === "number" ? p.color : 6583435 });
+            const badge = p.badge;
+            const style = badge && ["primary", "secondary", "success", "danger"].includes(String(badge.style)) ? String(badge.style) : "secondary";
+            if (msg) await markDecided(msg, {
+              text: String(p.text ?? "Entschieden"),
+              color: typeof p.color === "number" ? p.color : 6583435,
+              ...typeof p.note === "string" ? { note: p.note } : {},
+              ...badge && typeof badge.label === "string" ? { badge: { label: badge.label, style, ...typeof badge.emoji === "string" ? { emoji: badge.emoji } : {} } } : {}
+            });
           }
           return true;
         }

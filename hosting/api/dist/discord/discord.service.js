@@ -116,7 +116,12 @@ let DiscordService = class DiscordService {
         const head = outcome === 'ACCEPTED' ? `✅ Angenommen von ${by}` : outcome === 'REJECTED' ? `❌ Abgelehnt von ${by}` : '↩️ Zurückgezogen';
         const text = `${head}${reason ? `\n**Grund:** ${reason}` : ''}`.slice(0, 1024);
         const color = outcome === 'ACCEPTED' ? 0x22c55e : outcome === 'REJECTED' ? 0xef4444 : 0x64748b;
-        await this.enqueue('applications', 'message.decided', { key: `msg-${kind[0]}-${id}`, text, color }, { always: true });
+        // Abmeldungen wie bei Trident: „Angenommen von @… am …“ über der Nachricht und ein ausgegrauter Status-Button
+        const trident = kind === 'leave' || kind === 'extension'
+            ? { note: `${outcome === 'ACCEPTED' ? 'Angenommen' : outcome === 'REJECTED' ? 'Abgelehnt' : 'Zurückgezogen'}${outcome === 'WITHDRAWN' ? '' : ` von ${by.replace(/ \(.*\)$/, '')}`} am <t:${Math.floor(Date.now() / 1000)}:f>`,
+                badge: outcome === 'ACCEPTED' ? { label: 'Angenommen', style: 'success', emoji: '✔️' } : outcome === 'REJECTED' ? { label: 'Abgelehnt', style: 'danger', emoji: '✖️' } : { label: 'Zurückgezogen', style: 'secondary', emoji: '↩️' } }
+            : {};
+        await this.enqueue('applications', 'message.decided', { key: `msg-${kind[0]}-${id}`, text, color, ...trident }, { always: true });
     }
     /**
      * „Ticket mit Bewerber öffnen“ aus dem Dashboard: der Bot legt (wie beim Discord-Button) einen privaten Kanal mit Person, Team-Rolle und dir an.

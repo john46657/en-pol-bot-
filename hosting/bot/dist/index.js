@@ -411,7 +411,7 @@ async function markDecided(message, d) {
     for (const row of message.components) {
         if (!('components' in row))
             continue;
-        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):|^decided$/.test(c.customId ?? ''));
+        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? '') && !(badge && c.customId === 'decided'));
         if (kept.length)
             rows.push(new discord_js_1.ActionRowBuilder().addComponents(kept.map((c) => discord_js_1.ButtonBuilder.from(c))));
     }
@@ -777,7 +777,7 @@ function wireReady(client0) {
             if (type === 'message.decided') {
                 // Entscheidung (auch aus dem Dashboard): gemerkte Antrags-/Bewerbungsnachricht einfärben, Buttons entfernen
                 const key = String(p.key ?? '');
-                if (!/^msg-[laq]-[0-9a-f-]{36}$/.test(key))
+                if (!/^msg-[laqe]-[0-9a-f-]{36}$/.test(key))
                     throw new Error('invalid key');
                 const spots = await api.service('GET', `/bot/state/${key}`).then((r) => (Array.isArray(r.value) ? r.value : []));
                 for (const spot of spots) {
@@ -785,8 +785,11 @@ function wireReady(client0) {
                     if (!ch?.isTextBased() || !('messages' in ch) || !spot.messageId)
                         continue;
                     const msg = await ch.messages.fetch(spot.messageId).catch(() => null); // gelöscht → nichts zu tun
+                    const badge = p.badge;
+                    const style = badge && ['primary', 'secondary', 'success', 'danger'].includes(String(badge.style)) ? String(badge.style) : 'secondary';
                     if (msg)
-                        await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b });
+                        await markDecided(msg, { text: String(p.text ?? 'Entschieden'), color: typeof p.color === 'number' ? p.color : 0x64748b,
+                            ...(typeof p.note === 'string' ? { note: p.note } : {}), ...(badge && typeof badge.label === 'string' ? { badge: { label: badge.label, style, ...(typeof badge.emoji === 'string' ? { emoji: badge.emoji } : {}) } } : {}) });
                 }
                 return true;
             }

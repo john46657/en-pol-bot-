@@ -80,13 +80,13 @@ export declare const buttonSchema: z.ZodObject<{
     enabled: boolean;
     label: string;
     action: string;
-    style: "success" | "danger" | "primary" | "secondary";
+    style: "success" | "danger" | "secondary" | "primary";
     emoji?: string | undefined;
 }, {
     enabled: boolean;
     label: string;
     action: string;
-    style: "success" | "danger" | "primary" | "secondary";
+    style: "success" | "danger" | "secondary" | "primary";
     emoji?: string | undefined;
 }>;
 export declare const categorySchema: z.ZodObject<{
@@ -214,13 +214,13 @@ export declare const categorySchema: z.ZodObject<{
         enabled: boolean;
         label: string;
         action: string;
-        style: "success" | "danger" | "primary" | "secondary";
+        style: "success" | "danger" | "secondary" | "primary";
         emoji?: string | undefined;
     }, {
         enabled: boolean;
         label: string;
         action: string;
-        style: "success" | "danger" | "primary" | "secondary";
+        style: "success" | "danger" | "secondary" | "primary";
         emoji?: string | undefined;
     }>, "many">>;
     claimMode: z.ZodDefault<z.ZodEnum<["MULTI" | "SINGLE" | "PRIMARY", ...("MULTI" | "SINGLE" | "PRIMARY")[]]>>;
@@ -271,7 +271,7 @@ export declare const categorySchema: z.ZodObject<{
         maxLength?: number | undefined;
     }[];
     emoji: string | null;
-    buttonStyle: "success" | "danger" | "primary" | "secondary";
+    buttonStyle: "success" | "danger" | "secondary" | "primary";
     discordCategoryId: string | null;
     channelNameFormat: string;
     staffRoleIds: string[];
@@ -289,7 +289,7 @@ export declare const categorySchema: z.ZodObject<{
         enabled: boolean;
         label: string;
         action: string;
-        style: "success" | "danger" | "primary" | "secondary";
+        style: "success" | "danger" | "secondary" | "primary";
         emoji?: string | undefined;
     }[];
     claimMode: "MULTI" | "SINGLE" | "PRIMARY";
@@ -341,7 +341,7 @@ export declare const categorySchema: z.ZodObject<{
         maxLength?: number | undefined;
     }[] | undefined;
     emoji?: string | null | undefined;
-    buttonStyle?: "success" | "danger" | "primary" | "secondary" | undefined;
+    buttonStyle?: "success" | "danger" | "secondary" | "primary" | undefined;
     discordCategoryId?: string | null | undefined;
     channelNameFormat?: string | undefined;
     staffRoleIds?: string[] | undefined;
@@ -360,7 +360,7 @@ export declare const categorySchema: z.ZodObject<{
         enabled: boolean;
         label: string;
         action: string;
-        style: "success" | "danger" | "primary" | "secondary";
+        style: "success" | "danger" | "secondary" | "primary";
         emoji?: string | undefined;
     }[] | undefined;
     claimMode?: "MULTI" | "SINGLE" | "PRIMARY" | undefined;

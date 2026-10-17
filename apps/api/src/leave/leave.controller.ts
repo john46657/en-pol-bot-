@@ -29,6 +29,9 @@ export class LeaveController {
   /** Verlängern um `minutes` mit Grund (eigene; Leitung jede). */
   @Post(':id/extend') @HttpCode(200) @RequirePermission('leave.request')
   extend(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(extendBody)) b: z.infer<typeof extendBody>) { return this.s.extend(a, id, b.minutes, b.reason); }
+  /** Leitung: über eine beantragte Verlängerung entscheiden. */
+  @Post(':id/extension-decision') @HttpCode(200) @RequirePermission('leave.manage')
+  decideExtension(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.s.decideExtension(a, id, b.status, b.reason); }
   /** Eigene zurückziehen; Leitung (leave.manage) kann jede beenden. */
   @Post(':id/cancel') @HttpCode(200) @RequirePermission('leave.request')
   cancel(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.cancel(a, id); }

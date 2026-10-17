@@ -109,6 +109,15 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
         description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} möchte sich abmelden.`, 4000),
         fields: [{ name: 'Grund', value: clip(plain(p.reason), 1024) }, { name: 'Dauer', value: leaveSpan(p) }, { name: 'Zeitraum', value: `<t:${unixOf(p.startsAt)}:f> – <t:${unixOf(p.endsAt)}:f>` }],
         footer: `ID: ${String(p.number)}` };
+    case 'leave.extension': {
+      // Verlängerungsantrag (wie Trident): oben @Benutzer mit Profilbild (setzt der Bot), Grund, zusätzliche Dauer, neues Ende, ID
+      const add = Number(p.extensionMinutes) * 60_000;
+      return { title: 'Verlängerungsantrag', color: COLORS.warning,
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} möchte die Abmeldung verlängern.`, 4000),
+        fields: [{ name: 'Grund', value: clip(plain(p.extensionReason), 1024) }, { name: 'Zusätzliche Dauer', value: Number.isFinite(add) && add > 0 ? humanDuration(add) : '—' },
+          { name: 'Ende', value: `bisher <t:${unixOf(p.endsAt)}:f> → neu <t:${unixOf(p.newEndsAt)}:f>` }],
+        footer: `ID: ${String(p.number)}` };
+    }
     case 'leave.log': {
       // wie Trident: oben das Mitglied, darunter Beginn, Ende, Grund, wer entschieden hat; unten die ID
       const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
@@ -184,7 +193,7 @@ const LEAVE_EVENTS: Record<string, { text: string; color: number }> = {
   approved: { text: '✅ Abmeldung angenommen', color: COLORS.success }, denied: { text: '❌ Abmeldung abgelehnt', color: COLORS.danger },
   started: { text: '🏝️ Abmeldung beginnt', color: COLORS.info }, ended: { text: '👋 Abmeldung beendet', color: COLORS.neutral },
   ended_early: { text: '↩️ Abmeldung vorzeitig beendet', color: COLORS.neutral }, cancelled: { text: '↩️ Abmeldung zurückgezogen', color: COLORS.neutral },
-  extended: { text: '🕒 Abmeldung verlängert', color: COLORS.info },
+  extended: { text: '🕒 Abmeldung verlängert', color: COLORS.info }, extension_denied: { text: '❌ Verlängerung abgelehnt', color: COLORS.danger },
 };
 const unixOf = (v: unknown) => Math.floor(new Date(String(v)).getTime() / 1000);
 /** Dauer menschenlesbar: „6 Stunden“, „1 Tag“, „2 Wochen“, „1 Woche, 2 Tage“. */
@@ -226,6 +235,20 @@ export function leaveDirectEmbed(type: string, p: Record<string, unknown>): Embe
     ...(p.decisionReason ? { fields: [{ name: 'Grund', value: clip(plain(p.decisionReason), 1024) }] } : {}) };
 }
 
+/** DM nach der Entscheidung über eine Verlängerung. */
+export function leaveExtensionDirectEmbed(p: Record<string, unknown>): EmbedData {
+  const author = guildAuthor(p);
+  const server = plain(p.guildName ?? 'dem Server');
+  const end = unixOf(p.endsAt);
+  const add = humanDuration(Number(p.extensionMinutes) * 60_000);
+  const base = { ...(author ? { author } : {}), footer: `ID: ${String(p.number)}` };
+  if (p.status === 'APPROVED') return { ...base, title: 'Verlängerung angenommen', color: COLORS.success,
+    description: `Deine Abmeldung wurde um ${add} verlängert und endet jetzt ungefähr <t:${end}:F> (<t:${end}:R>).\nUm deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.` };
+  return { ...base, title: 'Verlängerung abgelehnt', color: COLORS.danger,
+    description: `Deine Abmeldung wird nicht verlängert und endet weiterhin ungefähr <t:${end}:F> (<t:${end}:R>).`,
+    ...(p.decisionReason ? { fields: [{ name: 'Grund', value: clip(plain(p.decisionReason), 1024) }] } : {}) };
+}
+
 export function renderOutboxEmbeds(type: string, p: Record<string, unknown>): EmbedData[] | null {
   if (type === 'qualification.submitted') return applicationEmbeds(p, 'q');
   if (type === 'application.submitted') return applicationEmbeds(p, 'p');
@@ -259,6 +282,9 @@ export function outboxButtons(type: string, p: Record<string, unknown>): ButtonS
   if (type === 'leave.requested' && typeof p.id === 'string') return [
     { id: `leave:decide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:reason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
     ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary' as const, url: p.dashboardUrl }] : []),
+  ];
+  if (type === 'leave.extension' && typeof p.id === 'string') return [
+    { id: `leave:xdecide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:xreason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
   ];
   if (type === 'academy.course' && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
   // Fahndung / Einsatz: Link ins Dashboard
