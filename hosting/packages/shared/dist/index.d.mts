@@ -33,10 +33,6 @@ declare const PERMISSION_CATALOG: {
     readonly exam: readonly ["view", "create", "manage", "grade"];
     readonly warning: readonly ["view", "create", "manage"];
     readonly awards: readonly ["view", "create", "manage"];
-    /** Interne Meldungen mit Lesebestätigung */
-    readonly announcements: readonly ["view", "create", "manage"];
-    /** Interne Abstimmungen */
-    readonly polls: readonly ["view", "create", "manage"];
     /** Dienstnummern-System */
     readonly dienstnummer: readonly ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"];
     readonly leave: readonly ["view", "request", "manage"];
@@ -1719,8 +1715,8 @@ declare const MODULES: readonly [{
 }, {
     readonly key: "communication";
     readonly name: "Kommunikation";
-    readonly description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes, Funk-Whitelist";
-    readonly permissionPrefixes: ["communication", "announcements", "polls", "radio", "radiowhitelist"];
+    readonly description: "Nachrichten, Funk-Codes, Funk-Whitelist";
+    readonly permissionPrefixes: ["communication", "radio", "radiowhitelist"];
 }];
 type ModuleKey = (typeof MODULES)[number]['key'];
 declare const MODULE_KEYS: readonly string[];
@@ -3199,7 +3195,7 @@ declare const LOG_CATEGORIES: readonly [{
     readonly key: "kommunikation";
     readonly label: "Kommunikation & Discord";
     readonly emoji: "💬";
-    readonly modules: readonly ["announcements", "polls", "communication", "discord"];
+    readonly modules: readonly ["communication", "discord"];
 }, {
     readonly key: "rechte";
     readonly label: "Rechte, Konten & Anmeldung";

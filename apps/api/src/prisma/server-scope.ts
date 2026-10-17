@@ -10,7 +10,7 @@ import { currentGuild, inRequest, PER_SERVER_SETTING_KEYS, recordSpace, register
 export const SERVER_SCOPED_MODELS = new Set([
   'Person', 'Vehicle', 'Weapon', 'Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession', 'Ticket', 'LegalCode',
   'Incident', 'Unit', 'CadMapObject', 'CadMember',
-  'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'HrAnnouncement', 'HrPoll', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
+  'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
   'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
 ]);
 

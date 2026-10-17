@@ -281,13 +281,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "wanted.hit" | "wanted.possible";
+        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible";
         channelIds: string[];
         pingRoleIds: string[];
     }, {
         id: string;
         guildId: string;
-        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "wanted.hit" | "wanted.possible";
+        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible";
         channelIds: string[];
         enabled?: boolean | undefined;
         pingRoleIds?: string[] | undefined;
@@ -383,7 +383,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "wanted.hit" | "wanted.possible";
+        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible";
         channelIds: string[];
         pingRoleIds: string[];
     }[];

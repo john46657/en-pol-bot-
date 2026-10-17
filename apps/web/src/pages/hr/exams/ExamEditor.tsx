@@ -10,7 +10,7 @@ import { api } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 import { errText } from '../../../lib/tickets';
 import { Badge, Button, Card, ConfirmDialog, ErrorState, Input, PageHeader, Select, SkeletonRows, Textarea } from '../../../components/ui';
-import { AudiencePicker } from '../HrComms';
+import { AudiencePicker } from '../../../components/AudiencePicker';
 import { L, MultiPick, Switch, useStaff } from '../trainingCommon';
 import { AnswerReview, download, fileSafe, fromLocal, pts, QuestionImage, QuestionInput, toLocal, useExams, type Answer, type AttemptQuestion, type ExamDetail } from './common';
 

@@ -13,6 +13,7 @@ const duty_reports_1 = require("./duty-reports");
 const warnings_1 = require("./warnings");
 const radio_whitelist_1 = require("./radio-whitelist");
 const trainings_1 = require("./trainings");
+const shifts_1 = require("./shifts");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
 const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, '0')} min`;
@@ -98,8 +99,8 @@ exports.COMMANDS = [
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
                             { name: 'Konto', value: '`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
-                            { name: 'Dienst & Leitstelle', value: '`/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
-                            { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
+                            { name: 'Dienst & Leitstelle', value: '`/schicht` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
+                            { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
                             { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
@@ -532,6 +533,7 @@ exports.COMMANDS = [
     ...warnings_1.WARNING_COMMANDS,
     ...radio_whitelist_1.RADIO_WHITELIST_COMMANDS,
     ...trainings_1.TRAINING_COMMANDS,
+    ...shifts_1.SHIFT_COMMANDS,
     tickets_1.TICKET_COMMAND,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);

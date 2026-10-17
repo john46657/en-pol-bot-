@@ -11,7 +11,7 @@ import { JsonListStore } from '../common/json-store';
 import { makeNumber } from '../common/numbering';
 
 type Row = Prisma.DutyReportGetPayload<{ include: { author: { select: { id: true; displayName: true } } } }>;
-export interface ReportFilter { templateId?: string; authorId?: string; from?: string; to?: string; q?: string; status?: string; mine?: boolean }
+export interface ReportFilter { templateId?: string; authorId?: string; /** Verfasser per Discord-ID (Bot: `/dienstbericht liste mitglied:@…`) */ discordId?: string; from?: string; to?: string; q?: string; status?: string; mine?: boolean }
 
 /** Tages-/Wochenberichte: Vorlagen mit eigenen Feldern; ausfüllen, ansehen und bearbeiten im Dashboard und in Discord. */
 @Injectable()
@@ -53,6 +53,11 @@ export class DutyReportsService {
 
   async list(actor: Actor, f: ReportFilter, page = 1, pageSize = 50) {
     const all = await this.seeAll(actor.userId!);
+    if (f.discordId && all && !f.mine) {
+      const link = await this.prisma.discordLink.findUnique({ where: { discordId: f.discordId }, select: { userId: true } });
+      if (!link) return { items: [], total: 0, page, pageSize, seeAll: all };
+      f = { ...f, authorId: link.userId };
+    }
     const where: Prisma.DutyReportWhereInput = {
       ...(f.templateId ? { templateId: f.templateId } : {}),
       ...(f.status ? { status: f.status } : {}),
@@ -72,7 +77,7 @@ export class DutyReportsService {
     if (!r || (r.authorId !== actor.userId && !(await this.seeAll(actor.userId!)))) throw new AppError('NOT_FOUND', 'Bericht nicht gefunden.');
     const [t, posted] = await Promise.all([this.templates.get(r.templateId), this.discord.posted(`drep-${r.id}`)]);
     const reviewerName = r.reviewedById ? (await this.prisma.user.findUnique({ where: { id: r.reviewedById }, select: { displayName: true } }))?.displayName ?? null : null;
-    return { ...r, template: t ?? null, posted, reviewerName, canEdit: await this.canEdit(actor.userId!, r, t) };
+    return { ...r, template: t ?? null, posted, reviewerName, canEdit: await this.canEdit(actor.userId!, r, t), canReview: await this.perms.has(actor.userId!, 'dutyreports.review') };
   }
 
   private async canEdit(userId: string, r: { authorId: string }, t?: ReportTemplate | null) {

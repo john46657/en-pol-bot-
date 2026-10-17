@@ -12,8 +12,8 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     id: string;
     type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-    options: string[];
     label: string;
+    options: string[];
     required: boolean;
     description?: string | undefined;
     placeholder?: string | undefined;
@@ -25,15 +25,15 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
     label: string;
     required: boolean;
     description?: string | undefined;
-    options?: string[] | undefined;
     placeholder?: string | undefined;
+    options?: string[] | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
 }>, {
     id: string;
     type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-    options: string[];
     label: string;
+    options: string[];
     required: boolean;
     description?: string | undefined;
     placeholder?: string | undefined;
@@ -45,15 +45,15 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
     label: string;
     required: boolean;
     description?: string | undefined;
-    options?: string[] | undefined;
     placeholder?: string | undefined;
+    options?: string[] | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
 }>, {
     id: string;
     type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-    options: string[];
     label: string;
+    options: string[];
     required: boolean;
     description?: string | undefined;
     placeholder?: string | undefined;
@@ -65,8 +65,8 @@ export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
     label: string;
     required: boolean;
     description?: string | undefined;
-    options?: string[] | undefined;
     placeholder?: string | undefined;
+    options?: string[] | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
 }>;
@@ -122,8 +122,8 @@ export declare const categorySchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-        options: string[];
         label: string;
+        options: string[];
         required: boolean;
         description?: string | undefined;
         placeholder?: string | undefined;
@@ -135,15 +135,15 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        options?: string[] | undefined;
         placeholder?: string | undefined;
+        options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }>, {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-        options: string[];
         label: string;
+        options: string[];
         required: boolean;
         description?: string | undefined;
         placeholder?: string | undefined;
@@ -155,15 +155,15 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        options?: string[] | undefined;
         placeholder?: string | undefined;
+        options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }>, {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-        options: string[];
         label: string;
+        options: string[];
         required: boolean;
         description?: string | undefined;
         placeholder?: string | undefined;
@@ -175,15 +175,15 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        options?: string[] | undefined;
         placeholder?: string | undefined;
+        options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }>, "many">>, {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-        options: string[];
         label: string;
+        options: string[];
         required: boolean;
         description?: string | undefined;
         placeholder?: string | undefined;
@@ -195,8 +195,8 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        options?: string[] | undefined;
         placeholder?: string | undefined;
+        options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }[] | undefined>;
@@ -262,8 +262,8 @@ export declare const categorySchema: z.ZodObject<{
     questions: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
-        options: string[];
         label: string;
+        options: string[];
         required: boolean;
         description?: string | undefined;
         placeholder?: string | undefined;
@@ -335,8 +335,8 @@ export declare const categorySchema: z.ZodObject<{
         label: string;
         required: boolean;
         description?: string | undefined;
-        options?: string[] | undefined;
         placeholder?: string | undefined;
+        options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
     }[] | undefined;

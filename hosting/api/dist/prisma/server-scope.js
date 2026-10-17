@@ -13,7 +13,7 @@ const guild_context_1 = require("../common/guild-context");
 exports.SERVER_SCOPED_MODELS = new Set([
     'Person', 'Vehicle', 'Weapon', 'Report', 'Complaint', 'Investigation', 'WantedRecord', 'Evidence', 'DutySession', 'Ticket', 'LegalCode',
     'Incident', 'Unit', 'CadMapObject', 'CadMember',
-    'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'HrAnnouncement', 'HrPoll', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
+    'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
     'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
 ]);
 /** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */

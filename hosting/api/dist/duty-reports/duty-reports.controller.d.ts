@@ -49,6 +49,7 @@ declare const listQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["SUBMITTED", "REVIEWED", "RETURNED"]>>;
     mine: z.ZodOptional<z.ZodBoolean>;
+    discordId: z.ZodOptional<z.ZodString>;
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
@@ -56,6 +57,7 @@ declare const listQ: z.ZodObject<{
     pageSize: number;
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     authorId?: string | undefined;
+    discordId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
     from?: string | undefined;
@@ -64,6 +66,7 @@ declare const listQ: z.ZodObject<{
 }, {
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     authorId?: string | undefined;
+    discordId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
     from?: string | undefined;
@@ -223,6 +226,7 @@ export declare class DutyReportsController {
         } | null;
         reviewerName: string | null;
         canEdit: boolean;
+        canReview: boolean;
         author: {
             id: string;
             displayName: string;

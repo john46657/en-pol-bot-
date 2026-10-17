@@ -15,10 +15,7 @@ export function useNavBadges(): Record<string, number> {
   const leave = useQuery({ queryKey: ['badge', 'leave'], queryFn: () => api<{ items: unknown[] }>('/leave', { query: { status: 'PENDING' } }), enabled: !!user && can('leave.manage'), ...opts });
   const reports = useQuery({ queryKey: ['badge', 'reports'], queryFn: () => api<{ total: number }>('/reports', { query: { status: 'SUBMITTED', pageSize: 1 } }), enabled: !!user && can('reports.review'), ...opts });
   const promos = useQuery({ queryKey: ['badge', 'promotions'], queryFn: () => api<{ byStatus: { status: string; count: number }[] }>('/hr/requests/stats'), enabled: !!user && can('promotion.review'), ...opts });
-  // Mitteilungen, die man noch bestätigen muss (dieselbe Liste wie die Seite; ohne „alle“ nur aktuelle)
-  const ann = useQuery({ queryKey: ['hr-announcements', false], queryFn: () => api<{ requireAck: boolean; readAt: string | null; publishAt: string }[]>('/hr/announcements'), enabled: !!user && can('announcements.view'), ...opts });
   return {
-    '/announcements': (ann.data ?? []).filter((a) => a.requireAck && !a.readAt && new Date(a.publishAt).getTime() <= Date.now()).length,
     '/support-tickets': total(tickets.data),
     '/applications': total(apps.data),
     '/leave': leave.data?.items.length ?? 0,

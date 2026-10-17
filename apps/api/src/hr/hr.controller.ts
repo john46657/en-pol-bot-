@@ -10,7 +10,6 @@ import { HrPeopleService, RECORD_TYPES } from './hr-people.service';
 import { HrRequestsService } from './hr-requests.service';
 import { HrTrainingService, trainingSchema, TRAINING_STATUSES } from './hr-training.service';
 import { HrExamService } from './hr-exam.service';
-import { announcementSchema, HrCommsService, pollSchema } from './hr-comms.service';
 import { ServiceNumbersService } from './service-numbers.service';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
 
@@ -116,25 +115,6 @@ export class HrExamController {
   @Post('attempts/:id/submit') @HttpCode(200) @RequirePermission('exam.view') submit(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(answersBody)) b: z.infer<typeof answersBody>) { return this.s.submit(a, id, b.answers); }
   @Post('attempts/:id/grade') @HttpCode(200) @RequirePermission('exam.view') grade(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(gradeBody)) b: z.infer<typeof gradeBody>) { return this.s.grade(a, id, b); }
   @Post('attempts/:id/void') @HttpCode(200) @RequirePermission('exam.view') void(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ reason: z.string().trim().min(3).max(500) }))) b: { reason: string }) { return this.s.void(a, id, b.reason); }
-}
-
-// ───────────── Meldungen & Abstimmungen ─────────────
-@ApiTags('hr')
-@Controller('hr')
-export class HrCommsController {
-  constructor(private readonly s: HrCommsService) {}
-  @Get('announcements') @RequirePermission('announcements.view') list(@CurrentActor() a: Actor, @Query('all') all?: string) { return this.s.announcements(a, all === '1'); }
-  @Post('announcements') @RequirePermission('announcements.create') create(@CurrentActor() a: Actor, @Body(zodBody(announcementSchema)) b: z.infer<typeof announcementSchema>) { return this.s.saveAnnouncement(a, b); }
-  @Put('announcements/:id') @RequirePermission('announcements.create') save(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(announcementSchema)) b: z.infer<typeof announcementSchema>) { return this.s.saveAnnouncement(a, b, id); }
-  @Delete('announcements/:id') @HttpCode(204) @RequirePermission('announcements.create') remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.deleteAnnouncement(a, id); }
-  @Post('announcements/:id/ack') @HttpCode(200) @RequirePermission('announcements.view') ack(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.ack(a, id); }
-  @Get('announcements/:id/readers') @RequirePermission('announcements.create') readers(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.readers(a, id); }
-
-  @Get('polls') @RequirePermission('polls.view') polls(@CurrentActor() a: Actor) { return this.s.polls(a); }
-  @Post('polls') @RequirePermission('polls.create') createPoll(@CurrentActor() a: Actor, @Body(zodBody(pollSchema)) b: z.infer<typeof pollSchema>) { return this.s.savePoll(a, b); }
-  @Put('polls/:id') @RequirePermission('polls.create') savePoll(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(pollSchema)) b: z.infer<typeof pollSchema>) { return this.s.savePoll(a, b, id); }
-  @Delete('polls/:id') @HttpCode(204) @RequirePermission('polls.create') deletePoll(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.deletePoll(a, id); }
-  @Post('polls/:id/vote') @HttpCode(200) @RequirePermission('polls.view') vote(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ optionIds: z.array(z.string().max(40)).min(1).max(20) }))) b: { optionIds: string[] }) { return this.s.vote(a, id, b.optionIds); }
 }
 
 // ───────────── Dienstnummern ─────────────

@@ -4,6 +4,9 @@ exports.DUTY_REPORT_INTERACTION = exports.DUTY_REPORT_COMMANDS = void 0;
 const shared_1 = require("@enrp/shared");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
+const STATUS_DE = { SUBMITTED: '🕓 eingereicht', REVIEWED: '✅ geprüft', RETURNED: '↩️ zur Nachbesserung' };
+/** Filter für `/dienstbericht liste` (wie im Dashboard). */
+const LIST_STATUS = { offen: 'SUBMITTED', zurueckgegeben: 'RETURNED', geprueft: 'REVIEWED', alle: '' };
 /** Teilantworten mehrseitiger Formulare (Discord: max. 5 Felder je Formular) – 30 Minuten im Speicher. */
 const drafts = new Map();
 const key = (c, mode, id) => `${c.discordId}:${mode}:${id}`;
@@ -20,7 +23,54 @@ function modal(t, mode, id, page, values) {
         fields: t.fields.slice(page * PAGE, page * PAGE + PAGE).map((f) => ({ id: f.id, label: f.label, paragraph: f.type === 'long', required: f.required, maxLength: Math.min(f.maxLength, 4000), ...(hint(f) ? { placeholder: hint(f) } : {}), ...(values[f.id] ? { value: values[f.id].slice(0, 4000) } : {}) })),
     };
 }
-async function templates(c) { return c.api.asUser(c.discordId, 'GET', '/duty-reports/templates?active=1'); }
+/** Einen Bericht zeigen: Felder, Verfasser, Status; „Bearbeiten“ bzw. für die Leitung „Geprüft“/„Zur Nachbesserung“. */
+async function showReport(c, idOrNumber) {
+    const r = await c.api.asUser(c.discordId, 'GET', `/duty-reports/${encodeURIComponent(idOrNumber.trim())}`);
+    const t = r.template;
+    const head = [`**${r.number}** · ${STATUS_DE[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${(0, format_1.plain)(r.author.displayName)}` : null, r.reviewerName ? `**Geprüft von:** ${(0, format_1.plain)(r.reviewerName)}` : null, r.status === 'RETURNED' && r.reviewNote ? `**Nachbessern:** ${(0, format_1.plain)(r.reviewNote)}` : null].filter(Boolean).join('\n');
+    const buttons = [
+        ...(r.canEdit ? [{ id: `drep:edit:${r.id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' }] : []),
+        ...(r.canReview && r.status !== 'REVIEWED' ? [{ id: `drep:rev:${r.id}`, label: 'Geprüft', emoji: '✅', style: 'success' }] : []),
+        ...(r.canReview && r.status !== 'RETURNED' ? [{ id: `drep:ret:${r.id}`, label: 'Zur Nachbesserung', emoji: '↩️', style: 'secondary' }] : []),
+    ];
+    return {
+        ephemeral: true,
+        embeds: [{ title: `${t?.emoji ?? '📝'} ${r.templateName} – ${(0, shared_1.periodLabel)(r.period, r.periodStart)}`.slice(0, 256), color: r.status === 'REVIEWED' ? format_1.COLORS.success : r.status === 'RETURNED' ? format_1.COLORS.warning : format_1.COLORS.info, description: head.slice(0, 4000),
+                fields: (t?.fields ?? Object.keys(r.values).map((id) => ({ id, label: id }))).filter((f) => r.values[f.id]).slice(0, 25).map((f) => ({ name: f.label.slice(0, 256), value: r.values[f.id].slice(0, 1024) })) }],
+        ...(buttons.length ? { buttons } : {}),
+    };
+}
+/** `/dienstbericht liste`: Berichte des Teams (mit „dutyreports.view_all“, sonst nur eigene) – gefiltert; Auswahl öffnet einen Bericht. */
+async function listReply(c) {
+    const statusKey = String(c.opts.status ?? 'offen');
+    const status = LIST_STATUS[statusKey] ?? 'SUBMITTED';
+    const params = new URLSearchParams({ pageSize: '25' });
+    if (status)
+        params.set('status', status);
+    if (c.opts.mitglied)
+        params.set('discordId', String(c.opts.mitglied));
+    const days = Number(c.opts.tage ?? 0);
+    if (days > 0)
+        params.set('from', new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10));
+    const name = String(c.opts.vorlage ?? '').trim().toLowerCase();
+    if (name) {
+        const all = await templates(c, false);
+        const t = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
+        if (!t)
+            return (0, format_1.errorReply)(`Keine Vorlage „${(0, format_1.plain)(name)}“ gefunden.`);
+        params.set('templateId', t.id);
+    }
+    const r = await c.api.asUser(c.discordId, 'GET', `/duty-reports?${params}`);
+    const label = statusKey in LIST_STATUS ? { offen: 'Offen', zurueckgegeben: 'Zur Nachbesserung', geprueft: 'Geprüft', alle: 'Alle' }[statusKey] : 'Offen';
+    const lines = r.items.map((x) => `**${x.number}** · ${r.seeAll ? `${(0, format_1.plain)(x.author.displayName)} · ` : ''}${(0, format_1.plain)(x.templateName)} – ${(0, shared_1.periodLabel)(x.period, x.periodStart)}${status ? '' : ` · ${STATUS_DE[x.status] ?? x.status}`}`);
+    const embed = (0, format_1.listEmbed)(`🗓️ ${r.seeAll ? 'Berichte' : 'Deine Berichte'} – ${label} (${r.total})`, lines, 'Keine Berichte gefunden.');
+    if (r.total > r.items.length)
+        embed.footer = `${r.total - r.items.length} weitere – Filter eingrenzen oder im Dashboard ansehen`;
+    if (!r.items.length)
+        return { ephemeral: true, embeds: [embed] };
+    return { ephemeral: true, embeds: [embed], select: { id: 'drep:open', placeholder: 'Bericht öffnen …', options: r.items.slice(0, 25).map((x) => ({ label: `${x.number} · ${r.seeAll ? x.author.displayName : x.templateName}`.slice(0, 100), value: x.id, description: `${x.templateName} – ${(0, shared_1.periodLabel)(x.period, x.periodStart)}`.slice(0, 100) })) } };
+}
+async function templates(c, onlyActive = true) { return c.api.asUser(c.discordId, 'GET', `/duty-reports/templates${onlyActive ? '?active=1' : ''}`); }
 async function load(c, mode, id) {
     if (mode === 'n') {
         const t = (await templates(c)).find((x) => x.id === id);
@@ -50,7 +100,13 @@ exports.DUTY_REPORT_COMMANDS = [{
         subcommands: [
             { name: 'ausfuellen', description: 'Neuen Bericht nach einer Vorlage ausfüllen' },
             { name: 'meine', description: 'Deine letzten Berichte' },
-            { name: 'anzeigen', description: 'Einen Bericht ansehen (und bearbeiten)', options: [{ name: 'nummer', description: 'Berichtsnummer, z. B. TB-2026-K7M2QX', type: 'string', required: true, maxLength: 40 }] },
+            { name: 'anzeigen', description: 'Einen Bericht ansehen (bearbeiten bzw. prüfen)', options: [{ name: 'nummer', description: 'Berichtsnummer, z. B. TB-2026-K7M2QX', type: 'string', required: true, maxLength: 40 }] },
+            { name: 'liste', description: 'Berichte des Teams: offen, zur Nachbesserung, geprüft – zum Ansehen und Prüfen', options: [
+                    { name: 'status', description: 'Welche Berichte? (Standard: offen)', type: 'string', choices: Object.keys(LIST_STATUS).map((k) => ({ name: k === 'zurueckgegeben' ? 'zur Nachbesserung' : k === 'geprueft' ? 'geprüft' : k, value: k })) },
+                    { name: 'mitglied', description: 'Nur Berichte dieses Mitglieds', type: 'user' },
+                    { name: 'vorlage', description: 'Nur diese Vorlage (Name)', type: 'string', maxLength: 64 },
+                    { name: 'tage', description: 'Nur Zeiträume der letzten … Tage', type: 'integer', min: 1, max: 365 },
+                ] },
         ],
         opensModal: true,
         async run(c) {
@@ -59,17 +115,12 @@ exports.DUTY_REPORT_COMMANDS = [{
                 const sub = String(c.opts._sub ?? 'ausfuellen');
                 if (sub === 'meine') {
                     const r = await c.api.asUser(c.discordId, 'GET', '/duty-reports?mine=true&pageSize=10');
-                    return { ephemeral: true, embeds: [(0, format_1.listEmbed)('🗓️ Deine Berichte', r.items.map((x) => `**${x.number}** · ${(0, format_1.plain)(x.templateName)} – ${(0, shared_1.periodLabel)(x.period, x.periodStart)}${x.status === 'REVIEWED' ? ' ✅' : ''}`), 'Noch keine Berichte.')] };
+                    return { ephemeral: true, embeds: [(0, format_1.listEmbed)('🗓️ Deine Berichte', r.items.map((x) => `**${x.number}** · ${(0, format_1.plain)(x.templateName)} – ${(0, shared_1.periodLabel)(x.period, x.periodStart)}${x.status === 'REVIEWED' ? ' ✅' : x.status === 'RETURNED' ? ' ↩️ nachbessern' : ''}`), 'Noch keine Berichte.')] };
                 }
-                if (sub === 'anzeigen') {
-                    const r = await c.api.asUser(c.discordId, 'GET', `/duty-reports/${encodeURIComponent(String(c.opts.nummer ?? '').trim())}`);
-                    const t = r.template;
-                    return {
-                        ephemeral: true,
-                        embeds: [{ title: `${t?.emoji ?? '📝'} ${r.templateName} – ${(0, shared_1.periodLabel)(r.period, r.periodStart)}`, color: format_1.COLORS.info, description: `**${r.number}**${r.status === 'REVIEWED' ? ' · ✅ geprüft' : ''}`, fields: (t?.fields ?? Object.keys(r.values).map((id) => ({ id, label: id }))).filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024) })) }],
-                        ...(r.canEdit ? { buttons: [{ id: `drep:edit:${r.id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' }] } : {}),
-                    };
-                }
+                if (sub === 'anzeigen')
+                    return await showReport(c, String(c.opts.nummer ?? ''));
+                if (sub === 'liste')
+                    return await listReply(c);
                 const list = await templates(c);
                 if (!list.length)
                     return (0, format_1.errorReply)('Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter „Tages-/Wochenberichte“ an.');
@@ -82,13 +133,19 @@ exports.DUTY_REPORT_COMMANDS = [{
             }
         },
     }];
-/** Buttons/Menüs/Formulare: drep:pick · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> · drep:rev:<id> · drep:ret:<id> → drep:retsub:<id> */
+/** Buttons/Menüs/Formulare: drep:pick · drep:open · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> · drep:rev:<id> · drep:ret:<id> → drep:retsub:<id> */
 exports.DUTY_REPORT_INTERACTION = {
     prefix: 'drep',
     opensModal: (args) => ['pick', 'edit', 'next', 'ret'].includes(args[0] ?? ''),
     async run(c) {
         const [action, a1, a2, a3] = c.args;
         try {
+            if (action === 'open') {
+                const id = c.values?.[0] ?? '';
+                if (!/^[0-9a-f-]{36}$/.test(id))
+                    return (0, format_1.errorReply)('Bitte einen Bericht auswählen.');
+                return await showReport(c, id);
+            }
             if (action === 'pick') {
                 const id = c.values?.[0] ?? '';
                 const { t } = await load(c, 'n', id);

@@ -12,13 +12,16 @@ declare const logQuery: z.ZodObject<{
     days: z.ZodDefault<z.ZodNumber>;
     userId: z.ZodOptional<z.ZodString>;
     shiftType: z.ZodOptional<z.ZodString>;
+    discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     days: number;
     userId?: string | undefined;
     shiftType?: string | undefined;
+    discordId?: string | undefined;
 }, {
     userId?: string | undefined;
     shiftType?: string | undefined;
+    discordId?: string | undefined;
     days?: number | undefined;
 }>;
 declare const body: z.ZodObject<{
@@ -112,21 +115,13 @@ export declare class DutyController {
             };
         }[];
     }>;
-    /** Dienststunden aller Beamten (Schichtleitung). */
-    hours(f: z.infer<typeof hoursQuery>): Promise<{
+    /** Eigene Schichten (Discord: `/schicht verlauf`). */
+    myShifts(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
         days: number;
         since: Date;
-        users: {
-            minutes: number;
-            byStatus: {
-                [k: string]: number;
-            };
-        }[];
-    }>;
-    /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
-    shiftLog(f: z.infer<typeof logQuery>): Promise<{
-        days: number;
-        since: Date;
+        member: null;
+        items: never[];
+    } | {
         items: {
             id: string;
             userId: string;
@@ -145,6 +140,55 @@ export declare class DutyController {
             startedBy: string | null;
             endedBy: string | null;
         }[];
+        member?: {
+            userId: string;
+            name: string;
+        } | undefined;
+        days: number;
+        since: Date;
+    }>;
+    /** Dienststunden aller Beamten (Schichtleitung). */
+    hours(f: z.infer<typeof hoursQuery>): Promise<{
+        days: number;
+        since: Date;
+        users: {
+            minutes: number;
+            byStatus: {
+                [k: string]: number;
+            };
+        }[];
+    }>;
+    /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
+    shiftLog(f: z.infer<typeof logQuery>): Promise<{
+        days: number;
+        since: Date;
+        member: null;
+        items: never[];
+    } | {
+        items: {
+            id: string;
+            userId: string;
+            name: string;
+            rank: string | null;
+            callsign: string | null;
+            shiftType: string | null;
+            shiftTypeNames: string[];
+            startedAt: Date;
+            endedAt: Date | null;
+            active: boolean;
+            status: string;
+            minutes: number;
+            breakMinutes: number;
+            breaks: number;
+            startedBy: string | null;
+            endedBy: string | null;
+        }[];
+        member?: {
+            userId: string;
+            name: string;
+        } | undefined;
+        days: number;
+        since: Date;
     }>;
     /** „Bin noch im Dienst“ (Erinnerung) bzw. echte Aktivität im Dashboard/MDT. */
     active(a: Actor): Promise<{

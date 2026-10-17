@@ -19,9 +19,9 @@ export declare class CommunicationService {
         id: string;
         createdAt: Date;
         authorId: string;
-        body: string;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }[]>;
@@ -33,9 +33,9 @@ export declare class CommunicationService {
         id: string;
         createdAt: Date;
         authorId: string;
-        body: string;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;
@@ -43,9 +43,9 @@ export declare class CommunicationService {
         id: string;
         createdAt: Date;
         authorId: string;
-        body: string;
         deletedAt: Date | null;
         conversationId: string;
+        body: string;
         replyToId: string | null;
         pinned: boolean;
     }>;

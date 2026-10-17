@@ -7,7 +7,8 @@ import { DiscordService } from '../discord/discord.service';
 import { JsonListStore } from '../common/json-store';
 export interface ReportFilter {
     templateId?: string;
-    authorId?: string;
+    authorId?: string; /** Verfasser per Discord-ID (Bot: `/dienstbericht liste mitglied:@…`) */
+    discordId?: string;
     from?: string;
     to?: string;
     q?: string;
@@ -167,6 +168,7 @@ export declare class DutyReportsService {
         } | null;
         reviewerName: string | null;
         canEdit: boolean;
+        canReview: boolean;
         author: {
             id: string;
             displayName: string;

@@ -58,9 +58,9 @@ export declare class HrTrainingSessionsService {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -94,9 +94,9 @@ export declare class HrTrainingSessionsService {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -133,9 +133,9 @@ export declare class HrTrainingSessionsService {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -169,9 +169,9 @@ export declare class HrTrainingSessionsService {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -205,9 +205,9 @@ export declare class HrTrainingSessionsService {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -269,9 +269,9 @@ export declare class HrTrainingSessionsService {
             guildId: string | null;
             duration: string | null;
             trainingId: string | null;
-            startsAt: Date;
             instructorId: string | null;
             channelId: string | null;
+            startsAt: Date;
             passed: string[];
             forRank: string | null;
             promoteRankId: string | null;

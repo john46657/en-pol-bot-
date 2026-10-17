@@ -209,3 +209,30 @@ describe('/leave admin (wie Trident)', () => {
     expect(text(await cancel.def.run({ ...ctx(api), args: cancel.args }))).toContain('von John beendet');
   });
 });
+
+describe('/leave liste', () => {
+  const A = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-222222222222';
+  const row = (id: string, number: string, o: Record<string, unknown> = {}) => ({ id, number, status: 'PENDING', active: false, startsAt: '2026-11-01T00:00:00Z', endsAt: '2026-11-04T00:00:00Z', reason: 'Urlaub', endedAt: null, decisionReason: null, name: `User ${number}`, discordId: '423456789012345678', days: 3, ...o });
+  const run = (api: Api, ansicht?: string) => byName('leave')!.run(ctx(api, { opts: { _sub: 'liste', ...(ansicht ? { ansicht } : {}) } }));
+  it('leadership: open requests oldest first with a picker; picking shows approve/deny', async () => {
+    const pending = { all: true, items: [row(B, 'LOA-2'), row(A, 'LOA-1')] };
+    const { api, calls } = fakeApi({ 'GET /leave?status=PENDING': pending });
+    const r = await run(api);
+    expect(calls[0]!.path).toBe('/leave?status=PENDING');
+    expect(r.embeds?.[0]?.title).toContain('Offene Anträge (2)');
+    expect(r.select?.id).toBe('leave:pick');
+    expect(r.select?.options.map((o) => o.value)).toEqual([A, B]);
+    const pick = interactionFor('leave:pick')!;
+    const shown = await pick.def.run({ ...ctx(api), args: pick.args, values: [A] });
+    expect(shown.buttons?.map((b) => b.id)).toEqual([`leave:decide:${A}:APPROVED`, `leave:reason:${A}:DENIED`]);
+    expect(text(await pick.def.run({ ...ctx(api), args: pick.args, values: ['33333333-3333-4333-8333-333333333333'] }))).toContain('nicht mehr offen');
+  });
+  it('other views map to the dashboard tabs; without leave.view only own entries and no picker', async () => {
+    const { api, calls } = fakeApi({ 'GET /leave?status=ACTIVE': { all: true, items: [row(A, 'LOA-1', { status: 'APPROVED', active: true })] }, 'GET /leave?status=PENDING': { all: false, items: [row(A, 'LOA-1')] } });
+    expect((await run(api, 'aktiv')).embeds?.[0]?.title).toContain('Gerade abgemeldet (1)');
+    expect(calls.at(-1)!.path).toBe('/leave?status=ACTIVE');
+    const own = await run(api, 'offen');
+    expect(own.embeds?.[0]?.title).toContain('Deine Abmeldungen');
+    expect(own.select).toBeUndefined();
+  });
+});

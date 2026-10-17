@@ -111,9 +111,13 @@ export declare class DutyService {
         days: number;
         userId?: string;
         shiftType?: string;
+        discordId?: string;
     }): Promise<{
         days: number;
         since: Date;
+        member: null;
+        items: never[];
+    } | {
         items: {
             id: string;
             userId: string;
@@ -132,6 +136,12 @@ export declare class DutyService {
             startedBy: string | null;
             endedBy: string | null;
         }[];
+        member?: {
+            userId: string;
+            name: string;
+        } | undefined;
+        days: number;
+        since: Date;
     }>;
     /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */
     overview(): Promise<{

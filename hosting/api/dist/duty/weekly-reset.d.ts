@@ -144,9 +144,9 @@ export declare class WeeklyResetService {
         lastArchive: {
             id: string;
             createdAt: Date;
-            discordChannelId: string | null;
             weekKey: string;
             label: string;
+            discordChannelId: string | null;
             catchUp: boolean;
         } | null;
         totalMinutes: number;
@@ -165,7 +165,6 @@ export declare class WeeklyResetService {
     archives(): Promise<{
         id: string;
         createdAt: Date;
-        discordChannelId: string | null;
         timezone: string;
         scope: string;
         weekStart: Date;
@@ -176,13 +175,13 @@ export declare class WeeklyResetService {
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
+        discordChannelId: string | null;
         catchUp: boolean;
     }[]>;
     /** Archive anderer Bereiche (Server) sind hier nicht vorhanden – auch nicht über eine geratene ID. */
     archive(id: string): Promise<{
         id: string;
         createdAt: Date;
-        discordChannelId: string | null;
         timezone: string;
         scope: string;
         weekStart: Date;
@@ -194,6 +193,7 @@ export declare class WeeklyResetService {
         shiftCount: number;
         ranking: Prisma.JsonValue;
         sessions: Prisma.JsonValue;
+        discordChannelId: string | null;
         catchUp: boolean;
     }>;
 }
@@ -214,9 +214,9 @@ export declare class WeeklyResetController {
         lastArchive: {
             id: string;
             createdAt: Date;
-            discordChannelId: string | null;
             weekKey: string;
             label: string;
+            discordChannelId: string | null;
             catchUp: boolean;
         } | null;
         totalMinutes: number;
@@ -269,7 +269,6 @@ export declare class WeeklyResetController {
     archives(): Promise<{
         id: string;
         createdAt: Date;
-        discordChannelId: string | null;
         timezone: string;
         scope: string;
         weekStart: Date;
@@ -280,13 +279,13 @@ export declare class WeeklyResetController {
         activeUsers: number;
         shiftCount: number;
         ranking: Prisma.JsonValue;
+        discordChannelId: string | null;
         catchUp: boolean;
     }[]>;
     /** Vollständiges Archiv inkl. aller Dienst-Sitzungen der Woche (Schichtleitung). */
     archive(id: string): Promise<{
         id: string;
         createdAt: Date;
-        discordChannelId: string | null;
         timezone: string;
         scope: string;
         weekStart: Date;
@@ -298,6 +297,7 @@ export declare class WeeklyResetController {
         shiftCount: number;
         ranking: Prisma.JsonValue;
         sessions: Prisma.JsonValue;
+        discordChannelId: string | null;
         catchUp: boolean;
     }>;
 }

@@ -18,6 +18,11 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einheiten` | Einheiten + Status | `dispatch.view` |
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
 | `/abmeldung von bis grund` | Abmeldung (Urlaub, Abwesenheit) beantragen, z. B. `von: 24.12.` `bis: 02.01.2027` (auch `heute`, `morgen 18:00`); die Leitung entscheidet per Button | `leave.request` |
+| `/leave liste [ansicht]` | Abmeldungen wie im Dashboard: `offen` (Standard), `aktiv`, `geplant`, `kalender`, `alle`; bei offenen Anträgen Auswahlmenü → **Annehmen/Ablehnen** | `leave.request` (nur eigene) · alle sehen: `leave.view` · entscheiden: `leave.manage` |
+| `/schicht start [art]` · `pause` · `ende` | Schicht beginnen (mit Schichtart, sonst Auswahl bzw. Standard), Pause an/aus, Schicht beenden | `team.view` |
+| `/schicht status` · `verlauf [tage]` | laufende Schicht und eigene Schichten (Dauer ohne Pausen, Schichtart, Pausen) | `team.view` |
+| `/schicht aktiv` | wer gerade eine Schicht hat (Schichtart, seit wann) | `team.view` |
+| `/schicht admin mitglied [tage]` | Schichten eines Mitglieds; Button **Schicht beenden** | `team.manage` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
 | `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
 | `/qualipanel` | postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …): Auswahl → Fragen einzeln per DM → Bewerbung mit Annehmen/Ablehnen-Buttons im Team-Channel ([qualifications.md](qualifications.md)) | Discord „Server verwalten“; entscheiden: `qualifications.decide` |
@@ -202,6 +207,6 @@ Auf der Login-Seite erscheint **„Mit Discord anmelden“**, sobald `DISCORD_CL
 - **Funk-Codes** (`/radio-codes` → „In Discord senden“): Liste je Kategorie als Embed; bei Änderungen automatisch aktualisiert (abschaltbar).
 - **Staff-Liste** (`/staff-lists`): Abschnitte je Discord-Rolle (Reihenfolge, Überschrift, Trennlinie, „/“ wenn leer, nur höchste Rolle). Der Bot rechnet die Mitglieder selbst und bearbeitet die Nachricht, sobald sich Rollen ändern (Intent „Server Members“ nötig).
 - **Formular-Panels** (`/admin/form-panels`): Panel mit Button → Formular (bis 5 Felder) → Nachricht im Zielkanal, optional mit Name/Profilbild der Person (Bot braucht „Webhooks verwalten“), Reaktionen, Rollen-Ping, Rollen vergeben, „einmal je Person“.
-- **Tages-/Wochenberichte** (`/duty-reports`, `/dienstbericht ausfuellen|meine|anzeigen`): Vorlagen mit eigenen Feldern; mehr als 5 Felder → mehrseitiges Formular mit „Weiter“. Gepostete Berichte haben „✏️ Bearbeiten“; Änderungen im Dashboard aktualisieren die Nachricht.
+- **Tages-/Wochenberichte** (`/duty-reports`, `/dienstbericht ausfuellen|meine|anzeigen|liste`): Vorlagen mit eigenen Feldern; mehr als 5 Felder → mehrseitiges Formular mit „Weiter“. Gepostete Berichte haben „✏️ Bearbeiten“; Änderungen im Dashboard aktualisieren die Nachricht. `/dienstbericht liste [status] [mitglied] [vorlage] [tage]` zeigt die Berichte des Teams (Standard: offen; ohne `dutyreports.view_all` nur eigene), ein Auswahlmenü öffnet einen Bericht; `anzeigen` zeigt Verfasser, Status und Nachbesserungs-Hinweis und für `dutyreports.review` die Buttons **✅ Geprüft** / **↩️ Zur Nachbesserung**.
 - **Embed-Baukasten**: Bilder per „Datei hinzufügen“/„Datei einfügen“ (Zwischenablage) – der Bot hängt sie an; bis zu 4 Bilder, Autor-/Fußzeilen-Icon, eigenes Datum/Zeit, Reaktionen.
 - **Personal**: Beförderungen tauschen Rang-Rollen, Dienstnummern setzen den Nickname (Bot braucht „Nicknames verwalten“) und schicken eine DM.
