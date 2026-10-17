@@ -86,6 +86,19 @@ describe('Shifts module', () => {
     expect(again).toHaveLength(2);
     expect(again[0]).toMatchObject({ active: true, startedBy: 'sl_lead', endedBy: null });
     await lead.put(`/api/v1/team/${offId}/status`).send({ status: 'OFF_DUTY' });
+    // Discord: `/schicht admin mitglied:@…` (per Discord-ID) und `/schicht verlauf` (eigene Schichten, ohne team.manage)
+    const byDiscord = (await http().get(`/api/v1/team/shifts?discordId=${OFF_D}`).set(bot(LEAD_D))).body;
+    expect(byDiscord.member).toEqual({ userId: offId, name: 'sl_off' });
+    expect(byDiscord.items).toHaveLength(2);
+    expect((await http().get('/api/v1/team/shifts?discordId=599999999999999999').set(bot(LEAD_D))).body).toMatchObject({ member: null, items: [] });
+    expect((await http().get(`/api/v1/team/shifts?discordId=${LEAD_D}`).set(bot(OFF_D))).status).toBe(403);
+    const own = (await http().get('/api/v1/team/me/shifts?days=1').set(bot(OFF_D))).body.items as { userId: string }[];
+    expect(own).toHaveLength(2);
+    expect(own.every((x) => x.userId === offId)).toBe(true);
+    // „Schicht beenden“-Button: Schichtleitung ja, normales Mitglied nicht
+    await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY' });
+    expect((await http().put(`/api/v1/team/${offId}/status`).set(bot(OFF_D)).send({ status: 'OFF_DUTY' })).status).toBe(403);
+    expect((await http().put(`/api/v1/team/${offId}/status`).set(bot(LEAD_D)).send({ status: 'OFF_DUTY' })).status).toBe(200);
     expect((await lead.get('/api/v1/team/shifts?shiftType=sek')).body.items.filter((x: { name: string }) => x.name === 'sl_off')).toHaveLength(1);
     await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
   });

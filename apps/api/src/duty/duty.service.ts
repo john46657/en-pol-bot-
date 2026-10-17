@@ -167,7 +167,16 @@ export class DutyService {
    * Schicht-Logs: zusammenhängende Dienst-Sitzungen (Im Dienst ↔ Pause ↔ Schichtwechsel) bis „Außer Dienst“ ergeben eine Schicht.
    * Je Schicht: wer, Schichtart, Beginn/Ende, Dauer, Pausen und wer sie gestartet/beendet hat (aus dem Audit-Log).
    */
-  async shiftLog(f: { days: number; userId?: string; shiftType?: string }) {
+  async shiftLog(f: { days: number; userId?: string; shiftType?: string; discordId?: string }) {
+    // Discord-Mitglied (`/schicht admin`) → Benutzer; nicht verknüpft = keine Schichten
+    let member: { userId: string; name: string } | null | undefined;
+    if (f.discordId) {
+      const link = await this.prisma.discordLink.findUnique({ where: { discordId: f.discordId }, select: { userId: true } });
+      const user = link && await this.prisma.user.findUnique({ where: { id: link.userId }, select: { displayName: true } });
+      if (!link || !user) return { days: f.days, since: new Date(Date.now() - f.days * 86_400_000), member: null, items: [] };
+      member = { userId: link.userId, name: user.displayName };
+      f = { ...f, userId: link.userId };
+    }
     const now = new Date();
     const since = new Date(now.getTime() - f.days * 86_400_000);
     // Sitzungen etwas vor dem Zeitraum mitnehmen, damit Schichten über die Grenze vollständig sind
@@ -217,7 +226,7 @@ export class DutyService {
       };
       for (const s of shifts) { s.startedBy = near(s.userId, s.startedAt); s.endedBy = near(s.userId, s.endedAt); }
     }
-    return { days: f.days, since, items: shifts.map(({ shiftTypes: _, ...s }) => s) };
+    return { days: f.days, since, ...(member ? { member } : {}), items: shifts.map(({ shiftTypes: _, ...s }) => s) };
   }
 
   /** Team-Dashboard: pro aktivem Beamten Dienststatus, Einheit, aktueller Einsatz und letzte Statusänderung. */

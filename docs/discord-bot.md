@@ -18,6 +18,11 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/einheiten` | Einheiten + Status | `dispatch.view` |
 | `/team` | wer ist im Dienst (Einheit, Einsatz) | `team.view` |
 | `/abmeldung von bis grund` | Abmeldung (Urlaub, Abwesenheit) beantragen, z. B. `von: 24.12.` `bis: 02.01.2027` (auch `heute`, `morgen 18:00`); die Leitung entscheidet per Button | `leave.request` |
+| `/leave liste [ansicht]` | Abmeldungen wie im Dashboard: `offen` (Standard), `aktiv`, `geplant`, `kalender`, `alle`; bei offenen Anträgen Auswahlmenü → **Annehmen/Ablehnen** | `leave.request` (nur eigene) · alle sehen: `leave.view` · entscheiden: `leave.manage` |
+| `/schicht start [art]` · `pause` · `ende` | Schicht beginnen (mit Schichtart, sonst Auswahl bzw. Standard), Pause an/aus, Schicht beenden | `team.view` |
+| `/schicht status` · `verlauf [tage]` | laufende Schicht und eigene Schichten (Dauer ohne Pausen, Schichtart, Pausen) | `team.view` |
+| `/schicht aktiv` | wer gerade eine Schicht hat (Schichtart, seit wann) | `team.view` |
+| `/schicht admin mitglied [tage]` | Schichten eines Mitglieds; Button **Schicht beenden** | `team.manage` |
 | `/dienststunden [tage] [alle]` | eigene Dienststunden der letzten 7 (1–90) Tage nach Status; mit `alle` die Stunden aller Beamten | `team.view` · `alle`: `team.manage` |
 | `/dienstpanel` | postet das Dienst-Panel: Buttons **Im Dienst / Pause / Außer Dienst** (setzt den Status als verknüpfter Benutzer) | Discord „Server verwalten“; Klick: `team.view` |
 | `/qualipanel` | postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …): Auswahl → Fragen einzeln per DM → Bewerbung mit Annehmen/Ablehnen-Buttons im Team-Channel ([qualifications.md](qualifications.md)) | Discord „Server verwalten“; entscheiden: `qualifications.decide` |

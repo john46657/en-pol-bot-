@@ -8,7 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
 const hoursQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) });
-const logQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7), userId: z.string().uuid().optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
+const logQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7), userId: z.string().uuid().optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() });
 const body = z.object({ status: z.enum(DUTY_STATUSES), unitId: z.string().uuid().optional(), callsign: z.string().max(16).optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 
 @ApiTags('team')
@@ -24,6 +24,9 @@ export class DutyController {
   /** Eigene Dienststunden. */
   @Get('me/hours') @RequirePermission('team.view')
   myHours(@CurrentActor() a: Actor, @Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.hours(f.days, a.userId!); }
+  /** Eigene Schichten (Discord: `/schicht verlauf`). */
+  @Get('me/shifts') @RequirePermission('team.view')
+  myShifts(@CurrentActor() a: Actor, @Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.shiftLog({ days: f.days, userId: a.userId! }); }
   /** Dienststunden aller Beamten (Schichtleitung). */
   @Get('hours') @RequirePermission('team.manage')
   hours(@Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.hours(f.days); }

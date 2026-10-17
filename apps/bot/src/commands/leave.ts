@@ -128,6 +128,35 @@ async function adminHistory(c: Ctx, discordId: string): Promise<Reply> {
   return { ephemeral: true, embeds: [{ box: true, heading: 'small', author: await memberHead(c, discordId), title: 'Verlauf der Abmeldungen', description: clip(blocks.join('\n\n'), 3900) }] };
 }
 
+/** Ansichten wie im Dashboard (Abmeldungen → Tabs). */
+const LIST_VIEWS = { offen: ['PENDING', 'Offene Anträge'], aktiv: ['ACTIVE', 'Gerade abgemeldet'], geplant: ['UPCOMING', 'Bevorstehend'], kalender: ['CALENDAR', 'Nächste 4 Wochen'], alle: ['ALL', 'Alle Abmeldungen'] } as const;
+type ListRow = LoaRow & { name: string; discordId: string | null; days: number };
+const who = (r: ListRow) => (r.discordId ? `<@${r.discordId}>` : `**${plain(r.name)}**`);
+
+/** `/leave liste`: Übersicht für die Leitung (ohne „leave.view“ nur die eigenen); bei offenen Anträgen Auswahl zum Entscheiden. */
+export async function listReply(c: Ctx, view: string): Promise<Reply> {
+  const [status, title] = LIST_VIEWS[view as keyof typeof LIST_VIEWS] ?? LIST_VIEWS.offen;
+  const { all, items } = await c.api.asUser<{ all: boolean; items: ListRow[] }>(c.discordId, 'GET', `/leave?status=${status}`);
+  // offene Anträge: älteste zuerst (wie eine Warteschlange), sonst nach Beginn
+  const rows = status === 'PENDING' ? [...items].reverse() : status === 'CALENDAR' || status === 'UPCOMING' ? [...items].sort((a, b) => a.startsAt.localeCompare(b.startsAt)) : items;
+  const lines = rows.slice(0, 20).map((r) => `\`${r.number}\` ${all ? `${who(r)} · ` : ''}${ts(r.startsAt, 'd')} – ${ts(r.endsAt, 'd')} [${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}]${status === 'ACTIVE' ? ` · bis ${ts(r.endsAt, 'R')}` : ''}${status === 'ALL' || status === 'CALENDAR' ? ` ${leaveState(r)}` : ''}\n> ${clip(plain(r.reason), 120)}`);
+  const embed: EmbedData = { title: `📅 ${all ? title : `Deine Abmeldungen – ${title}`} (${items.length})`, color: status === 'PENDING' && items.length ? COLORS.warning : COLORS.info,
+    description: clip(lines.length ? `${lines.join('\n')}${rows.length > 20 ? `\n… und ${rows.length - 20} weitere (im Dashboard)` : ''}` : 'Keine Einträge.', 4000) };
+  if (status !== 'PENDING' || !all || !rows.length) return { ephemeral: true, embeds: [embed] };
+  return { ephemeral: true, embeds: [embed], select: { id: 'leave:pick', placeholder: 'Antrag zum Entscheiden wählen …', options: rows.slice(0, 25).map((r) => ({ label: clip(`${r.number} · ${r.name}`, 100), value: r.id, description: clip(`${fmt(r.startsAt)} – ${fmt(r.endsAt)} · ${r.reason}`, 100) })) } };
+}
+
+/** Auswahl aus `/leave liste`: einen offenen Antrag mit „Annehmen“/„Ablehnen“ zeigen. */
+async function pickReply(c: Ctx, id: string): Promise<Reply> {
+  const { items } = await c.api.asUser<{ items: ListRow[] }>(c.discordId, 'GET', '/leave?status=PENDING');
+  const r = items.find((x) => x.id === id);
+  if (!r) return errorReply('Dieser Antrag ist nicht mehr offen.');
+  return { ephemeral: true, embeds: [{ title: 'Abmeldeantrag', color: COLORS.warning, footer: `ID: ${r.number}`,
+    description: `${who(r)}${r.discordId ? ` (${plain(r.name)})` : ''}\n**${ts(r.startsAt, 'f')}** bis **${ts(r.endsAt, 'f')}** (${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())})`,
+    fields: [{ name: 'Grund', value: clip(plain(r.reason), 1024) }] }],
+    buttons: [{ id: `leave:decide:${r.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✅' }, { id: `leave:reason:${r.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '❌' }] };
+}
+
 export const LEAVE_COMMANDS: CommandDef[] = [
   {
     name: 'abmeldung', description: 'Abmeldung (Urlaub, Abwesenheit) beantragen – die Leitung entscheidet',
@@ -151,10 +180,15 @@ export const LEAVE_COMMANDS: CommandDef[] = [
     name: 'leave', description: 'Abmeldungen (Leave of Absence)',
     subcommands: [
       { name: 'manage', description: 'Eigene Abmeldung ansehen, starten oder beenden' },
+      { name: 'liste', description: 'Übersicht: offene Anträge, gerade abgemeldet, bevorstehend, Kalender', options: [{ name: 'ansicht', description: 'Was anzeigen? (Standard: offen)', type: 'string', choices: Object.keys(LIST_VIEWS).map((k) => ({ name: k, value: k })) }] },
       { name: 'admin', description: 'Leitung: Abmeldungen eines Mitglieds ansehen, starten oder beenden', options: [{ name: 'mitglied', description: 'Discord-Mitglied', type: 'user', required: true }] },
     ],
     async run(c): Promise<Reply> {
-      try { return c.opts._sub === 'admin' ? await adminReply(c, String(c.opts.mitglied ?? '')) : await manageReply(c); } catch (e) { return mapError(e); }
+      try {
+        if (c.opts._sub === 'admin') return await adminReply(c, String(c.opts.mitglied ?? ''));
+        if (c.opts._sub === 'liste') return await listReply(c, String(c.opts.ansicht ?? 'offen'));
+        return await manageReply(c);
+      } catch (e) { return mapError(e); }
     },
   },
 ];
@@ -212,6 +246,11 @@ export const LEAVE_INTERACTION: InteractionDef = {
         return { ephemeral: true, embeds: [{ title: `Abmeldung eingereicht · ${humanDuration(ms)}`, color: COLORS.neutral, footer: `ID: ${r.number}`,
           description: `Deine Abmeldung wurde der Leitung zur Freigabe vorgelegt.\nWenn sie angenommen wird, endet sie ungefähr ${ts(r.endsAt)}.\nUm benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte deine DMs offen.` }] };
       } catch (e) { return mapError(e); }
+    }
+    if (action === 'pick') {
+      const picked = c.values?.[0] ?? '';
+      if (!/^[0-9a-f-]{36}$/.test(picked)) return errorReply('Bitte einen Antrag auswählen.');
+      try { return await pickReply(c, picked); } catch (e) { return mapError(e); }
     }
     if (!id || !/^[0-9a-f-]{36}$/.test(id)) return errorReply('Unbekannte Aktion.');
     if (action === 'cancel') {
