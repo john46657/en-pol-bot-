@@ -80125,10 +80125,6 @@ var PERMISSION_CATALOG = {
   exam: ["view", "create", "manage", "grade"],
   warning: ["view", "create", "manage"],
   awards: ["view", "create", "manage"],
-  /** Interne Meldungen mit Lesebestätigung */
-  announcements: ["view", "create", "manage"],
-  /** Interne Abstimmungen */
-  polls: ["view", "create", "manage"],
   /** Dienstnummern-System */
   dienstnummer: ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"],
   leave: ["view", "request", "manage"],
@@ -80569,7 +80565,7 @@ var MODULES = [
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
-  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "announcements", "polls", "radio", "radiowhitelist"] }
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var BOT_COMMAND_MODULES = {

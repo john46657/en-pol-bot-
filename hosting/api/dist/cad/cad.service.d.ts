@@ -564,10 +564,10 @@ export declare class CadService {
             type: string;
             title: string;
             userId: string;
-            body: string | null;
             entityId: string | null;
             archivedAt: Date | null;
             entityType: string | null;
+            body: string | null;
             readAt: Date | null;
         }[];
         history: never[] | {

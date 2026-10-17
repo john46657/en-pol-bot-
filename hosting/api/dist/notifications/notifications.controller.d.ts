@@ -52,10 +52,10 @@ export declare class NotificationsController {
             type: string;
             title: string;
             userId: string;
-            body: string | null;
             entityId: string | null;
             archivedAt: Date | null;
             entityType: string | null;
+            body: string | null;
             readAt: Date | null;
         }[];
         total: number;

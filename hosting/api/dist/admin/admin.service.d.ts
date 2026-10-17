@@ -258,13 +258,13 @@ export declare const SETTING_SCHEMAS: {
         multiple: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
+        key: string;
+        label: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
-        key: string;
-        label: string;
         required: boolean;
         minLength: number;
         maxLength: number;
@@ -282,13 +282,13 @@ export declare const SETTING_SCHEMAS: {
         maxLength?: number | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
+        key: string;
+        label: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
-        key: string;
-        label: string;
         required: boolean;
         minLength: number;
         maxLength: number;
@@ -306,13 +306,13 @@ export declare const SETTING_SCHEMAS: {
         maxLength?: number | undefined;
     }>, "many">, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
+        key: string;
+        label: string;
         options: {
             label: string;
             roleId?: string | undefined;
         }[];
         multiple: boolean;
-        key: string;
-        label: string;
         required: boolean;
         minLength: number;
         maxLength: number;

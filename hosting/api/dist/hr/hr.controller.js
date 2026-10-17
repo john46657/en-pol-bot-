@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BotTrainingSessionsController = exports.HrTrainingSessionsController = exports.ServiceNumbersController = exports.HrCommsController = exports.HrExamController = exports.HrTrainingController = exports.HrRequestsController = exports.HrController = void 0;
+exports.BotTrainingSessionsController = exports.HrTrainingSessionsController = exports.ServiceNumbersController = exports.HrExamController = exports.HrTrainingController = exports.HrRequestsController = exports.HrController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
@@ -24,7 +24,6 @@ const hr_people_service_1 = require("./hr-people.service");
 const hr_requests_service_1 = require("./hr-requests.service");
 const hr_training_service_1 = require("./hr-training.service");
 const hr_exam_service_1 = require("./hr-exam.service");
-const hr_comms_service_1 = require("./hr-comms.service");
 const service_numbers_service_1 = require("./service-numbers.service");
 const hr_training_sessions_service_1 = require("./hr-training-sessions.service");
 const uuid = zod_1.z.string().uuid();
@@ -586,135 +585,6 @@ exports.HrExamController = HrExamController = __decorate([
     (0, common_1.Controller)('hr'),
     __metadata("design:paramtypes", [hr_exam_service_1.HrExamService])
 ], HrExamController);
-// ───────────── Meldungen & Abstimmungen ─────────────
-let HrCommsController = class HrCommsController {
-    s;
-    constructor(s) {
-        this.s = s;
-    }
-    list(a, all) { return this.s.announcements(a, all === '1'); }
-    create(a, b) { return this.s.saveAnnouncement(a, b); }
-    save(a, id, b) { return this.s.saveAnnouncement(a, b, id); }
-    remove(a, id) { return this.s.deleteAnnouncement(a, id); }
-    ack(a, id) { return this.s.ack(a, id); }
-    readers(a, id) { return this.s.readers(a, id); }
-    polls(a) { return this.s.polls(a); }
-    createPoll(a, b) { return this.s.savePoll(a, b); }
-    savePoll(a, id, b) { return this.s.savePoll(a, b, id); }
-    deletePoll(a, id) { return this.s.deletePoll(a, id); }
-    vote(a, id, b) { return this.s.vote(a, id, b.optionIds); }
-};
-exports.HrCommsController = HrCommsController;
-__decorate([
-    (0, common_1.Get)('announcements'),
-    (0, decorators_1.RequirePermission)('announcements.view'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Query)('all')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "list", null);
-__decorate([
-    (0, common_1.Post)('announcements'),
-    (0, decorators_1.RequirePermission)('announcements.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(hr_comms_service_1.announcementSchema))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "create", null);
-__decorate([
-    (0, common_1.Put)('announcements/:id'),
-    (0, decorators_1.RequirePermission)('announcements.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(hr_comms_service_1.announcementSchema))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, void 0]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "save", null);
-__decorate([
-    (0, common_1.Delete)('announcements/:id'),
-    (0, common_1.HttpCode)(204),
-    (0, decorators_1.RequirePermission)('announcements.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "remove", null);
-__decorate([
-    (0, common_1.Post)('announcements/:id/ack'),
-    (0, common_1.HttpCode)(200),
-    (0, decorators_1.RequirePermission)('announcements.view'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "ack", null);
-__decorate([
-    (0, common_1.Get)('announcements/:id/readers'),
-    (0, decorators_1.RequirePermission)('announcements.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "readers", null);
-__decorate([
-    (0, common_1.Get)('polls'),
-    (0, decorators_1.RequirePermission)('polls.view'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "polls", null);
-__decorate([
-    (0, common_1.Post)('polls'),
-    (0, decorators_1.RequirePermission)('polls.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(hr_comms_service_1.pollSchema))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, void 0]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "createPoll", null);
-__decorate([
-    (0, common_1.Put)('polls/:id'),
-    (0, decorators_1.RequirePermission)('polls.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(hr_comms_service_1.pollSchema))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, void 0]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "savePoll", null);
-__decorate([
-    (0, common_1.Delete)('polls/:id'),
-    (0, common_1.HttpCode)(204),
-    (0, decorators_1.RequirePermission)('polls.create'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "deletePoll", null);
-__decorate([
-    (0, common_1.Post)('polls/:id/vote'),
-    (0, common_1.HttpCode)(200),
-    (0, decorators_1.RequirePermission)('polls.view'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ optionIds: zod_1.z.array(zod_1.z.string().max(40)).min(1).max(20) })))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
-    __metadata("design:returntype", void 0)
-], HrCommsController.prototype, "vote", null);
-exports.HrCommsController = HrCommsController = __decorate([
-    (0, swagger_1.ApiTags)('hr'),
-    (0, common_1.Controller)('hr'),
-    __metadata("design:paramtypes", [hr_comms_service_1.HrCommsService])
-], HrCommsController);
 // ───────────── Dienstnummern ─────────────
 const listQ = zod_1.z.object({ status: zod_1.z.enum(shared_1.DN_STATUSES).optional(), rangeId: uuid.optional(), q: zod_1.z.string().max(80).optional(), department: zod_1.z.string().max(64).optional(), rank: zod_1.z.string().max(64).optional(), limit: zod_1.z.coerce.number().int().min(1).max(1000).optional() });
 const target = zod_1.z.object({ display: zod_1.z.string().trim().min(1).max(40).optional(), rangeId: uuid.optional(), reason: zod_1.z.string().max(500).optional() });

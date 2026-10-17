@@ -6,7 +6,6 @@ import { HrPeopleService } from './hr-people.service';
 import { HrRequestsService } from './hr-requests.service';
 import { HrTrainingService, trainingSchema } from './hr-training.service';
 import { HrExamService } from './hr-exam.service';
-import { announcementSchema, HrCommsService, pollSchema } from './hr-comms.service';
 import { ServiceNumbersService } from './service-numbers.service';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
 declare const reason: z.ZodObject<{
@@ -1959,140 +1958,6 @@ export declare class HrExamController {
         } | null;
     }>;
 }
-export declare class HrCommsController {
-    private readonly s;
-    constructor(s: HrCommsService);
-    list(a: Actor, all?: string): Promise<{
-        author: string;
-        readAt: Date | null;
-        readCount: number;
-        audienceCount: number | null;
-        serverId: string | null;
-        id: string;
-        createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        priority: string;
-        expiresAt: Date | null;
-        attachments: string[];
-        audienceRoleIds: string[];
-        body: string;
-        publishAt: Date;
-        requireAck: boolean;
-        discordChannelId: string | null;
-    }[]>;
-    create(a: Actor, b: z.infer<typeof announcementSchema>): Promise<{
-        serverId: string | null;
-        id: string;
-        createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        priority: string;
-        expiresAt: Date | null;
-        attachments: string[];
-        audienceRoleIds: string[];
-        body: string;
-        publishAt: Date;
-        requireAck: boolean;
-        discordChannelId: string | null;
-    }>;
-    save(a: Actor, id: string, b: z.infer<typeof announcementSchema>): Promise<{
-        serverId: string | null;
-        id: string;
-        createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        priority: string;
-        expiresAt: Date | null;
-        attachments: string[];
-        audienceRoleIds: string[];
-        body: string;
-        publishAt: Date;
-        requireAck: boolean;
-        discordChannelId: string | null;
-    }>;
-    remove(a: Actor, id: string): Promise<void>;
-    ack(a: Actor, id: string): Promise<{
-        readAt: Date;
-    }>;
-    readers(a: Actor, id: string): Promise<{
-        total: number;
-        read: number;
-        people: {
-            userId: string;
-            name: string;
-            readAt: Date | null;
-        }[];
-    }>;
-    polls(a: Actor): Promise<{
-        ended: boolean;
-        open: boolean;
-        myVote: string[] | null;
-        totalVotes: number;
-        canManage: boolean;
-        results: {
-            id: string;
-            label: string;
-            count: number;
-            voters: string[] | null;
-        }[] | null;
-        serverId: string | null;
-        id: string;
-        createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        audienceRoleIds: string[];
-        options: import("@prisma/client/runtime/library").JsonValue;
-        startsAt: Date;
-        endsAt: Date | null;
-        anonymous: boolean;
-        multiple: boolean;
-        showResults: string;
-    }[]>;
-    createPoll(a: Actor, b: z.infer<typeof pollSchema>): Promise<{
-        serverId: string | null;
-        id: string;
-        createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        audienceRoleIds: string[];
-        options: import("@prisma/client/runtime/library").JsonValue;
-        startsAt: Date;
-        endsAt: Date | null;
-        anonymous: boolean;
-        multiple: boolean;
-        showResults: string;
-    }>;
-    savePoll(a: Actor, id: string, b: z.infer<typeof pollSchema>): Promise<{
-        serverId: string | null;
-        id: string;
-        createdById: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        audienceRoleIds: string[];
-        options: import("@prisma/client/runtime/library").JsonValue;
-        startsAt: Date;
-        endsAt: Date | null;
-        anonymous: boolean;
-        multiple: boolean;
-        showResults: string;
-    }>;
-    deletePoll(a: Actor, id: string): Promise<void>;
-    vote(a: Actor, id: string, b: {
-        optionIds: string[];
-    }): Promise<{
-        voted: boolean;
-    }>;
-}
 declare const listQ: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["ACTIVE", "RESERVED", "FREE", "BLOCKED", "FORMER"]>>;
     rangeId: z.ZodOptional<z.ZodString>;
@@ -2578,9 +2443,9 @@ export declare class HrTrainingSessionsController {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -2614,9 +2479,9 @@ export declare class HrTrainingSessionsController {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -2650,9 +2515,9 @@ export declare class HrTrainingSessionsController {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -2686,9 +2551,9 @@ export declare class HrTrainingSessionsController {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -2724,9 +2589,9 @@ export declare class HrTrainingSessionsController {
         guildId: string | null;
         duration: string | null;
         trainingId: string | null;
-        startsAt: Date;
         instructorId: string | null;
         channelId: string | null;
+        startsAt: Date;
         passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
@@ -2761,9 +2626,9 @@ export declare class HrTrainingSessionsController {
             guildId: string | null;
             duration: string | null;
             trainingId: string | null;
-            startsAt: Date;
             instructorId: string | null;
             channelId: string | null;
+            startsAt: Date;
             passed: string[];
             forRank: string | null;
             promoteRankId: string | null;

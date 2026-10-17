@@ -341,10 +341,6 @@ var PERMISSION_CATALOG = {
   exam: ["view", "create", "manage", "grade"],
   warning: ["view", "create", "manage"],
   awards: ["view", "create", "manage"],
-  /** Interne Meldungen mit Lesebestätigung */
-  announcements: ["view", "create", "manage"],
-  /** Interne Abstimmungen */
-  polls: ["view", "create", "manage"],
   /** Dienstnummern-System */
   dienstnummer: ["view", "create", "assign", "edit", "release", "block", "history", "manage_ranges", "manage_settings"],
   leave: ["view", "request", "manage"],
@@ -1610,7 +1606,7 @@ var MODULES = [
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
-  { key: "communication", name: "Kommunikation", description: "Nachrichten, Meldungen, Abstimmungen, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "announcements", "polls", "radio", "radiowhitelist"] }
+  { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var moduleDef = (key3) => MODULES.find((m) => m.key === key3);
@@ -2160,7 +2156,7 @@ var LOG_CATEGORIES = [
   { key: "bewerbungen", label: "Bewerbungen & Qualifikationen", emoji: "\u{1F4CB}", modules: ["applications", "qualifications"] },
   { key: "personal", label: "Personal & Ausbildung", emoji: "\u{1F46E}", modules: ["personnel", "promotion", "dienstnummer", "training", "exam", "academy", "sek"] },
   { key: "dienst", label: "Dienst, Abmeldungen & Berichte", emoji: "\u{1F552}", modules: ["team", "dutyreports", "leave"] },
-  { key: "kommunikation", label: "Kommunikation & Discord", emoji: "\u{1F4AC}", modules: ["announcements", "polls", "communication", "discord"] },
+  { key: "kommunikation", label: "Kommunikation & Discord", emoji: "\u{1F4AC}", modules: ["communication", "discord"] },
   { key: "rechte", label: "Rechte, Konten & Anmeldung", emoji: "\u{1F510}", modules: ["permissions", "users", "auth"] },
   { key: "einstellungen", label: "Einstellungen & System", emoji: "\u2699\uFE0F", modules: ["settings", "studio", "teamchance", "media", "locks", "export"] }
 ];
@@ -2181,7 +2177,6 @@ var LOG_TYPES = {
   "academy.course.create": "academy",
   "academy.enroll": "academy",
   "academy.grade": "academy",
-  "announcement.delete": "announcements",
   "application.accepted": "applications",
   "application.rejected": "applications",
   "application.submit": "applications",
@@ -2272,7 +2267,6 @@ var LOG_TYPES = {
   "person.create": "persons",
   "person.merge": "persons",
   "person.update": "persons",
-  "poll.delete": "polls",
   "promotion.rank.create": "promotion",
   "promotion.rank.delete": "promotion",
   "promotion.rank.discord_roles": "promotion",
