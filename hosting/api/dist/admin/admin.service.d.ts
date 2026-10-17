@@ -264,10 +264,10 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -277,9 +277,9 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         key: string;
@@ -288,10 +288,10 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -301,9 +301,9 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }>, "many">, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         key: string;
@@ -312,10 +312,10 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }[], {
         key: string;
         label: string;
@@ -325,9 +325,9 @@ export declare const SETTING_SCHEMAS: {
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }[]>;
     /** „Mit Discord anmelden“: neue Konten erlauben, nur Mitglieder des Discord-Servers, Discord-Rolle → Systemrolle. */
     readonly 'auth.discord': z.ZodObject<{

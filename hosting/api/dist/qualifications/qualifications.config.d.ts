@@ -27,10 +27,10 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
         label: string;
         roleId?: string | undefined;
     }[];
-    multiple: boolean;
     required: boolean;
     minLength: number;
     maxLength: number;
+    multiple: boolean;
 }, {
     key: string;
     label: string;
@@ -40,9 +40,9 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
         label: string;
         roleId?: string | undefined;
     }[] | undefined;
-    multiple?: boolean | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    multiple?: boolean | undefined;
 }>, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     key: string;
@@ -51,10 +51,10 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
         label: string;
         roleId?: string | undefined;
     }[];
-    multiple: boolean;
     required: boolean;
     minLength: number;
     maxLength: number;
+    multiple: boolean;
 }, {
     key: string;
     label: string;
@@ -64,9 +64,9 @@ export declare const formFieldSchema: z.ZodEffects<z.ZodObject<{
         label: string;
         roleId?: string | undefined;
     }[] | undefined;
-    multiple?: boolean | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    multiple?: boolean | undefined;
 }>;
 export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObject<{
     key: z.ZodString;
@@ -94,10 +94,10 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
         label: string;
         roleId?: string | undefined;
     }[];
-    multiple: boolean;
     required: boolean;
     minLength: number;
     maxLength: number;
+    multiple: boolean;
 }, {
     key: string;
     label: string;
@@ -107,9 +107,9 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
         label: string;
         roleId?: string | undefined;
     }[] | undefined;
-    multiple?: boolean | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    multiple?: boolean | undefined;
 }>, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     key: string;
@@ -118,10 +118,10 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
         label: string;
         roleId?: string | undefined;
     }[];
-    multiple: boolean;
     required: boolean;
     minLength: number;
     maxLength: number;
+    multiple: boolean;
 }, {
     key: string;
     label: string;
@@ -131,9 +131,9 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
         label: string;
         roleId?: string | undefined;
     }[] | undefined;
-    multiple?: boolean | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    multiple?: boolean | undefined;
 }>, "many">, {
     type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
     key: string;
@@ -142,10 +142,10 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
         label: string;
         roleId?: string | undefined;
     }[];
-    multiple: boolean;
     required: boolean;
     minLength: number;
     maxLength: number;
+    multiple: boolean;
 }[], {
     key: string;
     label: string;
@@ -155,9 +155,9 @@ export declare const formSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObjec
         label: string;
         roleId?: string | undefined;
     }[] | undefined;
-    multiple?: boolean | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    multiple?: boolean | undefined;
 }[]>;
 /** Texte, Rollen und Sonstiges je Bewerbung (wie Appy: Embed Customization, Role Config, Other). */
 export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
@@ -334,10 +334,10 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -347,9 +347,9 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         key: string;
@@ -358,10 +358,10 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -371,9 +371,9 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }>]>, "many">, FormField[], (string | {
         key: string;
         label: string;
@@ -383,9 +383,9 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     })[]>, FormField[], (string | {
         key: string;
         label: string;
@@ -395,9 +395,9 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     })[]>;
     /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
     pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -608,9 +608,9 @@ export declare const unitSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     })[];
     key: string;
     description?: string | undefined;
@@ -916,10 +916,10 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[];
-            multiple: boolean;
             required: boolean;
             minLength: number;
             maxLength: number;
+            multiple: boolean;
         }, {
             key: string;
             label: string;
@@ -929,9 +929,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         }>, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
             key: string;
@@ -940,10 +940,10 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[];
-            multiple: boolean;
             required: boolean;
             minLength: number;
             maxLength: number;
+            multiple: boolean;
         }, {
             key: string;
             label: string;
@@ -953,9 +953,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         }>]>, "many">, FormField[], (string | {
             key: string;
             label: string;
@@ -965,9 +965,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[]>, FormField[], (string | {
             key: string;
             label: string;
@@ -977,9 +977,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[]>;
         /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -1190,9 +1190,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[];
         key: string;
         description?: string | undefined;
@@ -1284,9 +1284,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[];
         key: string;
         description?: string | undefined;
@@ -1658,9 +1658,9 @@ export declare const configSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[];
         key: string;
         description?: string | undefined;
@@ -1775,10 +1775,10 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[];
-            multiple: boolean;
             required: boolean;
             minLength: number;
             maxLength: number;
+            multiple: boolean;
         }, {
             key: string;
             label: string;
@@ -1788,9 +1788,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         }>, {
             type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
             key: string;
@@ -1799,10 +1799,10 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[];
-            multiple: boolean;
             required: boolean;
             minLength: number;
             maxLength: number;
+            multiple: boolean;
         }, {
             key: string;
             label: string;
@@ -1812,9 +1812,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         }>]>, "many">, FormField[], (string | {
             key: string;
             label: string;
@@ -1824,9 +1824,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[]>, FormField[], (string | {
             key: string;
             label: string;
@@ -1836,9 +1836,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[]>;
         /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -2049,9 +2049,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[];
         key: string;
         description?: string | undefined;
@@ -2143,9 +2143,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[];
         key: string;
         description?: string | undefined;
@@ -2447,10 +2447,10 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -2460,9 +2460,9 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }>, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         key: string;
@@ -2471,10 +2471,10 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }, {
         key: string;
         label: string;
@@ -2484,9 +2484,9 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }>, "many">, {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         key: string;
@@ -2495,10 +2495,10 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }[], {
         key: string;
         label: string;
@@ -2508,9 +2508,9 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }[]>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
@@ -2605,10 +2605,10 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[];
-        multiple: boolean;
         required: boolean;
         minLength: number;
         maxLength: number;
+        multiple: boolean;
     }[] | undefined;
 }, {
     units: {
@@ -2622,9 +2622,9 @@ export declare const saveSchema: z.ZodObject<{
                 label: string;
                 roleId?: string | undefined;
             }[] | undefined;
-            multiple?: boolean | undefined;
             minLength?: number | undefined;
             maxLength?: number | undefined;
+            multiple?: boolean | undefined;
         })[];
         key: string;
         description?: string | undefined;
@@ -2716,9 +2716,9 @@ export declare const saveSchema: z.ZodObject<{
             label: string;
             roleId?: string | undefined;
         }[] | undefined;
-        multiple?: boolean | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        multiple?: boolean | undefined;
     }[] | undefined;
 }>;
 export type QualificationUnit = z.infer<typeof unitSchema>;
