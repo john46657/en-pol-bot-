@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ErlcWantedService = void 0;
+exports.ErlcWantedService = exports.wantedSpaceWhere = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const shared_1 = require("@enrp/shared");
@@ -23,6 +23,13 @@ const guild_context_1 = require("../common/guild-context");
 const pagination_1 = require("../common/pagination");
 const cad_notify_service_1 = require("./cad-notify.service");
 const validId = (id) => !!id && /^\d{1,20}$/.test(id);
+/**
+ * Fahndungen, die für einen ER:LC-Server gelten: Akten-Bereich seines Discord-Servers und der gemeinsame Bestand
+ * (z. B. unter „Alle Server“ angelegt) – sonst würde eine solche Fahndung nie abgeglichen.
+ */
+const wantedSpaceWhere = (space) => (space === null ? { serverId: null } : { OR: [{ serverId: space }, { serverId: null }] });
+exports.wantedSpaceWhere = wantedSpaceWhere;
+const activePersonWanted = (space, now) => ({ AND: [(0, exports.wantedSpaceWhere)(space), { status: 'ACTIVE', personId: { not: null }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }] });
 /**
  * Automatischer Fahndungsabgleich ER:LC ↔ eigene Fahndungen.
  * - Die ER:LC-API kennt keine Beitritts-Ereignisse per Webhook (nur Notrufe und „;“-Nachrichten). Darum: nach jedem erfolgreichen
@@ -98,7 +105,7 @@ let ErlcWantedService = class ErlcWantedService {
             return 0;
         // Aktive Personen-Fahndungen im Akten-Bereich des Discord-Servers dieses ER:LC-Servers
         const space = (0, guild_context_1.recordSpace)(s.guildId) ?? null;
-        const wanted = await this.prisma.wantedRecord.findMany({ where: { serverId: space, status: 'ACTIVE', personId: { not: null }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } });
+        const wanted = await this.prisma.wantedRecord.findMany({ where: activePersonWanted(space, now) });
         if (!wanted.length)
             return 0;
         const persons = await this.prisma.person.findMany({ where: { id: { in: wanted.map((w) => w.personId) } }, select: { id: true, robloxUserId: true, robloxUsername: true, aliases: true } });
@@ -191,13 +198,17 @@ let ErlcWantedService = class ErlcWantedService {
     }
     /** Verbindungs- und Abgleichsstatus je ER:LC-Server (keine Geheimnisse). */
     async status() {
-        const servers = await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, active: true, status: true, lastSyncAt: true, lastError: true, lastErrorAt: true, features: true, wantedCheckAt: true, wantedCheckError: true, _count: { select: { presence: true } } } });
+        const servers = await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, guildId: true, active: true, status: true, lastSyncAt: true, lastError: true, lastErrorAt: true, features: true, wantedCheckAt: true, wantedCheckError: true, _count: { select: { presence: true } }, presence: { select: { playerName: true, robloxUserId: true }, orderBy: { joinedAt: 'asc' }, take: 20 } } });
+        // Zur Fehlersuche: wie viele Fahndungen dieser Server abgleicht (ohne Server-Filter der Anfrage – maßgeblich ist der Bereich des ER:LC-Servers)
+        const now = new Date();
+        const wantedCounts = await (0, guild_context_1.unscoped)(() => Promise.all(servers.map((s) => this.prisma.wantedRecord.count({ where: activePersonWanted((0, guild_context_1.recordSpace)(s.guildId) ?? null, now) }))));
         const [open, review] = await Promise.all([this.prisma.erlcWantedHit.count({ where: { reviewStatus: 'NEW' } }), this.prisma.erlcWantedHit.count({ where: { reviewStatus: 'REVIEW_REQUIRED' } })]);
         return {
             open, review,
-            servers: servers.map((s) => ({
+            servers: servers.map((s, i) => ({
                 id: s.id, name: s.name, active: s.active, status: s.active ? s.status : 'DISABLED', lastSyncAt: s.lastSyncAt, lastError: s.status === 'CONNECTED' ? null : s.lastError, lastErrorAt: s.lastErrorAt,
                 playersEnabled: s.features.includes('players'), joinLogsEnabled: s.features.includes('joinLogs'), wantedCheckAt: s.wantedCheckAt, wantedCheckError: s.wantedCheckError, online: s._count.presence,
+                players: s.presence.map((p) => ({ name: p.playerName, robloxUserId: p.robloxUserId })), activeWanted: wantedCounts[i] ?? 0,
             })),
         };
     }

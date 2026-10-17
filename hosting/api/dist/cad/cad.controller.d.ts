@@ -2116,6 +2116,11 @@ export declare class WantedHitsController {
             wantedCheckAt: Date | null;
             wantedCheckError: string | null;
             online: number;
+            players: {
+                name: string;
+                robloxUserId: string | null;
+            }[];
+            activeWanted: number;
         }[];
     }>;
     review(a: Actor, id: string, b: z.infer<typeof reviewBody>): Promise<{

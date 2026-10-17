@@ -1,4 +1,4 @@
-import { type ErlcServer } from '@prisma/client';
+import { Prisma, type ErlcServer } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
@@ -6,6 +6,11 @@ import { RealtimeService } from '../realtime/realtime.service';
 import { PageQuery } from '../common/pagination';
 import { CadNotifyService } from './cad-notify.service';
 import type { ErlcSnapshot } from './erlc.service';
+/**
+ * Fahndungen, die für einen ER:LC-Server gelten: Akten-Bereich seines Discord-Servers und der gemeinsame Bestand
+ * (z. B. unter „Alle Server“ angelegt) – sonst würde eine solche Fahndung nie abgeglichen.
+ */
+export declare const wantedSpaceWhere: (space: string | null) => Prisma.WantedRecordWhereInput;
 /**
  * Automatischer Fahndungsabgleich ER:LC ↔ eigene Fahndungen.
  * - Die ER:LC-API kennt keine Beitritts-Ereignisse per Webhook (nur Notrufe und „;“-Nachrichten). Darum: nach jedem erfolgreichen
@@ -109,6 +114,11 @@ export declare class ErlcWantedService {
             wantedCheckAt: Date | null;
             wantedCheckError: string | null;
             online: number;
+            players: {
+                name: string;
+                robloxUserId: string | null;
+            }[];
+            activeWanted: number;
         }[];
     }>;
     /**

@@ -7,12 +7,18 @@ import { TimelineService } from '../timeline/timeline.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { AppError } from '../common/errors';
 import { webUrl } from '../common/web-url';
-import { recordSpace, runInGuild } from '../common/guild-context';
+import { recordSpace, runInGuild, unscoped } from '../common/guild-context';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { CadNotifyService } from './cad-notify.service';
 import type { ErlcSnapshot } from './erlc.service';
 
 const validId = (id: string | null | undefined) => !!id && /^\d{1,20}$/.test(id);
+/**
+ * Fahndungen, die für einen ER:LC-Server gelten: Akten-Bereich seines Discord-Servers und der gemeinsame Bestand
+ * (z. B. unter „Alle Server“ angelegt) – sonst würde eine solche Fahndung nie abgeglichen.
+ */
+export const wantedSpaceWhere = (space: string | null): Prisma.WantedRecordWhereInput => (space === null ? { serverId: null } : { OR: [{ serverId: space }, { serverId: null }] });
+const activePersonWanted = (space: string | null, now: Date): Prisma.WantedRecordWhereInput => ({ AND: [wantedSpaceWhere(space), { status: 'ACTIVE', personId: { not: null }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }] });
 
 /**
  * Automatischer Fahndungsabgleich ER:LC ↔ eigene Fahndungen.
@@ -75,7 +81,7 @@ export class ErlcWantedService {
 
     // Aktive Personen-Fahndungen im Akten-Bereich des Discord-Servers dieses ER:LC-Servers
     const space = recordSpace(s.guildId) ?? null;
-    const wanted = await this.prisma.wantedRecord.findMany({ where: { serverId: space, status: 'ACTIVE', personId: { not: null }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } });
+    const wanted = await this.prisma.wantedRecord.findMany({ where: activePersonWanted(space, now) });
     if (!wanted.length) return 0;
     const persons = await this.prisma.person.findMany({ where: { id: { in: wanted.map((w) => w.personId!) } }, select: { id: true, robloxUserId: true, robloxUsername: true, aliases: true } });
     const byPerson = new Map(persons.map((p) => [p.id, p]));
@@ -167,13 +173,17 @@ export class ErlcWantedService {
 
   /** Verbindungs- und Abgleichsstatus je ER:LC-Server (keine Geheimnisse). */
   async status() {
-    const servers = await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, active: true, status: true, lastSyncAt: true, lastError: true, lastErrorAt: true, features: true, wantedCheckAt: true, wantedCheckError: true, _count: { select: { presence: true } } } });
+    const servers = await this.prisma.erlcServer.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, guildId: true, active: true, status: true, lastSyncAt: true, lastError: true, lastErrorAt: true, features: true, wantedCheckAt: true, wantedCheckError: true, _count: { select: { presence: true } }, presence: { select: { playerName: true, robloxUserId: true }, orderBy: { joinedAt: 'asc' }, take: 20 } } });
+    // Zur Fehlersuche: wie viele Fahndungen dieser Server abgleicht (ohne Server-Filter der Anfrage – maßgeblich ist der Bereich des ER:LC-Servers)
+    const now = new Date();
+    const wantedCounts = await unscoped(() => Promise.all(servers.map((s) => this.prisma.wantedRecord.count({ where: activePersonWanted(recordSpace(s.guildId) ?? null, now) }))));
     const [open, review] = await Promise.all([this.prisma.erlcWantedHit.count({ where: { reviewStatus: 'NEW' } }), this.prisma.erlcWantedHit.count({ where: { reviewStatus: 'REVIEW_REQUIRED' } })]);
     return {
       open, review,
-      servers: servers.map((s) => ({
+      servers: servers.map((s, i) => ({
         id: s.id, name: s.name, active: s.active, status: s.active ? s.status : 'DISABLED', lastSyncAt: s.lastSyncAt, lastError: s.status === 'CONNECTED' ? null : s.lastError, lastErrorAt: s.lastErrorAt,
         playersEnabled: s.features.includes('players'), joinLogsEnabled: s.features.includes('joinLogs'), wantedCheckAt: s.wantedCheckAt, wantedCheckError: s.wantedCheckError, online: s._count.presence,
+        players: s.presence.map((p) => ({ name: p.playerName, robloxUserId: p.robloxUserId })), activeWanted: wantedCounts[i] ?? 0,
       })),
     };
   }

@@ -16,7 +16,8 @@ export interface WantedHit {
 }
 interface SyncStatus {
   open: number; review: number;
-  servers: { id: string; name: string; active: boolean; status: string; lastSyncAt: string | null; lastError: string | null; lastErrorAt: string | null; playersEnabled: boolean; joinLogsEnabled: boolean; wantedCheckAt: string | null; wantedCheckError: string | null; online: number }[];
+  servers: { id: string; name: string; active: boolean; status: string; lastSyncAt: string | null; lastError: string | null; lastErrorAt: string | null; playersEnabled: boolean; joinLogsEnabled: boolean; wantedCheckAt: string | null; wantedCheckError: string | null; online: number;
+    /** Zur Fehlersuche: wer gerade online ist und wie viele aktive Personen-Fahndungen abgeglichen werden */ players?: { name: string; robloxUserId: string | null }[]; activeWanted?: number }[];
 }
 
 const CONN: Record<string, [Tone, string]> = { CONNECTED: ['success', 'Verbunden'], LIMITED: ['warning', 'Eingeschränkt'], OFFLINE: ['danger', 'Offline'], ERROR: ['danger', 'Fehler'], UNKNOWN: ['neutral', 'Unbekannt'], DISABLED: ['neutral', 'Deaktiviert'] };
@@ -39,6 +40,9 @@ export function WantedSyncStatus() {
             <span className="text-xs text-muted">Letzte erfolgreiche Synchronisierung: {fmt(s.lastSyncAt)}</span>
             <span className="text-xs text-muted">Letzter Abgleich: {fmt(s.wantedCheckAt)}</span>
             {s.playersEnabled ? <span className="text-xs text-muted">{s.online} Spieler online</span> : <Badge tone="warning">Spielerdaten nicht freigegeben</Badge>}
+            {s.activeWanted !== undefined && <span className="text-xs text-muted">{s.activeWanted} aktive Personen-{s.activeWanted === 1 ? 'Fahndung' : 'Fahndungen'} im Abgleich</span>}
+            {!!s.players?.length && <span className="w-full text-xs text-muted">Online: {s.players.map((p) => `${p.name}${p.robloxUserId ? ` (Roblox-ID ${p.robloxUserId})` : ''}`).join(', ')}{s.online > s.players.length ? ` … und ${s.online - s.players.length} weitere` : ''}</span>}
+            {s.playersEnabled && s.activeWanted === 0 && <span className="w-full text-xs text-warning">Für diesen Server gibt es keine aktive Fahndung auf eine Person – Fahndungen auf Fahrzeuge oder auf einem anderen Discord-Server werden nicht abgeglichen.</span>}
             {s.lastError && <span role="alert" className="w-full text-xs text-danger">ER:LC: {s.lastError}{s.lastErrorAt ? ` (${fmt(s.lastErrorAt)})` : ''} – vorhandene Treffer bleiben erhalten, der Abgleich läuft nach der Wiederverbindung weiter.</span>}
             {s.wantedCheckError && <span role="alert" className="w-full text-xs text-danger">Abgleich fehlgeschlagen: {s.wantedCheckError}</span>}
           </li>
