@@ -55,7 +55,10 @@ describe('/abmeldung and the approval buttons', () => {
     const { api, calls } = fakeApi({ [`POST /leave/${id}/decision`]: { number: 'LOA-1', name: 'Max', decidedByName: 'Chef' } });
     const ok = interactionFor(`leave:decide:${id}:APPROVED`)!;
     const r = await ok.def.run({ ...ctx(api), args: ok.args });
-    expect(r.decided?.text).toContain('Angenommen');
+    expect(r.decided).toMatchObject({ badge: { label: 'Angenommen', style: 'success' } });
+    expect(r.decided?.note).toMatch(new RegExp(`^Angenommen von <@${ME}> am <t:\\d+:f>$`));
+    expect(r.embeds?.[0]).toMatchObject({ title: 'Abmeldung angenommen' });
+    expect(r.embeds?.[0]?.description).toContain('/leave admin');
     expect(calls[0]).toMatchObject({ path: `/leave/${id}/decision`, body: { status: 'APPROVED' } });
     const form = interactionFor(`leave:reason:${id}:DENIED`)!;
     expect(form.def.opensModal?.(form.args)).toBe(true);
@@ -78,6 +81,9 @@ describe('/abmeldung and the approval buttons', () => {
     expect(leaveDirectEmbed('leave.decided', { ...p, status: 'DENIED', decisionReason: 'test' }).fields?.[0]).toEqual({ name: 'Grund', value: 'test' });
     expect(leaveDirectEmbed('leave.decided', { ...p, status: 'APPROVED' }).title).toBe('Abmeldung angenommen');
     expect(renderOutboxEmbeds('leave.log', { ...p, event: 'started' })![0]!.title).toContain('beginnt');
+    const log = renderOutboxEmbeds('leave.log', { ...p, event: 'approved', decidedByName: 'Chef' })![0]!;
+    expect(log).toMatchObject({ author: { name: '@Max' }, footer: 'ID: LOA-1' });
+    expect(log.description).toMatch(/\*\*Beginn\*\*: <t:\d+:f>[\s\S]*\*\*Ende\*\*[\s\S]*\*\*Grund\*\*: Urlaub[\s\S]*\*\*Angenommen von\*\*: Chef/);
     expect(leaveDecisionText({ ...p, status: 'DENIED', decisionReason: 'Personalmangel' })).toContain('Personalmangel');
   });
 });
@@ -171,12 +177,28 @@ describe('/leave manage (wie Trident)', () => {
     const id = '11111111-2222-3333-4444-555555555555';
     const row = { id, number: 'LOA-2', reason: 'Urlaub', startsAt: '2026-01-01T00:00:00Z', endsAt: '2099-01-01T00:00:00Z', endedAt: null, decisionReason: null };
     const pend = fakeApi({ 'GET /leave?mine=true': { items: [{ ...row, status: 'PENDING', active: false }] } });
-    expect((await byName('leave')!.run(ctx(pend.api, { opts: { _sub: 'manage' } }))).buttons?.[0]?.id).toBe(`leave:cancel:${id}`);
+    const p = await byName('leave')!.run(ctx(pend.api, { opts: { _sub: 'manage' } }));
+    expect(p.embeds?.[0]).toMatchObject({ box: true });
+    expect(p.embeds?.[0]?.description).toContain('Wartet auf Freigabe');
+    expect(p.buttons?.map((b) => b.id)).toEqual([`leave:extend:${id}`, `leave:cancel:${id}`]);
     const act = fakeApi({ 'GET /leave?mine=true': { items: [{ ...row, status: 'APPROVED', active: true }] }, [`POST /leave/${id}/cancel`]: { number: 'LOA-2', status: 'ENDED' } });
     const r = await byName('leave')!.run(ctx(act.api, { opts: { _sub: 'manage' } }));
-    expect(r.buttons?.[0]?.label).toBe('Vorzeitig beenden');
+    expect(r.embeds?.[0]?.description).toMatch(/Aktuelle Abmeldung[\s\S]*\*\*Status\*\*: 🟢 Aktiv[\s\S]*\*\*Grund\*\*: Urlaub[\s\S]*ID: LOA-2/);
+    expect(r.buttons?.map((b) => b.label)).toEqual(['Verlängern', 'Vorzeitig beenden']);
     const cancel = interactionFor(`leave:cancel:${id}`)!;
     expect(text(await cancel.def.run({ ...ctx(act.api), args: cancel.args }))).toContain('beendet');
+  });
+  it('extend: form asks for a duration and extends by it', async () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+    const { api, calls } = fakeApi({ [`POST /leave/${id}/extend`]: { number: 'LOA-2', endsAt: '2099-01-03T00:00:00Z' } });
+    const ext = interactionFor(`leave:extend:${id}`)!;
+    expect(ext.def.opensModal?.(ext.args)).toBe(true);
+    expect((await ext.def.run({ ...ctx(api), args: ext.args })).modal?.id).toBe(`leave:extendsubmit:${id}`);
+    const sub = interactionFor(`leave:extendsubmit:${id}`)!;
+    expect(text(await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: 'bald' } }))).toContain('verstehe ich nicht');
+    const r = await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: '2d' } });
+    expect(calls[0]).toMatchObject({ method: 'POST', path: `/leave/${id}/extend`, body: { minutes: 2 * 24 * 60 } });
+    expect(text(r)).toContain('um 2 Tage verlängert');
   });
 });
 
@@ -185,8 +207,8 @@ describe('/leave admin (wie Trident)', () => {
   const row = (n: number, extra: Record<string, unknown>) => ({ id: `11111111-2222-3333-4444-55555555555${n}`, number: `LOA-${n}`, reason: 'test', startsAt: '2026-10-06T21:09:00Z', endsAt: '2026-10-07T16:55:00Z', endedAt: null, decisionReason: null, active: false, ...extra });
   it('shows the member history as a box; Start opens the form and starts the leave for the member', async () => {
     const { api, calls } = fakeApi({ [`GET /leave?discordId=${MEMBER}`]: { items: [row(1, { status: 'ENDED', endedAt: '2026-10-07T16:55:00Z' })] }, 'POST /leave': { number: 'LOA-9' } });
-    const r = await byName('leave')!.run(ctx(api, { opts: { _sub: 'admin', mitglied: MEMBER }, userNameOf: async () => 'john45346' }));
-    expect(r.embeds?.[0]).toMatchObject({ box: true, title: 'Abmeldungen verwalten', author: { name: 'Abmeldungen: @john45346' } });
+    const r = await byName('leave')!.run(ctx(api, { opts: { _sub: 'admin', user: MEMBER }, userNameOf: async () => 'john45346' }));
+    expect(r.embeds?.[0]).toMatchObject({ box: true, title: 'Abmeldungen verwalten', author: { name: 'Abmeldungsverwaltung: @john45346' } });
     expect(r.embeds?.[0]?.description).toMatch(/Verlauf[\s\S]*`1\.` <t:\d+:f> \[1 Tag\]/);
     expect(r.buttons?.map((b) => b.id)).toEqual([`leave:astart:${MEMBER}`, `leave:ahist:${MEMBER}`]);
     const hist = interactionFor(`leave:ahist:${MEMBER}`)!;
@@ -202,9 +224,10 @@ describe('/leave admin (wie Trident)', () => {
   it('a running leave can be ended by the management', async () => {
     const id = '11111111-2222-3333-4444-555555555552';
     const { api } = fakeApi({ [`GET /leave?discordId=${MEMBER}`]: { items: [row(2, { status: 'APPROVED', active: true, endsAt: '2099-01-01T00:00:00Z' })] }, [`POST /leave/${id}/cancel`]: { number: 'LOA-2', status: 'ENDED', name: 'John', discordId: MEMBER } });
-    const r = await byName('leave')!.run(ctx(api, { opts: { _sub: 'admin', mitglied: MEMBER } }));
-    expect(r.buttons?.[0]).toMatchObject({ id: `leave:cancel:${id}`, label: 'Beenden' });
-    expect(r.embeds?.[0]?.description).toContain('läuft');
+    const r = await byName('leave')!.run(ctx(api, { opts: { _sub: 'admin', user: MEMBER } }));
+    expect(r.buttons?.map((b) => b.id)).toEqual([`leave:extend:${id}`, `leave:cancel:${id}`, `leave:ahist:${MEMBER}`]);
+    expect(r.buttons?.[1]?.label).toBe('Vorzeitig beenden');
+    expect(r.embeds?.[0]?.description).toContain('🟢 Aktiv');
     const cancel = interactionFor(`leave:cancel:${id}`)!;
     expect(text(await cancel.def.run({ ...ctx(api), args: cancel.args }))).toContain('von John beendet');
   });

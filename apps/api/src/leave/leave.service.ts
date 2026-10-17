@@ -196,6 +196,29 @@ export class LeaveService {
     return this.view(updated);
   }
 
+  /**
+   * Verlängern (wie Trident „Extend“): eigene offene/laufende/geplante Abmeldung oder als Leitung jede.
+   * Das neue Ende darf die Höchstdauer nicht überschreiten und sich mit keiner anderen Abmeldung überschneiden; steht im Log.
+   */
+  async extend(actor: Actor, id: string, minutes: number) {
+    const r = await this.load(id);
+    if (r.userId !== actor.userId && !(await this.perms.has(actor.userId!, 'leave.manage'))) throw new AppError('PERMISSION_DENIED', 'Das ist nicht deine Abmeldung.');
+    if (!['PENDING', 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now()) throw new AppError('CONFLICT', 'Diese Abmeldung ist schon abgeschlossen.');
+    const cfg = await this.config();
+    const endsAt = new Date(r.endsAt.getTime() + minutes * 60_000);
+    if (endsAt.getTime() - r.startsAt.getTime() > cfg.maxDays * DAY) throw new AppError('VALIDATION_FAILED', `Eine Abmeldung darf höchstens ${cfg.maxDays} Tage lang sein.`);
+    const overlap = await this.prisma.leaveRequest.findFirst({ where: { id: { not: id }, userId: r.userId, status: { in: ['PENDING', 'APPROVED'] }, startsAt: { lt: endsAt }, endsAt: { gt: r.endsAt } } });
+    if (overlap) throw new AppError('CONFLICT', `Die Verlängerung überschneidet sich mit ${overlap.number}.`);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.leaveRequest.update({ where: { id }, data: { endsAt } });
+      await this.audit.record(actor, { action: 'leave.extend', module: 'leave', entityType: 'LeaveRequest', entityId: id, before: { endsAt: r.endsAt }, after: { endsAt } }, tx);
+      return tx.leaveRequest.findUniqueOrThrow({ where: { id }, include });
+    }).then((x) => this.one(x));
+    const by = await this.prisma.user.findUnique({ where: { id: actor.userId! }, select: { displayName: true } });
+    await this.log(cfg, updated, 'extended', { previousEndsAt: r.endsAt.toISOString(), decidedByName: r.userId === actor.userId ? null : by?.displayName ?? null });
+    return this.view(updated);
+  }
+
   /** Jede Minute: Rolle zu Beginn vergeben, am Ende entfernen und die Abmeldung abschließen. */
   async tick() {
     const cfg = await this.config();

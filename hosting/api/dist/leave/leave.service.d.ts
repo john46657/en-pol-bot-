@@ -158,6 +158,31 @@ export declare class LeaveService {
         createdAt: Date;
         days: number;
     }>;
+    /**
+     * Verlängern (wie Trident „Extend“): eigene offene/laufende/geplante Abmeldung oder als Leitung jede.
+     * Das neue Ende darf die Höchstdauer nicht überschreiten und sich mit keiner anderen Abmeldung überschneiden; steht im Log.
+     */
+    extend(actor: Actor, id: string, minutes: number): Promise<{
+        id: string;
+        number: string;
+        userId: string;
+        name: string;
+        discordId: string | null;
+        startsAt: Date;
+        endsAt: Date;
+        reason: string;
+        type: string | null;
+        comment: string | null;
+        status: string;
+        active: boolean;
+        guildId: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
+        decidedByName: string | null;
+        endedAt: Date | null;
+        createdAt: Date;
+        days: number;
+    }>;
     /** Jede Minute: Rolle zu Beginn vergeben, am Ende entfernen und die Abmeldung abschließen. */
     tick(): Promise<{
         started: number;

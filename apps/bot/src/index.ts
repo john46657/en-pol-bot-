@@ -342,19 +342,23 @@ function joinedAtOf(m: unknown): string | undefined {
 }
 
 /** Nach einer Entscheidung: Bewerbungs-Nachricht einfärben, Feld „Entscheidung“ anhängen, Entscheidungs-Buttons entfernen. */
-async function markDecided(message: Message, d: { text: string; color: number }) {
+async function markDecided(message: Message, d: NonNullable<Reply['decided']>) {
   const embeds = message.embeds.map((e, i, all) => {
     const b = EmbedBuilder.from(e).setColor(d.color);
     if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f) => f.name !== 'Entscheidung'), { name: 'Entscheidung', value: d.text.slice(0, 1024) }]); // nur einmal, auch wenn Button und Dashboard beide melden
     return b;
   });
+  // Entscheidungs-Buttons weg; mit `badge` stattdessen ein ausgegrauter Button wie bei Trident („Angenommen“)
+  const badge = d.badge ? new ButtonBuilder().setCustomId('decided').setLabel(d.badge.label).setStyle(STYLE[d.badge.style]).setDisabled(true) : null;
+  if (badge && d.badge?.emoji) badge.setEmoji(d.badge.emoji);
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (const row of message.components) {
     if (!('components' in row)) continue;
-    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ''));
+    const kept = row.components.filter((c): c is ButtonComponent => c.type === ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):|^decided$/.test(c.customId ?? ''));
     if (kept.length) rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(kept.map((c) => ButtonBuilder.from(c))));
   }
-  await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+  if (badge) { if (rows[0] && rows[0].components.length < 5) rows[0].components.unshift(badge); else rows.unshift(new ActionRowBuilder<ButtonBuilder>().addComponents(badge)); }
+  await message.edit({ ...(d.note ? { content: d.note.slice(0, 2000) } : {}), embeds, components: rows, allowedMentions: { parse: [] } });
 }
 
 /** Gemeinsamer Kontext für Befehle, Buttons und Formulare. */

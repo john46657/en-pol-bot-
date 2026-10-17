@@ -21,6 +21,7 @@ const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const requestBody = zod_1.z.object({ startsAt: zod_1.z.coerce.date(), endsAt: zod_1.z.coerce.date(), reason: zod_1.z.string().trim().min(3).max(1000), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), type: zod_1.z.string().regex(/^[A-Z0-9_]{1,32}$/).optional(), comment: zod_1.z.string().trim().max(1000).optional(), forDiscordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const listQ = zod_1.z.object({ status: zod_1.z.enum([...leave_service_1.LEAVE_STATUSES, 'ACTIVE', 'UPCOMING', 'CALENDAR', 'ALL']).optional(), mine: zod_1.z.enum(['true', 'false']).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const extendBody = zod_1.z.object({ minutes: zod_1.z.number().int().min(60).max(365 * 24 * 60) });
 const decision = zod_1.z.object({ status: zod_1.z.enum(['APPROVED', 'DENIED']), reason: zod_1.z.string().trim().max(1000).optional() });
 /** Abmeldungen (Leave of Absences). Beantragen: leave.request · alle sehen: leave.view · entscheiden: leave.manage. */
 let LeaveController = class LeaveController {
@@ -33,6 +34,8 @@ let LeaveController = class LeaveController {
     list(a, q) { return this.s.list(a, { status: q.status, mine: q.mine === 'true', discordId: q.discordId }); }
     request(a, b) { return this.s.request(a, b); }
     decide(a, id, b) { return this.s.decide(a, id, b.status, b.reason); }
+    /** Verlängern um `minutes` (eigene; Leitung jede). */
+    extend(a, id, b) { return this.s.extend(a, id, b.minutes); }
     /** Eigene zurückziehen; Leitung (leave.manage) kann jede beenden. */
     cancel(a, id) { return this.s.cancel(a, id); }
 };
@@ -82,6 +85,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], LeaveController.prototype, "decide", null);
+__decorate([
+    (0, common_1.Post)(':id/extend'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('leave.request'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(extendBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], LeaveController.prototype, "extend", null);
 __decorate([
     (0, common_1.Post)(':id/cancel'),
     (0, common_1.HttpCode)(200),

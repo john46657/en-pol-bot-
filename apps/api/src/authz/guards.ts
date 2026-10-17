@@ -36,7 +36,7 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)], ['GET', new RegExp(`^/qualifications/applications/${UUID}$`)], ['GET', /^\/qualifications\/history$/],
   ['POST', new RegExp(`^/applications/${UUID}/discord-decision$`)], ['GET', new RegExp(`^/applications/${UUID}$`)], ['GET', /^\/applications\/history$/],
   ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
-  ['GET', /^\/leave$/], ['POST', /^\/leave$/], ['POST', new RegExp(`^/leave/${UUID}/(decision|cancel)$`)],
+  ['GET', /^\/leave$/], ['POST', /^\/leave$/], ['POST', new RegExp(`^/leave/${UUID}/(decision|cancel|extend)$`)],
   ['GET', /^\/cad\/(units|incidents|calls|config)$/], ['GET', /^\/fleet\/vehicles$/], ['POST', /^\/cad\/radio$/], ['POST', new RegExp(`^/cad/units/${UUID}/(status|feedback)$`)],
   ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
   ['GET', /^\/duty-reports(\/templates)?$/], ['GET', new RegExp(`^/duty-reports/templates/${UUID}/prefill$`)], ['GET', /^\/duty-reports\/[A-Za-z0-9-]{1,40}$/],

@@ -403,15 +403,25 @@ async function markDecided(message, d) {
             b.setFields([...(e.fields ?? []).filter((f) => f.name !== 'Entscheidung'), { name: 'Entscheidung', value: d.text.slice(0, 1024) }]); // nur einmal, auch wenn Button und Dashboard beide melden
         return b;
     });
+    // Entscheidungs-Buttons weg; mit `badge` stattdessen ein ausgegrauter Button wie bei Trident („Angenommen“)
+    const badge = d.badge ? new discord_js_1.ButtonBuilder().setCustomId('decided').setLabel(d.badge.label).setStyle(STYLE[d.badge.style]).setDisabled(true) : null;
+    if (badge && d.badge?.emoji)
+        badge.setEmoji(d.badge.emoji);
     const rows = [];
     for (const row of message.components) {
         if (!('components' in row))
             continue;
-        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? ''));
+        const kept = row.components.filter((c) => c.type === discord_js_1.ComponentType.Button && !/^(quali|leave):(decide|reason):|^rwreq:(approve|reject):|^decided$/.test(c.customId ?? ''));
         if (kept.length)
             rows.push(new discord_js_1.ActionRowBuilder().addComponents(kept.map((c) => discord_js_1.ButtonBuilder.from(c))));
     }
-    await message.edit({ embeds, components: rows, allowedMentions: { parse: [] } });
+    if (badge) {
+        if (rows[0] && rows[0].components.length < 5)
+            rows[0].components.unshift(badge);
+        else
+            rows.unshift(new discord_js_1.ActionRowBuilder().addComponents(badge));
+    }
+    await message.edit({ ...(d.note ? { content: d.note.slice(0, 2000) } : {}), embeds, components: rows, allowedMentions: { parse: [] } });
 }
 /** Gemeinsamer Kontext für Befehle, Buttons und Formulare. */
 function baseCtx(i) {

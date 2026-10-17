@@ -108,9 +108,13 @@ function renderOutbox(type, p) {
                 fields: [{ name: 'Grund', value: (0, exports.clip)((0, exports.plain)(p.reason), 1024) }, { name: 'Dauer', value: leaveSpan(p) }, { name: 'Zeitraum', value: `<t:${unixOf(p.startsAt)}:f> – <t:${unixOf(p.endsAt)}:f>` }],
                 footer: `ID: ${String(p.number)}` };
         case 'leave.log': {
+            // wie Trident: oben das Mitglied, darunter Beginn, Ende, Grund, wer entschieden hat; unten die ID
             const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: exports.COLORS.neutral };
-            return { title: (0, exports.clip)(`${ev.text}: ${(0, exports.plain)(p.name)} (${String(p.number)})`, 256), color: ev.color,
-                description: (0, exports.clip)([p.discordId ? `<@${String(p.discordId)}>` : null, `**Zeitraum:** ${berlinDate(p.startsAt)} – ${berlinDate(p.endsAt)} (${leaveSpan(p)})`, `**Grund:** ${(0, exports.plain)(p.reason)}`, p.decidedByName ? `**Entschieden von:** ${(0, exports.plain)(p.decidedByName)}` : null, p.decisionReason ? `**Begründung:** ${(0, exports.plain)(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
+            const by = p.event === 'approved' ? 'Angenommen von' : p.event === 'denied' ? 'Abgelehnt von' : p.event === 'extended' ? 'Verlängert von' : 'Entschieden von';
+            const t = (v, style = 'f') => `<t:${unixOf(v)}:${style}>`;
+            return { author: { name: (0, exports.clip)(`@${String(p.name ?? '—')}`, 200) }, title: ev.text, color: ev.color, footer: `ID: ${String(p.number)}`,
+                description: (0, exports.clip)([p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null, `**Beginn**: ${t(p.startsAt)}`, `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ''}`, `**Dauer**: ${leaveSpan(p)}`, `**Grund**: ${(0, exports.plain)(p.reason)}`,
+                    p.decidedByName ? `**${by}**: ${(0, exports.plain)(p.decidedByName)}` : null, p.decisionReason ? `**Begründung**: ${(0, exports.plain)(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
         }
         case 'sek.report':
             return { title: `🎯 SEK-Einsatzbericht ${p.number}`, color: exports.COLORS.neutral, description: (0, exports.clip)((0, exports.plain)(p.description), 3500), fields: [
@@ -184,6 +188,7 @@ const LEAVE_EVENTS = {
     approved: { text: '✅ Abmeldung angenommen', color: exports.COLORS.success }, denied: { text: '❌ Abmeldung abgelehnt', color: exports.COLORS.danger },
     started: { text: '🏝️ Abmeldung beginnt', color: exports.COLORS.info }, ended: { text: '👋 Abmeldung beendet', color: exports.COLORS.neutral },
     ended_early: { text: '↩️ Abmeldung vorzeitig beendet', color: exports.COLORS.neutral }, cancelled: { text: '↩️ Abmeldung zurückgezogen', color: exports.COLORS.neutral },
+    extended: { text: '🕒 Abmeldung verlängert', color: exports.COLORS.info },
 };
 const unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1000);
 /** Dauer menschenlesbar: „6 Stunden“, „1 Tag“, „2 Wochen“, „1 Woche, 2 Tage“. */
