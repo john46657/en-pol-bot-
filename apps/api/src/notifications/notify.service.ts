@@ -38,15 +38,16 @@ export class NotifyService {
       this.prisma.userRole.findMany({ where: { userId: { in: ids } } }),
       this.prisma.groupMember.findMany({ where: { userId: { in: ids } }, select: { userId: true, group: { select: { roles: { select: { roleId: true } } } } } }),
       this.prisma.userPermissionOverride.findMany({ where: { userId: { in: ids }, guildId: g } }),
-      this.prisma.role.findMany({ where: { active: true, ...(g ? { OR: [{ guildId: g }, { guildId: null, name: 'System Administrator' }] } : { guildId: null }) }, select: { id: true, guildId: true, name: true } }),
+      this.prisma.role.findMany({ where: { active: true, ...(g ? { OR: [{ guildId: g }, { guildId: null, name: 'System Administrator' }] } : { guildId: null }) }, select: { id: true, guildId: true, name: true, priority: true } }),
       g ? this.prisma.discordServer.findUnique({ where: { guildId: g }, select: { id: true, memberships: { where: { status: 'MEMBER' }, select: { userId: true } } } }) : null,
     ]);
     const valid = new Set(roles.map((r) => r.id));
     const adminRole = roles.find((r) => r.guildId === null && r.name === 'System Administrator')?.id;
     const members = server ? new Set(server.memberships.map((m) => m.userId)) : null;
     const grants = await this.prisma.rolePermission.findMany({ where: { roleId: { in: [...valid] } } });
-    const byRole = new Map<string, { permission: string; effect: 'ALLOW' | 'DENY' }[]>();
-    for (const x of grants) byRole.set(x.roleId, [...(byRole.get(x.roleId) ?? []), { permission: x.permissionKey, effect: x.effect === 'DENY' ? 'DENY' : 'ALLOW' }]);
+    const byRole = new Map<string, { permission: string; effect: 'ALLOW' | 'DENY'; rank?: number }[]>();
+    const rankOf = new Map(roles.map((r) => [r.id, r.priority]));
+    for (const x of grants) byRole.set(x.roleId, [...(byRole.get(x.roleId) ?? []), { permission: x.permissionKey, effect: x.effect === 'DENY' ? 'DENY' : 'ALLOW', rank: rankOf.get(x.roleId) }]);
     const rolesOf = new Map<string, Set<string>>();
     const add = (u: string, r: string) => { if (valid.has(r)) rolesOf.set(u, (rolesOf.get(u) ?? new Set()).add(r)); };
     for (const d of direct) {

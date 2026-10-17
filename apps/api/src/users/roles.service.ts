@@ -6,6 +6,7 @@ import { PermissionService } from '../authz/permission.service';
 import { AppError } from '../common/errors';
 import { RealtimeService } from '../realtime/realtime.service';
 import { currentGuild } from '../common/guild-context';
+import { DiscordAccessService } from '../authz/discord-access.service';
 
 export const ADMIN_ROLE = 'System Administrator';
 type Effect = 'ALLOW' | 'DENY';
@@ -24,7 +25,7 @@ const validPermission = (p: string) => isPermissionKey(p) || p === '*' || (p.end
  */
 @Injectable()
 export class RolesService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly rt: RealtimeService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly rt: RealtimeService, private readonly access: DiscordAccessService) {}
 
   /** Nach jeder Änderung: alle Dashboards laden ihre Rechte neu (die API prüft ohnehin bei jeder Anfrage). */
   private changed<T>(v: T): T { this.rt.broadcast('permissions.changed'); return v; }
@@ -80,11 +81,13 @@ export class RolesService {
 
   async create(actor: Actor, d: RoleInput & { name: string }) {
     const rank = await this.perms.rankOf(actor.userId!);
-    const priority = d.priority ?? Math.max(100, rank + 1);
+    // Server-Rolle: gilt nur auf ihrem Server (Standard: der gerade gewählte Server)
+    const guildId = d.guildId === undefined ? currentGuild() : d.guildId;
+    // neue Rolle ganz unten einreihen – nicht gleichrangig mit bestehenden (sonst könnte sie niemand mit gleichem Rang verwalten)
+    const lowest = (await this.prisma.role.aggregate({ where: { guildId, name: { not: ADMIN_ROLE } }, _max: { priority: true } }))._max.priority ?? 0;
+    const priority = d.priority ?? Math.min(100_000, Math.max(100, rank + 1, lowest + 1));
     await this.assertPriority(actor, priority);
-    return this.changed(await this.prisma.$transaction(async (tx) => {
-      // Server-Rolle: gilt nur auf ihrem Server (Standard: der gerade gewählte Server)
-      const guildId = d.guildId === undefined ? currentGuild() : d.guildId;
+    const created = this.changed(await this.prisma.$transaction(async (tx) => {
       await this.uniqueName(tx, d.name, guildId);
       // Rollen für andere Server oder alle Server: nur der Serverbesitzer bzw. aus „Alle Server“ heraus
       if (currentGuild() && guildId !== currentGuild() && !(await this.perms.isOwner(actor.userId!))) throw new AppError('PERMISSION_DENIED', 'In der Server-Ansicht kannst du nur Rollen für diesen Server anlegen.');
@@ -92,13 +95,15 @@ export class RolesService {
       await this.audit.record(actor, { action: 'role.create', module: 'permissions', entityType: 'Role', entityId: r.id, after: { name: r.name, guildId: r.guildId, priority: r.priority, discordRoleIds: r.discordRoleIds } }, tx);
       return r;
     }));
+    if (created.discordRoleIds.length) this.access.resyncSoon();
+    return created;
   }
 
   async update(actor: Actor, id: string, d: RoleInput) {
     const before = await this.load(id);
     await this.guard(actor, before);
     if (d.priority !== undefined) await this.assertPriority(actor, d.priority);
-    return this.changed(await this.prisma.$transaction(async (tx) => {
+    const updated = this.changed(await this.prisma.$transaction(async (tx) => {
       if (d.name && d.name !== before.name) await this.uniqueName(tx, d.name, before.guildId, id);
       const r = await tx.role.update({ where: { id }, data: d, include });
       const changed = (Object.keys(d) as (keyof RoleInput)[]).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(r[k]));
@@ -111,6 +116,9 @@ export class RolesService {
       }
       return r;
     }));
+    // verknüpfte Discord-Rollen oder Aktiv-Status geändert: Mitglieder sofort neu abgleichen, nicht erst in ein paar Minuten
+    if (d.discordRoleIds !== undefined || d.active !== undefined) this.access.resyncSoon();
+    return updated;
   }
 
   async remove(actor: Actor, id: string) {
@@ -154,7 +162,8 @@ export class RolesService {
       const before = roles.map((r) => ({ name: r.name, priority: r.priority }));
       for (const [i, id] of ids.entries()) await tx.role.update({ where: { id }, data: { priority: slots[i]! } });
       await this.audit.record(actor, { action: 'role.reorder', module: 'permissions', entityType: 'Role', before, after: ids.map((id, i) => ({ name: roles.find((r) => r.id === id)!.name, priority: slots[i] })) }, tx);
-      return tx.role.findMany({ orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
+      const g = currentGuild();
+      return tx.role.findMany({ where: g ? { guildId: g } : {}, orderBy: [{ priority: 'asc' }, { name: 'asc' }], include });
     }));
   }
 

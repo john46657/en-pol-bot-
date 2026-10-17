@@ -33,7 +33,7 @@ const TTL = 5_000;
 
 /**
  * Zentrale Zugriffsentscheidung für ALLE geschützten Aktionen (PermissionGuard, Server-/Verbindungs-APIs, Bot-Aufrufe):
- * authentifizierter Benutzer → Server registriert und aktiv → bestätigte Mitgliedschaft → Modul an → Berechtigung (DENY vor ALLOW)
+ * authentifizierter Benutzer → Server registriert und aktiv → bestätigte Mitgliedschaft → Modul an → Berechtigung (höchste Rolle entscheidet, in einer Rolle DENY vor ALLOW)
  * → Datensatz im erlaubten Bereich → ggf. aktive Datenfreigabe. Standard ist „verweigert“.
  * Globale Systemadministratoren überspringen NUR die Mitgliedschaftsprüfung (Notfall-/Verwaltungszugang); Module und
  * Mandantengrenzen gelten auch für sie. Server-Administratoren haben Rechte nur auf ihrem Server (Rollen mit `guildId`).

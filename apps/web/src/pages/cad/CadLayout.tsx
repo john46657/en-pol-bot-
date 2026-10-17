@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, BarChart3, BookOpen, Car, ClipboardList, FileText, Fingerprint, Globe, LayoutDashboard, Map as MapIcon, Menu, Monitor, Phone, Radio, RadioTower, RefreshCw, ScrollText, Settings, Siren, Smartphone, Tablet, Truck, Users, UsersRound, X, type LucideIcon } from 'lucide-react';
+import { Activity, BarChart3, BookOpen, Car, ClipboardList, FileText, Fingerprint, LayoutDashboard, Map as MapIcon, Menu, Monitor, Phone, Radio, RadioTower, RefreshCw, ScrollText, Settings, Siren, Smartphone, Tablet, Truck, Users, UsersRound, X, type LucideIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useCadConfig, useCadLive, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
@@ -37,7 +37,6 @@ export const CAD_NAV: { group: string; items: CadNavItem[] }[] = [
   ] },
   { group: 'Dienst', items: [
     { to: '/cad/team', label: 'Teamübersicht', icon: Users },
-    { to: '/cad/cross-server', label: 'Cross-Server', icon: Globe },
     { to: '/cad/handover', label: 'Schichtübergabe', icon: Activity },
     { to: '/cad/stats', label: 'Statistik', icon: BarChart3, perm: 'cad.view_stats' },
   ] },

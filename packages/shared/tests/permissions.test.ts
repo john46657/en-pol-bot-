@@ -19,6 +19,11 @@ describe('resolvePermission', () => {
     const r = resolvePermission(ctx([{ permission: 'dispatch.manage', effect: 'ALLOW' }], [{ permission: 'dispatch.manage', effect: 'DENY' }]), 'dispatch.manage');
     expect(r).toEqual({ allowed: true, source: 'USER_ALLOW' });
   });
+  it('higher role decides: DENY in a lower role does not take away an ALLOW of a higher role', () => {
+    expect(resolvePermission(ctx([], [{ permission: 'cad.*', effect: 'ALLOW', rank: 5 }, { permission: 'cad.view', effect: 'DENY', rank: 90 }]), 'cad.view')).toEqual({ allowed: true, source: 'ROLE_ALLOW' });
+    expect(resolvePermission(ctx([], [{ permission: 'cad.view', effect: 'ALLOW', rank: 90 }, { permission: 'cad.view', effect: 'DENY', rank: 5 }]), 'cad.view')).toEqual({ allowed: false, source: 'ROLE_DENY' });
+    expect(resolvePermission(ctx([], [{ permission: 'cad.*', effect: 'ALLOW', rank: 5 }, { permission: 'cad.view', effect: 'DENY', rank: 5 }]), 'cad.view').allowed).toBe(false);
+  });
   it('user DENY overrides role ALLOW', () => {
     const r = resolvePermission(ctx([{ permission: 'tickets.void', effect: 'DENY' }], [{ permission: 'tickets.void', effect: 'ALLOW' }]), 'tickets.void');
     expect(r).toEqual({ allowed: false, source: 'USER_DENY' });

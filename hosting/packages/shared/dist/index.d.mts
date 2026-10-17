@@ -85,6 +85,8 @@ type Effect = 'ALLOW' | 'DENY';
 interface PermissionGrant {
     permission: string;
     effect: Effect;
+    /** Rang der Rolle, aus der das Recht stammt (Priorität: kleiner = höher). Ohne Angabe: alle gleichrangig. */
+    rank?: number;
 }
 type ResolutionSource = 'USER_DENY' | 'USER_ALLOW' | 'ROLE_DENY' | 'ROLE_ALLOW' | 'DEFAULT_DENY';
 interface Resolution {
@@ -100,6 +102,8 @@ interface PermissionContext {
 /**
  * Zentrale Auflösung (Spezifikation §12):
  * 1. User DENY  2. User ALLOW  3. Role/Group DENY  4. Role/Group ALLOW  5. Default DENY
+ * Bei Rollen entscheidet (wie bei Discord) die HÖCHSTE Rolle, die das Recht überhaupt setzt: ein ✕ in einer niedrigeren Rolle
+ * (z. B. „Azubi“) nimmt einer höheren Rolle (z. B. „Leitung“) nichts weg. Innerhalb derselben Rolle schlägt DENY das ALLOW.
  * Ein Wildcard `module.*` im Grant gilt für alle Aktionen des Moduls; `*` für alles.
  */
 declare function resolvePermission(ctx: PermissionContext, permission: string): Resolution;
