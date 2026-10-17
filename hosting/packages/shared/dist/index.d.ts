@@ -649,7 +649,7 @@ interface CadConfig {
     /** Widgets der Leitstellen-Startseite (Standard für alle; jeder Benutzer kann seine eigene Ansicht anpassen). */
     widgets: string[];
 }
-declare const CAD_EVENTS: readonly ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible"];
+declare const CAD_EVENTS: readonly ["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible", "wanted.erlc"];
 type CadEvent = (typeof CAD_EVENTS)[number];
 declare const CAD_EVENT_LABELS: Record<CadEvent, string>;
 /**
@@ -728,7 +728,7 @@ declare function parsePlayer(v: unknown): {
  * Automatischer ER:LC-Fahndungsabgleich. Die ER:LC-API liefert je Spieler nur „Roblox-Name:Roblox-ID“ (Players, JoinLogs) –
  * weitere eindeutige Kennungen gibt es nicht. Bestätigt ist ein Treffer nur bei exakt gleicher Roblox-ID.
  */
-declare const WANTED_MATCH_TYPES: readonly ["ROBLOX_ID", "NAME", "ALIAS", "NAME_ID_MISMATCH"];
+declare const WANTED_MATCH_TYPES: readonly ["ROBLOX_ID", "NAME", "ALIAS", "NAME_ID_MISMATCH", "ERLC_WANTED"];
 type WantedMatchType = (typeof WANTED_MATCH_TYPES)[number];
 declare const WANTED_MATCH_LABELS: Record<WantedMatchType, string>;
 declare const WANTED_HIT_STATUSES: readonly ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"];

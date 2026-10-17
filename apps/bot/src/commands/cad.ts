@@ -149,6 +149,13 @@ export function renderCadOutbox(type: string, p: Record<string, unknown>): Embed
           { name: 'Identifikation', value: confirmed ? 'Bestätigt (Roblox-ID stimmt überein)' : `Manuelle Prüfung erforderlich${p.matchLabel ? ` – ${plain(p.matchLabel)}` : ''}`, inline: false }, ...f('Server', p.server)],
         footer: 'Nur zur Information – keine automatischen Maßnahmen im Spiel.' };
     }
+    case 'cad.wanted.erlc':
+      // Im Spiel gesucht (ER:LC-Wanted-Sterne): Roblox-ID kommt direkt von der API, keine eigene Fahndung nötig
+      return { title: '🚨 IM SPIEL GESUCHT', color: COLORS.danger,
+        fields: [{ name: 'Spieler', value: clip(plain(p.playerName), 256), inline: true }, { name: 'Identifikator', value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : 'keine ID von ER:LC geliefert', inline: true },
+          { name: 'Grund', value: clip(plain(p.reason), 1024), inline: false }, ...f('Priorität', p.priority),
+          ...(p.detectedAt ? [{ name: 'Erkannt am', value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1000)}:f>`, inline: true }] : []), ...f('Server', p.server)],
+        footer: 'Nur zur Information – keine automatischen Maßnahmen im Spiel.' };
     case 'cad.announcement':
       return { title: '📢 Leitstellenmeldung', description: clip(plain(p.text), 4000), color: COLORS.warning, ...(p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {}) };
     case 'cad.radio':
@@ -168,7 +175,7 @@ export function cadButtons(type: string, p: Record<string, unknown>): ButtonSpec
     ...(typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : []),
   ];
   if (type === 'cad.handover') return link.length ? link : undefined;
-  if (type === 'cad.wanted.hit' || type === 'cad.wanted.possible') return typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard öffnen', style: 'secondary', url: p.dashboardUrl }] : undefined;
+  if (type === 'cad.wanted.hit' || type === 'cad.wanted.possible' || type === 'cad.wanted.erlc') return typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard öffnen', style: 'secondary', url: p.dashboardUrl }] : undefined;
   if (type.startsWith('cad.incident.')) {
     const map = type === 'cad.incident.created' && typeof p.mapUrl === 'string' && /^https?:\/\//.test(p.mapUrl) ? [{ id: 'map', label: 'Auf Karte anzeigen', style: 'secondary' as const, url: p.mapUrl }] : [];
     return link.length || map.length ? [...link, ...map] : undefined;

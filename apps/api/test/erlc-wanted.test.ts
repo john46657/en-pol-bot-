@@ -16,9 +16,9 @@ let serverId = '';
 const sent: { method: string; path: string }[] = [];
 let replies: (() => Response)[] = [];
 const json = (status: number, body: unknown) => () => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-const server = (players: string[], joinLogs: { player: string; ts: number }[] = []) => json(200, {
+const server = (players: string[], joinLogs: { player: string; ts: number }[] = [], stars: Record<string, number> = {}) => json(200, {
   Name: 'EN Test', OwnerId: 1, CoOwnerIds: [], CurrentPlayers: players.length, MaxPlayers: 40, JoinKey: 'ENTEST', AccVerifiedReq: 'Disabled', TeamBalance: true,
-  Players: players.map((p) => ({ Player: p, Team: 'Civilian', Permission: 'Normal', WantedStars: 0 })),
+  Players: players.map((p) => ({ Player: p, Team: 'Civilian', Permission: 'Normal', WantedStars: stars[p] ?? 0 })),
   JoinLogs: joinLogs.map((j) => ({ Join: true, Timestamp: j.ts, Player: j.player })),
 });
 const poll = async (reply: () => Response) => { replies = [reply]; return erlc.poll(serverId, true); };
@@ -240,8 +240,36 @@ describe('ER:LC-Fahndungsabgleich', () => {
     await poll(server(['AllServers:779009']));
     expect((await hits()).filter((x) => x.wantedId === w.body.id)).toHaveLength(1);
     const st = (await admin.get('/api/v1/wanted-hits/status').set({ 'X-Guild-Id': HOME })).body.servers.find((x: { id: string }) => x.id === serverId);
-    expect(st.players).toEqual([{ name: 'AllServers', robloxUserId: '779009' }]);
+    expect(st.players).toEqual([{ name: 'AllServers', robloxUserId: '779009', wantedStars: 0 }]);
     expect(st.activeWanted).toBeGreaterThan(0);
+  });
+
+  it('im Spiel gesucht (Wanted-Sterne) → Treffer auch ohne Fahndung, eine Meldung je Aufenthalt, mehr Sterne ziehen nur den Treffer nach', async () => {
+    const inGame = () => prisma.erlcWantedHit.findMany({ where: { matchType: 'ERLC_WANTED' } });
+    // nur der Kanal für Fahndungstreffer ist eingestellt → „im Spiel gesucht“ landet dort
+    await (await login(app, 'wh_admin')).agent.put('/api/v1/cad/config').set({ 'X-Guild-Id': HOME }).send({ homeGuildId: HOME, routes: [{ id: 'w1', guildId: HOME, event: 'wanted.hit', channelIds: [CH.hits], pingRoleIds: [], enabled: true }] });
+    const before = await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc' } });
+    await poll(server(['Robber:775005']));
+    expect(await inGame()).toHaveLength(0);
+    await poll(server(['Robber:775005'], [], { 'Robber:775005': 2 }));
+    const h = await inGame();
+    expect(h).toHaveLength(1);
+    expect(h[0]).toMatchObject({ playerName: 'Robber', robloxUserId: '775005', wantedId: null, identified: true, reviewStatus: 'NEW', wantedPriority: 'MEDIUM', notifyStatus: 'QUEUED' });
+    expect(h[0]!.wantedReason).toContain('2 Sterne');
+    const out = await prisma.discordOutbox.findMany({ where: { type: 'cad.wanted.erlc' } });
+    expect(out).toHaveLength(before + 1);
+    expect(out.at(-1)!.payload).toMatchObject({ playerName: 'Robber', channelIds: [CH.hits] }); // ohne eigenen Kanal → Fahndungstreffer
+    await poll(server(['Robber:775005'], [], { 'Robber:775005': 4 }));
+    const again = await inGame();
+    expect(again).toHaveLength(1);
+    expect(again[0]).toMatchObject({ wantedPriority: 'HIGH' });
+    expect(again[0]!.wantedReason).toContain('4 Sterne');
+    expect(await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc' } })).toBe(before + 1);
+    const admin = (await login(app, 'wh_admin')).agent;
+    const st = (await admin.get('/api/v1/wanted-hits/status').set({ 'X-Guild-Id': HOME })).body.servers.find((x: { id: string }) => x.id === serverId);
+    expect(st.players).toEqual([{ name: 'Robber', robloxUserId: '775005', wantedStars: 4 }]);
+    const list = (await admin.get('/api/v1/wanted-hits').set({ 'X-Guild-Id': HOME })).body.items;
+    expect(list.find((x: { playerName: string }) => x.playerName === 'Robber')).toMatchObject({ identification: 'Im Spiel gesucht (ER:LC)', matchLabel: 'Im Spiel gesucht (ER:LC-Wanted-Sterne)' });
   });
 
   it('es wird nie ein Befehl an den ER:LC-Server gesendet (kein Kick, kein Bann)', () => {

@@ -83057,6 +83057,20 @@ ${list}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
       };
     }
+    case "cad.wanted.erlc":
+      return {
+        title: "\u{1F6A8} IM SPIEL GESUCHT",
+        color: COLORS.danger,
+        fields: [
+          { name: "Spieler", value: clip(plain(p.playerName), 256), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
+          { name: "Grund", value: clip(plain(p.reason), 1024), inline: false },
+          ...f("Priorit\xE4t", p.priority),
+          ...p.detectedAt ? [{ name: "Erkannt am", value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1e3)}:f>`, inline: true }] : [],
+          ...f("Server", p.server)
+        ],
+        footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
+      };
     case "cad.announcement":
       return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
     case "cad.radio":
@@ -83075,7 +83089,7 @@ function cadButtons(type, p) {
     ...typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : []
   ];
   if (type === "cad.handover") return link.length ? link : void 0;
-  if (type === "cad.wanted.hit" || type === "cad.wanted.possible") return typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard \xF6ffnen", style: "secondary", url: p.dashboardUrl }] : void 0;
+  if (type === "cad.wanted.hit" || type === "cad.wanted.possible" || type === "cad.wanted.erlc") return typeof p.dashboardUrl === "string" && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: "link", label: "Im Dashboard \xF6ffnen", style: "secondary", url: p.dashboardUrl }] : void 0;
   if (type.startsWith("cad.incident.")) {
     const map = type === "cad.incident.created" && typeof p.mapUrl === "string" && /^https?:\/\//.test(p.mapUrl) ? [{ id: "map", label: "Auf Karte anzeigen", style: "secondary", url: p.mapUrl }] : [];
     return link.length || map.length ? [...link, ...map] : void 0;

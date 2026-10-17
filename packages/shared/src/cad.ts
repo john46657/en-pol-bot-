@@ -35,13 +35,14 @@ export interface CadConfig {
   widgets: string[];
 }
 
-export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'incident.feedback', 'incident.support', 'call.received', 'announcement', 'radio', 'handover', 'wanted.hit', 'wanted.possible'] as const;
+export const CAD_EVENTS = ['incident.created', 'incident.status', 'incident.assigned', 'incident.closed', 'incident.feedback', 'incident.support', 'call.received', 'announcement', 'radio', 'handover', 'wanted.hit', 'wanted.possible', 'wanted.erlc'] as const;
 export type CadEvent = (typeof CAD_EVENTS)[number];
 export const CAD_EVENT_LABELS: Record<CadEvent, string> = {
   'incident.created': 'Neuer Einsatz', 'incident.status': 'Einsatzstatus geändert', 'incident.assigned': 'Einheit zugewiesen',
   'incident.closed': 'Einsatz abgeschlossen', 'incident.feedback': 'Rückmeldung einer Einheit (MDT)', 'incident.support': 'Unterstützung benötigt',
   'call.received': 'Notruf eingegangen', announcement: 'Wichtige Leitstellenmeldung', radio: 'Funkmeldung', handover: 'Schichtübergabe',
   'wanted.hit': 'Fahndungstreffer (Roblox-ID bestätigt)', 'wanted.possible': 'Mögliche Fahndungsübereinstimmung (nur Name – Prüfung nötig)',
+  'wanted.erlc': 'Im Spiel gesucht (ER:LC-Wanted-Sterne; ohne eigenen Kanal → Kanal „Fahndungstreffer“)',
 };
 
 /**
@@ -178,10 +179,11 @@ export function parsePlayer(v: unknown): { name: string; id: string | null } {
  * Automatischer ER:LC-Fahndungsabgleich. Die ER:LC-API liefert je Spieler nur „Roblox-Name:Roblox-ID“ (Players, JoinLogs) –
  * weitere eindeutige Kennungen gibt es nicht. Bestätigt ist ein Treffer nur bei exakt gleicher Roblox-ID.
  */
-export const WANTED_MATCH_TYPES = ['ROBLOX_ID', 'NAME', 'ALIAS', 'NAME_ID_MISMATCH'] as const;
+export const WANTED_MATCH_TYPES = ['ROBLOX_ID', 'NAME', 'ALIAS', 'NAME_ID_MISMATCH', 'ERLC_WANTED'] as const;
 export type WantedMatchType = (typeof WANTED_MATCH_TYPES)[number];
 export const WANTED_MATCH_LABELS: Record<WantedMatchType, string> = {
   ROBLOX_ID: 'Roblox-ID stimmt überein', NAME: 'Nur Roblox-Name stimmt überein', ALIAS: 'Nur Alias stimmt überein', NAME_ID_MISMATCH: 'Name gleich, Roblox-ID abweichend',
+  ERLC_WANTED: 'Im Spiel gesucht (ER:LC-Wanted-Sterne)',
 };
 export const WANTED_HIT_STATUSES = ['NEW', 'REVIEW_REQUIRED', 'ACKNOWLEDGED', 'CONFIRMED', 'REJECTED'] as const;
 export type WantedHitStatus = (typeof WANTED_HIT_STATUSES)[number];

@@ -273,7 +273,7 @@ export declare const cadConfigSchema: z.ZodObject<{
     }, z.ZodTypeAny, "passthrough">[]>, z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         guildId: z.ZodString;
-        event: z.ZodEnum<["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible"]>;
+        event: z.ZodEnum<["incident.created", "incident.status", "incident.assigned", "incident.closed", "incident.feedback", "incident.support", "call.received", "announcement", "radio", "handover", "wanted.hit", "wanted.possible", "wanted.erlc"]>;
         channelIds: z.ZodArray<z.ZodString, "many">;
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -281,13 +281,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible";
+        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
         channelIds: string[];
         pingRoleIds: string[];
     }, {
         id: string;
         guildId: string;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible";
+        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
         channelIds: string[];
         enabled?: boolean | undefined;
         pingRoleIds?: string[] | undefined;
@@ -383,7 +383,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         id: string;
         guildId: string;
         enabled: boolean;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible";
+        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
         channelIds: string[];
         pingRoleIds: string[];
     }[];

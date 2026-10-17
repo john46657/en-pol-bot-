@@ -17,7 +17,7 @@ export interface WantedHit {
 interface SyncStatus {
   open: number; review: number;
   servers: { id: string; name: string; active: boolean; status: string; lastSyncAt: string | null; lastError: string | null; lastErrorAt: string | null; playersEnabled: boolean; joinLogsEnabled: boolean; wantedCheckAt: string | null; wantedCheckError: string | null; online: number;
-    /** Zur Fehlersuche: wer gerade online ist und wie viele aktive Personen-Fahndungen abgeglichen werden */ players?: { name: string; robloxUserId: string | null }[]; activeWanted?: number }[];
+    /** Zur Fehlersuche: wer gerade online ist und wie viele aktive Personen-Fahndungen abgeglichen werden */ players?: { name: string; robloxUserId: string | null; wantedStars?: number }[]; activeWanted?: number }[];
 }
 
 const CONN: Record<string, [Tone, string]> = { CONNECTED: ['success', 'Verbunden'], LIMITED: ['warning', 'Eingeschränkt'], OFFLINE: ['danger', 'Offline'], ERROR: ['danger', 'Fehler'], UNKNOWN: ['neutral', 'Unbekannt'], DISABLED: ['neutral', 'Deaktiviert'] };
@@ -41,8 +41,8 @@ export function WantedSyncStatus() {
             <span className="text-xs text-muted">Letzter Abgleich: {fmt(s.wantedCheckAt)}</span>
             {s.playersEnabled ? <span className="text-xs text-muted">{s.online} Spieler online</span> : <Badge tone="warning">Spielerdaten nicht freigegeben</Badge>}
             {s.activeWanted !== undefined && <span className="text-xs text-muted">{s.activeWanted} aktive Personen-{s.activeWanted === 1 ? 'Fahndung' : 'Fahndungen'} im Abgleich</span>}
-            {!!s.players?.length && <span className="w-full text-xs text-muted">Online: {s.players.map((p) => `${p.name}${p.robloxUserId ? ` (Roblox-ID ${p.robloxUserId})` : ''}`).join(', ')}{s.online > s.players.length ? ` … und ${s.online - s.players.length} weitere` : ''}</span>}
-            {s.playersEnabled && s.activeWanted === 0 && <span className="w-full text-xs text-warning">Für diesen Server gibt es keine aktive Fahndung auf eine Person – Fahndungen auf Fahrzeuge oder auf einem anderen Discord-Server werden nicht abgeglichen.</span>}
+            {!!s.players?.length && <span className="w-full text-xs text-muted">Online: {s.players.map((p) => `${p.name}${p.robloxUserId ? ` (Roblox-ID ${p.robloxUserId})` : ''}${p.wantedStars ? ` – im Spiel gesucht ${'★'.repeat(Math.min(p.wantedStars, 5))}` : ''}`).join(', ')}{s.online > s.players.length ? ` … und ${s.online - s.players.length} weitere` : ''}</span>}
+            {s.playersEnabled && s.activeWanted === 0 && <span className="w-full text-xs text-warning">Für diesen Server gibt es keine aktive Fahndung auf eine Person im Dashboard – Fahndungen auf Fahrzeuge oder auf einem anderen Discord-Server werden nicht abgeglichen. Wer im Spiel gesucht wird (Wanted-Sterne), wird trotzdem gemeldet.</span>}
             {s.lastError && <span role="alert" className="w-full text-xs text-danger">ER:LC: {s.lastError}{s.lastErrorAt ? ` (${fmt(s.lastErrorAt)})` : ''} – vorhandene Treffer bleiben erhalten, der Abgleich läuft nach der Wiederverbindung weiter.</span>}
             {s.wantedCheckError && <span role="alert" className="w-full text-xs text-danger">Abgleich fehlgeschlagen: {s.wantedCheckError}</span>}
           </li>
@@ -91,7 +91,7 @@ export function WantedHitList({ wantedId, compact, openOnly }: { wantedId?: stri
                   </td>
                   {!wantedId && (
                     <td className="px-2 py-2">
-                      {h.wantedId ? <Link className="font-medium text-primary hover:underline" to={`/wanted/${h.wantedId}`}>{h.wantedNumber ?? 'Fahndung'}</Link> : <span>{h.wantedNumber ?? '—'}</span>}
+                      {h.wantedId ? <Link className="font-medium text-primary hover:underline" to={`/wanted/${h.wantedId}`}>{h.wantedNumber ?? 'Fahndung'}</Link> : <span>{h.wantedNumber ?? (h.matchType === 'ERLC_WANTED' ? 'Im Spiel (ER:LC)' : '—')}</span>}
                       <div className="text-xs">{h.reason}</div>
                       <div className="mt-0.5 flex flex-wrap gap-1"><PriorityBadge priority={h.priority} />{h.wantedStatus && <StatusBadge status={h.wantedStatus} />}</div>
                     </td>
@@ -170,6 +170,7 @@ export function WantedHits() {
         <Card title="So funktioniert der Abgleich">
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
             <li>Die ER:LC-API liefert je Spieler den Roblox-Namen und die Roblox-ID. Weitere eindeutige Kennungen gibt es nicht; Beitritte meldet ER:LC nicht per Webhook – das System vergleicht darum bei jedem Abruf die Spielerliste mit der vorherigen.</li>
+            <li><b>Im Spiel gesucht:</b> Hat ein Spieler in ER:LC Wanted-Sterne, entsteht automatisch ein Treffer (einer je Aufenthalt) – auch ohne Fahndung im Dashboard. Discord-Kanal: Ereignis „Im Spiel gesucht“ in den CAD-Einstellungen, sonst der Kanal für Fahndungstreffer.</li>
             <li><b>Bestätigt</b> ist ein Treffer nur, wenn die Roblox-ID exakt mit der Roblox-ID in der Personenakte übereinstimmt.</li>
             <li>Gleicher Name oder Alias ergibt nur eine <b>mögliche Übereinstimmung</b> – sie muss manuell bestätigt oder verworfen werden.</li>
             <li>Je Aufenthalt auf dem Server und Fahndung gibt es höchstens einen Treffer und eine Discord-Meldung. Verlässt der Spieler den Server und kommt wieder, ist das ein neuer Aufenthalt.</li>

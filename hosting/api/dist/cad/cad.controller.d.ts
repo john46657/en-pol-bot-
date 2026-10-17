@@ -2119,6 +2119,7 @@ export declare class WantedHitsController {
             players: {
                 name: string;
                 robloxUserId: string | null;
+                wantedStars: number;
             }[];
             activeWanted: number;
         }[];
