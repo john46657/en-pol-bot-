@@ -3,7 +3,10 @@ import { COLORS, errorReply, listEmbed, okReply, plain, type ModalSpec, type Rep
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
-interface Report { id: string; number: string; templateId: string; templateName: string; period: ReportTemplate['period']; periodStart: string; values: Record<string, string>; status: string; template: ReportTemplate | null; canEdit: boolean; version: number }
+interface Report { id: string; number: string; templateId: string; templateName: string; period: ReportTemplate['period']; periodStart: string; values: Record<string, string>; status: string; template: ReportTemplate | null; canEdit: boolean; canReview?: boolean; version: number; author?: { id: string; displayName: string }; reviewerName?: string | null; reviewNote?: string | null }
+const STATUS_DE: Record<string, string> = { SUBMITTED: '🕓 eingereicht', REVIEWED: '✅ geprüft', RETURNED: '↩️ zur Nachbesserung' };
+/** Filter für `/dienstbericht liste` (wie im Dashboard). */
+const LIST_STATUS = { offen: 'SUBMITTED', zurueckgegeben: 'RETURNED', geprueft: 'REVIEWED', alle: '' } as const;
 type Mode = 'n' | 'e';
 
 /** Teilantworten mehrseitiger Formulare (Discord: max. 5 Felder je Formular) – 30 Minuten im Speicher. */
@@ -22,7 +25,50 @@ function modal(t: ReportTemplate, mode: Mode, id: string, page: number, values: 
   };
 }
 
-async function templates(c: Ctx) { return c.api.asUser<ReportTemplate[]>(c.discordId, 'GET', '/duty-reports/templates?active=1'); }
+/** Einen Bericht zeigen: Felder, Verfasser, Status; „Bearbeiten“ bzw. für die Leitung „Geprüft“/„Zur Nachbesserung“. */
+async function showReport(c: Ctx, idOrNumber: string): Promise<Reply> {
+  const r = await c.api.asUser<Report>(c.discordId, 'GET', `/duty-reports/${encodeURIComponent(idOrNumber.trim())}`);
+  const t = r.template;
+  const head = [`**${r.number}** · ${STATUS_DE[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain(r.author.displayName)}` : null, r.reviewerName ? `**Geprüft von:** ${plain(r.reviewerName)}` : null, r.status === 'RETURNED' && r.reviewNote ? `**Nachbessern:** ${plain(r.reviewNote)}` : null].filter(Boolean).join('\n');
+  const buttons: NonNullable<Reply['buttons']> = [
+    ...(r.canEdit ? [{ id: `drep:edit:${r.id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' as const }] : []),
+    ...(r.canReview && r.status !== 'REVIEWED' ? [{ id: `drep:rev:${r.id}`, label: 'Geprüft', emoji: '✅', style: 'success' as const }] : []),
+    ...(r.canReview && r.status !== 'RETURNED' ? [{ id: `drep:ret:${r.id}`, label: 'Zur Nachbesserung', emoji: '↩️', style: 'secondary' as const }] : []),
+  ];
+  return {
+    ephemeral: true,
+    embeds: [{ title: `${t?.emoji ?? '📝'} ${r.templateName} – ${periodLabel(r.period, r.periodStart)}`.slice(0, 256), color: r.status === 'REVIEWED' ? COLORS.success : r.status === 'RETURNED' ? COLORS.warning : COLORS.info, description: head.slice(0, 4000),
+      fields: (t?.fields ?? Object.keys(r.values).map((id) => ({ id, label: id }))).filter((f) => r.values[f.id]).slice(0, 25).map((f) => ({ name: f.label.slice(0, 256), value: r.values[f.id]!.slice(0, 1024) })) }],
+    ...(buttons.length ? { buttons } : {}),
+  };
+}
+
+/** `/dienstbericht liste`: Berichte des Teams (mit „dutyreports.view_all“, sonst nur eigene) – gefiltert; Auswahl öffnet einen Bericht. */
+async function listReply(c: Ctx): Promise<Reply> {
+  const statusKey = String(c.opts.status ?? 'offen') as keyof typeof LIST_STATUS;
+  const status = LIST_STATUS[statusKey] ?? 'SUBMITTED';
+  const params = new URLSearchParams({ pageSize: '25' });
+  if (status) params.set('status', status);
+  if (c.opts.mitglied) params.set('discordId', String(c.opts.mitglied));
+  const days = Number(c.opts.tage ?? 0);
+  if (days > 0) params.set('from', new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10));
+  const name = String(c.opts.vorlage ?? '').trim().toLowerCase();
+  if (name) {
+    const all = await templates(c, false);
+    const t = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
+    if (!t) return errorReply(`Keine Vorlage „${plain(name)}“ gefunden.`);
+    params.set('templateId', t.id);
+  }
+  const r = await c.api.asUser<{ items: (Report & { author: { displayName: string } })[]; total: number; seeAll: boolean }>(c.discordId, 'GET', `/duty-reports?${params}`);
+  const label = statusKey in LIST_STATUS ? { offen: 'Offen', zurueckgegeben: 'Zur Nachbesserung', geprueft: 'Geprüft', alle: 'Alle' }[statusKey] : 'Offen';
+  const lines = r.items.map((x) => `**${x.number}** · ${r.seeAll ? `${plain(x.author.displayName)} · ` : ''}${plain(x.templateName)} – ${periodLabel(x.period, x.periodStart)}${status ? '' : ` · ${STATUS_DE[x.status] ?? x.status}`}`);
+  const embed = listEmbed(`🗓️ ${r.seeAll ? 'Berichte' : 'Deine Berichte'} – ${label} (${r.total})`, lines, 'Keine Berichte gefunden.');
+  if (r.total > r.items.length) embed.footer = `${r.total - r.items.length} weitere – Filter eingrenzen oder im Dashboard ansehen`;
+  if (!r.items.length) return { ephemeral: true, embeds: [embed] };
+  return { ephemeral: true, embeds: [embed], select: { id: 'drep:open', placeholder: 'Bericht öffnen …', options: r.items.slice(0, 25).map((x) => ({ label: `${x.number} · ${r.seeAll ? x.author.displayName : x.templateName}`.slice(0, 100), value: x.id, description: `${x.templateName} – ${periodLabel(x.period, x.periodStart)}`.slice(0, 100) })) } };
+}
+
+async function templates(c: Ctx, onlyActive = true) { return c.api.asUser<ReportTemplate[]>(c.discordId, 'GET', `/duty-reports/templates${onlyActive ? '?active=1' : ''}`); }
 async function load(c: Ctx, mode: Mode, id: string): Promise<{ t: ReportTemplate; values: Record<string, string>; report?: Report }> {
   if (mode === 'n') {
     const t = (await templates(c)).find((x) => x.id === id);
@@ -51,7 +97,13 @@ export const DUTY_REPORT_COMMANDS: CommandDef[] = [{
   subcommands: [
     { name: 'ausfuellen', description: 'Neuen Bericht nach einer Vorlage ausfüllen' },
     { name: 'meine', description: 'Deine letzten Berichte' },
-    { name: 'anzeigen', description: 'Einen Bericht ansehen (und bearbeiten)', options: [{ name: 'nummer', description: 'Berichtsnummer, z. B. TB-2026-K7M2QX', type: 'string', required: true, maxLength: 40 }] },
+    { name: 'anzeigen', description: 'Einen Bericht ansehen (bearbeiten bzw. prüfen)', options: [{ name: 'nummer', description: 'Berichtsnummer, z. B. TB-2026-K7M2QX', type: 'string', required: true, maxLength: 40 }] },
+    { name: 'liste', description: 'Berichte des Teams: offen, zur Nachbesserung, geprüft – zum Ansehen und Prüfen', options: [
+      { name: 'status', description: 'Welche Berichte? (Standard: offen)', type: 'string', choices: Object.keys(LIST_STATUS).map((k) => ({ name: k === 'zurueckgegeben' ? 'zur Nachbesserung' : k === 'geprueft' ? 'geprüft' : k, value: k })) },
+      { name: 'mitglied', description: 'Nur Berichte dieses Mitglieds', type: 'user' },
+      { name: 'vorlage', description: 'Nur diese Vorlage (Name)', type: 'string', maxLength: 64 },
+      { name: 'tage', description: 'Nur Zeiträume der letzten … Tage', type: 'integer', min: 1, max: 365 },
+    ] },
   ],
   opensModal: true,
   async run(c) {
@@ -60,17 +112,10 @@ export const DUTY_REPORT_COMMANDS: CommandDef[] = [{
       const sub = String(c.opts._sub ?? 'ausfuellen');
       if (sub === 'meine') {
         const r = await c.api.asUser<{ items: Report[] }>(c.discordId, 'GET', '/duty-reports?mine=true&pageSize=10');
-        return { ephemeral: true, embeds: [listEmbed('🗓️ Deine Berichte', r.items.map((x) => `**${x.number}** · ${plain(x.templateName)} – ${periodLabel(x.period, x.periodStart)}${x.status === 'REVIEWED' ? ' ✅' : ''}`), 'Noch keine Berichte.')] };
+        return { ephemeral: true, embeds: [listEmbed('🗓️ Deine Berichte', r.items.map((x) => `**${x.number}** · ${plain(x.templateName)} – ${periodLabel(x.period, x.periodStart)}${x.status === 'REVIEWED' ? ' ✅' : x.status === 'RETURNED' ? ' ↩️ nachbessern' : ''}`), 'Noch keine Berichte.')] };
       }
-      if (sub === 'anzeigen') {
-        const r = await c.api.asUser<Report>(c.discordId, 'GET', `/duty-reports/${encodeURIComponent(String(c.opts.nummer ?? '').trim())}`);
-        const t = r.template;
-        return {
-          ephemeral: true,
-          embeds: [{ title: `${t?.emoji ?? '📝'} ${r.templateName} – ${periodLabel(r.period, r.periodStart)}`, color: COLORS.info, description: `**${r.number}**${r.status === 'REVIEWED' ? ' · ✅ geprüft' : ''}`, fields: (t?.fields ?? Object.keys(r.values).map((id) => ({ id, label: id }))).filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id]!.slice(0, 1024) })) }],
-          ...(r.canEdit ? { buttons: [{ id: `drep:edit:${r.id}`, label: 'Bearbeiten', emoji: '✏️', style: 'secondary' as const }] } : {}),
-        };
-      }
+      if (sub === 'anzeigen') return await showReport(c, String(c.opts.nummer ?? ''));
+      if (sub === 'liste') return await listReply(c);
       const list = await templates(c);
       if (!list.length) return errorReply('Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter „Tages-/Wochenberichte“ an.');
       if (list.length === 1) return openModal(c, list[0]!, 'n', list[0]!.id, 0, await prefill(c, list[0]!));
@@ -79,13 +124,18 @@ export const DUTY_REPORT_COMMANDS: CommandDef[] = [{
   },
 }];
 
-/** Buttons/Menüs/Formulare: drep:pick · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> · drep:rev:<id> · drep:ret:<id> → drep:retsub:<id> */
+/** Buttons/Menüs/Formulare: drep:pick · drep:open · drep:edit:<id> · drep:next:<n|e>:<id>:<seite> · drep:sub:<n|e>:<id>:<seite> · drep:rev:<id> · drep:ret:<id> → drep:retsub:<id> */
 export const DUTY_REPORT_INTERACTION: InteractionDef = {
   prefix: 'drep',
   opensModal: (args) => ['pick', 'edit', 'next', 'ret'].includes(args[0] ?? ''),
   async run(c): Promise<Reply> {
     const [action, a1, a2, a3] = c.args;
     try {
+      if (action === 'open') {
+        const id = c.values?.[0] ?? '';
+        if (!/^[0-9a-f-]{36}$/.test(id)) return errorReply('Bitte einen Bericht auswählen.');
+        return await showReport(c, id);
+      }
       if (action === 'pick') {
         const id = c.values?.[0] ?? '';
         const { t } = await load(c, 'n', id);

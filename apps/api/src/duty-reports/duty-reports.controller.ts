@@ -13,7 +13,7 @@ const values = z.record(z.string().max(40), z.union([z.string().max(4000), z.num
 const create = z.object({ templateId: z.string().uuid(), periodStart: z.string().date().optional(), values, guildId: z.string().regex(/^\d{15,25}$/).nullable().optional(), source: z.enum(['WEB', 'DISCORD']).optional() });
 const edit = z.object({ values, version: z.number().int().optional() });
 const reviewBody = z.object({ decision: z.enum(['REVIEWED', 'RETURNED', 'SUBMITTED']).optional(), note: z.string().trim().max(1000).optional() }).default({});
-const listQ = z.object({ templateId: z.string().uuid().optional(), authorId: z.string().uuid().optional(), from: z.string().date().optional(), to: z.string().date().optional(), q: z.string().max(80).optional(), status: z.enum(['SUBMITTED', 'REVIEWED', 'RETURNED']).optional(), mine: z.coerce.boolean().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(200).default(50) });
+const listQ = z.object({ templateId: z.string().uuid().optional(), authorId: z.string().uuid().optional(), from: z.string().date().optional(), to: z.string().date().optional(), q: z.string().max(80).optional(), status: z.enum(['SUBMITTED', 'REVIEWED', 'RETURNED']).optional(), mine: z.coerce.boolean().optional(), discordId: z.string().regex(/^\d{15,25}$/).optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(200).default(50) });
 
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 @ApiTags('duty-reports')
