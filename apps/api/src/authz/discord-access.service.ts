@@ -31,6 +31,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
   private readonly checked = new Map<string, { at: number; ok: boolean }>();
   private readonly inflight = new Map<string, Promise<boolean>>();
   private timer?: NodeJS.Timeout;
+  private resyncTimer?: NodeJS.Timeout;
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService) {}
 
   onModuleInit() {
@@ -38,7 +39,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
     this.timer = setInterval(() => void this.sweep().catch((e) => this.log.warn(`sweep failed: ${e instanceof Error ? e.message : e}`)), SWEEP_MS);
     this.timer.unref?.();
   }
-  onModuleDestroy() { clearInterval(this.timer); }
+  onModuleDestroy() { clearInterval(this.timer); clearTimeout(this.resyncTimer); }
 
   isOwnerId(discordId: string) { return (this.env.ADMIN_DISCORD_IDS ?? '').split(/[\s,;]+/).includes(discordId); }
 
@@ -165,7 +166,8 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
     const names = [...new Set(settings.roleMap.map((m) => m.role))];
     // nur Rollen der geprüften Server – serverübergreifende Vorlagen werden nicht über Discord vergeben
     const roles = await this.prisma.role.findMany({
-      where: { guildId: { in: checked }, name: { not: 'System Administrator' }, OR: [{ name: { in: names } }, { discordRoleIds: { isEmpty: false } }, { discordMappings: { some: {} } }] },
+      // auch Rollen, die der Benutzer noch über Discord hat, deren Verknüpfung aber entfernt wurde – sonst bliebe die Zuweisung für immer
+      where: { guildId: { in: checked }, name: { not: 'System Administrator' }, OR: [{ name: { in: names } }, { discordRoleIds: { isEmpty: false } }, { discordMappings: { some: {} } }, { users: { some: { userId, guildIds: { isEmpty: false } } } }] },
       include: { discordMappings: { include: { server: { select: { guildId: true } } } } },
     });
     if (!roles.length) return;
@@ -220,6 +222,18 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
         () => undefined,
       );
     }
+  }
+
+  /**
+   * Discord-Verknüpfung einer Rolle geändert (Rollen-Editor): nicht bis zum nächsten Abgleich warten – jede nächste Anfrage
+   * gleicht neu ab, und alle angemeldeten Benutzer werden kurz danach im Hintergrund geprüft.
+   */
+  resyncSoon() {
+    this.forget();
+    if (this.env.NODE_ENV === 'test' || !this.env.DISCORD_TOKEN) return;
+    clearTimeout(this.resyncTimer);
+    this.resyncTimer = setTimeout(() => void this.sweep().catch((e) => this.log.warn(`resync failed: ${e instanceof Error ? e.message : e}`)), 3_000);
+    this.resyncTimer.unref?.();
   }
 
   /** Abgleich nach dem Login merken (kein zweiter Discord-Aufruf direkt danach). */

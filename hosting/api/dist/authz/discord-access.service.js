@@ -37,6 +37,7 @@ let DiscordAccessService = class DiscordAccessService {
     checked = new Map();
     inflight = new Map();
     timer;
+    resyncTimer;
     constructor(prisma, audit, rt) {
         this.prisma = prisma;
         this.audit = audit;
@@ -48,7 +49,7 @@ let DiscordAccessService = class DiscordAccessService {
         this.timer = setInterval(() => void this.sweep().catch((e) => this.log.warn(`sweep failed: ${e instanceof Error ? e.message : e}`)), SWEEP_MS);
         this.timer.unref?.();
     }
-    onModuleDestroy() { clearInterval(this.timer); }
+    onModuleDestroy() { clearInterval(this.timer); clearTimeout(this.resyncTimer); }
     isOwnerId(discordId) { return (this.env.ADMIN_DISCORD_IDS ?? '').split(/[\s,;]+/).includes(discordId); }
     async settings() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'auth.discord' } }))?.value;
@@ -188,7 +189,8 @@ let DiscordAccessService = class DiscordAccessService {
         const names = [...new Set(settings.roleMap.map((m) => m.role))];
         // nur Rollen der geprüften Server – serverübergreifende Vorlagen werden nicht über Discord vergeben
         const roles = await this.prisma.role.findMany({
-            where: { guildId: { in: checked }, name: { not: 'System Administrator' }, OR: [{ name: { in: names } }, { discordRoleIds: { isEmpty: false } }, { discordMappings: { some: {} } }] },
+            // auch Rollen, die der Benutzer noch über Discord hat, deren Verknüpfung aber entfernt wurde – sonst bliebe die Zuweisung für immer
+            where: { guildId: { in: checked }, name: { not: 'System Administrator' }, OR: [{ name: { in: names } }, { discordRoleIds: { isEmpty: false } }, { discordMappings: { some: {} } }, { users: { some: { userId, guildIds: { isEmpty: false } } } }] },
             include: { discordMappings: { include: { server: { select: { guildId: true } } } } },
         });
         if (!roles.length)
@@ -256,6 +258,18 @@ let DiscordAccessService = class DiscordAccessService {
                 await this.audit.record({ userId: null }, { action: 'server.register', module: 'servers', entityType: 'DiscordServer', entityId: c.id, serverId: guildId, after: { guildId, name, via: 'configured' } });
             }, () => undefined);
         }
+    }
+    /**
+     * Discord-Verknüpfung einer Rolle geändert (Rollen-Editor): nicht bis zum nächsten Abgleich warten – jede nächste Anfrage
+     * gleicht neu ab, und alle angemeldeten Benutzer werden kurz danach im Hintergrund geprüft.
+     */
+    resyncSoon() {
+        this.forget();
+        if (this.env.NODE_ENV === 'test' || !this.env.DISCORD_TOKEN)
+            return;
+        clearTimeout(this.resyncTimer);
+        this.resyncTimer = setTimeout(() => void this.sweep().catch((e) => this.log.warn(`resync failed: ${e instanceof Error ? e.message : e}`)), 3_000);
+        this.resyncTimer.unref?.();
     }
     /** Abgleich nach dem Login merken (kein zweiter Discord-Aufruf direkt danach). */
     remember(userId, ok) { this.checked.set(userId, { at: Date.now(), ok }); }

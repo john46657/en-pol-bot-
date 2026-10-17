@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, Copy, GripVertical, Plus, Trash2, Users as UsersIco
 import { PERMISSION_CATALOG } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { hasPending, onSaved, pendingBody, queueSave } from '../../lib/autosave';
+import { hasPending, onRejected, onSaved, pendingBody, queueSave } from '../../lib/autosave';
 import { guildName, useGuilds, useServer } from '../../lib/guilds';
 import { ACTION_LABELS, MODULE_LABELS } from '../../lib/permLabels';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, PageHeader, SkeletonRows, Tabs, Textarea } from '../../components/ui';
@@ -41,6 +41,8 @@ export function Roles() {
 
   // Nach dem Speichern den Serverstand übernehmen – erst wenn nichts mehr aussteht (sonst würde eine laufende Eingabe überschrieben)
   useEffect(() => onSaved('role', () => { if (!hasPending('role')) void qc.invalidateQueries({ queryKey: KEY }); }), [qc]);
+  // Abgelehnt (z. B. fehlende Rechte, Name vergeben): Fehler deutlich zeigen und wieder den echten Serverstand anzeigen
+  useEffect(() => onRejected('role', (m) => { setErr(m); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ['my-rank'] }); }), [qc]);
 
   // Lokale (noch nicht gespeicherte) Änderungen über den Serverstand legen – auch nach dem Neuladen
   const roles = useMemo(() => {
@@ -139,6 +141,13 @@ export function Roles() {
 
 const uniqueName = (base: string, roles: Role[]) => { let n = base; for (let i = 2; roles.some((r) => r.name === n); i++) n = `${base} ${i}`; return n; };
 const effectOf = (r: Role, k: string): Eff => (r.permissions.find((p) => p.permissionKey === k)?.effect as Eff | undefined) ?? 'NONE';
+/** Was tatsächlich gilt: eigenes Recht, sonst „alle“ des Bereichs, sonst das Generalrecht (*). */
+const grantedOf = (r: Role, k: string): Eff => {
+  const own = effectOf(r, k);
+  if (own !== 'NONE') return own;
+  const w = effectOf(r, `${k.split('.')[0]}.*`);
+  return w !== 'NONE' ? w : effectOf(r, '*') === 'ALLOW' ? 'ALLOW' : 'NONE';
+};
 const next = (e: Eff): Eff => (e === 'NONE' ? 'ALLOW' : e === 'ALLOW' ? 'DENY' : 'NONE');
 const EFF_LABEL: Record<Eff, string> = { ALLOW: 'erlaubt', DENY: 'verweigert', NONE: 'nicht gesetzt' };
 const cellCls = (e: Eff) => (e === 'ALLOW' ? 'border-success/40 bg-success/15 text-success' : e === 'DENY' ? 'border-danger/40 bg-danger/15 text-danger' : 'border-line text-muted');
@@ -151,7 +160,8 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
   const [pf, setPf] = useState('');
   const f = pf.toLowerCase();
   const modules = Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => ({ mod, actions: (actions as readonly string[]).filter((a) => !f || `${mod}.${a} ${MODULE_LABELS[mod] ?? ''} ${ACTION_LABELS[a] ?? ''}`.toLowerCase().includes(f)) })).filter((m) => m.actions.length);
-  const set = role.permissions.filter((p) => p.permissionKey !== '*' && !p.permissionKey.endsWith('.*'));
+  const allKeys = Object.entries(PERMISSION_CATALOG).flatMap(([m, acts]) => (acts as readonly string[]).map((a) => `${m}.${a}`));
+  const allowed = allKeys.filter((k) => grantedOf(role, k) === 'ALLOW').length, denied = allKeys.filter((k) => grantedOf(role, k) === 'DENY').length;
   return (
     <Card title={<span className="flex items-center gap-2">{role.icon && <span aria-hidden>{role.icon}</span>}{role.name}{scope && <Badge>{scope}</Badge>}{!role.active && <Badge tone="warning">deaktiviert</Badge>}</span>}
       actions={<span className="flex gap-1">{canCreate && role.name !== ADMIN && <Button size="sm" variant="secondary" onClick={onDuplicate}><Copy size={12} />Duplizieren</Button>}{editable && <Button size="sm" variant="danger" onClick={onDelete}><Trash2 size={12} />Löschen</Button>}</span>}>
@@ -170,7 +180,7 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
         </div>
       </div>
       <div className="mb-2 mt-5 flex flex-wrap items-end justify-between gap-2">
-        <h3 className="text-sm font-semibold">Berechtigungen <span className="text-xs font-normal text-muted">– {set.filter((p) => p.effect === 'ALLOW').length} erlaubt · {set.filter((p) => p.effect === 'DENY').length} verweigert · klicken: nicht gesetzt → ✓ erlaubt → ✕ verweigert. Verweigern schlägt Erlauben.</span></h3>
+        <h3 className="text-sm font-semibold">Berechtigungen <span className="text-xs font-normal text-muted">– {allowed} erlaubt · {denied} verweigert · klicken: nicht gesetzt → ✓ erlaubt → ✕ verweigert. Gestrichelt = gilt über „alle“. Verweigern schlägt Erlauben – auch aus anderen Rollen derselben Person.</span></h3>
         <Input aria-label="Berechtigung suchen" className="w-52 py-1 text-xs" placeholder="Berechtigung suchen…" value={pf} onChange={(e) => setPf(e.target.value)} />
       </div>
       {wildcard && <p className="mb-3 rounded bg-warning/10 p-2 text-xs text-warning">Diese Rolle hat das Generalrecht (*) – sie darf alles.</p>}
@@ -178,13 +188,13 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
         {!modules.length && <p className="text-sm text-muted">Keine Berechtigung passt zur Suche.</p>}
         {modules.map(({ mod, actions }) => {
           const all = effectOf(role, `${mod}.*`);
-          const on = (PERMISSION_CATALOG[mod as keyof typeof PERMISSION_CATALOG] as readonly string[]).filter((a) => effectOf(role, `${mod}.${a}`) === 'ALLOW').length;
+          const on = (PERMISSION_CATALOG[mod as keyof typeof PERMISSION_CATALOG] as readonly string[]).filter((a) => grantedOf(role, `${mod}.${a}`) === 'ALLOW').length;
           return (
             <fieldset key={mod}><legend className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-muted">{MODULE_LABELS[mod] ?? mod}
               <span className="font-normal normal-case">{on}/{PERMISSION_CATALOG[mod as keyof typeof PERMISSION_CATALOG].length}</span>
               <button type="button" disabled={!editable} onClick={() => onPerm(`${mod}.*`, next(all))} className={`rounded border px-1.5 text-[10px] normal-case ${cellCls(all)}`} aria-label={`${mod}.*: ${EFF_LABEL[all]}`}>{all === 'ALLOW' ? '✓ alle' : all === 'DENY' ? '✕ alle' : 'alle'}</button></legend>
-              <div className="flex flex-wrap gap-1.5">{actions.map((a) => { const k = `${mod}.${a}`; const st = effectOf(role, k); return (
-                <button key={k} type="button" title={k} disabled={!editable} aria-pressed={st !== 'NONE'} aria-label={`${k}: ${EFF_LABEL[st]}`} onClick={() => onPerm(k, next(st))} className={`rounded border px-2 py-0.5 text-xs ${cellCls(st)}`}>{st === 'ALLOW' ? '✓ ' : st === 'DENY' ? '✕ ' : ''}{ACTION_LABELS[a] ?? a}</button>); })}</div>
+              <div className="flex flex-wrap gap-1.5">{actions.map((a) => { const k = `${mod}.${a}`; const st = effectOf(role, k); const eff = grantedOf(role, k); const inherited = st === 'NONE' && eff !== 'NONE'; return (
+                <button key={k} type="button" title={inherited ? `${k} – gilt über „alle“ bzw. *` : k} disabled={!editable} aria-pressed={st !== 'NONE'} aria-label={`${k}: ${EFF_LABEL[eff]}${inherited ? ' (über „alle“)' : ''}`} onClick={() => onPerm(k, next(st))} className={`rounded border px-2 py-0.5 text-xs ${cellCls(eff)} ${inherited ? 'border-dashed opacity-60' : ''}`}>{eff === 'ALLOW' ? '✓ ' : eff === 'DENY' ? '✕ ' : ''}{ACTION_LABELS[a] ?? a}</button>); })}</div>
             </fieldset>
           );
         })}

@@ -2,6 +2,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { DiscordAccessService } from '../authz/discord-access.service';
 export declare const ADMIN_ROLE = "System Administrator";
 type Effect = 'ALLOW' | 'DENY';
 export interface RoleInput {
@@ -26,7 +27,8 @@ export declare class RolesService {
     private readonly audit;
     private readonly perms;
     private readonly rt;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService);
+    private readonly access;
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, access: DiscordAccessService);
     /** Nach jeder Änderung: alle Dashboards laden ihre Rechte neu (die API prüft ohnehin bei jeder Anfrage). */
     private changed;
     /** Im Server-Kontext nur die Rollen dieses Servers; unter „Alle Server“: alle (serverübergreifende = Vorlagen für neue Server). */

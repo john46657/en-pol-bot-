@@ -18,6 +18,7 @@ const STORE_KEY = 'enrp.autosave.v1';
 const DEBOUNCE_MS = 800;
 const listeners = new Set<() => void>();
 const savedHooks = new Map<string, Set<(data: unknown) => void>>();
+const rejectedHooks = new Map<string, Set<(message: string) => void>>();
 let owner = '';
 let queue = new Map<string, Entry>();
 let state: { status: SaveState; error?: string; lastSavedAt?: number } = { status: 'saved' };
@@ -69,6 +70,13 @@ export function onSaved(prefix: string, fn: (data: unknown) => void) {
   return () => { set.delete(fn); };
 }
 
+/** Vom Server abgelehnte Änderung (fehlende Rechte, ungültige Werte) – z. B. um die Anzeige auf den Serverstand zurückzusetzen. */
+export function onRejected(prefix: string, fn: (message: string) => void) {
+  const set = rejectedHooks.get(prefix) ?? new Set();
+  set.add(fn); rejectedHooks.set(prefix, set);
+  return () => { set.delete(fn); };
+}
+
 async function send(e: Entry, keepalive = false) {
   const res = await fetch(`/api/v1${e.path}`, { method: e.method, credentials: 'same-origin', keepalive, headers: { 'content-type': 'application/json', ...apiHeaders(e.guildId) }, body: JSON.stringify(e.body) });
   const text = await res.text();
@@ -97,6 +105,7 @@ export function flush(): Promise<void> {
           // vom Server abgelehnt: Wiederholen hilft nicht
           queue.delete(e.key);
           failed = `${e.label ?? 'Änderung'}: ${err instanceof ApiError ? err.message : 'abgelehnt'}`;
+          for (const [p, fns] of rejectedHooks) if (e.key.startsWith(p)) fns.forEach((f) => f(failed!));
         } else {
           e.attempts++; retry = true;
           failed = 'Deine Änderungen konnten nicht gespeichert werden. Wir versuchen es automatisch erneut.';

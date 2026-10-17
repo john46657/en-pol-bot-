@@ -35,6 +35,7 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     private readonly checked;
     private readonly inflight;
     private timer?;
+    private resyncTimer?;
     constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService);
     onModuleInit(): void;
     onModuleDestroy(): void;
@@ -76,6 +77,11 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
      * automatisch registriert und aktiv – andere vom Bot entdeckte Server müssen ein globaler Systemadministrator freischalten.
      */
     ensureConfiguredServers(): Promise<void>;
+    /**
+     * Discord-Verknüpfung einer Rolle geändert (Rollen-Editor): nicht bis zum nächsten Abgleich warten – jede nächste Anfrage
+     * gleicht neu ab, und alle angemeldeten Benutzer werden kurz danach im Hintergrund geprüft.
+     */
+    resyncSoon(): void;
     /** Abgleich nach dem Login merken (kein zweiter Discord-Aufruf direkt danach). */
     remember(userId: string, ok: boolean): void;
     forget(userId?: string): void;
