@@ -83,6 +83,7 @@ describe('/abmeldung and the approval buttons', () => {
     expect(renderOutboxEmbeds('leave.log', { ...p, event: 'started' })![0]!.title).toContain('beginnt');
     const log = renderOutboxEmbeds('leave.log', { ...p, event: 'approved', decidedByName: 'Chef' })![0]!;
     expect(log).toMatchObject({ author: { name: '@Max' }, footer: 'ID: LOA-1' });
+    expect(renderOutboxEmbeds('leave.log', { ...p, event: 'extended', extendReason: 'Flug verschoben' })![0]!.description).toContain('**Grund der Verlängerung**: Flug verschoben');
     expect(log.description).toMatch(/\*\*Beginn\*\*: <t:\d+:f>[\s\S]*\*\*Ende\*\*[\s\S]*\*\*Grund\*\*: Urlaub[\s\S]*\*\*Angenommen von\*\*: Chef/);
     expect(leaveDecisionText({ ...p, status: 'DENIED', decisionReason: 'Personalmangel' })).toContain('Personalmangel');
   });
@@ -195,9 +196,10 @@ describe('/leave manage (wie Trident)', () => {
     expect(ext.def.opensModal?.(ext.args)).toBe(true);
     expect((await ext.def.run({ ...ctx(api), args: ext.args })).modal?.id).toBe(`leave:extendsubmit:${id}`);
     const sub = interactionFor(`leave:extendsubmit:${id}`)!;
-    expect(text(await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: 'bald' } }))).toContain('verstehe ich nicht');
-    const r = await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: '2d' } });
-    expect(calls[0]).toMatchObject({ method: 'POST', path: `/leave/${id}/extend`, body: { minutes: 2 * 24 * 60 } });
+    expect(text(await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: 'bald', reason: 'länger' } }))).toContain('verstehe ich nicht');
+    expect(text(await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: '2d', reason: '' } }))).toContain('Grund');
+    const r = await sub.def.run({ ...ctx(api), args: sub.args, fields: { duration: '2d', reason: 'Urlaub verlängert' } });
+    expect(calls[0]).toMatchObject({ method: 'POST', path: `/leave/${id}/extend`, body: { minutes: 2 * 24 * 60, reason: 'Urlaub verlängert' } });
     expect(text(r)).toContain('um 2 Tage verlängert');
   });
 });

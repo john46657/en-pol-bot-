@@ -41,9 +41,12 @@ declare const listQ: z.ZodObject<{
 }>;
 declare const extendBody: z.ZodObject<{
     minutes: z.ZodNumber;
+    reason: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    reason: string;
     minutes: number;
 }, {
+    reason: string;
     minutes: number;
 }>;
 declare const decision: z.ZodObject<{
@@ -144,7 +147,7 @@ export declare class LeaveController {
         createdAt: Date;
         days: number;
     }>;
-    /** Verlängern um `minutes` (eigene; Leitung jede). */
+    /** Verlängern um `minutes` mit Grund (eigene; Leitung jede). */
     extend(a: Actor, id: string, b: z.infer<typeof extendBody>): Promise<{
         id: string;
         number: string;

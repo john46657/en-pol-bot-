@@ -113,7 +113,7 @@ function renderOutbox(type, p) {
             const by = p.event === 'approved' ? 'Angenommen von' : p.event === 'denied' ? 'Abgelehnt von' : p.event === 'extended' ? 'Verlängert von' : 'Entschieden von';
             const t = (v, style = 'f') => `<t:${unixOf(v)}:${style}>`;
             return { author: { name: (0, exports.clip)(`@${String(p.name ?? '—')}`, 200) }, title: ev.text, color: ev.color, footer: `ID: ${String(p.number)}`,
-                description: (0, exports.clip)([p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null, `**Beginn**: ${t(p.startsAt)}`, `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ''}`, `**Dauer**: ${leaveSpan(p)}`, `**Grund**: ${(0, exports.plain)(p.reason)}`,
+                description: (0, exports.clip)([p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null, `**Beginn**: ${t(p.startsAt)}`, `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ''}`, `**Dauer**: ${leaveSpan(p)}`, `**Grund**: ${(0, exports.plain)(p.reason)}`, p.extendReason ? `**Grund der Verlängerung**: ${(0, exports.plain)(p.extendReason)}` : null,
                     p.decidedByName ? `**${by}**: ${(0, exports.plain)(p.decidedByName)}` : null, p.decisionReason ? `**Begründung**: ${(0, exports.plain)(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
         }
         case 'sek.report':

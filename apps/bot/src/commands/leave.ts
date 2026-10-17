@@ -263,13 +263,16 @@ export const LEAVE_INTERACTION: InteractionDef = {
     }
     if (!id || !/^[0-9a-f-]{36}$/.test(id)) return errorReply('Unbekannte Aktion.');
     if (action === 'extend') return { modal: { id: `leave:extendsubmit:${id}`, title: 'Abmeldung verlängern', fields: [
-      { id: 'duration', label: 'Um wie lange verlängern?', required: true, maxLength: 20, placeholder: "Format: '6h', '4d' oder '2w'" },
+      { id: 'duration', label: 'Zusätzliche Dauer', paragraph: true, required: true, maxLength: 20, placeholder: "Hinweis: Wird zur bisherigen Zeit hinzugefügt.\nFormat: '6h', '4d' oder '2w'" },
+      { id: 'reason', label: 'Grund', paragraph: true, required: true, minLength: 3, maxLength: 1000, placeholder: 'z. B. Urlaub verlängert sich' },
     ] } };
     if (action === 'extendsubmit') {
       const ms = parseDuration(c.fields?.duration ?? '');
       if (!ms) return errorReply('Die Dauer verstehe ich nicht. Beispiele: `6h`, `4d`, `2w` oder `1w 2d` (mindestens 1 Stunde).');
+      const reason = (c.fields?.reason ?? '').trim();
+      if (reason.length < 3) return errorReply('Bitte einen Grund angeben.');
       try {
-        const r = await c.api.asUser<{ number: string; endsAt: string }>(c.discordId, 'POST', `/leave/${id}/extend`, { minutes: Math.round(ms / 60_000) });
+        const r = await c.api.asUser<{ number: string; endsAt: string }>(c.discordId, 'POST', `/leave/${id}/extend`, { minutes: Math.round(ms / 60_000), reason });
         return okReply(`Abmeldung **${r.number}** um ${humanDuration(ms)} verlängert – sie endet jetzt ungefähr ${ts(r.endsAt)} (${ts(r.endsAt, 'R')}).`);
       } catch (e) { return mapError(e); }
     }

@@ -115,7 +115,7 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
       const by = p.event === 'approved' ? 'Angenommen von' : p.event === 'denied' ? 'Abgelehnt von' : p.event === 'extended' ? 'Verlängert von' : 'Entschieden von';
       const t = (v: unknown, style = 'f') => `<t:${unixOf(v)}:${style}>`;
       return { author: { name: clip(`@${String(p.name ?? '—')}`, 200) }, title: ev.text, color: ev.color, footer: `ID: ${String(p.number)}`,
-        description: clip([p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null, `**Beginn**: ${t(p.startsAt)}`, `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ''}`, `**Dauer**: ${leaveSpan(p)}`, `**Grund**: ${plain(p.reason)}`,
+        description: clip([p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null, `**Beginn**: ${t(p.startsAt)}`, `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ''}`, `**Dauer**: ${leaveSpan(p)}`, `**Grund**: ${plain(p.reason)}`, p.extendReason ? `**Grund der Verlängerung**: ${plain(p.extendReason)}` : null,
           p.decidedByName ? `**${by}**: ${plain(p.decidedByName)}` : null, p.decisionReason ? `**Begründung**: ${plain(p.decisionReason)}` : null].filter(Boolean).join('\n'), 4000) };
     }
     case 'sek.report':

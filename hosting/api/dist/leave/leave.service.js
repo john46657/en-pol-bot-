@@ -222,7 +222,7 @@ let LeaveService = class LeaveService {
      * Verlängern (wie Trident „Extend“): eigene offene/laufende/geplante Abmeldung oder als Leitung jede.
      * Das neue Ende darf die Höchstdauer nicht überschreiten und sich mit keiner anderen Abmeldung überschneiden; steht im Log.
      */
-    async extend(actor, id, minutes) {
+    async extend(actor, id, minutes, reason) {
         const r = await this.load(id);
         if (r.userId !== actor.userId && !(await this.perms.has(actor.userId, 'leave.manage')))
             throw new errors_1.AppError('PERMISSION_DENIED', 'Das ist nicht deine Abmeldung.');
@@ -237,11 +237,11 @@ let LeaveService = class LeaveService {
             throw new errors_1.AppError('CONFLICT', `Die Verlängerung überschneidet sich mit ${overlap.number}.`);
         const updated = await this.prisma.$transaction(async (tx) => {
             await tx.leaveRequest.update({ where: { id }, data: { endsAt } });
-            await this.audit.record(actor, { action: 'leave.extend', module: 'leave', entityType: 'LeaveRequest', entityId: id, before: { endsAt: r.endsAt }, after: { endsAt } }, tx);
+            await this.audit.record(actor, { action: 'leave.extend', module: 'leave', entityType: 'LeaveRequest', entityId: id, before: { endsAt: r.endsAt }, after: { endsAt, reason } }, tx);
             return tx.leaveRequest.findUniqueOrThrow({ where: { id }, include });
         }).then((x) => this.one(x));
         const by = await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } });
-        await this.log(cfg, updated, 'extended', { previousEndsAt: r.endsAt.toISOString(), decidedByName: r.userId === actor.userId ? null : by?.displayName ?? null });
+        await this.log(cfg, updated, 'extended', { previousEndsAt: r.endsAt.toISOString(), extendReason: reason, decidedByName: r.userId === actor.userId ? null : by?.displayName ?? null });
         return this.view(updated);
     }
     /** Jede Minute: Rolle zu Beginn vergeben, am Ende entfernen und die Abmeldung abschließen. */

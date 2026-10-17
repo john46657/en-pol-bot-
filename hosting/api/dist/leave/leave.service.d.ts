@@ -162,7 +162,7 @@ export declare class LeaveService {
      * Verlängern (wie Trident „Extend“): eigene offene/laufende/geplante Abmeldung oder als Leitung jede.
      * Das neue Ende darf die Höchstdauer nicht überschreiten und sich mit keiner anderen Abmeldung überschneiden; steht im Log.
      */
-    extend(actor: Actor, id: string, minutes: number): Promise<{
+    extend(actor: Actor, id: string, minutes: number, reason: string): Promise<{
         id: string;
         number: string;
         userId: string;
