@@ -50,13 +50,15 @@ export interface Ctx {
   /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
   voiceSupport?: VoiceSupportRuntime;
 }
-export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number }
+export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number; /** Vorschläge beim Tippen über `CommandDef.complete` (nur Text-Optionen). */ autocomplete?: boolean }
 /** Unterbefehl (`/leave manage`): Name landet in `opts._sub`, seine Optionen wie gewohnt in `opts`. */
 export interface SubcommandDef { name: string; description: string; options?: OptionDef[] }
 export interface CommandDef {
   name: string; description: string; options?: OptionDef[]; subcommands?: SubcommandDef[];
   /** true: Der Befehl öffnet ein Formular (Modal) – darf vorher NICHT mit deferReply beantwortet werden. */
   opensModal?: boolean;
+  /** Vorschläge für Optionen mit `autocomplete` (höchstens 25). */
+  complete?(ctx: Ctx, option: string, value: string): Promise<{ name: string; value: string }[]>;
   run(ctx: Ctx): Promise<Reply>;
 }
 /** Buttons/Formulare/Auswahlmenüs: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen, `values` nur bei Auswahlmenüs. */

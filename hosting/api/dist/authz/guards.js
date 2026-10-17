@@ -32,7 +32,7 @@ const UUID = '[0-9a-fA-F-]{36}';
 const BOT_USER_ROUTES = [
     ['GET', /^\/persons\/?$/], ['GET', new RegExp(`^/persons/${UUID}$`)], ['GET', /^\/vehicles\/?$/], ['GET', new RegExp(`^/vehicles/${UUID}$`)],
     ['GET', /^\/wanted\/?$/], ['GET', /^\/search\/?$/], ['GET', /^\/incidents\/?$/], ['POST', /^\/incidents\/?$/],
-    ['GET', /^\/team\/(overview|me|me\/hours|me\/shifts|hours|shifts)$/], ['PUT', /^\/team\/me\/status$/], ['PUT', new RegExp(`^/team/${UUID}/status$`)],
+    ['GET', /^\/team\/(overview|me|me\/hours|me\/shifts|hours|shifts|leaderboard)$/], ['PUT', /^\/team\/me\/status$/], ['PUT', new RegExp(`^/team/${UUID}/status$`)],
     ['GET', /^\/dispatch\/units\/?$/], ['PUT', new RegExp(`^/dispatch/units/${UUID}/status$`)],
     ['POST', /^\/tickets\/?$/],
     ['GET', /^\/auth\/me$/], ['DELETE', /^\/discord\/link$/], ['GET', /^\/notifications\/?$/],

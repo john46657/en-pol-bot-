@@ -109,13 +109,16 @@ export declare class DutyController {
         days: number;
         since: Date;
         users: {
+            userId: string;
+            name: string;
+            rank: string | null;
+            callsign: string | null;
             minutes: number;
-            byStatus: {
-                [k: string]: number;
-            };
+            byStatus: Record<string, number>;
+            sessions: number;
         }[];
     }>;
-    /** Eigene Schichten (Discord: `/schicht verlauf`). */
+    /** Eigene Schichten (Discord: `/shift manage`). */
     myShifts(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
         days: number;
         since: Date;
@@ -147,15 +150,29 @@ export declare class DutyController {
         days: number;
         since: Date;
     }>;
+    /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
+    leaderboard(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
+        days: number;
+        me: string;
+        users: {
+            userId: string;
+            name: string;
+            callsign: string | null;
+            minutes: number;
+        }[];
+    }>;
     /** Dienststunden aller Beamten (Schichtleitung). */
     hours(f: z.infer<typeof hoursQuery>): Promise<{
         days: number;
         since: Date;
         users: {
+            userId: string;
+            name: string;
+            rank: string | null;
+            callsign: string | null;
             minutes: number;
-            byStatus: {
-                [k: string]: number;
-            };
+            byStatus: Record<string, number>;
+            sessions: number;
         }[];
     }>;
     /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */

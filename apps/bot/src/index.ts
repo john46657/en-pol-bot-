@@ -1,7 +1,7 @@
 import {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentType, ContainerBuilder, EmbedBuilder, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, GatewayIntentBits, MessageFlags, ModalBuilder, OverwriteType, Partials,
   PermissionFlagsBits, SlashCommandBuilder, TextInputBuilder, TextInputStyle,
-  type AnySelectMenuInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
+  type AnySelectMenuInteraction, type AutocompleteInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
 import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
 import { deleteMessage, postAsUser, postOrUpdate, resolveAssets } from './messages';
@@ -319,7 +319,7 @@ type OptionHost = Pick<SlashCommandBuilder, 'addStringOption' | 'addIntegerOptio
 function addOptions(b: OptionHost, options: CommandDef['options'] = []) {
   for (const o of options) {
     const common = (x: { setName(n: string): unknown; setDescription(d: string): unknown; setRequired(r: boolean): unknown }) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
-    if (o.type === 'string') b.addStringOption((x) => { common(x); if (o.maxLength) x.setMaxLength(o.maxLength); if (o.choices) x.addChoices(...o.choices); return x; });
+    if (o.type === 'string') b.addStringOption((x) => { common(x); if (o.maxLength) x.setMaxLength(o.maxLength); if (o.autocomplete) x.setAutocomplete(true); else if (o.choices) x.addChoices(...o.choices); return x; });
     else if (o.type === 'integer') b.addIntegerOption((x) => { common(x); if (o.min !== undefined) x.setMinValue(o.min); if (o.max !== undefined) x.setMaxValue(o.max); return x; });
     else if (o.type === 'boolean') b.addBooleanOption((x) => { common(x); return x; });
     else if (o.type === 'user') b.addUserOption((x) => { common(x); return x; });
@@ -357,7 +357,7 @@ async function markDecided(message: Message, d: { text: string; color: number })
 }
 
 /** Gemeinsamer Kontext für Befehle, Buttons und Formulare. */
-function baseCtx(i: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction): Omit<Ctx, 'opts'> {
+function baseCtx(i: ChatInputCommandInteraction | AutocompleteInteraction | ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction): Omit<Ctx, 'opts'> {
   const perms = i.memberPermissions;
   return {
     discordId: i.user.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
@@ -437,6 +437,15 @@ async function handleCommand(i: ChatInputCommandInteraction) {
   await i.editReply(replyPayload(reply));
 }
 
+/** Vorschläge beim Tippen (z. B. Schichtart bei `/shift manage`). */
+async function handleAutocomplete(i: AutocompleteInteraction) {
+  const def = byName(i.commandName);
+  const focused = i.options.getFocused(true);
+  const sub = def?.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
+  const list = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? '')).catch(() => []) : [];
+  await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
+}
+
 async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
@@ -463,7 +472,7 @@ function wire(c: Client) {
   c.on('shardError', (e, id) => console.error(`discord shard ${id} error:`, e.message));
   c.on('interactionCreate', (i: Interaction) => {
     // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
-    const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
+    const task = guildScope.run(i.guildId ?? null, () => rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isAutocomplete() ? handleAutocomplete(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
     void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
   });
 

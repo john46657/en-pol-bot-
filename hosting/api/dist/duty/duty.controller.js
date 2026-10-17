@@ -33,8 +33,10 @@ let DutyController = class DutyController {
     mine(a) { return this.d.mine(a.userId); }
     /** Eigene Dienststunden. */
     myHours(a, f) { return this.d.hours(f.days, a.userId); }
-    /** Eigene Schichten (Discord: `/schicht verlauf`). */
+    /** Eigene Schichten (Discord: `/shift manage`). */
     myShifts(a, f) { return this.d.shiftLog({ days: f.days, userId: a.userId }); }
+    /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
+    leaderboard(a, f) { return this.d.leaderboard(f.days, a.userId); }
     /** Dienststunden aller Beamten (Schichtleitung). */
     hours(f) { return this.d.hours(f.days); }
     /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
@@ -86,6 +88,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "myShifts", null);
+__decorate([
+    (0, common_1.Get)('leaderboard'),
+    (0, decorators_1.RequirePermission)('team.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(hoursQuery))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "leaderboard", null);
 __decorate([
     (0, common_1.Get)('hours'),
     (0, decorators_1.RequirePermission)('team.manage'),

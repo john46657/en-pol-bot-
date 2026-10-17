@@ -360,7 +360,9 @@ function addOptions(b, options = []) {
         const common = (x) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
         if (o.type === 'string')
             b.addStringOption((x) => { common(x); if (o.maxLength)
-                x.setMaxLength(o.maxLength); if (o.choices)
+                x.setMaxLength(o.maxLength); if (o.autocomplete)
+                x.setAutocomplete(true);
+            else if (o.choices)
                 x.addChoices(...o.choices); return x; });
         else if (o.type === 'integer')
             b.addIntegerOption((x) => { common(x); if (o.min !== undefined)
@@ -506,6 +508,14 @@ async function handleCommand(i) {
     const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     await i.editReply(replyPayload(reply));
 }
+/** Vorschläge beim Tippen (z. B. Schichtart bei `/shift manage`). */
+async function handleAutocomplete(i) {
+    const def = (0, commands_1.byName)(i.commandName);
+    const focused = i.options.getFocused(true);
+    const sub = def?.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
+    const list = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? '')).catch(() => []) : [];
+    await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
+}
 async function handleComponent(i) {
     const hit = (0, features_1.interactionFor)(i.customId);
     if (!hit)
@@ -538,7 +548,7 @@ function wire(c) {
     c.on('shardError', (e, id) => console.error(`discord shard ${id} error:`, e.message));
     c.on('interactionCreate', (i) => {
         // Server der Interaktion → API prüft Rechte für genau diesen Server (Server laufen getrennt)
-        const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
+        const task = api_1.guildScope.run(i.guildId ?? null, () => api_1.rolesScope.run(rolesOf(i.member), () => i.isChatInputCommand() ? handleCommand(i) : i.isAutocomplete() ? handleAutocomplete(i) : i.isButton() || i.isModalSubmit() || i.isAnySelectMenu() ? handleComponent(i) : undefined));
         void task?.catch((e) => console.error('interaction failed:', e instanceof Error ? e.message : e));
     });
     c.on('voiceStateUpdate', (o, n) => {

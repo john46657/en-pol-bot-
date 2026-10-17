@@ -158,9 +158,17 @@ export class DutyService {
       r.minutes += min; r.byStatus[s.status] = (r.byStatus[s.status] ?? 0) + min; r.sessions++;
       rows.set(s.userId, r);
     }
-    const round = (r: { minutes: number; byStatus: Record<string, number> }) => ({ ...r, minutes: Math.round(r.minutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) });
+    const round = <T extends { minutes: number; byStatus: Record<string, number> }>(r: T): T => ({ ...r, minutes: Math.round(r.minutes), byStatus: Object.fromEntries(Object.entries(r.byStatus).map(([k, v]) => [k, Math.round(v)])) });
     const users = [...rows.values()].map(round).sort((a, b) => b.minutes - a.minutes);
     return { days, since, users };
+  }
+
+  /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
+  async leaderboard(days: number, me: string) {
+    const { users } = await this.hours(days);
+    const rows = users.map((u) => ({ userId: u.userId, name: u.name, callsign: u.callsign, minutes: u.minutes - (u.byStatus.BREAK ?? 0) }))
+      .filter((u) => u.minutes > 0).sort((a, b) => b.minutes - a.minutes);
+    return { days, me, users: rows };
   }
 
   /**
@@ -168,7 +176,7 @@ export class DutyService {
    * Je Schicht: wer, Schichtart, Beginn/Ende, Dauer, Pausen und wer sie gestartet/beendet hat (aus dem Audit-Log).
    */
   async shiftLog(f: { days: number; userId?: string; shiftType?: string; discordId?: string }) {
-    // Discord-Mitglied (`/schicht admin`) → Benutzer; nicht verknüpft = keine Schichten
+    // Discord-Mitglied (`/shift admin`) → Benutzer; nicht verknüpft = keine Schichten
     let member: { userId: string; name: string } | null | undefined;
     if (f.discordId) {
       const link = await this.prisma.discordLink.findUnique({ where: { discordId: f.discordId }, select: { userId: true } });
