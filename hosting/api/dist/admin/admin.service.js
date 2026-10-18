@@ -50,6 +50,8 @@ exports.SETTING_SCHEMAS = {
         roleMap: zod_1.z.array(zod_1.z.object({ discordRoleId: zod_1.z.string().regex(/^\d{15,25}$/), role: zod_1.z.string().trim().min(1).max(64) })).max(50),
         /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
         teamRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(20).default([]),
+        /** Discord-Administratoren (Recht „Administrator“ oder Besitzer) eines Servers kommen immer rein und verwalten diesen Server. */
+        guildAdmins: zod_1.z.boolean().default(true),
     }),
 };
 /** Ungültige gespeicherte Werte (altes Format, unvollständig) weglassen – dann gelten im Dashboard die Standardwerte. */
