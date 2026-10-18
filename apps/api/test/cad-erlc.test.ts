@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ERLC_POSTALS } from '@enrp/shared';
+import { DEFAULT_CAD_CONFIG, ERLC_POSTALS } from '@enrp/shared';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { generateKeyPairSync, sign } from 'node:crypto';
@@ -242,8 +242,12 @@ describe('CAD', () => {
     expect((await admin.put('/api/v1/cad/config').send({ incidentStatuses: [{ key: 'A', label: 'A' }, { key: 'B', label: 'B' }] })).status).toBe(400); // kein abschließender Status
     const r = await admin.put('/api/v1/cad/config').send({ incidentNumberPrefix: 'E' });
     expect(r.body).toMatchObject({ incidentNumberPrefix: 'E', homeGuildId: HOME });
-    expect((await admin.put('/api/v1/cad/config/map').send({ scale: 0.5 })).body.map.scale).toBe(0.5);
-    expect(await prisma.auditLog.count({ where: { action: 'cad.map.config' } })).toBe(1);
+    // Karte ist fest die offizielle ER:LC-Karte: nicht änderbar, auch nicht über die allgemeine Konfiguration
+    expect((await admin.put('/api/v1/cad/config/map').send({ scale: 0.5 })).status).toBe(404);
+    expect((await admin.post('/api/v1/cad/map/image-url').send({ url: 'https://example.com/karte.png' })).status).toBe(404);
+    expect((await admin.put('/api/v1/cad/config').send({ map: { imageUrl: 'https://example.com/k.png', width: 100, height: 100, originX: 0, originY: 0, scale: 2 } })).body.map).toEqual(DEFAULT_CAD_CONFIG.map);
+    await prisma.systemSetting.update({ where: { key: 'cad.config' }, data: { value: { ...(await prisma.systemSetting.findUniqueOrThrow({ where: { key: 'cad.config' } })).value as object, map: { imageUrl: '/api/v1/media/alt', width: 4096, height: 4096, originX: 2048, originY: 2048, scale: 0.7 } } } });
+    expect((await admin.get('/api/v1/cad/config')).body.map).toEqual(DEFAULT_CAD_CONFIG.map); // alte gespeicherte Karte wird ignoriert
   });
 
   it('units, incidents with sequential numbers, assignment, status and chronicle', async () => {

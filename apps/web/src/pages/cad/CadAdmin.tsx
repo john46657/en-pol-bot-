@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Link2, Trash2, Upload } from 'lucide-react';
-import { CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, ERLC_BUILTIN_MAP, fitPostalCalibration, postalMatchRate, type CadConfig, type PostalSample, type CadRoute } from '@enrp/shared';
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_BUILTIN_MAP, fitPostalCalibration, postalMatchRate, type CadConfig, type PostalSample, type CadRoute } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useAutosaveDraft } from '../../lib/autosave';
@@ -76,9 +76,9 @@ export function CadSettings() {
   const [tab, setTab] = useState(tabs.includes(sp.get('tab') ?? '') ? sp.get('tab')! : tabs[0] ?? '');
   const [draft, setDraft] = useState<CadConfig | null>(null);
   useEffect(() => { if (q.data && !draft) setDraft(q.data); }, [q.data, draft]);
-  const { map: mapDraft, ...rest } = draft ?? ({} as CadConfig);
-  useAutosaveDraft(draft ? 'cad:config' : null, draft ? rest : undefined, (d) => (can('cad.manage_settings') ? { method: 'PUT', path: '/cad/config', body: d, guildId: null, label: 'CAD-Einstellungen' } : null));
-  useAutosaveDraft(draft ? 'cad:map' : null, mapDraft, (d) => (can('cad.manage_map') ? { method: 'PUT', path: '/cad/config/map', body: d, guildId: null, label: 'CAD-Karte' } : null));
+  // Karte ist fest eingebaut – nur der Rest wird gespeichert
+  const rest = draft ? (({ map: _, ...r }) => r)(draft) : undefined;
+  useAutosaveDraft(draft ? 'cad:config' : null, rest, (d) => (can('cad.manage_settings') ? { method: 'PUT', path: '/cad/config', body: d, guildId: null, label: 'CAD-Einstellungen' } : null));
   if (!tabs.length) return <EmptyState text="Keine Einstellungen für dich." />;
   if (q.isLoading || !draft) return <SkeletonRows />;
   const upd = (p: Partial<CadConfig>) => setDraft({ ...draft, ...p });
@@ -89,7 +89,7 @@ export function CadSettings() {
     Einheiten: { desc: 'Einheitenstatus und -typen', ok: draft.unitStatuses.length > 0 && draft.unitTypes.length > 0 },
     'Discord-Kanäle': { desc: 'Welche Meldung in welchen Kanal', ok: draft.routes.some((r) => r.enabled && r.channelIds.length) },
     Zusatzfelder: { desc: 'Eigene Felder in der Teamübersicht' },
-    'Karte & Ebenen': { desc: 'ER:LC-Karte, Ebenen, Marker', ok: true },
+    'Karte & Ebenen': { desc: 'ER:LC-Karte (fest), Ebenen, Marker', ok: true },
     'ER:LC Integration': { desc: 'Server-Key, Abgleich, Notrufe' },
   };
   return (
@@ -160,10 +160,10 @@ function RoutesEditor({ routes, onChange }: { routes: CadRoute[]; onChange: (r: 
 }
 
 /**
- * Prüfung der Kalibrierung mit Live-Daten: ER:LC meldet zu jeder Spieler-Position die PLZ. Liegt die nächste PLZ-Beschriftung
- * der Karte meist an der gemeldeten PLZ, stimmt die Einstellung; sonst lässt sich die aus den Daten ermittelte übernehmen.
+ * Prüfung mit Live-Daten: ER:LC meldet zu jeder Spieler-Position die PLZ. Liegt die nächste PLZ-Beschriftung der Karte meist
+ * an der gemeldeten PLZ, liegen die Positionen genau; sonst wird die gemessene Abweichung angezeigt (zum Melden an die Entwickler).
  */
-function CalibrationCheck({ map, onApply }: { map: CadConfig['map']; onApply: (c: { scale: number; originX: number; originY: number }) => void }) {
+function CalibrationCheck({ map }: { map: CadConfig['map'] }) {
   const q = useQuery({ queryKey: ['cad-map-calibration'], queryFn: () => api<{ samples: PostalSample[] }>('/cad/map/calibration'), refetchInterval: 60_000 });
   const samples = q.data?.samples ?? [];
   const pct = (v: number) => `${Math.round(v * 100)} %`;
@@ -175,59 +175,22 @@ function CalibrationCheck({ map, onApply }: { map: CadConfig['map']; onApply: (c
     <div className="mt-3 rounded border border-line p-2 text-xs">
       <p><b>Prüfung mit Live-Daten:</b> {samples.length} Spieler-Positionen in {new Set(samples.map((s) => s[2])).size} PLZ – {pct(now)} liegen mit der aktuellen Einstellung an der richtigen PLZ{now >= 0.6 ? ' ✅' : ' ⚠️'}.</p>
       {!best && <p className="mt-1 text-muted">Für einen eigenen Vorschlag braucht es mehr Positionen aus verschiedenen Teilen der Karte (mind. 20 in 6 PLZ).</p>}
-      {best && better && <div className="mt-1 flex flex-wrap items-center gap-2"><span>Ermittelt aus den Daten: Maßstab {best.scale}, Ursprung {best.originX} / {best.originY} → {pct(best.match)} an der richtigen PLZ.</span><Button size="sm" onClick={() => onApply({ scale: best.scale, originX: best.originX, originY: best.originY })}>Übernehmen</Button></div>}
-      {best && !better && <p className="mt-1 text-muted">Die aus den Daten ermittelte Kalibrierung weicht nicht nennenswert ab – die Einstellung passt.</p>}
+      {best && better && <p className="mt-1 text-warning">Die Daten deuten auf eine Abweichung hin (gemessen: Maßstab {best.scale}, Ursprung {best.originX} / {best.originY} → {pct(best.match)} an der richtigen PLZ). Bitte diese Werte an die Entwickler melden.</p>}
+      {best && !better && <p className="mt-1 text-muted">Keine nennenswerte Abweichung – die Positionen passen genau zur Karte.</p>}
     </div>
   );
 }
 
 function MapSettings({ draft, upd }: { draft: CadConfig; upd: (p: Partial<CadConfig>) => void }) {
-  const qc = useQueryClient();
-  const [msg, setMsg] = useState<string>();
-  const m = draft.map;
-  const setMap = (p: Partial<CadConfig['map']>) => upd({ map: { ...m, ...p } });
-  const upload = useMutation({
-    mutationFn: async (file: File) => {
-      const dims = await new Promise<{ w: number; h: number }>((res) => { const img = new Image(); img.onload = () => res({ w: img.naturalWidth, h: img.naturalHeight }); img.onerror = () => res({ w: ERLC_MAP_SIZE, h: ERLC_MAP_SIZE }); img.src = URL.createObjectURL(file); });
-      const fd = new FormData(); fd.append('file', file); fd.append('width', String(dims.w)); fd.append('height', String(dims.h));
-      return api<CadConfig>('/cad/map/image', { formData: fd });
-    },
-    onSuccess: (cfg) => { upd({ map: cfg.map }); void qc.invalidateQueries({ queryKey: ['cad-config'] }); setMsg('Karte hochgeladen.'); },
-    onError: (e) => setMsg(errText(e)),
-  });
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [url, setUrl] = useState('');
-  // Bild-Adresse: der Server lädt das Bild herunter und speichert es wie einen Upload
-  const fromUrl = useMutation({
-    mutationFn: (u: string) => api<CadConfig>('/cad/map/image-url', { body: { url: u } }),
-    onSuccess: (cfg) => { upd({ map: cfg.map }); void qc.invalidateQueries({ queryKey: ['cad-config'] }); setUrl(''); setMsg('Karte von der Adresse übernommen.'); },
-    onError: (e) => setMsg(errText(e)),
-  });
-  const busy = upload.isPending || fromUrl.isPending;
-  const [broken, setBroken] = useState<string | null>(null);
-  const num = (label: string, k: 'width' | 'height' | 'originX' | 'originY' | 'scale', hint?: string) => <Field label={label} hint={hint}>{(id) => <Input id={id} type="number" step="any" value={m[k]} onChange={(e) => e.target.value !== '' && setMap({ [k]: Number(e.target.value) })} />}</Field>;
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      <Card title="Kartenbild">
-        <p className="mb-2 text-xs text-muted">Die offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen ist schon eingebaut – hier nur etwas tun, wenn du ein eigenes Kartenbild willst (PNG/JPG/WebP, bis 40 MB). Marker, POIs und Zonen liegen als Ebenen darüber.</p>
-        {m.imageUrl && broken === m.imageUrl && <p className="mb-2 rounded border border-warning/50 bg-warning/10 px-2 py-1 text-xs">Das eingetragene Kartenbild lässt sich nicht anzeigen ({m.imageUrl.startsWith('/api/') ? 'Datei fehlt' : 'keine Bilddatei oder fremder Server'}) – solange wird die mitgelieferte ER:LC-Karte verwendet.</p>}
-        <img src={m.imageUrl && broken !== m.imageUrl ? m.imageUrl : ERLC_BUILTIN_MAP} alt="Aktuelle Karte" onError={() => m.imageUrl && setBroken(m.imageUrl)} className="mb-2 max-h-48 rounded border border-line" />
-        <p className="mb-2 text-xs text-muted">{m.imageUrl && broken !== m.imageUrl ? 'Eigenes Kartenbild.' : 'Mitgelieferte offizielle ER:LC-Karte mit Postals und Straßennamen.'}</p>
-        {m.imageUrl && <Button size="sm" variant="ghost" className="mb-2" disabled={busy} onClick={() => { setBroken(null); setMap({ imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 }); setMsg('Mitgelieferte Karte wird verwendet.'); }}>Mitgelieferte Karte verwenden</Button>}
-        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" aria-label="Karte hochladen" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = ''; }} />
-        <Button size="sm" variant="secondary" disabled={busy} onClick={() => fileRef.current?.click()}><Upload size={14} /> Datei auswählen</Button>
-        <Field label="oder Bild-Adresse (https, direkt zur Bilddatei)" hint="z. B. https://erlc.one/maps/2026/erlc-map-9-26-26.png – keine Webseite, sondern die Bilddatei selbst">{(id) => (
-          <div className="flex gap-2"><Input id={id} value={url} placeholder="https://…/karte.png" onChange={(e) => setUrl(e.target.value)} />
-            <Button size="sm" variant="secondary" disabled={busy || !/^https:\/\/\S+$/.test(url.trim())} onClick={() => fromUrl.mutate(url.trim())}><Link2 size={14} /> Laden</Button></div>
-        )}</Field>
-        {busy && <p className="text-xs text-muted">{upload.isPending ? 'Wird hochgeladen …' : 'Bild wird geladen – große Karten brauchen einen Moment …'}</p>}
-        {msg && <p role="status" className="mt-1 text-xs">{msg}</p>}
+      <Card title="Karte">
+        <p className="mb-2 text-xs text-muted">Fest eingebaut: die offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen – für Einsatzkarte, Leitstelle und Mini-Karten. Sie lässt sich nicht ändern, damit Einsätze, Notrufe und Einheiten immer genau an der richtigen Stelle liegen. Marker, POIs und Zonen liegen als Ebenen darüber.</p>
+        <img src={ERLC_BUILTIN_MAP} alt="ER:LC-Karte" className="max-h-64 rounded border border-line" />
       </Card>
-      <Card title="Kalibrierung">
-        <p className="mb-2 text-xs text-muted">ER:LC liefert Positionen relativ zur Kartenmitte (X nach rechts, Z nach unten). Standard für die offiziellen 5355-px-Karten: Ursprung in der Bildmitte, Maßstab 1. Liegen Marker daneben, hier anpassen.</p>
-        <div className="grid grid-cols-2 gap-2">{num('Breite (px)', 'width')}{num('Höhe (px)', 'height')}{num('Ursprung X (px)', 'originX')}{num('Ursprung Y (px)', 'originY')}{num('Maßstab (px je Einheit)', 'scale')}</div>
-        <Button size="sm" variant="ghost" className="mt-2" onClick={() => setMap({ originX: m.width / 2, originY: m.height / 2, scale: 1 })}>Auf Standard zurücksetzen</Button>
-        <CalibrationCheck map={m} onApply={(c) => setMap(c)} />
+      <Card title="Genauigkeit">
+        <p className="text-xs text-muted">ER:LC liefert Positionen relativ zur Kartenmitte (X nach rechts, Z nach unten), passend zur offiziellen Karte (5355 × 5355 px).</p>
+        <CalibrationCheck map={draft.map} />
       </Card>
       <Card title="Ebenen" className="lg:col-span-2">
         <OptionListEditor title="Ebenen (jede einzeln ein-/ausblendbar)" value={draft.layers} noColor noEmoji onChange={(v) => upd({ layers: v.map((l) => ({ key: l.key.toLowerCase(), label: l.label, ...(l.builtin ? { builtin: true } : {}), enabledByDefault: l.enabledByDefault !== false })) })}

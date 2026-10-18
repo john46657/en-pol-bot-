@@ -16,7 +16,7 @@ const MAX_ZOOM = 6;
 type View = { s: number; tx: number; ty: number };
 
 /**
- * Interaktive CAD-Karte: Kartenbild aus den Einstellungen (hochgeladene ER:LC-Map), darüber Layer mit Markern,
+ * Interaktive CAD-Karte: offizielle ER:LC-Karte (fest eingebaut, mit PLZ und Straßen), darüber Layer mit Markern,
  * POIs und Zonen. Zoom mit Mausrad/Buttons, Verschieben per Ziehen (auch Touch). Positionen in Spielkoordinaten.
  */
 export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt, actionsFor, compact, placeUnit }: {
@@ -35,9 +35,6 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
   const setUnitPos = async (id: string, x: number, z: number) => { await api(`/cad/units/${id}`, { method: 'PATCH', body: { mapX: x, mapZ: z } }); void qcMap.invalidateQueries({ queryKey: ['cad-map'] }); void qcMap.invalidateQueries({ queryKey: ['cad-units'] }); };
   const box = useRef<HTMLDivElement>(null);
   const m = cfg.map;
-  // Eigenes Kartenbild; fehlt es oder lädt es nicht (z. B. Webseiten-Adresse), gilt die mitgelieferte ER:LC-Karte
-  const [mapFailed, setMapFailed] = useState<string | null>(null);
-  const mapSrc = m.imageUrl && mapFailed !== m.imageUrl ? m.imageUrl : ERLC_BUILTIN_MAP;
   const [view, setView] = useState<{ s: number; tx: number; ty: number } | null>(null);
   const [selected, setSelected] = useState<string | null>(focus?.id ?? null);
   const [mode, setMode] = useState<Mode>({ kind: 'view' });
@@ -233,7 +230,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} role="application" aria-label="Einsatzkarte">
       {view && (
         <div className="absolute left-0 top-0 origin-top-left" style={{ width: m.width, height: m.height, transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.s})`, cursor: mode.kind === 'view' ? 'grab' : 'crosshair' }}>
-          <img src={mapSrc} alt="ER:LC-Karte" draggable={false} onError={() => m.imageUrl && setMapFailed(m.imageUrl)} className="pointer-events-none absolute inset-0 h-full w-full" />
+          <img src={ERLC_BUILTIN_MAP} alt="ER:LC-Karte" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full" />
           <svg className="pointer-events-none absolute inset-0" width={m.width} height={m.height}>
             {zones.map((z) => <polygon key={z.id} points={z.points!.map(([x, zz]) => { const p = gameToPixel(m, x, zz); return `${p.px},${p.py}`; }).join(' ')} fill={`${z.color ?? (z.layer === 'restricted' ? '#ef4444' : '#3b82f6')}33`} stroke={z.color ?? (z.layer === 'restricted' ? '#ef4444' : '#3b82f6')} strokeWidth={3 / view.s} />)}
             {mode.kind === 'zone' && mode.points.length > 0 && <polyline points={mode.points.map(([x, zz]) => { const p = gameToPixel(m, x, zz); return `${p.px},${p.py}`; }).join(' ')} fill="none" stroke="#facc15" strokeWidth={3 / view.s} strokeDasharray={`${8 / view.s}`} />}

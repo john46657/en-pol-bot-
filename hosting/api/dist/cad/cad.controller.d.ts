@@ -2,7 +2,6 @@ import { z } from 'zod';
 import type { Actor } from '../audit/audit.service';
 import type { AppRequest } from '../common/request-context';
 import { PermissionService } from '../authz/permission.service';
-import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
 import { CadHandoverService } from './cad-handover.service';
@@ -283,27 +282,16 @@ export declare class CadController {
     private readonly tablet;
     private readonly cfg;
     private readonly perms;
-    private readonly media;
     private readonly handover;
     private readonly statsSvc;
     private readonly erlc;
-    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService, handover: CadHandoverService, statsSvc: CadStatsService, erlc: ErlcService);
+    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, handover: CadHandoverService, statsSvc: CadStatsService, erlc: ErlcService);
     config(): Promise<import("@enrp/shared").CadConfig>;
     saveConfig(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
-    saveMap(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
-    /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen und Ermitteln der Kartenkalibrierung. */
+    /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen, ob die Positionen genau zur Karte passen. */
     mapCalibration(): Promise<{
         samples: import("@enrp/shared").PostalSample[];
     }>;
-    /** Kartenbild hochladen (ER:LC-Karte, bis 40 MB) – wird danach als Kartenhintergrund gesetzt. */
-    mapImage(a: Actor, file: Express.Multer.File | undefined, b: {
-        width?: number;
-        height?: number;
-    }): Promise<import("@enrp/shared").CadConfig>;
-    /** Kartenbild von einer https-Adresse übernehmen: der Server lädt es herunter und speichert es wie einen Upload (fremde Bild-Server blockiert die Sicherheitsrichtlinie). */
-    mapImageUrl(a: Actor, b: {
-        url: string;
-    }): Promise<import("@enrp/shared").CadConfig>;
     overview(a: CadActor): Promise<{
         config: import("@enrp/shared").CadConfig;
         incidents: {

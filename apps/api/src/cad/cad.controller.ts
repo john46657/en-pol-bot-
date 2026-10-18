@@ -1,5 +1,4 @@
-import { Body, Controller, createParamDecorator, Delete, ExecutionContext, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, createParamDecorator, Delete, ExecutionContext, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query, Req, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_SEND_TYPES, WANTED_HIT_STATUSES } from '@enrp/shared';
@@ -10,7 +9,6 @@ import { AppError } from '../common/errors';
 import { currentGuild } from '../common/guild-context';
 import type { AppRequest } from '../common/request-context';
 import { PermissionService } from '../authz/permission.service';
-import { MediaService } from '../media/media.service';
 import { CadService, type CadActor } from './cad.service';
 import { CadTabletService } from './cad-tablet.service';
 import { CadHandoverService } from './cad-handover.service';
@@ -21,9 +19,7 @@ import { ErlcService, erlcServerInput } from './erlc.service';
 import { ErlcSyncService } from './erlc-sync.service';
 import { ErlcWantedService } from './erlc-wanted.service';
 import { pageQuery } from '../common/pagination';
-import { fetchMapImage, imageSize } from './map-image';
 
-const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = z.string().regex(/^\d{15,25}$/);
 const isBot = (r: AppRequest) => typeof r.headers.authorization === 'string' && r.headers.authorization.startsWith('Bot ');
 /** Akteur inkl. Discord-Server der Anfrage und – nur vom Bot – Discord-ID/Rollen des Aufrufers. */
@@ -75,7 +71,7 @@ const radioBody = z.object({ text: z.string().trim().min(1).max(500), unitId: op
 @Controller('cad')
 export class CadController {
   constructor(
-    private readonly s: CadService, private readonly tablet: CadTabletService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService,
+    private readonly s: CadService, private readonly tablet: CadTabletService, private readonly cfg: CadConfigService, private readonly perms: PermissionService,
     private readonly handover: CadHandoverService, private readonly statsSvc: CadStatsService, private readonly erlc: ErlcService,
   ) {}
 
@@ -84,26 +80,9 @@ export class CadController {
   config() { return this.cfg.get(); }
   @Put('config') @RequirePermission('cad.manage_settings')
   saveConfig(@CurrentActor() a: Actor, @Body(zodBody(cadConfigSchema.omit({ map: true }).partial())) b: Record<string, unknown>) { return this.cfg.save(a, b); }
-  @Put('config/map') @RequirePermission('cad.manage_map')
-  saveMap(@CurrentActor() a: Actor, @Body(zodBody(cadConfigSchema.shape.map.partial())) b: Record<string, unknown>) { return this.cfg.save(a, { map: b as never }); }
-  /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen und Ermitteln der Kartenkalibrierung. */
+  /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen, ob die Positionen genau zur Karte passen. */
   @Get('map/calibration') @RequirePermission('cad.manage_map')
   mapCalibration() { return this.erlc.postalSamples(); }
-  /** Kartenbild hochladen (ER:LC-Karte, bis 40 MB) – wird danach als Kartenhintergrund gesetzt. */
-  @Post('map/image') @RequirePermission('cad.manage_map') @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAP_MAX_BYTES, files: 1 } }))
-  async mapImage(@CurrentActor() a: Actor, @UploadedFile() file: Express.Multer.File | undefined, @Body(zodBody(z.object({ width: z.coerce.number().int().min(100).max(20000).optional(), height: z.coerce.number().int().min(100).max(20000).optional() }))) b: { width?: number; height?: number }) {
-    if (!file || !/^image\/(png|jpeg|webp)$/.test(file.mimetype)) throw new AppError('VALIDATION_FAILED', 'Bitte ein Bild (PNG, JPG oder WebP) hochladen.');
-    const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
-    return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(b.width ? { width: b.width, originX: b.width / 2 } : {}), ...(b.height ? { height: b.height, originY: b.height / 2 } : {}) } as never });
-  }
-  /** Kartenbild von einer https-Adresse übernehmen: der Server lädt es herunter und speichert es wie einen Upload (fremde Bild-Server blockiert die Sicherheitsrichtlinie). */
-  @Post('map/image-url') @RequirePermission('cad.manage_map')
-  async mapImageUrl(@CurrentActor() a: Actor, @Body(zodBody(z.object({ url: z.string().trim().url().max(500) }))) b: { url: string }) {
-    const file = await fetchMapImage(b.url, MAP_MAX_BYTES);
-    const dims = imageSize(file.buffer);
-    const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
-    return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(dims ? { width: dims.width, height: dims.height, originX: dims.width / 2, originY: dims.height / 2 } : {}) } as never });
-  }
 
   @Get('overview') @RequirePermission('cad.view')
   overview(@Cad() a: CadActor) { return this.s.overview(a); }
