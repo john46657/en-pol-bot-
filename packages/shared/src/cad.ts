@@ -7,9 +7,8 @@ export interface CadStatusOption extends CadOption { /** Status beendet den Eins
 export interface CadUnitType extends CadOption { /** Layer, auf dem Einheiten dieses Typs erscheinen. */ layer?: string }
 export interface CadLayer { key: string; label: string; builtin?: boolean; enabledByDefault?: boolean }
 export interface CadMarkerStyle { key: string; label: string; emoji: string; color: string }
+/** Feste Kartengeometrie der offiziellen ER:LC-Karte (nicht änderbar, siehe ERLC_BUILTIN_MAP). */
 export interface CadMapConfig {
-  /** Kartenbild (hochgeladene ER:LC-Map). Leer = noch keine Karte hinterlegt. */
-  imageUrl?: string | null;
   width: number; height: number;
   /** Pixel des Spiel-Ursprungs (0,0) und Pixel pro Spieleinheit – zum Kalibrieren der Marker. */
   originX: number; originY: number; scale: number;
@@ -82,8 +81,8 @@ export const CAD_WIDGET_LABELS: Record<string, string> = {
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 export const ERLC_MAP_SIZE = 5355;
 /**
- * Mitgelieferte offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355)
- * – Standardkarte für Einsatzkarte, Leitstelle und Mini-Karten, gilt ohne eigenes Kartenbild oder wenn es nicht lädt.
+ * Offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355) –
+ * fest eingebaut für Einsatzkarte, Leitstelle und Mini-Karten; ein eigenes Kartenbild gibt es nicht mehr.
  */
 export const ERLC_BUILTIN_MAP = '/maps/erlc-map-postals.webp';
 
@@ -145,7 +144,7 @@ export const DEFAULT_CAD_CONFIG: CadConfig = {
     { key: 'player', label: 'Spieler', emoji: '•', color: '#94a3b8' },
     { key: 'poi', label: 'POI', emoji: '📍', color: '#10b981' },
   ],
-  map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
+  map: { width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
   widgets: ['activeIncidents', 'availableUnits', 'activeCalls', 'dutyActivity', 'erlcStatus', 'map', 'radio'],

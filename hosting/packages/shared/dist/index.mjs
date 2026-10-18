@@ -469,7 +469,7 @@ var DEFAULT_CAD_CONFIG = {
     { key: "player", label: "Spieler", emoji: "\u2022", color: "#94a3b8" },
     { key: "poi", label: "POI", emoji: "\u{1F4CD}", color: "#10b981" }
   ],
-  map: { imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
+  map: { width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 },
   routes: [],
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]

@@ -14,7 +14,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WantedHitsController = exports.ErlcController = exports.CadController = void 0;
 const common_1 = require("@nestjs/common");
-const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
@@ -23,7 +22,6 @@ const zod_pipe_1 = require("../common/zod.pipe");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
 const permission_service_1 = require("../authz/permission.service");
-const media_service_1 = require("../media/media.service");
 const cad_service_1 = require("./cad.service");
 const cad_tablet_service_1 = require("./cad-tablet.service");
 const cad_handover_service_1 = require("./cad-handover.service");
@@ -34,8 +32,6 @@ const erlc_service_1 = require("./erlc.service");
 const erlc_sync_service_1 = require("./erlc-sync.service");
 const erlc_wanted_service_1 = require("./erlc-wanted.service");
 const pagination_1 = require("../common/pagination");
-const map_image_1 = require("./map-image");
-const MAP_MAX_BYTES = 40 * 1024 * 1024;
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 const isBot = (r) => typeof r.headers.authorization === 'string' && r.headers.authorization.startsWith('Bot ');
 /** Akteur inkl. Discord-Server der Anfrage und – nur vom Bot – Discord-ID/Rollen des Aufrufers. */
@@ -85,16 +81,14 @@ let CadController = class CadController {
     tablet;
     cfg;
     perms;
-    media;
     handover;
     statsSvc;
     erlc;
-    constructor(s, tablet, cfg, perms, media, handover, statsSvc, erlc) {
+    constructor(s, tablet, cfg, perms, handover, statsSvc, erlc) {
         this.s = s;
         this.tablet = tablet;
         this.cfg = cfg;
         this.perms = perms;
-        this.media = media;
         this.handover = handover;
         this.statsSvc = statsSvc;
         this.erlc = erlc;
@@ -102,23 +96,8 @@ let CadController = class CadController {
     // Konfiguration
     config() { return this.cfg.get(); }
     saveConfig(a, b) { return this.cfg.save(a, b); }
-    saveMap(a, b) { return this.cfg.save(a, { map: b }); }
-    /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen und Ermitteln der Kartenkalibrierung. */
+    /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen, ob die Positionen genau zur Karte passen. */
     mapCalibration() { return this.erlc.postalSamples(); }
-    /** Kartenbild hochladen (ER:LC-Karte, bis 40 MB) – wird danach als Kartenhintergrund gesetzt. */
-    async mapImage(a, file, b) {
-        if (!file || !/^image\/(png|jpeg|webp)$/.test(file.mimetype))
-            throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte ein Bild (PNG, JPG oder WebP) hochladen.');
-        const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
-        return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(b.width ? { width: b.width, originX: b.width / 2 } : {}), ...(b.height ? { height: b.height, originY: b.height / 2 } : {}) } });
-    }
-    /** Kartenbild von einer https-Adresse übernehmen: der Server lädt es herunter und speichert es wie einen Upload (fremde Bild-Server blockiert die Sicherheitsrichtlinie). */
-    async mapImageUrl(a, b) {
-        const file = await (0, map_image_1.fetchMapImage)(b.url, MAP_MAX_BYTES);
-        const dims = (0, map_image_1.imageSize)(file.buffer);
-        const m = await this.media.upload(a, file, { linkedType: 'CadMap', linkedId: 'map' }, MAP_MAX_BYTES);
-        return this.cfg.save(a, { map: { imageUrl: `/api/v1/media/${m.id}`, ...(dims ? { width: dims.width, height: dims.height, originX: dims.width / 2, originY: dims.height / 2 } : {}) } });
-    }
     overview(a) { return this.s.overview(a); }
     map(a) { return this.s.mapData(a); }
     // Einsätze
@@ -210,41 +189,12 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "saveConfig", null);
 __decorate([
-    (0, common_1.Put)('config/map'),
-    (0, decorators_1.RequirePermission)('cad.manage_map'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(cad_config_service_1.cadConfigSchema.shape.map.partial()))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", void 0)
-], CadController.prototype, "saveMap", null);
-__decorate([
     (0, common_1.Get)('map/calibration'),
     (0, decorators_1.RequirePermission)('cad.manage_map'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "mapCalibration", null);
-__decorate([
-    (0, common_1.Post)('map/image'),
-    (0, decorators_1.RequirePermission)('cad.manage_map'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: MAP_MAX_BYTES, files: 1 } })),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.UploadedFile)()),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ width: zod_1.z.coerce.number().int().min(100).max(20000).optional(), height: zod_1.z.coerce.number().int().min(100).max(20000).optional() })))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Object]),
-    __metadata("design:returntype", Promise)
-], CadController.prototype, "mapImage", null);
-__decorate([
-    (0, common_1.Post)('map/image-url'),
-    (0, decorators_1.RequirePermission)('cad.manage_map'),
-    __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ url: zod_1.z.string().trim().url().max(500) })))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], CadController.prototype, "mapImageUrl", null);
 __decorate([
     (0, common_1.Get)('overview'),
     (0, decorators_1.RequirePermission)('cad.view'),
@@ -634,7 +584,7 @@ exports.CadController = CadController = __decorate([
     (0, swagger_1.ApiTags)('cad'),
     (0, common_1.UseInterceptors)(cad_link_interceptor_1.CadLinkInterceptor),
     (0, common_1.Controller)('cad'),
-    __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService,
+    __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService,
         cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService, erlc_service_1.ErlcService])
 ], CadController);
 const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max(500), confirm: zod_1.z.boolean().optional() });

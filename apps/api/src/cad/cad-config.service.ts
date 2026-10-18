@@ -24,11 +24,8 @@ export const cadConfigSchema = z.object({
   unitTypes: list(option.extend({ layer: z.string().max(32).optional() }), 0, 30),
   layers: list(z.object({ key: keyStr, label: z.string().trim().min(1).max(60), builtin: z.boolean().optional(), enabledByDefault: z.boolean().optional() }), 1, 40),
   markers: list(z.object({ key: keyStr, label: z.string().trim().min(1).max(60), emoji: z.string().min(1).max(16), color }), 1, 30),
-  map: z.object({
-    imageUrl: z.string().max(500).refine((v) => /^(https:\/\/|\/api\/v1\/media\/)/.test(v), 'Bild-Adresse muss mit https:// beginnen oder eine hochgeladene Datei sein').nullish(),
-    width: z.number().int().min(100).max(20000), height: z.number().int().min(100).max(20000),
-    originX: z.number().finite(), originY: z.number().finite(), scale: z.number().positive().max(100),
-  }),
+  // Karte ist fest die offizielle ER:LC-Karte – gespeicherte Werte (eigenes Kartenbild, Kalibrierung) werden ignoriert
+  map: z.unknown().transform(() => ({ ...DEFAULT_CAD_CONFIG.map })),
   // Zuordnungen zu entfernten Ereignissen (z. B. „air.requested“) still verwerfen statt die ganze Konfiguration ungültig zu machen
   routes: z.array(z.object({ event: z.string() }).passthrough()).transform((rs) => rs.filter((r) => (CAD_EVENTS as readonly string[]).includes(r.event))).pipe(z.array(z.object({ id: z.string().min(1).max(40), guildId: sf, event: z.enum(CAD_EVENTS), channelIds: z.array(sf).max(10), pingRoleIds: z.array(sf).max(10).default([]), enabled: z.boolean().default(true) })).max(100)),
   memberFields: list(z.object({ key: keyStr, label: z.string().trim().min(1).max(60), type: z.enum(['text', 'number', 'select']), options: z.array(z.string().max(60)).max(30).optional() }), 0, 20),
@@ -43,7 +40,7 @@ export class CadConfigService {
 
   async get(): Promise<CadConfig> {
     const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value as Partial<CadConfig> | undefined;
-    const merged = { ...DEFAULT_CAD_CONFIG, ...(v ?? {}), map: { ...DEFAULT_CAD_CONFIG.map, ...(v?.map ?? {}) } };
+    const merged = { ...DEFAULT_CAD_CONFIG, ...(v ?? {}), map: DEFAULT_CAD_CONFIG.map };
     // Neu hinzugekommene eingebaute Ebenen/Marker auch bei älteren Einstellungen anbieten
     // eingebaute Layer behalten ihre Standard-Bezeichnung (z. B. nach einer Umbenennung im Code)
     if (v?.layers) merged.layers = [...v.layers.map((l) => { const d = DEFAULT_CAD_CONFIG.layers.find((x) => x.key === l.key && x.builtin); return d ? { ...l, label: d.label } : l; }), ...DEFAULT_CAD_CONFIG.layers.filter((l) => !v.layers!.some((x) => x.key === l.key))].slice(0, 40);
@@ -58,13 +55,13 @@ export class CadConfigService {
   async save(actor: Actor, patch: Partial<CadConfig>) {
     // Basis ist der gespeicherte Stand (nicht die Standardwerte), damit eine ungültige Altkonfiguration nicht still überschrieben wird
     const stored = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value as Partial<CadConfig> | undefined;
-    const before = { ...DEFAULT_CAD_CONFIG, ...(stored ?? {}), map: { ...DEFAULT_CAD_CONFIG.map, ...(stored?.map ?? {}) } } as CadConfig;
-    const r = cadConfigSchema.safeParse({ ...before, ...patch, ...(patch.map ? { map: { ...before.map, ...patch.map } } : {}) });
+    const before = { ...DEFAULT_CAD_CONFIG, ...(stored ?? {}), map: DEFAULT_CAD_CONFIG.map } as CadConfig;
+    const r = cadConfigSchema.safeParse({ ...before, ...patch, map: DEFAULT_CAD_CONFIG.map });
     if (!r.success) throw new AppError('VALIDATION_FAILED', r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '));
     const value = r.data as unknown as Prisma.InputJsonValue;
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({ where: { key: KEY }, create: { key: KEY, value }, update: { value } });
-      await this.audit.record(actor, { action: patch.map ? 'cad.map.config' : 'cad.config', module: 'cad', entityType: 'SystemSetting', entityId: KEY, before: Object.fromEntries(Object.keys(patch).map((k) => [k, (before as unknown as Record<string, unknown>)[k]])), after: patch }, tx);
+      await this.audit.record(actor, { action: 'cad.config', module: 'cad', entityType: 'SystemSetting', entityId: KEY, before: Object.fromEntries(Object.keys(patch).map((k) => [k, (before as unknown as Record<string, unknown>)[k]])), after: patch }, tx);
     });
     return this.get();
   }

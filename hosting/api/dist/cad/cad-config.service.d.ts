@@ -238,28 +238,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         emoji: string;
     }[]>;
-    map: z.ZodObject<{
-        imageUrl: z.ZodOptional<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
-        width: z.ZodNumber;
-        height: z.ZodNumber;
-        originX: z.ZodNumber;
-        originY: z.ZodNumber;
-        scale: z.ZodNumber;
-    }, "strip", z.ZodTypeAny, {
+    map: z.ZodEffects<z.ZodUnknown, {
         width: number;
         height: number;
         originX: number;
         originY: number;
         scale: number;
-        imageUrl?: string | null | undefined;
-    }, {
-        width: number;
-        height: number;
-        originX: number;
-        originY: number;
-        scale: number;
-        imageUrl?: string | null | undefined;
-    }>;
+    }, unknown>;
     routes: z.ZodPipeline<z.ZodEffects<z.ZodArray<z.ZodObject<{
         event: z.ZodString;
     }, "passthrough", z.ZodTypeAny, z.objectOutputType<{
@@ -334,7 +319,6 @@ export declare const cadConfigSchema: z.ZodObject<{
         originX: number;
         originY: number;
         scale: number;
-        imageUrl?: string | null | undefined;
     };
     widgets: ("vehicles" | "units" | "map" | "persons" | "radio" | "activeIncidents" | "availableUnits" | "activeCalls" | "erlcStatus" | "dutyActivity")[];
     incidentNumberPrefix: string;
@@ -403,14 +387,6 @@ export declare const cadConfigSchema: z.ZodObject<{
         order?: number | undefined;
         emoji?: string | undefined;
     }[];
-    map: {
-        width: number;
-        height: number;
-        originX: number;
-        originY: number;
-        scale: number;
-        imageUrl?: string | null | undefined;
-    };
     widgets: string[];
     incidentTypes: {
         key: string;
@@ -462,6 +438,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         label: string;
         options?: string[] | undefined;
     }[];
+    map?: unknown;
     homeGuildId?: string | null | undefined;
     incidentNumberPrefix?: string | undefined;
 }>;

@@ -33,8 +33,9 @@ ER:LC → Command Center (Recht `cad.erlc_command`). Kritische Befehle (Liste je
 
 ## Karte
 
-- **Kartenbild hochladen** unter Einstellungen → Karte & Layer (PNG/JPG/WebP bis 40 MB). Die offiziellen Bilder von `api.erlc.gg` lassen sich nicht direkt einbinden (die Seite verbietet das Einbetten) – herunterladen und hochladen.
-- Positionen werden in **Spielkoordinaten** gespeichert (ER:LC: Ursprung Kartenmitte, X nach rechts, Z nach unten). Kalibrierung (Ursprung/Maßstab) ist einstellbar; Standard passt zu den 5355-px-Karten.
+- **Fest eingebaut:** die offizielle ER:LC-Karte mit Postleitzahlen und Straßennamen (`api.erlc.gg/maps`, `fall_postals`, 5355 × 5355, als `/maps/erlc-map-postals.webp` mitgeliefert). Kartenbild und Kalibrierung lassen sich nicht ändern; ältere gespeicherte Kartenbilder werden ignoriert.
+- Positionen werden in **Spielkoordinaten** gespeichert (ER:LC: Ursprung Kartenmitte, X nach rechts, Z nach unten, 1 Einheit = 1 px der offiziellen Karte).
+- **PLZ:** Einsätze ohne Position mit PLZ im Ort („PLZ 321“) und Notrufe ohne Anrufer-Standort landen an der Postleitzahl (`ERLC_POSTALS`); die Einsatzkarte hat eine PLZ-Suche. Einstellungen → Karte & Ebenen → Genauigkeit prüft mit Live-Spielerdaten (Position ↔ gemeldete PLZ), ob die Positionen genau passen.
 - Layer (einzeln ein-/ausblendbar, jeder Benutzer für sich): Einsätze, Notrufe, SEK, K9, weitere Einheiten, Fahrzeuge, Staff, Spieler, POIs, Zonen, Sperrbereiche, eigene Layer.
 - Einheiten erscheinen dort, wo ein zugeordneter Spieler (Teamübersicht → ER:LC-Name) gerade ist; sonst an ihrer manuellen Position. Fahrzeuge haben in der ER:LC-API keine eigene Position und werden beim Besitzer angezeigt.
 - Map-Editor (`cad.manage_map`): POI setzen, Zone zeichnen (Punkte klicken), Name, Beschreibung, Kategorie, Icon, Farbe, Layer, sichtbare Rollen, Einsatzart, automatische Aktion.

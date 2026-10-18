@@ -607,9 +607,8 @@ interface CadMarkerStyle {
     emoji: string;
     color: string;
 }
+/** Feste Kartengeometrie der offiziellen ER:LC-Karte (nicht änderbar, siehe ERLC_BUILTIN_MAP). */
 interface CadMapConfig {
-    /** Kartenbild (hochgeladene ER:LC-Map). Leer = noch keine Karte hinterlegt. */
-    imageUrl?: string | null;
     width: number;
     height: number;
     /** Pixel des Spiel-Ursprungs (0,0) und Pixel pro Spieleinheit – zum Kalibrieren der Marker. */
@@ -697,8 +696,8 @@ declare const CAD_WIDGET_LABELS: Record<string, string>;
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 declare const ERLC_MAP_SIZE = 5355;
 /**
- * Mitgelieferte offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355)
- * – Standardkarte für Einsatzkarte, Leitstelle und Mini-Karten, gilt ohne eigenes Kartenbild oder wenn es nicht lädt.
+ * Offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355) –
+ * fest eingebaut für Einsatzkarte, Leitstelle und Mini-Karten; ein eigenes Kartenbild gibt es nicht mehr.
  */
 declare const ERLC_BUILTIN_MAP = "/maps/erlc-map-postals.webp";
 declare const DEFAULT_CAD_CONFIG: CadConfig;
@@ -4137,7 +4136,6 @@ declare const mbEmbedSchema: z.ZodObject<{
         inline?: boolean | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
-    imageUrl: string;
     title: string;
     description: string;
     id: string;
@@ -4154,12 +4152,12 @@ declare const mbEmbedSchema: z.ZodObject<{
     authorUrl: string;
     authorIconUrl: string;
     thumbnailUrl: string;
+    imageUrl: string;
     footerText: string;
     footerIconUrl: string;
     timestampAt: string;
 }, {
     id: string;
-    imageUrl?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
     color?: string | undefined;
@@ -4175,6 +4173,7 @@ declare const mbEmbedSchema: z.ZodObject<{
     authorUrl?: string | undefined;
     authorIconUrl?: string | undefined;
     thumbnailUrl?: string | undefined;
+    imageUrl?: string | undefined;
     footerText?: string | undefined;
     footerIconUrl?: string | undefined;
     timestampAt?: string | undefined;
@@ -4217,7 +4216,6 @@ declare const mbMessageSchema: z.ZodObject<{
             inline?: boolean | undefined;
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
-        imageUrl: string;
         title: string;
         description: string;
         id: string;
@@ -4234,12 +4232,12 @@ declare const mbMessageSchema: z.ZodObject<{
         authorUrl: string;
         authorIconUrl: string;
         thumbnailUrl: string;
+        imageUrl: string;
         footerText: string;
         footerIconUrl: string;
         timestampAt: string;
     }, {
         id: string;
-        imageUrl?: string | undefined;
         title?: string | undefined;
         description?: string | undefined;
         color?: string | undefined;
@@ -4255,6 +4253,7 @@ declare const mbMessageSchema: z.ZodObject<{
         authorUrl?: string | undefined;
         authorIconUrl?: string | undefined;
         thumbnailUrl?: string | undefined;
+        imageUrl?: string | undefined;
         footerText?: string | undefined;
         footerIconUrl?: string | undefined;
         timestampAt?: string | undefined;
@@ -4482,7 +4481,6 @@ declare const mbMessageSchema: z.ZodObject<{
     id: string;
     content: string;
     embeds: {
-        imageUrl: string;
         title: string;
         description: string;
         id: string;
@@ -4499,6 +4497,7 @@ declare const mbMessageSchema: z.ZodObject<{
         authorUrl: string;
         authorIconUrl: string;
         thumbnailUrl: string;
+        imageUrl: string;
         footerText: string;
         footerIconUrl: string;
         timestampAt: string;
@@ -4553,7 +4552,6 @@ declare const mbMessageSchema: z.ZodObject<{
     content?: string | undefined;
     embeds?: {
         id: string;
-        imageUrl?: string | undefined;
         title?: string | undefined;
         description?: string | undefined;
         color?: string | undefined;
@@ -4569,6 +4567,7 @@ declare const mbMessageSchema: z.ZodObject<{
         authorUrl?: string | undefined;
         authorIconUrl?: string | undefined;
         thumbnailUrl?: string | undefined;
+        imageUrl?: string | undefined;
         footerText?: string | undefined;
         footerIconUrl?: string | undefined;
         timestampAt?: string | undefined;
@@ -4659,7 +4658,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 inline?: boolean | undefined;
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
-            imageUrl: string;
             title: string;
             description: string;
             id: string;
@@ -4676,12 +4674,12 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             authorUrl: string;
             authorIconUrl: string;
             thumbnailUrl: string;
+            imageUrl: string;
             footerText: string;
             footerIconUrl: string;
             timestampAt: string;
         }, {
             id: string;
-            imageUrl?: string | undefined;
             title?: string | undefined;
             description?: string | undefined;
             color?: string | undefined;
@@ -4697,6 +4695,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             authorUrl?: string | undefined;
             authorIconUrl?: string | undefined;
             thumbnailUrl?: string | undefined;
+            imageUrl?: string | undefined;
             footerText?: string | undefined;
             footerIconUrl?: string | undefined;
             timestampAt?: string | undefined;
@@ -4924,7 +4923,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         id: string;
         content: string;
         embeds: {
-            imageUrl: string;
             title: string;
             description: string;
             id: string;
@@ -4941,6 +4939,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             authorUrl: string;
             authorIconUrl: string;
             thumbnailUrl: string;
+            imageUrl: string;
             footerText: string;
             footerIconUrl: string;
             timestampAt: string;
@@ -4995,7 +4994,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         content?: string | undefined;
         embeds?: {
             id: string;
-            imageUrl?: string | undefined;
             title?: string | undefined;
             description?: string | undefined;
             color?: string | undefined;
@@ -5011,6 +5009,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             authorUrl?: string | undefined;
             authorIconUrl?: string | undefined;
             thumbnailUrl?: string | undefined;
+            imageUrl?: string | undefined;
             footerText?: string | undefined;
             footerIconUrl?: string | undefined;
             timestampAt?: string | undefined;
@@ -5077,7 +5076,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         id: string;
         content: string;
         embeds: {
-            imageUrl: string;
             title: string;
             description: string;
             id: string;
@@ -5094,6 +5092,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             authorUrl: string;
             authorIconUrl: string;
             thumbnailUrl: string;
+            imageUrl: string;
             footerText: string;
             footerIconUrl: string;
             timestampAt: string;
@@ -5154,7 +5153,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         content?: string | undefined;
         embeds?: {
             id: string;
-            imageUrl?: string | undefined;
             title?: string | undefined;
             description?: string | undefined;
             color?: string | undefined;
@@ -5170,6 +5168,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             authorUrl?: string | undefined;
             authorIconUrl?: string | undefined;
             thumbnailUrl?: string | undefined;
+            imageUrl?: string | undefined;
             footerText?: string | undefined;
             footerIconUrl?: string | undefined;
             timestampAt?: string | undefined;
