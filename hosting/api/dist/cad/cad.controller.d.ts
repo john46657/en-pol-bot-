@@ -2020,7 +2020,7 @@ declare const hitsQ: z.ZodObject<{
     pageSize: z.ZodDefault<z.ZodNumber>;
     q: z.ZodOptional<z.ZodString>;
 } & {
-    status: z.ZodOptional<z.ZodEnum<["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"]>>;
+    status: z.ZodOptional<z.ZodEnum<["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED", "ENDED"]>>;
     open: z.ZodOptional<z.ZodEffects<z.ZodEnum<["true", "false"]>, boolean, "true" | "false">>;
     identified: z.ZodOptional<z.ZodEffects<z.ZodEnum<["true", "false"]>, boolean, "true" | "false">>;
     wantedId: z.ZodOptional<z.ZodString>;
@@ -2029,14 +2029,14 @@ declare const hitsQ: z.ZodObject<{
     page: number;
     pageSize: number;
     id?: string | undefined;
-    status?: "REJECTED" | "NEW" | "REVIEW_REQUIRED" | "ACKNOWLEDGED" | "CONFIRMED" | undefined;
+    status?: "REJECTED" | "ENDED" | "NEW" | "REVIEW_REQUIRED" | "ACKNOWLEDGED" | "CONFIRMED" | undefined;
     wantedId?: string | undefined;
     identified?: boolean | undefined;
     open?: boolean | undefined;
     q?: string | undefined;
 }, {
     id?: string | undefined;
-    status?: "REJECTED" | "NEW" | "REVIEW_REQUIRED" | "ACKNOWLEDGED" | "CONFIRMED" | undefined;
+    status?: "REJECTED" | "ENDED" | "NEW" | "REVIEW_REQUIRED" | "ACKNOWLEDGED" | "CONFIRMED" | undefined;
     wantedId?: string | undefined;
     identified?: "true" | "false" | undefined;
     open?: "true" | "false" | undefined;

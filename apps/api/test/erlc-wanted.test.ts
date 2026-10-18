@@ -275,6 +275,22 @@ describe('ER:LC-Fahndungsabgleich', () => {
     expect(list.find((x: { playerName: string }) => x.playerName === 'Robber')).toMatchObject({ identification: 'Im Spiel gesucht (ER:LC)', matchLabel: 'Im Spiel gesucht (ER:LC-Wanted-Sterne)' });
   });
 
+  it('im Spiel gesucht endet automatisch: Sterne weg → beendet, Sterne wieder da → offen ohne neue Meldung, Server verlassen → beendet', async () => {
+    const robber = async () => (await prisma.erlcWantedHit.findMany({ where: { erlcServerId: serverId, matchType: 'ERLC_WANTED', playerName: 'Robber' }, orderBy: { detectedAt: 'desc' } }))[0]!;
+    const before = await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc', ...ours } });
+    await poll(server(['Robber:775005']));
+    expect(await robber()).toMatchObject({ reviewStatus: 'ENDED', reviewedById: null });
+    const admin = (await login(app, 'wh_admin')).agent;
+    const open = (await admin.get('/api/v1/wanted-hits').query({ open: 'true' }).set({ 'X-Guild-Id': HOME })).body.items;
+    expect(open.find((x: { playerName: string; matchType: string }) => x.playerName === 'Robber' && x.matchType === 'ERLC_WANTED')).toBeUndefined();
+    await poll(server(['Robber:775005'], [], { 'Robber:775005': 1 }));
+    expect(await robber()).toMatchObject({ reviewStatus: 'NEW', reviewNote: null });
+    expect(await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc', ...ours } })).toBe(before);
+    await poll(server([]));
+    expect(await robber()).toMatchObject({ reviewStatus: 'ENDED' });
+    expect(await prisma.erlcWantedHit.count({ where: { erlcServerId: serverId, matchType: 'ERLC_WANTED', reviewStatus: 'NEW' } })).toBe(0);
+  });
+
   it('es wird nie ein Befehl an den ER:LC-Server gesendet (kein Kick, kein Bann)', () => {
     expect(sent.length).toBeGreaterThan(5);
     expect(sent.every((c) => c.method === 'GET' && c.path.startsWith('/v2/server'))).toBe(true);

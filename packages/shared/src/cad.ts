@@ -81,8 +81,11 @@ export const CAD_WIDGET_LABELS: Record<string, string> = {
 
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 export const ERLC_MAP_SIZE = 5355;
-/** Mitgelieferte ER:LC-Karte (Stand 26.09.2026, 4096 px, als 5355 × 5355 dargestellt) – gilt ohne eigenes Kartenbild oder wenn es nicht lädt. */
-export const ERLC_BUILTIN_MAP = '/maps/erlc-map.webp';
+/**
+ * Mitgelieferte offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355)
+ * – Standardkarte für Einsatzkarte, Leitstelle und Mini-Karten, gilt ohne eigenes Kartenbild oder wenn es nicht lädt.
+ */
+export const ERLC_BUILTIN_MAP = '/maps/erlc-map-postals.webp';
 
 export const DEFAULT_CAD_CONFIG: CadConfig = {
   homeGuildId: null,
@@ -243,10 +246,11 @@ export const WANTED_MATCH_LABELS: Record<WantedMatchType, string> = {
   ROBLOX_ID: 'Roblox-ID stimmt überein', NAME: 'Nur Roblox-Name stimmt überein', ALIAS: 'Nur Alias stimmt überein', NAME_ID_MISMATCH: 'Name gleich, Roblox-ID abweichend',
   ERLC_WANTED: 'Im Spiel gesucht (ER:LC-Wanted-Sterne)',
 };
-export const WANTED_HIT_STATUSES = ['NEW', 'REVIEW_REQUIRED', 'ACKNOWLEDGED', 'CONFIRMED', 'REJECTED'] as const;
+export const WANTED_HIT_STATUSES = ['NEW', 'REVIEW_REQUIRED', 'ACKNOWLEDGED', 'CONFIRMED', 'REJECTED', 'ENDED'] as const;
 export type WantedHitStatus = (typeof WANTED_HIT_STATUSES)[number];
 export const WANTED_HIT_STATUS_LABELS: Record<WantedHitStatus, string> = {
   NEW: 'Neu', REVIEW_REQUIRED: 'Manuelle Prüfung erforderlich', ACKNOWLEDGED: 'Zur Kenntnis genommen', CONFIRMED: 'Manuell bestätigt', REJECTED: 'Verworfen (nicht die Person)',
+  ENDED: 'Beendet (nicht mehr im Spiel gesucht)',
 };
 
 export interface WantedMatchPlayer { name: string; id: string | null }

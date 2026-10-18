@@ -79,6 +79,20 @@ let ErlcWantedService = class ErlcWantedService {
     /** Server laut API leer/offline (nicht: API nicht erreichbar) → alle Sitzungen sind beendet. */
     async serverEmpty(serverId) {
         await this.prisma.erlcPlayerPresence.deleteMany({ where: { serverId } }).catch(() => undefined);
+        await this.endInGame(serverId, [], new Date()).catch(() => undefined);
+    }
+    /**
+     * „Im Spiel gesucht“ gilt nur, solange der Spieler im Spiel gesucht wird: Treffer ohne Prüfung, deren Aufenthalt
+     * vorbei ist (Server verlassen, Server leer) oder deren Spieler keine Sterne mehr hat, werden automatisch beendet.
+     */
+    async endInGame(serverId, stillWanted, now) {
+        const r = await this.prisma.erlcWantedHit.updateMany({
+            where: { erlcServerId: serverId, matchType: 'ERLC_WANTED', reviewStatus: 'NEW', sessionId: { notIn: stillWanted } },
+            data: { reviewStatus: 'ENDED', reviewedAt: now, reviewNote: 'Automatisch: Spieler hat keine Wanted-Sterne mehr oder den Server verlassen' },
+        });
+        if (r.count)
+            this.rt.publish('cad', 'wanted.hits', { serverId, count: 0 });
+        return r.count;
     }
     async run(s, snap) {
         const now = new Date();
@@ -110,6 +124,7 @@ let ErlcWantedService = class ErlcWantedService {
                 throw e; });
         }
         const sessions = await this.prisma.erlcPlayerPresence.findMany({ where: { serverId: s.id } });
+        await this.endInGame(s.id, sessions.filter((x) => (stars.get(x.playerKey) ?? 0) > 0).map((x) => x.id), now);
         if (!sessions.length)
             return 0;
         const space = (0, guild_context_1.recordSpace)(s.guildId) ?? null;
@@ -159,7 +174,7 @@ let ErlcWantedService = class ErlcWantedService {
         const wantedNow = sessions.filter((x) => (stars.get(x.playerKey) ?? 0) > 0);
         if (!wantedNow.length)
             return 0;
-        const existing = new Map((await this.prisma.erlcWantedHit.findMany({ where: { sessionId: { in: wantedNow.map((x) => x.id) }, matchType: 'ERLC_WANTED' }, select: { id: true, sessionId: true, wantedReason: true } })).map((h) => [h.sessionId, h]));
+        const existing = new Map((await this.prisma.erlcWantedHit.findMany({ where: { sessionId: { in: wantedNow.map((x) => x.id) }, matchType: 'ERLC_WANTED' }, select: { id: true, sessionId: true, wantedReason: true, reviewStatus: true } })).map((h) => [h.sessionId, h]));
         const ids = wantedNow.map((x) => x.robloxUserId).filter((x) => !!x);
         const persons = ids.length ? await this.prisma.person.findMany({ where: { serverId: space, robloxUserId: { in: ids } }, select: { id: true, robloxUserId: true } }) : [];
         let created = 0;
@@ -169,8 +184,10 @@ let ErlcWantedService = class ErlcWantedService {
             const old = existing.get(sess.id);
             if (old) {
                 const before = Number(/\((\d+)/.exec(old.wantedReason)?.[1] ?? 0);
-                if (n > before)
-                    await this.prisma.erlcWantedHit.update({ where: { id: old.id }, data: { wantedReason: reason, wantedPriority: inGamePriority(n) } }).catch(() => undefined);
+                // Sterne im selben Aufenthalt wieder da → Treffer wieder offen (ohne neue Meldung)
+                const reopen = old.reviewStatus === 'ENDED' ? { reviewStatus: 'NEW', reviewedAt: null, reviewNote: null } : {};
+                if (n > before || old.reviewStatus === 'ENDED')
+                    await this.prisma.erlcWantedHit.update({ where: { id: old.id }, data: { ...reopen, wantedReason: reason, wantedPriority: inGamePriority(n) } }).catch(() => undefined);
                 continue;
             }
             const hit = await this.prisma.erlcWantedHit.create({ data: {

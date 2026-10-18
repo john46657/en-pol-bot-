@@ -720,7 +720,7 @@ var CAD_WIDGET_LABELS = {
   dutyActivity: "Aktivit\xE4t im Dienst"
 };
 var ERLC_MAP_SIZE = 5355;
-var ERLC_BUILTIN_MAP = "/maps/erlc-map.webp";
+var ERLC_BUILTIN_MAP = "/maps/erlc-map-postals.webp";
 var DEFAULT_CAD_CONFIG = {
   homeGuildId: null,
   incidentNumberPrefix: "E",
@@ -865,13 +865,14 @@ var WANTED_MATCH_LABELS = {
   NAME_ID_MISMATCH: "Name gleich, Roblox-ID abweichend",
   ERLC_WANTED: "Im Spiel gesucht (ER:LC-Wanted-Sterne)"
 };
-var WANTED_HIT_STATUSES = ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"];
+var WANTED_HIT_STATUSES = ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED", "ENDED"];
 var WANTED_HIT_STATUS_LABELS = {
   NEW: "Neu",
   REVIEW_REQUIRED: "Manuelle Pr\xFCfung erforderlich",
   ACKNOWLEDGED: "Zur Kenntnis genommen",
   CONFIRMED: "Manuell best\xE4tigt",
-  REJECTED: "Verworfen (nicht die Person)"
+  REJECTED: "Verworfen (nicht die Person)",
+  ENDED: "Beendet (nicht mehr im Spiel gesucht)"
 };
 function matchWantedPlayer(player, subjects) {
   const lc = (v) => v.trim().toLowerCase();

@@ -21,7 +21,7 @@ interface SyncStatus {
 }
 
 const CONN: Record<string, [Tone, string]> = { CONNECTED: ['success', 'Verbunden'], LIMITED: ['warning', 'Eingeschränkt'], OFFLINE: ['danger', 'Offline'], ERROR: ['danger', 'Fehler'], UNKNOWN: ['neutral', 'Unbekannt'], DISABLED: ['neutral', 'Deaktiviert'] };
-const REVIEW_TONE: Record<string, Tone> = { NEW: 'danger', REVIEW_REQUIRED: 'warning', ACKNOWLEDGED: 'neutral', CONFIRMED: 'success', REJECTED: 'neutral' };
+const REVIEW_TONE: Record<string, Tone> = { NEW: 'danger', REVIEW_REQUIRED: 'warning', ACKNOWLEDGED: 'neutral', CONFIRMED: 'success', REJECTED: 'neutral', ENDED: 'neutral' };
 const NOTIFY: Record<string, string> = { SENT: 'Discord: gesendet', QUEUED: 'Discord: wartet auf den Bot', RETRYING: 'Discord: wird wiederholt', FAILED: 'Discord: fehlgeschlagen', NOT_CONFIGURED: 'Discord: kein Kanal eingestellt', UNKNOWN: 'Discord: unbekannt' };
 
 /** Verbindungs- und Abgleichsstatus je ER:LC-Server (letzte erfolgreiche Synchronisierung, Fehler). */
@@ -57,7 +57,8 @@ export function WantedHitList({ wantedId, compact, openOnly }: { wantedId?: stri
   const { can } = useAuth();
   const [params] = useSearchParams();
   const focus = params.get('id') ?? undefined;
-  const [status, setStatus] = useState(openOnly ? 'OPEN' : '');
+  // Ohne Fahndungsakte: standardmäßig nur offene Treffer (beendete/bearbeitete über den Filter)
+  const [status, setStatus] = useState(openOnly || !wantedId ? 'OPEN' : '');
   const [page, setPage] = useState(1);
   const [review, setReview] = useState<{ hit: WantedHit; decision: 'ACKNOWLEDGED' | 'CONFIRMED' | 'REJECTED' }>();
   const query = { page, pageSize: compact ? 10 : 25, wantedId, id: compact ? undefined : focus, ...(status === 'OPEN' ? { open: 'true' } : status ? { status } : {}) };
@@ -74,7 +75,7 @@ export function WantedHitList({ wantedId, compact, openOnly }: { wantedId?: stri
           {focus && <Link className="text-xs text-primary underline" to="/wanted/hits">Alle Treffer anzeigen</Link>}
         </div>
       )}
-      {q.isLoading ? <SkeletonRows rows={3} /> : q.error || !q.data ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data.items.length ? <EmptyState text="Keine Fahndungstreffer." hint="Treffer entstehen automatisch, wenn ein gesuchter Spieler dem ER:LC-Server beitritt." /> : (
+      {q.isLoading ? <SkeletonRows rows={3} /> : q.error || !q.data ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data.items.length ? <EmptyState text={status === 'OPEN' ? 'Keine offenen Fahndungstreffer.' : 'Keine Fahndungstreffer.'} hint="Treffer entstehen automatisch, wenn ein gesuchter Spieler dem ER:LC-Server beitritt." /> : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead><tr className="border-b border-line text-left text-xs text-muted">
@@ -98,7 +99,7 @@ export function WantedHitList({ wantedId, compact, openOnly }: { wantedId?: stri
                   )}
                   <td className="px-2 py-2">
                     <Badge tone={REVIEW_TONE[h.reviewStatus] ?? 'neutral'}>{h.reviewLabel}</Badge>
-                    {h.reviewedBy && <div className="mt-0.5 text-xs text-muted">{h.reviewedBy} · {fmt(h.reviewedAt)}{h.reviewNote ? ` – ${h.reviewNote}` : ''}</div>}
+                    {(h.reviewedBy || h.reviewStatus === 'ENDED') && <div className="mt-0.5 text-xs text-muted">{h.reviewedBy ?? 'System'} · {fmt(h.reviewedAt)}{h.reviewNote ? ` – ${h.reviewNote}` : ''}</div>}
                     <div className={`mt-0.5 text-xs ${h.notify.status === 'FAILED' ? 'text-danger' : 'text-muted'}`} title={h.notify.error ?? undefined}>{NOTIFY[h.notify.status] ?? h.notify.status}{h.notify.error ? ` (${h.notify.error})` : ''}</div>
                   </td>
                   <td className="whitespace-nowrap px-2 py-2 text-right">
@@ -170,7 +171,7 @@ export function WantedHits() {
         <Card title="So funktioniert der Abgleich">
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
             <li>Die ER:LC-API liefert je Spieler den Roblox-Namen und die Roblox-ID. Weitere eindeutige Kennungen gibt es nicht; Beitritte meldet ER:LC nicht per Webhook – das System vergleicht darum bei jedem Abruf die Spielerliste mit der vorherigen.</li>
-            <li><b>Im Spiel gesucht:</b> Hat ein Spieler in ER:LC Wanted-Sterne, entsteht automatisch ein Treffer (einer je Aufenthalt) – auch ohne Fahndung im Dashboard. Discord-Kanal: Ereignis „Im Spiel gesucht“ in den CAD-Einstellungen, sonst der Kanal für Fahndungstreffer.</li>
+            <li><b>Im Spiel gesucht:</b> Hat ein Spieler in ER:LC Wanted-Sterne, entsteht automatisch ein Treffer (einer je Aufenthalt) – auch ohne Fahndung im Dashboard. Hat der Spieler keine Sterne mehr oder verlässt er den Server, wird der Treffer automatisch beendet. Discord-Kanal: Ereignis „Im Spiel gesucht“ in den CAD-Einstellungen, sonst der Kanal für Fahndungstreffer.</li>
             <li><b>Bestätigt</b> ist ein Treffer nur, wenn die Roblox-ID exakt mit der Roblox-ID in der Personenakte übereinstimmt.</li>
             <li>Gleicher Name oder Alias ergibt nur eine <b>mögliche Übereinstimmung</b> – sie muss manuell bestätigt oder verworfen werden.</li>
             <li>Je Aufenthalt auf dem Server und Fahndung gibt es höchstens einen Treffer und eine Discord-Meldung. Verlässt der Spieler den Server und kommt wieder, ist das ein neuer Aufenthalt.</li>

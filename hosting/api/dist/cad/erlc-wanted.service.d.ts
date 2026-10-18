@@ -44,6 +44,11 @@ export declare class ErlcWantedService {
     }>;
     /** Server laut API leer/offline (nicht: API nicht erreichbar) → alle Sitzungen sind beendet. */
     serverEmpty(serverId: string): Promise<void>;
+    /**
+     * „Im Spiel gesucht“ gilt nur, solange der Spieler im Spiel gesucht wird: Treffer ohne Prüfung, deren Aufenthalt
+     * vorbei ist (Server verlassen, Server leer) oder deren Spieler keine Sterne mehr hat, werden automatisch beendet.
+     */
+    private endInGame;
     private run;
     /**
      * Im Spiel gesucht: Spieler mit ER:LC-Wanted-Sternen → ein Treffer je Aufenthalt (Roblox-ID von der API, ohne eigene Fahndung).
