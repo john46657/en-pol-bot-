@@ -246,10 +246,11 @@ export const WANTED_MATCH_LABELS: Record<WantedMatchType, string> = {
   ROBLOX_ID: 'Roblox-ID stimmt überein', NAME: 'Nur Roblox-Name stimmt überein', ALIAS: 'Nur Alias stimmt überein', NAME_ID_MISMATCH: 'Name gleich, Roblox-ID abweichend',
   ERLC_WANTED: 'Im Spiel gesucht (ER:LC-Wanted-Sterne)',
 };
-export const WANTED_HIT_STATUSES = ['NEW', 'REVIEW_REQUIRED', 'ACKNOWLEDGED', 'CONFIRMED', 'REJECTED'] as const;
+export const WANTED_HIT_STATUSES = ['NEW', 'REVIEW_REQUIRED', 'ACKNOWLEDGED', 'CONFIRMED', 'REJECTED', 'ENDED'] as const;
 export type WantedHitStatus = (typeof WANTED_HIT_STATUSES)[number];
 export const WANTED_HIT_STATUS_LABELS: Record<WantedHitStatus, string> = {
   NEW: 'Neu', REVIEW_REQUIRED: 'Manuelle Prüfung erforderlich', ACKNOWLEDGED: 'Zur Kenntnis genommen', CONFIRMED: 'Manuell bestätigt', REJECTED: 'Verworfen (nicht die Person)',
+  ENDED: 'Beendet (nicht mehr im Spiel gesucht)',
 };
 
 export interface WantedMatchPlayer { name: string; id: string | null }

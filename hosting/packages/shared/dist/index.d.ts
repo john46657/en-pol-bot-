@@ -766,7 +766,7 @@ declare function parsePlayer(v: unknown): {
 declare const WANTED_MATCH_TYPES: readonly ["ROBLOX_ID", "NAME", "ALIAS", "NAME_ID_MISMATCH", "ERLC_WANTED"];
 type WantedMatchType = (typeof WANTED_MATCH_TYPES)[number];
 declare const WANTED_MATCH_LABELS: Record<WantedMatchType, string>;
-declare const WANTED_HIT_STATUSES: readonly ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED"];
+declare const WANTED_HIT_STATUSES: readonly ["NEW", "REVIEW_REQUIRED", "ACKNOWLEDGED", "CONFIRMED", "REJECTED", "ENDED"];
 type WantedHitStatus = (typeof WANTED_HIT_STATUSES)[number];
 declare const WANTED_HIT_STATUS_LABELS: Record<WantedHitStatus, string>;
 interface WantedMatchPlayer {
