@@ -696,8 +696,11 @@ declare const CAD_WIDGETS: readonly ["activeIncidents", "availableUnits", "activ
 declare const CAD_WIDGET_LABELS: Record<string, string>;
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 declare const ERLC_MAP_SIZE = 5355;
-/** Mitgelieferte ER:LC-Karte (Stand 26.09.2026, 4096 px, als 5355 × 5355 dargestellt) – gilt ohne eigenes Kartenbild oder wenn es nicht lädt. */
-declare const ERLC_BUILTIN_MAP = "/maps/erlc-map.webp";
+/**
+ * Mitgelieferte offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355)
+ * – Standardkarte für Einsatzkarte, Leitstelle und Mini-Karten, gilt ohne eigenes Kartenbild oder wenn es nicht lädt.
+ */
+declare const ERLC_BUILTIN_MAP = "/maps/erlc-map-postals.webp";
 declare const DEFAULT_CAD_CONFIG: CadConfig;
 /** Spielkoordinate (ER:LC: X nach rechts, Z nach unten, Ursprung Mitte) → Pixel im Kartenbild. */
 declare const gameToPixel: (m: CadMapConfig, x: number, z: number) => {

@@ -81,8 +81,11 @@ export const CAD_WIDGET_LABELS: Record<string, string> = {
 
 /** Offizielle ER:LC-Kartenbilder sind 5355 × 5355 px, Spielkoordinate (0,0) liegt in der Mitte. */
 export const ERLC_MAP_SIZE = 5355;
-/** Mitgelieferte ER:LC-Karte (Stand 26.09.2026, 4096 px, als 5355 × 5355 dargestellt) – gilt ohne eigenes Kartenbild oder wenn es nicht lädt. */
-export const ERLC_BUILTIN_MAP = '/maps/erlc-map.webp';
+/**
+ * Mitgelieferte offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen (api.erlc.gg/maps, „fall_postals“, 5355 × 5355)
+ * – Standardkarte für Einsatzkarte, Leitstelle und Mini-Karten, gilt ohne eigenes Kartenbild oder wenn es nicht lädt.
+ */
+export const ERLC_BUILTIN_MAP = '/maps/erlc-map-postals.webp';
 
 export const DEFAULT_CAD_CONFIG: CadConfig = {
   homeGuildId: null,

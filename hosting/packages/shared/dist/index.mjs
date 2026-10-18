@@ -406,7 +406,7 @@ var CAD_WIDGET_LABELS = {
   dutyActivity: "Aktivit\xE4t im Dienst"
 };
 var ERLC_MAP_SIZE = 5355;
-var ERLC_BUILTIN_MAP = "/maps/erlc-map.webp";
+var ERLC_BUILTIN_MAP = "/maps/erlc-map-postals.webp";
 var DEFAULT_CAD_CONFIG = {
   homeGuildId: null,
   incidentNumberPrefix: "E",

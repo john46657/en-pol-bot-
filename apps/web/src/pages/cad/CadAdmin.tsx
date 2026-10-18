@@ -187,10 +187,10 @@ function MapSettings({ draft, upd }: { draft: CadConfig; upd: (p: Partial<CadCon
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <Card title="Kartenbild">
-        <p className="mb-2 text-xs text-muted">Die aktuelle ER:LC-Karte ist schon eingebaut – hier nur etwas tun, wenn du ein eigenes Kartenbild willst (PNG/JPG/WebP, bis 40 MB). Marker, POIs und Zonen liegen als Ebenen darüber.</p>
+        <p className="mb-2 text-xs text-muted">Die offizielle ER:LC-Karte mit Postleitzahlen (Postals) und Straßennamen ist schon eingebaut – hier nur etwas tun, wenn du ein eigenes Kartenbild willst (PNG/JPG/WebP, bis 40 MB). Marker, POIs und Zonen liegen als Ebenen darüber.</p>
         {m.imageUrl && broken === m.imageUrl && <p className="mb-2 rounded border border-warning/50 bg-warning/10 px-2 py-1 text-xs">Das eingetragene Kartenbild lässt sich nicht anzeigen ({m.imageUrl.startsWith('/api/') ? 'Datei fehlt' : 'keine Bilddatei oder fremder Server'}) – solange wird die mitgelieferte ER:LC-Karte verwendet.</p>}
         <img src={m.imageUrl && broken !== m.imageUrl ? m.imageUrl : ERLC_BUILTIN_MAP} alt="Aktuelle Karte" onError={() => m.imageUrl && setBroken(m.imageUrl)} className="mb-2 max-h-48 rounded border border-line" />
-        <p className="mb-2 text-xs text-muted">{m.imageUrl && broken !== m.imageUrl ? 'Eigenes Kartenbild.' : 'Mitgelieferte ER:LC-Karte (Stand 26.09.2026).'}</p>
+        <p className="mb-2 text-xs text-muted">{m.imageUrl && broken !== m.imageUrl ? 'Eigenes Kartenbild.' : 'Mitgelieferte offizielle ER:LC-Karte mit Postals und Straßennamen.'}</p>
         {m.imageUrl && <Button size="sm" variant="ghost" className="mb-2" disabled={busy} onClick={() => { setBroken(null); setMap({ imageUrl: null, width: ERLC_MAP_SIZE, height: ERLC_MAP_SIZE, originX: ERLC_MAP_SIZE / 2, originY: ERLC_MAP_SIZE / 2, scale: 1 }); setMsg('Mitgelieferte Karte wird verwendet.'); }}>Mitgelieferte Karte verwenden</Button>}
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" aria-label="Karte hochladen" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = ''; }} />
         <Button size="sm" variant="secondary" disabled={busy} onClick={() => fileRef.current?.click()}><Upload size={14} /> Datei auswählen</Button>
