@@ -68,6 +68,7 @@ __export(index_exports, {
   ERLC_FEATURE_LABELS: () => ERLC_FEATURE_LABELS,
   ERLC_MAP_SIZE: () => ERLC_MAP_SIZE,
   ERLC_POLL_OPTIONS: () => ERLC_POLL_OPTIONS,
+  ERLC_POSTALS: () => ERLC_POSTALS,
   ERLC_STATUSES: () => ERLC_STATUSES,
   ERLC_STATUS_LABEL: () => ERLC_STATUS_LABEL,
   EVIDENCE_CUSTODY_STATES: () => EVIDENCE_CUSTODY_STATES,
@@ -194,6 +195,7 @@ __export(index_exports, {
   fieldValue: () => fieldValue,
   fillTemplate: () => fillTemplate,
   fitCallCalibration: () => fitCallCalibration,
+  fitPostalCalibration: () => fitPostalCalibration,
   fleetConfigSchema: () => fleetConfigSchema,
   fleetInternalSchema: () => fleetInternalSchema,
   fleetModelSchema: () => fleetModelSchema,
@@ -270,6 +272,8 @@ __export(index_exports, {
   poiForPlace: () => poiForPlace,
   policeReportFields: () => policeReportFields,
   policyAllowsFlow: () => policyAllowsFlow,
+  postalMatchRate: () => postalMatchRate,
+  postalPosition: () => postalPosition,
   questionProblems: () => questionProblems,
   questionSchema: () => questionSchema,
   radioRoleSyncAction: () => radioRoleSyncAction,
@@ -788,6 +792,210 @@ var DEFAULT_CAD_CONFIG = {
   memberFields: [],
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
+var ERLC_POSTALS = {
+  "200": [-1498, 1635],
+  "201": [-1170, 1666],
+  "202": [-819, 1582],
+  "203": [-1443, 1477],
+  "204": [-1181, 1477],
+  "205": [-837, 1396],
+  "206": [-1249, 1343],
+  "207": [-1106, 1343],
+  "208": [-979, 1343],
+  "209": [-1410, 1218],
+  "210": [-1182, 1218],
+  "211": [-980, 1218],
+  "212": [-803, 1218],
+  "213": [-1411, 1045],
+  "214": [-1249, 1045],
+  "215": [-1106, 1045],
+  "216": [-978, 1045],
+  "217": [-828, 1045],
+  "218": [-568, 984],
+  "219": [-1110, 925],
+  "220": [-978, 925],
+  "221": [-1411, 876],
+  "222": [-1248, 924],
+  "223": [-1102, 790],
+  "224": [-978, 790],
+  "225": [-772, 790],
+  "226": [-532, 790],
+  "227": [-1558, 738],
+  "228": [-1404, 712],
+  "229": [-1268, 766],
+  "230": [-1048, 652],
+  "231": [-827, 652],
+  "300": [-214, 1342],
+  "301": [10, 1380],
+  "302": [435, 1343],
+  "303": [856, 1257],
+  "304": [-46, 1205],
+  "305": [100, 1205],
+  "306": [-46, 1010],
+  "307": [120, 1064],
+  "308": [671, 1064],
+  "309": [119, 966],
+  "310": [260, 966],
+  "311": [404, 962],
+  "312": [515, 979],
+  "313": [649, 963],
+  "314": [892, 959],
+  "315": [-2, 824],
+  "316": [186, 823],
+  "317": [364, 824],
+  "319": [514, 780],
+  "320": [858, 817],
+  "321": [26, 626],
+  "322": [366, 640],
+  "323": [514, 664],
+  "324": [661, 664],
+  "325": [858, 632],
+  "326": [376, 488],
+  "327": [607, 488],
+  "400": [-1510, 476],
+  "401": [-597, 532],
+  "402": [-1713, 268],
+  "403": [-1068, 399],
+  "404": [-834, 399],
+  "405": [-1392, 233],
+  "406": [-1164, 233],
+  "407": [-964, 233],
+  "408": [-1421, 6],
+  "409": [-1164, 62],
+  "410": [-964, 62],
+  "411": [-794, 62],
+  "500": [-284, 50],
+  "501": [296, 245],
+  "502": [773, 186],
+  "503": [630, -40],
+  "504": [795, -464],
+  "600": [-1502, -200],
+  "601": [-841, -364],
+  "602": [-1670, -609],
+  "603": [-1111, -784],
+  "604": [-1334, -946],
+  "605": [-1500, -1111],
+  "606": [-1795, -1294],
+  "607": [-1602, -1294],
+  "700": [196, -444],
+  "701": [46, -612],
+  "702": [260, -612],
+  "703": [438, -652],
+  "704": [145, -882],
+  "705": [590, -896],
+  "800": [-1588, -1510],
+  "801": [-1391, -1458],
+  "802": [-1216, -1552],
+  "803": [-1674, -1752],
+  "804": [-1492, -1674],
+  "805": [-1236, -1684],
+  "806": [-1438, -1794],
+  "807": [-1164, -1802],
+  "808": [-1339, -1926],
+  "809": [-1084, -1950],
+  "900": [-878, -1111],
+  "901": [-364, -898],
+  "902": [-444, -1145],
+  "903": [-688, -1350],
+  "904": [-844, -1636],
+  "905": [-458, -1586],
+  "906": [-734, -2062],
+  "907": [-681, -2326],
+  "908": [-395, -2338],
+  "909": [-139, -2278],
+  "1000": [3, -1528],
+  "1001": [470, -1325],
+  "1002": [896, -1287],
+  "1003": [738, -1425],
+  "1004": [878, -1424],
+  "1005": [534, -1583],
+  "1006": [738, -1558],
+  "1007": [878, -1560],
+  "1008": [738, -1694],
+  "1009": [894, -1688],
+  "1010": [807, -1940],
+  "1011": [533, -2096],
+  "1100": [1320, -1059],
+  "1101": [1530, -1116],
+  "1102": [1320, -1245],
+  "1103": [1466, -1282],
+  "1104": [1634, -1245],
+  "1105": [1320, -1452],
+  "1106": [1466, -1452],
+  "1107": [1570, -1448],
+  "1108": [1548, -1664],
+  "1109": [1255, -1738],
+  "1200": [1290, 958],
+  "1201": [1482, 957],
+  "1202": [1840, 821],
+  "1203": [1152, 590],
+  "1204": [1890, 605],
+  "1205": [1344, 319],
+  "1206": [1551, 143],
+  "1207": [1850, 143],
+  "1208": [983, -88],
+  "1209": [1515, -374],
+  "1210": [1084, -505],
+  "1211": [1136, -788],
+  "1212": [1407, -606],
+  "1213": [1700, -671]
+};
+function postalPosition(text) {
+  if (!text) return null;
+  const tagged = /\b(?:plz|postal(?:\s*code)?|p)\s*[-:#.]?\s*(\d{3,4})\b/i.exec(text)?.[1];
+  const postal = tagged && ERLC_POSTALS[tagged] ? tagged : (text.match(/(?<![\d.,])\d{3,4}(?![\d.,])/g) ?? []).find((n) => ERLC_POSTALS[n]);
+  const p = postal ? ERLC_POSTALS[postal] : void 0;
+  return postal && p ? { postal, x: p[0], z: p[1] } : null;
+}
+var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z10]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z10 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
+function postalMatchRate(m, samples) {
+  const labels = postalLabels(m.width, m.height);
+  const known = samples.filter((s) => ERLC_POSTALS[s[2]]);
+  if (!known.length) return 0;
+  const hits = known.filter(([x, z10, k]) => {
+    const px = m.originX + x * m.scale, py = m.originY + z10 * m.scale;
+    let best = labels[0], d = Infinity;
+    for (const l of labels) {
+      const dd2 = (l.px - px) ** 2 + (l.py - py) ** 2;
+      if (dd2 < d) {
+        d = dd2;
+        best = l;
+      }
+    }
+    return best.k === k;
+  });
+  return hits.length / known.length;
+}
+function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_SIZE) {
+  const labels = new Map(postalLabels(width, height).map((l) => [l.k, l]));
+  const fit = (pts2) => {
+    const n = pts2.length, mx = pts2.reduce((a, p) => a + p.x, 0) / n, mz = pts2.reduce((a, p) => a + p.z, 0) / n;
+    const mlx = pts2.reduce((a, p) => a + p.lx, 0) / n, mly = pts2.reduce((a, p) => a + p.ly, 0) / n;
+    const den = pts2.reduce((a, p) => a + (p.x - mx) ** 2 + (p.z - mz) ** 2, 0);
+    if (!den) return null;
+    const scale = pts2.reduce((a, p) => a + (p.x - mx) * (p.lx - mlx) + (p.z - mz) * (p.ly - mly), 0) / den;
+    return { scale, originX: mlx - scale * mx, originY: mly - scale * mz };
+  };
+  let pts = samples.flatMap(([x, z10, k]) => {
+    const l = labels.get(k);
+    return l && Number.isFinite(x) && Number.isFinite(z10) ? [{ x, z: z10, lx: l.px, ly: l.py, k }] : [];
+  });
+  const enough = (p) => p.length >= 20 && new Set(p.map((q) => q.k)).size >= 6 && Math.max(...p.map((q) => q.x)) - Math.min(...p.map((q) => q.x)) >= 1e3 && Math.max(...p.map((q) => q.z)) - Math.min(...p.map((q) => q.z)) >= 1e3;
+  if (!enough(pts)) return null;
+  let f = fit(pts);
+  if (!f) return null;
+  const err = (p, c) => Math.hypot(c.originX + p.x * c.scale - p.lx, c.originY + p.z * c.scale - p.ly);
+  const med = [...pts.map((p) => err(p, f))].sort((a, b) => a - b)[Math.floor(pts.length / 2)];
+  const kept = pts.filter((p) => err(p, f) <= Math.max(3 * med, 150));
+  if (enough(kept)) {
+    pts = kept;
+    f = fit(pts) ?? f;
+  }
+  if (!(f.scale > 0)) return null;
+  const r = (v, d = 1) => Math.round(v * 10 ** d) / 10 ** d;
+  const out = { scale: r(f.scale, 4), originX: r(f.originX), originY: r(f.originY) };
+  return { ...out, n: pts.length, postals: new Set(pts.map((p) => p.k)).size, match: postalMatchRate({ width, height, ...out }, samples) };
+}
 var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
 var onErlcMap = (x, z10) => typeof x === "number" && typeof z10 === "number" && Number.isFinite(x) && Number.isFinite(z10) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z10) <= ERLC_MAP_SIZE / 2;
 function poiForPlace(place, pois) {
@@ -3128,6 +3336,7 @@ function parseCsv(text) {
   ERLC_FEATURE_LABELS,
   ERLC_MAP_SIZE,
   ERLC_POLL_OPTIONS,
+  ERLC_POSTALS,
   ERLC_STATUSES,
   ERLC_STATUS_LABEL,
   EVIDENCE_CUSTODY_STATES,
@@ -3254,6 +3463,7 @@ function parseCsv(text) {
   fieldValue,
   fillTemplate,
   fitCallCalibration,
+  fitPostalCalibration,
   fleetConfigSchema,
   fleetInternalSchema,
   fleetModelSchema,
@@ -3330,6 +3540,8 @@ function parseCsv(text) {
   poiForPlace,
   policeReportFields,
   policyAllowsFlow,
+  postalMatchRate,
+  postalPosition,
   questionProblems,
   questionSchema,
   radioRoleSyncAction,

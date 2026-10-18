@@ -88,7 +88,8 @@ let CadController = class CadController {
     media;
     handover;
     statsSvc;
-    constructor(s, tablet, cfg, perms, media, handover, statsSvc) {
+    erlc;
+    constructor(s, tablet, cfg, perms, media, handover, statsSvc, erlc) {
         this.s = s;
         this.tablet = tablet;
         this.cfg = cfg;
@@ -96,11 +97,14 @@ let CadController = class CadController {
         this.media = media;
         this.handover = handover;
         this.statsSvc = statsSvc;
+        this.erlc = erlc;
     }
     // Konfiguration
     config() { return this.cfg.get(); }
     saveConfig(a, b) { return this.cfg.save(a, b); }
     saveMap(a, b) { return this.cfg.save(a, { map: b }); }
+    /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen und Ermitteln der Kartenkalibrierung. */
+    mapCalibration() { return this.erlc.postalSamples(); }
     /** Kartenbild hochladen (ER:LC-Karte, bis 40 MB) – wird danach als Kartenhintergrund gesetzt. */
     async mapImage(a, file, b) {
         if (!file || !/^image\/(png|jpeg|webp)$/.test(file.mimetype))
@@ -214,6 +218,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], CadController.prototype, "saveMap", null);
+__decorate([
+    (0, common_1.Get)('map/calibration'),
+    (0, decorators_1.RequirePermission)('cad.manage_map'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CadController.prototype, "mapCalibration", null);
 __decorate([
     (0, common_1.Post)('map/image'),
     (0, decorators_1.RequirePermission)('cad.manage_map'),
@@ -624,7 +635,7 @@ exports.CadController = CadController = __decorate([
     (0, common_1.UseInterceptors)(cad_link_interceptor_1.CadLinkInterceptor),
     (0, common_1.Controller)('cad'),
     __metadata("design:paramtypes", [cad_service_1.CadService, cad_tablet_service_1.CadTabletService, cad_config_service_1.CadConfigService, permission_service_1.PermissionService, media_service_1.MediaService,
-        cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService])
+        cad_handover_service_1.CadHandoverService, cad_stats_service_1.CadStatsService, erlc_service_1.ErlcService])
 ], CadController);
 const commandBody = zod_1.z.object({ command: zod_1.z.string().trim().min(2).max(500), confirm: zod_1.z.boolean().optional() });
 let ErlcController = class ErlcController {

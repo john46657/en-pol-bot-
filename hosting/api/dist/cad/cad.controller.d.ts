@@ -286,10 +286,15 @@ export declare class CadController {
     private readonly media;
     private readonly handover;
     private readonly statsSvc;
-    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService, handover: CadHandoverService, statsSvc: CadStatsService);
+    private readonly erlc;
+    constructor(s: CadService, tablet: CadTabletService, cfg: CadConfigService, perms: PermissionService, media: MediaService, handover: CadHandoverService, statsSvc: CadStatsService, erlc: ErlcService);
     config(): Promise<import("@enrp/shared").CadConfig>;
     saveConfig(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
     saveMap(a: Actor, b: Record<string, unknown>): Promise<import("@enrp/shared").CadConfig>;
+    /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen und Ermitteln der Kartenkalibrierung. */
+    mapCalibration(): Promise<{
+        samples: import("@enrp/shared").PostalSample[];
+    }>;
     /** Kartenbild hochladen (ER:LC-Karte, bis 40 MB) – wird danach als Kartenhintergrund gesetzt. */
     mapImage(a: Actor, file: Express.Multer.File | undefined, b: {
         width?: number;

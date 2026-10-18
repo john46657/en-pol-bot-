@@ -5,6 +5,7 @@ import { MapPin, Star } from 'lucide-react';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ago, optColor, optLabel, useCadConfig, useCadPrefs, type CadConfig, type CadIncidentDetail, type CadIncidentRow, type CadMapData, type CadRadioRow, type CadUnitRow } from '../../lib/cad';
+import { postalPosition } from '@enrp/shared';
 import { MiniMap } from './MiniMap';
 import { LockBanner, useEditLock } from '../../lib/locks';
 import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
@@ -40,6 +41,13 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
     onError: (e) => setErr(errText(e)),
   });
   const upd = (p: IncidentDraft) => setV({ ...v, ...p });
+  /** Position stammt aus der PLZ im Ort (wird bei Änderung des Orts nachgezogen, eine von Hand gesetzte Position nicht). */
+  const [fromPlz, setFromPlz] = useState(false);
+  const setLocation = (location: string) => {
+    const plz = postalPosition(location);
+    if (v.mapX == null || v.mapZ == null || fromPlz) { upd({ location, mapX: plz?.x ?? null, mapZ: plz?.z ?? null }); setFromPlz(!!plz); }
+    else upd({ location });
+  };
   return (
     <Modal open wide title={id ? 'Einsatz bearbeiten' : callId ? 'Einsatz aus Notruf erstellen' : 'Neuer Einsatz'} onClose={onClose}>
       <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); m.mutate(); }}>
@@ -49,15 +57,15 @@ export function IncidentForm({ cfg, initial, id, callId, onClose, onSaved }: { c
         <Field label="Stichwort">{(fid) => <Input id={fid} maxLength={80} value={v.keyword ?? ''} onChange={(e) => upd({ keyword: e.target.value })} />}</Field>
         <Field label="Priorität">{(fid) => <Select id={fid} value={v.priority ?? ''} onChange={(e) => upd({ priority: e.target.value })}>{cfg.priorities.map((p) => <option key={p.key} value={p.key}>{optLabel(cfg.priorities, p.key)}</option>)}</Select>}</Field>
         {!id && <Field label="Status">{(fid) => <Select id={fid} value={v.status ?? ''} onChange={(e) => upd({ status: e.target.value || undefined })}><option value="">Standard ({optLabel(cfg.incidentStatuses, cfg.incidentStatuses.find((s) => !s.closed)?.key)})</option>{cfg.incidentStatuses.filter((s) => !s.closed).map((s) => <option key={s.key} value={s.key}>{optLabel(cfg.incidentStatuses, s.key)}</option>)}</Select>}</Field>}
-        <Field label="Ort">{(fid) => <Input id={fid} maxLength={200} value={v.location ?? ''} onChange={(e) => upd({ location: e.target.value })} />}</Field>
+        <Field label="Ort" hint="Mit PLZ (z. B. „PLZ 321“) landet der Einsatz automatisch an der Postleitzahl auf der Karte">{(fid) => <Input id={fid} maxLength={200} value={v.location ?? ''} onChange={(e) => setLocation(e.target.value)} />}</Field>
         {players.length > 0 && <Field label="Position aus ER:LC übernehmen" hint="Live-Standort eines Spielers (z. B. Anrufer oder Einheit vor Ort)">{(fid) => (
-          <Select id={fid} value="" onChange={(e) => { const p = players.find((x) => `${x.serverId}:${x.name}` === e.target.value); if (p?.location) upd({ mapX: Math.round(p.location.x * 10) / 10, mapZ: Math.round(p.location.z * 10) / 10, location: v.location || [p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') }); }}>
+          <Select id={fid} value="" onChange={(e) => { const p = players.find((x) => `${x.serverId}:${x.name}` === e.target.value); if (p?.location) setFromPlz(false); if (p?.location) upd({ mapX: Math.round(p.location.x * 10) / 10, mapZ: Math.round(p.location.z * 10) / 10, location: v.location || [p.location.street, p.location.postal && `PLZ ${p.location.postal}`].filter(Boolean).join(' · ') }); }}>
             <option value="">📍 Spieler wählen…</option>
             {players.map((p) => <option key={`${p.serverId}:${p.name}`} value={`${p.serverId}:${p.name}`}>{p.team?.toLowerCase() === 'police' ? '🚓' : '👤'} {p.name}{p.callsign ? ` (${p.callsign})` : ''} – {[p.location!.street, p.location!.postal && `PLZ ${p.location!.postal}`].filter(Boolean).join(' · ') || 'ohne Straße'}</option>)}
           </Select>
         )}</Field>}
         <Field label="Kartenposition (X / Z)" hint="Wird bei Notrufen automatisch aus ER:LC übernommen – sonst Spieler oben wählen oder „Einsatz hier“ auf der Karte">{(fid) => (
-          <div className="flex gap-1"><Input id={fid} type="number" step="any" placeholder="X" value={v.mapX ?? ''} onChange={(e) => upd({ mapX: e.target.value === '' ? null : Number(e.target.value) })} /><Input aria-label="Z" type="number" step="any" placeholder="Z" value={v.mapZ ?? ''} onChange={(e) => upd({ mapZ: e.target.value === '' ? null : Number(e.target.value) })} /></div>
+          <div className="flex gap-1"><Input id={fid} type="number" step="any" placeholder="X" value={v.mapX ?? ''} onChange={(e) => { setFromPlz(false); upd({ mapX: e.target.value === '' ? null : Number(e.target.value) }); }} /><Input aria-label="Z" type="number" step="any" placeholder="Z" value={v.mapZ ?? ''} onChange={(e) => { setFromPlz(false); upd({ mapZ: e.target.value === '' ? null : Number(e.target.value) }); }} /></div>
         )}</Field>
         {v.mapX !== null && v.mapX !== undefined && v.mapZ !== null && v.mapZ !== undefined && <div className="sm:col-span-2"><MiniMap cfg={cfg} x={v.mapX} z={v.mapZ} height={120} label={v.location || undefined} /></div>}
         <div className="sm:col-span-2"><Field label="Beschreibung">{(fid) => <Textarea id={fid} rows={3} maxLength={5000} value={v.description ?? ''} onChange={(e) => upd({ description: e.target.value })} />}</Field></div>

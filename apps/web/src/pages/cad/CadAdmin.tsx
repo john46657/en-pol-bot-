@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Link2, Trash2, Upload } from 'lucide-react';
-import { CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, ERLC_BUILTIN_MAP, type CadConfig, type CadRoute } from '@enrp/shared';
+import { CAD_WIDGET_LABELS, CAD_WIDGETS, CAD_EVENT_LABELS, CAD_EVENTS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, ERLC_FEATURE_LABELS, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_MAP_SIZE, ERLC_BUILTIN_MAP, fitPostalCalibration, postalMatchRate, type CadConfig, type PostalSample, type CadRoute } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useAutosaveDraft } from '../../lib/autosave';
@@ -159,6 +159,28 @@ function RoutesEditor({ routes, onChange }: { routes: CadRoute[]; onChange: (r: 
   );
 }
 
+/**
+ * Prüfung der Kalibrierung mit Live-Daten: ER:LC meldet zu jeder Spieler-Position die PLZ. Liegt die nächste PLZ-Beschriftung
+ * der Karte meist an der gemeldeten PLZ, stimmt die Einstellung; sonst lässt sich die aus den Daten ermittelte übernehmen.
+ */
+function CalibrationCheck({ map, onApply }: { map: CadConfig['map']; onApply: (c: { scale: number; originX: number; originY: number }) => void }) {
+  const q = useQuery({ queryKey: ['cad-map-calibration'], queryFn: () => api<{ samples: PostalSample[] }>('/cad/map/calibration'), refetchInterval: 60_000 });
+  const samples = q.data?.samples ?? [];
+  const pct = (v: number) => `${Math.round(v * 100)} %`;
+  if (!samples.length) return <p className="mt-3 text-xs text-muted">Prüfung mit Live-Daten: noch keine Spieler-Positionen gesammelt – sobald Spieler auf dem ER:LC-Server sind (Abruf „Spieler“ aktiv), wird hier geprüft, ob die Positionen genau zu den Postleitzahlen der Karte passen.</p>;
+  const now = postalMatchRate(map, samples);
+  const best = fitPostalCalibration(samples, map.width, map.height);
+  const better = best && best.match > now + 0.05 && (Math.abs(best.scale - map.scale) > 0.01 || Math.hypot(best.originX - map.originX, best.originY - map.originY) > 15);
+  return (
+    <div className="mt-3 rounded border border-line p-2 text-xs">
+      <p><b>Prüfung mit Live-Daten:</b> {samples.length} Spieler-Positionen in {new Set(samples.map((s) => s[2])).size} PLZ – {pct(now)} liegen mit der aktuellen Einstellung an der richtigen PLZ{now >= 0.6 ? ' ✅' : ' ⚠️'}.</p>
+      {!best && <p className="mt-1 text-muted">Für einen eigenen Vorschlag braucht es mehr Positionen aus verschiedenen Teilen der Karte (mind. 20 in 6 PLZ).</p>}
+      {best && better && <div className="mt-1 flex flex-wrap items-center gap-2"><span>Ermittelt aus den Daten: Maßstab {best.scale}, Ursprung {best.originX} / {best.originY} → {pct(best.match)} an der richtigen PLZ.</span><Button size="sm" onClick={() => onApply({ scale: best.scale, originX: best.originX, originY: best.originY })}>Übernehmen</Button></div>}
+      {best && !better && <p className="mt-1 text-muted">Die aus den Daten ermittelte Kalibrierung weicht nicht nennenswert ab – die Einstellung passt.</p>}
+    </div>
+  );
+}
+
 function MapSettings({ draft, upd }: { draft: CadConfig; upd: (p: Partial<CadConfig>) => void }) {
   const qc = useQueryClient();
   const [msg, setMsg] = useState<string>();
@@ -205,6 +227,7 @@ function MapSettings({ draft, upd }: { draft: CadConfig; upd: (p: Partial<CadCon
         <p className="mb-2 text-xs text-muted">ER:LC liefert Positionen relativ zur Kartenmitte (X nach rechts, Z nach unten). Standard für die offiziellen 5355-px-Karten: Ursprung in der Bildmitte, Maßstab 1. Liegen Marker daneben, hier anpassen.</p>
         <div className="grid grid-cols-2 gap-2">{num('Breite (px)', 'width')}{num('Höhe (px)', 'height')}{num('Ursprung X (px)', 'originX')}{num('Ursprung Y (px)', 'originY')}{num('Maßstab (px je Einheit)', 'scale')}</div>
         <Button size="sm" variant="ghost" className="mt-2" onClick={() => setMap({ originX: m.width / 2, originY: m.height / 2, scale: 1 })}>Auf Standard zurücksetzen</Button>
+        <CalibrationCheck map={m} onApply={(c) => setMap(c)} />
       </Card>
       <Card title="Ebenen" className="lg:col-span-2">
         <OptionListEditor title="Ebenen (jede einzeln ein-/ausblendbar)" value={draft.layers} noColor noEmoji onChange={(v) => upd({ layers: v.map((l) => ({ key: l.key.toLowerCase(), label: l.label, ...(l.builtin ? { builtin: true } : {}), enabledByDefault: l.enabledByDefault !== false })) })}

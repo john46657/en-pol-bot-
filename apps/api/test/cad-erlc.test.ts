@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ERLC_POSTALS } from '@enrp/shared';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { generateKeyPairSync, sign } from 'node:crypto';
@@ -185,6 +186,27 @@ describe('ER:LC integration', () => {
     const inc = await admin.post(`/api/v1/cad/calls/${old.id}/incident`).send({});
     expect(inc.body).toMatchObject({ mapX: 300, mapZ: -400 });
     await admin.delete(`/api/v1/cad/map/objects/${poi}`);
+  });
+
+  it('PLZ: Notruf und Einsatz mit Postleitzahl im Ort landen an der PLZ der offiziellen Karte; Spieler-PLZ werden für die Kalibrierung gesammelt', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const now = Math.floor(Date.now() / 1000);
+    const [px, pz] = ERLC_POSTALS['321']!;
+    replies = [json(200, { ...SERVER_DATA, EmergencyCalls: [{ Team: 'Police', Caller: 0, Players: [], Position: null, StartedAt: now, CallNumber: 1240, Description: 'Schüsse', PositionDescriptor: 'Postal 321' }] })];
+    await admin.post(`/api/v1/erlc/servers/${id}/reconnect`);
+    const call = ((await admin.get('/api/v1/cad/calls')).body as { callNumber: number; mapX: number | null; mapZ: number | null }[]).find((c) => c.callNumber === 1240);
+    expect(call).toMatchObject({ mapX: px, mapZ: pz });
+    // Einsatz ohne Kartenposition, Ort mit PLZ → Position der PLZ; eigene Position hat Vorrang
+    const inc = await admin.post('/api/v1/cad/incidents').send({ title: 'Raub', location: 'Freedom Avenue · PLZ 321' });
+    expect(inc.body).toMatchObject({ mapX: px, mapZ: pz });
+    expect((await admin.post('/api/v1/cad/incidents').send({ title: 'Raub', location: 'PLZ 321', mapX: 5, mapZ: 6 })).body).toMatchObject({ mapX: 5, mapZ: 6 });
+    const plain = await admin.post('/api/v1/cad/incidents').send({ title: 'Ohne Ort' });
+    expect(plain.body).toMatchObject({ mapX: null, mapZ: null });
+    const [qx, qz] = ERLC_POSTALS['1102']!;
+    expect((await admin.patch(`/api/v1/cad/incidents/${plain.body.id}`).send({ location: 'Postal 1102' })).body).toMatchObject({ mapX: qx, mapZ: qz });
+    // Spieler-Positionen mit PLZ (SERVER_DATA: PLZ 218) für die Prüfung der Kalibrierung
+    const cal = (await admin.get('/api/v1/cad/map/calibration')).body;
+    expect(cal.samples).toContainEqual([100, -50, '218']);
   });
 
   it('webhook: only valid Ed25519 signatures over timestamp + raw body are accepted', async () => {

@@ -282,6 +282,7 @@ let ErlcService = class ErlcService {
                 await this.syncCalls(s, snap.emergencyCalls, 'API');
             // Fahndungsabgleich VOR der Personen-Übernahme: deren Namens-Zuordnung darf keinen „bestätigten“ Treffer erzeugen
             await this.wanted.check(s, snap);
+            await this.learnPostals(snap.players ?? []);
             await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
             await this.fleet.sync(id, snap, manual).catch((e) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
             this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
@@ -321,14 +322,14 @@ let ErlcService = class ErlcService {
             try {
                 /*
                  * Position des Notrufs, in dieser Reihenfolge: 1. Standort des Anrufers (ER:LC liefert ihn im dokumentierten Kartensystem),
-                 * 2. POI zum Ortsnamen („Bank“), 3. Notruf-Position mit gelernter Umrechnung, 4. Notruf-Position, wenn sie auf der Karte liegt.
+                 * 2. POI zum Ortsnamen („Bank“), 3. PLZ aus der Ortsangabe, 4. Notruf-Position mit gelernter Umrechnung, 5. Notruf-Position, wenn sie auf der Karte liegt.
                  */
                 const fb = await callerPos(c.caller);
                 const hasPos = c.x !== null && c.z !== null && Number.isFinite(c.x) && Number.isFinite(c.z);
                 if (fb && hasPos)
                     await this.learnCallPosition(calKey, await loadPairs(), { px: c.x, pz: c.z, cx: fb.x, cz: fb.z });
                 pois ??= await this.prisma.cadMapObject.findMany({ where: { kind: 'POI', OR: [{ serverId: (0, guild_context_1.recordSpace)(s.guildId) ?? null }, { serverId: null }] }, select: { name: true, x: true, z: true } });
-                const poi = fb ? null : (0, shared_1.poiForPlace)(c.positionDescriptor, pois);
+                const poi = fb ? null : (0, shared_1.poiForPlace)(c.positionDescriptor, pois) ?? (0, shared_1.postalPosition)(c.positionDescriptor);
                 const cal = !fb && !poi && hasPos ? (0, shared_1.fitCallCalibration)(await loadPairs()) : null;
                 const learned = cal ? (0, shared_1.applyCallCalibration)(cal, c.x, c.z) : null;
                 const pos = fb ? { x: fb.x, z: fb.z } : poi ? { x: poi.x, z: poi.z } : learned && (0, shared_1.onErlcMap)(learned.x, learned.z) ? learned : hasPos && (0, shared_1.onErlcMap)(c.x, c.z) ? { x: c.x, z: c.z } : null;
@@ -355,6 +356,25 @@ let ErlcService = class ErlcService {
             pairs.splice(0, pairs.length - 30);
         const value = { pairs };
         await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } }).catch(() => undefined);
+    }
+    /**
+     * Spieler-Positionen mit ihrer PLZ sammeln (höchstens einmal pro Minute, die letzten 600) – daraus prüft und ermittelt
+     * CAD → Einstellungen → Karte die Kalibrierung, damit Einsätze und Einheiten genau an der richtigen Stelle der Karte liegen.
+     */
+    postalsAt = 0;
+    async learnPostals(players) {
+        const fresh = players.flatMap((p) => (p.location?.postal && shared_1.ERLC_POSTALS[p.location.postal] ? [[Math.round(p.location.x), Math.round(p.location.z), p.location.postal]] : []));
+        if (!fresh.length || Date.now() - this.postalsAt < 60_000)
+            return;
+        this.postalsAt = Date.now();
+        const key = 'erlc.postalSamples';
+        const old = (await this.prisma.systemSetting.findUnique({ where: { key } }))?.value?.samples ?? [];
+        const value = { samples: [...old, ...fresh].slice(-600) };
+        await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } }).catch(() => undefined);
+    }
+    /** Gesammelte Spieler-Positionen mit PLZ (Prüfung und Vorschlag der Kalibrierung rechnet die Einstellungsseite mit dem Entwurf). */
+    async postalSamples() {
+        return { samples: (await this.prisma.systemSetting.findUnique({ where: { key: 'erlc.postalSamples' } }))?.value?.samples ?? [] };
     }
     /** Live-Daten (letzter Stand bleibt bei API-Ausfall sichtbar). */
     async live(id) {

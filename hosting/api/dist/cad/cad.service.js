@@ -27,11 +27,11 @@ const locks_service_1 = require("../locks/locks.service");
 const fleet_service_1 = require("../fleet/fleet.service");
 const unitInclude = { members: true, incidents: { where: { clearedAt: null }, include: { incident: { select: { id: true, number: true, title: true, status: true } } } } };
 const incidentInclude = { units: { include: { unit: { select: { id: true, callsign: true, name: true, type: true, status: true } } } } };
-/** Notruf mit Position außerhalb der ER:LC-Karte (ältere Daten): Position des POI zum Ortsnamen, sonst keine. */
+/** Notruf mit Position außerhalb der ER:LC-Karte (ältere Daten): Position des POI zum Ortsnamen oder der PLZ, sonst keine. */
 const placeCall = (c, objects) => {
     if (c.mapX === null || c.mapZ === null || (0, shared_1.onErlcMap)(c.mapX, c.mapZ))
         return c;
-    const poi = (0, shared_1.poiForPlace)(c.positionDescriptor, objects.filter((o) => o.kind === 'POI'));
+    const poi = (0, shared_1.poiForPlace)(c.positionDescriptor, objects.filter((o) => o.kind === 'POI')) ?? (0, shared_1.postalPosition)(c.positionDescriptor);
     return { ...c, mapX: poi?.x ?? null, mapZ: poi?.z ?? null };
 };
 let CadService = class CadService {
@@ -199,6 +199,8 @@ let CadService = class CadService {
     async createIncident(actor, d, opts = {}) {
         const cfg = await this.validateIncident(d);
         const status = d.status ?? cfg.incidentStatuses.find((s) => !s.closed).key;
+        // ohne Kartenposition: Position der PLZ aus der Ortsangabe („PLZ 321“)
+        const plz = d.mapX == null || d.mapZ == null ? (0, shared_1.postalPosition)(d.location) : null;
         const priority = d.priority ?? cfg.priorities[Math.floor(cfg.priorities.length / 2)].key;
         const guildId = actor.guildId ?? cfg.homeGuildId ?? null;
         let inc;
@@ -207,7 +209,7 @@ let CadService = class CadService {
                 inc = await this.prisma.$transaction(async (tx) => {
                     const row = await tx.incident.create({ data: {
                             number: await this.nextNumber(tx, cfg.incidentNumberPrefix), title: d.title, type: d.type ?? null, keyword: d.keyword ?? null, priority, status, location: d.location ?? null,
-                            description: d.description ?? null, involved: d.involved ?? null, requiredUnits: d.requiredUnits ?? null, internalNotes: d.internalNotes ?? null, mapX: d.mapX ?? null, mapZ: d.mapZ ?? null,
+                            description: d.description ?? null, involved: d.involved ?? null, requiredUnits: d.requiredUnits ?? null, internalNotes: d.internalNotes ?? null, mapX: plz?.x ?? d.mapX ?? null, mapZ: plz?.z ?? d.mapZ ?? null,
                             restrictRoleIds: d.restrictRoleIds ?? [], dispatcherId: d.dispatcherId ?? actor.userId, source: opts.callId ? 'ERLC_CALL' : 'CAD', guildId,
                         } });
                     await this.log(tx, row.id, 'CREATED', `Einsatz ${row.number} angelegt`, actor);
@@ -263,6 +265,10 @@ let CadService = class CadService {
         if (!before)
             throw new errors_1.AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
         const { status, ...rest } = d;
+        // Ort geändert, aber keine Kartenposition: Position der PLZ aus der Ortsangabe
+        const plz = d.location !== undefined && (d.mapX === undefined ? before.mapX : d.mapX) == null ? (0, shared_1.postalPosition)(d.location) : null;
+        if (plz)
+            Object.assign(rest, { mapX: plz.x, mapZ: plz.z });
         if (status && status !== before.status)
             await this.assertStatusAllowed(actor, cfg, before.status, status);
         const after = await this.prisma.$transaction(async (tx) => {

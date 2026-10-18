@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCallCalibration, fitCallCalibration, onErlcMap, poiForPlace } from '../src';
+import { ERLC_POSTALS, applyCallCalibration, fitCallCalibration, fitPostalCalibration, postalMatchRate, type PostalSample, onErlcMap, poiForPlace, postalPosition } from '../src';
 
 describe('Notruf-Positionen', () => {
   it('onErlcMap: nur Koordinaten innerhalb der offiziellen Karte', () => {
@@ -34,5 +34,36 @@ describe('Notruf-Positionen', () => {
     const same = fitCallCalibration(pairs.map((x) => ({ px: x.px, pz: x.pz, cx: x.px, cz: x.pz })))!;
     expect(same.ax).toBeCloseTo(1);
     expect(same.bx).toBeCloseTo(0);
+  });
+  it('postalPosition: PLZ aus der Ortsangabe → Position der Beschriftung auf der offiziellen Karte', () => {
+    expect(postalPosition('Freedom Avenue · PLZ 321')).toEqual({ postal: '321', x: ERLC_POSTALS['321']![0], z: ERLC_POSTALS['321']![1] });
+    expect(postalPosition('Postal 1102')?.postal).toBe('1102');
+    expect(postalPosition('P-218')?.postal).toBe('218');
+    expect(postalPosition('Überfall 404 Pineview Circle')?.postal).toBe('404');
+    expect(postalPosition('PLZ 9999')).toBeNull(); // unbekannt → keine geratene Position
+    expect(postalPosition('Shop 12, 3,5 km')).toBeNull();
+    expect(postalPosition(null)).toBeNull();
+  });
+  it('ERLC_POSTALS: alle Postleitzahlen liegen auf der Karte, Stadtgebiet unten (positives Z)', () => {
+    expect(Object.keys(ERLC_POSTALS).length).toBeGreaterThan(140);
+    for (const [x, z] of Object.values(ERLC_POSTALS)) expect(onErlcMap(x, z)).toBe(true);
+    expect(ERLC_POSTALS['201']![1]).toBeGreaterThan(ERLC_POSTALS['907']![1]); // Strand (201) liegt südlich vom Nordsee-Ufer (907)
+  });
+  it('fitPostalCalibration: findet Maßstab und Ursprung aus Spieler-Positionen mit PLZ; zu wenig Daten → null', () => {
+    // Spieler stehen im Umkreis ihrer PLZ-Beschriftung; echte Karte mit Maßstab 0,8 und verschobenem Ursprung
+    const truth = { scale: 0.8, originX: 2700, originY: 2650 };
+    const keys = Object.keys(ERLC_POSTALS);
+    const samples: PostalSample[] = Array.from({ length: 120 }, (_, i) => {
+      const k = keys[(i * 7) % keys.length]!, [lx, lz] = ERLC_POSTALS[k]!;
+      const px = lx + 2677.5 + ((i * 37) % 81) - 40, py = lz + 2677.5 + ((i * 53) % 81) - 40;
+      return [(px - truth.originX) / truth.scale, (py - truth.originY) / truth.scale, k];
+    });
+    const c = fitPostalCalibration(samples)!;
+    expect(c.scale).toBeCloseTo(0.8, 2);
+    expect(Math.abs(c.originX - 2700)).toBeLessThan(10);
+    expect(Math.abs(c.originY - 2650)).toBeLessThan(10);
+    expect(c.match).toBeGreaterThan(0.8);
+    expect(postalMatchRate({ width: 5355, height: 5355, originX: 2677.5, originY: 2677.5, scale: 1 }, samples)).toBeLessThan(c.match);
+    expect(fitPostalCalibration(samples.slice(0, 5))).toBeNull();
   });
 });
