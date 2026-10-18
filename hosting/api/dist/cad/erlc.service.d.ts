@@ -1,7 +1,7 @@
 import { ErlcSyncService } from './erlc-sync.service';
 import { type ErlcServer } from '@prisma/client';
 import { z } from 'zod';
-import { type ErlcStatus } from '@enrp/shared';
+import { type PostalSample, type ErlcStatus } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -362,6 +362,16 @@ export declare class ErlcService {
     syncCalls(s: Pick<ErlcServer, 'id' | 'name' | 'guildId'>, calls: NonNullable<ErlcSnapshot['emergencyCalls']>, source: 'API' | 'WEBHOOK'): Promise<number>;
     /** Paar Notruf-Position ↔ Standort des Anrufers merken (die letzten 30), damit Notrufe ohne Anrufer richtig auf der Karte landen. */
     private learnCallPosition;
+    /**
+     * Spieler-Positionen mit ihrer PLZ sammeln (höchstens einmal pro Minute, die letzten 600) – daraus prüft und ermittelt
+     * CAD → Einstellungen → Karte die Kalibrierung, damit Einsätze und Einheiten genau an der richtigen Stelle der Karte liegen.
+     */
+    private postalsAt;
+    learnPostals(players: ErlcPlayer[]): Promise<void>;
+    /** Gesammelte Spieler-Positionen mit PLZ (Prüfung und Vorschlag der Kalibrierung rechnet die Einstellungsseite mit dem Entwurf). */
+    postalSamples(): Promise<{
+        samples: PostalSample[];
+    }>;
     /** Live-Daten (letzter Stand bleibt bei API-Ausfall sichtbar). */
     live(id: string): Promise<{
         server: {

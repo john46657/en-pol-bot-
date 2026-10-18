@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layers, Locate, Minus, Pencil, Plus, X } from 'lucide-react';
-import { ERLC_BUILTIN_MAP, gameToPixel, pixelToGame, type CadConfig } from '@enrp/shared';
+import { ERLC_BUILTIN_MAP, gameToPixel, pixelToGame, postalPosition, type CadConfig } from '@enrp/shared';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { optLabel, useCadPrefs, type CadMapData, type CadMapObject } from '../../lib/cad';
@@ -43,6 +43,10 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
   const [mode, setMode] = useState<Mode>({ kind: 'view' });
   const [editObj, setEditObj] = useState<Partial<CadMapObject> | null>(null);
   const [showLayers, setShowLayers] = useState(false);
+  /** PLZ-Suche: gefundene Postleitzahl wird markiert und angesprungen */
+  const [plzQuery, setPlzQuery] = useState('');
+  const [plzMark, setPlzMark] = useState<{ postal: string; x: number; z: number } | null>(null);
+  const [plzMiss, setPlzMiss] = useState(false);
   const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
   const hidden = useMemo(() => new Set(cad.hiddenLayers ?? cfg.layers.filter((l) => l.enabledByDefault === false).map((l) => l.key)), [cad.hiddenLayers, cfg.layers]);
 
@@ -116,6 +120,13 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     apply({ s, tx: cx - ((cx - view.tx) * s) / view.s, ty: cy - ((cy - view.ty) * s) / view.s });
   };
   const center = () => { const el = box.current!; return [el.clientWidth / 2, el.clientHeight / 2] as const; };
+  const findPostal = (q: string) => {
+    const hit = postalPosition(/^\s*\d{3,4}\s*$/.test(q) ? `PLZ ${q.trim()}` : q);
+    setPlzMiss(!hit); setPlzMark(hit);
+    if (!hit || !box.current) return;
+    const el = box.current, { px, py } = gameToPixel(m, hit.x, hit.z), s = Math.max(view?.s ?? 0.3, 0.8);
+    apply({ s, tx: el.clientWidth / 2 - px * s, ty: el.clientHeight / 2 - py * s });
+  };
 
   useEffect(() => {
     const el = box.current;
@@ -228,6 +239,9 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
             {mode.kind === 'zone' && mode.points.length > 0 && <polyline points={mode.points.map(([x, zz]) => { const p = gameToPixel(m, x, zz); return `${p.px},${p.py}`; }).join(' ')} fill="none" stroke="#facc15" strokeWidth={3 / view.s} strokeDasharray={`${8 / view.s}`} />}
           </svg>
           {zones.map((z) => { const p = gameToPixel(m, z.points![0]![0], z.points![0]![1]); return <span key={`zl-${z.id}`} className="pointer-events-none absolute whitespace-nowrap rounded bg-black/60 px-1 text-[11px] text-white" style={{ left: p.px, top: p.py, transform: `scale(${1 / view.s})`, transformOrigin: 'top left' }}>{z.name}</span>; })}
+          {plzMark && onImage(plzMark.x, plzMark.z) && (() => { const { px, py } = gameToPixel(m, plzMark.x, plzMark.z); return (
+            <span className="pointer-events-none absolute rounded-full border-4 border-yellow-300 shadow-[0_0_0_4px_rgba(0,0,0,0.5)]" style={{ left: px, top: py, width: 120, height: 120, transform: `translate(-50%, -50%) scale(${Math.min(1, 1 / view.s)})` }} aria-label={`PLZ ${plzMark.postal}`} />
+          ); })()}
           {visible.map((mk) => {
             const { px, py } = gameToPixel(m, mk.x, mk.z);
             return (
@@ -265,6 +279,10 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       {!compact && (
         <div data-ui className="absolute left-2 top-2 flex flex-wrap gap-1">
           {onCreateIncidentAt && can('cad.create_incident') && <Button size="sm" variant={mode.kind === 'pick' && mode.tag === 'incident' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'pick' && mode.tag === 'incident' ? { kind: 'view' } : { kind: 'pick', tag: 'incident', hint: 'Klicke auf die Karte, um dort einen Einsatz anzulegen.', onPick: onCreateIncidentAt })}>🔴 Einsatz hier</Button>}
+          <form data-ui className="flex items-center gap-1" onSubmit={(e) => { e.preventDefault(); findPostal(plzQuery); }}>
+            <input type="search" inputMode="numeric" aria-label="PLZ suchen" placeholder="PLZ…" className={`h-8 w-20 rounded border bg-panel px-2 text-xs ${plzMiss ? 'border-danger' : 'border-line'}`} value={plzQuery}
+              onChange={(e) => { setPlzQuery(e.target.value); setPlzMiss(false); if (!e.target.value) setPlzMark(null); }} title={plzMiss ? 'Diese PLZ gibt es auf der Karte nicht' : 'Postleitzahl anspringen'} />
+          </form>
           {can('cad.manage_map') && <>
             <Button size="sm" variant={mode.kind === 'poi' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'poi' ? { kind: 'view' } : { kind: 'poi' })}><Pencil size={12} /> POI setzen</Button>
             <Button size="sm" variant={mode.kind === 'zone' ? 'primary' : 'secondary'} onClick={() => setMode(mode.kind === 'zone' ? { kind: 'view' } : { kind: 'zone', points: [] })}>⬠ Zone zeichnen</Button>

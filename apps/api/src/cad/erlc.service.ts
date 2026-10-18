@@ -4,7 +4,7 @@ import { createPublicKey, timingSafeEqual, verify as edVerify, type KeyObject } 
 import { recordSpace } from '../common/guild-context';
 import { Prisma, type ErlcServer } from '@prisma/client';
 import { z } from 'zod';
-import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, applyCallCalibration, fitCallCalibration, onErlcMap, parsePlayer, poiForPlace, type CallCalibrationPair, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
+import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, applyCallCalibration, fitCallCalibration, onErlcMap, parsePlayer, poiForPlace, postalPosition, ERLC_POSTALS, type PostalSample, type CallCalibrationPair, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -254,6 +254,7 @@ export class ErlcService {
       if (snap.emergencyCalls) await this.syncCalls(s, snap.emergencyCalls, 'API');
       // Fahndungsabgleich VOR der Personen-Übernahme: deren Namens-Zuordnung darf keinen „bestätigten“ Treffer erzeugen
       await this.wanted.check(s, snap);
+      await this.learnPostals(snap.players ?? []);
       await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
       await this.fleet.sync(id, snap, manual).catch((e: Error) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
       this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
@@ -287,13 +288,13 @@ export class ErlcService {
       try {
         /*
          * Position des Notrufs, in dieser Reihenfolge: 1. Standort des Anrufers (ER:LC liefert ihn im dokumentierten Kartensystem),
-         * 2. POI zum Ortsnamen („Bank“), 3. Notruf-Position mit gelernter Umrechnung, 4. Notruf-Position, wenn sie auf der Karte liegt.
+         * 2. POI zum Ortsnamen („Bank“), 3. PLZ aus der Ortsangabe, 4. Notruf-Position mit gelernter Umrechnung, 5. Notruf-Position, wenn sie auf der Karte liegt.
          */
         const fb = await callerPos(c.caller);
         const hasPos = c.x !== null && c.z !== null && Number.isFinite(c.x) && Number.isFinite(c.z);
         if (fb && hasPos) await this.learnCallPosition(calKey, await loadPairs(), { px: c.x!, pz: c.z!, cx: fb.x, cz: fb.z });
         pois ??= await this.prisma.cadMapObject.findMany({ where: { kind: 'POI', OR: [{ serverId: recordSpace(s.guildId) ?? null }, { serverId: null }] }, select: { name: true, x: true, z: true } });
-        const poi = fb ? null : poiForPlace(c.positionDescriptor, pois);
+        const poi = fb ? null : poiForPlace(c.positionDescriptor, pois) ?? postalPosition(c.positionDescriptor);
         const cal = !fb && !poi && hasPos ? fitCallCalibration(await loadPairs()) : null;
         const learned = cal ? applyCallCalibration(cal, c.x!, c.z!) : null;
         const pos = fb ? { x: fb.x, z: fb.z } : poi ? { x: poi.x!, z: poi.z! } : learned && onErlcMap(learned.x, learned.z) ? learned : hasPos && onErlcMap(c.x, c.z) ? { x: c.x!, z: c.z! } : null;
@@ -316,6 +317,26 @@ export class ErlcService {
     if (pairs.length > 30) pairs.splice(0, pairs.length - 30);
     const value = { pairs } as unknown as Prisma.InputJsonValue;
     await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } }).catch(() => undefined);
+  }
+
+  /**
+   * Spieler-Positionen mit ihrer PLZ sammeln (höchstens einmal pro Minute, die letzten 600) – daraus prüft und ermittelt
+   * CAD → Einstellungen → Karte die Kalibrierung, damit Einsätze und Einheiten genau an der richtigen Stelle der Karte liegen.
+   */
+  private postalsAt = 0;
+  async learnPostals(players: ErlcPlayer[]) {
+    const fresh: PostalSample[] = players.flatMap((p) => (p.location?.postal && ERLC_POSTALS[p.location.postal] ? [[Math.round(p.location.x), Math.round(p.location.z), p.location.postal] as PostalSample] : []));
+    if (!fresh.length || Date.now() - this.postalsAt < 60_000) return;
+    this.postalsAt = Date.now();
+    const key = 'erlc.postalSamples';
+    const old = ((await this.prisma.systemSetting.findUnique({ where: { key } }))?.value as { samples?: PostalSample[] } | null)?.samples ?? [];
+    const value = { samples: [...old, ...fresh].slice(-600) } as unknown as Prisma.InputJsonValue;
+    await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } }).catch(() => undefined);
+  }
+
+  /** Gesammelte Spieler-Positionen mit PLZ (Prüfung und Vorschlag der Kalibrierung rechnet die Einstellungsseite mit dem Entwurf). */
+  async postalSamples() {
+    return { samples: ((await this.prisma.systemSetting.findUnique({ where: { key: 'erlc.postalSamples' } }))?.value as { samples?: PostalSample[] } | null)?.samples ?? [] };
   }
 
   /** Live-Daten (letzter Stand bleibt bei API-Ausfall sichtbar). */

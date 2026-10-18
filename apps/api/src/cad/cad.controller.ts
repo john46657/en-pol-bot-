@@ -76,7 +76,7 @@ const radioBody = z.object({ text: z.string().trim().min(1).max(500), unitId: op
 export class CadController {
   constructor(
     private readonly s: CadService, private readonly tablet: CadTabletService, private readonly cfg: CadConfigService, private readonly perms: PermissionService, private readonly media: MediaService,
-    private readonly handover: CadHandoverService, private readonly statsSvc: CadStatsService,
+    private readonly handover: CadHandoverService, private readonly statsSvc: CadStatsService, private readonly erlc: ErlcService,
   ) {}
 
   // Konfiguration
@@ -86,6 +86,9 @@ export class CadController {
   saveConfig(@CurrentActor() a: Actor, @Body(zodBody(cadConfigSchema.omit({ map: true }).partial())) b: Record<string, unknown>) { return this.cfg.save(a, b); }
   @Put('config/map') @RequirePermission('cad.manage_map')
   saveMap(@CurrentActor() a: Actor, @Body(zodBody(cadConfigSchema.shape.map.partial())) b: Record<string, unknown>) { return this.cfg.save(a, { map: b as never }); }
+  /** Spieler-Positionen mit gemeldeter PLZ – zum Prüfen und Ermitteln der Kartenkalibrierung. */
+  @Get('map/calibration') @RequirePermission('cad.manage_map')
+  mapCalibration() { return this.erlc.postalSamples(); }
   /** Kartenbild hochladen (ER:LC-Karte, bis 40 MB) – wird danach als Kartenhintergrund gesetzt. */
   @Post('map/image') @RequirePermission('cad.manage_map') @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAP_MAX_BYTES, files: 1 } }))
   async mapImage(@CurrentActor() a: Actor, @UploadedFile() file: Express.Multer.File | undefined, @Body(zodBody(z.object({ width: z.coerce.number().int().min(100).max(20000).optional(), height: z.coerce.number().int().min(100).max(20000).optional() }))) b: { width?: number; height?: number }) {
