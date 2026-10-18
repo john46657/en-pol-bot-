@@ -125,6 +125,31 @@ describe('qualification applications', () => {
     await prisma.systemSetting.deleteMany({ where: { key: 'application.form' } }); // Standardformular für andere Tests
   });
 
+  it('sends the application panel from the dashboard into the chosen channel and keeps it up to date', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const body = { title: cur.title, intro: cur.intro, units: cur.units, police: { ...cur.police, title: 'Bewerbung bei der EN | Polizei', description: 'Werde Teil der Polizei!', panelChannelId: '' } };
+    await admin.put('/api/v1/qualifications/config').send(body);
+    expect((await admin.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(400); // kein Kanal
+    const CH = '400000000000000077';
+    await admin.put('/api/v1/qualifications/config').send({ ...body, police: { ...body.police, panelChannelId: CH } });
+    expect((await (await login(app, 'q_off')).agent.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(403);
+    expect((await admin.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const out = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    const p = out!.payload as { stateKey: string; channelId: string; forceNew: boolean; message: { embeds: { title: string }[]; buttons: { id: string; label: string }[] } };
+    expect(p).toMatchObject({ stateKey: 'apanel-police', channelId: CH, forceNew: true });
+    expect(p.message.embeds[0]!.title).toBe('Bewerbung bei der EN | Polizei');
+    expect(p.message.buttons[0]).toMatchObject({ id: 'quali:pick:@polizei', label: 'Jetzt bewerben' });
+    // gesendet → geänderter Text wird beim Speichern automatisch nachgezogen
+    await prisma.systemSetting.upsert({ where: { key: 'bot.state.apanel-police' }, create: { key: 'bot.state.apanel-police', value: { channelId: CH, messageId: '500000000000000001' } }, update: { value: { channelId: CH, messageId: '500000000000000001' } } });
+    expect((await admin.get('/api/v1/qualifications/config')).body.panelPosted).toMatchObject({ channelId: CH });
+    const before = await prisma.discordOutbox.count({ where: { type: 'message.post' } });
+    await admin.put('/api/v1/qualifications/config').send({ ...body, police: { ...body.police, panelChannelId: CH, description: 'Neuer Text' } });
+    const upd = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    expect(await prisma.discordOutbox.count({ where: { type: 'message.post' } })).toBe(before + 1);
+    expect(upd!.payload).toMatchObject({ forceNew: false, message: { embeds: [{ description: 'Neuer Text' }] } });
+  });
+
   it('question types like Appy: multiple choice and role select are validated, chosen roles are given on acceptance, ping role in the post', async () => {
     const admin = (await login(app, 'q_admin')).agent;
     const cur = (await admin.get('/api/v1/qualifications/config')).body;

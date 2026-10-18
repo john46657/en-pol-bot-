@@ -15,10 +15,20 @@ import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
 import { RobloxService } from '../persons/roblox.service';
-import { formatMinutes } from '@enrp/shared';
+import { formatMinutes, type MessageSpec } from '@enrp/shared';
 
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
+/** Gleicher Button wie /bewerbungspanel – der Bot startet darüber die Bewerbung. */
+const POLICE_BUTTON = 'quali:pick:@polizei';
+
+/** Panel „Jetzt bewerben“ für die Polizei-Bewerbung (wie /bewerbungspanel). */
+export function policePanelMessage(p: { title: string; description: string }): MessageSpec {
+  return {
+    embeds: [{ title: p.title.slice(0, 256), description: p.description.slice(0, 4000) || undefined, color: 0x3b82f6 }],
+    buttons: [{ id: POLICE_BUTTON, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }],
+  };
+}
 export interface Answer { question: string; answer: string | string[] | null }
 
 /**
@@ -51,7 +61,19 @@ export class QualificationsService {
   /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
   async setup(guildId?: string | null) {
     const own = guildId ? (await this.read(KEY, guildId)).own : true;
-    return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own };
+    return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own, panelPosted: await this.discord.posted(this.panelKey(guildId)) };
+  }
+
+  /** Ort des Bewerbungs-Panels in Discord – je Server getrennt. */
+  private panelKey(guildId?: string | null) { return guildId ? `apanel-police-${guildId}` : 'apanel-police'; }
+
+  /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
+  async sendPolicePanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null) {
+    const police = (await this.config(guildId)).police;
+    if (!police.panelChannelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+    await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(police), { forceNew: mode === 'new' });
+    await this.audit.record(actor, { action: 'applications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: police.panelChannelId, mode, guildId: guildId ?? null } });
+    return { queued: true };
   }
 
   async saveConfig(actor: Actor, input: QualificationConfig & { policeForm?: FormField[] }, guildId?: string | null) {
@@ -59,6 +81,7 @@ export class QualificationsService {
     const key = this.keyOf(KEY, guildId), formKey = this.keyOf(FORM_KEY, guildId);
     // eigener Server ohne eigenes Formular: das gemeinsame Formular übernehmen, damit Server-Einstellungen vollständig sind
     const form = policeForm ?? (guildId && !(await this.prisma.systemSetting.findUnique({ where: { key: formKey } })) ? await this.policeForm(null) : undefined);
+    const before = policePanelMessage((await this.config(guildId)).police);
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({ where: { key }, create: { key, value: c as unknown as Prisma.InputJsonValue }, update: { value: c as unknown as Prisma.InputJsonValue } });
       await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: key, after: { units: c.units.map((u) => u.key), guildId: guildId ?? null } }, tx);
@@ -67,6 +90,10 @@ export class QualificationsService {
         await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: formKey, after: form as unknown as Prisma.InputJsonValue }, tx);
       }
     });
+    // Panel steht schon in Discord → geänderten Titel/Text gleich mitziehen
+    const posted = await this.discord.posted(this.panelKey(guildId));
+    const after = policePanelMessage(c.police);
+    if (posted && posted.channelId === c.police.panelChannelId && JSON.stringify(before) !== JSON.stringify(after)) await this.discord.postMessage(this.panelKey(guildId), posted.channelId, after);
     return this.setup(guildId);
   }
 
