@@ -27,6 +27,13 @@ const locks_service_1 = require("../locks/locks.service");
 const fleet_service_1 = require("../fleet/fleet.service");
 const unitInclude = { members: true, incidents: { where: { clearedAt: null }, include: { incident: { select: { id: true, number: true, title: true, status: true } } } } };
 const incidentInclude = { units: { include: { unit: { select: { id: true, callsign: true, name: true, type: true, status: true } } } } };
+/** Notruf mit Position außerhalb der ER:LC-Karte (ältere Daten): Position des POI zum Ortsnamen, sonst keine. */
+const placeCall = (c, objects) => {
+    if (c.mapX === null || c.mapZ === null || (0, shared_1.onErlcMap)(c.mapX, c.mapZ))
+        return c;
+    const poi = (0, shared_1.poiForPlace)(c.positionDescriptor, objects.filter((o) => o.kind === 'POI'));
+    return { ...c, mapX: poi?.x ?? null, mapZ: poi?.z ?? null };
+};
 let CadService = class CadService {
     prisma;
     audit;
@@ -568,9 +575,10 @@ let CadService = class CadService {
         const c = await this.prisma.erlcEmergencyCall.findUnique({ where: { id: callId }, include: { server: { select: { guildId: true } } } });
         if (!c)
             throw new errors_1.AppError('NOT_FOUND', 'Notruf nicht gefunden.');
+        const at = placeCall(c, (0, shared_1.onErlcMap)(c.mapX, c.mapZ) ? [] : await this.prisma.cadMapObject.findMany({ where: { kind: 'POI' }, select: { kind: true, name: true, x: true, z: true } }));
         return this.createIncident({ ...actor, guildId: actor.guildId ?? c.server.guildId }, {
             title: d.title ?? (c.description ? c.description.slice(0, 200) : `Notruf #${c.callNumber}`), type: d.type, keyword: d.keyword ?? (c.team ? `Notruf ${c.team}` : null), priority: d.priority, status: d.status,
-            location: d.location ?? c.positionDescriptor, description: d.description ?? c.description, mapX: d.mapX ?? c.mapX, mapZ: d.mapZ ?? c.mapZ, involved: d.involved ?? (c.callerName ?? c.callerRobloxId ? `Anrufer: ${c.callerName ?? c.callerRobloxId}` : null),
+            location: d.location ?? c.positionDescriptor, description: d.description ?? c.description, mapX: d.mapX ?? at.mapX, mapZ: d.mapZ ?? at.mapZ, involved: d.involved ?? (c.callerName ?? c.callerRobloxId ? `Anrufer: ${c.callerName ?? c.callerRobloxId}` : null),
         }, { callId });
     }
     /** Einheit direkt zu einem Notruf: legt bei Bedarf den Einsatz an. */
@@ -813,7 +821,8 @@ let CadService = class CadService {
             }
         return {
             incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),
-            calls: calls.filter((c) => c.mapX !== null && c.mapZ !== null),
+            // ältere Notrufe mit Position außerhalb der Karte: POI zum Ortsnamen, sonst ohne Marker
+            calls: calls.map((c) => placeCall(c, objects)).filter((c) => c.mapX !== null && c.mapZ !== null),
             units: units.filter((u) => u.position), objects, players, vehicles,
             stale: servers.some((s) => s.status !== 'CONNECTED'),
         };

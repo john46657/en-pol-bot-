@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CAD_FEEDBACK, type CadConfig, type CadEvent, type CadFeedbackKey } from '@enrp/shared';
+import { CAD_FEEDBACK, onErlcMap, poiForPlace, type CadConfig, type CadEvent, type CadFeedbackKey } from '@enrp/shared';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -40,6 +40,13 @@ export interface MapObjectInput {
 export interface LinkInput {
   name: string; sourceGuildId: string; targetGuildId: string; active?: boolean; sendTypes?: string[]; allowActions?: string[]; roleIds?: string[]; channels?: Record<string, string[]>; notify?: boolean;
 }
+
+/** Notruf mit Position außerhalb der ER:LC-Karte (ältere Daten): Position des POI zum Ortsnamen, sonst keine. */
+const placeCall = <C extends { mapX: number | null; mapZ: number | null; positionDescriptor: string | null }>(c: C, objects: { kind: string; name: string; x: number | null; z: number | null }[]): C => {
+  if (c.mapX === null || c.mapZ === null || onErlcMap(c.mapX, c.mapZ)) return c;
+  const poi = poiForPlace(c.positionDescriptor, objects.filter((o) => o.kind === 'POI'));
+  return { ...c, mapX: poi?.x ?? null, mapZ: poi?.z ?? null };
+};
 
 @Injectable()
 export class CadService {
@@ -534,9 +541,10 @@ export class CadService {
   async incidentFromCall(actor: CadActor, callId: string, d: Partial<IncidentInput>) {
     const c = await this.prisma.erlcEmergencyCall.findUnique({ where: { id: callId }, include: { server: { select: { guildId: true } } } });
     if (!c) throw new AppError('NOT_FOUND', 'Notruf nicht gefunden.');
+    const at = placeCall(c, onErlcMap(c.mapX, c.mapZ) ? [] : await this.prisma.cadMapObject.findMany({ where: { kind: 'POI' }, select: { kind: true, name: true, x: true, z: true } }));
     return this.createIncident({ ...actor, guildId: actor.guildId ?? c.server.guildId }, {
       title: d.title ?? (c.description ? c.description.slice(0, 200) : `Notruf #${c.callNumber}`), type: d.type, keyword: d.keyword ?? (c.team ? `Notruf ${c.team}` : null), priority: d.priority, status: d.status,
-      location: d.location ?? c.positionDescriptor, description: d.description ?? c.description, mapX: d.mapX ?? c.mapX, mapZ: d.mapZ ?? c.mapZ, involved: d.involved ?? (c.callerName ?? c.callerRobloxId ? `Anrufer: ${c.callerName ?? c.callerRobloxId}` : null),
+      location: d.location ?? c.positionDescriptor, description: d.description ?? c.description, mapX: d.mapX ?? at.mapX, mapZ: d.mapZ ?? at.mapZ, involved: d.involved ?? (c.callerName ?? c.callerRobloxId ? `Anrufer: ${c.callerName ?? c.callerRobloxId}` : null),
     }, { callId });
   }
 
@@ -766,7 +774,8 @@ export class CadService {
     }
     return {
       incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),
-      calls: calls.filter((c) => c.mapX !== null && c.mapZ !== null),
+      // ältere Notrufe mit Position außerhalb der Karte: POI zum Ortsnamen, sonst ohne Marker
+      calls: calls.map((c) => placeCall(c, objects)).filter((c) => c.mapX !== null && c.mapZ !== null),
       units: units.filter((u) => u.position), objects, players, vehicles,
       stale: servers.some((s) => s.status !== 'CONNECTED'),
     };

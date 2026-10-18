@@ -360,6 +360,8 @@ export declare class ErlcService {
     }>;
     /** Notrufe übernehmen (idempotent je Server + Notrufnummer + Startzeit). Neue Notrufe → CAD + Discord. */
     syncCalls(s: Pick<ErlcServer, 'id' | 'name' | 'guildId'>, calls: NonNullable<ErlcSnapshot['emergencyCalls']>, source: 'API' | 'WEBHOOK'): Promise<number>;
+    /** Paar Notruf-Position ↔ Standort des Anrufers merken (die letzten 30), damit Notrufe ohne Anrufer richtig auf der Karte landen. */
+    private learnCallPosition;
     /** Live-Daten (letzter Stand bleibt bei API-Ausfall sichtbar). */
     live(id: string): Promise<{
         server: {

@@ -153,6 +153,61 @@ export const gameToPixel = (m: CadMapConfig, x: number, z: number) => ({ px: m.o
 /** Liegt eine Spielkoordinate auf der ER:LC-Karte? Laut ER:LC-Doku: Ursprung Kartenmitte, offizielle Karte 5355 × 5355. */
 export const onErlcMap = (x: number | null | undefined, z: number | null | undefined) =>
   typeof x === 'number' && typeof z === 'number' && Number.isFinite(x) && Number.isFinite(z) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z) <= ERLC_MAP_SIZE / 2;
+/** POI, dessen Name zum Ort eines Notrufs passt („Bank“, „Jewelry Store“ …): erst exakt, dann enthalten (mind. 3 Zeichen). */
+export function poiForPlace<T extends { name: string; x: number | null; z: number | null }>(place: string | null | undefined, pois: T[]): T | null {
+  const norm = (v: string) => v.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, ' ').trim();
+  const p = place ? norm(place) : '';
+  if (p.length < 3) return null;
+  const usable = pois.filter((o) => o.x !== null && o.z !== null && norm(o.name).length >= 3);
+  return usable.find((o) => norm(o.name) === p) ?? usable.find((o) => p.includes(norm(o.name)) || norm(o.name).includes(p)) ?? null;
+}
+
+/** Selbstkalibrierung: Notruf-Position (`p*`) ↔ Standort des Anrufers (`c*`, dokumentierte Kartenkoordinaten). */
+export interface CallCalibrationPair { px: number; pz: number; cx: number; cz: number }
+export interface CallCalibration { ax: number; bx: number; az: number; bz: number; n: number }
+/**
+ * Lineare Umrechnung je Achse (kleinste Quadrate). Nur mit mind. 3 Paaren, genug Abstand zwischen den Punkten
+ * und kleiner Abweichung – sonst `null` (lieber keine als eine geratene Umrechnung). Einzelne Ausreißer
+ * (z. B. Anrufer, der sich nach dem Anruf bewegt hat) werden verworfen, solange mind. 3 Paare und ⅔ übrig bleiben.
+ */
+export function fitCallCalibration(pairs: CallCalibrationPair[]): CallCalibration | null {
+  let rest = pairs;
+  for (;;) {
+    const fit = fitExact(rest);
+    if (fit || rest.length - 1 < Math.max(3, Math.ceil((pairs.length * 2) / 3))) return fit;
+    // Paar mit der größten Abweichung von der Ausgleichsgeraden ohne es weglassen
+    const drop = rest.map((_, i) => i).sort((a, b) => outlierScore(rest, b) - outlierScore(rest, a))[0]!;
+    rest = rest.filter((_, i) => i !== drop);
+  }
+}
+/** Wie stark verbessert das Weglassen dieses Paars die Geraden? (größer = eher Ausreißer) */
+function outlierScore(pairs: CallCalibrationPair[], i: number) {
+  const others = pairs.filter((_, j) => j !== i);
+  const line = (from: number[], to: number[]) => {
+    const n = from.length, mf = from.reduce((a, b) => a + b, 0) / n, mt = to.reduce((a, b) => a + b, 0) / n;
+    const sxx = from.reduce((a, f) => a + (f - mf) ** 2, 0) || 1;
+    const a = from.reduce((acc, f, k) => acc + (f - mf) * (to[k]! - mt), 0) / sxx;
+    return { a, b: mt - a * mf };
+  };
+  const lx = line(others.map((p) => p.px), others.map((p) => p.cx)), lz = line(others.map((p) => p.pz), others.map((p) => p.cz));
+  const p = pairs[i]!;
+  return Math.abs(lx.a * p.px + lx.b - p.cx) + Math.abs(lz.a * p.pz + lz.b - p.cz);
+}
+function fitExact(pairs: CallCalibrationPair[]): CallCalibration | null {
+  if (pairs.length < 3) return null;
+  const axis = (from: number[], to: number[]) => {
+    const n = from.length, mf = from.reduce((a, b) => a + b, 0) / n, mt = to.reduce((a, b) => a + b, 0) / n;
+    const sxx = from.reduce((a, f) => a + (f - mf) ** 2, 0);
+    if (Math.max(...from) - Math.min(...from) < 100 || sxx === 0) return null;
+    const a = from.reduce((acc, f, i) => acc + (f - mf) * (to[i]! - mt), 0) / sxx, b = mt - a * mf;
+    const worst = Math.max(...from.map((f, i) => Math.abs(a * f + b - to[i]!)));
+    return worst <= 60 && a > 0 ? { a, b } : null;
+  };
+  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
+  return x && z ? { ax: x.a, bx: x.b, az: z.a, bz: z.b, n: pairs.length } : null;
+}
+export const applyCallCalibration = (c: CallCalibration, x: number, z: number) => ({ x: c.ax * x + c.bx, z: c.az * z + c.bz });
+
 export const pixelToGame = (m: CadMapConfig, px: number, py: number) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 
 // ---- ER:LC ----

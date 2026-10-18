@@ -243,7 +243,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       {offMap.length > 0 && (
         <div data-ui className="absolute inset-x-2 top-12 z-10 mx-auto w-fit max-w-[calc(100%-1rem)] rounded bg-warning/90 px-2 py-1 text-xs text-black">
           ⚠️ Position außerhalb der Karte: {offMap.slice(0, 4).map((mk, i) => <span key={mk.id}>{i ? ', ' : ''}<button type="button" className="underline" onClick={() => setSelected(mk.id)}>{mk.label}</button> (X {Math.round(mk.x)}, Z {Math.round(mk.z)})</span>)}
-          {offMap.length > 4 && ` und ${offMap.length - 4} weitere`} – Kartenmaßstab unter CAD → Einstellungen → Karte prüfen.
+          {offMap.length > 4 && ` und ${offMap.length - 4} weitere`} – Tipp: einen POI mit dem Namen des Ortes (z. B. „Bank“) setzen, dann landen solche Notrufe dort.
         </div>
       )}
       {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand</div>}
