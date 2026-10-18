@@ -5,6 +5,8 @@ import { WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS } from '@enrp/shared';
 import { api, ApiError, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
+import { useSettings } from '../lib/settings';
+import { ChannelsPicker } from '../components/DiscordPickers';
 import { Badge, Button, Card, EmptyState, ErrorState, Field, fmt, Modal, PriorityBadge, Select, SkeletonRows, StatusBadge, Textarea, type Tone } from '../components/ui';
 
 export interface WantedHit {
@@ -144,6 +146,37 @@ function ReviewDialog({ hit, decision, onClose }: { hit: WantedHit; decision: 'A
       {m.error && <p role="alert" className="mt-2 text-sm text-danger">{m.error instanceof ApiError ? m.error.message : 'Speichern fehlgeschlagen.'}</p>}
       <div className="mt-4 flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={m.isPending || (needsNote && note.trim().length < 3)} onClick={() => m.mutate()}>Speichern</Button></div>
     </Modal>
+  );
+}
+
+/** Fahndungs-Einstellungen direkt auf der Fahndungsseite (nur mit „Einstellungen verwalten“). */
+export function WantedSettingsCard() {
+  const { can } = useAuth();
+  const manage = can('settings.manage');
+  if (!manage) return null;
+  return <WantedSettingsInner />;
+}
+function WantedSettingsInner() {
+  const { q, get, put } = useSettings();
+  const [draft, setDraft] = useState<string>();
+  if (!q.data) return null;
+  const channels = get<Record<string, string>>('discord.channels') ?? {};
+  const value = draft ?? String(channels.wanted ?? '');
+  const save = (v: string) => {
+    setDraft(v);
+    const ids = v.trim();
+    if (ids && !/^\d{15,25}(\s*,\s*\d{15,25})*$/.test(ids)) return; // halbe Eingaben nicht speichern
+    const rest = Object.fromEntries(Object.entries(channels).filter(([k]) => k !== 'wanted'));
+    put('discord.channels', ids ? { ...rest, wanted: ids } : rest, 'Fahndungs-Kanal');
+  };
+  return (
+    <Card className="mb-4" title="⚙️ Fahndungs-Einstellungen">
+      <div className="grid gap-2">
+        <p className="text-xs font-medium text-muted">🚨 Fahndungs-Kanal (neue Fahndungen und Statusänderungen)</p>
+        <div className="max-w-xl"><ChannelsPicker ariaLabel="Fahndungs-Kanal" max={10} value={value} onChange={save} /></div>
+        <p className="text-xs text-muted">Jede Fahndung (aus Dashboard oder Discord) wird dort gepostet. Leer = keine Discord-Meldungen. Wird automatisch gespeichert. Kanäle für ER:LC-Fahndungstreffer: <Link className="text-primary underline" to="/cad/settings?tab=Discord-Kanäle">CAD → Discord-Kanäle</Link>.</p>
+      </div>
+    </Card>
   );
 }
 

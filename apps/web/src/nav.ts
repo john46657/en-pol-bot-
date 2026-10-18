@@ -64,8 +64,6 @@ export const NAV: NavItem[] = [
     { path: '/admin/settings', label: 'Allgemein', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/servers', label: 'Server-Verbund', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/multi-server', label: 'Server & Module', perm: 'servers.view', area: 'dashboard.settings.view' },
     { path: '/admin/personnel', label: 'Personal', perm: 'personnel.view', area: 'dashboard.settings.view' },
     { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),

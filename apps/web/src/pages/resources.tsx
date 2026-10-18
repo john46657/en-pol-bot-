@@ -2,7 +2,7 @@ import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
 import { InvestigationEdit, InvestigationPersons } from '../components/InvestigationPersons';
-import { WantedHitList, WantedHitsNotice } from './WantedHits';
+import { WantedHitList, WantedHitsNotice, WantedSettingsCard } from './WantedHits';
 import { Link } from 'react-router';
 import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
 import type { ResourceConfig } from '../components/ResourcePage';
@@ -54,7 +54,7 @@ export const investigations: ResourceConfig<Row> = {
 };
 
 export const wanted: ResourceConfig<Row> = {
-  notice: <><DiscordChannelHint channel="wanted" what="Fahndungen" /><WantedHitsNotice /></>,
+  notice: <><WantedSettingsCard /><DiscordChannelHint channel="wanted" what="Fahndungen" /><WantedHitsNotice /></>,
   title: 'Fahndungen', subtitle: 'Standardmäßig nur aktive Fahndungen', endpoint: '/wanted', queryKey: 'wanted', emptyText: 'Keine aktiven Fahndungen.', statusFilter: WANTED_STATUSES, detailPath: (r) => `/wanted/${r.id}`,
   columns: [{ key: 'number', label: 'Nummer', render: (r) => s(r.number) }, { key: 'reason', label: 'Grund' }, { key: 'priority', label: 'Priorität', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'expiresAt', label: 'Läuft ab', render: (r) => (r.expiresAt ? fmt(r.expiresAt as string) : 'Nie') }],
   create: { perm: 'wanted.create', label: 'Neue Fahndung', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'reason', label: 'Grund', required: true, min: 3, max: 500 }, { name: 'priority', label: 'Priorität', type: 'select', options: PRIORITIES }, { name: 'description', label: 'Beschreibung', type: 'textarea' }] },
