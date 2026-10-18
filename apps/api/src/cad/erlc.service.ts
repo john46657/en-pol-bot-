@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createPublicKey, timingSafeEqual, verify as edVerify, type KeyObject } from 'node:crypto';
 import { Prisma, type ErlcServer } from '@prisma/client';
 import { z } from 'zod';
-import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, parsePlayer, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
+import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, onErlcMap, parsePlayer, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -279,9 +279,11 @@ export class ErlcService {
       const exists = await this.prisma.erlcEmergencyCall.findFirst({ where: { serverId: s.id, callNumber: c.callNumber, startedAt: { gte: new Date(startedAt.getTime() - 30 * 60_000), lte: new Date(startedAt.getTime() + 30 * 60_000) } } });
       if (exists) continue;
       try {
-        const fb = c.x === null || c.z === null ? await callerPos(c.caller) : null;
+        // Position fehlt oder liegt außerhalb der ER:LC-Karte → Standort des Anrufers (sonst stünde der Notruf am Kartenrand)
+        const ownPos = onErlcMap(c.x, c.z);
+        const fb = ownPos ? null : await callerPos(c.caller);
         const where = c.positionDescriptor ?? (fb ? [fb.street, fb.postal && `PLZ ${fb.postal}`].filter(Boolean).join(' · ') || null : null);
-        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: c.x ?? fb?.x ?? null, mapZ: c.z ?? fb?.z ?? null, startedAt, source } });
+        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: ownPos ? c.x : fb?.x ?? null, mapZ: ownPos ? c.z : fb?.z ?? null, startedAt, source } });
         created++;
         await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: webUrl(`/cad/map?call=${row.id}`), dashboardUrl: webUrl(`/cad/calls?id=${row.id}`) }, s.guildId);
       } catch (e) {

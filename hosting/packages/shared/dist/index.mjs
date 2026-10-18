@@ -475,6 +475,7 @@ var DEFAULT_CAD_CONFIG = {
   widgets: ["activeIncidents", "availableUnits", "activeCalls", "dutyActivity", "erlcStatus", "map", "radio"]
 };
 var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
+var onErlcMap = (x, z10) => typeof x === "number" && typeof z10 === "number" && Number.isFinite(x) && Number.isFinite(z10) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z10) <= ERLC_MAP_SIZE / 2;
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -2955,6 +2956,7 @@ export {
   nextWeekStart,
   normalizeField,
   notifyRuleSchema,
+  onErlcMap,
   panelFieldSchema,
   parseCsv,
   parsePlayer,

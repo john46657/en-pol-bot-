@@ -83,10 +83,14 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     return () => ro.disconnect();
   }, [m.width, m.height]);
 
-  // Fokus (z. B. „Auf Karte anzeigen“): dorthin springen und Info-Fenster öffnen
+  /** Liegt eine Spielkoordinate auf dem Kartenbild? (sonst würde die Karte an den Rand springen und der Marker fehlen) */
+  const onImage = (x: number, z: number) => { const { px, py } = gameToPixel(m, x, z); return px >= 0 && py >= 0 && px <= m.width && py <= m.height; };
+
+  // Fokus (z. B. „Auf Karte anzeigen“): dorthin springen und Info-Fenster öffnen; außerhalb der Karte nur das Info-Fenster
   useEffect(() => {
     const el = box.current;
     if (!el || !focus) return;
+    if (!onImage(focus.x, focus.z)) { if (focus.id) setSelected(focus.id); return; }
     const { px, py } = gameToPixel(m, focus.x, focus.z);
     const s = Math.max(view?.s ?? 0.3, 0.6);
     setView(clamp({ s, tx: el.clientWidth / 2 - px * s, ty: el.clientHeight / 2 - py * s }));
@@ -204,9 +208,12 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     return out;
   }, [data, cfg, actionsFor, can, vehicleFilter]);
 
-  const visible = markers.filter((mk) => !hidden.has(mk.layer));
+  const shown = markers.filter((mk) => !hidden.has(mk.layer));
+  const visible = shown.filter((mk) => onImage(mk.x, mk.z));
+  /** Notrufe/Einsätze mit Position außerhalb der Karte: nicht am Rand verstecken, sondern als Hinweis zeigen */
+  const offMap = shown.filter((mk) => (mk.layer === 'calls' || mk.layer === 'incidents') && !onImage(mk.x, mk.z));
   const zones = (data?.objects ?? []).filter((o) => o.kind === 'ZONE' && o.points && !hidden.has(o.layer));
-  const sel = visible.find((mk) => mk.id === selected);
+  const sel = shown.find((mk) => mk.id === selected);
   const toggleLayer = (k: string) => { const next = new Set(hidden); if (next.has(k)) next.delete(k); else next.add(k); set({ hiddenLayers: [...next] }); };
   const counts = (k: string) => markers.filter((mk) => mk.layer === k).length + (data?.objects ?? []).filter((o) => o.kind === 'ZONE' && o.layer === k).length;
 
@@ -231,6 +238,12 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
               </button>
             );
           })}
+        </div>
+      )}
+      {offMap.length > 0 && (
+        <div data-ui className="absolute inset-x-2 top-12 z-10 mx-auto w-fit max-w-[calc(100%-1rem)] rounded bg-warning/90 px-2 py-1 text-xs text-black">
+          ⚠️ Position außerhalb der Karte: {offMap.slice(0, 4).map((mk, i) => <span key={mk.id}>{i ? ', ' : ''}<button type="button" className="underline" onClick={() => setSelected(mk.id)}>{mk.label}</button> (X {Math.round(mk.x)}, Z {Math.round(mk.z)})</span>)}
+          {offMap.length > 4 && ` und ${offMap.length - 4} weitere`} – Kartenmaßstab unter CAD → Einstellungen → Karte prüfen.
         </div>
       )}
       {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand</div>}
@@ -265,6 +278,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
         <div data-ui className="absolute bottom-2 right-2 z-30 w-72 max-w-[calc(100%-1rem)] rounded-md border border-line bg-panel p-3 shadow-xl" role="dialog" aria-label={sel.title}>
           <div className="mb-1 flex items-start justify-between gap-2"><h3 className="text-sm font-semibold">{sel.title}</h3><button aria-label="Schließen" onClick={() => setSelected(null)}><X size={14} /></button></div>
           {sel.body}
+          <p className="mt-1 text-[11px] text-muted">Koordinaten: X {sel.x.toFixed(1)} · Z {sel.z.toFixed(1)}{!onImage(sel.x, sel.z) && <span className="text-warning"> – außerhalb der Karte</span>}</p>
           {sel.actions && <div className="mt-2 flex flex-wrap gap-1">{sel.actions}</div>}
         </div>
       )}
