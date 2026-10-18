@@ -155,6 +155,38 @@ describe('ER:LC integration', () => {
     expect(list.find((c) => c.callNumber === 1191)).toMatchObject({ mapX: null, mapZ: null });
   });
 
+  it('Notruf-Position: Anrufer vor POI vor gelernter Umrechnung; ältere Notrufe außerhalb der Karte landen am POI', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const poi = (await admin.post('/api/v1/cad/map/objects').send({ kind: 'POI', name: 'Juwelier', layer: 'pois', x: 300, z: -400 })).body.id as string;
+    const now = Math.floor(Date.now() / 1000);
+    const player = (n: number, x: number, z: number) => ({ Player: `Caller${n}:90${n}`, Team: 'Civilian', Permission: 'Normal', WantedStars: 0, Location: { LocationX: x, LocationZ: z, PostalCode: '1', StreetName: 'Teststraße', BuildingNumber: '' } });
+    // Notruf-Positionen in einem anderen Maßstab (doppelt so groß, verschoben) – die Anrufer liefern die richtige Stelle
+    const raw = (x: number, z: number) => [2 * x + 500, 2 * z - 200];
+    const spots = [[-1000, 800], [600, -900], [1200, 1100]] as const;
+    replies = [json(200, { ...SERVER_DATA, Players: spots.map(([x, z], i) => player(i, x, z)), EmergencyCalls: [
+      ...spots.map(([x, z], i) => ({ Team: 'Police', Caller: Number(`90${i}`), Players: [], Position: raw(x, z), StartedAt: now, CallNumber: 1200 + i, Description: 'x', PositionDescriptor: null })),
+      { Team: 'Police', Caller: 0, Players: [], Position: [99999, 99999], StartedAt: now, CallNumber: 1210, Description: 'Raub', PositionDescriptor: 'Juwelier' },
+    ] })];
+    await admin.post(`/api/v1/erlc/servers/${id}/reconnect`);
+    let list = (await admin.get('/api/v1/cad/calls')).body as { callNumber: number; mapX: number | null; mapZ: number | null }[];
+    expect(list.find((c) => c.callNumber === 1201)).toMatchObject({ mapX: 600, mapZ: -900 }); // Anrufer
+    expect(list.find((c) => c.callNumber === 1210)).toMatchObject({ mapX: 300, mapZ: -400 }); // POI zum Ortsnamen
+    // automatischer Notruf ohne Anrufer: gelernte Umrechnung aus den drei Paaren
+    replies = [json(200, { ...SERVER_DATA, EmergencyCalls: [{ Team: 'Police', Caller: 0, Players: [], Position: raw(-200, 250), StartedAt: now, CallNumber: 1220, Description: 'Alarm', PositionDescriptor: null }] })];
+    await admin.post(`/api/v1/erlc/servers/${id}/reconnect`);
+    list = (await admin.get('/api/v1/cad/calls')).body;
+    const learned = list.find((c) => c.callNumber === 1220)!;
+    expect(learned.mapX).toBeCloseTo(-200);
+    expect(learned.mapZ).toBeCloseTo(250);
+    // älterer Notruf mit Position außerhalb der Karte → auf der Karte am POI, „Einsatz erstellen“ übernimmt die POI-Position
+    const old = await prisma.erlcEmergencyCall.create({ data: { serverId: id, callNumber: 1230, team: 'Police', description: 'Alt', positionDescriptor: 'Juwelier', mapX: 9000, mapZ: 9000, startedAt: new Date(), source: 'API' } });
+    const map = (await admin.get('/api/v1/cad/map')).body;
+    expect(map.calls.find((c: { id: string }) => c.id === old.id)).toMatchObject({ mapX: 300, mapZ: -400 });
+    const inc = await admin.post(`/api/v1/cad/calls/${old.id}/incident`).send({});
+    expect(inc.body).toMatchObject({ mapX: 300, mapZ: -400 });
+    await admin.delete(`/api/v1/cad/map/objects/${poi}`);
+  });
+
   it('webhook: only valid Ed25519 signatures over timestamp + raw body are accepted', async () => {
     const { publicKey, privateKey } = generateKeyPairSync('ed25519');
     erlc.useWebhookKey(publicKey.export({ format: 'der', type: 'spki' }).toString('base64'));

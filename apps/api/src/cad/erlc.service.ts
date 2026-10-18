@@ -1,9 +1,10 @@
 import { ErlcSyncService } from './erlc-sync.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { createPublicKey, timingSafeEqual, verify as edVerify, type KeyObject } from 'node:crypto';
+import { recordSpace } from '../common/guild-context';
 import { Prisma, type ErlcServer } from '@prisma/client';
 import { z } from 'zod';
-import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, onErlcMap, parsePlayer, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
+import { ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_POLL_OPTIONS, ERLC_STATUS_LABEL, applyCallCalibration, fitCallCalibration, onErlcMap, parsePlayer, poiForPlace, type CallCalibrationPair, type ErlcFeature, type ErlcStatus } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -270,6 +271,11 @@ export class ErlcService {
       players ??= ((await this.prisma.erlcServer.findUnique({ where: { id: s.id }, select: { snapshot: true } }))?.snapshot as ErlcSnapshot | null)?.players ?? [];
       return players.find((p) => p.id === callerId)?.location ?? null;
     };
+    // POIs (Ortsnamen wie „Bank“) und gelernte Umrechnung der Notruf-Positionen – einmal je Durchlauf
+    let pois: { name: string; x: number | null; z: number | null }[] | null = null;
+    const calKey = `erlc.callCalibration.${s.id}`;
+    let pairs: CallCalibrationPair[] | null = null;
+    const loadPairs = async () => (pairs ??= (((await this.prisma.systemSetting.findUnique({ where: { key: calKey } }))?.value as { pairs?: CallCalibrationPair[] } | null)?.pairs ?? []));
     for (const c of calls) {
       if (!c.callNumber || !c.startedAt) continue;
       // Nur Notrufe an die Polizei (Sheriff, Feuerwehr, DOT gehören nicht in diese Leitstelle)
@@ -279,11 +285,20 @@ export class ErlcService {
       const exists = await this.prisma.erlcEmergencyCall.findFirst({ where: { serverId: s.id, callNumber: c.callNumber, startedAt: { gte: new Date(startedAt.getTime() - 30 * 60_000), lte: new Date(startedAt.getTime() + 30 * 60_000) } } });
       if (exists) continue;
       try {
-        // Position fehlt oder liegt außerhalb der ER:LC-Karte → Standort des Anrufers (sonst stünde der Notruf am Kartenrand)
-        const ownPos = onErlcMap(c.x, c.z);
-        const fb = ownPos ? null : await callerPos(c.caller);
+        /*
+         * Position des Notrufs, in dieser Reihenfolge: 1. Standort des Anrufers (ER:LC liefert ihn im dokumentierten Kartensystem),
+         * 2. POI zum Ortsnamen („Bank“), 3. Notruf-Position mit gelernter Umrechnung, 4. Notruf-Position, wenn sie auf der Karte liegt.
+         */
+        const fb = await callerPos(c.caller);
+        const hasPos = c.x !== null && c.z !== null && Number.isFinite(c.x) && Number.isFinite(c.z);
+        if (fb && hasPos) await this.learnCallPosition(calKey, await loadPairs(), { px: c.x!, pz: c.z!, cx: fb.x, cz: fb.z });
+        pois ??= await this.prisma.cadMapObject.findMany({ where: { kind: 'POI', OR: [{ serverId: recordSpace(s.guildId) ?? null }, { serverId: null }] }, select: { name: true, x: true, z: true } });
+        const poi = fb ? null : poiForPlace(c.positionDescriptor, pois);
+        const cal = !fb && !poi && hasPos ? fitCallCalibration(await loadPairs()) : null;
+        const learned = cal ? applyCallCalibration(cal, c.x!, c.z!) : null;
+        const pos = fb ? { x: fb.x, z: fb.z } : poi ? { x: poi.x!, z: poi.z! } : learned && onErlcMap(learned.x, learned.z) ? learned : hasPos && onErlcMap(c.x, c.z) ? { x: c.x!, z: c.z! } : null;
         const where = c.positionDescriptor ?? (fb ? [fb.street, fb.postal && `PLZ ${fb.postal}`].filter(Boolean).join(' · ') || null : null);
-        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: ownPos ? c.x : fb?.x ?? null, mapZ: ownPos ? c.z : fb?.z ?? null, startedAt, source } });
+        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: pos?.x ?? null, mapZ: pos?.z ?? null, startedAt, source } });
         created++;
         await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: webUrl(`/cad/map?call=${row.id}`), dashboardUrl: webUrl(`/cad/calls?id=${row.id}`) }, s.guildId);
       } catch (e) {
@@ -292,6 +307,15 @@ export class ErlcService {
     }
     if (created) this.realtime.publish('cad', 'call.created', { serverId: s.id, count: created });
     return created;
+  }
+
+  /** Paar Notruf-Position ↔ Standort des Anrufers merken (die letzten 30), damit Notrufe ohne Anrufer richtig auf der Karte landen. */
+  private async learnCallPosition(key: string, pairs: CallCalibrationPair[], p: CallCalibrationPair) {
+    if (!onErlcMap(p.cx, p.cz)) return;
+    pairs.push(p);
+    if (pairs.length > 30) pairs.splice(0, pairs.length - 30);
+    const value = { pairs } as unknown as Prisma.InputJsonValue;
+    await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value }, update: { value } }).catch(() => undefined);
   }
 
   /** Live-Daten (letzter Stand bleibt bei API-Ausfall sichtbar). */

@@ -476,6 +476,48 @@ var DEFAULT_CAD_CONFIG = {
 };
 var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
 var onErlcMap = (x, z10) => typeof x === "number" && typeof z10 === "number" && Number.isFinite(x) && Number.isFinite(z10) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z10) <= ERLC_MAP_SIZE / 2;
+function poiForPlace(place, pois) {
+  const norm2 = (v) => v.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
+  const p = place ? norm2(place) : "";
+  if (p.length < 3) return null;
+  const usable = pois.filter((o) => o.x !== null && o.z !== null && norm2(o.name).length >= 3);
+  return usable.find((o) => norm2(o.name) === p) ?? usable.find((o) => p.includes(norm2(o.name)) || norm2(o.name).includes(p)) ?? null;
+}
+function fitCallCalibration(pairs) {
+  let rest = pairs;
+  for (; ; ) {
+    const fit = fitExact(rest);
+    if (fit || rest.length - 1 < Math.max(3, Math.ceil(pairs.length * 2 / 3))) return fit;
+    const drop = rest.map((_, i) => i).sort((a, b) => outlierScore(rest, b) - outlierScore(rest, a))[0];
+    rest = rest.filter((_, i) => i !== drop);
+  }
+}
+function outlierScore(pairs, i) {
+  const others = pairs.filter((_, j) => j !== i);
+  const line = (from, to) => {
+    const n = from.length, mf = from.reduce((a2, b) => a2 + b, 0) / n, mt = to.reduce((a2, b) => a2 + b, 0) / n;
+    const sxx = from.reduce((a2, f) => a2 + (f - mf) ** 2, 0) || 1;
+    const a = from.reduce((acc, f, k) => acc + (f - mf) * (to[k] - mt), 0) / sxx;
+    return { a, b: mt - a * mf };
+  };
+  const lx = line(others.map((p2) => p2.px), others.map((p2) => p2.cx)), lz = line(others.map((p2) => p2.pz), others.map((p2) => p2.cz));
+  const p = pairs[i];
+  return Math.abs(lx.a * p.px + lx.b - p.cx) + Math.abs(lz.a * p.pz + lz.b - p.cz);
+}
+function fitExact(pairs) {
+  if (pairs.length < 3) return null;
+  const axis = (from, to) => {
+    const n = from.length, mf = from.reduce((a2, b2) => a2 + b2, 0) / n, mt = to.reduce((a2, b2) => a2 + b2, 0) / n;
+    const sxx = from.reduce((a2, f) => a2 + (f - mf) ** 2, 0);
+    if (Math.max(...from) - Math.min(...from) < 100 || sxx === 0) return null;
+    const a = from.reduce((acc, f, i) => acc + (f - mf) * (to[i] - mt), 0) / sxx, b = mt - a * mf;
+    const worst = Math.max(...from.map((f, i) => Math.abs(a * f + b - to[i])));
+    return worst <= 60 && a > 0 ? { a, b } : null;
+  };
+  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z10 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
+  return x && z10 ? { ax: x.a, bx: x.b, az: z10.a, bz: z10.b, n: pairs.length } : null;
+}
+var applyCallCalibration = (c, x, z10) => ({ x: c.ax * x + c.bx, z: c.az * z10 + c.bz });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -2863,6 +2905,7 @@ export {
   absenceTypeSchema,
   accountAge,
   ageOf,
+  applyCallCalibration,
   areaGrantsFor,
   assertTransition,
   awardDefSchema,
@@ -2894,6 +2937,7 @@ export {
   examSchema,
   fieldValue,
   fillTemplate,
+  fitCallCalibration,
   fleetConfigSchema,
   fleetInternalSchema,
   fleetModelSchema,
@@ -2967,6 +3011,7 @@ export {
   personDetailsSchema,
   pixelToGame,
   playerKey,
+  poiForPlace,
   policeReportFields,
   policyAllowsFlow,
   questionProblems,
