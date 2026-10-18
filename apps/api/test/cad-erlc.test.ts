@@ -142,6 +142,19 @@ describe('ER:LC integration', () => {
     expect(await prisma.auditLog.count({ where: { action: 'erlc.command' } })).toBe(2);
   });
 
+  it('Notruf mit Position außerhalb der ER:LC-Karte → Standort des Anrufers; ohne bekannten Anrufer keine Position', async () => {
+    const admin = (await login(app, 'cad_admin')).agent;
+    const now = Math.floor(Date.now() / 1000);
+    replies = [json(200, { ...SERVER_DATA, EmergencyCalls: [
+      { Team: 'Police', Caller: 111, Players: [], Position: [8000, -9000], StartedAt: now, CallNumber: 1190, Description: 'Raub', PositionDescriptor: 'Bank' },
+      { Team: 'Police', Caller: 999, Players: [], Position: [8000, -9000], StartedAt: now, CallNumber: 1191, Description: 'Unbekannt', PositionDescriptor: null },
+    ] })];
+    await admin.post(`/api/v1/erlc/servers/${id}/reconnect`);
+    const list = (await admin.get('/api/v1/cad/calls')).body as { callNumber: number; mapX: number | null; mapZ: number | null }[];
+    expect(list.find((c) => c.callNumber === 1190)).toMatchObject({ mapX: 100, mapZ: -50 });
+    expect(list.find((c) => c.callNumber === 1191)).toMatchObject({ mapX: null, mapZ: null });
+  });
+
   it('webhook: only valid Ed25519 signatures over timestamp + raw body are accepted', async () => {
     const { publicKey, privateKey } = generateKeyPairSync('ed25519');
     erlc.useWebhookKey(publicKey.export({ format: 'der', type: 'spki' }).toString('base64'));

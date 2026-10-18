@@ -150,6 +150,9 @@ export const DEFAULT_CAD_CONFIG: CadConfig = {
 
 /** Spielkoordinate (ER:LC: X nach rechts, Z nach unten, Ursprung Mitte) → Pixel im Kartenbild. */
 export const gameToPixel = (m: CadMapConfig, x: number, z: number) => ({ px: m.originX + x * m.scale, py: m.originY + z * m.scale });
+/** Liegt eine Spielkoordinate auf der ER:LC-Karte? Laut ER:LC-Doku: Ursprung Kartenmitte, offizielle Karte 5355 × 5355. */
+export const onErlcMap = (x: number | null | undefined, z: number | null | undefined) =>
+  typeof x === 'number' && typeof z === 'number' && Number.isFinite(x) && Number.isFinite(z) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z) <= ERLC_MAP_SIZE / 2;
 export const pixelToGame = (m: CadMapConfig, px: number, py: number) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 
 // ---- ER:LC ----

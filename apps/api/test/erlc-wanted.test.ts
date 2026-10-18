@@ -22,7 +22,10 @@ const server = (players: string[], joinLogs: { player: string; ts: number }[] = 
   JoinLogs: joinLogs.map((j) => ({ Join: true, Timestamp: j.ts, Player: j.player })),
 });
 const poll = async (reply: () => Response) => { replies = [reply]; return erlc.poll(serverId, true); };
-const hits = () => prisma.erlcWantedHit.findMany({ orderBy: { detectedAt: 'asc' } });
+/** Nur Discord-Meldungen dieses Test-Servers. */
+const ours = { payload: { path: ['server'], equals: 'Fahndung Testserver' } };
+/** Nur Treffer dieses Test-Servers (andere Testdateien laufen gleichzeitig gegen dieselbe Datenbank). */
+const hits = () => prisma.erlcWantedHit.findMany({ where: { erlcServerId: serverId }, orderBy: { detectedAt: 'asc' } });
 
 beforeAll(async () => {
   ({ app, prisma } = await createTestApp());
@@ -86,7 +89,7 @@ describe('ER:LC-Fahndungsabgleich', () => {
     const h = await hits();
     expect(h).toHaveLength(1);
     expect(h[0]).toMatchObject({ wantedId: ids.wantedA, playerName: 'BadGuy', robloxUserId: '771001', matchType: 'ROBLOX_ID', identified: true, reviewStatus: 'NEW', wantedReason: 'Bankraub Hauptstraße', wantedPriority: 'HIGH', notifyStatus: 'QUEUED' });
-    const out = await prisma.discordOutbox.findMany({ where: { type: { startsWith: 'cad.wanted.' } } });
+    const out = await prisma.discordOutbox.findMany({ where: { type: { startsWith: 'cad.wanted.' }, ...ours } });
     expect(out).toHaveLength(1);
     expect(out[0]!.type).toBe('cad.wanted.hit');
     expect(out[0]!.payload).toMatchObject({ playerName: 'BadGuy', robloxUserId: '771001', identified: true, channelIds: [CH.hits] });
@@ -102,7 +105,7 @@ describe('ER:LC-Fahndungsabgleich', () => {
   it('Spieler bleibt über mehrere Abfragen online → kein weiterer Treffer, keine weitere Meldung', async () => {
     for (let i = 0; i < 3; i++) await poll(server(['Harmless:773003', 'BadGuy:771001']));
     expect(await hits()).toHaveLength(1);
-    expect(await prisma.discordOutbox.count({ where: { type: { startsWith: 'cad.wanted.' } } })).toBe(1);
+    expect(await prisma.discordOutbox.count({ where: { type: { startsWith: 'cad.wanted.' }, ...ours } })).toBe(1);
   });
 
   it('gleicher Name, andere Roblox-ID → nur „Mögliche Übereinstimmung“, nicht identifiziert, eigener Kanal', async () => {
@@ -245,10 +248,10 @@ describe('ER:LC-Fahndungsabgleich', () => {
   });
 
   it('im Spiel gesucht (Wanted-Sterne) → Treffer auch ohne Fahndung, eine Meldung je Aufenthalt, mehr Sterne ziehen nur den Treffer nach', async () => {
-    const inGame = () => prisma.erlcWantedHit.findMany({ where: { matchType: 'ERLC_WANTED' } });
+    const inGame = () => prisma.erlcWantedHit.findMany({ where: { erlcServerId: serverId, matchType: 'ERLC_WANTED' } });
     // nur der Kanal für Fahndungstreffer ist eingestellt → „im Spiel gesucht“ landet dort
     await (await login(app, 'wh_admin')).agent.put('/api/v1/cad/config').set({ 'X-Guild-Id': HOME }).send({ homeGuildId: HOME, routes: [{ id: 'w1', guildId: HOME, event: 'wanted.hit', channelIds: [CH.hits], pingRoleIds: [], enabled: true }] });
-    const before = await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc' } });
+    const before = await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc', ...ours } });
     await poll(server(['Robber:775005']));
     expect(await inGame()).toHaveLength(0);
     await poll(server(['Robber:775005'], [], { 'Robber:775005': 2 }));
@@ -256,7 +259,7 @@ describe('ER:LC-Fahndungsabgleich', () => {
     expect(h).toHaveLength(1);
     expect(h[0]).toMatchObject({ playerName: 'Robber', robloxUserId: '775005', wantedId: null, identified: true, reviewStatus: 'NEW', wantedPriority: 'MEDIUM', notifyStatus: 'QUEUED' });
     expect(h[0]!.wantedReason).toContain('2 Sterne');
-    const out = await prisma.discordOutbox.findMany({ where: { type: 'cad.wanted.erlc' } });
+    const out = await prisma.discordOutbox.findMany({ where: { type: 'cad.wanted.erlc', ...ours }, orderBy: { createdAt: 'asc' } });
     expect(out).toHaveLength(before + 1);
     expect(out.at(-1)!.payload).toMatchObject({ playerName: 'Robber', channelIds: [CH.hits] }); // ohne eigenen Kanal → Fahndungstreffer
     await poll(server(['Robber:775005'], [], { 'Robber:775005': 4 }));
@@ -264,7 +267,7 @@ describe('ER:LC-Fahndungsabgleich', () => {
     expect(again).toHaveLength(1);
     expect(again[0]).toMatchObject({ wantedPriority: 'HIGH' });
     expect(again[0]!.wantedReason).toContain('4 Sterne');
-    expect(await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc' } })).toBe(before + 1);
+    expect(await prisma.discordOutbox.count({ where: { type: 'cad.wanted.erlc', ...ours } })).toBe(before + 1);
     const admin = (await login(app, 'wh_admin')).agent;
     const st = (await admin.get('/api/v1/wanted-hits/status').set({ 'X-Guild-Id': HOME })).body.servers.find((x: { id: string }) => x.id === serverId);
     expect(st.players).toEqual([{ name: 'Robber', robloxUserId: '775005', wantedStars: 4 }]);

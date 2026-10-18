@@ -313,9 +313,11 @@ let ErlcService = class ErlcService {
             if (exists)
                 continue;
             try {
-                const fb = c.x === null || c.z === null ? await callerPos(c.caller) : null;
+                // Position fehlt oder liegt außerhalb der ER:LC-Karte → Standort des Anrufers (sonst stünde der Notruf am Kartenrand)
+                const ownPos = (0, shared_1.onErlcMap)(c.x, c.z);
+                const fb = ownPos ? null : await callerPos(c.caller);
                 const where = c.positionDescriptor ?? (fb ? [fb.street, fb.postal && `PLZ ${fb.postal}`].filter(Boolean).join(' · ') || null : null);
-                const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: c.x ?? fb?.x ?? null, mapZ: c.z ?? fb?.z ?? null, startedAt, source } });
+                const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: ownPos ? c.x : fb?.x ?? null, mapZ: ownPos ? c.z : fb?.z ?? null, startedAt, source } });
                 created++;
                 await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: (0, web_url_1.webUrl)(`/cad/map?call=${row.id}`), dashboardUrl: (0, web_url_1.webUrl)(`/cad/calls?id=${row.id}`) }, s.guildId);
             }
