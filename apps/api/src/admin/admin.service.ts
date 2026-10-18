@@ -39,6 +39,8 @@ export const SETTING_SCHEMAS = {
     roleMap: z.array(z.object({ discordRoleId: z.string().regex(/^\d{15,25}$/), role: z.string().trim().min(1).max(64) })).max(50),
     /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
     teamRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(20).default([]),
+    /** Discord-Administratoren (Recht „Administrator“ oder Besitzer) eines Servers kommen immer rein und verwalten diesen Server. */
+    guildAdmins: z.boolean().default(true),
   }),
 } as const;
 export type SettingKey = keyof typeof SETTING_SCHEMAS;

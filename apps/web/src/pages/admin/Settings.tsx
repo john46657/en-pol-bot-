@@ -92,7 +92,7 @@ export function Settings() {
   );
 }
 
-interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds?: string[] }
+interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds?: string[]; guildAdmins?: boolean }
 
 /** „Mit Discord anmelden“: neue Konten, Server-Pflicht, Discord-Rolle → Systemrolle (wird bei jeder Discord-Anmeldung abgeglichen). */
 function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: DiscordLogin; onSave: (v: DiscordLogin) => void }) {
@@ -116,10 +116,11 @@ function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: 
       <div className="space-y-2 text-sm">
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.signup} onChange={(e) => setD({ ...d, signup: e.target.checked })} />Neue Benutzer können sich mit Discord registrieren (Konto wird bei der ersten Anmeldung erstellt)</label>
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Nur Mitglieder unseres Discord-Servers dürfen sich anmelden</label>
+        <label className="flex items-start gap-2"><input type="checkbox" className="mt-1" disabled={!manage} checked={d.guildAdmins !== false} onChange={(e) => setD({ ...d, guildAdmins: e.target.checked })} /><span>Discord-Admins haben immer Zugang: Wer auf einem Server das Discord-Recht <b>Administrator</b> hat (oder Besitzer ist), kommt auch ohne Teamrolle rein und bekommt die Rolle „Server-Administrator“ – nur für diesen Server. Verliert die Person das Recht, wird die Rolle wieder entzogen.</span></label>
       </div>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rollen mit Dashboard-Zugriff (Teamrollen)</h3>
       <div className="max-w-xl"><RolePicker ariaLabel="Teamrollen" disabled={!manage} max={20} value={team.match(/\d{15,25}/g) ?? []} onChange={(ids) => setTeam(ids.join(', '))} /></div>
-      <p className="mt-1 text-xs text-muted">Nur Personen mit einer dieser Discord-Rollen können sich anmelden (mehrere Server / Rollen: kommagetrennt). Leer = alle Servermitglieder. Konten in ADMIN_DISCORD_IDS kommen immer rein. Wird bei jeder Anmeldung und danach laufend geprüft (Verlust der Rolle beendet die Sitzung). Discord-Rollen mit Dashboard-Rollen verknüpfen: Rollen &amp; Rechte → Rolle → „Verknüpfte Discord-Rollen“.</p>
+      <p className="mt-1 text-xs text-muted">Nur Personen mit einer dieser Discord-Rollen können sich anmelden (mehrere Server / Rollen: kommagetrennt). Leer = alle Servermitglieder. Konten in ADMIN_DISCORD_IDS und (falls oben aktiviert) Discord-Admins des jeweiligen Servers kommen immer rein. Wird bei jeder Anmeldung und danach laufend geprüft (Verlust der Rolle beendet die Sitzung). Discord-Rollen mit Dashboard-Rollen verknüpfen: Rollen &amp; Rechte → Rolle → „Verknüpfte Discord-Rollen“.</p>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rolle → Systemrolle (bei jeder Discord-Anmeldung abgeglichen)</h3>
       <div className="space-y-2">
         {d.roleMap.map((r, i) => (
