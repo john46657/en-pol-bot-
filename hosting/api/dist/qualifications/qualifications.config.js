@@ -74,6 +74,8 @@ exports.policeSchema = zod_1.z.object({
     /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
     channelId: channelOpt,
     pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(10).default([]),
+    /** Kanal, in den das Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: channelOpt,
     title: zod_1.z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
     description: zod_1.z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),
 });

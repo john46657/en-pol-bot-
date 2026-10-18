@@ -89,6 +89,7 @@ export declare class ApplicationsService {
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     }>;
     /** Entscheidungs-DM mit Text und Rollen aus den Einstellungen. */
     private decided;

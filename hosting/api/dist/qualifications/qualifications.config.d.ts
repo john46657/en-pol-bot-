@@ -657,6 +657,8 @@ export declare const policeSchema: z.ZodObject<{
     /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
     channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Kanal, in den das Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     title: z.ZodDefault<z.ZodString>;
     description: z.ZodDefault<z.ZodString>;
     enabled: z.ZodDefault<z.ZodBoolean>;
@@ -846,6 +848,7 @@ export declare const policeSchema: z.ZodObject<{
     channelId?: string | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
+    panelChannelId?: string | undefined;
 }, {
     title?: string | undefined;
     description?: string | undefined;
@@ -885,6 +888,7 @@ export declare const policeSchema: z.ZodObject<{
     pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
+    panelChannelId?: string | undefined;
 }>;
 export declare const configSchema: z.ZodObject<{
     title: z.ZodDefault<z.ZodString>;
@@ -1332,6 +1336,8 @@ export declare const configSchema: z.ZodObject<{
         /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
         channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** Kanal, in den das Panel aus dem Dashboard gesendet wird. */
+        panelChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         title: z.ZodDefault<z.ZodString>;
         description: z.ZodDefault<z.ZodString>;
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -1521,6 +1527,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     }, {
         title?: string | undefined;
         description?: string | undefined;
@@ -1560,6 +1567,7 @@ export declare const configSchema: z.ZodObject<{
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
@@ -1644,6 +1652,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     };
     intro: string;
 }, {
@@ -1741,6 +1750,7 @@ export declare const configSchema: z.ZodObject<{
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     } | undefined;
     intro?: string | undefined;
 }>;
@@ -2191,6 +2201,8 @@ export declare const saveSchema: z.ZodObject<{
         /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
         channelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** Kanal, in den das Panel aus dem Dashboard gesendet wird. */
+        panelChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         title: z.ZodDefault<z.ZodString>;
         description: z.ZodDefault<z.ZodString>;
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -2380,6 +2392,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     }, {
         title?: string | undefined;
         description?: string | undefined;
@@ -2419,6 +2432,7 @@ export declare const saveSchema: z.ZodObject<{
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     }>>;
 } & {
     policeForm: z.ZodOptional<z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObject<{
@@ -2595,6 +2609,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     };
     intro: string;
     policeForm?: {
@@ -2705,6 +2720,7 @@ export declare const saveSchema: z.ZodObject<{
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
+        panelChannelId?: string | undefined;
     } | undefined;
     intro?: string | undefined;
     policeForm?: {

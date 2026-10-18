@@ -6,6 +6,12 @@ import { DiscordService } from '../discord/discord.service';
 import { type QualificationConfig } from './qualifications.config';
 import { type FormField } from '@enrp/shared';
 import { RobloxService } from '../persons/roblox.service';
+import { type MessageSpec } from '@enrp/shared';
+/** Panel „Jetzt bewerben“ für die Polizei-Bewerbung (wie /bewerbungspanel). */
+export declare function policePanelMessage(p: {
+    title: string;
+    description: string;
+}): MessageSpec;
 export interface Answer {
     question: string;
     answer: string | string[] | null;
@@ -31,6 +37,10 @@ export declare class QualificationsService {
     setup(guildId?: string | null): Promise<{
         policeForm: FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -113,14 +123,25 @@ export declare class QualificationsService {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
+    }>;
+    /** Ort des Bewerbungs-Panels in Discord – je Server getrennt. */
+    private panelKey;
+    /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
+    sendPolicePanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null): Promise<{
+        queued: boolean;
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
         policeForm?: FormField[];
     }, guildId?: string | null): Promise<{
         policeForm: FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -203,6 +224,7 @@ export declare class QualificationsService {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
     }>;
@@ -210,6 +232,10 @@ export declare class QualificationsService {
     resetGuild(actor: Actor, guildId: string): Promise<{
         policeForm: FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -292,6 +318,7 @@ export declare class QualificationsService {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
     }>;

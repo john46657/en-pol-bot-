@@ -32,6 +32,7 @@ const webLink = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, disc
 const token = zod_1.z.string().regex(/^[\w-]{60,2000}$/, 'Ungültiger Bewerbungslink.');
 const webSubmit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().max(64).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const panelSend = zod_1.z.object({ mode: zod_1.z.enum(['update', 'new']).default('update') });
 const guildRequired = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/) });
 let QualificationsController = class QualificationsController {
     q;
@@ -44,6 +45,8 @@ let QualificationsController = class QualificationsController {
     save(a, q, b) { return this.q.saveConfig(a, b, q.guildId); }
     /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
     reset(a, q) { return this.q.resetGuild(a, q.guildId); }
+    /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
+    sendPanel(a, q, b) { return this.q.sendPolicePanel(a, b.mode, q.guildId); }
     list(f) { return this.q.list(f); }
     history(q) { return this.q.history(q.discordId); }
     get(id) { return this.q.get(id); }
@@ -81,6 +84,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], QualificationsController.prototype, "reset", null);
+__decorate([
+    (0, common_1.Post)('police-panel/send'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('qualifications.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(panelSend))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0, void 0]),
+    __metadata("design:returntype", void 0)
+], QualificationsController.prototype, "sendPanel", null);
 __decorate([
     (0, common_1.Get)('applications'),
     (0, decorators_1.RequirePermission)('qualifications.view'),

@@ -119,6 +119,13 @@ declare const guildQ: z.ZodObject<{
 }, {
     guildId?: string | undefined;
 }>;
+declare const panelSend: z.ZodObject<{
+    mode: z.ZodDefault<z.ZodEnum<["update", "new"]>>;
+}, "strip", z.ZodTypeAny, {
+    mode: "update" | "new";
+}, {
+    mode?: "update" | "new" | undefined;
+}>;
 declare const guildRequired: z.ZodObject<{
     guildId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -134,6 +141,10 @@ export declare class QualificationsController {
     config(q: z.infer<typeof guildQ>): Promise<{
         policeForm: import("@enrp/shared").FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -216,12 +227,17 @@ export declare class QualificationsController {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
     }>;
     save(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof saveSchema>): Promise<{
         policeForm: import("@enrp/shared").FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -304,6 +320,7 @@ export declare class QualificationsController {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
     }>;
@@ -311,6 +328,10 @@ export declare class QualificationsController {
     reset(a: Actor, q: z.infer<typeof guildRequired>): Promise<{
         policeForm: import("@enrp/shared").FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -393,8 +414,13 @@ export declare class QualificationsController {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
+    }>;
+    /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
+    sendPanel(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof panelSend>): Promise<{
+        queued: boolean;
     }>;
     list(f: z.infer<typeof list>): Promise<{
         linkedName: string | null;
@@ -549,6 +575,7 @@ export declare class BotQualificationsController {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
     }>;
