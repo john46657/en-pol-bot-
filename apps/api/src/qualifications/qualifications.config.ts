@@ -63,6 +63,8 @@ export const unitSchema = z.object({
   questions: unitQuestions,
   /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
   pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(10).default([]),
+  /** In welchem Panel die Einheit steht: Qualifikations-Panel oder (als weitere Bewerbungsart) Bewerbungs-Panel. */
+  panel: z.enum(['quali', 'apply']).default('quali'),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export const policeSchema = z.object({
@@ -81,7 +83,7 @@ export const configSchema = z.object({
   /** Kanal, in den das Qualifikations-Panel aus dem Dashboard gesendet wird. */
   panelChannelId: channelOpt,
   intro: z.string().trim().max(1500).default(''),
-  units: z.array(unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
+  units: z.array(unitSchema).min(1).max(30).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
   police: policeSchema.default({}),
 });
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */

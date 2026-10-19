@@ -168,6 +168,30 @@ describe('qualification applications', () => {
     expect((out!.payload as { message: { select: { options: { value: string }[] } } }).message.select.options.map((o) => o.value)).toEqual(cur.units.map((u: { key: string }) => u.key));
   });
 
+  it('more application types: an apply unit turns the application panel into a select and leaves the quali panel', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const leitstelle = { key: 'leitstelle', name: 'Leitstelle', description: 'Funk und Einsätze koordinieren', questions: ['Warum Leitstelle?'], panel: 'apply' };
+    const saved = await admin.put('/api/v1/qualifications/config').send({ title: cur.title, intro: cur.intro, units: [...cur.units, leitstelle], police: cur.police });
+    expect(saved.status).toBe(200);
+    expect(saved.body.units.find((u: { key: string }) => u.key === 'leitstelle')).toMatchObject({ panel: 'apply' });
+    expect((await admin.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const apply = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    const am = (apply!.payload as { message: { buttons?: unknown[]; select: { id: string; options: { value: string }[] }; embeds: { description: string }[] } }).message;
+    expect(am.buttons).toBeUndefined();
+    expect(am.select.id).toBe('quali:pick');
+    expect(am.select.options.map((o) => o.value)).toEqual(['@polizei', 'leitstelle']);
+    expect(am.embeds[0]!.description).toContain('**__Leitstelle:__**');
+    expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const quali = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    expect((quali!.payload as { message: { select: { options: { value: string }[] } } }).message.select.options.map((o) => o.value)).not.toContain('leitstelle');
+    // bewerben wie bei Qualifikationen; landet in der Bewerbungsliste
+    const r = await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'leitstelle', discordId: STRANGER, discordName: 'lena', answers: [{ question: 'Warum Leitstelle?', answer: 'Weil.' }] });
+    expect(r.status).toBe(201);
+    const inbox = await admin.get('/api/v1/applications/inbox').query({ type: 'q:leitstelle' });
+    expect(inbox.body.items.map((x: { number: string }) => x.number)).toContain(r.body.number);
+  });
+
   it('question types like Appy: multiple choice and role select are validated, chosen roles are given on acceptance, ping role in the post', async () => {
     const admin = (await login(app, 'q_admin')).agent;
     const cur = (await admin.get('/api/v1/qualifications/config')).body;

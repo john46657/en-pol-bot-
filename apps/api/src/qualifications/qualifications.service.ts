@@ -15,32 +15,18 @@ import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
 import { RobloxService } from '../persons/roblox.service';
-import { formatMinutes, type MessageSpec } from '@enrp/shared';
+import { applyPanelParts, formatMinutes, qualiPanelParts, type ApplicationPanelParts, type MessageSpec } from '@enrp/shared';
 
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
-/** Gleicher Button wie /bewerbungspanel – der Bot startet darüber die Bewerbung. */
-const POLICE_BUTTON = 'quali:pick:@polizei';
-
-/** Panel „Jetzt bewerben“ für die Polizei-Bewerbung (wie /bewerbungspanel). */
-export function policePanelMessage(p: { title: string; description: string }): MessageSpec {
-  return {
-    embeds: [{ title: p.title.slice(0, 256), description: p.description.slice(0, 4000) || undefined, color: 0x3b82f6 }],
-    buttons: [{ id: POLICE_BUTTON, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }],
-  };
-}
-
-const clip = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
-const plain = (s: string) => s.replace(/[*_`~|>\\]/g, '\\$&').replace(/@(everyone|here)/g, '@\u200b$1');
-/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
-export function qualiPanelMessage(cfg: QualificationConfig): MessageSpec {
-  const parts = [cfg.intro, ...cfg.units.map((u) => `**__${plain(u.name)}:__**\n${u.description}`)].filter(Boolean);
-  return {
-    embeds: [{ title: clip(cfg.title, 256), description: clip(parts.join('\n\n'), 4000), color: 0x3b82f6 }],
-    select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? ' (geschlossen)' : ''}`, 100), value: u.key, ...(u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ''), 100) } : {}) })) },
-  };
-}
 export interface Answer { question: string; answer: string | string[] | null }
+/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+export function policePanelMessage(cfg: QualificationConfig): MessageSpec { return panelMessage(applyPanelParts(cfg)); }
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+export function qualiPanelMessage(cfg: QualificationConfig): MessageSpec { return panelMessage(qualiPanelParts(cfg)); }
+function panelMessage(p: ApplicationPanelParts): MessageSpec {
+  return { embeds: [{ title: p.title, description: p.description || undefined, color: 0x3b82f6 }], ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) };
+}
 
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
@@ -80,9 +66,10 @@ export class QualificationsService {
 
   /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
   async sendPolicePanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null) {
-    const police = (await this.config(guildId)).police;
+    const cfg = await this.config(guildId);
+    const police = cfg.police;
     if (!police.panelChannelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
-    await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(police), { forceNew: mode === 'new' });
+    await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(cfg), { forceNew: mode === 'new' });
     await this.audit.record(actor, { action: 'applications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: police.panelChannelId, mode, guildId: guildId ?? null } });
     return { queued: true };
   }
@@ -115,7 +102,7 @@ export class QualificationsService {
     });
     // Panels stehen schon in Discord → geänderte Texte/Einheiten gleich mitziehen
     const panels = [
-      { key: this.panelKey(guildId), channelId: c.police.panelChannelId, before: policePanelMessage(old.police), after: policePanelMessage(c.police) },
+      { key: this.panelKey(guildId), channelId: c.police.panelChannelId, before: policePanelMessage(old), after: policePanelMessage(c) },
       { key: this.panelKey(guildId, 'quali'), channelId: c.panelChannelId, before: qualiPanelMessage(old), after: qualiPanelMessage(c) },
     ];
     for (const p of panels) {

@@ -1,4 +1,4 @@
-import { checkAnswer, DEFAULT_APPLICATION_MESSAGES, formatMinutes, normalizeField, renderApplicationText, rolesMatch, type Field, type FormField } from '@enrp/shared';
+import { applyPanelParts, checkAnswer, DEFAULT_APPLICATION_MESSAGES, qualiPanelParts, type ApplicationPanelParts, formatMinutes, normalizeField, renderApplicationText, rolesMatch, type Field, type FormField } from '@enrp/shared';
 import { BotApiError, type Api } from '../api';
 import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply, type SelectSpec } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
@@ -14,7 +14,7 @@ export interface AppSettings {
   /** Art der Bewerbung: Fragen per Direktnachricht (Standard) oder als Formular im Browser. */
   mode?: 'DM' | 'WEB';
 }
-export interface QualiUnit { key: string; name: string; description: string; questions: (string | FormField)[]; enabled?: boolean; settings?: AppSettings }
+export interface QualiUnit { key: string; name: string; description: string; questions: (string | FormField)[]; enabled?: boolean; settings?: AppSettings; /** `apply` = weitere Bewerbungsart im Bewerbungs-Panel */ panel?: 'quali' | 'apply' }
 export interface QualiConfig { title: string; intro: string; units: QualiUnit[]; police?: { title: string; description: string; name?: string; enabled?: boolean; settings?: AppSettings } }
 interface Question { text: string; key?: string; field: Field }
 /** Antworten: Text, gewählte Optionen (Auswahl/Rollen) oder `null` (übersprungen). */
@@ -152,9 +152,11 @@ async function offer(c: Ctx, key: string | undefined): Promise<Reply> {
 }
 
 export function panelEmbed(cfg: QualiConfig): EmbedData {
-  const parts = [cfg.intro, ...cfg.units.map((u) => `**__${plain(u.name)}:__**\n${u.description}`)].filter(Boolean);
-  return { title: clip(cfg.title, 256), color: COLORS.info, description: clip(parts.join('\n\n'), 4000) };
+  const p = qualiPanelParts(cfg);
+  return { title: p.title, color: COLORS.info, description: p.description };
 }
+/** Panel-Bausteine (gemeinsam mit dem Dashboard) → Nachricht für `postPanel`. */
+const panelPost = (p: ApplicationPanelParts) => ({ embed: { title: p.title, color: COLORS.info, ...(p.description ? { description: p.description } : {}) }, ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) });
 
 export const QUALI_COMMANDS: CommandDef[] = [
   {
@@ -168,9 +170,9 @@ export const QUALI_COMMANDS: CommandDef[] = [
       if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
       try {
-        const police = (await getConfig(c.api, c.guildId).catch(() => undefined))?.police;
-        const embed = police ? { title: clip(police.title, 256), color: COLORS.info, description: clip(police.description, 4000) } : POLICE_PANEL;
-        await c.platform.postPanel({ channelId: c.channelId, embed, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] });
+        const cfg = await getConfig(c.api, c.guildId).catch(() => undefined);
+        const panel = cfg?.police ? panelPost(applyPanelParts(cfg)) : { embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' as const }] };
+        await c.platform.postPanel({ channelId: c.channelId, ...panel });
       } catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).'); }
       return okReply('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).');
     },
@@ -183,7 +185,7 @@ export const QUALI_COMMANDS: CommandDef[] = [
       if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
       try {
         const cfg = await getConfig(c.api, c.guildId);
-        await c.platform.postPanel({ channelId: c.channelId, embed: panelEmbed(cfg), select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? ' (geschlossen)' : ''}`, 100), value: u.key, ...(u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ''), 100) } : {}) })) } });
+        await c.platform.postPanel({ channelId: c.channelId, ...panelPost(qualiPanelParts(cfg)) });
         const ch = await c.config?.().catch(() => undefined);
         return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
       } catch (e) {
