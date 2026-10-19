@@ -18,12 +18,14 @@ export const NAV: NavItem[] = [
   grp('Leitstelle', MapPinned, 'Operations', [
     { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
     { path: '/incidents', label: 'Einsätze', perm: 'incidents.view' },
+    { path: '/admin/danger-level', label: 'Gefahrenstatus', perm: 'settings.manage', area: 'dashboard.settings.view' },
   ]),
   grp('Team', Users, 'Operations', [
     { path: '/team', label: 'Team', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/teamlist', label: 'Teamliste', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/staff-lists', label: 'Staff-Liste (Discord)', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/offices', label: 'Büros', perm: 'team.view', area: 'dashboard.offices.view' },
+    { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
   grp('Funk', RadioTower, 'Operations', [
     { path: '/radio-codes', label: 'Funk-Codes', perm: 'radio.view', area: 'dashboard.radio.view' },
@@ -35,6 +37,7 @@ export const NAV: NavItem[] = [
   grp('Berichte', FileText, 'Records', [
     { path: '/reports', label: 'Einsatzberichte', perm: 'reports.view' },
     { path: '/duty-reports', label: 'Tages-/Wochenberichte', perm: 'dutyreports.view' },
+    { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
@@ -55,24 +58,21 @@ export const NAV: NavItem[] = [
     { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
     { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
   ]),
-  { path: '/leave', label: 'Abmeldungen', icon: CalendarOff, perm: 'leave.request', group: 'Organisation' },
+  grp('Abmeldungen', CalendarOff, 'Organisation', [
+    { path: '/leave', label: 'Abmeldungen', perm: 'leave.request' },
+    { path: '/admin/leave', label: 'Einstellungen', perm: 'settings.view', area: 'dashboard.settings.view' },
+  ]),
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
   grp('Benutzer & Rollen', Users, 'Administration', [
     { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
     { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
   ]),
-  grp('Einstellungen', Settings, 'Administration', [
-    { path: '/admin/settings', label: 'Allgemein', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
-  ]),
+  { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration', keywords: 'allgemein discord kanäle anmeldung' },
   grp('Discord-Nachrichten', PanelTop, 'Administration', [
     { path: '/admin/embeds', label: 'Embeds', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/form-panels', label: 'Formular-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/welcome', label: 'Willkommen & Abschied', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/danger-level', label: 'Gefahrenstatus', perm: 'settings.manage', area: 'dashboard.settings.view' },
     { path: '/message-builder', label: 'Message Builder', perm: 'messagebuilder.view' },
   ]),
   grp('Protokolle', ScrollText, 'Administration', [
