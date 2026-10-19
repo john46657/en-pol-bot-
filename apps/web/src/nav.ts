@@ -43,6 +43,7 @@ export const NAV: NavItem[] = [
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
     { path: '/promotions', label: 'Beförderungen', perm: 'promotion.view' },
     { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
+    { path: '/admin/personnel', label: 'Einstellungen', perm: 'personnel.view', area: 'dashboard.settings.view' },
   ]),
   grp('Ausbildung', GraduationCap, 'Organisation', [
     { path: '/trainings', label: 'Ausbildungen & Prüfungen', perm: 'training.view|exam.view' },
@@ -64,7 +65,6 @@ export const NAV: NavItem[] = [
     { path: '/admin/settings', label: 'Allgemein', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/personnel', label: 'Personal', perm: 'personnel.view', area: 'dashboard.settings.view' },
     { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
   grp('Discord-Nachrichten', PanelTop, 'Administration', [
