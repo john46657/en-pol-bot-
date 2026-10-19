@@ -459,6 +459,15 @@ async function handleAutocomplete(i: AutocompleteInteraction) {
   await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
 }
 
+/**
+ * Auswahlmenü in einer öffentlichen Nachricht (Panels): Discord lässt die gewählte Option sonst stehen
+ * („K9“ bleibt ausgewählt) – Nachricht mit denselben Komponenten neu speichern, damit das Menü wieder leer ist.
+ */
+async function resetSelect(i: AnySelectMenuInteraction) {
+  if (i.message.flags.has(MessageFlags.Ephemeral)) return;
+  await i.message.edit({ components: i.message.components }).catch((e) => console.error('could not reset select menu:', e instanceof Error ? e.message : e));
+}
+
 async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
@@ -467,6 +476,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
     const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
     else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
+    if (i.isAnySelectMenu()) await resetSelect(i);
     return;
   }
   if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
@@ -486,6 +496,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
   const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
   if (reply.update && source) await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error('could not update message:', e instanceof Error ? e.message : e));
+  else if (i.isAnySelectMenu() && !reply.decided) await resetSelect(i);
 }
 
 function wire(c: Client) {
