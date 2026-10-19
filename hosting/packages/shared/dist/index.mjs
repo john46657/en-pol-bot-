@@ -1700,6 +1700,8 @@ var hrConfigSchema = z3.object({
   departments: z3.array(departmentSchema).max(50).default([]),
   absenceTypes: z3.array(absenceTypeSchema).max(30).default([]),
   warningSeverities: z3.array(severitySchema).max(20).default([]),
+  /** Später ergänzte Standardwerte, die schon einmal in gespeicherte Einstellungen übernommen wurden (Löschen bleibt dann gelöscht). */
+  addedDefaults: z3.array(z3.string().max(40)).max(50).default([]),
   warningCategories: z3.array(z3.string().trim().min(1).max(60)).max(50).default([]),
   awards: z3.array(awardDefSchema).max(100).default([]),
   /** Bereiche der Personalakte */
@@ -1756,6 +1758,7 @@ var hrConfigSchema = z3.object({
   /** Zertifikate */
   certificate: z3.object({ organisation: z3.string().max(100).default("EN Polizei"), logo: z3.string().max(500).default(""), signature: z3.string().max(100).default("") }).default({})
 });
+var PERMANENT_SEVERITY = { key: "PERMANENT", label: "Dauerhafter Vermerk", emoji: "\u26AB", color: "#475569", defaultDays: 0 };
 var id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 var DEFAULT_HR_CONFIG = hrConfigSchema.parse({
   statuses: [
@@ -1773,8 +1776,10 @@ var DEFAULT_HR_CONFIG = hrConfigSchema.parse({
   warningSeverities: [
     { key: "WARNING", label: "Verwarnung", emoji: "\u{1F7E1}", color: "#eab308", defaultDays: 30 },
     { key: "REPRIMAND", label: "Abmahnung", emoji: "\u{1F7E0}", color: "#f97316", defaultDays: 60 },
-    { key: "SEVERE", label: "Schwerwiegender Versto\xDF", emoji: "\u{1F534}", color: "#ef4444", defaultDays: 180 }
+    { key: "SEVERE", label: "Schwerwiegender Versto\xDF", emoji: "\u{1F534}", color: "#ef4444", defaultDays: 180 },
+    PERMANENT_SEVERITY
   ],
+  addedDefaults: ["severity.PERMANENT"],
   warningCategories: ["Verhalten", "Dienstvergehen", "Funk", "Regelversto\xDF", "Sonstiges"],
   awards: [{ id: id(10), name: "Besondere Leistung", icon: "\u{1F3C5}", description: "F\xFCr au\xDFergew\xF6hnliche Leistungen.", color: "#eab308" }],
   sections: Object.fromEntries(PROFILE_SECTIONS.map((s) => [s, { visible: true, sensitive: ["warnings", "notes", "history"].includes(s) }])),
@@ -1798,7 +1803,8 @@ function withHrDefaults(v) {
     statuses: raw.statuses ? c.statuses : DEFAULT_HR_CONFIG.statuses,
     departments: raw.departments ? c.departments : DEFAULT_HR_CONFIG.departments,
     absenceTypes: raw.absenceTypes ? c.absenceTypes : DEFAULT_HR_CONFIG.absenceTypes,
-    warningSeverities: raw.warningSeverities ? c.warningSeverities : DEFAULT_HR_CONFIG.warningSeverities,
+    warningSeverities: !raw.warningSeverities ? DEFAULT_HR_CONFIG.warningSeverities : c.addedDefaults.includes("severity.PERMANENT") || c.warningSeverities.some((s) => s.key === PERMANENT_SEVERITY.key) || c.warningSeverities.length >= 20 ? c.warningSeverities : [...c.warningSeverities, PERMANENT_SEVERITY],
+    addedDefaults: [.../* @__PURE__ */ new Set([...c.addedDefaults, "severity.PERMANENT"])],
     warningCategories: raw.warningCategories ? c.warningCategories : DEFAULT_HR_CONFIG.warningCategories,
     awards: raw.awards ? c.awards : DEFAULT_HR_CONFIG.awards,
     sections: { ...DEFAULT_HR_CONFIG.sections, ...c.sections },

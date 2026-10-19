@@ -2081,6 +2081,8 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji?: string | undefined;
         defaultDays?: number | undefined;
     }>, "many">>;
+    /** Später ergänzte Standardwerte, die schon einmal in gespeicherte Einstellungen übernommen wurden (Löschen bleibt dann gelöscht). */
+    addedDefaults: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     warningCategories: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     awards: z.ZodDefault<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
@@ -2427,6 +2429,7 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji: string;
         defaultDays: number;
     }[];
+    addedDefaults: string[];
     warningCategories: string[];
     showAbsenceInTeam: boolean;
     notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
@@ -2531,6 +2534,7 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji?: string | undefined;
         defaultDays?: number | undefined;
     }[] | undefined;
+    addedDefaults?: string[] | undefined;
     warningCategories?: string[] | undefined;
     showAbsenceInTeam?: boolean | undefined;
     notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {

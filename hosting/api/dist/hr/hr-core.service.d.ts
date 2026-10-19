@@ -106,6 +106,7 @@ export declare class HrCoreService {
             emoji: string;
             defaultDays: number;
         }[];
+        addedDefaults: string[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
         notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
