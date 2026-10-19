@@ -83786,7 +83786,7 @@ async function active(c) {
     const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY").sort((a, b) => (a.onDutySince ?? "").localeCompare(b.onDutySince ?? ""));
     const lines = on.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? "\u2022"} **${plain2(r.callsign ?? r.name)}**${r.callsign ? ` (${plain2(r.name)})` : ""}${r.shiftType ? ` \xB7 ${plain2(r.shiftType)}` : ""}${r.onDutySince ? ` \xB7 seit ${ts3(r.onDutySince, "R")}` : ""}`);
     const onBreak = on.filter((r) => r.dutyStatus === "BREAK").length;
-    return { ephemeral: true, embeds: [{
+    return { ephemeral: false, embeds: [{
       title: `\u{1F46E} Laufende Schichten (${on.length})`,
       color: on.length ? COLORS.success : COLORS.neutral,
       description: clip2(lines.length ? `${lines.join("\n")}${on.length > 30 ? `
@@ -83804,7 +83804,7 @@ async function leaderboard(c) {
     const r = await c.api.asUser(c.discordId, "GET", `/team/leaderboard?days=${d}`);
     const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${plain2(u.callsign ?? u.name)}**${u.callsign ? ` (${plain2(u.name)})` : ""} \xB7 ${hm(u.minutes)}${u.userId === r.me ? " \u2190 du" : ""}`);
     const mine = r.users.findIndex((u) => u.userId === r.me);
-    return { ephemeral: true, embeds: [{
+    return { ephemeral: false, embeds: [{
       title: `\u{1F3C6} Rangliste (${period(r.days)})`,
       color: COLORS.info,
       description: clip2(lines.length ? `${lines.join("\n")}${r.users.length > 20 ? `
@@ -83821,7 +83821,7 @@ async function adminReply2(c, discordId, d = 7) {
   if (!log.member) return errorReply(`<@${discordId}> ist mit keinem Konto im System verkn\xFCpft.`);
   const current = log.items.find((s) => s.active);
   const buttons = current ? [{ id: `shift:end:${log.member.userId}:${discordId}`, label: "Schicht beenden", style: "danger", emoji: "\u23F9\uFE0F" }] : [];
-  return { ephemeral: true, embeds: [logEmbed(clip2(`\u{1F552} Schichten von ${plain2(log.member.name)}`, 256), log, "Im Zeitraum keine Schichten.")], ...buttons.length ? { buttons } : {} };
+  return { ephemeral: false, embeds: [logEmbed(clip2(`\u{1F552} Schichten von ${plain2(log.member.name)}`, 256), log, "Im Zeitraum keine Schichten.")], ...buttons.length ? { buttons } : {} };
 }
 var SHIFT_COMMANDS = [
   {
@@ -83836,7 +83836,8 @@ var SHIFT_COMMANDS = [
       ] },
       { name: "leaderboard", description: "Alle Mitglieder nach ihrer Zeit im Dienst", options: [{ name: "days", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }] }
     ],
-    publicReply: (opts) => opts._sub === "manage",
+    publicReply: () => true,
+    // alles rund um Schichten ist für alle im Channel sichtbar
     async complete(c, option2, value) {
       if (option2 !== "type") return [];
       const v = value.trim().toLowerCase();
@@ -83900,7 +83901,7 @@ var SHIFT_INTERACTION = {
       if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
     }
     try {
-      return discordId ? { ...await adminReply2(c, discordId), content: "\u2705 Schicht beendet." } : okReply("Schicht beendet.");
+      return discordId ? { ...okReply("Schicht beendet."), update: await adminReply2(c, discordId) } : okReply("Schicht beendet.");
     } catch {
       return okReply("Schicht beendet.");
     }

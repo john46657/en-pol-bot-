@@ -98,7 +98,7 @@ async function active(c) {
         const on = rows.filter((r) => r.dutyStatus !== 'OFF_DUTY').sort((a, b) => (a.onDutySince ?? '').localeCompare(b.onDutySince ?? ''));
         const lines = on.slice(0, 30).map((r) => `${format_1.DUTY_DE[r.dutyStatus]?.emoji ?? '•'} **${(0, format_1.plain)(r.callsign ?? r.name)}**${r.callsign ? ` (${(0, format_1.plain)(r.name)})` : ''}${r.shiftType ? ` · ${(0, format_1.plain)(r.shiftType)}` : ''}${r.onDutySince ? ` · seit ${ts(r.onDutySince, 'R')}` : ''}`);
         const onBreak = on.filter((r) => r.dutyStatus === 'BREAK').length;
-        return { ephemeral: true, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? format_1.COLORS.success : format_1.COLORS.neutral,
+        return { ephemeral: false, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? format_1.COLORS.success : format_1.COLORS.neutral,
                     description: (0, format_1.clip)(lines.length ? `${lines.join('\n')}${on.length > 30 ? `\n… und ${on.length - 30} weitere` : ''}` : 'Gerade ist niemand im Dienst.', 4000),
                     ...(onBreak ? { footer: `${onBreak} davon in der Pause` } : {}) }] };
     }
@@ -114,7 +114,7 @@ async function leaderboard(c) {
         const r = await c.api.asUser(c.discordId, 'GET', `/team/leaderboard?days=${d}`);
         const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${(0, format_1.plain)(u.callsign ?? u.name)}**${u.callsign ? ` (${(0, format_1.plain)(u.name)})` : ''} · ${hm(u.minutes)}${u.userId === r.me ? ' ← du' : ''}`);
         const mine = r.users.findIndex((u) => u.userId === r.me);
-        return { ephemeral: true, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: format_1.COLORS.info,
+        return { ephemeral: false, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: format_1.COLORS.info,
                     description: (0, format_1.clip)(lines.length ? `${lines.join('\n')}${r.users.length > 20 ? `\n… und ${r.users.length - 20} weitere` : ''}` : 'Im Zeitraum war niemand im Dienst.', 4000),
                     ...(r.users.length ? { footer: mine >= 0 ? `Dein Platz: ${mine + 1} von ${r.users.length} · ${hm(r.users[mine].minutes)}` : 'Du warst im Zeitraum nicht im Dienst.' } : {}) }] };
     }
@@ -131,7 +131,7 @@ async function adminReply(c, discordId, d = 7) {
         return (0, format_1.errorReply)(`<@${discordId}> ist mit keinem Konto im System verknüpft.`);
     const current = log.items.find((s) => s.active);
     const buttons = current ? [{ id: `shift:end:${log.member.userId}:${discordId}`, label: 'Schicht beenden', style: 'danger', emoji: '⏹️' }] : [];
-    return { ephemeral: true, embeds: [logEmbed((0, format_1.clip)(`🕒 Schichten von ${(0, format_1.plain)(log.member.name)}`, 256), log, 'Im Zeitraum keine Schichten.')], ...(buttons.length ? { buttons } : {}) };
+    return { ephemeral: false, embeds: [logEmbed((0, format_1.clip)(`🕒 Schichten von ${(0, format_1.plain)(log.member.name)}`, 256), log, 'Im Zeitraum keine Schichten.')], ...(buttons.length ? { buttons } : {}) };
 }
 exports.SHIFT_COMMANDS = [
     {
@@ -145,7 +145,7 @@ exports.SHIFT_COMMANDS = [
                 ] },
             { name: 'leaderboard', description: 'Alle Mitglieder nach ihrer Zeit im Dienst', options: [{ name: 'days', description: 'Zeitraum in Tagen (Standard: 7)', type: 'integer', min: 1, max: 90 }] },
         ],
-        publicReply: (opts) => opts._sub === 'manage',
+        publicReply: () => true, // alles rund um Schichten ist für alle im Channel sichtbar
         async complete(c, option, value) {
             if (option !== 'type')
                 return [];
@@ -220,8 +220,9 @@ exports.SHIFT_INTERACTION = {
             if (!(e instanceof api_1.BotApiError && e.status === 409))
                 return (0, errors_1.mapError)(e);
         }
+        // öffentliche Nachricht aus `/shift admin` neu zeichnen, Bestätigung nur für den Klickenden
         try {
-            return discordId ? { ...(await adminReply(c, discordId)), content: '✅ Schicht beendet.' } : (0, format_1.okReply)('Schicht beendet.');
+            return discordId ? { ...(0, format_1.okReply)('Schicht beendet.'), update: await adminReply(c, discordId) } : (0, format_1.okReply)('Schicht beendet.');
         }
         catch {
             return (0, format_1.okReply)('Schicht beendet.');
