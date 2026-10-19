@@ -536,6 +536,15 @@ async function handleAutocomplete(i) {
     const list = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? '')).catch(() => []) : [];
     await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
 }
+/**
+ * Auswahlmenü in einer öffentlichen Nachricht (Panels): Discord lässt die gewählte Option sonst stehen
+ * („K9“ bleibt ausgewählt) – Nachricht mit denselben Komponenten neu speichern, damit das Menü wieder leer ist.
+ */
+async function resetSelect(i) {
+    if (i.message.flags.has(discord_js_1.MessageFlags.Ephemeral))
+        return;
+    await i.message.edit({ components: i.message.components }).catch((e) => console.error('could not reset select menu:', e instanceof Error ? e.message : e));
+}
 async function handleComponent(i) {
     const hit = (0, features_1.interactionFor)(i.customId);
     if (!hit)
@@ -549,6 +558,8 @@ async function handleComponent(i) {
             const p = replyPayload(reply);
             await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
         }
+        if (i.isAnySelectMenu())
+            await resetSelect(i);
         return;
     }
     if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
@@ -572,6 +583,8 @@ async function handleComponent(i) {
         await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
     if (reply.update && source)
         await source.edit({ embeds: (reply.update.embeds ?? []).map(toEmbed), components: toComponents(reply.update.buttons), allowedMentions: { parse: [] } }).catch((e) => console.error('could not update message:', e instanceof Error ? e.message : e));
+    else if (i.isAnySelectMenu() && !reply.decided)
+        await resetSelect(i);
 }
 function wire(c) {
     // Verbindungsfehler melden – ein 'error'-Ereignis ohne Listener würde den ganzen Prozess beenden
