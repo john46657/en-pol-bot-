@@ -64,7 +64,7 @@ export function AppShell() {
     <div className="group relative">
       <NavLink to={to} onClick={() => { setOpen(false); setFilter(''); }} title={collapsed ? L(i.label) : via ? `${L(i.label)} › ${via}` : undefined}
         aria-current={isActive(i, loc.pathname) ? 'page' : undefined}
-        className={() => `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ${collapsed ? 'justify-center' : ''} ${isActive(i, loc.pathname) ? 'bg-primary/15 font-medium text-fg shadow-[inset_2px_0_0_var(--color-primary)]' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
+        className={() => `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ${collapsed ? 'justify-center' : ''} ${!isActive(i, loc.pathname) ? 'text-muted hover:bg-panel-2 hover:text-fg' : !collapsed && !fav && !via && onSubPage(i) ? 'font-medium text-fg hover:bg-panel-2' : 'bg-primary/15 font-medium text-fg shadow-[inset_2px_0_0_var(--color-primary)]'}`}>
         <span className="relative shrink-0"><i.icon size={16} aria-hidden />{collapsed && countFor(i) > 0 && <span className="absolute -right-1.5 -top-1.5 size-2 rounded-full bg-warning" aria-hidden />}</span>
         {!collapsed && <span className="min-w-0 flex-1 truncate">{L(i.label)}{via && <span className="block truncate text-[11px] text-muted">› {via}</span>}</span>}
         {!collapsed && !via && countFor(i) > 0 && <span className="mr-4 rounded-full bg-warning/20 px-1.5 text-[10px] font-semibold text-warning tabular-nums" title="Offene Vorgänge">{countFor(i) > 99 ? '99+' : countFor(i)}<span className="sr-only"> offen</span></span>}
@@ -78,9 +78,16 @@ export function AppShell() {
     </div>
   );
   // Unterpunkte eines zusammengefassten Bereichs (z. B. Personal · Verwarnungen · Beförderungen) – aufgeklappt, solange er offen ist
+  // offen ist ein Unterpunkt (nicht die gleichnamige Seite des Bereichs) → der dort markiert, der Bereich nur hervorgehoben
+  const onSubPage = (i: NavItem) => {
+    const all = visibleTabs(i, can);
+    return all.length > 1 && all.some((t) => t.label !== i.label && (loc.pathname === t.path || loc.pathname.startsWith(`${t.path}/`)));
+  };
+  // die gleichnamige Unterseite (z. B. Personal → Personal) ist der Menüpunkt selbst und steht nicht noch einmal darunter
   const subLinks = (i: NavItem) => {
-    const tabs = visibleTabs(i, can);
-    if (tabs.length < 2 || !isActive(i, loc.pathname)) return null;
+    const all = visibleTabs(i, can);
+    const tabs = all.filter((t) => t.label !== i.label);
+    if (all.length < 2 || !tabs.length || !isActive(i, loc.pathname)) return null;
     return (
       <ul className="ml-[1.1rem] mt-0.5 grid gap-0.5 border-l border-line pl-2">
         {tabs.map((t) => {
