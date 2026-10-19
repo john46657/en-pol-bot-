@@ -198,6 +198,18 @@ describe('Anträge über Discord', () => {
     expect((await outbox('member.roles', M(44))).map((o) => o.payload)).toContainEqual(expect.objectContaining({ add: [EXTRA], remove: [] }));
     expect((await outbox('member.roles', M(45))).length).toBe(0);
     await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, approveRoleIds: [], panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
+    // umbenanntes Dienstgrad-Feld („Dein discord username“): Antwort ist eine normale Antwort, überschreibt bei Genehmigung nicht den Dienstgrad
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: { title: 'Antrag', fields: [{ ...DEFAULT_FORM.fields[0], label: 'Dein Roblox user name' }, { ...DEFAULT_FORM.fields[1], label: 'Dein discord username' }] } }, notifyMembers: true }).expect(200);
+    const old = await lead.post('/api/v1/radio-whitelist/grants').send({ discordId: M(46), reason: 'alt', rank: 'Leitung' });
+    await lead.post(`/api/v1/radio-whitelist/grants/${old.body.id}/deactivate`).send({ reason: 'Pause' }).expect(200);
+    const renamed = await http().post('/api/v1/bot/radio-whitelist/requests').set(bot).send({ guildId: G, discordId: M(46), discordName: 'John', rank: 'test', reason: 'RobloxJohn' });
+    expect(renamed.status).toBe(201);
+    const stored = await prisma.radioRequest.findUniqueOrThrow({ where: { id: renamed.body.id } });
+    expect(stored.rank).toBeNull();
+    expect(stored.answers).toEqual([{ key: 'rank', label: 'Dein discord username', value: 'test' }]);
+    await lead.post(`/api/v1/radio-whitelist/requests/${renamed.body.id}/decision`).send({ decision: 'APPROVE' }).expect(200);
+    expect((await prisma.radioGrant.findUniqueOrThrow({ where: { discordId: M(46) } })).rank).toBe('Leitung');
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
     // gesperrt → kein Antrag
     const g = await lead.post('/api/v1/radio-whitelist/grants').send({ discordId: M(43), reason: 'x-test' });
     await lead.post(`/api/v1/radio-whitelist/grants/${g.body.id}/suspend`).send({ reason: 'Sperre' }).expect(200);

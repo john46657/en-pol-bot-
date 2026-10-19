@@ -128,13 +128,12 @@ function GrantsTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                <th className="px-2 py-2 font-medium">Mitglied</th><th className="hidden px-2 py-2 font-medium md:table-cell">Dienstgrad / Abteilung</th><th className="px-2 py-2 font-medium">Status</th>
+                <th className="px-2 py-2 font-medium">Mitglied</th><th className="px-2 py-2 font-medium">Status</th>
                 <th className="hidden px-2 py-2 font-medium sm:table-cell">Gültig bis</th><th className="hidden px-2 py-2 font-medium lg:table-cell">Funkdienst</th><th className="hidden px-2 py-2 font-medium lg:table-cell">Quelle</th><th className="px-2 py-2"><span className="sr-only">Aktionen</span></th>
               </tr></thead>
               <tbody>{list.data.items.map((g) => (
                 <tr key={g.id} className={`border-b border-line/60 hover:bg-panel-2 ${g.archivedAt ? 'opacity-60' : ''}`}>
                   <td className="px-2 py-2"><button type="button" className="text-left font-medium hover:underline" onClick={() => setOpen(g.id)}>{who(g)}</button><span className="block font-mono text-xs text-muted">{g.discordId ?? '⚠️ Discord-ID fehlt'}</span></td>
-                  <td className="hidden px-2 py-2 md:table-cell">{g.rank ?? '—'}<span className="block text-xs text-muted">{g.department ?? ''}</span></td>
                   <td className="px-2 py-2"><StatusBadge status={g.effectiveStatus} />{g.effectiveStatus === 'SUSPENDED' && g.suspendedUntil && <span className="block text-xs text-muted">bis {fmt(g.suspendedUntil)}</span>}</td>
                   <td className="hidden px-2 py-2 sm:table-cell">{g.expiresAt ? fmt(g.expiresAt) : <span className="text-muted">unbefristet</span>}</td>
                   <td className="hidden px-2 py-2 lg:table-cell">{g.externalName ?? <span className="text-muted">—</span>}{g.externalStatus !== 'NONE' && <span className="ml-1"><Badge tone={EXT_LABEL[g.externalStatus]?.[1] ?? 'neutral'}>{EXT_LABEL[g.externalStatus]?.[0] ?? g.externalStatus}</Badge></span>}</td>
@@ -450,6 +449,8 @@ function FormEditor({ form, onChange }: { form: RequestForm; onChange: (f: Reque
             <label className="flex items-center gap-1"><input type="checkbox" checked={f.key === 'reason' || f.required} disabled={f.key === 'reason'} onChange={(e) => set(i, { required: e.target.checked })} />Pflichtfeld</label>
             <label className="flex items-center gap-1">max. <input type="number" min={1} max={1000} className="w-16 rounded border border-line bg-transparent px-1" value={f.maxLength} onChange={(e) => set(i, { maxLength: Math.max(1, Math.min(1000, Number(e.target.value) || 1)) })} /> Zeichen</label>
             {f.key === 'reason' && <span className="text-muted">immer dabei</span>}
+            {f.key === 'rank' && <span className="text-muted">eingebaut: wird als Dienstgrad gespeichert, solange die Beschriftung nach „Dienstgrad“ oder „Rang“ fragt</span>}
+            {f.key === 'department' && <span className="text-muted">eingebaut: wird als Abteilung gespeichert, solange die Beschriftung nach „Abteilung“ fragt</span>}
           </div>
         </li>
       ))}</ol>
