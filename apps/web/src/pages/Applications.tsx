@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FormField } from '@enrp/shared';
+import { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, aiCheck, type AiCheckResult, type FormField } from '@enrp/shared';
 import { useAutosaveDraft } from '../lib/autosave';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -29,6 +29,9 @@ interface QualiConfig { title: string; intro: string; units: Unit[]; police: Pol
 const OPEN = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION', 'OPEN'];
 const PAGE_SIZES = [10, 20, 50, 100];
 const FilterBox = ({ label, children }: { label: string; children: ReactNode }) => <label className="grid w-40 gap-1 text-xs text-muted">{label}{children}</label>;
+const AI_TONE = { LOW: 'border-line text-muted', MEDIUM: 'border-warning/50 bg-warning/10 text-warning', HIGH: 'border-danger/50 bg-danger/10 text-danger' } as const;
+/** KI-Checker: Einschätzung, ob die Antworten mit ChatGPT & Co. geschrieben wurden (Hinweis, kein Beweis). */
+const AiBadge = ({ r }: { r: AiCheckResult }) => <span title={AI_CHECK_HINT} className={`rounded-full border px-2 py-0.5 text-xs font-medium ${AI_TONE[r.level]}`}>🤖 KI-Verdacht {AI_CHECK_LEVEL_LABEL[r.level]} · {r.score} %</span>;
 const STATUS_FILTER = [['OPEN', 'Offen'], ['ACCEPTED', 'Angenommen'], ['REJECTED', 'Abgelehnt'], ['WITHDRAWN', 'Zurückgezogen'], ['', 'Alle']] as const;
 
 /** Bewerbungen bei EN Polizei – genauso aufgebaut wie Qualifications: Karten mit allen Antworten und Entscheidung, Setup mit Fragen-Editor. */
@@ -87,12 +90,13 @@ export function Applications() {
               <div className="grid gap-2">{list.data.items.map((a) => {
                 const isOpen = expanded.has(a.id);
                 const who = a.discordName ?? a.robloxUsername ?? a.discordId ?? '—';
+                const ai = aiCheck(a.answers.map((x) => ({ question: x.label, answer: x.value })), a.durationSec);
                 return (
                   <div key={`${a.kind}-${a.id}`} className="rounded-lg border border-line bg-panel">
                     <button type="button" aria-expanded={isOpen} onClick={() => toggle(a.id)} className="flex w-full items-center gap-3 p-3 text-left hover:bg-panel-2/50">
                       <Avatar src={a.avatar} name={who} size={40} />
                       <span className="min-w-0 flex-1">
-                        <span className="flex flex-wrap items-center gap-2 font-medium">{who}s Bewerbung für „{a.typeName}“ <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>
+                        <span className="flex flex-wrap items-center gap-2 font-medium">{who}s Bewerbung für „{a.typeName}“ <StatusBadge status={a.status} />{ai.level !== 'LOW' && <AiBadge r={ai} />}<GuildTag id={a.guildId} /></span>
                         <span className="block truncate text-xs text-muted">{a.discordId ?? 'Webformular'} · {a.number} · {fmt(a.createdAt)} ({ago(a.createdAt)})</span>
                       </span>
                       <ChevronDown size={18} aria-hidden className={`shrink-0 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -103,9 +107,14 @@ export function Applications() {
                           {a.robloxUsername && <>Roblox: <strong>{a.robloxUsername}</strong>{a.robloxUserId && <span className="text-xs text-muted"> ({a.robloxUserId})</span>} · </>}
                           {a.discordId ? <>Discord: <strong>{a.discordName ?? a.discordId}</strong> <span className="text-xs text-muted">({a.discordId})</span></> : <span className="text-muted">über Webformular</span>}
                         </p>
+                        <div className={`mb-3 rounded-md border p-2 text-sm ${AI_TONE[ai.level]}`}>
+                          <p className="font-medium">🤖 KI-Check: {AI_CHECK_LEVEL_LABEL[ai.level]} ({ai.score} %)</p>
+                          {ai.reasons.length > 0 ? <ul className="mt-1 list-disc pl-5 text-xs text-fg">{ai.reasons.map((x) => <li key={x}>{x}</li>)}</ul> : <p className="text-xs">Keine Auffälligkeiten gefunden.</p>}
+                          <p className="mt-1 text-xs text-muted">{AI_CHECK_HINT}</p>
+                        </div>
                         <p className="mb-2 text-sm font-semibold">Antworten</p>
                         <ol className="grid gap-2 text-sm">{a.answers.map((x, i) => (
-                          <li key={i}><p className="text-xs text-muted">{i + 1}. {x.label}</p><p className="whitespace-pre-wrap rounded-md bg-panel-2 p-2">{x.value || '—'}</p></li>
+                          <li key={i}><p className="text-xs text-muted">{i + 1}. {x.label}{ai.flagged.includes(i) && <span className="ml-1 text-warning" title="KI-typische Formulierung oder Formatierung">🤖</span>}</p><p className="whitespace-pre-wrap rounded-md bg-panel-2 p-2">{x.value || '—'}</p></li>
                         ))}</ol>
                         {a.decisionReason && <p className="mt-2 text-sm"><span className="text-xs text-muted">Begründung:</span> {a.decisionReason}</p>}
                         <p className="mt-2 text-xs text-muted">Eingereicht {fmt(a.createdAt)}{a.durationSec !== null && ` · ausgefüllt in ${Math.floor(a.durationSec / 60)} min ${a.durationSec % 60} s`}{a.decidedByName && ` · entschieden von ${a.decidedByName}`}</p>

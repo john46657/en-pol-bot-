@@ -1,4 +1,5 @@
 /** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
+import { AI_CHECK_LEVEL_LABEL, aiCheck } from '@enrp/shared';
 /** `author`: kleine Zeile über dem Titel (z. B. Server-Name mit Icon oder @Benutzer mit Profilbild, wie bei Trident). */
 export interface EmbedData { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; footer?: string; thumbnail?: string; author?: { name: string; iconUrl?: string }; /** großes Bild (https:// oder attachment://datei) */ image?: string;
   /** Als Kasten ohne Farbstreifen senden (Discord-Komponenten statt Embed); Titel groß (`heading`) oder fett, `stamp` = Datum/Uhrzeit unten. */
@@ -141,6 +142,13 @@ export const fmtDuration = (sec: number) => (sec < 60 ? `${sec}s` : sec < 3600 ?
 /** Gesamtbudget der Embeds einer Nachricht (Discord: 6000 Zeichen) – Platz lassen für das spätere Feld „Entscheidung“. */
 const BUDGET = 4800;
 
+const AI_ICON = { LOW: '🟢', MEDIUM: '🟡', HIGH: '🔴' } as const;
+/** KI-Checker: Einschätzung + wichtigste Gründe (nur Hinweis, Details im Dashboard). */
+function aiLines(qa: { answer?: unknown }[], durationSec: number | null): string[] {
+  const r = aiCheck(qa.map((q) => ({ answer: String(q.answer ?? '') })), durationSec);
+  return [`KI-Check: ${AI_ICON[r.level]} ${AI_CHECK_LEVEL_LABEL[r.level]} (\`${r.score} %\`)`, ...(r.level === 'LOW' ? [] : r.reasons.slice(0, 2).map((x) => `› ${clip(plain(x), 160)}`))];
+}
+
 /** Fragen fett + nummeriert, Antwort darunter, am Ende die Bewerber-Infos. Lange Bewerbungen werden auf mehrere Embeds verteilt bzw. gekürzt. */
 export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): EmbedData[] {
   const qa = Array.isArray(p.answers) ? (p.answers as { question?: unknown; answer?: unknown }[]) : [];
@@ -150,6 +158,7 @@ export function applicationEmbeds(p: Record<string, unknown>, kind: 'q' | 'p'): 
     ...(id ? [`Discord-ID: \`${id}\``, `Benutzername: \`${plain(p.discordName ?? '—')}\``, `Benutzer: <@${id}>`] : ['Quelle: Web-Formular (kein Discord)']),
     ...(kind === 'p' ? [`Roblox: \`${plain(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ''}`] : [p.linkedName ? `Im System: **${plain(p.linkedName)}**` : 'Im System: nicht verknüpft']),
     ...(typeof p.durationSec === 'number' ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : []),
+    ...aiLines(qa, typeof p.durationSec === 'number' ? p.durationSec : null),
     ...(joined ? [`Server beigetreten: <t:${joined}:R>`] : []),
     ...(submitted ? [`Eingereicht: <t:${submitted}:R>`] : []),
     ...(p.guildName ? [`Server: \`${plain(p.guildName)}\``] : []),

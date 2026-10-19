@@ -588,6 +588,13 @@ describe('applications with many questions', () => {
     expect(normal).toContain('**20. Frage 20?**\nAntwort 20 mit etwas Text.');
     expect(normal).not.toContain('gekürzt');
   });
+  it('zeigt die Einschätzung des KI-Checkers bei den Bewerber-Infos', () => {
+    const text = (answers: { question: string; answer: string }[], durationSec?: number) => applicationEmbeds({ number: 'APP-1', discordId: ME, answers, durationSec, createdAt: new Date().toISOString() }, 'p').map((e) => e.description).join('\n');
+    expect(text([{ question: 'Warum?', answer: 'weil ich bock hab xD' }], 60)).toContain('KI-Check: 🟢 gering');
+    const ai = text([{ question: 'Warum?', answer: 'Gerne! Hier ist eine mögliche Antwort: Darüber hinaus ist Kommunikation der Schlüssel — nicht nur im Funk, sondern auch im Team.' }], 5);
+    expect(ai).toContain('KI-Check: 🔴 hoch');
+    expect(ai).toMatch(/› Eindeutige KI-Spur/);
+  });
 });
 
 describe('"Ticket mit Bewerber öffnen" from the dashboard', () => {
