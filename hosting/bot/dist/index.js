@@ -515,9 +515,17 @@ async function handleCommand(i) {
         }
         return;
     }
-    // Antworten sind immer nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels).
-    await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
+    // Antworten sind nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels) – außer bei ausdrücklich öffentlichen Befehlen
+    const pub = !!def.publicReply?.(opts);
+    await i.deferReply(pub ? {} : { flags: discord_js_1.MessageFlags.Ephemeral });
     const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    if (pub && reply.ephemeral) {
+        // Fehler o. Ä. eines öffentlichen Befehls: öffentliche „denkt nach“-Antwort weg, Hinweis nur für den Aufrufer
+        await i.deleteReply().catch(() => undefined);
+        const p = replyPayload(reply);
+        await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
+        return;
+    }
     await i.editReply(replyPayload(reply));
 }
 /** Vorschläge beim Tippen (z. B. Schichtart bei `/shift manage`). */

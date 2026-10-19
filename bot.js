@@ -83746,6 +83746,8 @@ async function manageReply2(c, type, notice) {
   const st = current ? DUTY_DE[current.status] : void 0;
   const typeName = current ? current.shiftType : type?.name ?? null;
   const description = [
+    `**Mitglied**: <@${c.discordId}>`,
+    "",
     ...notice ? [notice, ""] : [],
     ...current ? [
       "### \u{1F552} Aktuelle Schicht",
@@ -83762,17 +83764,17 @@ async function manageReply2(c, type, notice) {
     ...typeName ? ["", `-# Schichtart: ${plain2(typeName)}`] : []
   ].join("\n");
   const buttons = [
-    { id: `shift:on${!current && type ? `:${type.id}` : ""}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
-    { id: "shift:break", label: onBreak ? "Pause beenden" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
-    { id: "shift:off", label: "Beenden", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
+    { id: `shift:on:${!current && type ? type.id : ""}:${c.discordId}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
+    { id: `shift:break:${c.discordId}`, label: onBreak ? "Pause beenden" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
+    { id: `shift:off:${c.discordId}`, label: "Beenden", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
   ];
-  return { ephemeral: true, buttons, embeds: [{ box: true, heading: "small", title: "Schichtverwaltung", description: clip2(description, 3900) }] };
+  return { ephemeral: false, buttons, embeds: [{ box: true, heading: "small", title: "Schichtverwaltung", description: clip2(description, 3900) }] };
 }
 async function switchTo(c, status, type) {
   let notice;
   try {
     await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...type ? { shiftType: type.id } : {} });
-    notice = status === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain2(type.name)}** gestartet.` : `${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**.`;
+    notice = status === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain2(type.name)}** gestartet.` : `${DUTY_DE[status].emoji} Jetzt **${DUTY_DE[status].label}**.`;
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
@@ -83834,6 +83836,7 @@ var SHIFT_COMMANDS = [
       ] },
       { name: "leaderboard", description: "Alle Mitglieder nach ihrer Zeit im Dienst", options: [{ name: "days", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }] }
     ],
+    publicReply: (opts) => opts._sub === "manage",
     async complete(c, option2, value) {
       if (option2 !== "type") return [];
       const v = value.trim().toLowerCase();
@@ -83874,6 +83877,8 @@ var SHIFT_INTERACTION = {
   updatesMessage: (args) => args[0] === "on" || args[0] === "break" || args[0] === "off",
   async run(c) {
     const [action, userId, discordId] = c.args;
+    const owner = action === "on" ? discordId : action === "break" || action === "off" ? userId : void 0;
+    if (owner && owner !== c.discordId) return errorReply(`Das ist die Schichtverwaltung von <@${owner}>. F\xFCr deine eigene Schicht: \`/shift manage\`.`);
     try {
       if (action === "on") {
         const types = await shiftTypes(c);
@@ -85703,8 +85708,15 @@ async function handleCommand(i) {
     }
     return;
   }
-  await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
+  const pub = !!def.publicReply?.(opts);
+  await i.deferReply(pub ? {} : { flags: import_discord6.MessageFlags.Ephemeral });
   const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+  if (pub && reply.ephemeral) {
+    await i.deleteReply().catch(() => void 0);
+    const p = replyPayload(reply);
+    await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    return;
+  }
   await i.editReply(replyPayload(reply));
 }
 async function handleAutocomplete(i) {
