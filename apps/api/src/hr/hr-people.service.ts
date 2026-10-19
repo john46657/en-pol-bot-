@@ -204,7 +204,7 @@ export class HrPeopleService {
     let data: Prisma.InputJsonValue = {}, expiresAt: Date | null = null, summary = d.summary;
     if (d.type === 'WARNING') {
       const sev = cfg.warningSeverities.find((s) => s.key === d.severity) ?? cfg.warningSeverities[0];
-      if (!sev) throw new AppError('VALIDATION_FAILED', 'Lege zuerst Schweregrade an (Einstellungen → Personal).');
+      if (!sev) throw new AppError('VALIDATION_FAILED', 'Lege zuerst Schweregrade an (Personal → Einstellungen).');
       expiresAt = d.expiresAt === null ? null : d.expiresAt ? new Date(d.expiresAt) : sev.defaultDays ? new Date(Date.now() + sev.defaultDays * 86_400_000) : null;
       data = { severity: sev.key, severityLabel: sev.label, emoji: sev.emoji, color: sev.color, category: d.category ?? null };
     }
