@@ -47,7 +47,7 @@ let TicketConfigService = class TicketConfigService {
         return { categories: categories.map((c) => this.categoryOut(c)), panels, statuses, priorities, reasons, settings };
     }
     categoryOut(c) {
-        const buttons = (Array.isArray(c.buttons) && c.buttons.length ? c.buttons : (0, shared_1.defaultTicketButtons)());
+        const buttons = (0, shared_1.ticketButtonsOf)((Array.isArray(c.buttons) && c.buttons.length ? c.buttons : (0, shared_1.defaultTicketButtons)()));
         return { ...c, buttons, questions: (c.questions ?? []) };
     }
     statuses() { return this.prisma.ticketStatus.findMany({ orderBy: { position: 'asc' } }); }

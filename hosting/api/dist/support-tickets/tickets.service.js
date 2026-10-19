@@ -99,7 +99,7 @@ let SupportTicketsService = class SupportTicketsService {
         const closed = this.isClosed(l);
         const v = this.vars(l);
         const buttons = [];
-        for (const b of l.cat.buttons) {
+        for (const b of (0, shared_1.ticketButtonsOf)(l.cat.buttons)) {
             if (!b.enabled)
                 continue;
             const def = shared_1.TICKET_ACTIONS[b.action];

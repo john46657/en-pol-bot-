@@ -236,7 +236,9 @@ var TICKET_ACTIONS = {
   delete: { label: "L\xF6schen", emoji: "\u{1F5D1}\uFE0F", style: "danger", state: "closed", permission: "ticket.delete" }
 };
 var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
-var defaultTicketButtons = () => ["close", "close_request", "claim", "unclaim", "add_user", "remove_user", "priority", "transcript", "escalate", "note", "reopen", "delete"].map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style, enabled: true }));
+var NO_TICKET_BUTTON = ["reopen", "priority", "escalate"];
+var ticketButtonsOf = (buttons) => buttons.filter((b) => !NO_TICKET_BUTTON.includes(b.action));
+var defaultTicketButtons = () => ["close", "close_request", "claim", "unclaim", "add_user", "remove_user", "transcript", "note", "delete"].map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style, enabled: true }));
 var QUESTION_TYPES = { SHORT: "Kurze Antwort", LONG: "Lange Antwort", YESNO: "Ja/Nein", SELECT: "Auswahl", MULTI: "Mehrere Optionen" };
 var CLAIM_MODES = { SINGLE: "Nur ein Bearbeiter", MULTI: "Mehrere Bearbeiter", PRIMARY: "Hauptbearbeiter + Helfer" };
 var CLOSE_REASON_MODES = { NONE: "Kein Grund", OPTIONAL: "Grund optional", REQUIRED: "Grund erforderlich" };
@@ -3201,6 +3203,7 @@ export {
   MODULES,
   MODULE_KEYS,
   MUSIC_TRACKS,
+  NO_TICKET_BUTTON,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
   POLICE_APPLICATION_KEY,
@@ -3402,6 +3405,7 @@ export {
   staffSectionSchema,
   stageSchema,
   statusLabel,
+  ticketButtonsOf,
   ticketChannelName,
   ticketNumber,
   toDiscordPayload,
