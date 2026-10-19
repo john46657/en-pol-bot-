@@ -892,6 +892,8 @@ export declare const policeSchema: z.ZodObject<{
 }>;
 export declare const configSchema: z.ZodObject<{
     title: z.ZodDefault<z.ZodString>;
+    /** Kanal, in den das Qualifikations-Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     intro: z.ZodDefault<z.ZodString>;
     units: z.ZodEffects<z.ZodArray<z.ZodObject<{
         questions: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodEffects<z.ZodObject<{
@@ -1655,6 +1657,7 @@ export declare const configSchema: z.ZodObject<{
         panelChannelId?: string | undefined;
     };
     intro: string;
+    panelChannelId?: string | undefined;
 }, {
     units: {
         name: string;
@@ -1752,11 +1755,14 @@ export declare const configSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
         panelChannelId?: string | undefined;
     } | undefined;
+    panelChannelId?: string | undefined;
     intro?: string | undefined;
 }>;
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */
 export declare const saveSchema: z.ZodObject<{
     title: z.ZodDefault<z.ZodString>;
+    /** Kanal, in den das Qualifikations-Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     intro: z.ZodDefault<z.ZodString>;
     units: z.ZodEffects<z.ZodArray<z.ZodObject<{
         questions: z.ZodEffects<z.ZodEffects<z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodEffects<z.ZodObject<{
@@ -2612,6 +2618,7 @@ export declare const saveSchema: z.ZodObject<{
         panelChannelId?: string | undefined;
     };
     intro: string;
+    panelChannelId?: string | undefined;
     policeForm?: {
         type: "TEXT" | "CHOICE" | "ROLE" | "ROBLOX";
         key: string;
@@ -2722,6 +2729,7 @@ export declare const saveSchema: z.ZodObject<{
         deniedChannelId?: string | undefined;
         panelChannelId?: string | undefined;
     } | undefined;
+    panelChannelId?: string | undefined;
     intro?: string | undefined;
     policeForm?: {
         key: string;

@@ -12,6 +12,8 @@ export declare function policePanelMessage(p: {
     title: string;
     description: string;
 }): MessageSpec;
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+export declare function qualiPanelMessage(cfg: QualificationConfig): MessageSpec;
 export interface Answer {
     question: string;
     answer: string | string[] | null;
@@ -41,6 +43,10 @@ export declare class QualificationsService {
             channelId: string;
             messageId: string;
         } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -126,11 +132,16 @@ export declare class QualificationsService {
             panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
     }>;
     /** Ort des Bewerbungs-Panels in Discord – je Server getrennt. */
     private panelKey;
     /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
     sendPolicePanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null): Promise<{
+        queued: boolean;
+    }>;
+    /** Qualifikations-Panel (Auswahl der Einheiten) aus dem Dashboard senden oder aktualisieren. */
+    sendQualiPanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null): Promise<{
         queued: boolean;
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
@@ -142,97 +153,7 @@ export declare class QualificationsService {
             channelId: string;
             messageId: string;
         } | null;
-        title: string;
-        units: {
-            description: string;
-            name: string;
-            questions: FormField[];
-            enabled: boolean;
-            settings: {
-                mode: "DM" | "WEB";
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
-                roles: {
-                    denied: string[];
-                    pending: string[];
-                    accepted: string[];
-                    required: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    restricted: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    acceptedRemove: string[];
-                    deniedRemove: string[];
-                    removeOnSubmit: string[];
-                    managers: string[];
-                };
-                staffThreads: boolean;
-                timeLimitMinutes: number;
-                onLeave: "DENY" | "NONE" | "WITHDRAW";
-            };
-            key: string;
-            pingRoleIds: string[];
-            channelId?: string | undefined;
-            roleId?: string | undefined;
-            acceptedChannelId?: string | undefined;
-            deniedChannelId?: string | undefined;
-        }[];
-        police: {
-            title: string;
-            description: string;
-            name: string;
-            enabled: boolean;
-            settings: {
-                mode: "DM" | "WEB";
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
-                roles: {
-                    denied: string[];
-                    pending: string[];
-                    accepted: string[];
-                    required: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    restricted: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    acceptedRemove: string[];
-                    deniedRemove: string[];
-                    removeOnSubmit: string[];
-                    managers: string[];
-                };
-                staffThreads: boolean;
-                timeLimitMinutes: number;
-                onLeave: "DENY" | "NONE" | "WITHDRAW";
-            };
-            pingRoleIds: string[];
-            channelId?: string | undefined;
-            acceptedChannelId?: string | undefined;
-            deniedChannelId?: string | undefined;
-            panelChannelId?: string | undefined;
-        };
-        intro: string;
-    }>;
-    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
-    resetGuild(actor: Actor, guildId: string): Promise<{
-        policeForm: FormField[];
-        own: boolean;
-        panelPosted: {
+        qualiPanelPosted: {
             channelId: string;
             messageId: string;
         } | null;
@@ -321,6 +242,106 @@ export declare class QualificationsService {
             panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
+    }>;
+    /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
+    resetGuild(actor: Actor, guildId: string): Promise<{
+        policeForm: FormField[];
+        own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        title: string;
+        units: {
+            description: string;
+            name: string;
+            questions: FormField[];
+            enabled: boolean;
+            settings: {
+                mode: "DM" | "WEB";
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                roles: {
+                    denied: string[];
+                    pending: string[];
+                    accepted: string[];
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                staffThreads: boolean;
+                timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
+            };
+            key: string;
+            pingRoleIds: string[];
+            channelId?: string | undefined;
+            roleId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+        }[];
+        police: {
+            title: string;
+            description: string;
+            name: string;
+            enabled: boolean;
+            settings: {
+                mode: "DM" | "WEB";
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                roles: {
+                    denied: string[];
+                    pending: string[];
+                    accepted: string[];
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                staffThreads: boolean;
+                timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
+            };
+            pingRoleIds: string[];
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
+        };
+        intro: string;
+        panelChannelId?: string | undefined;
     }>;
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
     openFor(discordId: string, unit?: string): Promise<{

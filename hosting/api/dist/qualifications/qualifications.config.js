@@ -81,6 +81,8 @@ exports.policeSchema = zod_1.z.object({
 });
 exports.configSchema = zod_1.z.object({
     title: zod_1.z.string().trim().min(2).max(100).default('Qualifikationen'),
+    /** Kanal, in den das Qualifikations-Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: channelOpt,
     intro: zod_1.z.string().trim().max(1500).default(''),
     units: zod_1.z.array(exports.unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
     police: exports.policeSchema.default({}),

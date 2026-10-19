@@ -47,6 +47,8 @@ let QualificationsController = class QualificationsController {
     reset(a, q) { return this.q.resetGuild(a, q.guildId); }
     /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
     sendPanel(a, q, b) { return this.q.sendPolicePanel(a, b.mode, q.guildId); }
+    /** Qualifikations-Panel (Auswahl der Einheiten) direkt aus dem Dashboard senden. */
+    sendQualiPanel(a, q, b) { return this.q.sendQualiPanel(a, b.mode, q.guildId); }
     list(f) { return this.q.list(f); }
     history(q) { return this.q.history(q.discordId); }
     get(id) { return this.q.get(id); }
@@ -95,6 +97,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0, void 0]),
     __metadata("design:returntype", void 0)
 ], QualificationsController.prototype, "sendPanel", null);
+__decorate([
+    (0, common_1.Post)('quali-panel/send'),
+    (0, common_1.HttpCode)(202),
+    (0, decorators_1.RequirePermission)('qualifications.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(guildQ))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(panelSend))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0, void 0]),
+    __metadata("design:returntype", void 0)
+], QualificationsController.prototype, "sendQualiPanel", null);
 __decorate([
     (0, common_1.Get)('applications'),
     (0, decorators_1.RequirePermission)('qualifications.view'),

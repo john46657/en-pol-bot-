@@ -145,96 +145,7 @@ export declare class QualificationsController {
             channelId: string;
             messageId: string;
         } | null;
-        title: string;
-        units: {
-            description: string;
-            name: string;
-            questions: import("@enrp/shared").FormField[];
-            enabled: boolean;
-            settings: {
-                mode: "DM" | "WEB";
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
-                roles: {
-                    denied: string[];
-                    pending: string[];
-                    accepted: string[];
-                    required: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    restricted: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    acceptedRemove: string[];
-                    deniedRemove: string[];
-                    removeOnSubmit: string[];
-                    managers: string[];
-                };
-                staffThreads: boolean;
-                timeLimitMinutes: number;
-                onLeave: "DENY" | "NONE" | "WITHDRAW";
-            };
-            key: string;
-            pingRoleIds: string[];
-            channelId?: string | undefined;
-            roleId?: string | undefined;
-            acceptedChannelId?: string | undefined;
-            deniedChannelId?: string | undefined;
-        }[];
-        police: {
-            title: string;
-            description: string;
-            name: string;
-            enabled: boolean;
-            settings: {
-                mode: "DM" | "WEB";
-                cooldownMinutes: number;
-                messages: {
-                    denied: string;
-                    accepted: string;
-                    confirmation: string;
-                    completion: string;
-                };
-                roles: {
-                    denied: string[];
-                    pending: string[];
-                    accepted: string[];
-                    required: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    restricted: {
-                        mode: "ALL" | "ANY";
-                        ids: string[];
-                    };
-                    acceptedRemove: string[];
-                    deniedRemove: string[];
-                    removeOnSubmit: string[];
-                    managers: string[];
-                };
-                staffThreads: boolean;
-                timeLimitMinutes: number;
-                onLeave: "DENY" | "NONE" | "WITHDRAW";
-            };
-            pingRoleIds: string[];
-            channelId?: string | undefined;
-            acceptedChannelId?: string | undefined;
-            deniedChannelId?: string | undefined;
-            panelChannelId?: string | undefined;
-        };
-        intro: string;
-    }>;
-    save(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof saveSchema>): Promise<{
-        policeForm: import("@enrp/shared").FormField[];
-        own: boolean;
-        panelPosted: {
+        qualiPanelPosted: {
             channelId: string;
             messageId: string;
         } | null;
@@ -323,6 +234,105 @@ export declare class QualificationsController {
             panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
+    }>;
+    save(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof saveSchema>): Promise<{
+        policeForm: import("@enrp/shared").FormField[];
+        own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        title: string;
+        units: {
+            description: string;
+            name: string;
+            questions: import("@enrp/shared").FormField[];
+            enabled: boolean;
+            settings: {
+                mode: "DM" | "WEB";
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                roles: {
+                    denied: string[];
+                    pending: string[];
+                    accepted: string[];
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                staffThreads: boolean;
+                timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
+            };
+            key: string;
+            pingRoleIds: string[];
+            channelId?: string | undefined;
+            roleId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+        }[];
+        police: {
+            title: string;
+            description: string;
+            name: string;
+            enabled: boolean;
+            settings: {
+                mode: "DM" | "WEB";
+                cooldownMinutes: number;
+                messages: {
+                    denied: string;
+                    accepted: string;
+                    confirmation: string;
+                    completion: string;
+                };
+                roles: {
+                    denied: string[];
+                    pending: string[];
+                    accepted: string[];
+                    required: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    restricted: {
+                        mode: "ALL" | "ANY";
+                        ids: string[];
+                    };
+                    acceptedRemove: string[];
+                    deniedRemove: string[];
+                    removeOnSubmit: string[];
+                    managers: string[];
+                };
+                staffThreads: boolean;
+                timeLimitMinutes: number;
+                onLeave: "DENY" | "NONE" | "WITHDRAW";
+            };
+            pingRoleIds: string[];
+            channelId?: string | undefined;
+            acceptedChannelId?: string | undefined;
+            deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
+        };
+        intro: string;
+        panelChannelId?: string | undefined;
     }>;
     /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
     reset(a: Actor, q: z.infer<typeof guildRequired>): Promise<{
@@ -332,6 +342,10 @@ export declare class QualificationsController {
             channelId: string;
             messageId: string;
         } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -417,9 +431,14 @@ export declare class QualificationsController {
             panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
     }>;
     /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
     sendPanel(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof panelSend>): Promise<{
+        queued: boolean;
+    }>;
+    /** Qualifikations-Panel (Auswahl der Einheiten) direkt aus dem Dashboard senden. */
+    sendQualiPanel(a: Actor, q: z.infer<typeof guildQ>, b: z.infer<typeof panelSend>): Promise<{
         queued: boolean;
     }>;
     list(f: z.infer<typeof list>): Promise<{
@@ -578,6 +597,7 @@ export declare class BotQualificationsController {
             panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
     }>;
     open(f: z.infer<typeof openQ>): Promise<{
         open: boolean;
