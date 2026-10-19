@@ -335,11 +335,6 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
               <Num label="Automatisch freigeben nach Inaktivität (Minuten, 0 = aus)" value={d.autoUnclaimMinutes} onChange={(v) => set({ autoUnclaimMinutes: v })} />
             </div>
           </Section>
-          <Section title="Eskalation">
-            <Roles label="Rollen, die bei Eskalation hinzugefügt werden" value={d.escalationRoleIds} onChange={(v) => set({ escalationRoleIds: v })} />
-            <Field label="Priorität bei Eskalation">{(id) => <Select id={id} value={d.escalationPriorityId ?? ''} onChange={(e) => set({ escalationPriorityId: e.target.value || null })}><option value="">unverändert</option>{c.priorities.map((p) => <option key={p.id} value={p.id}>{label(p)}</option>)}</Select>}</Field>
-            <Field label="Nachricht">{(id) => <Input id={id} value={d.escalationMessage} maxLength={1000} onChange={(e) => set({ escalationMessage: e.target.value })} />}</Field>
-          </Section>
           <Err error={save.error} />
           <div className="flex gap-2">{d.id ? <><span className="self-center text-xs text-muted">Wird automatisch gespeichert.</span><Button onClick={() => void flush().then(onDone)}>Fertig</Button></> : <><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Kategorie erstellen</Button><Button variant="secondary" onClick={onDone}>Abbrechen</Button></>}</div>
         </div>

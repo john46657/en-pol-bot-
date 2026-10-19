@@ -104,7 +104,7 @@ Pro Kategorie lässt sich mit *Dashboard access: system roles* festlegen, welche
 - **Categories** (alles mit Vorschau der Ticket-Nachricht):
   - Allgemeines, Discord-Channel, Wer darf öffnen und Limits.
   - Fragen (hinzufügen, ändern, sortieren, Pflicht/optional), Ticket-Nachricht, Buttons (an/aus, Text, Emoji, Farbe, Reihenfolge).
-  - Übernehmen, Schließen, Transcript und Bewertung, Automatik, Eskalation.
+  - Übernehmen, Schließen, Transcript und Bewertung, Automatik.
 - **Statuses & priorities:** eigene Status (offen/geschlossen/archiviert, Rolle als Standard / beim Übernehmen / beim Eskalieren / beim Schließen), Prioritäten mit Farbe, vorgefertigte Schließgründe.
 - **General:** Log-Channel (jede Aktion), Standard-Transcript-Channel, Aufbewahrung der Transcripts, CLOSED-Anzeige (Titel, Text, Farbe), Texte für Wieder-öffnen und Bewertung.
 
