@@ -133,8 +133,8 @@ export declare const sendSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
-                    url: string;
                     style: "danger" | "secondary" | "success" | "primary";
+                    url: string;
                     disabled: boolean;
                 }, {
                     id: string;
@@ -149,8 +149,8 @@ export declare const sendSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
-                    url?: string | undefined;
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                    url?: string | undefined;
                     disabled?: boolean | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
@@ -169,8 +169,8 @@ export declare const sendSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
-                    url: string;
                     style: "danger" | "secondary" | "success" | "primary";
+                    url: string;
                     disabled: boolean;
                 }[];
             }, {
@@ -189,8 +189,8 @@ export declare const sendSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
-                    url?: string | undefined;
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                    url?: string | undefined;
                     disabled?: boolean | undefined;
                 }[] | undefined;
             }>, z.ZodObject<{
@@ -345,8 +345,8 @@ export declare const sendSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
-                    url: string;
                     style: "danger" | "secondary" | "success" | "primary";
+                    url: string;
                     disabled: boolean;
                 }[];
             } | {
@@ -415,8 +415,8 @@ export declare const sendSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
-                    url?: string | undefined;
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                    url?: string | undefined;
                     disabled?: boolean | undefined;
                 }[] | undefined;
             } | {
@@ -497,8 +497,8 @@ export declare const sendSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
-                    url: string;
                     style: "danger" | "secondary" | "success" | "primary";
+                    url: string;
                     disabled: boolean;
                 }[];
             } | {
@@ -573,8 +573,8 @@ export declare const sendSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
-                    url?: string | undefined;
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                    url?: string | undefined;
                     disabled?: boolean | undefined;
                 }[] | undefined;
             } | {
@@ -658,8 +658,8 @@ export declare const sendSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
-                    url: string;
                     style: "danger" | "secondary" | "success" | "primary";
+                    url: string;
                     disabled: boolean;
                 }[];
             } | {
@@ -741,8 +741,8 @@ export declare const sendSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
-                    url?: string | undefined;
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                    url?: string | undefined;
                     disabled?: boolean | undefined;
                 }[] | undefined;
             } | {

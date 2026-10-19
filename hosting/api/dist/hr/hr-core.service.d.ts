@@ -72,6 +72,7 @@ export declare class HrCoreService {
             channelId: string | null;
             template: string;
             limit: number;
+            style: "text" | "embed";
             atLimit: {
                 status: string | null;
                 notifyRoleIds: string[];

@@ -149,6 +149,7 @@ __export(index_exports, {
   WANTED_MATCH_TYPES: () => WANTED_MATCH_TYPES,
   WANTED_STATUSES: () => WANTED_STATUSES,
   WANTED_TRANSITIONS: () => WANTED_TRANSITIONS,
+  WARNING_TEMPLATE: () => WARNING_TEMPLATE,
   WARNING_VARIABLES: () => WARNING_VARIABLES,
   WEAPON_STATUSES: () => WEAPON_STATUSES,
   WEAPON_STATUS_KEYS: () => WEAPON_STATUS_KEYS,
@@ -2017,6 +2018,8 @@ var HR_EVENT_LABEL = {
 var stageSchema = import_zod3.z.object({ id: uuid, name: import_zod3.z.string().trim().min(1).max(60), roleIds: import_zod3.z.array(uuid).max(20).default([]) });
 var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
 var requestStatusDefSchema = import_zod3.z.object({ label: import_zod3.z.string().max(40), emoji: import_zod3.z.string().max(16) });
+var WARNING_TEMPLATE = "Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}";
+var OLD_WARNING_TEMPLATE = "**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}";
 var hrConfigSchema = import_zod3.z.object({
   statuses: import_zod3.z.array(hrStatusSchema).max(30).default([]),
   departments: import_zod3.z.array(departmentSchema).max(50).default([]),
@@ -2063,7 +2066,9 @@ var hrConfigSchema = import_zod3.z.object({
     limit: import_zod3.z.number().int().min(1).max(20).default(3),
     /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
     channelId: sf3.nullable().default(null),
-    template: import_zod3.z.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    template: import_zod3.z.string().max(1500).default(WARNING_TEMPLATE),
+    /** Darstellung in Discord: einfacher Text („Wer: … / Grund: … / Verwarnungen: 1/3“) oder als Kasten (Embed) */
+    style: import_zod3.z.enum(["text", "embed"]).default("text"),
     /** Person per DM informieren */
     dm: import_zod3.z.boolean().default(true),
     atLimit: import_zod3.z.object({
@@ -2131,7 +2136,8 @@ function withHrDefaults(v) {
     awards: raw.awards ? c.awards : DEFAULT_HR_CONFIG.awards,
     sections: { ...DEFAULT_HR_CONFIG.sections, ...c.sections },
     fields: { ...DEFAULT_HR_CONFIG.fields, ...c.fields },
-    notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications
+    notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications,
+    warnings: c.warnings.template === OLD_WARNING_TEMPLATE ? { ...c.warnings, template: WARNING_TEMPLATE } : c.warnings
   };
 }
 var REQUEST_STATUS_DEFAULT = {
@@ -3460,6 +3466,7 @@ function applyPanelParts(cfg) {
   WANTED_MATCH_TYPES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WARNING_TEMPLATE,
   WARNING_VARIABLES,
   WEAPON_STATUSES,
   WEAPON_STATUS_KEYS,

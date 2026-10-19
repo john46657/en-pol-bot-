@@ -102,8 +102,8 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
-                        url: string;
                         style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
                         disabled: boolean;
                     }[];
                 } | {
@@ -191,8 +191,8 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
-                        url: string;
                         style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
                         disabled: boolean;
                     }[];
                 } | {
@@ -280,8 +280,8 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
-                        url: string;
                         style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
                         disabled: boolean;
                     }[];
                 } | {
@@ -369,8 +369,8 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
-                        url: string;
                         style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
                         disabled: boolean;
                     }[];
                 } | {
@@ -458,8 +458,8 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
-                        url: string;
                         style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
                         disabled: boolean;
                     }[];
                 } | {

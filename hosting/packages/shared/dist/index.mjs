@@ -1695,6 +1695,8 @@ var HR_EVENT_LABEL = {
 var stageSchema = z3.object({ id: uuid, name: z3.string().trim().min(1).max(60), roleIds: z3.array(uuid).max(20).default([]) });
 var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
 var requestStatusDefSchema = z3.object({ label: z3.string().max(40), emoji: z3.string().max(16) });
+var WARNING_TEMPLATE = "Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}";
+var OLD_WARNING_TEMPLATE = "**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}";
 var hrConfigSchema = z3.object({
   statuses: z3.array(hrStatusSchema).max(30).default([]),
   departments: z3.array(departmentSchema).max(50).default([]),
@@ -1741,7 +1743,9 @@ var hrConfigSchema = z3.object({
     limit: z3.number().int().min(1).max(20).default(3),
     /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
     channelId: sf3.nullable().default(null),
-    template: z3.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    template: z3.string().max(1500).default(WARNING_TEMPLATE),
+    /** Darstellung in Discord: einfacher Text („Wer: … / Grund: … / Verwarnungen: 1/3“) oder als Kasten (Embed) */
+    style: z3.enum(["text", "embed"]).default("text"),
     /** Person per DM informieren */
     dm: z3.boolean().default(true),
     atLimit: z3.object({
@@ -1809,7 +1813,8 @@ function withHrDefaults(v) {
     awards: raw.awards ? c.awards : DEFAULT_HR_CONFIG.awards,
     sections: { ...DEFAULT_HR_CONFIG.sections, ...c.sections },
     fields: { ...DEFAULT_HR_CONFIG.fields, ...c.fields },
-    notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications
+    notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications,
+    warnings: c.warnings.template === OLD_WARNING_TEMPLATE ? { ...c.warnings, template: WARNING_TEMPLATE } : c.warnings
   };
 }
 var REQUEST_STATUS_DEFAULT = {
@@ -3137,6 +3142,7 @@ export {
   WANTED_MATCH_TYPES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WARNING_TEMPLATE,
   WARNING_VARIABLES,
   WEAPON_STATUSES,
   WEAPON_STATUS_KEYS,

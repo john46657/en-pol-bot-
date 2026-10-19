@@ -195,6 +195,7 @@ export declare class HrController {
             channelId: string | null;
             template: string;
             limit: number;
+            style: "text" | "embed";
             atLimit: {
                 status: string | null;
                 notifyRoleIds: string[];
@@ -307,6 +308,7 @@ export declare class HrController {
             channelId: string | null;
             template: string;
             limit: number;
+            style: "text" | "embed";
             atLimit: {
                 status: string | null;
                 notifyRoleIds: string[];
