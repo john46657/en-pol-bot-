@@ -40,7 +40,7 @@ const formField = z.object({ key: z.string().regex(/^[a-z0-9_]{1,30}$/, 'Feld-Sc
 const formB = z.object({ title: text(45).min(1), fields: z.array(formField).min(1).max(5, 'Discord erlaubt höchstens 5 Felder.') })
   .refine((f) => new Set(f.fields.map((x) => x.key)).size === f.fields.length, 'Jedes Feld braucht einen eigenen Schlüssel.')
   .refine((f) => f.fields.some((x) => x.key === 'reason'), 'Das Feld „Begründung“ (reason) muss enthalten sein.');
-const requestsB = z.object({ requests: z.object({ enabled: z.boolean(), preventDuplicates: z.boolean(), notifyChannelId: snowflake.nullable(), panel: panelB, form: formB }), notifyMembers: z.boolean() });
+const requestsB = z.object({ requests: z.object({ enabled: z.boolean(), preventDuplicates: z.boolean(), notifyChannelId: snowflake.nullable(), approveRoleIds: z.array(snowflake).max(10).default([]), panel: panelB, form: formB }), notifyMembers: z.boolean() });
 const integrationB = z.object({
   provider: z.enum(['NONE', 'ZELLO_WORK', 'ZELLO_APP', 'OTHER_MANUAL']), displayName: text(80).min(1), network: optText(63), channel: optText(100), adminUsername: optText(100),
   password: z.string().max(200).optional(), apiKey: z.string().max(500).optional(), clearCredentials: z.boolean().optional(), autoSync: z.boolean(), version: z.number().int().positive(),
