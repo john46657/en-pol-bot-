@@ -48,6 +48,8 @@ export const hrConfigSchema = z.object({
   departments: z.array(departmentSchema).max(50).default([]),
   absenceTypes: z.array(absenceTypeSchema).max(30).default([]),
   warningSeverities: z.array(severitySchema).max(20).default([]),
+  /** Später ergänzte Standardwerte, die schon einmal in gespeicherte Einstellungen übernommen wurden (Löschen bleibt dann gelöscht). */
+  addedDefaults: z.array(z.string().max(40)).max(50).default([]),
   warningCategories: z.array(z.string().trim().min(1).max(60)).max(50).default([]),
   awards: z.array(awardDefSchema).max(100).default([]),
   /** Bereiche der Personalakte */
@@ -106,6 +108,8 @@ export const hrConfigSchema = z.object({
 });
 export type HrConfig = z.infer<typeof hrConfigSchema>;
 
+/** Schweregrad, der nicht abläuft (Laufzeit 0). */
+const PERMANENT_SEVERITY = { key: 'PERMANENT', label: 'Dauerhafter Vermerk', emoji: '⚫', color: '#475569', defaultDays: 0 };
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 export const DEFAULT_HR_CONFIG: HrConfig = hrConfigSchema.parse({
   statuses: [
@@ -119,7 +123,9 @@ export const DEFAULT_HR_CONFIG: HrConfig = hrConfigSchema.parse({
   warningSeverities: [
     { key: 'WARNING', label: 'Verwarnung', emoji: '🟡', color: '#eab308', defaultDays: 30 }, { key: 'REPRIMAND', label: 'Abmahnung', emoji: '🟠', color: '#f97316', defaultDays: 60 },
     { key: 'SEVERE', label: 'Schwerwiegender Verstoß', emoji: '🔴', color: '#ef4444', defaultDays: 180 },
+    PERMANENT_SEVERITY,
   ],
+  addedDefaults: ['severity.PERMANENT'],
   warningCategories: ['Verhalten', 'Dienstvergehen', 'Funk', 'Regelverstoß', 'Sonstiges'],
   awards: [{ id: id(10), name: 'Besondere Leistung', icon: '🏅', description: 'Für außergewöhnliche Leistungen.', color: '#eab308' }],
   sections: Object.fromEntries(PROFILE_SECTIONS.map((s) => [s, { visible: true, sensitive: ['warnings', 'notes', 'history'].includes(s) }])),
@@ -139,7 +145,10 @@ export function withHrDefaults(v: unknown): HrConfig {
     statuses: raw.statuses ? c.statuses : DEFAULT_HR_CONFIG.statuses,
     departments: raw.departments ? c.departments : DEFAULT_HR_CONFIG.departments,
     absenceTypes: raw.absenceTypes ? c.absenceTypes : DEFAULT_HR_CONFIG.absenceTypes,
-    warningSeverities: raw.warningSeverities ? c.warningSeverities : DEFAULT_HR_CONFIG.warningSeverities,
+    warningSeverities: !raw.warningSeverities ? DEFAULT_HR_CONFIG.warningSeverities
+      // eigene Schweregrade: den nicht ablaufenden einmalig ergänzen
+      : c.addedDefaults.includes('severity.PERMANENT') || c.warningSeverities.some((s) => s.key === PERMANENT_SEVERITY.key) || c.warningSeverities.length >= 20 ? c.warningSeverities : [...c.warningSeverities, PERMANENT_SEVERITY],
+    addedDefaults: [...new Set([...c.addedDefaults, 'severity.PERMANENT'])],
     warningCategories: raw.warningCategories ? c.warningCategories : DEFAULT_HR_CONFIG.warningCategories,
     awards: raw.awards ? c.awards : DEFAULT_HR_CONFIG.awards,
     sections: { ...DEFAULT_HR_CONFIG.sections, ...c.sections },

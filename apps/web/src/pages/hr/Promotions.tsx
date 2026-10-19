@@ -96,25 +96,31 @@ function RequestsTab({ cfg, ranks }: { cfg: HrConfig | undefined; ranks: HrRank[
   const open = (id: string | null) => { const p = new URLSearchParams(params); if (id) p.set('req', id); else p.delete('req'); setParams(p, { replace: !id }); };
   const sorted = (o: Record<string, string>) => Object.entries(o).sort((a, b) => a[1].localeCompare(b[1], 'de'));
   const dirty = JSON.stringify({ ...f, q: '' }) !== JSON.stringify({ ...EMPTY_FILTERS }) || !!q;
+  // seltener gebrauchte Filter erst auf Wunsch zeigen (offen, solange einer davon gesetzt ist)
+  const moreSet = !!(f.rank || f.department || f.requesterId || f.approverId || f.from || f.to);
+  const [more, setMore] = useState(false);
+  const showMore = more || moreSet;
+  const recent = stats.data?.recent ?? [];
 
   return (
     <div className="grid gap-4">
       {can('promotion.view') && (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Beförderungsanträge nach Status">
           {KPI_STATUSES.map((s) => {
-            const st = requestStatus(cfg, s);
+            const st = requestStatus(cfg, s), n = count(s), on = f.kind === 'PROMOTION' && f.status === s;
             return (
-              <button key={s} type="button" onClick={() => setF({ ...f, kind: 'PROMOTION', status: s })} className="card border border-line p-3 text-left transition hover:border-primary" aria-label={`${st.label}: ${count(s)} Beförderungsanträge – filtern`}>
-                <p className="text-xs text-muted"><span aria-hidden>{st.emoji} </span>{st.label}</p>
-                <p className="mt-1 text-2xl font-semibold">{stats.isLoading ? '…' : count(s)}</p>
+              <button key={s} type="button" aria-pressed={on} onClick={() => setF(on ? EMPTY_FILTERS : { ...f, kind: 'PROMOTION', status: s })}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition ${on ? 'border-primary bg-primary/15' : 'border-line hover:border-primary'} ${n || on ? '' : 'opacity-60'}`}
+                aria-label={`${st.label}: ${n} Beförderungsanträge – filtern`}>
+                <span aria-hidden>{st.emoji}</span>{st.label}<b className="tabular-nums">{stats.isLoading ? '…' : n}</b>
               </button>
             );
           })}
         </div>
       )}
-      <div className="grid gap-4 xl:grid-cols-[1fr_300px]">
+      <div className={`grid gap-4 ${recent.length ? 'xl:grid-cols-[1fr_300px]' : ''}`}>
         <Card title="Anträge" actions={dirty && <Button size="sm" variant="ghost" onClick={() => { setF(EMPTY_FILTERS); setQ(''); }}>Filter zurücksetzen</Button>}>
-          <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.4fr)_auto]">
             <Input aria-label="Mitarbeiter oder Antrag suchen" placeholder="Mitarbeiter, Antragsnummer, Begründung…" value={q} onChange={(e) => setQ(e.target.value)} />
             <Select aria-label="Art" value={f.kind} onChange={(e) => set('kind', e.target.value as Filters['kind'])}>
               <option value="">Alle Arten</option>
@@ -126,6 +132,9 @@ function RequestsTab({ cfg, ranks }: { cfg: HrConfig | undefined; ranks: HrRank[
               <option value="ACTIVE">Offene (Offen, In Prüfung, Zurückgestellt)</option>
               {REQUEST_STATUSES.map((s) => { const st = requestStatus(cfg, s); return <option key={s} value={s}>{st.emoji} {st.label}</option>; })}
             </Select>
+            <Button variant="secondary" aria-expanded={showMore} disabled={moreSet} onClick={() => setMore(!more)}>{showMore ? 'Weniger Filter' : 'Weitere Filter'}{moreSet ? ' •' : ''}</Button>
+          </div>
+          {showMore && <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             <Select aria-label="Rang" value={f.rank} onChange={(e) => set('rank', e.target.value)}>
               <option value="">Alle Ränge</option>
               {ranks.map((r) => <option key={r.id} value={r.id}>{r.icon ? `${r.icon} ` : ''}{r.name}</option>)}
@@ -147,7 +156,7 @@ function RequestsTab({ cfg, ranks }: { cfg: HrConfig | undefined; ranks: HrRank[
               <span className="text-muted" aria-hidden>–</span>
               <Input type="date" aria-label="Zeitraum bis" value={f.to} min={f.from || undefined} onChange={(e) => set('to', e.target.value)} />
             </div>
-          </div>
+          </div>}
           {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.length ? <EmptyState text="Keine Anträge gefunden." hint={dirty ? 'Filter anpassen oder zurücksetzen.' : undefined} /> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -170,17 +179,15 @@ function RequestsTab({ cfg, ranks }: { cfg: HrConfig | undefined; ranks: HrRank[
             </div>
           )}
         </Card>
-        {can('promotion.view') && (
+        {can('promotion.view') && recent.length > 0 && (
           <Card title="🎖️ Kürzlich durchgeführte Beförderungen">
-            {stats.isLoading ? <SkeletonRows rows={3} /> : !stats.data?.recent.length ? <p className="text-sm text-muted">Noch keine Beförderungen.</p> : (
-              <ul className="grid gap-2">{stats.data.recent.map((r) => (
-                <li key={r.id} className="rounded-md border border-line p-2 text-sm">
-                  <Link to={`/personnel/${r.personnelId}`} className="font-medium text-primary hover:underline">{r.name}</Link>
-                  <p className="text-xs text-muted">{r.summary}</p>
-                  <p className="text-xs text-muted">{fmtDate(r.at)}</p>
-                </li>
-              ))}</ul>
-            )}
+            <ul className="grid gap-2">{recent.map((r) => (
+              <li key={r.id} className="rounded-md border border-line p-2 text-sm">
+                <Link to={`/personnel/${r.personnelId}`} className="font-medium text-primary hover:underline">{r.name}</Link>
+                <p className="text-xs text-muted">{r.summary}</p>
+                <p className="text-xs text-muted">{fmtDate(r.at)}</p>
+              </li>
+            ))}</ul>
           </Card>
         )}
       </div>
