@@ -38,6 +38,9 @@ export class QualificationsController {
   /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
   @Post('police-panel/send') @HttpCode(202) @RequirePermission('qualifications.manage')
   sendPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendPolicePanel(a, b.mode, q.guildId); }
+  /** Qualifikations-Panel (Auswahl der Einheiten) direkt aus dem Dashboard senden. */
+  @Post('quali-panel/send') @HttpCode(202) @RequirePermission('qualifications.manage')
+  sendQualiPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendQualiPanel(a, b.mode, q.guildId); }
   @Get('applications') @RequirePermission('qualifications.view')
   list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
   @Get('history') @RequirePermission('qualifications.view')

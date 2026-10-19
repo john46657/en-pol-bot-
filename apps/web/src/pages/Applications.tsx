@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, type ReactNode } from 'react';
-import { ChevronDown, Send, Trash2 } from 'lucide-react';
+import { ChevronDown, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FormField } from '@enrp/shared';
@@ -13,7 +13,7 @@ import { Avatar } from '../components/TeamRoster';
 import { ago } from '../lib/cad';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationSettingsEditor, withDefaults, type AppCommon } from '../components/ApplicationSettings';
-import { ChannelPicker } from '../components/DiscordPickers';
+import { PanelSendBox } from '../components/PanelSendBox';
 import { Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
 /** Eine Zeile der gemeinsamen Liste: Polizei-Bewerbung oder Bewerbung für eine Einheit (Flugstaffel, GSG9 …). */
@@ -152,8 +152,6 @@ function PoliceSetup() {
     setTitle(p.title); setText(p.description); setName(p.name ?? 'Polizeianwärter'); setPanelChannel(p.panelChannelId ?? ''); setQuestions(config.data.policeForm);
     setCommon({ enabled: p.enabled ?? true, channelId: p.channelId ?? '', acceptedChannelId: p.acceptedChannelId ?? '', deniedChannelId: p.deniedChannelId ?? '', pingRoleIds: p.pingRoleIds ?? [], settings: withDefaults(p.settings) });
   }, [config.data]);
-  const guilds = useGuilds();
-  const channelName = (id: string) => { for (const g of guilds.data ?? []) { const c = g.channels.find((x) => x.id === id); if (c) return `#${c.name}`; } return id; };
   const putNow = () => {
     const c = config.data!;
     return api('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: { title: c.title, intro: c.intro, units: c.units, police: { title, description: text, name, panelChannelId: panelChannel, ...common }, policeForm: questions } });
@@ -162,19 +160,12 @@ function PoliceSetup() {
     mutationFn: putNow,
     onSuccess: () => { setMsg('Gespeichert. Änderungen gelten sofort für neue Bewerbungen; ein bereits gesendetes Panel wird automatisch aktualisiert.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
   });
-  const [sendMsg, setSendMsg] = useState<{ ok: boolean; text: string }>();
-  const send = useMutation({
-    mutationFn: async (mode: 'update' | 'new') => { await putNow(); return api('/qualifications/police-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); },
-    onSuccess: (_d, mode) => { setSendMsg({ ok: true, text: mode === 'update' ? 'Panel wird aktualisiert – in wenigen Sekunden in Discord.' : 'Panel wird gesendet – in wenigen Sekunden in Discord.' }); setTimeout(() => void qc.invalidateQueries({ queryKey: ['quali-config'] }), 4000); },
-    onError: (e) => setSendMsg({ ok: false, text: errText(e) }),
-  });
   // automatisch speichern – für den gewählten Server (Server laufen getrennt)
   const draft = useMemo(() => (common ? { title, text, name, panelChannel, common, questions } : undefined), [title, text, name, panelChannel, common, questions]);
   useAutosaveDraft(config.data ? `app:setup:${server || 'all'}` : null, draft, (d) => {
     const c = config.data!;
     return { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: c.title, intro: c.intro, units: c.units, police: { title: d.title, description: d.text, name: d.name, panelChannelId: d.panelChannel, ...d.common }, policeForm: d.questions }, label: 'Bewerbungs-Einstellungen' };
   }, 1500);
-  const posted = config.data?.panelPosted;
   if (config.error) return <ErrorState error={config.error} onRetry={() => void config.refetch()} />;
   if (config.isLoading || !common) return <SkeletonRows />;
   return (
@@ -185,18 +176,10 @@ function PoliceSetup() {
           <Field label="Panel-Titel">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
           <Field label="Panel-Text (Discord-Markdown erlaubt)">{(id) => <Textarea id={id} rows={3} value={text} maxLength={1500} onChange={(e) => setText(e.target.value)} />}</Field>
         </div>
-        <div className="mt-3 grid gap-2 border-t border-line pt-3">
-          <span className="text-sm font-medium">Kanal für das Panel</span>
-          <div className="max-w-md"><ChannelPicker ariaLabel="Kanal für das Bewerbungs-Panel" value={panelChannel} onChange={(id) => { setPanelChannel(id ?? ''); setSendMsg(undefined); }} /></div>
-          <p className="text-sm text-muted">{posted ? <>Steht in <b>{channelName(posted.channelId)}</b>.</> : 'Noch nicht aus dem Dashboard gesendet.'}</p>
-          <div className="flex flex-wrap gap-2">
-            {posted && posted.channelId === panelChannel
-              ? <><Button disabled={send.isPending} onClick={() => send.mutate('update')}><Send size={14} className="mr-1" />Panel aktualisieren</Button><Button variant="secondary" disabled={send.isPending} onClick={() => send.mutate('new')}>Neu senden</Button></>
-              : <Button disabled={send.isPending || !panelChannel} onClick={() => send.mutate('new')}><Send size={14} className="mr-1" />{panelChannel ? `In ${channelName(panelChannel)} senden` : 'Erst Kanal wählen'}</Button>}
-          </div>
-          {sendMsg && <p role={sendMsg.ok ? 'status' : 'alert'} className={`text-sm ${sendMsg.ok ? 'text-success' : 'text-danger'}`}>{sendMsg.text}</p>}
-          <p className="text-xs text-muted">Das Panel bekommt den Button „Jetzt bewerben“. Der Bot braucht im Kanal „Nachrichten senden“ und „Links einbetten“. Alternativ geht weiterhin /bewerbungspanel direkt in Discord.</p>
-        </div>
+        <PanelSendBox label="Kanal für das Bewerbungs-Panel" channelId={panelChannel} onChannel={setPanelChannel} posted={config.data?.panelPosted}
+          onSend={async (mode) => { await putNow(); return api('/qualifications/police-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); }}
+          onSent={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })}
+          hint="Das Panel bekommt den Button „Jetzt bewerben“. Alternativ geht weiterhin /bewerbungspanel direkt in Discord." />
       </Card>
       <Card title="Bewerbungs-Einstellungen">
         <ApplicationSettingsEditor value={common} onChange={(p) => setCommon({ ...common, ...p })} name={name} onName={setName}

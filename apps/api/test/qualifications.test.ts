@@ -150,6 +150,24 @@ describe('qualification applications', () => {
     expect(upd!.payload).toMatchObject({ forceNew: false, message: { embeds: [{ description: 'Neuer Text' }] } });
   });
 
+  it('sends the qualification panel (unit select) from the dashboard; saving one page keeps the other panel channel', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const CH = '400000000000000088', POLICE_CH = cur.police.panelChannelId;
+    expect(POLICE_CH).toBeTruthy(); // aus dem vorigen Test
+    expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(400); // kein Kanal
+    // Qualifikations-Seite schickt den Polizei-Kanal nicht mit → bleibt erhalten
+    const { panelChannelId: _p, ...police } = cur.police;
+    expect((await admin.put('/api/v1/qualifications/config').send({ title: 'Quali', intro: cur.intro, units: cur.units, police, panelChannelId: CH })).status).toBe(200);
+    // Bewerbungs-Seite schickt den Quali-Kanal nicht mit → bleibt erhalten
+    const after = (await admin.put('/api/v1/qualifications/config').send({ title: 'Quali', intro: cur.intro, units: cur.units, police: cur.police })).body;
+    expect(after).toMatchObject({ panelChannelId: CH, police: { panelChannelId: POLICE_CH } });
+    expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const out = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    expect(out!.payload).toMatchObject({ stateKey: 'apanel-quali', channelId: CH, forceNew: true, message: { embeds: [{ title: 'Quali' }], select: { id: 'quali:pick' } } });
+    expect((out!.payload as { message: { select: { options: { value: string }[] } } }).message.select.options.map((o) => o.value)).toEqual(cur.units.map((u: { key: string }) => u.key));
+  });
+
   it('question types like Appy: multiple choice and role select are validated, chosen roles are given on acceptance, ping role in the post', async () => {
     const admin = (await login(app, 'q_admin')).agent;
     const cur = (await admin.get('/api/v1/qualifications/config')).body;

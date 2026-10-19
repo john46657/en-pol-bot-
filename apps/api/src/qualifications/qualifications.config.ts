@@ -78,6 +78,8 @@ export const policeSchema = z.object({
 });
 export const configSchema = z.object({
   title: z.string().trim().min(2).max(100).default('Qualifikationen'),
+  /** Kanal, in den das Qualifikations-Panel aus dem Dashboard gesendet wird. */
+  panelChannelId: channelOpt,
   intro: z.string().trim().max(1500).default(''),
   units: z.array(unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
   police: policeSchema.default({}),

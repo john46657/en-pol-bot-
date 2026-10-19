@@ -11,10 +11,11 @@ import { ApplicationActions } from '../components/DecisionButtons';
 import { ApplicationSettingsEditor, defaultAppSettings, withDefaults, type AppCommon } from '../components/ApplicationSettings';
 import { GuildTag, useServer } from '../lib/guilds';
 import { ServerScope } from './Applications';
+import { PanelSendBox } from '../components/PanelSendBox';
 import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
 interface Unit extends Partial<AppCommon> { key: string; name: string; description: string; roleId?: string; questions: FormField[] }
-interface Config { own?: boolean; title: string; intro: string; units: Unit[]; police: { title: string; description: string; pingRoleIds?: string[] }; policeForm: FormField[] }
+interface Config { own?: boolean; title: string; intro: string; panelChannelId?: string; qualiPanelPosted?: { channelId: string; messageId: string } | null; units: Unit[]; police: { title: string; description: string; pingRoleIds?: string[] }; policeForm: FormField[] }
 interface Application {
   id: string; number: string; unit: string; unitName: string; discordId: string; discordName: string; linkedName: string | null;
   answers: { question: string; answer: string }[]; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null;
@@ -51,12 +52,13 @@ export function Qualifications() {
   // ---- Setup ----
   const [title, setTitle] = useState('');
   const [intro, setIntro] = useState('');
+  const [panelChannel, setPanelChannel] = useState('');
   const [units, setUnits] = useState<DraftUnit[]>([]);
   const [loadedFrom, setLoadedFrom] = useState<Config>(); // aus welchem Server-Stand die Felder befüllt sind
   useEffect(() => {
     if (!config.data) return;
     setLoadedFrom(config.data);
-    setTitle(config.data.title); setIntro(config.data.intro);
+    setTitle(config.data.title); setIntro(config.data.intro); setPanelChannel(config.data.panelChannelId ?? '');
     // die frühere einzelne „Rolle bei Annahme“ wird zu den Accepted Roles
     setUnits(config.data.units.map((u) => {
       const settings = withDefaults(u.settings);
@@ -67,15 +69,15 @@ export function Qualifications() {
   const save = useMutation({
     mutationFn: () => api<Config>('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: {
       // die Polizei-Bewerbung wird unter „Applications → Setup“ bearbeitet und hier unverändert mitgeschickt
-      title, intro, police: config.data!.police,
+      title, intro, panelChannelId: panelChannel, police: config.data!.police,
       units: units.map(({ isNew: _n, ...u }) => u),
     } }),
-    onSuccess: () => { setErr(undefined); setMsg('Gespeichert. Fragen gelten sofort für neue Bewerbungen; poste das Panel in Discord erneut (/qualipanel), damit geänderte Texte oder Einheiten angezeigt werden.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
+    onSuccess: () => { setErr(undefined); setMsg('Gespeichert. Fragen gelten sofort für neue Bewerbungen; ein bereits aus dem Dashboard gesendetes Panel wird automatisch aktualisiert.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
   // automatisch speichern – je Server getrennt; unvollständige Einheiten (ohne Name/Schlüssel/Frage) bleiben lokal
   // erst wenn die Felder aus den geladenen Daten befüllt sind – sonst gilt das Befüllen selbst als Änderung und wird beim Öffnen gespeichert
-  const qDraft = useMemo(() => (config.data && loadedFrom === config.data ? { title, intro, units } : undefined), [title, intro, units, config.data, loadedFrom]);
-  useAutosaveDraft(config.data && can('qualifications.manage') ? `quali:setup:${server || 'all'}` : null, qDraft, (d) => (d.units.every((u) => u.name.trim() && u.questions.length) ? { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: d.title, intro: d.intro, police: config.data!.police, units: d.units.map(({ isNew: _n, ...u }) => u) }, label: 'Qualifikationen' } : null), 1500);
+  const qDraft = useMemo(() => (config.data && loadedFrom === config.data ? { title, intro, panelChannel, units } : undefined), [title, intro, panelChannel, units, config.data, loadedFrom]);
+  useAutosaveDraft(config.data && can('qualifications.manage') ? `quali:setup:${server || 'all'}` : null, qDraft, (d) => (d.units.every((u) => u.name.trim() && u.questions.length) ? { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: d.title, intro: d.intro, panelChannelId: d.panelChannel, police: config.data!.police, units: d.units.map(({ isNew: _n, ...u }) => u) }, label: 'Qualifikationen' } : null), 1500);
   const patch = (i: number, p: Partial<DraftUnit>) => setUnits(units.map((u, j) => (j === i ? { ...u, ...p } : u)));
 
   return (
@@ -115,11 +117,15 @@ export function Qualifications() {
         {tab === 'Einrichtung' && manage && (config.isLoading ? <SkeletonRows /> : config.error ? <ErrorState error={config.error} onRetry={() => void config.refetch()} /> : (
           <div className="grid gap-4">
             <ServerScope own={config.data?.own} onReset={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })} />
-            <Card title="Qualifikations-Panel (/qualipanel)">
+            <Card title="Qualifikations-Panel in Discord">
               <div className="grid gap-3">
                 <Field label="Panel-Titel">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
                 <Field label="Einleitungstext (Discord-Markdown erlaubt)">{(id) => <Textarea id={id} value={intro} maxLength={1500} onChange={(e) => setIntro(e.target.value)} />}</Field>
               </div>
+              <PanelSendBox label="Kanal für das Qualifikations-Panel" channelId={panelChannel} onChannel={setPanelChannel} posted={config.data?.qualiPanelPosted}
+                onSend={async (mode) => { await save.mutateAsync(); return api('/qualifications/quali-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); }}
+                onSent={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })}
+                hint="Das Panel bekommt das Auswahlmenü mit allen Einheiten. Alternativ geht weiterhin /qualipanel direkt in Discord." />
             </Card>
             {units.map((u, i) => (
               <Card key={i} title={u.name || 'Neue Einheit'} actions={<Button size="sm" variant="ghost" disabled={units.length <= 1} onClick={() => setUnits(units.filter((_, j) => j !== i))}>Einheit entfernen</Button>}>
