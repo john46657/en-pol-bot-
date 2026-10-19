@@ -41,7 +41,7 @@ function normalizeForm(f) {
         fields.unshift(exports.DEFAULT_FORM.fields[0]);
     return { title: (f?.title || exports.DEFAULT_FORM.title).slice(0, 45), fields: fields.slice(0, 5).map((x) => (x.key === 'reason' ? { ...x, required: true, maxLength: Math.max(10, Math.min(x.maxLength, 1000)) } : x)) };
 }
-exports.DEFAULT_CONFIG = { roleSync: shared_1.DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: exports.DEFAULT_PANEL, form: exports.DEFAULT_FORM }, notifyMembers: true };
+exports.DEFAULT_CONFIG = { roleSync: shared_1.DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, approveRoleIds: [], panel: exports.DEFAULT_PANEL, form: exports.DEFAULT_FORM }, notifyMembers: true };
 const PANEL_STATE_KEY = 'radio-request-panel';
 const requestStateKey = (id) => `rwreq-${id}`;
 const hexColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? parseInt(c.slice(1), 16) : 0x3b82f6);
@@ -528,6 +528,10 @@ let RadioWhitelistService = class RadioWhitelistService {
             : `❌ Dein Antrag auf Funkfreigabe wurde **abgelehnt**.\n**Begründung:** ${(b.reason ?? '').trim()}`;
         if (out.grant)
             await this.afterChange(out.grant.row, out.grant.before, text, b.reason, { forceDm: true });
+        // zusätzliche Rollen bei Genehmigung (Einstellungen für Anträge)
+        const extra = b.decision === 'APPROVE' ? (await this.config()).requests.approveRoleIds.filter((r) => DISCORD_ID.test(r)) : [];
+        if (extra.length)
+            await this.prisma.discordOutbox.create({ data: { type: 'member.roles', channelKey: 'announcements', payload: { discordId: out.req.discordId, add: extra, remove: [] } } }).catch((e) => this.log.warn(`approve roles not queued: ${errMsg(e)}`));
         else
             await this.prisma.discordOutbox.create({ data: { type: 'bot.dm', channelKey: 'announcements', payload: { discordId: out.req.discordId, message: { embeds: [{ title: '🎙️ Funk-Whitelist', description: text.slice(0, 3900), color: 0xef4444 }] } } } }).catch(() => undefined);
         const final = (await this.prisma.radioRequest.findUnique({ where: { id } }));

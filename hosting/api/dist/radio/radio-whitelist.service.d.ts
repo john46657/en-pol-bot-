@@ -10,10 +10,12 @@ export interface RadioWhitelistConfig {
     roleSync: RadioRoleRules;
     /** Discord-Rolle(n), die Mitglieder mit aktiver Freigabe tragen (leer = Funkrolle aus Einstellungen → Discord). */
     radioRoleIds: string[];
+    /** `approveRoleIds`: Discord-Rollen, die das Mitglied zusätzlich bekommt, wenn sein Antrag genehmigt wird (bleiben danach bestehen). */
     requests: {
         enabled: boolean;
         preventDuplicates: boolean;
         notifyChannelId: string | null;
+        approveRoleIds: string[];
         panel: RequestPanel;
         form: RequestForm;
     };
