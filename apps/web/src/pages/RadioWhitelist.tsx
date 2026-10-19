@@ -128,13 +128,12 @@ function GrantsTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                <th className="px-2 py-2 font-medium">Mitglied</th><th className="hidden px-2 py-2 font-medium md:table-cell">Dienstgrad / Abteilung</th><th className="px-2 py-2 font-medium">Status</th>
+                <th className="px-2 py-2 font-medium">Mitglied</th><th className="px-2 py-2 font-medium">Status</th>
                 <th className="hidden px-2 py-2 font-medium sm:table-cell">Gültig bis</th><th className="hidden px-2 py-2 font-medium lg:table-cell">Funkdienst</th><th className="hidden px-2 py-2 font-medium lg:table-cell">Quelle</th><th className="px-2 py-2"><span className="sr-only">Aktionen</span></th>
               </tr></thead>
               <tbody>{list.data.items.map((g) => (
                 <tr key={g.id} className={`border-b border-line/60 hover:bg-panel-2 ${g.archivedAt ? 'opacity-60' : ''}`}>
                   <td className="px-2 py-2"><button type="button" className="text-left font-medium hover:underline" onClick={() => setOpen(g.id)}>{who(g)}</button><span className="block font-mono text-xs text-muted">{g.discordId ?? '⚠️ Discord-ID fehlt'}</span></td>
-                  <td className="hidden px-2 py-2 md:table-cell">{g.rank ?? '—'}<span className="block text-xs text-muted">{g.department ?? ''}</span></td>
                   <td className="px-2 py-2"><StatusBadge status={g.effectiveStatus} />{g.effectiveStatus === 'SUSPENDED' && g.suspendedUntil && <span className="block text-xs text-muted">bis {fmt(g.suspendedUntil)}</span>}</td>
                   <td className="hidden px-2 py-2 sm:table-cell">{g.expiresAt ? fmt(g.expiresAt) : <span className="text-muted">unbefristet</span>}</td>
                   <td className="hidden px-2 py-2 lg:table-cell">{g.externalName ?? <span className="text-muted">—</span>}{g.externalStatus !== 'NONE' && <span className="ml-1"><Badge tone={EXT_LABEL[g.externalStatus]?.[1] ?? 'neutral'}>{EXT_LABEL[g.externalStatus]?.[0] ?? g.externalStatus}</Badge></span>}</td>
