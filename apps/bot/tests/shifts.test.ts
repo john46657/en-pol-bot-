@@ -43,8 +43,12 @@ describe('/shift', () => {
     expect(t).toContain('**Gesamtdauer**: 4 Stunden, 10 Minuten');
     expect(t).toContain('**Durchschnittliche Dauer**: 1 Stunde, 3 Minuten'); // 62,5 → 63 Minuten
     expect(t).toContain('Schichtart: Streife');
-    expect(ids(r)).toEqual(['shift:on:streife', 'shift:break (aus)', 'shift:off (aus)']);
-    expect((await run(api, 'manage', { type: 'SEK' })).buttons?.[0]?.id).toBe('shift:on:sek');
+    expect(ids(r)).toEqual([`shift:on:streife:${ME}`, `shift:break:${ME} (aus)`, `shift:off:${ME} (aus)`]);
+    expect(r.ephemeral).toBe(false); // für alle im Channel sichtbar
+    expect(t).toContain(`**Mitglied**: <@${ME}>`);
+    expect(byName('shift')!.publicReply?.({ _sub: 'manage' })).toBe(true);
+    expect(byName('shift')!.publicReply?.({ _sub: 'active' })).toBe(false);
+    expect((await run(api, 'manage', { type: 'SEK' })).buttons?.[0]?.id).toBe(`shift:on:sek:${ME}`);
     expect(text(await run(api, 'manage', { type: 'gibtsnicht' }))).toContain('Unbekannte Schichtart');
     const fresh = fakeApi({ 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': { count: 0, minutes: 0 }, 'GET /bot/shifts': { enabled: false, types: [] } });
     const f = text(await run(fresh.api, 'manage'));
@@ -57,7 +61,7 @@ describe('/shift', () => {
     expect(text(r)).toContain('Aktuelle Schicht');
     expect(text(r)).toContain('**Dauer**: 1 Stunde, 15 Minuten'); // 90 − 15 Minuten Pause
     expect(text(r)).toContain('Schichtart: SEK');
-    expect(ids(r)).toEqual(['shift:on (aus)', 'shift:break', 'shift:off']);
+    expect(ids(r)).toEqual([`shift:on::${ME} (aus)`, `shift:break:${ME}`, `shift:off:${ME}`]);
     const brk = fakeApi({ 'GET /team/me/shifts': { days: 1, items: [shift({ status: 'BREAK' })] }, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
     expect((await run(brk.api, 'manage')).buttons?.[1]?.label).toBe('Pause beenden');
   });
@@ -73,6 +77,21 @@ describe('/shift', () => {
     expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'BREAK' } });
     expect(text(await click(api, 'shift:off'))).toContain('außer Dienst');
     expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'OFF_DUTY' } });
+  });
+  it('public panel: only its owner can use the buttons; old panels without owner still work', async () => {
+    const { api, calls } = fakeApi({ 'GET /bot/shifts': types, 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /team/me': { status: 'ON_DUTY' }, 'PUT /team/me/status': {} });
+    for (const id of [`shift:on:sek:${OTHER}`, `shift:break:${OTHER}`, `shift:off:${OTHER}`]) {
+      const r = await click(api, id);
+      expect(r.ephemeral).toBe(true);
+      expect(r.embeds).toBeUndefined(); // kein Kasten → Panel bleibt unverändert, Hinweis nur für den Klickenden
+      expect(text(r)).toContain(`Schichtverwaltung von <@${OTHER}>`);
+    }
+    expect(calls.filter((x) => x.method === 'PUT')).toEqual([]);
+    const own = await click(api, `shift:on::${ME}`);
+    expect(own.embeds?.[0]?.box).toBe(true);
+    expect(calls.find((x) => x.method === 'PUT')!.body).toEqual({ status: 'ON_DUTY' });
+    await click(api, `shift:off:${ME}`);
+    expect(calls.filter((x) => x.method === 'PUT').at(-1)!.body).toEqual({ status: 'OFF_DUTY' });
   });
   it('pause button ends a break; without types start goes on duty; 409 is shown as a hint', async () => {
     const brk = fakeApi({ 'GET /bot/shifts': { enabled: false, types: [] }, 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /team/me': { status: 'BREAK' }, 'PUT /team/me/status': {} });
@@ -99,7 +118,7 @@ describe('/shift', () => {
     expect((await def.complete!(member([SEK_ROLE]), 'type', '')).map((t) => t.value)).toEqual(['streife', 'sek', 'buero']);
     // ohne die Rolle: Standard (Streife) ist gesperrt → erste erlaubte Art; ausdrücklich gewählte gesperrte Art → Hinweis
     const r = await def.run({ ...member([]), opts: { _sub: 'manage' } });
-    expect(r.buttons?.[0]?.id).toBe('shift:on:buero');
+    expect(r.buttons?.[0]?.id).toBe(`shift:on:buero:${ME}`);
     expect(text(await def.run({ ...member([]), opts: { _sub: 'manage', type: 'sek' } }))).toContain('fehlt dir die passende Rolle');
   });
   it('leaderboard ranks by time on duty and shows your place', async () => {

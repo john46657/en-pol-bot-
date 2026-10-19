@@ -57,7 +57,8 @@ const pickType = (c: Ctx, types: ShiftTypeInfo[], wanted?: string) => {
 
 /**
  * `/shift manage`: Panel wie bei Trident – laufende Schicht, Gesamtübersicht (Anzahl, Gesamt- und Durchschnittsdauer),
- * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Klicks zeichnen das Panel neu.
+ * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Das Panel ist für alle im
+ * Channel sichtbar; Klicks des Besitzers zeichnen es neu, die Buttons tragen dafür seine Discord-ID.
  */
 export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string): Promise<Reply> {
   const [log, stats] = await Promise.all([
@@ -69,6 +70,7 @@ export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string)
   const st = current ? DUTY_DE[current.status] : undefined;
   const typeName = current ? current.shiftType : type?.name ?? null;
   const description = [
+    `**Mitglied**: <@${c.discordId}>`, '',
     ...(notice ? [notice, ''] : []),
     ...(current ? ['### 🕒 Aktuelle Schicht', `**Status**: ${st?.emoji ?? '🟢'} ${st?.label ?? current.status}`, `**Begonnen**: ${ts(current.startedAt, 'R')}`,
       `**Dauer**: ${long(current.minutes - current.breakMinutes)}`, `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : 'keine'}`, ''] : []),
@@ -79,11 +81,11 @@ export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string)
     ...(typeName ? ['', `-# Schichtart: ${plain(typeName)}`] : []),
   ].join('\n');
   const buttons: ButtonSpec[] = [
-    { id: `shift:on${!current && type ? `:${type.id}` : ''}`, label: 'Start', style: 'success', emoji: '▶️', disabled: !!current },
-    { id: 'shift:break', label: onBreak ? 'Pause beenden' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
-    { id: 'shift:off', label: 'Beenden', style: 'danger', emoji: '⏹️', disabled: !current },
+    { id: `shift:on:${!current && type ? type.id : ''}:${c.discordId}`, label: 'Start', style: 'success', emoji: '▶️', disabled: !!current },
+    { id: `shift:break:${c.discordId}`, label: onBreak ? 'Pause beenden' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
+    { id: `shift:off:${c.discordId}`, label: 'Beenden', style: 'danger', emoji: '⏹️', disabled: !current },
   ];
-  return { ephemeral: true, buttons, embeds: [{ box: true, heading: 'small', title: 'Schichtverwaltung', description: clip(description, 3900) }] };
+  return { ephemeral: false, buttons, embeds: [{ box: true, heading: 'small', title: 'Schichtverwaltung', description: clip(description, 3900) }] };
 }
 
 /** Status setzen und das Panel neu zeichnen; „schon so“ (409) und Fehler stehen oben im Panel. */
@@ -91,7 +93,7 @@ async function switchTo(c: Ctx, status: 'ON_DUTY' | 'BREAK' | 'OFF_DUTY', type?:
   let notice: string;
   try {
     await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status, ...(type ? { shiftType: type.id } : {}) });
-    notice = status === 'ON_DUTY' && type ? `🟢 Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status]!.emoji} Du bist jetzt **${DUTY_DE[status]!.label}**.`;
+    notice = status === 'ON_DUTY' && type ? `🟢 Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status]!.emoji} Jetzt **${DUTY_DE[status]!.label}**.`;
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status]!.label}**.` : mapError(e).content ?? '❌ Das hat nicht geklappt.';
   }
@@ -147,6 +149,7 @@ export const SHIFT_COMMANDS: CommandDef[] = [
       ] },
       { name: 'leaderboard', description: 'Alle Mitglieder nach ihrer Zeit im Dienst', options: [{ name: 'days', description: 'Zeitraum in Tagen (Standard: 7)', type: 'integer', min: 1, max: 90 }] },
     ],
+    publicReply: (opts) => opts._sub === 'manage',
     async complete(c, option, value) {
       if (option !== 'type') return [];
       const v = value.trim().toLowerCase();
@@ -174,7 +177,8 @@ export const SHIFT_COMMANDS: CommandDef[] = [
 ];
 
 /**
- * Buttons aus `/shift manage` (zeichnen das Panel neu): `shift:on[:<schichtart>]`, `shift:break` (Pause an/aus), `shift:off`;
+ * Buttons aus `/shift manage` (zeichnen das Panel neu): `shift:on:<schichtart|leer>:<besitzer>`, `shift:break:<besitzer>` (Pause an/aus),
+ * `shift:off:<besitzer>` – nur der Besitzer des Panels darf sie benutzen (ältere Panels ohne Besitzer: wer klickt);
  * aus `/shift admin`: `shift:end:<userId>:<discordId>` (Schicht eines Mitglieds beenden).
  */
 export const SHIFT_INTERACTION: InteractionDef = {
@@ -182,6 +186,8 @@ export const SHIFT_INTERACTION: InteractionDef = {
   updatesMessage: (args) => args[0] === 'on' || args[0] === 'break' || args[0] === 'off',
   async run(c): Promise<Reply> {
     const [action, userId, discordId] = c.args;
+    const owner = action === 'on' ? discordId : action === 'break' || action === 'off' ? userId : undefined;
+    if (owner && owner !== c.discordId) return errorReply(`Das ist die Schichtverwaltung von <@${owner}>. Für deine eigene Schicht: \`/shift manage\`.`);
     try {
       if (action === 'on') {
         const types = await shiftTypes(c);

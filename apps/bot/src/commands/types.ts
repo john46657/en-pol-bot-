@@ -57,6 +57,8 @@ export interface CommandDef {
   name: string; description: string; options?: OptionDef[]; subcommands?: SubcommandDef[];
   /** true: Der Befehl öffnet ein Formular (Modal) – darf vorher NICHT mit deferReply beantwortet werden. */
   opensModal?: boolean;
+  /** true: Antwort ist für alle im Channel sichtbar (z. B. `/shift manage`); Antworten mit `ephemeral` bleiben trotzdem privat. */
+  publicReply?: (opts: Record<string, unknown>) => boolean;
   /** Vorschläge für Optionen mit `autocomplete` (höchstens 25). */
   complete?(ctx: Ctx, option: string, value: string): Promise<{ name: string; value: string }[]>;
   run(ctx: Ctx): Promise<Reply>;
