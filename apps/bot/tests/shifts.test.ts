@@ -47,7 +47,7 @@ describe('/shift', () => {
     expect(r.ephemeral).toBe(false); // für alle im Channel sichtbar
     expect(t).toContain(`**Mitglied**: <@${ME}>`);
     expect(byName('shift')!.publicReply?.({ _sub: 'manage' })).toBe(true);
-    expect(byName('shift')!.publicReply?.({ _sub: 'active' })).toBe(false);
+    for (const sub of ['active', 'leaderboard', 'admin']) expect(byName('shift')!.publicReply?.({ _sub: sub })).toBe(true);
     expect((await run(api, 'manage', { type: 'SEK' })).buttons?.[0]?.id).toBe(`shift:on:sek:${ME}`);
     expect(text(await run(api, 'manage', { type: 'gibtsnicht' }))).toContain('Unbekannte Schichtart');
     const fresh = fakeApi({ 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': { count: 0, minutes: 0 }, 'GET /bot/shifts': { enabled: false, types: [] } });
@@ -150,6 +150,9 @@ describe('/shift', () => {
     const done = await btn.def.run({ discordId: ME, api, opts: {}, args: btn.args });
     expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ path: `/team/${UID}/status`, body: { status: 'OFF_DUTY' } });
     expect(done.content).toContain('Schicht beendet');
+    expect(done.ephemeral).toBe(true); // Bestätigung privat …
+    expect(done.update?.embeds?.[0]?.title).toContain('Schichten von Max'); // … öffentliche Nachricht wird neu gezeichnet
+    expect(r.ephemeral).toBe(false);
     const unlinked = fakeApi({ 'GET /team/shifts': { days: 7, member: null, items: [] } });
     expect(text(await run(unlinked.api, 'admin', { member: OTHER }))).toContain('keinem Konto');
   });

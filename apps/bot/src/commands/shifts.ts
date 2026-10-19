@@ -106,7 +106,7 @@ async function active(c: Ctx): Promise<Reply> {
     const on = rows.filter((r) => r.dutyStatus !== 'OFF_DUTY').sort((a, b) => (a.onDutySince ?? '').localeCompare(b.onDutySince ?? ''));
     const lines = on.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? '•'} **${plain(r.callsign ?? r.name)}**${r.callsign ? ` (${plain(r.name)})` : ''}${r.shiftType ? ` · ${plain(r.shiftType)}` : ''}${r.onDutySince ? ` · seit ${ts(r.onDutySince, 'R')}` : ''}`);
     const onBreak = on.filter((r) => r.dutyStatus === 'BREAK').length;
-    return { ephemeral: true, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? COLORS.success : COLORS.neutral,
+    return { ephemeral: false, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? COLORS.success : COLORS.neutral,
       description: clip(lines.length ? `${lines.join('\n')}${on.length > 30 ? `\n… und ${on.length - 30} weitere` : ''}` : 'Gerade ist niemand im Dienst.', 4000),
       ...(onBreak ? { footer: `${onBreak} davon in der Pause` } : {}) }] };
   } catch (e) { return mapError(e); }
@@ -121,7 +121,7 @@ async function leaderboard(c: Ctx): Promise<Reply> {
     const r = await c.api.asUser<{ days: number; me: string; users: BoardRow[] }>(c.discordId, 'GET', `/team/leaderboard?days=${d}`);
     const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${plain(u.callsign ?? u.name)}**${u.callsign ? ` (${plain(u.name)})` : ''} · ${hm(u.minutes)}${u.userId === r.me ? ' ← du' : ''}`);
     const mine = r.users.findIndex((u) => u.userId === r.me);
-    return { ephemeral: true, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: COLORS.info,
+    return { ephemeral: false, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: COLORS.info,
       description: clip(lines.length ? `${lines.join('\n')}${r.users.length > 20 ? `\n… und ${r.users.length - 20} weitere` : ''}` : 'Im Zeitraum war niemand im Dienst.', 4000),
       ...(r.users.length ? { footer: mine >= 0 ? `Dein Platz: ${mine + 1} von ${r.users.length} · ${hm(r.users[mine]!.minutes)}` : 'Du warst im Zeitraum nicht im Dienst.' } : {}) }] };
   } catch (e) { return mapError(e); }
@@ -134,7 +134,7 @@ export async function adminReply(c: Ctx, discordId: string, d = 7): Promise<Repl
   if (!log.member) return errorReply(`<@${discordId}> ist mit keinem Konto im System verknüpft.`);
   const current = log.items.find((s) => s.active);
   const buttons: ButtonSpec[] = current ? [{ id: `shift:end:${log.member.userId}:${discordId}`, label: 'Schicht beenden', style: 'danger', emoji: '⏹️' }] : [];
-  return { ephemeral: true, embeds: [logEmbed(clip(`🕒 Schichten von ${plain(log.member.name)}`, 256), log, 'Im Zeitraum keine Schichten.')], ...(buttons.length ? { buttons } : {}) };
+  return { ephemeral: false, embeds: [logEmbed(clip(`🕒 Schichten von ${plain(log.member.name)}`, 256), log, 'Im Zeitraum keine Schichten.')], ...(buttons.length ? { buttons } : {}) };
 }
 
 export const SHIFT_COMMANDS: CommandDef[] = [
@@ -149,7 +149,7 @@ export const SHIFT_COMMANDS: CommandDef[] = [
       ] },
       { name: 'leaderboard', description: 'Alle Mitglieder nach ihrer Zeit im Dienst', options: [{ name: 'days', description: 'Zeitraum in Tagen (Standard: 7)', type: 'integer', min: 1, max: 90 }] },
     ],
-    publicReply: (opts) => opts._sub === 'manage',
+    publicReply: () => true, // alles rund um Schichten ist für alle im Channel sichtbar
     async complete(c, option, value) {
       if (option !== 'type') return [];
       const v = value.trim().toLowerCase();
@@ -206,6 +206,7 @@ export const SHIFT_INTERACTION: InteractionDef = {
     } catch (e) {
       if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
     }
-    try { return discordId ? { ...(await adminReply(c, discordId)), content: '✅ Schicht beendet.' } : okReply('Schicht beendet.'); } catch { return okReply('Schicht beendet.'); }
+    // öffentliche Nachricht aus `/shift admin` neu zeichnen, Bestätigung nur für den Klickenden
+    try { return discordId ? { ...okReply('Schicht beendet.'), update: await adminReply(c, discordId) } : okReply('Schicht beendet.'); } catch { return okReply('Schicht beendet.'); }
   },
 };
