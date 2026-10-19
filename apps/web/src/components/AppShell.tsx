@@ -60,7 +60,8 @@ export function AppShell() {
   // Menü-Inhalt; `collapsed` nur in der Desktop-Leiste (die aufgeklappte Handy-/Tablet-Leiste zeigt immer Beschriftungen)
   const menu = (collapsed: boolean) => {
   const link = (i: NavItem, fav = false, to = href(i, can), via?: string) => (
-    <div key={(fav ? 'f' : '') + i.path + (via ?? '')} className="group relative">
+    <div key={(fav ? 'f' : '') + i.path + (via ?? '')}>
+    <div className="group relative">
       <NavLink to={to} onClick={() => { setOpen(false); setFilter(''); }} title={collapsed ? L(i.label) : via ? `${L(i.label)} › ${via}` : undefined}
         aria-current={isActive(i, loc.pathname) ? 'page' : undefined}
         className={() => `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ${collapsed ? 'justify-center' : ''} ${isActive(i, loc.pathname) ? 'bg-primary/15 font-medium text-fg shadow-[inset_2px_0_0_var(--color-primary)]' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>
@@ -73,7 +74,23 @@ export function AppShell() {
         <Star size={12} fill={isFav(i) ? 'currentColor' : 'none'} aria-hidden />
       </button>}
     </div>
+      {!collapsed && !fav && !via && subLinks(i)}
+    </div>
   );
+  // Unterpunkte eines zusammengefassten Bereichs (z. B. Personal · Verwarnungen · Beförderungen) – aufgeklappt, solange er offen ist
+  const subLinks = (i: NavItem) => {
+    const tabs = visibleTabs(i, can);
+    if (tabs.length < 2 || !isActive(i, loc.pathname)) return null;
+    return (
+      <ul className="ml-[1.1rem] mt-0.5 grid gap-0.5 border-l border-line pl-2">
+        {tabs.map((t) => {
+          const on = loc.pathname === t.path || loc.pathname.startsWith(`${t.path}/`);
+          return <li key={t.path}><NavLink to={t.path} onClick={() => { setOpen(false); setFilter(''); }} aria-current={on ? 'page' : undefined}
+            className={`block truncate rounded px-2 py-1 text-[13px] ${on ? 'bg-primary/10 font-medium text-fg' : 'text-muted hover:bg-panel-2 hover:text-fg'}`}>{L(t.label)}</NavLink></li>;
+        })}
+      </ul>
+    );
+  };
   const heading = (text: string, g?: string) => {
     if (collapsed) return <div className="mx-auto mb-1 h-px w-6 bg-line" aria-hidden />;
     if (!g) return <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{text}</p>;
@@ -149,7 +166,7 @@ export function AppShell() {
             <Button variant="ghost" aria-label="Abmelden" onClick={() => void flush().finally(() => void logout())}><LogOut size={16} /></Button>
           </div>
         </header>
-        <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">{can('dashboard.view') ? <><SectionTabs /><Outlet /></> : <NoAccess />}</main>
+        <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">{can('dashboard.view') ? <><div className={collapsed ? '' : 'lg:hidden'}><SectionTabs /></div><Outlet /></> : <NoAccess />}</main>
         {/* Platzhalter: der Inhalt (auch fixierte Speichern-Leisten) endet über der Handy-Leiste */}
         {!tablet && <><div className="h-bottombar shrink-0 md:hidden" aria-hidden /><BottomBar items={items} favs={favs} onMenu={() => setOpen(true)} /></>}
         <Toasts />
@@ -159,7 +176,10 @@ export function AppShell() {
   );
 }
 
-/** Reiterleiste eines zusammengefassten Menüpunkts (z. B. Leitstelle: CAD · klassisch · Einsätze) – nur mit mehr als einem erlaubten Reiter. */
+/**
+ * Reiterleiste eines zusammengefassten Menüpunkts (z. B. Leitstelle: CAD · klassisch · Einsätze) – nur mit mehr als einem erlaubten Reiter.
+ * Bei ausgeklapptem Menü am PC stehen die Unterpunkte links im Menü; die Leiste gibt es dann nur auf Handy/Tablet und bei eingeklapptem Menü.
+ */
 function SectionTabs() {
   const { can } = useAuth();
   const loc = useLocation();

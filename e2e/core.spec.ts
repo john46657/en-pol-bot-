@@ -242,7 +242,7 @@ test('Funk-Codes: standard codes, edit with autosave, find via global search', a
 test('Team-Chance: open it (autosave) – the public application page shows it', async ({ page, browser }) => {
   await uiLogin(page, 'admin', ADMIN_PASSWORD);
   await page.getByRole('link', { name: 'Bewerbungen', exact: true }).first().click();
-  await page.getByRole('navigation', { name: 'Bewerbungen' }).getByRole('link', { name: 'Team-Chance' }).click();
+  await page.getByRole('navigation', { name: 'Hauptmenü' }).getByRole('link', { name: 'Team-Chance' }).click();
   await page.getByLabel('Titel').fill('E2E Team-Chance');
   await page.getByRole('checkbox', { name: /Team-Chance ist geschlossen/ }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Alle Änderungen gespeichert' })).toBeVisible({ timeout: 10_000 });
