@@ -8,7 +8,7 @@ import { ChannelPicker, ChannelsPicker, RolePicker, ServersPicker, TagListEditor
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 const TEXT = [['org.name', 'Name der Organisation'], ['org.serverName', 'Servername'], ['org.timezone', 'Zeitzone (IANA)']] as const;
-const CHANNELS = [['dispatch', '📡 Leitstellen-Kanal (neue/zugewiesene Einsätze)'], ['wanted', '🚨 Fahndungs-Kanal (neue Fahndungen und Statusänderungen)'], ['announcements', '📢 Ankündigungs-Kanal'], ['applications', 'Bewerbungs-Kanal (Polizei-Bewerbungen mit Antworten + Annehmen/Ablehnen-Buttons – nur für Staff!)'], ['danger', 'Gefahrenstatus-Kanal (Stufenänderungen)'], ['qualifications', 'Qualifikations-Kanal (Anträge aus /qualipanel mit Annehmen/Ablehnen-Buttons)'], ['duty', 'Dienst-Kanal (Nachricht bei jeder Dienststatus-Änderung)'],
+const CHANNELS = [['dispatch', '📡 Leitstellen-Kanal (neue/zugewiesene Einsätze)'], ['announcements', '📢 Ankündigungs-Kanal'], ['applications', 'Bewerbungs-Kanal (Polizei-Bewerbungen mit Antworten + Annehmen/Ablehnen-Buttons – nur für Staff!)'], ['danger', 'Gefahrenstatus-Kanal (Stufenänderungen)'], ['qualifications', 'Qualifikations-Kanal (Anträge aus /qualipanel mit Annehmen/Ablehnen-Buttons)'], ['duty', 'Dienst-Kanal (Nachricht bei jeder Dienststatus-Änderung)'],
   ['teamlist', 'Teamlisten-Kanal (aktualisiert sich selbst, ein Kanal)'], ['tickets', 'Support-Ticket-Kategorie (eine Kategorie)'], ['staffRole', 'Staff-Rolle (sieht Support-Tickets)'], ['radioRole', 'Funk-Rolle (wird mit der Funk-Whitelist vergeben)'], ['dutyRole', 'Im-Dienst-Rolle(n) (im Dienst vergeben, sonst entzogen; mehrere Server: je eine ID, kommagetrennt)'], ['breakRole', 'Pausen-Rolle(n) (optional)'], ['trainingRole', 'Ausbildungs-Rolle(n) (optional)'], ['adminDutyRole', 'Verwaltungsdienst-Rolle(n) (optional)'], ['guildId', 'Server – optional (für Discord-Anmeldung/Mitgliedschaft)']] as const;
 /** Rollen-Felder (Auswahl als Rolle) und Felder mit genau einer ID. */
 const ROLE_KEYS = new Set(['staffRole', 'radioRole', 'dutyRole', 'breakRole', 'trainingRole', 'adminDutyRole']);
@@ -33,7 +33,8 @@ export function Settings() {
   const setChannel = (k: string, v: string) => {
     const next = { ...drafts, [`discord.${k}`]: v };
     setDrafts(next);
-    const all = Object.fromEntries(CHANNELS.map(([c]) => [c, (next[`discord.${c}`] ?? String(channels[c] ?? '')).trim()]).filter(([, x]) => x));
+    // Werte, die woanders eingestellt werden (z. B. Fahndungs-Kanal auf der Fahndungsseite), bleiben erhalten
+    const all = Object.fromEntries([...Object.entries(channels).map(([c, x]) => [c, String(x ?? '').trim()]), ...CHANNELS.map(([c]) => [c, (next[`discord.${c}`] ?? String(channels[c] ?? '')).trim()])].filter(([, x]) => x));
     // nur vollständige IDs speichern (sonst lehnt der Server ab); halbe Eingaben bleiben lokal stehen
     if (manage && Object.values(all).every((x) => /^\d{15,25}(\s*,\s*\d{15,25})*$/.test(String(x)))) put('discord.channels', all, 'Discord-Kanäle');
   };
@@ -66,7 +67,7 @@ export function Settings() {
         </div>
       </Card>
       <Card title="Discord-Bot-Kanäle" className="mt-4">
-        <p className="mb-3 text-xs text-muted">Kanal aus der Liste wählen – wird automatisch gespeichert. Beispiel: <b>Fahndungs-Kanal</b> = euer Fahndungs-Kanal; jede Fahndung (aus Dashboard oder Discord) wird dort gepostet. Leer = diese Benachrichtigungsart ist deaktiviert (nichts wird eingereiht). Mehrere Kanäle (auch auf verschiedenen Servern): IDs mit Komma trennen. Alle, die den Discord-Kanal lesen können, sehen die Beiträge – nutze Kanäle nur für Staff. Teamliste, Ticket-Kategorie und Staff-/Funk-Rolle nehmen genau eine ID.</p>
+        <p className="mb-3 text-xs text-muted">Kanal aus der Liste wählen – wird automatisch gespeichert. Beispiel: <b>Leitstellen-Kanal</b> = euer Leitstellen-Kanal; jeder neue Einsatz wird dort gepostet. Den Fahndungs-Kanal stellst du direkt auf der Seite <b>Fahndungen</b> ein. Leer = diese Benachrichtigungsart ist deaktiviert (nichts wird eingereiht). Mehrere Kanäle (auch auf verschiedenen Servern): IDs mit Komma trennen. Alle, die den Discord-Kanal lesen können, sehen die Beiträge – nutze Kanäle nur für Staff. Teamliste, Ticket-Kategorie und Staff-/Funk-Rolle nehmen genau eine ID.</p>
         <div className="grid gap-3 md:grid-cols-2">{CHANNELS.map(([k, label]) => (
           <div key={k} className="grid gap-1">
             <p className="text-xs font-medium text-muted">{label}</p>
@@ -91,7 +92,7 @@ export function Settings() {
   );
 }
 
-interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds?: string[] }
+interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds?: string[]; guildAdmins?: boolean }
 
 /** „Mit Discord anmelden“: neue Konten, Server-Pflicht, Discord-Rolle → Systemrolle (wird bei jeder Discord-Anmeldung abgeglichen). */
 function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: DiscordLogin; onSave: (v: DiscordLogin) => void }) {
@@ -115,10 +116,11 @@ function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: 
       <div className="space-y-2 text-sm">
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.signup} onChange={(e) => setD({ ...d, signup: e.target.checked })} />Neue Benutzer können sich mit Discord registrieren (Konto wird bei der ersten Anmeldung erstellt)</label>
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Nur Mitglieder unseres Discord-Servers dürfen sich anmelden</label>
+        <label className="flex items-start gap-2"><input type="checkbox" className="mt-1" disabled={!manage} checked={d.guildAdmins !== false} onChange={(e) => setD({ ...d, guildAdmins: e.target.checked })} /><span>Discord-Admins haben immer Zugang: Wer auf einem Server das Discord-Recht <b>Administrator</b> hat (oder Besitzer ist), kommt auch ohne Teamrolle rein und bekommt die Rolle „Server-Administrator“ – nur für diesen Server. Verliert die Person das Recht, wird die Rolle wieder entzogen.</span></label>
       </div>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rollen mit Dashboard-Zugriff (Teamrollen)</h3>
       <div className="max-w-xl"><RolePicker ariaLabel="Teamrollen" disabled={!manage} max={20} value={team.match(/\d{15,25}/g) ?? []} onChange={(ids) => setTeam(ids.join(', '))} /></div>
-      <p className="mt-1 text-xs text-muted">Nur Personen mit einer dieser Discord-Rollen können sich anmelden (mehrere Server / Rollen: kommagetrennt). Leer = alle Servermitglieder. Konten in ADMIN_DISCORD_IDS kommen immer rein. Wird bei jeder Anmeldung und danach laufend geprüft (Verlust der Rolle beendet die Sitzung). Discord-Rollen mit Dashboard-Rollen verknüpfen: Rollen &amp; Rechte → Rolle → „Verknüpfte Discord-Rollen“.</p>
+      <p className="mt-1 text-xs text-muted">Nur Personen mit einer dieser Discord-Rollen können sich anmelden (mehrere Server / Rollen: kommagetrennt). Leer = alle Servermitglieder. Konten in ADMIN_DISCORD_IDS und (falls oben aktiviert) Discord-Admins des jeweiligen Servers kommen immer rein. Wird bei jeder Anmeldung und danach laufend geprüft (Verlust der Rolle beendet die Sitzung). Discord-Rollen mit Dashboard-Rollen verknüpfen: Rollen &amp; Rechte → Rolle → „Verknüpfte Discord-Rollen“.</p>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rolle → Systemrolle (bei jeder Discord-Anmeldung abgeglichen)</h3>
       <div className="space-y-2">
         {d.roleMap.map((r, i) => (

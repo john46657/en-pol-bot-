@@ -134,7 +134,8 @@ let DiscordOAuthService = class DiscordOAuthService {
         if (!owner && settings.requireGuild && member === null)
             throw new DiscordLoginFailure('not_member');
         // Team-Rolle Pflicht: ohne eine der eingestellten Discord-Rollen kein Zugang (Besitzer aus ADMIN_DISCORD_IDS ausgenommen)
-        if (!owner && settings.teamRoleIds.length) {
+        const guildAdmin = settings.guildAdmins && member && member !== 'unknown' && !!member.admin?.length; // Discord-Administrator eines Servers
+        if (!owner && !guildAdmin && settings.teamRoleIds.length) {
             if (member === 'unknown')
                 throw new DiscordLoginFailure('cannot_verify');
             if (member === null)
@@ -155,7 +156,7 @@ let DiscordOAuthService = class DiscordOAuthService {
             await this.prisma.discordLink.updateMany({ where: { userId: user.id, discordId: du.id }, data: { managedGuilds: guilds, guildsSyncedAt: new Date() } });
         if (member && member !== 'unknown') {
             await this.access.recordMemberships(user.id, member.byGuild, member.checked);
-            await this.access.syncRoles(user.id, member.byGuild, settings, member.checked);
+            await this.access.syncRoles(user.id, member.byGuild, settings, member.checked, member.admin);
         }
         this.access.remember(user.id, true);
         await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });

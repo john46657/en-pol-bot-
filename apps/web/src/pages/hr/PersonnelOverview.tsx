@@ -40,6 +40,15 @@ const sortValue = (r: PersonRow, k: SortKey): string | number => {
   }
 };
 
+/** Ausbildungen, Beförderungen, Auszeichnungen, Verwarnungen als kleine Zähler – nur was vorhanden ist. */
+function FileCounts({ r }: { r: PersonRow }) {
+  const items = [['📚', 'Ausbildungen', r.counts.trainings], ['🎖️', 'Beförderungen', r.counts.promotions], ['🏅', 'Auszeichnungen', r.counts.awards], ['⚠️', 'Verwarnungen', r.counts.warnings ?? 0]] as const;
+  const shown = items.filter(([, , n]) => n > 0);
+  if (!shown.length) return <span className="text-muted">—</span>;
+  return <span className="flex flex-wrap gap-1.5">{shown.map(([icon, label, n]) => <span key={label} title={`${label}: ${n}`} className={`rounded px-1.5 py-0.5 text-xs ${icon === '⚠️' ? 'bg-warning/15 text-warning' : 'bg-panel-2'}`}><span aria-hidden>{icon} </span>{n}<span className="sr-only"> {label}</span></span>)}</span>;
+}
+const STATES: [State, string][] = [['', 'Alle'], ['active', 'Aktiv'], ['absent', 'Abwesend'], ['inactive', 'Inaktiv']];
+
 export const RankLabel = ({ name, color, icon }: { name: string | null; color: string | null; icon: string | null }) =>
   name ? <span className="inline-flex items-center gap-1.5">{icon ? <span aria-hidden>{icon}</span> : <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color ?? '#64748b' }} />}{name}</span> : <span className="text-muted">—</span>;
 
@@ -81,6 +90,9 @@ export function PersonnelOverview() {
   });
   const showWarn = !!data?.rows.some((r) => r.counts.warnings !== null);
   const cols = COLS.filter((c) => c.key !== 'warnings' || showWarn);
+  // Spalten ohne Inhalt (z. B. noch keine Ränge vergeben) weglassen – die Tabelle bleibt übersichtlich
+  const hasRank = !!data?.rows.some((r) => r.rank), hasDept = !!data?.rows.some((r) => r.department);
+  const tableCols = cols.filter((c) => (c.key !== 'rank' || hasRank) && (c.key !== 'department' || hasDept) && !['trainings', 'promotions', 'awards', 'warnings'].includes(c.key));
   const rows = useMemo(() => {
     const r = [...(data?.rows ?? [])];
     const m = v.dir === 'asc' ? 1 : -1;
@@ -96,7 +108,7 @@ export function PersonnelOverview() {
 
   return (
     <div>
-      <PageHeader title="Personal" subtitle={data ? `${rows.length} Personalakten` : undefined}
+      <PageHeader title="Personal" subtitle={data ? `${rows.length} Personalakte${rows.length === 1 ? '' : 'n'}${!hasRank && rows.length ? ' · noch keine Ränge vergeben' : ''}` : undefined}
         actions={<span className="flex flex-wrap gap-2">
           {rows.length > 0 && <Button variant="secondary" title="Gefilterte Liste als CSV (Excel)" onClick={() => downloadCsv('personal', ['Name', 'Dienstnummer', 'Rufname', 'Rang', 'Abteilung', 'Status', 'Eingetreten', 'Discord', 'Roblox', 'Beförderungen', 'Auszeichnungen', 'Verwarnungen', 'Ausbildungen', 'Abwesend bis'],
             rows.map((r) => [r.name, r.serviceNumber, r.callsign, r.rank, r.department, statusInfo(cfg, r.status).label, r.joinDate ? fmtDate(r.joinDate) : '', r.discordName, r.robloxName, r.counts.promotions, r.counts.awards, r.counts.warnings ?? '', r.counts.trainings, r.absentUntil ? fmtDate(r.absentUntil) : '']))}><Download size={16} aria-hidden />CSV</Button>}
@@ -119,10 +131,10 @@ export function PersonnelOverview() {
           <Select aria-label="Abteilung" className="w-auto" value={f.department} onChange={(e) => setF({ department: e.target.value })}>
             <option value="">Alle Abteilungen</option>{(data?.departments ?? cfg?.departments ?? []).map((d) => <option key={d.name}>{d.name}</option>)}
           </Select>
-          <Select aria-label="Zustand" className="w-auto" value={f.state} onChange={(e) => setF({ state: e.target.value as State })}>
-            <option value="">Alle</option><option value="active">Aktiv</option><option value="inactive">Inaktiv</option><option value="absent">Abwesend</option>
-          </Select>
-          <div className="flex items-center gap-1" role="group" aria-label="Ansicht">
+          <div className="flex rounded-md border border-line p-0.5" role="group" aria-label="Zustand">
+            {STATES.map(([k, label]) => <button key={k} type="button" aria-pressed={f.state === k} onClick={() => setF({ state: k })} className={`rounded px-2.5 py-1 text-sm ${f.state === k ? 'bg-primary text-white' : 'text-muted hover:text-fg'}`}>{label}</button>)}
+          </div>
+          <div className="ml-auto flex items-center gap-1" role="group" aria-label="Ansicht">
             {!phone && <><Button size="sm" variant={v.view === 'cards' ? 'primary' : 'secondary'} aria-pressed={v.view === 'cards'} onClick={() => setV({ ...v, view: 'cards' })}><LayoutGrid size={14} aria-hidden />Karten</Button>
             <Button size="sm" variant={v.view === 'table' ? 'primary' : 'secondary'} aria-pressed={v.view === 'table'} onClick={() => setV({ ...v, view: 'table' })}><Table2 size={14} aria-hidden />Tabelle</Button></>}
           </div>
@@ -141,25 +153,21 @@ export function PersonnelOverview() {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-line text-left text-xs text-muted">
-              {cols.map((c) => (
+              {tableCols.map((c) => (
                 <th key={c.key} className={pad} aria-sort={v.sort === c.key ? (v.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
                   <button type="button" className="inline-flex items-center gap-1 hover:text-fg" onClick={() => sortBy(c.key)}>{c.label}{v.sort === c.key && (v.dir === 'asc' ? <ArrowUp size={12} aria-hidden /> : <ArrowDown size={12} aria-hidden />)}</button>
                 </th>
               ))}
-              <th className={pad}>Dienstnummer</th>
+              <th className={pad}>Akte</th>
             </tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} tabIndex={0} className="cursor-pointer border-b border-line/50 hover:bg-panel-2" onClick={() => open(r)} onKeyDown={(e) => { if (e.key === 'Enter') open(r); }}>
-                  <td className={pad}><span className="flex items-center gap-2"><Avatar src={r.avatar} name={r.name} size={v.compact ? 20 : 28} /><span className="min-w-0"><span className="block font-medium">{r.name}</span>{!v.compact && (r.discordName || r.robloxName) && <span className="block text-xs text-muted">{[r.discordName, r.robloxName && `Roblox: ${r.robloxName}`].filter(Boolean).join(' · ')}</span>}</span>{away(r)}</span></td>
-                  <td className={pad}><RankLabel name={r.rank} color={r.rankColor} icon={r.rankIcon} /></td>
-                  <td className={pad}>{r.department ?? <span className="text-muted">—</span>}</td>
+                  <td className={pad}><span className="flex items-center gap-2"><Avatar src={r.avatar} name={r.name} size={v.compact ? 20 : 28} /><span className="min-w-0"><span className="block font-medium">{r.serviceNumber && <span className="mr-1.5 rounded bg-panel-2 px-1.5 py-0.5 font-mono text-xs text-muted">{r.serviceNumber}</span>}{r.name}</span>{!v.compact && (r.discordName || r.robloxName) && <span className="block text-xs text-muted">{[r.discordName, r.robloxName && `Roblox: ${r.robloxName}`].filter(Boolean).join(' · ')}</span>}</span>{away(r)}</span></td>
+                  {hasRank && <td className={pad}><RankLabel name={r.rank} color={r.rankColor} icon={r.rankIcon} /></td>}
+                  {hasDept && <td className={pad}>{r.department ?? <span className="text-muted">—</span>}</td>}
                   <td className={pad}>{status(r)}</td>
-                  <td className={pad}>{r.counts.trainings}</td>
-                  <td className={pad}>{r.counts.promotions}</td>
-                  <td className={pad}>{r.counts.awards}</td>
-                  {showWarn && <td className={pad}>{r.counts.warnings ?? '—'}</td>}
-                  <td className={pad}>{r.serviceNumber ?? <span className="text-muted">—</span>}</td>
+                  <td className={pad}><FileCounts r={r} /></td>
                 </tr>
               ))}
             </tbody>
@@ -181,10 +189,7 @@ export function PersonnelOverview() {
                   <dt className="text-muted">Dienstnummer</dt><dd>{r.serviceNumber ?? '—'}</dd>
                 </dl>
               )}
-              <p className="mt-2 flex flex-wrap gap-x-3 text-xs text-muted">
-                <span title="Ausbildungen">📚 {r.counts.trainings}</span><span title="Beförderungen">🎖️ {r.counts.promotions}</span><span title="Auszeichnungen">🏅 {r.counts.awards}</span>
-                {r.counts.warnings !== null && <span title="Verwarnungen">⚠️ {r.counts.warnings}</span>}
-              </p>
+              <div className="mt-2 text-xs"><FileCounts r={r} /></div>
             </button>
           ))}
         </div>

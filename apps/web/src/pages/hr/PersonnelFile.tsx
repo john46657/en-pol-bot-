@@ -522,7 +522,7 @@ function WarningsTab({ p, cfg }: { p: Profile; cfg: HrConfig | undefined }) {
       <Modal open={open} title="Verwarnung erstellen" onClose={() => setOpen(false)}>
         <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-1 text-sm">Schweregrad<Select aria-label="Schweregrad" value={d.severity} onChange={(e) => { const s = sevs.find((x) => x.key === e.target.value); setD({ ...d, severity: e.target.value, expiresAt: plusDays(s?.defaultDays ?? 0) }); }}>{sevs.map((s) => <option key={s.key} value={s.key}>{s.emoji} {s.label}</option>)}</Select></label>
+            <label className="grid gap-1 text-sm">Schweregrad<Select aria-label="Schweregrad" value={d.severity} onChange={(e) => { const s = sevs.find((x) => x.key === e.target.value); setD({ ...d, severity: e.target.value, expiresAt: plusDays(s?.defaultDays ?? 0) }); }}>{sevs.map((s) => <option key={s.key} value={s.key}>{s.emoji} {s.label}{s.defaultDays ? ` (${s.defaultDays} Tage)` : ' (läuft nicht ab)'}</option>)}</Select></label>
             <label className="grid gap-1 text-sm">Kategorie<Select aria-label="Kategorie" value={d.category} onChange={(e) => setD({ ...d, category: e.target.value })}><option value="">– keine –</option>{(cfg?.warningCategories ?? []).map((c) => <option key={c}>{c}</option>)}</Select></label>
           </div>
           <label className="grid gap-1 text-sm">Grund *<Input aria-label="Grund" maxLength={300} value={d.summary} onChange={(e) => setD({ ...d, summary: e.target.value })} /></label>

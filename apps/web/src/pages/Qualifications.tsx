@@ -6,22 +6,19 @@ import { api } from '../lib/api';
 import { errText } from '../lib/tickets';
 import { useAuth } from '../lib/auth';
 import type { FormField } from '@enrp/shared';
-import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationActions } from '../components/DecisionButtons';
-import { ApplicationSettingsEditor, defaultAppSettings, withDefaults, type AppCommon } from '../components/ApplicationSettings';
+import { fromDraft, newUnit, toDraft, UnitsEditor, unitsComplete, type DraftUnit, type Unit } from '../components/UnitsEditor';
 import { GuildTag, useServer } from '../lib/guilds';
 import { ServerScope } from './Applications';
+import { PanelSendBox } from '../components/PanelSendBox';
 import { Button, Card, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
-interface Unit extends Partial<AppCommon> { key: string; name: string; description: string; roleId?: string; questions: FormField[] }
-interface Config { own?: boolean; title: string; intro: string; units: Unit[]; police: { title: string; description: string; pingRoleIds?: string[] }; policeForm: FormField[] }
+interface Config { own?: boolean; title: string; intro: string; panelChannelId?: string; qualiPanelPosted?: { channelId: string; messageId: string } | null; units: Unit[]; police: { title: string; description: string; pingRoleIds?: string[] }; policeForm: FormField[] }
 interface Application {
   id: string; number: string; unit: string; unitName: string; discordId: string; discordName: string; linkedName: string | null;
   answers: { question: string; answer: string }[]; status: string; createdAt: string; decidedAt: string | null; decidedByName: string | null;
   decisionReason: string | null; durationSec: number | null; guildId?: string | null;
 }
-type DraftUnit = Unit & AppCommon & { isNew?: boolean };
-const newQuestion = (): FormField => ({ key: 'frage1', label: '', type: 'TEXT', required: true, minLength: 0, maxLength: 1000, options: [], multiple: false });
 
 /** Qualifikationen (SEK, Flugstaffel, Ausbilder …): Bewerbungen aus dem Discord-Panel entscheiden und Einheiten/Fragen einrichten. */
 export function Qualifications() {
@@ -51,32 +48,30 @@ export function Qualifications() {
   // ---- Setup ----
   const [title, setTitle] = useState('');
   const [intro, setIntro] = useState('');
+  const [panelChannel, setPanelChannel] = useState('');
   const [units, setUnits] = useState<DraftUnit[]>([]);
   const [loadedFrom, setLoadedFrom] = useState<Config>(); // aus welchem Server-Stand die Felder befüllt sind
   useEffect(() => {
     if (!config.data) return;
     setLoadedFrom(config.data);
-    setTitle(config.data.title); setIntro(config.data.intro);
-    // die frühere einzelne „Rolle bei Annahme“ wird zu den Accepted Roles
-    setUnits(config.data.units.map((u) => {
-      const settings = withDefaults(u.settings);
-      if (u.roleId && !settings.roles.accepted.includes(u.roleId)) settings.roles.accepted = [u.roleId, ...settings.roles.accepted];
-      return { ...u, roleId: '', enabled: u.enabled ?? true, channelId: u.channelId ?? '', acceptedChannelId: u.acceptedChannelId ?? '', deniedChannelId: u.deniedChannelId ?? '', pingRoleIds: u.pingRoleIds ?? [], settings };
-    }));
+    setTitle(config.data.title); setIntro(config.data.intro); setPanelChannel(config.data.panelChannelId ?? '');
+    // hier nur die Einheiten des Qualifikations-Panels; weitere Bewerbungsarten stehen unter Bewerbungen → Einrichtung
+    setUnits(config.data.units.filter((u) => (u.panel ?? 'quali') === 'quali').map(toDraft));
   }, [config.data]);
+  // Bewerbungsarten des Bewerbungs-Panels unverändert mitschicken
+  const allUnits = (mine: DraftUnit[]) => [...mine.map(fromDraft), ...(config.data?.units ?? []).filter((u) => u.panel === 'apply')];
   const save = useMutation({
     mutationFn: () => api<Config>('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: {
       // die Polizei-Bewerbung wird unter „Applications → Setup“ bearbeitet und hier unverändert mitgeschickt
-      title, intro, police: config.data!.police,
-      units: units.map(({ isNew: _n, ...u }) => u),
+      title, intro, panelChannelId: panelChannel, police: config.data!.police,
+      units: allUnits(units),
     } }),
-    onSuccess: () => { setErr(undefined); setMsg('Gespeichert. Fragen gelten sofort für neue Bewerbungen; poste das Panel in Discord erneut (/qualipanel), damit geänderte Texte oder Einheiten angezeigt werden.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
+    onSuccess: () => { setErr(undefined); setMsg('Gespeichert. Fragen gelten sofort für neue Bewerbungen; ein bereits aus dem Dashboard gesendetes Panel wird automatisch aktualisiert.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); }, onError,
   });
   // automatisch speichern – je Server getrennt; unvollständige Einheiten (ohne Name/Schlüssel/Frage) bleiben lokal
   // erst wenn die Felder aus den geladenen Daten befüllt sind – sonst gilt das Befüllen selbst als Änderung und wird beim Öffnen gespeichert
-  const qDraft = useMemo(() => (config.data && loadedFrom === config.data ? { title, intro, units } : undefined), [title, intro, units, config.data, loadedFrom]);
-  useAutosaveDraft(config.data && can('qualifications.manage') ? `quali:setup:${server || 'all'}` : null, qDraft, (d) => (d.units.every((u) => u.name.trim() && u.questions.length) ? { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: d.title, intro: d.intro, police: config.data!.police, units: d.units.map(({ isNew: _n, ...u }) => u) }, label: 'Qualifikationen' } : null), 1500);
-  const patch = (i: number, p: Partial<DraftUnit>) => setUnits(units.map((u, j) => (j === i ? { ...u, ...p } : u)));
+  const qDraft = useMemo(() => (config.data && loadedFrom === config.data ? { title, intro, panelChannel, units } : undefined), [title, intro, panelChannel, units, config.data, loadedFrom]);
+  useAutosaveDraft(config.data && can('qualifications.manage') ? `quali:setup:${server || 'all'}` : null, qDraft, (d) => (unitsComplete(d.units) ? { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: d.title, intro: d.intro, panelChannelId: d.panelChannel, police: config.data!.police, units: allUnits(d.units) }, label: 'Qualifikationen' } : null), 1500);
 
   return (
     <>
@@ -115,25 +110,19 @@ export function Qualifications() {
         {tab === 'Einrichtung' && manage && (config.isLoading ? <SkeletonRows /> : config.error ? <ErrorState error={config.error} onRetry={() => void config.refetch()} /> : (
           <div className="grid gap-4">
             <ServerScope own={config.data?.own} onReset={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })} />
-            <Card title="Qualifikations-Panel (/qualipanel)">
+            <Card title="Qualifikations-Panel in Discord">
               <div className="grid gap-3">
                 <Field label="Panel-Titel">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
                 <Field label="Einleitungstext (Discord-Markdown erlaubt)">{(id) => <Textarea id={id} value={intro} maxLength={1500} onChange={(e) => setIntro(e.target.value)} />}</Field>
               </div>
+              <PanelSendBox label="Kanal für das Qualifikations-Panel" channelId={panelChannel} onChannel={setPanelChannel} posted={config.data?.qualiPanelPosted}
+                onSend={async (mode) => { await save.mutateAsync(); return api('/qualifications/quali-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); }}
+                onSent={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })}
+                hint="Das Panel bekommt das Auswahlmenü mit allen Einheiten. Alternativ geht weiterhin /qualipanel direkt in Discord." />
             </Card>
-            {units.map((u, i) => (
-              <Card key={i} title={u.name || 'Neue Einheit'} actions={<Button size="sm" variant="ghost" disabled={units.length <= 1} onClick={() => setUnits(units.filter((_, j) => j !== i))}>Einheit entfernen</Button>}>
-                <div className="mb-4 grid gap-3 md:grid-cols-2">
-                  <Field label="Schlüssel (intern, a-z 0-9 - _)">{(id) => <Input id={id} value={u.key} disabled={!u.isNew} maxLength={24} onChange={(e) => patch(i, { key: e.target.value.toLowerCase() })} />}</Field>
-                  <Field label="Beschreibung (im Panel angezeigt)">{(id) => <Textarea id={id} rows={2} maxLength={600} value={u.description} onChange={(e) => patch(i, { description: e.target.value })} />}</Field>
-                </div>
-                <ApplicationSettingsEditor value={u} onChange={(p) => patch(i, p)} name={u.name} onName={(v) => patch(i, { name: v })}
-                  pendingHint="Neue Bewerbungen werden hier gepostet (leer = Qualifikations-Kanal aus den Einstellungen)."
-                  questions={<section className="grid gap-2"><h3 className="text-base font-semibold">Fragen</h3><FormQuestionsEditor value={u.questions} onChange={(q) => patch(i, { questions: q })} /></section>} />
-              </Card>
-            ))}
+            <UnitsEditor units={units} onChange={setUnits} noun="Einheit" minCount={1} pendingHint="Neue Bewerbungen werden hier gepostet (leer = Qualifikations-Kanal aus den Einstellungen)." />
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="secondary" disabled={units.length >= 10} onClick={() => setUnits([...units, { key: '', name: '', description: '', roleId: '', enabled: true, channelId: '', acceptedChannelId: '', deniedChannelId: '', pingRoleIds: [], settings: defaultAppSettings(), questions: [newQuestion()], isNew: true }])}>Einheit hinzufügen</Button>
+              <Button variant="secondary" disabled={units.length >= 25} onClick={() => setUnits([...units, newUnit('quali')])}>Einheit hinzufügen</Button>
               <span className="text-sm text-muted">Änderungen werden automatisch gespeichert.</span>
               <Button variant="secondary" disabled={save.isPending} onClick={() => { setMsg(undefined); save.mutate(); }}>Jetzt speichern</Button>
               {msg && <span className="text-sm text-muted">{msg}</span>}

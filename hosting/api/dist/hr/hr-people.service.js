@@ -273,8 +273,14 @@ let HrPeopleService = class HrPeopleService {
         const color = reached ? 0xef4444 : data.color ? parseInt(data.color.slice(1), 16) : 0xeab308;
         const limitText = reached ? `\n\n⚠️ **Grenze erreicht (${count}/${w.limit}).**` : '';
         if (w.channelId) {
-            const ping = reached && w.atLimit.pingDiscordRoleIds.length ? { content: w.atLimit.pingDiscordRoleIds.map((r) => `<@&${r}>`).join(' '), mentionRoles: w.atLimit.pingDiscordRoleIds } : {};
-            await this.core.discord.postMessage(`hr-warning-${row.id.slice(0, 8)}`, w.channelId, { ...ping, embeds: [{ title: `${reached ? '⛔' : '⚠️'} Verwarnung`, description: ((0, shared_1.fillTemplate)(w.template, vars) + limitText).slice(0, 4000), color, footer: `Verwarnt von ${vars.durch}`, timestamp: new Date().toISOString() }] }, { forceNew: true });
+            const roles = reached ? w.atLimit.pingDiscordRoleIds : [];
+            const ping = roles.map((r) => `<@&${r}>`).join(' ');
+            const key = `hr-warning-${row.id.slice(0, 8)}`;
+            // Erwähnung der Person wird angezeigt, pingt aber nicht (sie bekommt die DM); nur die Rollen bei Erreichen der Grenze werden gepingt
+            if (w.style === 'text')
+                await this.core.discord.postMessage(key, w.channelId, { content: [ping, (0, shared_1.fillTemplate)(w.template, vars) + (reached ? `\n⛔ Grenze erreicht (${count}/${w.limit}).` : '')].filter(Boolean).join('\n').slice(0, 2000), mentionRoles: roles }, { forceNew: true });
+            else
+                await this.core.discord.postMessage(key, w.channelId, { ...(ping ? { content: ping, mentionRoles: roles } : {}), embeds: [{ title: `${reached ? '⛔' : '⚠️'} Verwarnung`, description: ((0, shared_1.fillTemplate)(w.template, vars) + limitText).slice(0, 4000), color, footer: `Verwarnt von ${vars.durch}`, timestamp: new Date().toISOString() }] }, { forceNew: true });
         }
         if (w.dm)
             await this.core.dm(p.userId, { embeds: [{ title: '⚠️ Du wurdest verwarnt', description: `**Grund:** ${vars.grund}\n**Verwarnungen:** ${count}/${w.limit}\n**Gültig bis:** ${vars.ablauf}${limitText}`.slice(0, 4000), color }] });

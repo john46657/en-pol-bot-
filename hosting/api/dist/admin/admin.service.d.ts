@@ -345,6 +345,8 @@ export declare const SETTING_SCHEMAS: {
         }>, "many">;
         /** Team-Rolle(n): nur wer eine davon auf dem Discord-Server hat, kommt ins MDT/Dashboard (leer = alle Mitglieder). */
         teamRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** Discord-Administratoren (Recht „Administrator“ oder Besitzer) eines Servers kommen immer rein und verwalten diesen Server. */
+        guildAdmins: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         signup: boolean;
         requireGuild: boolean;
@@ -353,6 +355,7 @@ export declare const SETTING_SCHEMAS: {
             discordRoleId: string;
         }[];
         teamRoleIds: string[];
+        guildAdmins: boolean;
     }, {
         signup: boolean;
         requireGuild: boolean;
@@ -361,6 +364,7 @@ export declare const SETTING_SCHEMAS: {
             discordRoleId: string;
         }[];
         teamRoleIds?: string[] | undefined;
+        guildAdmins?: boolean | undefined;
     }>;
 };
 export type SettingKey = keyof typeof SETTING_SCHEMAS;

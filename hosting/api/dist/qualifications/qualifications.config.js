@@ -66,6 +66,8 @@ exports.unitSchema = zod_1.z.object({
     questions: unitQuestions,
     /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
     pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(10).default([]),
+    /** In welchem Panel die Einheit steht: Qualifikations-Panel oder (als weitere Bewerbungsart) Bewerbungs-Panel. */
+    panel: zod_1.z.enum(['quali', 'apply']).default('quali'),
 });
 /** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
 exports.policeSchema = zod_1.z.object({
@@ -74,13 +76,17 @@ exports.policeSchema = zod_1.z.object({
     /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */
     channelId: channelOpt,
     pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-Rollen-ID (15–25 Ziffern)')).max(10).default([]),
+    /** Kanal, in den das Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: channelOpt,
     title: zod_1.z.string().trim().min(2).max(100).default('📋 Bewerbung bei EN Polizei'),
     description: zod_1.z.string().trim().max(1500).default('Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.'),
 });
 exports.configSchema = zod_1.z.object({
     title: zod_1.z.string().trim().min(2).max(100).default('Qualifikationen'),
+    /** Kanal, in den das Qualifikations-Panel aus dem Dashboard gesendet wird. */
+    panelChannelId: channelOpt,
     intro: zod_1.z.string().trim().max(1500).default(''),
-    units: zod_1.z.array(exports.unitSchema).min(1).max(10).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
+    units: zod_1.z.array(exports.unitSchema).min(1).max(30).refine((u) => new Set(u.map((x) => x.key)).size === u.length, 'Die Schlüssel der Einheiten müssen eindeutig sein.'),
     police: exports.policeSchema.default({}),
 });
 /** Speichern aus „Qualifications → Setup“: Panels + Einheiten und optional die Fragen der Polizei-Bewerbung. */

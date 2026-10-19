@@ -72,6 +72,7 @@ export declare class HrCoreService {
             channelId: string | null;
             template: string;
             limit: number;
+            style: "text" | "embed";
             atLimit: {
                 status: string | null;
                 notifyRoleIds: string[];
@@ -106,6 +107,7 @@ export declare class HrCoreService {
             emoji: string;
             defaultDays: number;
         }[];
+        addedDefaults: string[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
         notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {

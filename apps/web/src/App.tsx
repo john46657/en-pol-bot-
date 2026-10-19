@@ -42,7 +42,6 @@ const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
 const RadioWhitelist = lazy(() => import('./pages/RadioWhitelist').then((m) => ({ default: m.RadioWhitelist })));
-const WantedHits = lazy(() => import('./pages/WantedHits').then((m) => ({ default: m.WantedHits })));
 const TeamChance = lazy(() => import('./pages/TeamChance').then((m) => ({ default: m.TeamChance })));
 const StaffLists = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.StaffLists })));
 const FormPanels = lazy(() => import('./pages/DiscordPanels').then((m) => ({ default: m.FormPanels })));
@@ -90,6 +89,12 @@ const MdtWeapons = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ de
 const MdtSettings = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtSettings })));
 
 /** Statistik: allgemeine Statistik ODER Bewerbungs-Statistik genügt. */
+/** Fahndungstreffer stehen jetzt auf der Fahndungsseite – alte Links (auch aus Discord, `?id=`) dorthin umleiten. */
+function WantedHitsRedirect() {
+  const loc = useLocation();
+  return <Navigate to={`/wanted${loc.search}`} replace />;
+}
+
 function AnalyticsGate() {
   const { can } = useAuth();
   return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <Forbidden />;
@@ -210,7 +215,7 @@ export function App() {
           <Route path="investigations" element={list(R.investigations as never, 'investigations.view')} />
           <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
-          <Route path="wanted/hits" element={<Guard perm="wanted.view"><WantedHits /></Guard>} />
+          <Route path="wanted/hits" element={<WantedHitsRedirect />} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
           <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />

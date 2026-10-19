@@ -8,7 +8,7 @@ export const WARNING_COMMANDS: CommandDef[] = [{
   options: [
     { name: 'mitglied', description: 'Wer wird verwarnt?', type: 'user', required: true },
     { name: 'grund', description: 'Grund, z. B. „Shift Abuse“', type: 'string', required: true, maxLength: 300 },
-    { name: 'schweregrad', description: 'Standard: Verwarnung', type: 'string', choices: [{ name: 'Verwarnung', value: 'WARNING' }, { name: 'Abmahnung', value: 'REPRIMAND' }, { name: 'Schwerwiegender Verstoß', value: 'SEVERE' }] },
+    { name: 'schweregrad', description: 'Standard: Verwarnung', type: 'string', choices: [{ name: 'Verwarnung', value: 'WARNING' }, { name: 'Abmahnung', value: 'REPRIMAND' }, { name: 'Schwerwiegender Verstoß', value: 'SEVERE' }, { name: 'Dauerhafter Vermerk (läuft nicht ab)', value: 'PERMANENT' }] },
   ],
   async run(c): Promise<Reply> {
     try {

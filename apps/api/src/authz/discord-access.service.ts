@@ -11,11 +11,23 @@ const CHECK_TTL_MS = 2 * 60_000;
 /** Regelmäßiger Abgleich aller angemeldeten Discord-Benutzer (auch ohne Aktivität). */
 const SWEEP_MS = 5 * 60_000;
 
-/** `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum Dashboard (leer = jedes Server-Mitglied). */
-export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds: string[] }
-export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] };
-/** `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server. */
-export type Membership = { roles: string[]; byGuild: Record<string, string[]>; checked: string[] } | null | 'unknown';
+/**
+ * `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum Dashboard (leer = jedes Server-Mitglied).
+ * `guildAdmins`: wer auf einem Server das Discord-Recht „Administrator“ hat (oder Besitzer ist), kommt immer rein und ist
+ * Server-Administrator genau dieses Servers.
+ */
+export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds: string[]; guildAdmins: boolean }
+export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [], guildAdmins: true };
+/**
+ * `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server,
+ * `admin` = Server, auf denen die Person das Discord-Recht „Administrator“ hat oder Besitzer ist.
+ */
+export type Membership = { roles: string[]; byGuild: Record<string, string[]>; checked: string[]; admin?: string[] } | null | 'unknown';
+/** Rolle, die Discord-Administratoren eines Servers bekommen (Rechte nur auf diesem Server). */
+export const SERVER_ADMIN_ROLE = 'Server-Administrator';
+const ADMINISTRATOR = 0x8n;
+/** Wie lange Besitzer und Rollenrechte eines Servers zwischengespeichert werden. */
+const GUILD_TTL_MS = 5 * 60_000;
 export type AccessVerdict = 'ok' | 'not_member' | 'no_team_role';
 
 /**
@@ -30,6 +42,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
   private readonly log = new Logger('DiscordAccess');
   private readonly checked = new Map<string, { at: number; ok: boolean }>();
   private readonly inflight = new Map<string, Promise<boolean>>();
+  private readonly guildInfo = new Map<string, { at: number; ownerId: string; adminRoles: Set<string> }>();
   private timer?: NodeJS.Timeout;
   private resyncTimer?: NodeJS.Timeout;
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService) {}
@@ -57,14 +70,30 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       const guilds = await this.guildIds(bot);
       if (!guilds) return 'unknown';
       const byGuild: Record<string, string[]> = {};
+      const admin: string[] = [];
       for (const g of guilds) {
         const r = await bot(`/guilds/${g}/members/${discordId}`);
         if (r.status === 404) continue;
         if (!r.ok) return 'unknown';
         byGuild[g] = ((await r.json()) as { roles?: string[] }).roles ?? [];
+        const info = await this.guildAdmins(bot, g);
+        if (info && (info.ownerId === discordId || info.adminRoles.has(g) || byGuild[g]!.some((x) => info.adminRoles.has(x)))) admin.push(g);
       }
-      return Object.keys(byGuild).length ? { roles: Object.values(byGuild).flat(), byGuild, checked: guilds } : null;
+      return Object.keys(byGuild).length ? { roles: Object.values(byGuild).flat(), byGuild, checked: guilds, admin } : null;
     } catch { return 'unknown'; }
+  }
+
+  /** Besitzer und Rollen mit dem Discord-Recht „Administrator“ (die @everyone-Rolle hat die ID des Servers); `null` = nicht lesbar. */
+  private async guildAdmins(bot: (path: string) => Promise<Response>, guildId: string) {
+    const c = this.guildInfo.get(guildId);
+    if (c && Date.now() - c.at < GUILD_TTL_MS) return c;
+    const r = await bot(`/guilds/${guildId}`);
+    if (!r.ok) return c ?? null;
+    const g = (await r.json()) as { owner_id?: string; roles?: { id: string; permissions?: string }[] };
+    const adminRoles = new Set((g.roles ?? []).filter((x) => /^\d+$/.test(x.permissions ?? '') && (BigInt(x.permissions!) & ADMINISTRATOR) !== 0n).map((x) => x.id));
+    const info = { at: Date.now(), ownerId: g.owner_id ?? '', adminRoles };
+    this.guildInfo.set(guildId, info);
+    return info;
   }
 
   private bot(token: string) { return (path: string) => fetch(`${API}${path}`, { headers: { authorization: `Bot ${token}` }, signal: AbortSignal.timeout(10_000) }); }
@@ -130,8 +159,9 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
-  verdict(member: { roles: string[] } | null, s: DiscordLoginSettings): AccessVerdict {
+  verdict(member: { roles: string[]; admin?: string[] } | null, s: DiscordLoginSettings): AccessVerdict {
     if ((s.requireGuild || s.teamRoleIds.length) && member === null) return 'not_member';
+    if (s.guildAdmins && member?.admin?.length) return 'ok'; // Discord-Administrator eines Servers: immer Zugang
     if (s.teamRoleIds.length && !member!.roles.some((r) => s.teamRoleIds.includes(r))) return 'no_team_role';
     return 'ok';
   }
@@ -161,9 +191,11 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
    * (`UserRole.guildIds`) – eine Discord-Rolle auf Server A verleiht nie Rechte auf Server B. Nur die in `byGuild`/`checked`
    * geprüften Server werden geändert; Rollen ohne Discord-Verknüpfung und „System Administrator“ bleiben unangetastet.
    */
-  async syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked: string[] = Object.keys(byGuild)) {
+  async syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked: string[] = Object.keys(byGuild), adminGuilds: string[] = []) {
     const settings = s ?? (await this.settings());
-    const names = [...new Set(settings.roleMap.map((m) => m.role))];
+    const admins = settings.guildAdmins ? adminGuilds.filter((g) => checked.includes(g)) : [];
+    if (admins.length) await this.ensureServerAdminRoles(admins);
+    const names = [...new Set([...settings.roleMap.map((m) => m.role), SERVER_ADMIN_ROLE])];
     // nur Rollen der geprüften Server – serverübergreifende Vorlagen werden nicht über Discord vergeben
     const roles = await this.prisma.role.findMany({
       // auch Rollen, die der Benutzer noch über Discord hat, deren Verknüpfung aber entfernt wurde – sonst bliebe die Zuweisung für immer
@@ -175,6 +207,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       if (r.guildId !== g) return false; // Server-Rolle gilt nur auf ihrem Server
       const have = byGuild[g];
       if (!have) return false;
+      if (r.name === SERVER_ADMIN_ROLE && admins.includes(g)) return true;
       return r.discordRoleIds.some((d) => have.includes(d))
         || r.discordMappings.some((m) => m.server.guildId === g && have.includes(m.discordRoleId))
         || settings.roleMap.some((m) => m.role === r.name && have.includes(m.discordRoleId));
@@ -199,6 +232,15 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       if (changes.length) await this.audit.record({ userId: null }, { action: 'auth.discord.roles_synced', module: 'permissions', entityType: 'User', entityId: userId, serverId: null, after: { added: changes.filter((c) => !c.before.length).map((c) => c.name), removed: changes.filter((c) => !c.after.length).map((c) => c.name), servers: changes } }, tx);
     });
     if (changes.length) this.rt.publishToUser(userId, 'permissions.changed', {});
+  }
+
+  /** Rolle „Server-Administrator“ (alle Rechte, nur auf diesem Server) für registrierte Server anlegen, falls es sie noch nicht gibt. */
+  private async ensureServerAdminRoles(guildIds: string[]) {
+    const servers = await this.prisma.discordServer.findMany({ where: { guildId: { in: guildIds }, archivedAt: null }, select: { guildId: true } });
+    const have = new Set((await this.prisma.role.findMany({ where: { guildId: { in: servers.map((x) => x.guildId) }, name: SERVER_ADMIN_ROLE }, select: { guildId: true } })).map((r) => r.guildId));
+    for (const { guildId } of servers.filter((x) => !have.has(x.guildId))) {
+      await this.prisma.role.create({ data: { guildId, name: SERVER_ADMIN_ROLE, description: 'Discord-Administratoren dieses Servers (Rechte nur auf diesem Server)', priority: 2, permissions: { create: [{ permissionKey: '*', effect: 'ALLOW' }] } } }).catch(() => undefined);
+    }
   }
 
   /**
@@ -268,7 +310,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
     await this.recordMemberships(userId, member!.byGuild, member!.checked);
-    await this.syncRoles(userId, member!.byGuild, s, member!.checked);
+    await this.syncRoles(userId, member!.byGuild, s, member!.checked, member!.admin);
     return true;
   }
 

@@ -7,6 +7,7 @@ import type { PrismaService } from '../src/prisma/prisma.service';
 const APP_ID = '123456789012345678';
 const GUILD = '555555555555555555';
 const ROLE_POLICE = '666666666666666661';
+const ROLE_ADMIN = '666666666666666669';
 let app: INestApplication; let prisma: PrismaService;
 /** Nachgestelltes Discord: wer ist eingeloggt, wer ist auf dem Server (mit welchen Rollen). */
 const discord: { user: { id: string; username: string; global_name: string | null }; members: Map<string, string[]>; tokenOk: boolean } = { user: { id: '111111111111111111', username: 'Oscar.Officer', global_name: 'Oscar' }, members: new Map(), tokenOk: true };
@@ -31,6 +32,8 @@ beforeAll(async () => {
     if (url.endsWith('/users/@me')) return json(200, discord.user);
     const m = url.match(/\/guilds\/(\d+)\/members\/(\d+)$/);
     if (m) { const roles = m[1] === GUILD ? discord.members.get(m[2]!) : undefined; return roles ? json(200, { roles }) : json(404, { message: 'Unknown Member' }); }
+    // Server: Besitzer und Rollenrechte (0x8 = Administrator)
+    if (url.endsWith(`/guilds/${GUILD}`)) return json(200, { id: GUILD, owner_id: '999999999999999999', roles: [{ id: GUILD, permissions: '0' }, { id: ROLE_ADMIN, permissions: String(0x8 | 0x400) }, { id: ROLE_POLICE, permissions: '1024' }] });
     return json(404, {});
   });
   ({ app, prisma } = await createTestApp());
@@ -138,6 +141,30 @@ describe('login with Discord', () => {
     expect((await (await discordLogin()).agent.get('/api/v1/auth/me')).status).toBe(200);
     discord.user = before;
     await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] } });
+  });
+
+  it('Discord admins of a server always get in (without team role) and become Server-Administrator only there', async () => {
+    const admin = (await login(app, 'dl_admin')).agent;
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: ['777777777777777777'] } });
+    discord.members.set(discord.user.id, [ROLE_ADMIN]);
+    const ok = await discordLogin();
+    expect(ok.location).not.toMatch(/no_team_role/);
+    expect((await ok.agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).toEqual(['Server-Administrator']);
+    expect((await ok.agent.get('/api/v1/auth/me')).body.roles).toEqual([]); // keine globalen Rechte
+    expect((await ok.agent.get('/api/v1/admin/settings').set('X-Guild-Id', GUILD)).status).toBe(200);
+    // Recht verloren → kein Zugang mehr (Teamrolle fehlt), Rolle entzogen
+    discord.members.set(discord.user.id, []);
+    expect((await discordLogin()).location).toMatch(/discord=no_team_role$/);
+    // abgeschaltet → Admin-Recht allein reicht nicht
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: ['777777777777777777'], guildAdmins: false } });
+    discord.members.set(discord.user.id, [ROLE_ADMIN]);
+    expect((await discordLogin()).location).toMatch(/discord=no_team_role$/);
+    // mit Teamrolle wieder drin – die Admin-Rolle ist beim Abgleich entzogen
+    discord.members.set(discord.user.id, [ROLE_ADMIN, '777777777777777777']);
+    const back = await discordLogin();
+    expect((await back.agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD)).body.roles).toEqual([]);
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] } });
+    discord.members.set(discord.user.id, []);
   });
 
   it('rejects forged or replayed callbacks, other browsers, failed token exchange and disabled sign-up', async () => {

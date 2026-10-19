@@ -218,7 +218,7 @@ let ErlcWantedService = class ErlcWantedService {
                 const row = await this.prisma.discordOutbox.create({ data: { type: `cad.${event}`, channelKey: 'wanted', payload: {
                             id: hit.id, playerName: hit.playerName, robloxUserId: hit.robloxUserId, wantedNumber: hit.wantedNumber, reason: hit.wantedReason, priority: hit.wantedPriority, wantedStatus,
                             detectedAt: hit.detectedAt.toISOString(), identified: hit.identified, matchType: hit.matchType, matchLabel: shared_1.WANTED_MATCH_LABELS[hit.matchType], server: s.name,
-                            dashboardUrl: (0, web_url_1.webUrl)(`/wanted/hits?id=${hit.id}`), channelIds: t.channelIds, pingRoleIds: t.pingRoleIds,
+                            dashboardUrl: (0, web_url_1.webUrl)(`/wanted?id=${hit.id}`), channelIds: t.channelIds, pingRoleIds: t.pingRoleIds,
                         } } });
                 status = 'QUEUED';
                 outboxId = row.id;

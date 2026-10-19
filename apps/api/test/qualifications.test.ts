@@ -125,6 +125,73 @@ describe('qualification applications', () => {
     await prisma.systemSetting.deleteMany({ where: { key: 'application.form' } }); // Standardformular für andere Tests
   });
 
+  it('sends the application panel from the dashboard into the chosen channel and keeps it up to date', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const body = { title: cur.title, intro: cur.intro, units: cur.units, police: { ...cur.police, title: 'Bewerbung bei der EN | Polizei', description: 'Werde Teil der Polizei!', panelChannelId: '' } };
+    await admin.put('/api/v1/qualifications/config').send(body);
+    expect((await admin.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(400); // kein Kanal
+    const CH = '400000000000000077';
+    await admin.put('/api/v1/qualifications/config').send({ ...body, police: { ...body.police, panelChannelId: CH } });
+    expect((await (await login(app, 'q_off')).agent.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(403);
+    expect((await admin.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const out = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    const p = out!.payload as { stateKey: string; channelId: string; forceNew: boolean; message: { embeds: { title: string }[]; buttons: { id: string; label: string }[] } };
+    expect(p).toMatchObject({ stateKey: 'apanel-police', channelId: CH, forceNew: true });
+    expect(p.message.embeds[0]!.title).toBe('Bewerbung bei der EN | Polizei');
+    expect(p.message.buttons[0]).toMatchObject({ id: 'quali:pick:@polizei', label: 'Jetzt bewerben' });
+    // gesendet → geänderter Text wird beim Speichern automatisch nachgezogen
+    await prisma.systemSetting.upsert({ where: { key: 'bot.state.apanel-police' }, create: { key: 'bot.state.apanel-police', value: { channelId: CH, messageId: '500000000000000001' } }, update: { value: { channelId: CH, messageId: '500000000000000001' } } });
+    expect((await admin.get('/api/v1/qualifications/config')).body.panelPosted).toMatchObject({ channelId: CH });
+    const before = await prisma.discordOutbox.count({ where: { type: 'message.post' } });
+    await admin.put('/api/v1/qualifications/config').send({ ...body, police: { ...body.police, panelChannelId: CH, description: 'Neuer Text' } });
+    const upd = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    expect(await prisma.discordOutbox.count({ where: { type: 'message.post' } })).toBe(before + 1);
+    expect(upd!.payload).toMatchObject({ forceNew: false, message: { embeds: [{ description: 'Neuer Text' }] } });
+  });
+
+  it('sends the qualification panel (unit select) from the dashboard; saving one page keeps the other panel channel', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const CH = '400000000000000088', POLICE_CH = cur.police.panelChannelId;
+    expect(POLICE_CH).toBeTruthy(); // aus dem vorigen Test
+    expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(400); // kein Kanal
+    // Qualifikations-Seite schickt den Polizei-Kanal nicht mit → bleibt erhalten
+    const police = Object.fromEntries(Object.entries(cur.police).filter(([k]) => k !== 'panelChannelId'));
+    expect((await admin.put('/api/v1/qualifications/config').send({ title: 'Quali', intro: cur.intro, units: cur.units, police, panelChannelId: CH })).status).toBe(200);
+    // Bewerbungs-Seite schickt den Quali-Kanal nicht mit → bleibt erhalten
+    const after = (await admin.put('/api/v1/qualifications/config').send({ title: 'Quali', intro: cur.intro, units: cur.units, police: cur.police })).body;
+    expect(after).toMatchObject({ panelChannelId: CH, police: { panelChannelId: POLICE_CH } });
+    expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const out = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    expect(out!.payload).toMatchObject({ stateKey: 'apanel-quali', channelId: CH, forceNew: true, message: { embeds: [{ title: 'Quali' }], select: { id: 'quali:pick' } } });
+    expect((out!.payload as { message: { select: { options: { value: string }[] } } }).message.select.options.map((o) => o.value)).toEqual(cur.units.map((u: { key: string }) => u.key));
+  });
+
+  it('more application types: an apply unit turns the application panel into a select and leaves the quali panel', async () => {
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get('/api/v1/qualifications/config')).body;
+    const leitstelle = { key: 'leitstelle', name: 'Leitstelle', description: 'Funk und Einsätze koordinieren', questions: ['Warum Leitstelle?'], panel: 'apply' };
+    const saved = await admin.put('/api/v1/qualifications/config').send({ title: cur.title, intro: cur.intro, units: [...cur.units, leitstelle], police: cur.police });
+    expect(saved.status).toBe(200);
+    expect(saved.body.units.find((u: { key: string }) => u.key === 'leitstelle')).toMatchObject({ panel: 'apply' });
+    expect((await admin.post('/api/v1/qualifications/police-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const apply = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    const am = (apply!.payload as { message: { buttons?: unknown[]; select: { id: string; options: { value: string }[] }; embeds: { description: string }[] } }).message;
+    expect(am.buttons).toBeUndefined();
+    expect(am.select.id).toBe('quali:pick');
+    expect(am.select.options.map((o) => o.value)).toEqual(['@polizei', 'leitstelle']);
+    expect(am.embeds[0]!.description).toContain('**__Leitstelle:__**');
+    expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(202);
+    const quali = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    expect((quali!.payload as { message: { select: { options: { value: string }[] } } }).message.select.options.map((o) => o.value)).not.toContain('leitstelle');
+    // bewerben wie bei Qualifikationen; landet in der Bewerbungsliste
+    const r = await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ unit: 'leitstelle', discordId: STRANGER, discordName: 'lena', answers: [{ question: 'Warum Leitstelle?', answer: 'Weil.' }] });
+    expect(r.status).toBe(201);
+    const inbox = await admin.get('/api/v1/applications/inbox').query({ type: 'q:leitstelle' });
+    expect(inbox.body.items.map((x: { number: string }) => x.number)).toContain(r.body.number);
+  });
+
   it('question types like Appy: multiple choice and role select are validated, chosen roles are given on acceptance, ping role in the post', async () => {
     const admin = (await login(app, 'q_admin')).agent;
     const cur = (await admin.get('/api/v1/qualifications/config')).body;

@@ -20,6 +20,7 @@ const token = z.string().regex(/^[\w-]{60,2000}$/, 'Ungültiger Bewerbungslink.'
 const webSubmit = z.object({ robloxUsername: z.string().trim().max(64).optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 
 const guildQ = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional() });
+const panelSend = z.object({ mode: z.enum(['update', 'new']).default('update') });
 const guildRequired = z.object({ guildId: z.string().regex(/^\d{15,25}$/) });
 @ApiTags('qualifications')
 @Controller('qualifications')
@@ -34,6 +35,12 @@ export class QualificationsController {
   /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
   @Delete('config') @RequirePermission('qualifications.manage')
   reset(@CurrentActor() a: Actor, @Query(zodBody(guildRequired)) q: z.infer<typeof guildRequired>) { return this.q.resetGuild(a, q.guildId); }
+  /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
+  @Post('police-panel/send') @HttpCode(202) @RequirePermission('qualifications.manage')
+  sendPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendPolicePanel(a, b.mode, q.guildId); }
+  /** Qualifikations-Panel (Auswahl der Einheiten) direkt aus dem Dashboard senden. */
+  @Post('quali-panel/send') @HttpCode(202) @RequirePermission('qualifications.manage')
+  sendQualiPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendQualiPanel(a, b.mode, q.guildId); }
   @Get('applications') @RequirePermission('qualifications.view')
   list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
   @Get('history') @RequirePermission('qualifications.view')

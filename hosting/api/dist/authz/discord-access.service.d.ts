@@ -2,7 +2,11 @@ import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimeService } from '../realtime/realtime.service';
-/** `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum Dashboard (leer = jedes Server-Mitglied). */
+/**
+ * `teamRoleIds`: ohne eine dieser Discord-Rollen kein Zugang zum Dashboard (leer = jedes Server-Mitglied).
+ * `guildAdmins`: wer auf einem Server das Discord-Recht „Administrator“ hat (oder Besitzer ist), kommt immer rein und ist
+ * Server-Administrator genau dieses Servers.
+ */
 export interface DiscordLoginSettings {
     signup: boolean;
     requireGuild: boolean;
@@ -11,14 +15,21 @@ export interface DiscordLoginSettings {
         role: string;
     }[];
     teamRoleIds: string[];
+    guildAdmins: boolean;
 }
 export declare const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings;
-/** `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server. */
+/**
+ * `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server,
+ * `admin` = Server, auf denen die Person das Discord-Recht „Administrator“ hat oder Besitzer ist.
+ */
 export type Membership = {
     roles: string[];
     byGuild: Record<string, string[]>;
     checked: string[];
+    admin?: string[];
 } | null | 'unknown';
+/** Rolle, die Discord-Administratoren eines Servers bekommen (Rechte nur auf diesem Server). */
+export declare const SERVER_ADMIN_ROLE = "Server-Administrator";
 export type AccessVerdict = 'ok' | 'not_member' | 'no_team_role';
 /**
  * Discord-Rollen → Dashboard-Zugang und Dashboard-Rollen. Wird beim Login geprüft und danach laufend:
@@ -34,6 +45,7 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     private readonly log;
     private readonly checked;
     private readonly inflight;
+    private readonly guildInfo;
     private timer?;
     private resyncTimer?;
     constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService);
@@ -43,6 +55,8 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     settings(): Promise<DiscordLoginSettings>;
     /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
     membership(discordId: string): Promise<Membership>;
+    /** Besitzer und Rollen mit dem Discord-Recht „Administrator“ (die @everyone-Rolle hat die ID des Servers); `null` = nicht lesbar. */
+    private guildAdmins;
     private bot;
     /** Eingestellte und registrierte Server bzw. alle Server des Bots (max. 20); `null` = Discord nicht erreichbar. */
     private guildIds;
@@ -59,6 +73,7 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
     verdict(member: {
         roles: string[];
+        admin?: string[];
     } | null, s: DiscordLoginSettings): AccessVerdict;
     /**
      * Mitgliedschaften je registriertem Server festhalten: geprüft und Mitglied → MEMBER (mit Discord-Rollen), geprüft und
@@ -71,7 +86,9 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
      * (`UserRole.guildIds`) – eine Discord-Rolle auf Server A verleiht nie Rechte auf Server B. Nur die in `byGuild`/`checked`
      * geprüften Server werden geändert; Rollen ohne Discord-Verknüpfung und „System Administrator“ bleiben unangetastet.
      */
-    syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked?: string[]): Promise<void>;
+    syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked?: string[], adminGuilds?: string[]): Promise<void>;
+    /** Rolle „Server-Administrator“ (alle Rechte, nur auf diesem Server) für registrierte Server anlegen, falls es sie noch nicht gibt. */
+    private ensureServerAdminRoles;
     /**
      * Vom Administrator ausdrücklich eingestellte Haupt-Server (DISCORD_GUILD_ID bzw. Einstellung „Discord-Server-ID“) sind
      * automatisch registriert und aktiv – andere vom Bot entdeckte Server müssen ein globaler Systemadministrator freischalten.

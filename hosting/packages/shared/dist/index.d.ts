@@ -2007,6 +2007,7 @@ declare const requestStatusDefSchema: z.ZodObject<{
     label: string;
     emoji: string;
 }>;
+declare const WARNING_TEMPLATE = "Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}";
 declare const hrConfigSchema: z.ZodObject<{
     statuses: z.ZodDefault<z.ZodArray<z.ZodObject<{
         key: z.ZodString;
@@ -2081,6 +2082,8 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji?: string | undefined;
         defaultDays?: number | undefined;
     }>, "many">>;
+    /** Später ergänzte Standardwerte, die schon einmal in gespeicherte Einstellungen übernommen wurden (Löschen bleibt dann gelöscht). */
+    addedDefaults: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     warningCategories: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     awards: z.ZodDefault<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
@@ -2277,6 +2280,8 @@ declare const hrConfigSchema: z.ZodObject<{
         /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
         channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
         template: z.ZodDefault<z.ZodString>;
+        /** Darstellung in Discord: einfacher Text („Wer: … / Grund: … / Verwarnungen: 1/3“) oder als Kasten (Embed) */
+        style: z.ZodDefault<z.ZodEnum<["text", "embed"]>>;
         /** Person per DM informieren */
         dm: z.ZodDefault<z.ZodBoolean>;
         atLimit: z.ZodDefault<z.ZodObject<{
@@ -2304,6 +2309,7 @@ declare const hrConfigSchema: z.ZodObject<{
         channelId: string | null;
         template: string;
         limit: number;
+        style: "text" | "embed";
         atLimit: {
             status: string | null;
             notifyRoleIds: string[];
@@ -2315,6 +2321,7 @@ declare const hrConfigSchema: z.ZodObject<{
         channelId?: string | null | undefined;
         template?: string | undefined;
         limit?: number | undefined;
+        style?: "text" | "embed" | undefined;
         atLimit?: {
             status?: string | null | undefined;
             notifyRoleIds?: string[] | undefined;
@@ -2393,6 +2400,7 @@ declare const hrConfigSchema: z.ZodObject<{
         channelId: string | null;
         template: string;
         limit: number;
+        style: "text" | "embed";
         atLimit: {
             status: string | null;
             notifyRoleIds: string[];
@@ -2427,6 +2435,7 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji: string;
         defaultDays: number;
     }[];
+    addedDefaults: string[];
     warningCategories: string[];
     showAbsenceInTeam: boolean;
     notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
@@ -2497,6 +2506,7 @@ declare const hrConfigSchema: z.ZodObject<{
         channelId?: string | null | undefined;
         template?: string | undefined;
         limit?: number | undefined;
+        style?: "text" | "embed" | undefined;
         atLimit?: {
             status?: string | null | undefined;
             notifyRoleIds?: string[] | undefined;
@@ -2531,6 +2541,7 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji?: string | undefined;
         defaultDays?: number | undefined;
     }[] | undefined;
+    addedDefaults?: string[] | undefined;
     warningCategories?: string[] | undefined;
     showAbsenceInTeam?: boolean | undefined;
     notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
@@ -3803,8 +3814,8 @@ declare const mbButtonSchema: z.ZodObject<{
     };
     id: string;
     emoji: string;
-    url: string;
     style: "danger" | "secondary" | "success" | "primary";
+    url: string;
     disabled: boolean;
 }, {
     id: string;
@@ -3819,8 +3830,8 @@ declare const mbButtonSchema: z.ZodObject<{
         mode?: "remove" | "add" | "toggle" | undefined;
     } | undefined;
     emoji?: string | undefined;
-    url?: string | undefined;
     style?: "danger" | "secondary" | "success" | "primary" | undefined;
+    url?: string | undefined;
     disabled?: boolean | undefined;
 }>;
 type MbButton = z.infer<typeof mbButtonSchema>;
@@ -3926,8 +3937,8 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         };
         id: string;
         emoji: string;
-        url: string;
         style: "danger" | "secondary" | "success" | "primary";
+        url: string;
         disabled: boolean;
     }, {
         id: string;
@@ -3942,8 +3953,8 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
             mode?: "remove" | "add" | "toggle" | undefined;
         } | undefined;
         emoji?: string | undefined;
-        url?: string | undefined;
         style?: "danger" | "secondary" | "success" | "primary" | undefined;
+        url?: string | undefined;
         disabled?: boolean | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
@@ -3962,8 +3973,8 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         };
         id: string;
         emoji: string;
-        url: string;
         style: "danger" | "secondary" | "success" | "primary";
+        url: string;
         disabled: boolean;
     }[];
 }, {
@@ -3982,8 +3993,8 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
             mode?: "remove" | "add" | "toggle" | undefined;
         } | undefined;
         emoji?: string | undefined;
-        url?: string | undefined;
         style?: "danger" | "secondary" | "success" | "primary" | undefined;
+        url?: string | undefined;
         disabled?: boolean | undefined;
     }[] | undefined;
 }>, z.ZodObject<{
@@ -4305,8 +4316,8 @@ declare const mbMessageSchema: z.ZodObject<{
             };
             id: string;
             emoji: string;
-            url: string;
             style: "danger" | "secondary" | "success" | "primary";
+            url: string;
             disabled: boolean;
         }, {
             id: string;
@@ -4321,8 +4332,8 @@ declare const mbMessageSchema: z.ZodObject<{
                 mode?: "remove" | "add" | "toggle" | undefined;
             } | undefined;
             emoji?: string | undefined;
-            url?: string | undefined;
             style?: "danger" | "secondary" | "success" | "primary" | undefined;
+            url?: string | undefined;
             disabled?: boolean | undefined;
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -4341,8 +4352,8 @@ declare const mbMessageSchema: z.ZodObject<{
             };
             id: string;
             emoji: string;
-            url: string;
             style: "danger" | "secondary" | "success" | "primary";
+            url: string;
             disabled: boolean;
         }[];
     }, {
@@ -4361,8 +4372,8 @@ declare const mbMessageSchema: z.ZodObject<{
                 mode?: "remove" | "add" | "toggle" | undefined;
             } | undefined;
             emoji?: string | undefined;
-            url?: string | undefined;
             style?: "danger" | "secondary" | "success" | "primary" | undefined;
+            url?: string | undefined;
             disabled?: boolean | undefined;
         }[] | undefined;
     }>, z.ZodObject<{
@@ -4518,8 +4529,8 @@ declare const mbMessageSchema: z.ZodObject<{
             };
             id: string;
             emoji: string;
-            url: string;
             style: "danger" | "secondary" | "success" | "primary";
+            url: string;
             disabled: boolean;
         }[];
     } | {
@@ -4588,8 +4599,8 @@ declare const mbMessageSchema: z.ZodObject<{
                 mode?: "remove" | "add" | "toggle" | undefined;
             } | undefined;
             emoji?: string | undefined;
-            url?: string | undefined;
             style?: "danger" | "secondary" | "success" | "primary" | undefined;
+            url?: string | undefined;
             disabled?: boolean | undefined;
         }[] | undefined;
     } | {
@@ -4747,8 +4758,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
-                url: string;
                 style: "danger" | "secondary" | "success" | "primary";
+                url: string;
                 disabled: boolean;
             }, {
                 id: string;
@@ -4763,8 +4774,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
-                url?: string | undefined;
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                url?: string | undefined;
                 disabled?: boolean | undefined;
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
@@ -4783,8 +4794,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
-                url: string;
                 style: "danger" | "secondary" | "success" | "primary";
+                url: string;
                 disabled: boolean;
             }[];
         }, {
@@ -4803,8 +4814,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
-                url?: string | undefined;
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                url?: string | undefined;
                 disabled?: boolean | undefined;
             }[] | undefined;
         }>, z.ZodObject<{
@@ -4960,8 +4971,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
-                url: string;
                 style: "danger" | "secondary" | "success" | "primary";
+                url: string;
                 disabled: boolean;
             }[];
         } | {
@@ -5030,8 +5041,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
-                url?: string | undefined;
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                url?: string | undefined;
                 disabled?: boolean | undefined;
             }[] | undefined;
         } | {
@@ -5113,8 +5124,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
-                url: string;
                 style: "danger" | "secondary" | "success" | "primary";
+                url: string;
                 disabled: boolean;
             }[];
         } | {
@@ -5189,8 +5200,8 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
-                url?: string | undefined;
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                url?: string | undefined;
                 disabled?: boolean | undefined;
             }[] | undefined;
         } | {
@@ -5385,4 +5396,54 @@ declare function parseCsv(text: string): {
     }[];
 };
 
-export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, SYNC_DATA_TYPES, SYNC_DIRECTIONS, type StaffList, type StaffMember, type StatusKind, type SupportTime, type SyncDataType, type SyncDirection, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, applyCallCalibration, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, parseCsv, parsePlayer, parseQuestions, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, poiForPlace, policeReportFields, policyAllowsFlow, postalMatchRate, postalPosition, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+/**
+ * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot (/bewerbungspanel, /qualipanel) gleich gebaut.
+ * Einheiten mit `panel: 'apply'` stehen im Bewerbungs-Panel neben der Polizei-Bewerbung, alle anderen im Qualifikations-Panel.
+ */
+/** Schlüssel der Polizei-Bewerbung im Auswahlmenü bzw. am Button (`quali:pick:@polizei`). */
+declare const POLICE_APPLICATION_KEY = "@polizei";
+type ApplicationPanelKind = 'quali' | 'apply';
+interface PanelUnit {
+    key: string;
+    name: string;
+    description: string;
+    enabled?: boolean;
+    panel?: ApplicationPanelKind;
+}
+interface ApplicationPanelConfig {
+    title: string;
+    intro: string;
+    units: PanelUnit[];
+    police?: {
+        title: string;
+        description: string;
+        name?: string;
+        enabled?: boolean;
+    };
+}
+interface ApplicationPanelParts {
+    title: string;
+    description?: string;
+    button?: {
+        id: string;
+        label: string;
+        emoji: string;
+        style: 'primary';
+    };
+    select?: {
+        id: string;
+        placeholder: string;
+        options: {
+            label: string;
+            value: string;
+            description?: string;
+        }[];
+    };
+}
+declare const panelUnits: (units: PanelUnit[], kind: ApplicationPanelKind) => PanelUnit[];
+/** Qualifikations-Panel: Einleitung, Beschreibung je Einheit und Auswahlmenü. */
+declare function qualiPanelParts(cfg: ApplicationPanelConfig): ApplicationPanelParts;
+/** Bewerbungs-Panel: nur Polizei → Button „Jetzt bewerben“; mit weiteren Bewerbungsarten → Auswahlmenü (Polizei zuerst). */
+declare function applyPanelParts(cfg: ApplicationPanelConfig): ApplicationPanelParts;
+
+export { ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, SYNC_DATA_TYPES, SYNC_DIRECTIONS, type StaffList, type StaffMember, type StatusKind, type SupportTime, type SyncDataType, type SyncDirection, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parsePlayer, parseQuestions, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, poiForPlace, policeReportFields, policyAllowsFlow, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

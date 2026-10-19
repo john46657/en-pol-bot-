@@ -10,6 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QualificationsService = void 0;
+exports.policePanelMessage = policePanelMessage;
+exports.qualiPanelMessage = qualiPanelMessage;
 const application_bans_service_1 = require("../application-bans/application-bans.service");
 const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
@@ -29,6 +31,13 @@ const roblox_service_1 = require("../persons/roblox.service");
 const shared_2 = require("@enrp/shared");
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
+/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+function policePanelMessage(cfg) { return panelMessage((0, shared_2.applyPanelParts)(cfg)); }
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+function qualiPanelMessage(cfg) { return panelMessage((0, shared_2.qualiPanelParts)(cfg)); }
+function panelMessage(p) {
+    return { embeds: [{ title: p.title, description: p.description || undefined, color: 0x3b82f6 }], ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) };
+}
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
  * Bei Annahme: Direktnachricht, optionale Discord-Rolle; für die Einheit `sek` zusätzlich SEK-Roster + System-Rolle „SEK“ (bei verknüpftem Konto).
@@ -69,13 +78,38 @@ let QualificationsService = class QualificationsService {
     /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
     async setup(guildId) {
         const own = guildId ? (await this.read(KEY, guildId)).own : true;
-        return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own };
+        return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own, panelPosted: await this.discord.posted(this.panelKey(guildId)), qualiPanelPosted: await this.discord.posted(this.panelKey(guildId, 'quali')) };
+    }
+    /** Ort des Bewerbungs-Panels in Discord – je Server getrennt. */
+    panelKey(guildId, kind = 'police') { return guildId ? `apanel-${kind}-${guildId}` : `apanel-${kind}`; }
+    /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
+    async sendPolicePanel(actor, mode, guildId) {
+        const cfg = await this.config(guildId);
+        const police = cfg.police;
+        if (!police.panelChannelId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+        await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(cfg), { forceNew: mode === 'new' });
+        await this.audit.record(actor, { action: 'applications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: police.panelChannelId, mode, guildId: guildId ?? null } });
+        return { queued: true };
+    }
+    /** Qualifikations-Panel (Auswahl der Einheiten) aus dem Dashboard senden oder aktualisieren. */
+    async sendQualiPanel(actor, mode, guildId) {
+        const cfg = await this.config(guildId);
+        if (!cfg.panelChannelId)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+        await this.discord.postMessage(this.panelKey(guildId, 'quali'), cfg.panelChannelId, qualiPanelMessage(cfg), { forceNew: mode === 'new' });
+        await this.audit.record(actor, { action: 'qualifications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: cfg.panelChannelId, mode, guildId: guildId ?? null } });
+        return { queued: true };
     }
     async saveConfig(actor, input, guildId) {
         const { policeForm, ...c } = input;
         const key = this.keyOf(KEY, guildId), formKey = this.keyOf(FORM_KEY, guildId);
         // eigener Server ohne eigenes Formular: das gemeinsame Formular übernehmen, damit Server-Einstellungen vollständig sind
         const form = policeForm ?? (guildId && !(await this.prisma.systemSetting.findUnique({ where: { key: formKey } })) ? await this.policeForm(null) : undefined);
+        const old = await this.config(guildId);
+        // Panel-Kanäle werden auf zwei Seiten eingestellt – nicht mitgeschickt = bisheriger Kanal bleibt
+        c.panelChannelId ??= old.panelChannelId;
+        c.police.panelChannelId ??= old.police.panelChannelId;
         await this.prisma.$transaction(async (tx) => {
             await tx.systemSetting.upsert({ where: { key }, create: { key, value: c }, update: { value: c } });
             await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: key, after: { units: c.units.map((u) => u.key), guildId: guildId ?? null } }, tx);
@@ -84,6 +118,16 @@ let QualificationsService = class QualificationsService {
                 await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: formKey, after: form }, tx);
             }
         });
+        // Panels stehen schon in Discord → geänderte Texte/Einheiten gleich mitziehen
+        const panels = [
+            { key: this.panelKey(guildId), channelId: c.police.panelChannelId, before: policePanelMessage(old), after: policePanelMessage(c) },
+            { key: this.panelKey(guildId, 'quali'), channelId: c.panelChannelId, before: qualiPanelMessage(old), after: qualiPanelMessage(c) },
+        ];
+        for (const p of panels) {
+            const posted = await this.discord.posted(p.key);
+            if (posted && posted.channelId === p.channelId && JSON.stringify(p.before) !== JSON.stringify(p.after))
+                await this.discord.postMessage(p.key, posted.channelId, p.after);
+        }
         return this.setup(guildId);
     }
     /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */

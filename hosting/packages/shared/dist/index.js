@@ -106,6 +106,7 @@ __export(index_exports, {
   MUSIC_TRACKS: () => MUSIC_TRACKS,
   PERIOD_LABEL: () => PERIOD_LABEL,
   PERMISSION_CATALOG: () => PERMISSION_CATALOG,
+  POLICE_APPLICATION_KEY: () => POLICE_APPLICATION_KEY,
   POSITION_HINT: () => POSITION_HINT,
   PRIORITIES: () => PRIORITIES,
   PRIORITY_LABEL: () => PRIORITY_LABEL,
@@ -148,6 +149,7 @@ __export(index_exports, {
   WANTED_MATCH_TYPES: () => WANTED_MATCH_TYPES,
   WANTED_STATUSES: () => WANTED_STATUSES,
   WANTED_TRANSITIONS: () => WANTED_TRANSITIONS,
+  WARNING_TEMPLATE: () => WARNING_TEMPLATE,
   WARNING_VARIABLES: () => WARNING_VARIABLES,
   WEAPON_STATUSES: () => WEAPON_STATUSES,
   WEAPON_STATUS_KEYS: () => WEAPON_STATUS_KEYS,
@@ -163,6 +165,7 @@ __export(index_exports, {
   accountAge: () => accountAge,
   ageOf: () => ageOf,
   applyCallCalibration: () => applyCallCalibration,
+  applyPanelParts: () => applyPanelParts,
   areaGrantsFor: () => areaGrantsFor,
   assertTransition: () => assertTransition,
   awardDefSchema: () => awardDefSchema,
@@ -260,6 +263,7 @@ __export(index_exports, {
   notifyRuleSchema: () => notifyRuleSchema,
   onErlcMap: () => onErlcMap,
   panelFieldSchema: () => panelFieldSchema,
+  panelUnits: () => panelUnits,
   parseCsv: () => parseCsv,
   parsePlayer: () => parsePlayer,
   parseQuestions: () => parseQuestions,
@@ -274,6 +278,7 @@ __export(index_exports, {
   policyAllowsFlow: () => policyAllowsFlow,
   postalMatchRate: () => postalMatchRate,
   postalPosition: () => postalPosition,
+  qualiPanelParts: () => qualiPanelParts,
   questionProblems: () => questionProblems,
   questionSchema: () => questionSchema,
   radioRoleSyncAction: () => radioRoleSyncAction,
@@ -2013,11 +2018,15 @@ var HR_EVENT_LABEL = {
 var stageSchema = import_zod3.z.object({ id: uuid, name: import_zod3.z.string().trim().min(1).max(60), roleIds: import_zod3.z.array(uuid).max(20).default([]) });
 var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
 var requestStatusDefSchema = import_zod3.z.object({ label: import_zod3.z.string().max(40), emoji: import_zod3.z.string().max(16) });
+var WARNING_TEMPLATE = "Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}";
+var OLD_WARNING_TEMPLATE = "**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}";
 var hrConfigSchema = import_zod3.z.object({
   statuses: import_zod3.z.array(hrStatusSchema).max(30).default([]),
   departments: import_zod3.z.array(departmentSchema).max(50).default([]),
   absenceTypes: import_zod3.z.array(absenceTypeSchema).max(30).default([]),
   warningSeverities: import_zod3.z.array(severitySchema).max(20).default([]),
+  /** Später ergänzte Standardwerte, die schon einmal in gespeicherte Einstellungen übernommen wurden (Löschen bleibt dann gelöscht). */
+  addedDefaults: import_zod3.z.array(import_zod3.z.string().max(40)).max(50).default([]),
   warningCategories: import_zod3.z.array(import_zod3.z.string().trim().min(1).max(60)).max(50).default([]),
   awards: import_zod3.z.array(awardDefSchema).max(100).default([]),
   /** Bereiche der Personalakte */
@@ -2057,7 +2066,9 @@ var hrConfigSchema = import_zod3.z.object({
     limit: import_zod3.z.number().int().min(1).max(20).default(3),
     /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
     channelId: sf3.nullable().default(null),
-    template: import_zod3.z.string().max(1500).default("**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}"),
+    template: import_zod3.z.string().max(1500).default(WARNING_TEMPLATE),
+    /** Darstellung in Discord: einfacher Text („Wer: … / Grund: … / Verwarnungen: 1/3“) oder als Kasten (Embed) */
+    style: import_zod3.z.enum(["text", "embed"]).default("text"),
     /** Person per DM informieren */
     dm: import_zod3.z.boolean().default(true),
     atLimit: import_zod3.z.object({
@@ -2074,6 +2085,7 @@ var hrConfigSchema = import_zod3.z.object({
   /** Zertifikate */
   certificate: import_zod3.z.object({ organisation: import_zod3.z.string().max(100).default("EN Polizei"), logo: import_zod3.z.string().max(500).default(""), signature: import_zod3.z.string().max(100).default("") }).default({})
 });
+var PERMANENT_SEVERITY = { key: "PERMANENT", label: "Dauerhafter Vermerk", emoji: "\u26AB", color: "#475569", defaultDays: 0 };
 var id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 var DEFAULT_HR_CONFIG = hrConfigSchema.parse({
   statuses: [
@@ -2091,8 +2103,10 @@ var DEFAULT_HR_CONFIG = hrConfigSchema.parse({
   warningSeverities: [
     { key: "WARNING", label: "Verwarnung", emoji: "\u{1F7E1}", color: "#eab308", defaultDays: 30 },
     { key: "REPRIMAND", label: "Abmahnung", emoji: "\u{1F7E0}", color: "#f97316", defaultDays: 60 },
-    { key: "SEVERE", label: "Schwerwiegender Versto\xDF", emoji: "\u{1F534}", color: "#ef4444", defaultDays: 180 }
+    { key: "SEVERE", label: "Schwerwiegender Versto\xDF", emoji: "\u{1F534}", color: "#ef4444", defaultDays: 180 },
+    PERMANENT_SEVERITY
   ],
+  addedDefaults: ["severity.PERMANENT"],
   warningCategories: ["Verhalten", "Dienstvergehen", "Funk", "Regelversto\xDF", "Sonstiges"],
   awards: [{ id: id(10), name: "Besondere Leistung", icon: "\u{1F3C5}", description: "F\xFCr au\xDFergew\xF6hnliche Leistungen.", color: "#eab308" }],
   sections: Object.fromEntries(PROFILE_SECTIONS.map((s) => [s, { visible: true, sensitive: ["warnings", "notes", "history"].includes(s) }])),
@@ -2116,12 +2130,14 @@ function withHrDefaults(v) {
     statuses: raw.statuses ? c.statuses : DEFAULT_HR_CONFIG.statuses,
     departments: raw.departments ? c.departments : DEFAULT_HR_CONFIG.departments,
     absenceTypes: raw.absenceTypes ? c.absenceTypes : DEFAULT_HR_CONFIG.absenceTypes,
-    warningSeverities: raw.warningSeverities ? c.warningSeverities : DEFAULT_HR_CONFIG.warningSeverities,
+    warningSeverities: !raw.warningSeverities ? DEFAULT_HR_CONFIG.warningSeverities : c.addedDefaults.includes("severity.PERMANENT") || c.warningSeverities.some((s) => s.key === PERMANENT_SEVERITY.key) || c.warningSeverities.length >= 20 ? c.warningSeverities : [...c.warningSeverities, PERMANENT_SEVERITY],
+    addedDefaults: [.../* @__PURE__ */ new Set([...c.addedDefaults, "severity.PERMANENT"])],
     warningCategories: raw.warningCategories ? c.warningCategories : DEFAULT_HR_CONFIG.warningCategories,
     awards: raw.awards ? c.awards : DEFAULT_HR_CONFIG.awards,
     sections: { ...DEFAULT_HR_CONFIG.sections, ...c.sections },
     fields: { ...DEFAULT_HR_CONFIG.fields, ...c.fields },
-    notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications
+    notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications,
+    warnings: c.warnings.template === OLD_WARNING_TEMPLATE ? { ...c.warnings, template: WARNING_TEMPLATE } : c.warnings
   };
 }
 var REQUEST_STATUS_DEFAULT = {
@@ -3286,6 +3302,39 @@ function parseCsv(text) {
   const header = (nonEmpty.shift()?.cells ?? []).map((h) => h.trim().toLowerCase());
   return { header, rows: nonEmpty.map((r) => ({ line: r.line, cells: Object.fromEntries(header.map((h, i) => [h, (r.cells[i] ?? "").trim().replace(/^'(?=[=+\-@])/, "")])) })) };
 }
+
+// src/application-panels.ts
+var POLICE_APPLICATION_KEY = "@polizei";
+var clip = (s, max) => s.length > max ? `${s.slice(0, max - 1)}\u2026` : s;
+var plain = (s) => s.replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
+var optionOf = (u) => ({
+  label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100),
+  value: u.key,
+  ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {}
+});
+var section = (u) => `**__${plain(u.name)}:__**
+${u.description}`;
+var panelUnits = (units, kind) => units.filter((u) => (u.panel ?? "quali") === kind);
+function qualiPanelParts(cfg) {
+  const units = panelUnits(cfg.units, "quali");
+  return {
+    title: clip(cfg.title, 256),
+    description: clip([cfg.intro, ...units.map(section)].filter(Boolean).join("\n\n"), 4e3),
+    select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: units.slice(0, 25).map(optionOf) }
+  };
+}
+function applyPanelParts(cfg) {
+  const p = cfg.police ?? { title: "\u{1F4CB} Bewerbung bei EN Polizei", description: "" };
+  const extra = panelUnits(cfg.units, "apply");
+  const title = clip(p.title, 256);
+  if (!extra.length) return { title, ...p.description ? { description: clip(p.description, 4e3) } : {}, button: { id: `quali:pick:${POLICE_APPLICATION_KEY}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" } };
+  const police = { key: POLICE_APPLICATION_KEY, name: p.name || "Polizei", enabled: p.enabled };
+  return {
+    title,
+    description: clip([p.description, ...extra.map(section)].filter(Boolean).join("\n\n"), 4e3),
+    select: { id: "quali:pick", placeholder: "Wof\xFCr m\xF6chtest du dich bewerben?", options: [police, ...extra].slice(0, 25).map(optionOf) }
+  };
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ALL_PERMISSIONS,
@@ -3374,6 +3423,7 @@ function parseCsv(text) {
   MUSIC_TRACKS,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
+  POLICE_APPLICATION_KEY,
   POSITION_HINT,
   PRIORITIES,
   PRIORITY_LABEL,
@@ -3416,6 +3466,7 @@ function parseCsv(text) {
   WANTED_MATCH_TYPES,
   WANTED_STATUSES,
   WANTED_TRANSITIONS,
+  WARNING_TEMPLATE,
   WARNING_VARIABLES,
   WEAPON_STATUSES,
   WEAPON_STATUS_KEYS,
@@ -3431,6 +3482,7 @@ function parseCsv(text) {
   accountAge,
   ageOf,
   applyCallCalibration,
+  applyPanelParts,
   areaGrantsFor,
   assertTransition,
   awardDefSchema,
@@ -3528,6 +3580,7 @@ function parseCsv(text) {
   notifyRuleSchema,
   onErlcMap,
   panelFieldSchema,
+  panelUnits,
   parseCsv,
   parsePlayer,
   parseQuestions,
@@ -3542,6 +3595,7 @@ function parseCsv(text) {
   policyAllowsFlow,
   postalMatchRate,
   postalPosition,
+  qualiPanelParts,
   questionProblems,
   questionSchema,
   radioRoleSyncAction,

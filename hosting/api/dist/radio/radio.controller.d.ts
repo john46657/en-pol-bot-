@@ -346,6 +346,13 @@ declare const requestsB: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         enabled: boolean;
         notifyChannelId: string | null;
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         form: {
             title: string;
             fields: {
@@ -357,6 +364,10 @@ declare const requestsB: z.ZodObject<{
                 paragraph: boolean;
             }[];
         };
+        preventDuplicates: boolean;
+    }, {
+        enabled: boolean;
+        notifyChannelId: string | null;
         panel: {
             color: string;
             title: string;
@@ -364,10 +375,6 @@ declare const requestsB: z.ZodObject<{
             channelId: string | null;
             buttonLabel: string;
         };
-        preventDuplicates: boolean;
-    }, {
-        enabled: boolean;
-        notifyChannelId: string | null;
         form: {
             title: string;
             fields: {
@@ -378,13 +385,6 @@ declare const requestsB: z.ZodObject<{
                 paragraph: boolean;
                 placeholder?: string | undefined;
             }[];
-        };
-        panel: {
-            color: string;
-            title: string;
-            text: string;
-            channelId: string | null;
-            buttonLabel: string;
         };
         preventDuplicates: boolean;
     }>;
@@ -393,6 +393,13 @@ declare const requestsB: z.ZodObject<{
     requests: {
         enabled: boolean;
         notifyChannelId: string | null;
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         form: {
             title: string;
             fields: {
@@ -404,13 +411,6 @@ declare const requestsB: z.ZodObject<{
                 paragraph: boolean;
             }[];
         };
-        panel: {
-            color: string;
-            title: string;
-            text: string;
-            channelId: string | null;
-            buttonLabel: string;
-        };
         preventDuplicates: boolean;
     };
     notifyMembers: boolean;
@@ -418,6 +418,13 @@ declare const requestsB: z.ZodObject<{
     requests: {
         enabled: boolean;
         notifyChannelId: string | null;
+        panel: {
+            color: string;
+            title: string;
+            text: string;
+            channelId: string | null;
+            buttonLabel: string;
+        };
         form: {
             title: string;
             fields: {
@@ -428,13 +435,6 @@ declare const requestsB: z.ZodObject<{
                 paragraph: boolean;
                 placeholder?: string | undefined;
             }[];
-        };
-        panel: {
-            color: string;
-            title: string;
-            text: string;
-            channelId: string | null;
-            buttonLabel: string;
         };
         preventDuplicates: boolean;
     };

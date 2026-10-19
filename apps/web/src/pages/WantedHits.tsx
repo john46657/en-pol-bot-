@@ -5,7 +5,9 @@ import { WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS } from '@enrp/shared';
 import { api, ApiError, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
-import { Badge, Button, Card, EmptyState, ErrorState, Field, fmt, Modal, PageHeader, PriorityBadge, Select, SkeletonRows, StatusBadge, Textarea, type Tone } from '../components/ui';
+import { useSettings } from '../lib/settings';
+import { ChannelsPicker } from '../components/DiscordPickers';
+import { Badge, Button, Card, EmptyState, ErrorState, Field, fmt, Modal, PriorityBadge, Select, SkeletonRows, StatusBadge, Textarea, type Tone } from '../components/ui';
 
 export interface WantedHit {
   id: string; serverName: string; playerName: string; robloxUserId: string | null; matchType: string; matchLabel: string; identified: boolean; identification: string;
@@ -72,7 +74,7 @@ export function WantedHitList({ wantedId, compact, openOnly }: { wantedId?: stri
             <option value="">Alle Treffer</option><option value="OPEN">Offen (neu / Prüfung nötig)</option>
             {WANTED_HIT_STATUSES.map((s) => <option key={s} value={s}>{WANTED_HIT_STATUS_LABELS[s]}</option>)}
           </Select>
-          {focus && <Link className="text-xs text-primary underline" to="/wanted/hits">Alle Treffer anzeigen</Link>}
+          {focus && <Link className="text-xs text-primary underline" to="/wanted">Alle Treffer anzeigen</Link>}
         </div>
       )}
       {q.isLoading ? <SkeletonRows rows={3} /> : q.error || !q.data ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data.items.length ? <EmptyState text={status === 'OPEN' ? 'Keine offenen Fahndungstreffer.' : 'Keine Fahndungstreffer.'} hint="Treffer entstehen automatisch, wenn ein gesuchter Spieler dem ER:LC-Server beitritt." /> : (
@@ -147,29 +149,52 @@ function ReviewDialog({ hit, decision, onClose }: { hit: WantedHit; decision: 'A
   );
 }
 
-/** Kurzübersicht über der Fahndungsliste: offene Treffer + Verbindungsstatus, Link zur vollständigen Liste. */
-export function WantedHitsNotice() {
-  const q = useQuery({ queryKey: ['wanted-hits', 'status'], queryFn: () => api<SyncStatus>('/wanted-hits/status'), refetchInterval: 15_000 });
-  useRealtime('cad', ['wanted.hits'], [['wanted-hits']]);
-  if (!q.data?.servers.length) return null;
-  const pending = q.data.open + q.data.review;
+/** Fahndungs-Einstellungen direkt auf der Fahndungsseite (nur mit „Einstellungen verwalten“). */
+export function WantedSettingsCard() {
+  const { can } = useAuth();
+  const manage = can('settings.manage');
+  if (!manage) return null;
+  return <WantedSettingsInner />;
+}
+function WantedSettingsInner() {
+  const { q, get, put } = useSettings();
+  const [draft, setDraft] = useState<string>();
+  if (!q.data) return null;
+  const channels = get<Record<string, string>>('discord.channels') ?? {};
+  const value = draft ?? String(channels.wanted ?? '');
+  const save = (v: string) => {
+    setDraft(v);
+    const ids = v.trim();
+    if (ids && !/^\d{15,25}(\s*,\s*\d{15,25})*$/.test(ids)) return; // halbe Eingaben nicht speichern
+    const rest = Object.fromEntries(Object.entries(channels).filter(([k]) => k !== 'wanted'));
+    put('discord.channels', ids ? { ...rest, wanted: ids } : rest, 'Fahndungs-Kanal');
+  };
   return (
-    <Card className="mb-4" title={<span className="flex items-center gap-2">🎯 ER:LC-Fahndungsabgleich {q.data.open > 0 && <Badge tone="danger">{q.data.open} bestätigt</Badge>}{q.data.review > 0 && <Badge tone="warning">{q.data.review} zu prüfen</Badge>}</span>}
-      actions={<Link className="text-xs text-primary underline" to="/wanted/hits">{pending ? 'Treffer ansehen' : 'Alle Treffer'}</Link>}>
-      <WantedSyncStatus />
+    <Card className="mb-4" title="⚙️ Fahndungs-Einstellungen">
+      <div className="grid gap-2">
+        <p className="text-xs font-medium text-muted">🚨 Fahndungs-Kanal (neue Fahndungen und Statusänderungen)</p>
+        <div className="max-w-xl"><ChannelsPicker ariaLabel="Fahndungs-Kanal" max={10} value={value} onChange={save} /></div>
+        <p className="text-xs text-muted">Jede Fahndung (aus Dashboard oder Discord) wird dort gepostet. Leer = keine Discord-Meldungen. Wird automatisch gespeichert. Kanäle für ER:LC-Fahndungstreffer: <Link className="text-primary underline" to="/cad/settings?tab=Discord-Kanäle">CAD → Discord-Kanäle</Link>.</p>
+      </div>
     </Card>
   );
 }
 
-export function WantedHits() {
+/** Fahndungstreffer (ER:LC) direkt auf der Fahndungsseite: Verbindungsstatus, Trefferliste und Erklärung. */
+export function WantedHitsNotice() {
+  const [params] = useSearchParams();
+  const q = useQuery({ queryKey: ['wanted-hits', 'status'], queryFn: () => api<SyncStatus>('/wanted-hits/status'), refetchInterval: 15_000 });
+  useRealtime('cad', ['wanted.hits'], [['wanted-hits']]);
+  // ohne ER:LC-Server nur zeigen, wenn ein Treffer verlinkt ist (z. B. aus Discord)
+  if (!q.data?.servers.length && !params.get('id')) return null;
   return (
-    <>
-      <PageHeader title="Fahndungstreffer (ER:LC)" subtitle="Automatischer Abgleich der Spieler auf dem ER:LC-Server mit den aktiven Fahndungen" />
-      <div className="space-y-4">
-        <Card title="Verbindung & Synchronisierung"><WantedSyncStatus /></Card>
-        <Card title="Treffer"><WantedHitList /></Card>
-        <Card title="So funktioniert der Abgleich">
-          <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+    <Card className="mb-4" title={<span className="flex items-center gap-2">🎯 Fahndungstreffer (ER:LC) {!!q.data?.open && <Badge tone="danger">{q.data.open} bestätigt</Badge>}{!!q.data?.review && <Badge tone="warning">{q.data.review} zu prüfen</Badge>}</span>}>
+      <div className="space-y-3">
+        <WantedSyncStatus />
+        <WantedHitList />
+        <details className="text-sm">
+          <summary className="cursor-pointer text-muted">So funktioniert der Abgleich</summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
             <li>Die ER:LC-API liefert je Spieler den Roblox-Namen und die Roblox-ID. Weitere eindeutige Kennungen gibt es nicht; Beitritte meldet ER:LC nicht per Webhook – das System vergleicht darum bei jedem Abruf die Spielerliste mit der vorherigen.</li>
             <li><b>Im Spiel gesucht:</b> Hat ein Spieler in ER:LC Wanted-Sterne, entsteht automatisch ein Treffer (einer je Aufenthalt) – auch ohne Fahndung im Dashboard. Hat der Spieler keine Sterne mehr oder verlässt er den Server, wird der Treffer automatisch beendet. Discord-Kanal: Ereignis „Im Spiel gesucht“ in den CAD-Einstellungen, sonst der Kanal für Fahndungstreffer.</li>
             <li><b>Bestätigt</b> ist ein Treffer nur, wenn die Roblox-ID exakt mit der Roblox-ID in der Personenakte übereinstimmt.</li>
@@ -178,8 +203,8 @@ export function WantedHits() {
             <li>Archivierte, erledigte, abgebrochene und abgelaufene Fahndungen werden nicht abgeglichen. Treffer bleiben dauerhaft gespeichert.</li>
             <li>Es wird nie automatisch gekickt, gebannt oder sanktioniert – die Funktion dient nur der Information.</li>
           </ul>
-        </Card>
+        </details>
       </div>
-    </>
+    </Card>
   );
 }

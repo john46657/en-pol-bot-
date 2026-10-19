@@ -6,10 +6,15 @@ import { DiscordService } from '../discord/discord.service';
 import { type QualificationConfig } from './qualifications.config';
 import { type FormField } from '@enrp/shared';
 import { RobloxService } from '../persons/roblox.service';
+import { type MessageSpec } from '@enrp/shared';
 export interface Answer {
     question: string;
     answer: string | string[] | null;
 }
+/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+export declare function policePanelMessage(cfg: QualificationConfig): MessageSpec;
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+export declare function qualiPanelMessage(cfg: QualificationConfig): MessageSpec;
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
  * Bei Annahme: Direktnachricht, optionale Discord-Rolle; für die Einheit `sek` zusätzlich SEK-Roster + System-Rolle „SEK“ (bei verknüpftem Konto).
@@ -31,6 +36,14 @@ export declare class QualificationsService {
     setup(guildId?: string | null): Promise<{
         policeForm: FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -69,6 +82,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -113,14 +127,34 @@ export declare class QualificationsService {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
+    }>;
+    /** Ort des Bewerbungs-Panels in Discord – je Server getrennt. */
+    private panelKey;
+    /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
+    sendPolicePanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null): Promise<{
+        queued: boolean;
+    }>;
+    /** Qualifikations-Panel (Auswahl der Einheiten) aus dem Dashboard senden oder aktualisieren. */
+    sendQualiPanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null): Promise<{
+        queued: boolean;
     }>;
     saveConfig(actor: Actor, input: QualificationConfig & {
         policeForm?: FormField[];
     }, guildId?: string | null): Promise<{
         policeForm: FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -159,6 +193,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -203,13 +238,23 @@ export declare class QualificationsService {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
     }>;
     /** Eigene Einstellungen eines Servers löschen – danach gilt wieder die gemeinsame Grundeinstellung. */
     resetGuild(actor: Actor, guildId: string): Promise<{
         policeForm: FormField[];
         own: boolean;
+        panelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
+        qualiPanelPosted: {
+            channelId: string;
+            messageId: string;
+        } | null;
         title: string;
         units: {
             description: string;
@@ -248,6 +293,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -292,8 +338,10 @@ export declare class QualificationsService {
             channelId?: string | undefined;
             acceptedChannelId?: string | undefined;
             deniedChannelId?: string | undefined;
+            panelChannelId?: string | undefined;
         };
         intro: string;
+        panelChannelId?: string | undefined;
     }>;
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
     openFor(discordId: string, unit?: string): Promise<{

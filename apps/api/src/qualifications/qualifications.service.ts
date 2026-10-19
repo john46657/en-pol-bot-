@@ -15,11 +15,18 @@ import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
 import { RobloxService } from '../persons/roblox.service';
-import { formatMinutes } from '@enrp/shared';
+import { applyPanelParts, formatMinutes, qualiPanelParts, type ApplicationPanelParts, type MessageSpec } from '@enrp/shared';
 
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
 export interface Answer { question: string; answer: string | string[] | null }
+/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+export function policePanelMessage(cfg: QualificationConfig): MessageSpec { return panelMessage(applyPanelParts(cfg)); }
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+export function qualiPanelMessage(cfg: QualificationConfig): MessageSpec { return panelMessage(qualiPanelParts(cfg)); }
+function panelMessage(p: ApplicationPanelParts): MessageSpec {
+  return { embeds: [{ title: p.title, description: p.description || undefined, color: 0x3b82f6 }], ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) };
+}
 
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
@@ -51,7 +58,29 @@ export class QualificationsService {
   /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
   async setup(guildId?: string | null) {
     const own = guildId ? (await this.read(KEY, guildId)).own : true;
-    return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own };
+    return { ...(await this.config(guildId)), policeForm: await this.policeForm(guildId), own, panelPosted: await this.discord.posted(this.panelKey(guildId)), qualiPanelPosted: await this.discord.posted(this.panelKey(guildId, 'quali')) };
+  }
+
+  /** Ort des Bewerbungs-Panels in Discord – je Server getrennt. */
+  private panelKey(guildId?: string | null, kind: 'police' | 'quali' = 'police') { return guildId ? `apanel-${kind}-${guildId}` : `apanel-${kind}`; }
+
+  /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
+  async sendPolicePanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null) {
+    const cfg = await this.config(guildId);
+    const police = cfg.police;
+    if (!police.panelChannelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+    await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(cfg), { forceNew: mode === 'new' });
+    await this.audit.record(actor, { action: 'applications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: police.panelChannelId, mode, guildId: guildId ?? null } });
+    return { queued: true };
+  }
+
+  /** Qualifikations-Panel (Auswahl der Einheiten) aus dem Dashboard senden oder aktualisieren. */
+  async sendQualiPanel(actor: Actor, mode: 'update' | 'new', guildId?: string | null) {
+    const cfg = await this.config(guildId);
+    if (!cfg.panelChannelId) throw new AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
+    await this.discord.postMessage(this.panelKey(guildId, 'quali'), cfg.panelChannelId, qualiPanelMessage(cfg), { forceNew: mode === 'new' });
+    await this.audit.record(actor, { action: 'qualifications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: cfg.panelChannelId, mode, guildId: guildId ?? null } });
+    return { queued: true };
   }
 
   async saveConfig(actor: Actor, input: QualificationConfig & { policeForm?: FormField[] }, guildId?: string | null) {
@@ -59,6 +88,10 @@ export class QualificationsService {
     const key = this.keyOf(KEY, guildId), formKey = this.keyOf(FORM_KEY, guildId);
     // eigener Server ohne eigenes Formular: das gemeinsame Formular übernehmen, damit Server-Einstellungen vollständig sind
     const form = policeForm ?? (guildId && !(await this.prisma.systemSetting.findUnique({ where: { key: formKey } })) ? await this.policeForm(null) : undefined);
+    const old = await this.config(guildId);
+    // Panel-Kanäle werden auf zwei Seiten eingestellt – nicht mitgeschickt = bisheriger Kanal bleibt
+    c.panelChannelId ??= old.panelChannelId;
+    c.police.panelChannelId ??= old.police.panelChannelId;
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({ where: { key }, create: { key, value: c as unknown as Prisma.InputJsonValue }, update: { value: c as unknown as Prisma.InputJsonValue } });
       await this.audit.record(actor, { action: 'qualifications.config', module: 'qualifications', entityType: 'SystemSetting', entityId: key, after: { units: c.units.map((u) => u.key), guildId: guildId ?? null } }, tx);
@@ -67,6 +100,15 @@ export class QualificationsService {
         await this.audit.record(actor, { action: 'studio.config.changed', module: 'settings', entityType: 'SystemSetting', entityId: formKey, after: form as unknown as Prisma.InputJsonValue }, tx);
       }
     });
+    // Panels stehen schon in Discord → geänderte Texte/Einheiten gleich mitziehen
+    const panels = [
+      { key: this.panelKey(guildId), channelId: c.police.panelChannelId, before: policePanelMessage(old), after: policePanelMessage(c) },
+      { key: this.panelKey(guildId, 'quali'), channelId: c.panelChannelId, before: qualiPanelMessage(old), after: qualiPanelMessage(c) },
+    ];
+    for (const p of panels) {
+      const posted = await this.discord.posted(p.key);
+      if (posted && posted.channelId === p.channelId && JSON.stringify(p.before) !== JSON.stringify(p.after)) await this.discord.postMessage(p.key, posted.channelId, p.after);
+    }
     return this.setup(guildId);
   }
 

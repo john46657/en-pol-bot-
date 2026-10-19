@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DiscordAccessService = exports.DEFAULT_DISCORD_LOGIN = void 0;
+exports.DiscordAccessService = exports.SERVER_ADMIN_ROLE = exports.DEFAULT_DISCORD_LOGIN = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
@@ -21,7 +21,12 @@ const API = 'https://discord.com/api/v10';
 const CHECK_TTL_MS = 2 * 60_000;
 /** Regelmäßiger Abgleich aller angemeldeten Discord-Benutzer (auch ohne Aktivität). */
 const SWEEP_MS = 5 * 60_000;
-exports.DEFAULT_DISCORD_LOGIN = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] };
+exports.DEFAULT_DISCORD_LOGIN = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [], guildAdmins: true };
+/** Rolle, die Discord-Administratoren eines Servers bekommen (Rechte nur auf diesem Server). */
+exports.SERVER_ADMIN_ROLE = 'Server-Administrator';
+const ADMINISTRATOR = 0x8n;
+/** Wie lange Besitzer und Rollenrechte eines Servers zwischengespeichert werden. */
+const GUILD_TTL_MS = 5 * 60_000;
 /**
  * Discord-Rollen → Dashboard-Zugang und Dashboard-Rollen. Wird beim Login geprüft und danach laufend:
  * bei Anfragen (spätestens alle 2 Minuten je Benutzer) und im Hintergrund alle 5 Minuten.
@@ -36,6 +41,7 @@ let DiscordAccessService = class DiscordAccessService {
     log = new common_1.Logger('DiscordAccess');
     checked = new Map();
     inflight = new Map();
+    guildInfo = new Map();
     timer;
     resyncTimer;
     constructor(prisma, audit, rt) {
@@ -66,6 +72,7 @@ let DiscordAccessService = class DiscordAccessService {
             if (!guilds)
                 return 'unknown';
             const byGuild = {};
+            const admin = [];
             for (const g of guilds) {
                 const r = await bot(`/guilds/${g}/members/${discordId}`);
                 if (r.status === 404)
@@ -73,12 +80,29 @@ let DiscordAccessService = class DiscordAccessService {
                 if (!r.ok)
                     return 'unknown';
                 byGuild[g] = (await r.json()).roles ?? [];
+                const info = await this.guildAdmins(bot, g);
+                if (info && (info.ownerId === discordId || info.adminRoles.has(g) || byGuild[g].some((x) => info.adminRoles.has(x))))
+                    admin.push(g);
             }
-            return Object.keys(byGuild).length ? { roles: Object.values(byGuild).flat(), byGuild, checked: guilds } : null;
+            return Object.keys(byGuild).length ? { roles: Object.values(byGuild).flat(), byGuild, checked: guilds, admin } : null;
         }
         catch {
             return 'unknown';
         }
+    }
+    /** Besitzer und Rollen mit dem Discord-Recht „Administrator“ (die @everyone-Rolle hat die ID des Servers); `null` = nicht lesbar. */
+    async guildAdmins(bot, guildId) {
+        const c = this.guildInfo.get(guildId);
+        if (c && Date.now() - c.at < GUILD_TTL_MS)
+            return c;
+        const r = await bot(`/guilds/${guildId}`);
+        if (!r.ok)
+            return c ?? null;
+        const g = (await r.json());
+        const adminRoles = new Set((g.roles ?? []).filter((x) => /^\d+$/.test(x.permissions ?? '') && (BigInt(x.permissions) & ADMINISTRATOR) !== 0n).map((x) => x.id));
+        const info = { at: Date.now(), ownerId: g.owner_id ?? '', adminRoles };
+        this.guildInfo.set(guildId, info);
+        return info;
     }
     bot(token) { return (path) => fetch(`${API}${path}`, { headers: { authorization: `Bot ${token}` }, signal: AbortSignal.timeout(10_000) }); }
     /** Eingestellte und registrierte Server bzw. alle Server des Bots (max. 20); `null` = Discord nicht erreichbar. */
@@ -156,6 +180,8 @@ let DiscordAccessService = class DiscordAccessService {
     verdict(member, s) {
         if ((s.requireGuild || s.teamRoleIds.length) && member === null)
             return 'not_member';
+        if (s.guildAdmins && member?.admin?.length)
+            return 'ok'; // Discord-Administrator eines Servers: immer Zugang
         if (s.teamRoleIds.length && !member.roles.some((r) => s.teamRoleIds.includes(r)))
             return 'no_team_role';
         return 'ok';
@@ -184,9 +210,12 @@ let DiscordAccessService = class DiscordAccessService {
      * (`UserRole.guildIds`) – eine Discord-Rolle auf Server A verleiht nie Rechte auf Server B. Nur die in `byGuild`/`checked`
      * geprüften Server werden geändert; Rollen ohne Discord-Verknüpfung und „System Administrator“ bleiben unangetastet.
      */
-    async syncRoles(userId, byGuild, s, checked = Object.keys(byGuild)) {
+    async syncRoles(userId, byGuild, s, checked = Object.keys(byGuild), adminGuilds = []) {
         const settings = s ?? (await this.settings());
-        const names = [...new Set(settings.roleMap.map((m) => m.role))];
+        const admins = settings.guildAdmins ? adminGuilds.filter((g) => checked.includes(g)) : [];
+        if (admins.length)
+            await this.ensureServerAdminRoles(admins);
+        const names = [...new Set([...settings.roleMap.map((m) => m.role), exports.SERVER_ADMIN_ROLE])];
         // nur Rollen der geprüften Server – serverübergreifende Vorlagen werden nicht über Discord vergeben
         const roles = await this.prisma.role.findMany({
             // auch Rollen, die der Benutzer noch über Discord hat, deren Verknüpfung aber entfernt wurde – sonst bliebe die Zuweisung für immer
@@ -201,6 +230,8 @@ let DiscordAccessService = class DiscordAccessService {
             const have = byGuild[g];
             if (!have)
                 return false;
+            if (r.name === exports.SERVER_ADMIN_ROLE && admins.includes(g))
+                return true;
             return r.discordRoleIds.some((d) => have.includes(d))
                 || r.discordMappings.some((m) => m.server.guildId === g && have.includes(m.discordRoleId))
                 || settings.roleMap.some((m) => m.role === r.name && have.includes(m.discordRoleId));
@@ -238,6 +269,14 @@ let DiscordAccessService = class DiscordAccessService {
         });
         if (changes.length)
             this.rt.publishToUser(userId, 'permissions.changed', {});
+    }
+    /** Rolle „Server-Administrator“ (alle Rechte, nur auf diesem Server) für registrierte Server anlegen, falls es sie noch nicht gibt. */
+    async ensureServerAdminRoles(guildIds) {
+        const servers = await this.prisma.discordServer.findMany({ where: { guildId: { in: guildIds }, archivedAt: null }, select: { guildId: true } });
+        const have = new Set((await this.prisma.role.findMany({ where: { guildId: { in: servers.map((x) => x.guildId) }, name: exports.SERVER_ADMIN_ROLE }, select: { guildId: true } })).map((r) => r.guildId));
+        for (const { guildId } of servers.filter((x) => !have.has(x.guildId))) {
+            await this.prisma.role.create({ data: { guildId, name: exports.SERVER_ADMIN_ROLE, description: 'Discord-Administratoren dieses Servers (Rechte nur auf diesem Server)', priority: 2, permissions: { create: [{ permissionKey: '*', effect: 'ALLOW' }] } } }).catch(() => undefined);
+        }
     }
     /**
      * Vom Administrator ausdrücklich eingestellte Haupt-Server (DISCORD_GUILD_ID bzw. Einstellung „Discord-Server-ID“) sind
@@ -309,7 +348,7 @@ let DiscordAccessService = class DiscordAccessService {
             return false;
         }
         await this.recordMemberships(userId, member.byGuild, member.checked);
-        await this.syncRoles(userId, member.byGuild, s, member.checked);
+        await this.syncRoles(userId, member.byGuild, s, member.checked, member.admin);
         return true;
     }
     /** Alle angemeldeten Discord-Benutzer prüfen (Rollenwechsel auch ohne Aktivität im Dashboard erkennen). */

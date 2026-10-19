@@ -37,10 +37,7 @@ export const NAV: NavItem[] = [
     { path: '/duty-reports', label: 'Tages-/Wochenberichte', perm: 'dutyreports.view' },
   ]),
   { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
-  grp('Fahndungen', Flag, 'Records', [
-    { path: '/wanted', label: 'Fahndungen', perm: 'wanted.view' },
-    { path: '/wanted/hits', label: 'Fahndungstreffer (ER:LC)', perm: 'wanted.view' },
-  ]),
+  { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   grp('Personal', UserCheck, 'Organisation', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
@@ -67,8 +64,6 @@ export const NAV: NavItem[] = [
     { path: '/admin/settings', label: 'Allgemein', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/servers', label: 'Server-Verbund', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/multi-server', label: 'Server & Module', perm: 'servers.view', area: 'dashboard.settings.view' },
     { path: '/admin/personnel', label: 'Personal', perm: 'personnel.view', area: 'dashboard.settings.view' },
     { path: '/admin/leave', label: 'Abmeldungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),

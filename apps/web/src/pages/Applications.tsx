@@ -13,6 +13,8 @@ import { Avatar } from '../components/TeamRoster';
 import { ago } from '../lib/cad';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationSettingsEditor, withDefaults, type AppCommon } from '../components/ApplicationSettings';
+import { PanelSendBox } from '../components/PanelSendBox';
+import { fromDraft, newUnit, toDraft, UnitsEditor, unitsComplete, type DraftUnit, type Unit } from '../components/UnitsEditor';
 import { Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
 /** Eine Zeile der gemeinsamen Liste: Polizei-Bewerbung oder Bewerbung für eine Einheit (Flugstaffel, GSG9 …). */
@@ -22,8 +24,8 @@ interface InboxRow {
   decisionReason: string | null; decidedByName: string | null; guildId: string | null; avatar: string | null;
 }
 interface Inbox extends Page<InboxRow> { types: { key: string; name: string }[] }
-interface PoliceCfg extends Partial<AppCommon> { title: string; description: string; name?: string }
-interface QualiConfig { title: string; intro: string; units: unknown[]; police: PoliceCfg; policeForm: FormField[]; own?: boolean }
+interface PoliceCfg extends Partial<AppCommon> { title: string; description: string; name?: string; panelChannelId?: string }
+interface QualiConfig { title: string; intro: string; units: Unit[]; police: PoliceCfg; policeForm: FormField[]; own?: boolean; panelPosted?: { channelId: string; messageId: string } | null }
 const OPEN = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION', 'OPEN'];
 const PAGE_SIZES = [10, 20, 50, 100];
 const FilterBox = ({ label, children }: { label: string; children: ReactNode }) => <label className="grid w-40 gap-1 text-xs text-muted">{label}{children}</label>;
@@ -133,6 +135,9 @@ export function Applications() {
   );
 }
 
+/** Einheiten des Qualifikations-Panels unverändert lassen, die weiteren Bewerbungsarten aus dem Entwurf übernehmen. */
+const withExtra = (c: QualiConfig, extra: DraftUnit[]) => [...c.units.filter((u) => u.panel !== 'apply'), ...extra.map(fromDraft)];
+
 /** Alles zur Polizei-Bewerbung wie bei Appy: Panel-Texte, Requirements, Fragen, Nachrichten, Rollen, Sonstiges. */
 function PoliceSetup() {
   const qc = useQueryClient();
@@ -141,40 +146,56 @@ function PoliceSetup() {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [name, setName] = useState('');
+  const [panelChannel, setPanelChannel] = useState('');
   const [common, setCommon] = useState<AppCommon>();
   const [questions, setQuestions] = useState<FormField[]>([]);
+  const [extra, setExtra] = useState<DraftUnit[]>([]); // weitere Bewerbungsarten im Bewerbungs-Panel
   const [msg, setMsg] = useState<string>();
   useEffect(() => {
     if (!config.data) return;
     const p = config.data.police;
-    setTitle(p.title); setText(p.description); setName(p.name ?? 'Polizeianwärter'); setQuestions(config.data.policeForm);
+    setTitle(p.title); setText(p.description); setName(p.name ?? 'Polizeianwärter'); setPanelChannel(p.panelChannelId ?? ''); setQuestions(config.data.policeForm);
+    setExtra(config.data.units.filter((u) => u.panel === 'apply').map(toDraft));
     setCommon({ enabled: p.enabled ?? true, channelId: p.channelId ?? '', acceptedChannelId: p.acceptedChannelId ?? '', deniedChannelId: p.deniedChannelId ?? '', pingRoleIds: p.pingRoleIds ?? [], settings: withDefaults(p.settings) });
   }, [config.data]);
+  const putNow = () => {
+    const c = config.data!;
+    return api('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: { title: c.title, intro: c.intro, units: withExtra(c, extra), police: { title, description: text, name, panelChannelId: panelChannel, ...common }, policeForm: questions } });
+  };
   const save = useMutation({
-    mutationFn: () => {
-      const c = config.data!;
-      return api('/qualifications/config', { method: 'PUT', query: { guildId: server }, body: { title: c.title, intro: c.intro, units: c.units, police: { title, description: text, name, ...common }, policeForm: questions } });
-    },
-    onSuccess: () => { setMsg('Gespeichert. Änderungen gelten sofort für neue Bewerbungen; poste das Panel erneut (/bewerbungspanel), damit ein geänderter Text angezeigt wird.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
+    mutationFn: putNow,
+    onSuccess: () => { setMsg('Gespeichert. Änderungen gelten sofort für neue Bewerbungen; ein bereits gesendetes Panel wird automatisch aktualisiert.'); void qc.invalidateQueries({ queryKey: ['quali-config'] }); void qc.invalidateQueries({ queryKey: ['application-form'] }); },
   });
   // automatisch speichern – für den gewählten Server (Server laufen getrennt)
-  const draft = useMemo(() => (common ? { title, text, name, common, questions } : undefined), [title, text, name, common, questions]);
+  const draft = useMemo(() => (common ? { title, text, name, panelChannel, common, questions, extra } : undefined), [title, text, name, panelChannel, common, questions, extra]);
   useAutosaveDraft(config.data ? `app:setup:${server || 'all'}` : null, draft, (d) => {
     const c = config.data!;
-    return { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: c.title, intro: c.intro, units: c.units, police: { title: d.title, description: d.text, name: d.name, ...d.common }, policeForm: d.questions }, label: 'Bewerbungs-Einstellungen' };
+    if (!unitsComplete(d.extra)) return null; // neue Bewerbungsart ohne Name/Frage: erst lokal
+    return { method: 'PUT', path: `/qualifications/config${server ? `?guildId=${server}` : ''}`, body: { title: c.title, intro: c.intro, units: withExtra(c, d.extra), police: { title: d.title, description: d.text, name: d.name, panelChannelId: d.panelChannel, ...d.common }, policeForm: d.questions }, label: 'Bewerbungs-Einstellungen' };
   }, 1500);
   if (config.error) return <ErrorState error={config.error} onRetry={() => void config.refetch()} />;
   if (config.isLoading || !common) return <SkeletonRows />;
   return (
     <div className="grid gap-4">
       <ServerScope own={config.data?.own} onReset={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })} />
-      <Card title="Panel in Discord (/bewerbungspanel)">
+      <Card title="Panel in Discord">
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Panel-Titel">{(id) => <Input id={id} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />}</Field>
           <Field label="Panel-Text (Discord-Markdown erlaubt)">{(id) => <Textarea id={id} rows={3} value={text} maxLength={1500} onChange={(e) => setText(e.target.value)} />}</Field>
         </div>
+        <PanelSendBox label="Kanal für das Bewerbungs-Panel" channelId={panelChannel} onChannel={setPanelChannel} posted={config.data?.panelPosted}
+          onSend={async (mode) => { await putNow(); return api('/qualifications/police-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); }}
+          onSent={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })}
+          hint="Das Panel bekommt den Button „Jetzt bewerben“. Alternativ geht weiterhin /bewerbungspanel direkt in Discord." />
       </Card>
-      <Card title="Bewerbungs-Einstellungen">
+      <Card title="Weitere Bewerbungsarten im Panel">
+        <p className="mb-3 text-sm text-muted">Z. B. Leitstelle oder Feuerwehr: Jede Art hat eigene Fragen, Kanäle und Rollen. Gibt es mindestens eine, zeigt das Bewerbungs-Panel statt des Buttons ein Auswahlmenü (Polizei zuerst). Die Bewerbungen erscheinen hier in der Liste (Filter „Art“).</p>
+        <div className="grid gap-4">
+          <UnitsEditor units={extra} onChange={setExtra} noun="Bewerbungsart" pendingHint="Neue Bewerbungen werden hier gepostet (leer = Qualifikations-Kanal aus den Einstellungen)." />
+          <div><Button variant="secondary" disabled={extra.length >= 24} onClick={() => setExtra([...extra, newUnit('apply')])}>Bewerbungsart hinzufügen</Button></div>
+        </div>
+      </Card>
+      <Card title="Bewerbungs-Einstellungen Polizei">
         <ApplicationSettingsEditor value={common} onChange={(p) => setCommon({ ...common, ...p })} name={name} onName={setName}
           pendingHint="Neue Bewerbungen werden hier gepostet (leer = Bewerbungs-Kanal aus den Einstellungen)."
           questions={<section className="grid gap-2"><h3 className="text-base font-semibold">Fragen</h3><p className="text-xs text-muted">Der Bot fragt immer zuerst nach dem Roblox-Benutzernamen – du musst das nicht hinzufügen.</p><FormQuestionsEditor value={questions} onChange={setQuestions} /></section>} />

@@ -35,16 +35,16 @@ declare const citizenUpdate: z.ZodObject<{
         height: z.ZodOptional<z.ZodString>;
         features: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
+        height?: string | undefined;
         skinTone?: string | undefined;
         hairColor?: string | undefined;
         eyeColor?: string | undefined;
-        height?: string | undefined;
         features?: string | undefined;
     }, {
+        height?: string | undefined;
         skinTone?: string | undefined;
         hairColor?: string | undefined;
         eyeColor?: string | undefined;
-        height?: string | undefined;
         features?: string | undefined;
     }>>>;
     licenses: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -63,10 +63,10 @@ declare const citizenUpdate: z.ZodObject<{
     nationality?: string | null | undefined;
     address?: string | null | undefined;
     appearance?: {
+        height?: string | undefined;
         skinTone?: string | undefined;
         hairColor?: string | undefined;
         eyeColor?: string | undefined;
-        height?: string | undefined;
         features?: string | undefined;
     } | null | undefined;
     licenses?: string[] | undefined;
@@ -82,10 +82,10 @@ declare const citizenUpdate: z.ZodObject<{
     nationality?: string | null | undefined;
     address?: string | null | undefined;
     appearance?: {
+        height?: string | undefined;
         skinTone?: string | undefined;
         hairColor?: string | undefined;
         eyeColor?: string | undefined;
-        height?: string | undefined;
         features?: string | undefined;
     } | null | undefined;
     licenses?: string[] | undefined;
