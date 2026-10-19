@@ -401,6 +401,8 @@ export declare const unitSchema: z.ZodObject<{
     })[]>;
     /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
     pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** In welchem Panel die Einheit steht: Qualifikations-Panel oder (als weitere Bewerbungsart) Bewerbungs-Panel. */
+    panel: z.ZodDefault<z.ZodEnum<["quali", "apply"]>>;
     enabled: z.ZodDefault<z.ZodBoolean>;
     acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
     deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
@@ -593,6 +595,7 @@ export declare const unitSchema: z.ZodObject<{
     };
     key: string;
     pingRoleIds: string[];
+    panel: "apply" | "quali";
     channelId?: string | undefined;
     roleId?: string | undefined;
     acceptedChannelId?: string | undefined;
@@ -648,6 +651,7 @@ export declare const unitSchema: z.ZodObject<{
     channelId?: string | undefined;
     roleId?: string | undefined;
     pingRoleIds?: string[] | undefined;
+    panel?: "apply" | "quali" | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }>;
@@ -989,6 +993,8 @@ export declare const configSchema: z.ZodObject<{
         })[]>;
         /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** In welchem Panel die Einheit steht: Qualifikations-Panel oder (als weitere Bewerbungsart) Bewerbungs-Panel. */
+        panel: z.ZodDefault<z.ZodEnum<["quali", "apply"]>>;
         enabled: z.ZodDefault<z.ZodBoolean>;
         acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
@@ -1181,6 +1187,7 @@ export declare const configSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
+        panel: "apply" | "quali";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1236,6 +1243,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        panel?: "apply" | "quali" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
@@ -1275,6 +1283,7 @@ export declare const configSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
+        panel: "apply" | "quali";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1330,6 +1339,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        panel?: "apply" | "quali" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[]>;
@@ -1610,6 +1620,7 @@ export declare const configSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
+        panel: "apply" | "quali";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1710,6 +1721,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        panel?: "apply" | "quali" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -1858,6 +1870,8 @@ export declare const saveSchema: z.ZodObject<{
         })[]>;
         /** Discord-Rolle(n), die bei einer neuen Bewerbung im Channel erwähnt werden (z. B. @Staffelkommandant). */
         pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        /** In welchem Panel die Einheit steht: Qualifikations-Panel oder (als weitere Bewerbungsart) Bewerbungs-Panel. */
+        panel: z.ZodDefault<z.ZodEnum<["quali", "apply"]>>;
         enabled: z.ZodDefault<z.ZodBoolean>;
         acceptedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
         deniedChannelId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
@@ -2050,6 +2064,7 @@ export declare const saveSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
+        panel: "apply" | "quali";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2105,6 +2120,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        panel?: "apply" | "quali" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
@@ -2144,6 +2160,7 @@ export declare const saveSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
+        panel: "apply" | "quali";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2199,6 +2216,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        panel?: "apply" | "quali" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[]>;
@@ -2571,6 +2589,7 @@ export declare const saveSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
+        panel: "apply" | "quali";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2684,6 +2703,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
+        panel?: "apply" | "quali" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];

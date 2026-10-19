@@ -187,6 +187,7 @@ export declare class QualificationsController {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -285,6 +286,7 @@ export declare class QualificationsController {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -384,6 +386,7 @@ export declare class QualificationsController {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -550,6 +553,7 @@ export declare class BotQualificationsController {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;

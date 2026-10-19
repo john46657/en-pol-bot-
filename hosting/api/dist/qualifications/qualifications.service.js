@@ -31,24 +31,12 @@ const roblox_service_1 = require("../persons/roblox.service");
 const shared_2 = require("@enrp/shared");
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
-/** Gleicher Button wie /bewerbungspanel – der Bot startet darüber die Bewerbung. */
-const POLICE_BUTTON = 'quali:pick:@polizei';
-/** Panel „Jetzt bewerben“ für die Polizei-Bewerbung (wie /bewerbungspanel). */
-function policePanelMessage(p) {
-    return {
-        embeds: [{ title: p.title.slice(0, 256), description: p.description.slice(0, 4000) || undefined, color: 0x3b82f6 }],
-        buttons: [{ id: POLICE_BUTTON, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }],
-    };
-}
-const clip = (s, max) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
-const plain = (s) => s.replace(/[*_`~|>\\]/g, '\\$&').replace(/@(everyone|here)/g, '@\u200b$1');
+/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+function policePanelMessage(cfg) { return panelMessage((0, shared_2.applyPanelParts)(cfg)); }
 /** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
-function qualiPanelMessage(cfg) {
-    const parts = [cfg.intro, ...cfg.units.map((u) => `**__${plain(u.name)}:__**\n${u.description}`)].filter(Boolean);
-    return {
-        embeds: [{ title: clip(cfg.title, 256), description: clip(parts.join('\n\n'), 4000), color: 0x3b82f6 }],
-        select: { id: 'quali:pick', placeholder: 'Triff eine Auswahl', options: cfg.units.map((u) => ({ label: clip(`${u.name}${u.enabled === false ? ' (geschlossen)' : ''}`, 100), value: u.key, ...(u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ''), 100) } : {}) })) },
-    };
+function qualiPanelMessage(cfg) { return panelMessage((0, shared_2.qualiPanelParts)(cfg)); }
+function panelMessage(p) {
+    return { embeds: [{ title: p.title, description: p.description || undefined, color: 0x3b82f6 }], ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) };
 }
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
@@ -96,10 +84,11 @@ let QualificationsService = class QualificationsService {
     panelKey(guildId, kind = 'police') { return guildId ? `apanel-${kind}-${guildId}` : `apanel-${kind}`; }
     /** Bewerbungs-Panel („Jetzt bewerben“) aus dem Dashboard senden oder die gesendete Nachricht aktualisieren. */
     async sendPolicePanel(actor, mode, guildId) {
-        const police = (await this.config(guildId)).police;
+        const cfg = await this.config(guildId);
+        const police = cfg.police;
         if (!police.panelChannelId)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Kanal für das Panel.');
-        await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(police), { forceNew: mode === 'new' });
+        await this.discord.postMessage(this.panelKey(guildId), police.panelChannelId, policePanelMessage(cfg), { forceNew: mode === 'new' });
         await this.audit.record(actor, { action: 'applications.panel.send', module: 'qualifications', entityType: 'SystemSetting', entityId: this.keyOf(KEY, guildId), after: { channelId: police.panelChannelId, mode, guildId: guildId ?? null } });
         return { queued: true };
     }
@@ -131,7 +120,7 @@ let QualificationsService = class QualificationsService {
         });
         // Panels stehen schon in Discord → geänderte Texte/Einheiten gleich mitziehen
         const panels = [
-            { key: this.panelKey(guildId), channelId: c.police.panelChannelId, before: policePanelMessage(old.police), after: policePanelMessage(c.police) },
+            { key: this.panelKey(guildId), channelId: c.police.panelChannelId, before: policePanelMessage(old), after: policePanelMessage(c) },
             { key: this.panelKey(guildId, 'quali'), channelId: c.panelChannelId, before: qualiPanelMessage(old), after: qualiPanelMessage(c) },
         ];
         for (const p of panels) {

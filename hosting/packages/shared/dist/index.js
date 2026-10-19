@@ -106,6 +106,7 @@ __export(index_exports, {
   MUSIC_TRACKS: () => MUSIC_TRACKS,
   PERIOD_LABEL: () => PERIOD_LABEL,
   PERMISSION_CATALOG: () => PERMISSION_CATALOG,
+  POLICE_APPLICATION_KEY: () => POLICE_APPLICATION_KEY,
   POSITION_HINT: () => POSITION_HINT,
   PRIORITIES: () => PRIORITIES,
   PRIORITY_LABEL: () => PRIORITY_LABEL,
@@ -163,6 +164,7 @@ __export(index_exports, {
   accountAge: () => accountAge,
   ageOf: () => ageOf,
   applyCallCalibration: () => applyCallCalibration,
+  applyPanelParts: () => applyPanelParts,
   areaGrantsFor: () => areaGrantsFor,
   assertTransition: () => assertTransition,
   awardDefSchema: () => awardDefSchema,
@@ -260,6 +262,7 @@ __export(index_exports, {
   notifyRuleSchema: () => notifyRuleSchema,
   onErlcMap: () => onErlcMap,
   panelFieldSchema: () => panelFieldSchema,
+  panelUnits: () => panelUnits,
   parseCsv: () => parseCsv,
   parsePlayer: () => parsePlayer,
   parseQuestions: () => parseQuestions,
@@ -274,6 +277,7 @@ __export(index_exports, {
   policyAllowsFlow: () => policyAllowsFlow,
   postalMatchRate: () => postalMatchRate,
   postalPosition: () => postalPosition,
+  qualiPanelParts: () => qualiPanelParts,
   questionProblems: () => questionProblems,
   questionSchema: () => questionSchema,
   radioRoleSyncAction: () => radioRoleSyncAction,
@@ -3286,6 +3290,39 @@ function parseCsv(text) {
   const header = (nonEmpty.shift()?.cells ?? []).map((h) => h.trim().toLowerCase());
   return { header, rows: nonEmpty.map((r) => ({ line: r.line, cells: Object.fromEntries(header.map((h, i) => [h, (r.cells[i] ?? "").trim().replace(/^'(?=[=+\-@])/, "")])) })) };
 }
+
+// src/application-panels.ts
+var POLICE_APPLICATION_KEY = "@polizei";
+var clip = (s, max) => s.length > max ? `${s.slice(0, max - 1)}\u2026` : s;
+var plain = (s) => s.replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
+var optionOf = (u) => ({
+  label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100),
+  value: u.key,
+  ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {}
+});
+var section = (u) => `**__${plain(u.name)}:__**
+${u.description}`;
+var panelUnits = (units, kind) => units.filter((u) => (u.panel ?? "quali") === kind);
+function qualiPanelParts(cfg) {
+  const units = panelUnits(cfg.units, "quali");
+  return {
+    title: clip(cfg.title, 256),
+    description: clip([cfg.intro, ...units.map(section)].filter(Boolean).join("\n\n"), 4e3),
+    select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: units.slice(0, 25).map(optionOf) }
+  };
+}
+function applyPanelParts(cfg) {
+  const p = cfg.police ?? { title: "\u{1F4CB} Bewerbung bei EN Polizei", description: "" };
+  const extra = panelUnits(cfg.units, "apply");
+  const title = clip(p.title, 256);
+  if (!extra.length) return { title, ...p.description ? { description: clip(p.description, 4e3) } : {}, button: { id: `quali:pick:${POLICE_APPLICATION_KEY}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" } };
+  const police = { key: POLICE_APPLICATION_KEY, name: p.name || "Polizei", enabled: p.enabled };
+  return {
+    title,
+    description: clip([p.description, ...extra.map(section)].filter(Boolean).join("\n\n"), 4e3),
+    select: { id: "quali:pick", placeholder: "Wof\xFCr m\xF6chtest du dich bewerben?", options: [police, ...extra].slice(0, 25).map(optionOf) }
+  };
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ALL_PERMISSIONS,
@@ -3374,6 +3411,7 @@ function parseCsv(text) {
   MUSIC_TRACKS,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
+  POLICE_APPLICATION_KEY,
   POSITION_HINT,
   PRIORITIES,
   PRIORITY_LABEL,
@@ -3431,6 +3469,7 @@ function parseCsv(text) {
   accountAge,
   ageOf,
   applyCallCalibration,
+  applyPanelParts,
   areaGrantsFor,
   assertTransition,
   awardDefSchema,
@@ -3528,6 +3567,7 @@ function parseCsv(text) {
   notifyRuleSchema,
   onErlcMap,
   panelFieldSchema,
+  panelUnits,
   parseCsv,
   parsePlayer,
   parseQuestions,
@@ -3542,6 +3582,7 @@ function parseCsv(text) {
   policyAllowsFlow,
   postalMatchRate,
   postalPosition,
+  qualiPanelParts,
   questionProblems,
   questionSchema,
   radioRoleSyncAction,

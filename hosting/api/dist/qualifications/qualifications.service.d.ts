@@ -7,17 +7,14 @@ import { type QualificationConfig } from './qualifications.config';
 import { type FormField } from '@enrp/shared';
 import { RobloxService } from '../persons/roblox.service';
 import { type MessageSpec } from '@enrp/shared';
-/** Panel „Jetzt bewerben“ für die Polizei-Bewerbung (wie /bewerbungspanel). */
-export declare function policePanelMessage(p: {
-    title: string;
-    description: string;
-}): MessageSpec;
-/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
-export declare function qualiPanelMessage(cfg: QualificationConfig): MessageSpec;
 export interface Answer {
     question: string;
     answer: string | string[] | null;
 }
+/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+export declare function policePanelMessage(cfg: QualificationConfig): MessageSpec;
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+export declare function qualiPanelMessage(cfg: QualificationConfig): MessageSpec;
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).
  * Bei Annahme: Direktnachricht, optionale Discord-Rolle; für die Einheit `sek` zusätzlich SEK-Roster + System-Rolle „SEK“ (bei verknüpftem Konto).
@@ -85,6 +82,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -195,6 +193,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -294,6 +293,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
+            panel: "apply" | "quali";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
