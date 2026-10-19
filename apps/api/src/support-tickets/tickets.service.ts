@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  renderTicketText, ticketChannelName, ticketNumber, TICKET_ACTIONS,
+  renderTicketText, ticketChannelName, ticketNumber, TICKET_ACTIONS, ticketButtonsOf,
   type ComponentButton, type EmbedSpec, type MessageSpec, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketVars,
 } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -93,7 +93,7 @@ export class SupportTicketsService {
     const closed = this.isClosed(l);
     const v = this.vars(l);
     const buttons: ComponentButton[] = [];
-    for (const b of l.cat.buttons as TicketButtonConfig[]) {
+    for (const b of ticketButtonsOf(l.cat.buttons as unknown as TicketButtonConfig[])) {
       if (!b.enabled) continue;
       const def = TICKET_ACTIONS[b.action];
       if (!def || (def.state === 'open' && closed) || (def.state === 'closed' && !closed)) continue;

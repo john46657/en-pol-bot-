@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { defaultTicketButtons, type TicketButtonConfig, type TicketQuestion } from '@enrp/shared';
+import { defaultTicketButtons, ticketButtonsOf, type TicketButtonConfig, type TicketQuestion } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
@@ -38,7 +38,7 @@ export class TicketConfigService {
   }
 
   categoryOut<T extends { buttons: Prisma.JsonValue; questions: Prisma.JsonValue }>(c: T) {
-    const buttons = (Array.isArray(c.buttons) && c.buttons.length ? c.buttons : defaultTicketButtons()) as unknown as TicketButtonConfig[];
+    const buttons = ticketButtonsOf((Array.isArray(c.buttons) && c.buttons.length ? c.buttons : defaultTicketButtons()) as unknown as TicketButtonConfig[]);
     return { ...c, buttons, questions: (c.questions ?? []) as unknown as TicketQuestion[] };
   }
   statuses() { return this.prisma.ticketStatus.findMany({ orderBy: { position: 'asc' } }); }

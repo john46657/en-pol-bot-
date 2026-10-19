@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, QUESTION_TYPES, TICKET_ACTIONS, TICKET_PLACEHOLDERS, defaultTicketButtons, renderTicketText, ticketChannelName,
+  CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, QUESTION_TYPES, NO_TICKET_BUTTON, TICKET_ACTIONS, TICKET_PLACEHOLDERS, defaultTicketButtons, ticketButtonsOf, renderTicketText, ticketChannelName,
   type ButtonStyleName, type MessageSpec, type QuestionType, type TicketAction, type TicketQuestion, type TicketVars,
 } from '@enrp/shared';
 import { flush, onSaved, useAutosaveDraft } from '../../lib/autosave';
@@ -240,7 +240,7 @@ function Categories({ c }: { c: TicketConfig }) {
 }
 
 function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig; onDone: () => void }) {
-  const [d, setD] = useState<CatDraft>({ ...draft, buttons: draft.buttons.length ? draft.buttons : defaultTicketButtons() });
+  const [d, setD] = useState<CatDraft>({ ...draft, buttons: draft.buttons.length ? ticketButtonsOf(draft.buttons) : defaultTicketButtons() });
   const set = (x: Partial<CatDraft>) => setD({ ...d, ...x });
   const save = useSave(() => api(d.id ? `/support-tickets/categories/${d.id}` : '/support-tickets/categories', { method: d.id ? 'PUT' : 'POST', body: clean({ ...d, id: undefined }) }), onDone);
   useTicketAutosaveSync();
@@ -384,11 +384,11 @@ function OptionsText({ value, onChange }: { value: string[]; onChange: (v: strin
 
 function ButtonsEditor({ value, onChange }: { value: TicketCategoryCfg['buttons']; onChange: (v: TicketCategoryCfg['buttons']) => void }) {
   const patch = (i: number, p: Partial<TicketCategoryCfg['buttons'][number]>) => onChange(value.map((b, j) => (j === i ? { ...b, ...p } : b)));
-  const missing = (Object.keys(TICKET_ACTIONS) as TicketAction[]).filter((a) => !value.some((b) => b.action === a));
+  const missing = (Object.keys(TICKET_ACTIONS) as TicketAction[]).filter((a) => !NO_TICKET_BUTTON.includes(a) && !value.some((b) => b.action === a));
   const [add, setAdd] = useState<string>('');
   return (
     <div className="grid gap-2">
-      <p className="text-xs text-muted">Jeder Button braucht sein eigenes Recht (ticket.*). Buttons erscheinen nur, wenn sie sinnvoll sind (z. B. „Wieder öffnen“ nur bei geschlossenen Tickets).</p>
+      <p className="text-xs text-muted">Jeder Button braucht sein eigenes Recht (ticket.*). Buttons erscheinen nur, wenn sie sinnvoll sind (z. B. „Freigeben“ nur bei übernommenen Tickets).</p>
       {value.map((b, i) => (
         <div key={b.action} className="grid items-end gap-2 rounded border border-line p-2 sm:grid-cols-[110px_minmax(0,1fr)_80px_110px_auto]">
           <div className="text-sm"><Check label={TICKET_ACTIONS[b.action].label} checked={b.enabled} onChange={(v) => patch(i, { enabled: v })} /><span className="text-[11px] text-muted">{TICKET_ACTIONS[b.action].permission}</span></div>
