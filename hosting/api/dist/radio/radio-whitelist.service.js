@@ -43,6 +43,8 @@ function normalizeForm(f) {
 }
 exports.DEFAULT_CONFIG = { roleSync: shared_1.DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, approveRoleIds: [], panel: exports.DEFAULT_PANEL, form: exports.DEFAULT_FORM }, notifyMembers: true };
 const PANEL_STATE_KEY = 'radio-request-panel';
+/** Beschriftungen, an denen das eingebaute Dienstgrad-/Abteilungsfeld noch erkennbar ist. */
+const BUILT_IN_LABEL = { rank: /dienstgrad|rang/i, department: /abteilung|einheit|dienststelle/i };
 const requestStateKey = (id) => `rwreq-${id}`;
 const hexColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? parseInt(c.slice(1), 16) : 0x3b82f6);
 /** Funkdienste, für die die Anbindung angeboten wird – mit ehrlicher Angabe, was per API möglich ist. */
@@ -238,7 +240,10 @@ let RadioWhitelistService = class RadioWhitelistService {
         const status = b.status ?? 'ACTIVE';
         const data = {
             discordName: clip(b.discordName, 100) ?? existing?.discordName ?? pre.discordName, userId: b.userId ?? existing?.userId ?? pre.userId,
-            rank: clip(b.rank, 80) ?? existing?.rank ?? pre.rank, department: clip(b.department, 80) ?? existing?.department ?? pre.department,
+            // per Antrag: Dienstgrad/Abteilung aus Personalakte bzw. Leitstelle, dann bisheriger Eintrag – die Formularangabe nur als letzte Möglichkeit
+            ...(b.source === 'REQUEST'
+                ? { rank: pre.rank ?? existing?.rank ?? clip(b.rank, 80), department: pre.department ?? existing?.department ?? clip(b.department, 80) }
+                : { rank: clip(b.rank, 80) ?? existing?.rank ?? pre.rank, department: clip(b.department, 80) ?? existing?.department ?? pre.department }),
             externalName: clip(b.externalName, 100) ?? existing?.externalName ?? pre.externalName,
             status, source: b.source, reason: clip(b.reason, 1000), expiresAt: b.expiresAt ?? null, suspendedUntil: null, suspendReason: null, statusBeforeSuspend: null,
             roleRevoked: false, archivedAt: null, grantedById: status === 'ACTIVE' ? actor.userId : null, grantedAt: status === 'ACTIVE' ? new Date() : null,
@@ -488,7 +493,17 @@ let RadioWhitelistService = class RadioWhitelistService {
                 if (f.required && !(b.answers?.[f.key] ?? '').trim())
                     throw new errors_1.AppError('VALIDATION_FAILED', `Bitte „${f.label}“ ausfüllen.`);
             const answers = custom.map((f) => ({ key: f.key, label: f.label, value: (b.answers?.[f.key] ?? '').trim().slice(0, f.maxLength) })).filter((a) => a.value);
-            const r = await tx.radioRequest.create({ data: { discordId: b.discordId, discordName: clip(b.discordName, 100), guildId: b.guildId, rank: clip(b.rank, 80), department: clip(b.department, 80), reason: b.reason.slice(0, 1000), ...(answers.length ? { answers } : {}) } });
+            // Dienstgrad-/Abteilungsfeld umbenannt (fragt etwas anderes, z. B. den Discord-Namen) → normale Antwort, nicht Dienstgrad/Abteilung
+            const builtIn = (key, value) => {
+                const f = cfg.requests.form.fields.find((x) => x.key === key);
+                const v = clip(value?.trim() || null, 80);
+                if (!f || !v || BUILT_IN_LABEL[key].test(f.label))
+                    return v;
+                answers.push({ key, label: f.label, value: v });
+                return null;
+            };
+            const rank = builtIn('rank', b.rank), department = builtIn('department', b.department);
+            const r = await tx.radioRequest.create({ data: { discordId: b.discordId, discordName: clip(b.discordName, 100), guildId: b.guildId, rank, department, reason: b.reason.slice(0, 1000), ...(answers.length ? { answers } : {}) } });
             await this.audit.record(SYSTEM, { action: 'radio.request.created', module: MODULE, entityType: 'RadioRequest', entityId: r.id, after: { discordId: r.discordId, discordName: r.discordName, rank: r.rank, department: r.department }, reason: r.reason, serverId: null }, tx);
             return r;
         });
