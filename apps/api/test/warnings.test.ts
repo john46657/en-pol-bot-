@@ -6,7 +6,7 @@ import type { PrismaService } from '../src/prisma/prisma.service';
 const CH = '730000000000000001', ROLE = '730000000000000099', DISCORD = '730000000000000010';
 let app: INestApplication; let prisma: PrismaService; let target: string;
 const started = new Date();
-const posts = async () => (await prisma.discordOutbox.findMany({ where: { type: 'message.post', createdAt: { gte: started } }, orderBy: { createdAt: 'asc' } })).map((o) => o.payload as { channelId: string; message: { content?: string; embeds: { description: string }[] } }).filter((p) => p.channelId === CH);
+const posts = async () => (await prisma.discordOutbox.findMany({ where: { type: 'message.post', createdAt: { gte: started } }, orderBy: { createdAt: 'asc' } })).map((o) => o.payload as { channelId: string; message: { content?: string; embeds?: { description: string }[]; mentionUsers?: string[] } }).filter((p) => p.channelId === CH);
 
 beforeAll(async () => {
   ({ app, prisma } = await createTestApp());
@@ -29,12 +29,15 @@ describe('Verwarnungen', () => {
     expect((await admin.put('/api/v1/hr/config').send({ ...cfg, warnings: { limit: 2, channelId: CH, dm: true, atLimit: { pingDiscordRoleIds: [ROLE], removeDiscordRoleIds: [ROLE], status: 'SUSPENDED' } } })).status).toBe(200);
     const first = await admin.post('/api/v1/hr/warnings/discord').send({ discordId: DISCORD, reason: 'Shift Abuse' });
     expect(first.body).toMatchObject({ count: 1, limit: 2 });
-    expect((await posts())[0]!.message.embeds[0]!.description).toBe(`**Wer:** <@${DISCORD}>\n**Grund:** Shift Abuse\n**Verwarnungen:** 1/2`);
+    // einfacher Text wie im Beispiel; die Person wird angezeigt, aber nicht gepingt
+    const firstPost = (await posts())[0]!.message;
+    expect(firstPost.content).toBe(`Wer: <@${DISCORD}>\nGrund: Shift Abuse\nVerwarnungen: 1/2`);
+    expect(firstPost.embeds).toBeUndefined();
+    expect(firstPost.mentionUsers).toBeUndefined();
     expect((await prisma.personnel.findUniqueOrThrow({ where: { id: target } })).employmentStatus).not.toBe('SUSPENDED');
     expect((await admin.post('/api/v1/hr/warnings/discord').send({ discordId: DISCORD, reason: 'Funkdisziplin', severity: 'REPRIMAND' })).body).toMatchObject({ count: 2, limit: 2 });
     const second = (await posts())[1]!;
-    expect(second.message.content).toBe(`<@&${ROLE}>`);
-    expect(second.message.embeds[0]!.description).toContain('Grenze erreicht (2/2)');
+    expect(second.message.content).toBe(`<@&${ROLE}>\nWer: <@${DISCORD}>\nGrund: Funkdisziplin\nVerwarnungen: 2/2\n⛔ Grenze erreicht (2/2).`);
     expect((await prisma.personnel.findUniqueOrThrow({ where: { id: target } })).employmentStatus).toBe('SUSPENDED');
     expect(await prisma.discordOutbox.findFirst({ where: { type: 'bot.dm', createdAt: { gte: started } } })).not.toBeNull();
     // Übersicht mit Zähler; zurücknehmen senkt ihn
@@ -45,5 +48,10 @@ describe('Verwarnungen', () => {
     expect((await admin.patch(`/api/v1/hr/records/${mine[0].id}`).send({ status: 'REVOKED' })).status).toBe(200);
     expect((await admin.get('/api/v1/hr/warnings')).body.items.filter((w: { personnelId: string }) => w.personnelId === target).map((w: { active: number }) => w.active)).toEqual([1]);
     expect((await admin.post('/api/v1/hr/warnings/discord').send({ discordId: '730000000000000077', reason: 'x y' })).status).toBe(404);
+    // Darstellung „Kasten“ bleibt wählbar
+    const cfg2 = (await admin.get('/api/v1/hr/config')).body;
+    await admin.put('/api/v1/hr/config').send({ ...cfg2, warnings: { ...cfg2.warnings, style: 'embed' } });
+    await admin.post('/api/v1/hr/warnings/discord').send({ discordId: DISCORD, reason: 'Test' });
+    expect((await posts()).at(-1)!.message.embeds?.[0]?.description).toContain('Grund: Test');
   });
 });

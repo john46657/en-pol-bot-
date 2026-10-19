@@ -43,6 +43,9 @@ export const REQUEST_STATUSES = ['OPEN', 'IN_REVIEW', 'APPROVED', 'REJECTED', 'D
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 export const requestStatusDefSchema = z.object({ label: z.string().max(40), emoji: z.string().max(16) });
 
+export const WARNING_TEMPLATE = 'Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}';
+/** Frühere Standardvorlage (fett) – unverändert gespeicherte Einstellungen bekommen die neue. */
+const OLD_WARNING_TEMPLATE = '**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}';
 export const hrConfigSchema = z.object({
   statuses: z.array(hrStatusSchema).max(30).default([]),
   departments: z.array(departmentSchema).max(50).default([]),
@@ -89,7 +92,9 @@ export const hrConfigSchema = z.object({
     limit: z.number().int().min(1).max(20).default(3),
     /** Kanal für jede neue Verwarnung (leer = nur Dashboard) */
     channelId: sf.nullable().default(null),
-    template: z.string().max(1500).default('**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}'),
+    template: z.string().max(1500).default(WARNING_TEMPLATE),
+    /** Darstellung in Discord: einfacher Text („Wer: … / Grund: … / Verwarnungen: 1/3“) oder als Kasten (Embed) */
+    style: z.enum(['text', 'embed']).default('text'),
     /** Person per DM informieren */
     dm: z.boolean().default(true),
     atLimit: z.object({
@@ -154,6 +159,7 @@ export function withHrDefaults(v: unknown): HrConfig {
     sections: { ...DEFAULT_HR_CONFIG.sections, ...c.sections },
     fields: { ...DEFAULT_HR_CONFIG.fields, ...c.fields },
     notifications: raw.notifications ? c.notifications : DEFAULT_HR_CONFIG.notifications,
+    warnings: c.warnings.template === OLD_WARNING_TEMPLATE ? { ...c.warnings, template: WARNING_TEMPLATE } : c.warnings,
   };
 }
 

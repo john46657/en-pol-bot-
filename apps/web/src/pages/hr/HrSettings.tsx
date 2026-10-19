@@ -216,6 +216,9 @@ export function HrSettings() {
                 <Lbl label="Verwarnungs-Kanal (leer = nur Dashboard)"><ChannelPicker ariaLabel="Verwarnungs-Kanal" disabled={ro} value={d.warnings.channelId} onChange={(v) => upd('warnings', { ...d.warnings, channelId: v })} /></Lbl>
                 <label className="flex items-center gap-2 self-end text-sm"><Toggle label="Person per DM informieren" checked={d.warnings.dm} onChange={(v) => !ro && upd('warnings', { ...d.warnings, dm: v })} />Person per DM informieren</label>
               </div>
+              <Lbl label="Darstellung in Discord"><Select aria-label="Darstellung der Verwarnungs-Meldung" disabled={ro} value={d.warnings.style} onChange={(e) => upd('warnings', { ...d.warnings, style: e.target.value as 'text' | 'embed' })}>
+                <option value="text">Einfacher Text (Wer / Grund / Verwarnungen)</option><option value="embed">Kasten (Embed mit Farbe, „Verwarnt von“ und Datum)</option>
+              </Select></Lbl>
               <Lbl label="Text der Meldung"><Textarea aria-label="Text der Verwarnungs-Meldung" rows={3} disabled={ro} maxLength={1500} value={d.warnings.template} onChange={(e) => upd('warnings', { ...d.warnings, template: e.target.value })} /></Lbl>
               <p className="text-xs text-muted">Platzhalter: {WARNING_VARIABLES.join(' ')}</p>
               <h4 className="text-xs font-semibold uppercase text-muted">Bei Erreichen der Grenze ({d.warnings.limit}/{d.warnings.limit})</h4>

@@ -15,4 +15,9 @@ describe('Schweregrad, der nicht abläuft', () => {
     const removed = withHrDefaults({ ...once, warningSeverities: [sev('WARNING', 30)] });
     expect(removed.warningSeverities.map((s) => s.key)).toEqual(['WARNING']);
   });
+
+  it('alte fette Vorlage der Verwarnungs-Meldung wird zur neuen, eigene Texte bleiben', () => {
+    expect(withHrDefaults({ warnings: { template: '**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}' } }).warnings.template).toBe('Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}');
+    expect(withHrDefaults({ warnings: { template: 'Eigener Text {mitglied}' } }).warnings.template).toBe('Eigener Text {mitglied}');
+  });
 });
