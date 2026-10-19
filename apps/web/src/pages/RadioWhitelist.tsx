@@ -450,6 +450,8 @@ function FormEditor({ form, onChange }: { form: RequestForm; onChange: (f: Reque
             <label className="flex items-center gap-1"><input type="checkbox" checked={f.key === 'reason' || f.required} disabled={f.key === 'reason'} onChange={(e) => set(i, { required: e.target.checked })} />Pflichtfeld</label>
             <label className="flex items-center gap-1">max. <input type="number" min={1} max={1000} className="w-16 rounded border border-line bg-transparent px-1" value={f.maxLength} onChange={(e) => set(i, { maxLength: Math.max(1, Math.min(1000, Number(e.target.value) || 1)) })} /> Zeichen</label>
             {f.key === 'reason' && <span className="text-muted">immer dabei</span>}
+            {f.key === 'rank' && <span className="text-muted">eingebaut: wird als Dienstgrad gespeichert, solange die Beschriftung nach „Dienstgrad“ oder „Rang“ fragt</span>}
+            {f.key === 'department' && <span className="text-muted">eingebaut: wird als Abteilung gespeichert, solange die Beschriftung nach „Abteilung“ fragt</span>}
           </div>
         </li>
       ))}</ol>
