@@ -136,7 +136,9 @@ describe('opening a ticket from Discord', () => {
     const tr = find(r.body.effects, 'transcript')[0]!;
     expect(tr.channelIds).toEqual(['920000000000000001']);
     expect(find(r.body.effects, 'dm')[0]!.message.buttons!.map((b) => b.id)).toContain(`tk:rate:${id}:5`);
-    expect(find(r.body.effects, 'control')[0]!.message.buttons!.map((b) => b.id.split(':')[1])).toEqual(expect.arrayContaining(['reopen', 'delete', 'transcript']));
+    const controls = find(r.body.effects, 'control')[0]!.message.buttons!.map((b) => b.id.split(':')[1]);
+    expect(controls).toEqual(expect.arrayContaining(['delete', 'transcript']));
+    expect(controls).not.toContain('reopen'); // „Wieder öffnen“, „Priorität“, „Eskalieren“ gibt es nicht mehr als Button
     const html = (await http().get(`/api/v1/bot/support-tickets/transcripts/${tr.transcriptId}`).set(bot())).body.html as string;
     expect(html).toContain('<strong>Beweis</strong>');
     expect(html).not.toContain('<script>alert(1)');

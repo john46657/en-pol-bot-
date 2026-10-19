@@ -19,6 +19,8 @@ exports.dangerPanel = dangerPanel;
 exports.dangerButtons = dangerButtons;
 exports.teamlistEmbed = teamlistEmbed;
 exports.dutyReminderDm = dutyReminderDm;
+/** Discord-unabhängige Nachrichtenmodelle + Formatierung (einfach testbar). */
+const shared_1 = require("@enrp/shared");
 exports.COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b };
 const PRIORITY_COLOR = { LOW: exports.COLORS.neutral, MEDIUM: exports.COLORS.info, HIGH: exports.COLORS.warning, URGENT: exports.COLORS.danger, CRITICAL: exports.COLORS.danger };
 /** Discord-Limits: Titel 256, Beschreibung 4096, Feldwert 1024. */
@@ -140,6 +142,12 @@ const fmtDuration = (sec) => (sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.floor(
 exports.fmtDuration = fmtDuration;
 /** Gesamtbudget der Embeds einer Nachricht (Discord: 6000 Zeichen) – Platz lassen für das spätere Feld „Entscheidung“. */
 const BUDGET = 4800;
+const AI_ICON = { LOW: '🟢', MEDIUM: '🟡', HIGH: '🔴' };
+/** KI-Checker: Einschätzung + wichtigste Gründe (nur Hinweis, Details im Dashboard). */
+function aiLines(qa, durationSec) {
+    const r = (0, shared_1.aiCheck)(qa.map((q) => ({ answer: String(q.answer ?? '') })), durationSec);
+    return [`KI-Check: ${AI_ICON[r.level]} ${shared_1.AI_CHECK_LEVEL_LABEL[r.level]} (\`${r.score} %\`)`, ...(r.level === 'LOW' ? [] : r.reasons.slice(0, 2).map((x) => `› ${(0, exports.clip)((0, exports.plain)(x), 160)}`))];
+}
 /** Fragen fett + nummeriert, Antwort darunter, am Ende die Bewerber-Infos. Lange Bewerbungen werden auf mehrere Embeds verteilt bzw. gekürzt. */
 function applicationEmbeds(p, kind) {
     const qa = Array.isArray(p.answers) ? p.answers : [];
@@ -149,6 +157,7 @@ function applicationEmbeds(p, kind) {
         ...(id ? [`Discord-ID: \`${id}\``, `Benutzername: \`${(0, exports.plain)(p.discordName ?? '—')}\``, `Benutzer: <@${id}>`] : ['Quelle: Web-Formular (kein Discord)']),
         ...(kind === 'p' ? [`Roblox: \`${(0, exports.plain)(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ''}`] : [p.linkedName ? `Im System: **${(0, exports.plain)(p.linkedName)}**` : 'Im System: nicht verknüpft']),
         ...(typeof p.durationSec === 'number' ? [`Dauer: \`${(0, exports.fmtDuration)(p.durationSec)}\``] : []),
+        ...aiLines(qa, typeof p.durationSec === 'number' ? p.durationSec : null),
         ...(joined ? [`Server beigetreten: <t:${joined}:R>`] : []),
         ...(submitted ? [`Eingereicht: <t:${submitted}:R>`] : []),
         ...(p.guildName ? [`Server: \`${(0, exports.plain)(p.guildName)}\``] : []),

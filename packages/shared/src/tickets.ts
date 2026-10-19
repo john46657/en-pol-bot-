@@ -32,8 +32,11 @@ export type ButtonStyleName = 'primary' | 'secondary' | 'success' | 'danger';
 
 /** Konfiguration eines Buttons am Ticket (pro Kategorie im Dashboard). */
 export interface TicketButtonConfig { action: TicketAction; label: string; emoji?: string; style: ButtonStyleName; enabled: boolean }
+/** Aktionen, die es nicht (mehr) als Button am Ticket gibt – alte gespeicherte Buttons werden ausgeblendet. */
+export const NO_TICKET_BUTTON: readonly TicketAction[] = ['reopen', 'priority', 'escalate'];
+export const ticketButtonsOf = <T extends { action: string }>(buttons: T[]): T[] => buttons.filter((b) => !NO_TICKET_BUTTON.includes(b.action as TicketAction));
 export const defaultTicketButtons = (): TicketButtonConfig[] =>
-  (['close', 'close_request', 'claim', 'unclaim', 'add_user', 'remove_user', 'priority', 'transcript', 'escalate', 'note', 'reopen', 'delete'] as TicketAction[])
+  (['close', 'close_request', 'claim', 'unclaim', 'add_user', 'remove_user', 'transcript', 'note', 'delete'] as TicketAction[])
     .map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style as ButtonStyleName, enabled: true }));
 
 export const QUESTION_TYPES = { SHORT: 'Kurze Antwort', LONG: 'Lange Antwort', YESNO: 'Ja/Nein', SELECT: 'Auswahl', MULTI: 'Mehrere Optionen' } as const;

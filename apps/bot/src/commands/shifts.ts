@@ -57,7 +57,8 @@ const pickType = (c: Ctx, types: ShiftTypeInfo[], wanted?: string) => {
 
 /**
  * `/shift manage`: Panel wie bei Trident – laufende Schicht, Gesamtübersicht (Anzahl, Gesamt- und Durchschnittsdauer),
- * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Klicks zeichnen das Panel neu.
+ * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Das Panel ist für alle im
+ * Channel sichtbar; Klicks des Besitzers zeichnen es neu, die Buttons tragen dafür seine Discord-ID.
  */
 export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string): Promise<Reply> {
   const [log, stats] = await Promise.all([
@@ -69,6 +70,7 @@ export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string)
   const st = current ? DUTY_DE[current.status] : undefined;
   const typeName = current ? current.shiftType : type?.name ?? null;
   const description = [
+    `**Mitglied**: <@${c.discordId}>`, '',
     ...(notice ? [notice, ''] : []),
     ...(current ? ['### 🕒 Aktuelle Schicht', `**Status**: ${st?.emoji ?? '🟢'} ${st?.label ?? current.status}`, `**Begonnen**: ${ts(current.startedAt, 'R')}`,
       `**Dauer**: ${long(current.minutes - current.breakMinutes)}`, `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : 'keine'}`, ''] : []),
@@ -79,11 +81,11 @@ export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string)
     ...(typeName ? ['', `-# Schichtart: ${plain(typeName)}`] : []),
   ].join('\n');
   const buttons: ButtonSpec[] = [
-    { id: `shift:on${!current && type ? `:${type.id}` : ''}`, label: 'Start', style: 'success', emoji: '▶️', disabled: !!current },
-    { id: 'shift:break', label: onBreak ? 'Pause beenden' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
-    { id: 'shift:off', label: 'Beenden', style: 'danger', emoji: '⏹️', disabled: !current },
+    { id: `shift:on:${!current && type ? type.id : ''}:${c.discordId}`, label: 'Start', style: 'success', emoji: '▶️', disabled: !!current },
+    { id: `shift:break:${c.discordId}`, label: onBreak ? 'Pause beenden' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
+    { id: `shift:off:${c.discordId}`, label: 'Beenden', style: 'danger', emoji: '⏹️', disabled: !current },
   ];
-  return { ephemeral: true, buttons, embeds: [{ box: true, heading: 'small', title: 'Schichtverwaltung', description: clip(description, 3900) }] };
+  return { ephemeral: false, buttons, embeds: [{ box: true, heading: 'small', title: 'Schichtverwaltung', description: clip(description, 3900) }] };
 }
 
 /** Status setzen und das Panel neu zeichnen; „schon so“ (409) und Fehler stehen oben im Panel. */
@@ -91,7 +93,7 @@ async function switchTo(c: Ctx, status: 'ON_DUTY' | 'BREAK' | 'OFF_DUTY', type?:
   let notice: string;
   try {
     await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status, ...(type ? { shiftType: type.id } : {}) });
-    notice = status === 'ON_DUTY' && type ? `🟢 Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status]!.emoji} Du bist jetzt **${DUTY_DE[status]!.label}**.`;
+    notice = status === 'ON_DUTY' && type ? `🟢 Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status]!.emoji} Jetzt **${DUTY_DE[status]!.label}**.`;
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status]!.label}**.` : mapError(e).content ?? '❌ Das hat nicht geklappt.';
   }
@@ -104,7 +106,7 @@ async function active(c: Ctx): Promise<Reply> {
     const on = rows.filter((r) => r.dutyStatus !== 'OFF_DUTY').sort((a, b) => (a.onDutySince ?? '').localeCompare(b.onDutySince ?? ''));
     const lines = on.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? '•'} **${plain(r.callsign ?? r.name)}**${r.callsign ? ` (${plain(r.name)})` : ''}${r.shiftType ? ` · ${plain(r.shiftType)}` : ''}${r.onDutySince ? ` · seit ${ts(r.onDutySince, 'R')}` : ''}`);
     const onBreak = on.filter((r) => r.dutyStatus === 'BREAK').length;
-    return { ephemeral: true, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? COLORS.success : COLORS.neutral,
+    return { ephemeral: false, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? COLORS.success : COLORS.neutral,
       description: clip(lines.length ? `${lines.join('\n')}${on.length > 30 ? `\n… und ${on.length - 30} weitere` : ''}` : 'Gerade ist niemand im Dienst.', 4000),
       ...(onBreak ? { footer: `${onBreak} davon in der Pause` } : {}) }] };
   } catch (e) { return mapError(e); }
@@ -119,7 +121,7 @@ async function leaderboard(c: Ctx): Promise<Reply> {
     const r = await c.api.asUser<{ days: number; me: string; users: BoardRow[] }>(c.discordId, 'GET', `/team/leaderboard?days=${d}`);
     const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${plain(u.callsign ?? u.name)}**${u.callsign ? ` (${plain(u.name)})` : ''} · ${hm(u.minutes)}${u.userId === r.me ? ' ← du' : ''}`);
     const mine = r.users.findIndex((u) => u.userId === r.me);
-    return { ephemeral: true, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: COLORS.info,
+    return { ephemeral: false, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: COLORS.info,
       description: clip(lines.length ? `${lines.join('\n')}${r.users.length > 20 ? `\n… und ${r.users.length - 20} weitere` : ''}` : 'Im Zeitraum war niemand im Dienst.', 4000),
       ...(r.users.length ? { footer: mine >= 0 ? `Dein Platz: ${mine + 1} von ${r.users.length} · ${hm(r.users[mine]!.minutes)}` : 'Du warst im Zeitraum nicht im Dienst.' } : {}) }] };
   } catch (e) { return mapError(e); }
@@ -132,7 +134,7 @@ export async function adminReply(c: Ctx, discordId: string, d = 7): Promise<Repl
   if (!log.member) return errorReply(`<@${discordId}> ist mit keinem Konto im System verknüpft.`);
   const current = log.items.find((s) => s.active);
   const buttons: ButtonSpec[] = current ? [{ id: `shift:end:${log.member.userId}:${discordId}`, label: 'Schicht beenden', style: 'danger', emoji: '⏹️' }] : [];
-  return { ephemeral: true, embeds: [logEmbed(clip(`🕒 Schichten von ${plain(log.member.name)}`, 256), log, 'Im Zeitraum keine Schichten.')], ...(buttons.length ? { buttons } : {}) };
+  return { ephemeral: false, embeds: [logEmbed(clip(`🕒 Schichten von ${plain(log.member.name)}`, 256), log, 'Im Zeitraum keine Schichten.')], ...(buttons.length ? { buttons } : {}) };
 }
 
 export const SHIFT_COMMANDS: CommandDef[] = [
@@ -147,6 +149,7 @@ export const SHIFT_COMMANDS: CommandDef[] = [
       ] },
       { name: 'leaderboard', description: 'Alle Mitglieder nach ihrer Zeit im Dienst', options: [{ name: 'days', description: 'Zeitraum in Tagen (Standard: 7)', type: 'integer', min: 1, max: 90 }] },
     ],
+    publicReply: () => true, // alles rund um Schichten ist für alle im Channel sichtbar
     async complete(c, option, value) {
       if (option !== 'type') return [];
       const v = value.trim().toLowerCase();
@@ -174,7 +177,8 @@ export const SHIFT_COMMANDS: CommandDef[] = [
 ];
 
 /**
- * Buttons aus `/shift manage` (zeichnen das Panel neu): `shift:on[:<schichtart>]`, `shift:break` (Pause an/aus), `shift:off`;
+ * Buttons aus `/shift manage` (zeichnen das Panel neu): `shift:on:<schichtart|leer>:<besitzer>`, `shift:break:<besitzer>` (Pause an/aus),
+ * `shift:off:<besitzer>` – nur der Besitzer des Panels darf sie benutzen (ältere Panels ohne Besitzer: wer klickt);
  * aus `/shift admin`: `shift:end:<userId>:<discordId>` (Schicht eines Mitglieds beenden).
  */
 export const SHIFT_INTERACTION: InteractionDef = {
@@ -182,6 +186,8 @@ export const SHIFT_INTERACTION: InteractionDef = {
   updatesMessage: (args) => args[0] === 'on' || args[0] === 'break' || args[0] === 'off',
   async run(c): Promise<Reply> {
     const [action, userId, discordId] = c.args;
+    const owner = action === 'on' ? discordId : action === 'break' || action === 'off' ? userId : undefined;
+    if (owner && owner !== c.discordId) return errorReply(`Das ist die Schichtverwaltung von <@${owner}>. Für deine eigene Schicht: \`/shift manage\`.`);
     try {
       if (action === 'on') {
         const types = await shiftTypes(c);
@@ -200,6 +206,7 @@ export const SHIFT_INTERACTION: InteractionDef = {
     } catch (e) {
       if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
     }
-    try { return discordId ? { ...(await adminReply(c, discordId)), content: '✅ Schicht beendet.' } : okReply('Schicht beendet.'); } catch { return okReply('Schicht beendet.'); }
+    // öffentliche Nachricht aus `/shift admin` neu zeichnen, Bestätigung nur für den Klickenden
+    try { return discordId ? { ...okReply('Schicht beendet.'), update: await adminReply(c, discordId) } : okReply('Schicht beendet.'); } catch { return okReply('Schicht beendet.'); }
   },
 };
