@@ -3012,7 +3012,111 @@ function applyPanelParts(cfg) {
     select: { id: "quali:pick", placeholder: "Wof\xFCr m\xF6chtest du dich bewerben?", options: [police, ...extra].slice(0, 25).map(optionOf) }
   };
 }
+
+// src/ai-check.ts
+var AI_CHECK_LEVEL_LABEL = { LOW: "gering", MEDIUM: "mittel", HIGH: "hoch" };
+var AI_CHECK_HINT = "Nur ein Hinweis, kein Beweis \u2013 im Zweifel im Gespr\xE4ch nachfragen.";
+var GIVEAWAYS = [
+  [/\bals (eine? )?(ki|künstliche intelligenz|sprachmodell|ai)\b/i, "\u201Eals KI/Sprachmodell\u201C"],
+  [/\bas an ai\b|\blanguage model\b/i, "\u201Eas an AI\u201C"],
+  [/\b(chat ?gpt|openai|gemini|copilot)\b/i, "nennt ChatGPT/KI-Dienst"],
+  [/^\s*(gerne|natürlich|klar|sure|certainly)[!,.]?\s+(hier|here)\b/im, "Antwort beginnt wie eine Chat-Antwort (\u201EGerne! Hier \u2026\u201C)"],
+  [/\bhier (ist|sind) (eine?|einige|ein paar|mögliche?)\b[^.\n]{0,40}\b(antwort|beispiel|vorschl|formulier|text)/i, "\u201EHier ist eine m\xF6gliche Antwort \u2026\u201C"],
+  [/\[(dein|ihr|name|server|servername|your|platzhalter)[^\]]{0,30}\]/i, "Platzhalter wie \u201E[Dein Name]\u201C"]
+];
+var PHRASES = [
+  /\bzusammenfassend\b/i,
+  /\bdarüber hinaus\b/i,
+  /\bdes weiteren\b/i,
+  /\babschließend (lässt sich|möchte ich|kann man)\b/i,
+  /\binsgesamt (lässt sich|kann man) sagen\b/i,
+  /\bes ist (mir )?(besonders |sehr )?wichtig,? (zu|dass)\b/i,
+  /\bvon (großer|zentraler|entscheidender) bedeutung\b/i,
+  /\b(spielt|spielen) eine (entscheidende|wichtige|zentrale) rolle\b/i,
+  /\bich bin (fest )?(davon )?überzeugt,? dass\b/i,
+  /\bich freue mich (darauf|auf die möglichkeit)\b/i,
+  /\bnicht nur\b[^.\n]{1,80}\bsondern auch\b/i,
+  /\bin diesem zusammenhang\b/i,
+  /\bim hinblick auf\b/i,
+  /\bein (respektvoller|professioneller|konstruktiver) umgang\b/i,
+  /\b(professionalität|teamfähigkeit|zuverlässigkeit) und (respekt|zuverlässigkeit|teamgeist|professionalität)\b/i,
+  /\bimmersive?n? (erlebnis|erfahrung|rollenspiel)\b/i,
+  /\b(sachlich|ruhig) und (respektvoll|sachlich|lösungsorientiert)\b/i,
+  /\blösungsorientiert\b/i,
+  /\bauf augenhöhe\b/i,
+  /\bwertvolle[nrs]? (erfahrung|beitrag|mitglied|teil)/i,
+  /\bmeine (fähigkeiten|kenntnisse) (einbringen|weiterentwickeln)\b/i,
+  /\bkommunikation ist (der schlüssel|das a und o|entscheidend)\b/i,
+  /\beinen positiven beitrag\b/i,
+  /\bfurthermore\b/i,
+  /\bin conclusion\b/i,
+  /\bi am (truly )?passionate\b/i,
+  /\bdelve\b/i,
+  /\bit is (important|crucial|essential) to\b/i,
+  /\bfoster(ing)?\b/i
+];
+var CASUAL = /\b(xd|lol|ka|idk|nen|hab|digga|bro|bissl|bisschen halt)\b|[😂🤣😅👍🙏😁😄]|:\)|:D/iu;
+var sentences = (t2) => t2.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter((s) => s.split(/\s+/).length >= 3);
+function aiCheck(answers, durationSec) {
+  const texts = answers.map((a) => String(a.answer ?? "").trim());
+  const all = texts.join("\n\n");
+  const chars = all.replace(/\s+/g, " ").length;
+  const flagged = /* @__PURE__ */ new Set();
+  const hits = [];
+  const mark = (re) => texts.forEach((t2, i) => {
+    if (re.test(t2)) flagged.add(i);
+  });
+  if (chars < 40) return { score: 0, level: "LOW", reasons: [], flagged: [] };
+  for (const [re, label] of GIVEAWAYS) if (re.test(all)) {
+    mark(re);
+    hits.push({ points: 60, reason: `Eindeutige KI-Spur: ${label}` });
+  }
+  if (durationSec && durationSec > 0 && chars >= 300) {
+    const cpm = Math.round(chars / durationSec * 60);
+    const time = durationSec < 120 ? `${durationSec} s` : `${Math.round(durationSec / 60)} min`;
+    if (cpm >= 600) hits.push({ points: 45, reason: `${chars} Zeichen in ${time} (\u2248 ${cpm} Zeichen/Min) \u2013 so schnell tippt niemand, wahrscheinlich hineinkopiert` });
+    else if (cpm >= 360) hits.push({ points: 25, reason: `${chars} Zeichen in ${time} (\u2248 ${cpm} Zeichen/Min) \u2013 sehr schnell f\xFCr selbst getippten Text` });
+  }
+  const phraseHits = PHRASES.filter((re) => re.test(all));
+  if (phraseHits.length) {
+    phraseHits.forEach(mark);
+    const examples = phraseHits.slice(0, 4).map((re) => `\u201E${all.match(re)[0]}\u201C`).join(", ");
+    hits.push({ points: Math.min(48, phraseHits.length * 8), reason: `Typische KI-Formulierungen (${phraseHits.length}): ${examples}` });
+  }
+  if (/—/.test(all)) {
+    mark(/—/);
+    hits.push({ points: 12, reason: "Geviertstrich \u201E\u2014\u201C (kommt fast nur aus KI-Texten/Kopien)" });
+  }
+  if (/\*\*[^*\n]+\*\*|^#{1,4} /m.test(all)) {
+    mark(/\*\*[^*\n]+\*\*|^#{1,4} /m);
+    hits.push({ points: 12, reason: "Markdown-Formatierung (**fett**, \xDCberschriften)" });
+  }
+  if (/(^|\n)\s*([-•*]|\d+\.)\s+\S.*\n\s*([-•*]|\d+\.)\s+\S/.test(all)) hits.push({ points: 8, reason: "Aufz\xE4hlungen/Listen in den Antworten" });
+  const filled = texts.filter((t2) => t2.length > 0);
+  const avg = filled.reduce((n, t2) => n + t2.length, 0) / Math.max(1, filled.length);
+  if (filled.length >= 3 && avg >= 400 && filled.every((t2) => t2.length >= 150)) hits.push({ points: 10, reason: `Alle Antworten auff\xE4llig lang und ausformuliert (\xD8 ${Math.round(avg)} Zeichen)` });
+  const s = sentences(all);
+  if (s.length >= 8) {
+    const lens = s.map((x) => x.split(/\s+/).length);
+    const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
+    const cv = Math.sqrt(lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length) / mean;
+    if (cv < 0.35 && mean >= 12) hits.push({ points: 10, reason: "Sehr gleichf\xF6rmige, lange S\xE4tze" });
+  }
+  const long = filled.filter((t2) => t2.length >= 100);
+  if (long.length >= 3 && long.every((t2) => /[.!?]$/.test(t2)) && s.length >= 6 && s.every((x) => /^[\p{Lu}„"(\d]/u.test(x))) hits.push({ points: 8, reason: "Durchgehend saubere Gro\xDF-/Kleinschreibung und Zeichensetzung" });
+  let score = hits.reduce((n, h) => n + h.points, 0);
+  if (CASUAL.test(all) || long.length && long.every((t2) => t2 === t2.toLowerCase())) score -= 15;
+  score = Math.max(0, Math.min(100, score));
+  return {
+    score,
+    level: score >= 60 ? "HIGH" : score >= 30 ? "MEDIUM" : "LOW",
+    reasons: hits.sort((a, b) => b.points - a.points).map((h) => h.reason),
+    flagged: [...flagged].sort((a, b) => a - b)
+  };
+}
 export {
+  AI_CHECK_HINT,
+  AI_CHECK_LEVEL_LABEL,
   ALL_PERMISSIONS,
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
@@ -3157,6 +3261,7 @@ export {
   absenceTypeSchema,
   accountAge,
   ageOf,
+  aiCheck,
   applyCallCalibration,
   applyPanelParts,
   areaGrantsFor,
