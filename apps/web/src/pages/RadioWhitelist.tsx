@@ -21,7 +21,7 @@ interface Summary { active: number; suspended: number; expired: number; pending:
 interface FormField { key: string; label: string; placeholder: string; paragraph: boolean; required: boolean; maxLength: number }
 interface RequestForm { title: string; fields: FormField[] }
 interface RequestPanel { channelId: string | null; title: string; text: string; buttonLabel: string; color: string }
-interface Config { roleSync: RadioRoleRules; radioRoleIds: string[]; requests: { enabled: boolean; preventDuplicates: boolean; notifyChannelId: string | null; panel: RequestPanel; form: RequestForm }; notifyMembers: boolean }
+interface Config { roleSync: RadioRoleRules; radioRoleIds: string[]; requests: { enabled: boolean; preventDuplicates: boolean; notifyChannelId: string | null; approveRoleIds?: string[]; panel: RequestPanel; form: RequestForm }; notifyMembers: boolean }
 interface Provider { key: string; name: string; apiSupported: boolean; note: string; verified?: string }
 interface Integration {
   provider: string; displayName: string; network: string | null; channel: string | null; endpoint: string | null; adminUsername: string | null; hasPassword: boolean; hasApiKey: boolean;
@@ -383,6 +383,7 @@ function RequestSettings() {
           {chk('Doppelte offene Anträge verhindern', d.requests.preventDuplicates, (v) => setD({ ...d, requests: { ...d.requests, preventDuplicates: v } }), 'Ein Mitglied kann erst wieder beantragen, wenn sein offener Antrag bearbeitet ist.')}
           {chk('Mitglieder per Direktnachricht über Änderungen informieren', d.notifyMembers, (v) => setD({ ...d, notifyMembers: v }), 'Entscheidungen über Anträge werden immer mitgeteilt.')}
           <Field label="Neue Anträge als Panel in diesen Kanal melden" hint="Jeder Antrag erscheint dort mit „Genehmigen“ und „Ablehnen“ (Ablehnen fragt nach dem Grund). Nach der Entscheidung – auch im Dashboard – wird die Meldung aktualisiert. Wer klickt, braucht ein verknüpftes Konto mit dem Recht „Anträge bearbeiten“.">{() => <ChannelPicker ariaLabel="Kanal für neue Anträge" value={d.requests.notifyChannelId} onChange={(id) => setD({ ...d, requests: { ...d.requests, notifyChannelId: id } })} />}</Field>
+          <Field label="Rollen bei Genehmigung" hint="Diese Discord-Rollen bekommt das Mitglied zusätzlich, sobald sein Antrag genehmigt wird – egal ob im Dashboard oder per Button in Discord. Die Funkrolle (Rollenabgleich) wird ohnehin vergeben.">{() => <RolePicker ariaLabel="Rollen bei Genehmigung" value={d.requests.approveRoleIds ?? []} onChange={(v) => setD({ ...d, requests: { ...d.requests, approveRoleIds: v } })} max={10} />}</Field>
           {saveBtn('Speichern')}
         </div>
       </Card>

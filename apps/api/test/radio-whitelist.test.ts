@@ -188,6 +188,16 @@ describe('Anträge über Discord', () => {
     await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: false, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
     expect((await ask(M(42))).status).toBe(503);
     await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
+    // Rollen bei Genehmigung: nur bei Genehmigung zusätzlich vergeben, nicht bei Ablehnung
+    const EXTRA = '871000000000000009';
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, approveRoleIds: [EXTRA], panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
+    expect((await lead.get('/api/v1/radio-whitelist/config')).body.requests.approveRoleIds).toEqual([EXTRA]);
+    const ok = await ask(M(44)), no = await ask(M(45));
+    await lead.post(`/api/v1/radio-whitelist/requests/${ok.body.id}/decision`).send({ decision: 'APPROVE' }).expect(200);
+    await lead.post(`/api/v1/radio-whitelist/requests/${no.body.id}/decision`).send({ decision: 'REJECT', reason: 'Noch nicht' }).expect(200);
+    expect((await outbox('member.roles', M(44))).map((o) => o.payload)).toContainEqual(expect.objectContaining({ add: [EXTRA], remove: [] }));
+    expect((await outbox('member.roles', M(45))).length).toBe(0);
+    await lead.put('/api/v1/radio-whitelist/config/requests').send({ requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, approveRoleIds: [], panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true }).expect(200);
     // gesperrt → kein Antrag
     const g = await lead.post('/api/v1/radio-whitelist/grants').send({ discordId: M(43), reason: 'x-test' });
     await lead.post(`/api/v1/radio-whitelist/grants/${g.body.id}/suspend`).send({ reason: 'Sperre' }).expect(200);

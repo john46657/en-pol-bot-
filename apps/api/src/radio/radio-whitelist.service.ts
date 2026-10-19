@@ -24,7 +24,8 @@ export interface RadioWhitelistConfig {
   roleSync: RadioRoleRules;
   /** Discord-Rolle(n), die Mitglieder mit aktiver Freigabe tragen (leer = Funkrolle aus Einstellungen → Discord). */
   radioRoleIds: string[];
-  requests: { enabled: boolean; preventDuplicates: boolean; notifyChannelId: string | null; panel: RequestPanel; form: RequestForm };
+  /** `approveRoleIds`: Discord-Rollen, die das Mitglied zusätzlich bekommt, wenn sein Antrag genehmigt wird (bleiben danach bestehen). */
+  requests: { enabled: boolean; preventDuplicates: boolean; notifyChannelId: string | null; approveRoleIds: string[]; panel: RequestPanel; form: RequestForm };
   /** Mitglieder per Discord-DM über Änderungen informieren (Antragsentscheidungen immer). */
   notifyMembers: boolean;
 }
@@ -49,7 +50,7 @@ export function normalizeForm(f: Partial<RequestForm> | undefined): RequestForm 
   if (!fields.some((x) => x.key === 'reason')) fields.unshift(DEFAULT_FORM.fields[0]!);
   return { title: (f?.title || DEFAULT_FORM.title).slice(0, 45), fields: fields.slice(0, 5).map((x) => (x.key === 'reason' ? { ...x, required: true, maxLength: Math.max(10, Math.min(x.maxLength, 1000)) } : x)) };
 }
-export const DEFAULT_CONFIG: RadioWhitelistConfig = { roleSync: DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true };
+export const DEFAULT_CONFIG: RadioWhitelistConfig = { roleSync: DEFAULT_RADIO_ROLE_RULES, radioRoleIds: [], requests: { enabled: true, preventDuplicates: true, notifyChannelId: null, approveRoleIds: [], panel: DEFAULT_PANEL, form: DEFAULT_FORM }, notifyMembers: true };
 const PANEL_STATE_KEY = 'radio-request-panel';
 const requestStateKey = (id: string) => `rwreq-${id}`;
 const hexColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? parseInt(c.slice(1), 16) : 0x3b82f6);
@@ -527,6 +528,9 @@ export class RadioWhitelistService {
       ? `✅ Dein Antrag auf Funkfreigabe wurde **genehmigt**${out.grant?.row.expiresAt ? ` (gültig bis ${this.day(out.grant.row.expiresAt)})` : ''}.${b.reason?.trim() ? `\n**Begründung:** ${b.reason.trim()}` : ''}`
       : `❌ Dein Antrag auf Funkfreigabe wurde **abgelehnt**.\n**Begründung:** ${(b.reason ?? '').trim()}`;
     if (out.grant) await this.afterChange(out.grant.row, out.grant.before, text, b.reason, { forceDm: true });
+    // zusätzliche Rollen bei Genehmigung (Einstellungen für Anträge)
+    const extra = b.decision === 'APPROVE' ? (await this.config()).requests.approveRoleIds.filter((r) => DISCORD_ID.test(r)) : [];
+    if (extra.length) await this.prisma.discordOutbox.create({ data: { type: 'member.roles', channelKey: 'announcements', payload: { discordId: out.req.discordId, add: extra, remove: [] } } }).catch((e) => this.log.warn(`approve roles not queued: ${errMsg(e)}`));
     else await this.prisma.discordOutbox.create({ data: { type: 'bot.dm', channelKey: 'announcements', payload: { discordId: out.req.discordId, message: { embeds: [{ title: '🎙️ Funk-Whitelist', description: text.slice(0, 3900), color: 0xef4444 }] } } as Prisma.InputJsonValue } }).catch(() => undefined);
     const final = (await this.prisma.radioRequest.findUnique({ where: { id } }))!;
     const [view] = await this.requestViews([final]);

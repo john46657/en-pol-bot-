@@ -239,6 +239,7 @@ declare const requestsB: z.ZodObject<{
         enabled: z.ZodBoolean;
         preventDuplicates: z.ZodBoolean;
         notifyChannelId: z.ZodNullable<z.ZodString>;
+        approveRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         panel: z.ZodObject<{
             channelId: z.ZodNullable<z.ZodString>;
             title: z.ZodString;
@@ -365,6 +366,7 @@ declare const requestsB: z.ZodObject<{
             }[];
         };
         preventDuplicates: boolean;
+        approveRoleIds: string[];
     }, {
         enabled: boolean;
         notifyChannelId: string | null;
@@ -387,6 +389,7 @@ declare const requestsB: z.ZodObject<{
             }[];
         };
         preventDuplicates: boolean;
+        approveRoleIds?: string[] | undefined;
     }>;
     notifyMembers: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
@@ -412,6 +415,7 @@ declare const requestsB: z.ZodObject<{
             }[];
         };
         preventDuplicates: boolean;
+        approveRoleIds: string[];
     };
     notifyMembers: boolean;
 }, {
@@ -437,6 +441,7 @@ declare const requestsB: z.ZodObject<{
             }[];
         };
         preventDuplicates: boolean;
+        approveRoleIds?: string[] | undefined;
     };
     notifyMembers: boolean;
 }>;
