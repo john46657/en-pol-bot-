@@ -12,12 +12,12 @@ import { Toggle } from '../../components/ApplicationSettings';
 import { Avatar } from '../../components/TeamRoster';
 import { Badge, Button, Card, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
-type SortKey = 'name' | 'rank' | 'department' | 'status' | 'trainings' | 'promotions' | 'awards' | 'warnings';
+type SortKey = 'serviceNumber' | 'name' | 'rank' | 'department' | 'status' | 'trainings' | 'promotions' | 'awards' | 'warnings';
 type State = '' | 'active' | 'inactive' | 'absent';
-interface ViewPrefs { view: 'cards' | 'table'; sort: SortKey; dir: 'asc' | 'desc'; compact: boolean; filters: { status: string; rank: string; department: string; state: State } }
-const DEFAULT_VIEW: ViewPrefs = { view: 'table', sort: 'rank', dir: 'asc', compact: false, filters: { status: '', rank: '', department: '', state: '' } };
+interface ViewPrefs { /** 2 = Standard-Sortierung nach Dienstnummer */ ver?: number; view: 'cards' | 'table'; sort: SortKey; dir: 'asc' | 'desc'; compact: boolean; filters: { status: string; rank: string; department: string; state: State } }
+const DEFAULT_VIEW: ViewPrefs = { ver: 2, view: 'table', sort: 'serviceNumber', dir: 'asc', compact: false, filters: { status: '', rank: '', department: '', state: '' } };
 const COLS: { key: SortKey; label: string }[] = [
-  { key: 'name', label: 'Name' }, { key: 'rank', label: 'Rang' }, { key: 'department', label: 'Abteilung' }, { key: 'status', label: 'Status' },
+  { key: 'serviceNumber', label: 'Dienstnummer' }, { key: 'name', label: 'Name' }, { key: 'rank', label: 'Rang' }, { key: 'department', label: 'Abteilung' }, { key: 'status', label: 'Status' },
   { key: 'trainings', label: 'Ausbildungen' }, { key: 'promotions', label: 'Beförderungen' }, { key: 'awards', label: 'Auszeichnungen' }, { key: 'warnings', label: 'Verwarnungen' },
 ];
 
@@ -25,12 +25,18 @@ const COLS: { key: SortKey; label: string }[] = [
 function loadView(key: string): ViewPrefs {
   try {
     const raw = JSON.parse(localStorage.getItem(key) ?? 'null') as Partial<ViewPrefs> | null;
-    return raw ? { ...DEFAULT_VIEW, ...raw, filters: { ...DEFAULT_VIEW.filters, ...raw.filters } } : DEFAULT_VIEW;
+    if (!raw) return DEFAULT_VIEW;
+    // ältere gespeicherte Ansicht mit der damaligen Standard-Sortierung (Rang) → einmalig auf Dienstnummer umstellen
+    const sort = (raw.ver ?? 1) < 2 && (raw.sort ?? 'rank') === 'rank' ? 'serviceNumber' : raw.sort ?? DEFAULT_VIEW.sort;
+    return { ...DEFAULT_VIEW, ...raw, ver: 2, sort, ...(sort !== raw.sort ? { dir: 'asc' as const } : {}), filters: { ...DEFAULT_VIEW.filters, ...raw.filters } };
   } catch { return DEFAULT_VIEW; }
 }
 
+/** Dienstnummern natürlich sortieren (EP2 vor EP10). */
+const byNumber = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 const sortValue = (r: PersonRow, k: SortKey): string | number => {
   switch (k) {
+    case 'serviceNumber': return r.serviceNumber ?? '';
     case 'name': return r.name.toLowerCase();
     case 'rank': return r.rankPosition;
     case 'department': return (r.department ?? '').toLowerCase();
@@ -92,14 +98,26 @@ export function PersonnelOverview() {
   const cols = COLS.filter((c) => c.key !== 'warnings' || showWarn);
   // Spalten ohne Inhalt (z. B. noch keine Ränge vergeben) weglassen – die Tabelle bleibt übersichtlich
   const hasRank = !!data?.rows.some((r) => r.rank), hasDept = !!data?.rows.some((r) => r.department);
-  const tableCols = cols.filter((c) => (c.key !== 'rank' || hasRank) && (c.key !== 'department' || hasDept) && !['trainings', 'promotions', 'awards', 'warnings'].includes(c.key));
+  const tableCols = cols.filter((c) => c.key !== 'serviceNumber' && (c.key !== 'rank' || hasRank) && (c.key !== 'department' || hasDept) && !['trainings', 'promotions', 'awards', 'warnings'].includes(c.key));
   const rows = useMemo(() => {
     const r = [...(data?.rows ?? [])];
     const m = v.dir === 'asc' ? 1 : -1;
-    r.sort((a, b) => { const x = sortValue(a, v.sort), y = sortValue(b, v.sort); return (x < y ? -1 : x > y ? 1 : a.name.localeCompare(b.name, 'de')) * m; });
+    r.sort((a, b) => {
+      if (v.sort === 'serviceNumber') {
+        // ohne Dienstnummer immer ans Ende
+        if (!a.serviceNumber !== !b.serviceNumber) return a.serviceNumber ? -1 : 1;
+        return (byNumber.compare(a.serviceNumber ?? '', b.serviceNumber ?? '') || a.name.localeCompare(b.name, 'de')) * m;
+      }
+      const x = sortValue(a, v.sort), y = sortValue(b, v.sort);
+      // gleicher Wert (z. B. gleicher Rang) → nach Dienstnummer
+      return (x < y ? -1 : x > y ? 1 : byNumber.compare(a.serviceNumber ?? '~', b.serviceNumber ?? '~') || a.name.localeCompare(b.name, 'de')) * m;
+    });
     return r;
   }, [data, v.sort, v.dir]);
   const sortBy = (k: SortKey) => setV({ ...v, sort: k, dir: v.sort === k && v.dir === 'asc' ? 'desc' : 'asc' });
+  const sortButton = (k: SortKey, label: string) => (
+    <button type="button" className={`inline-flex items-center gap-1 hover:text-fg ${v.sort === k ? 'text-fg' : ''}`} onClick={() => sortBy(k)}>{label}{v.sort === k && (v.dir === 'asc' ? <ArrowUp size={12} aria-hidden /> : <ArrowDown size={12} aria-hidden />)}</button>
+  );
   const open = (r: PersonRow) => nav(`/personnel/${r.id}`);
   const pad = v.compact ? 'px-2 py-1' : 'p-2';
 
@@ -154,8 +172,9 @@ export function PersonnelOverview() {
           <table className="w-full text-sm">
             <thead><tr className="border-b border-line text-left text-xs text-muted">
               {tableCols.map((c) => (
-                <th key={c.key} className={pad} aria-sort={v.sort === c.key ? (v.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
-                  <button type="button" className="inline-flex items-center gap-1 hover:text-fg" onClick={() => sortBy(c.key)}>{c.label}{v.sort === c.key && (v.dir === 'asc' ? <ArrowUp size={12} aria-hidden /> : <ArrowDown size={12} aria-hidden />)}</button>
+                <th key={c.key} className={pad} aria-sort={v.sort === c.key || (c.key === 'name' && v.sort === 'serviceNumber') ? (v.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  {c.key === 'name' && <>{sortButton('serviceNumber', 'Dienstnummer')}<span className="mx-1.5" aria-hidden>·</span></>}
+                  {sortButton(c.key, c.label)}
                 </th>
               ))}
               <th className={pad}>Akte</th>

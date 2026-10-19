@@ -135,7 +135,8 @@ export function PersonnelFile() {
               {p.robloxId && <Item label="Roblox-ID"><code className="text-xs">{p.robloxId}</code></Item>}
             </dl>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-4">
+          {/* Zähler unter den Angaben, erst auf sehr breiten Bildschirmen daneben – sonst wird die Angabenspalte zu schmal */}
+          <div className="grid w-full grid-cols-2 gap-2 text-center text-sm sm:grid-cols-4 2xl:w-auto">
             {([['🎖️', 'Beförderungen', p.counts.promotions], ['📚', 'Ausbildungen', p.counts.trainings], ['🏅', 'Auszeichnungen', p.counts.awards], ...(p.warnings !== null ? [['⚠️', 'Verwarnungen', p.counts.warnings] as const] : [])] as const).map(([icon, label, n]) => (
               <div key={label} className="rounded-md border border-line bg-panel-2/50 px-3 py-2"><p className="text-lg font-semibold"><span aria-hidden>{icon}</span> {n}</p><p className="text-xs text-muted">{label}</p></div>
             ))}
@@ -164,7 +165,8 @@ export function PersonnelFile() {
   );
 }
 
-const Item = ({ label, children }: { label: string; children: ReactNode }) => <div className="flex gap-2"><dt className="w-28 shrink-0 text-muted">{label}</dt><dd className="min-w-0">{children}</dd></div>;
+// lange Werte (Discord-/Roblox-ID) umbrechen statt in die Nachbarspalte zu laufen
+const Item = ({ label, children }: { label: string; children: ReactNode }) => <div className="flex min-w-0 gap-2"><dt className="w-28 shrink-0 text-muted">{label}</dt><dd className="min-w-0 [overflow-wrap:anywhere]">{children}</dd></div>;
 
 // ───────────── Bearbeiten (automatisch gespeichert) ─────────────
 interface Draft { department: string; status: string; joinDate: string; callsign: string }
