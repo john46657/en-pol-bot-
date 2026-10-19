@@ -157,7 +157,7 @@ describe('qualification applications', () => {
     expect(POLICE_CH).toBeTruthy(); // aus dem vorigen Test
     expect((await admin.post('/api/v1/qualifications/quali-panel/send').send({ mode: 'new' })).status).toBe(400); // kein Kanal
     // Qualifikations-Seite schickt den Polizei-Kanal nicht mit → bleibt erhalten
-    const { panelChannelId: _p, ...police } = cur.police;
+    const police = Object.fromEntries(Object.entries(cur.police).filter(([k]) => k !== 'panelChannelId'));
     expect((await admin.put('/api/v1/qualifications/config').send({ title: 'Quali', intro: cur.intro, units: cur.units, police, panelChannelId: CH })).status).toBe(200);
     // Bewerbungs-Seite schickt den Quali-Kanal nicht mit → bleibt erhalten
     const after = (await admin.put('/api/v1/qualifications/config').send({ title: 'Quali', intro: cur.intro, units: cur.units, police: cur.police })).body;
