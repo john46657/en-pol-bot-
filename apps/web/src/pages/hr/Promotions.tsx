@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import {
   HR_EVENTS, HR_EVENT_LABEL, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, hrConfigSchema, rankSchema,
   type HrConfig, type HrEvent, type Requirement, type RequirementType, type RequestStatus,
@@ -360,6 +360,9 @@ function RanksTab() {
     onError: (e) => { setErr(errText(e)); void qc.invalidateQueries({ queryKey: ['hr-ranks'] }); },
   });
   const move = (i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= list.length) return; const ids = list.map((r) => r.id); [ids[i], ids[j]] = [ids[j]!, ids[i]!]; order.mutate(ids); };
+  // Ziehen und Ablegen wie bei der Rollen-Hierarchie: gezogener Rang landet an der Stelle des Ziels
+  const [drag, setDrag] = useState<string>();
+  const dropAt = (to: number) => { const ids = list.map((r) => r.id); const from = drag ? ids.indexOf(drag) : -1; setDrag(undefined); if (from < 0 || from === to) return; ids.splice(to, 0, ...ids.splice(from, 1)); order.mutate(ids); };
   const editing = edit && edit !== 'new' ? list.find((r) => r.id === edit) : undefined;
 
   return (
@@ -368,7 +371,10 @@ function RanksTab() {
       {err && <p role="alert" className="mb-3 rounded-md border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err}</p>}
       {ranks.isLoading ? <SkeletonRows /> : ranks.error ? <ErrorState error={ranks.error} onRetry={() => void ranks.refetch()} /> : !list.length ? <EmptyState text="Noch keine Ränge angelegt." /> : (
         <ol className="grid gap-2">{list.map((r, i) => (
-          <li key={r.id} className={`flex flex-wrap items-center gap-3 rounded-md border border-line p-2.5 ${r.active ? '' : 'opacity-60'}`}>
+          <li key={r.id} draggable={manage && !order.isPending} onDragStart={() => setDrag(r.id)} onDragEnd={() => setDrag(undefined)}
+            onDragOver={(e) => { if (drag) e.preventDefault(); }} onDrop={() => dropAt(i)}
+            className={`flex flex-wrap items-center gap-3 rounded-md border border-line p-2.5 ${r.active ? '' : 'opacity-60'} ${drag === r.id ? 'opacity-50' : ''} ${drag && drag !== r.id ? 'hover:border-primary' : ''}`}>
+            {manage && <span className="cursor-grab text-muted" title="Ziehen zum Sortieren" aria-hidden><GripVertical size={14} /></span>}
             <span className="w-6 text-right text-xs text-muted">{i + 1}.</span>
             <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: r.color }} aria-hidden />
             <div className="min-w-0 flex-1">
