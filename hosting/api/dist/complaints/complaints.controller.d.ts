@@ -56,10 +56,10 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "CLOSED" | "ASSIGNED" | "INVESTIGATION" | "RECEIVED" | "SCREENING" | "REVIEW" | "RESOLVED" | undefined;
+    status?: "SCREENING" | "CLOSED" | "ASSIGNED" | "INVESTIGATION" | "RECEIVED" | "REVIEW" | "RESOLVED" | undefined;
     q?: string | undefined;
 }, {
-    status?: "CLOSED" | "ASSIGNED" | "INVESTIGATION" | "RECEIVED" | "SCREENING" | "REVIEW" | "RESOLVED" | undefined;
+    status?: "SCREENING" | "CLOSED" | "ASSIGNED" | "INVESTIGATION" | "RECEIVED" | "REVIEW" | "RESOLVED" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;

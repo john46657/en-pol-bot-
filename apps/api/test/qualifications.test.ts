@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { DEFAULT_CONFIG } from '../src/qualifications/qualifications.config';
 
@@ -420,5 +420,42 @@ describe('Bewerbungsart „Web“', () => {
     expect(f.status).toBe(200);
     expect(f.body.questions.length).toBeGreaterThan(0);
     expect((await http().post('/api/v1/bot/qualifications/web-link').set(bot()).send({ unit: 'gibtsnicht', discordId: WEB, discordName: 'webby' })).status).toBe(404);
+  });
+});
+
+describe('Discord manager roles ("Bewerbungs-Verwalter")', () => {
+  it('a manager role allows the Discord buttons without the system permission – only on its own server', async () => {
+    const G = '700000000000000011', OTHER = '700000000000000012', MGR = '700000000000000901';
+    await registerServer(prisma, G, [id.q_off!]);
+    const admin = (await login(app, 'q_admin')).agent;
+    const cur = (await admin.get(`/api/v1/qualifications/config?guildId=${G}`)).body;
+    const managers = { roles: { managers: [MGR] } };
+    expect((await admin.put(`/api/v1/qualifications/config?guildId=${G}`).send({ title: cur.title, intro: cur.intro, police: { ...cur.police, settings: managers }, units: [{ key: 'reiter', name: 'Reiter', description: '', questions: ['Pferd?'], settings: managers }] })).status).toBe(200);
+    const asBot = (roles: string[], guild = G) => ({ ...bot(APPLICANT), 'X-Guild-Id': guild, 'X-Discord-Roles': roles.join(',') });
+
+    // Polizei-Bewerbung: ohne Rolle fehlt das Recht (und die Meldung nennt es), mit Manager-Rolle geht es
+    const pa = await prisma.application.create({ data: { number: 'B-MGR-1', answers: {}, guildId: G, robloxUsername: 'Anwaerter', discordId: '300000000000000081', source: 'DISCORD' } });
+    const denied = await http().post(`/api/v1/applications/${pa.id}/discord-decision`).set(asBot(['700000000000000999'])).send({ status: 'ACCEPTED' });
+    expect(denied.status).toBe(403);
+    expect(denied.body.details).toMatchObject({ reason: 'PERMISSION', permission: 'applications.decide' });
+    expect((await http().get(`/api/v1/applications/${pa.id}`).set(asBot([MGR]))).status).toBe(200);
+    expect((await http().get('/api/v1/applications/history?discordId=300000000000000081').set(asBot([MGR]))).status).toBe(200);
+    const ok = await http().post(`/api/v1/applications/${pa.id}/discord-decision`).set(asBot([MGR])).send({ status: 'ACCEPTED' });
+    expect(ok.status).toBe(200);
+    expect(ok.body).toMatchObject({ status: 'ACCEPTED', decidedByName: 'q_off' });
+    // Bewerbung eines anderen Servers: die Rolle zählt nicht
+    const foreign = await prisma.application.create({ data: { number: 'B-MGR-2', answers: {}, guildId: OTHER, robloxUsername: 'Fremd', discordId: '300000000000000082', source: 'DISCORD' } });
+    expect((await http().post(`/api/v1/applications/${foreign.id}/discord-decision`).set(asBot([MGR])).send({ status: 'ACCEPTED' })).status).toBe(403);
+    // Dashboard/ohne Server-Kontext: nie
+    expect((await http().post(`/api/v1/applications/${foreign.id}/discord-decision`).set({ ...bot(APPLICANT), 'X-Discord-Roles': MGR }).send({ status: 'ACCEPTED' })).status).toBe(403);
+
+    // Qualifikation: Manager-Rolle der Einheit
+    const sub = await http().post('/api/v1/bot/qualifications/applications').set(bot()).send({ guildId: G, unit: 'reiter', discordId: '300000000000000083', discordName: 'reiter', answers: [{ question: 'Pferd?', answer: 'Ja' }] });
+    expect(sub.status).toBe(201);
+    expect((await http().get(`/api/v1/qualifications/applications/${sub.body.id}`).set(asBot(['700000000000000999']))).status).toBe(403);
+    expect((await http().get(`/api/v1/qualifications/applications/${sub.body.id}`).set(asBot([MGR]))).status).toBe(200);
+    const q = await http().post(`/api/v1/qualifications/applications/${sub.body.id}/decision`).set(asBot([MGR])).send({ status: 'REJECTED', reason: 'Noch zu jung' });
+    expect(q.status).toBe(200);
+    expect(q.body).toMatchObject({ status: 'REJECTED', decidedByName: 'q_off' });
   });
 });

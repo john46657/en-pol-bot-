@@ -21,6 +21,7 @@ const authorization_service_1 = require("./authorization.service");
 const guild_context_1 = require("../common/guild-context");
 const env_1 = require("../config/env");
 const errors_1 = require("../common/errors");
+const qualifications_service_1 = require("../qualifications/qualifications.service");
 exports.SESSION_COOKIE = 'enrp_session';
 const hashToken = (t) => (0, node_crypto_1.createHash)('sha256').update(t).digest('hex');
 exports.hashToken = hashToken;
@@ -145,9 +146,11 @@ exports.AuthGuard = AuthGuard = __decorate([
 let PermissionGuard = class PermissionGuard {
     reflector;
     authz;
-    constructor(reflector, authz) {
+    moduleRef;
+    constructor(reflector, authz, moduleRef) {
         this.reflector = reflector;
         this.authz = authz;
+        this.moduleRef = moduleRef;
     }
     async canActivate(ctx) {
         if (ctx.getType() !== 'http')
@@ -158,14 +161,31 @@ let PermissionGuard = class PermissionGuard {
         const req = ctx.switchToHttp().getRequest();
         if (!req.user)
             throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
-        for (const p of required)
+        const manager = this.reflector.getAllAndOverride(decorators_1.DISCORD_MANAGER_KEY, [ctx.getHandler(), ctx.getClass()]);
+        for (const p of required) {
+            if (manager && (await this.discordManager(req, p, manager)))
+                continue;
             await this.authz.assert(req.user.id, (0, guild_context_1.currentGuild)(), p, {}, { requestId: req.requestId, ip: req.ip });
+        }
         return true;
+    }
+    /** Bot-Klick mit Manager-Rolle der Bewerbung: fehlt NUR das Recht (Server, Mitgliedschaft, Modul passen), reicht die Rolle. */
+    async discordManager(req, permission, kind) {
+        const guildId = (0, guild_context_1.currentGuild)();
+        if (req.user?.sessionId !== 'bot' || !guildId)
+            return false;
+        const d = await this.authz.authorize(req.user.id, guildId, permission);
+        if (d.allowed || d.reason !== 'PERMISSION')
+            return false;
+        const raw = req.headers['x-discord-roles'];
+        const roles = typeof raw === 'string' ? raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
+        const id = typeof req.params?.id === 'string' ? req.params.id : undefined;
+        return this.moduleRef.get(qualifications_service_1.QualificationsService, { strict: false }).isDiscordManager(guildId, roles, kind, id);
     }
 };
 exports.PermissionGuard = PermissionGuard;
 exports.PermissionGuard = PermissionGuard = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [core_1.Reflector, authorization_service_1.AuthorizationService])
+    __metadata("design:paramtypes", [core_1.Reflector, authorization_service_1.AuthorizationService, core_1.ModuleRef])
 ], PermissionGuard);
 //# sourceMappingURL=guards.js.map

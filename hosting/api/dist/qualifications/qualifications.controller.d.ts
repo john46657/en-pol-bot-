@@ -166,18 +166,18 @@ export declare class QualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -187,7 +187,7 @@ export declare class QualificationsController {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -209,18 +209,18 @@ export declare class QualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -265,18 +265,18 @@ export declare class QualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -286,7 +286,7 @@ export declare class QualificationsController {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -308,18 +308,18 @@ export declare class QualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -365,18 +365,18 @@ export declare class QualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -386,7 +386,7 @@ export declare class QualificationsController {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -408,18 +408,18 @@ export declare class QualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -492,7 +492,7 @@ export declare class QualificationsController {
         durationSec: number | null;
         unitName: string;
     }>;
-    /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
+    /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers – oder seiner Manager-Rolle der Einheit. */
     decide(a: Actor, id: string, b: z.infer<typeof decision>): Promise<{
         id: string;
         number: string;
@@ -532,18 +532,18 @@ export declare class BotQualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -553,7 +553,7 @@ export declare class BotQualificationsController {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -575,18 +575,18 @@ export declare class BotQualificationsController {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };

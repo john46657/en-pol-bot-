@@ -111,7 +111,7 @@ let AuthorizationService = class AuthorizationService {
         // fremde Datensätze verraten nicht, dass es sie gibt
         if (d.reason === 'FOREIGN_RECORD')
             throw new errors_1.AppError('NOT_FOUND', 'Nicht gefunden.');
-        throw new errors_1.AppError('PERMISSION_DENIED', d.message, { reason: d.reason });
+        throw new errors_1.AppError('PERMISSION_DENIED', d.message, { reason: d.reason, ...(d.reason === 'PERMISSION' ? { permission } : {}) });
     }
     /** Verweigerte sicherheitsrelevante Zugriffe: SecurityEvent + Audit (DENIED), je Benutzer/Recht/Server höchstens einmal pro Minute. */
     async recordDenied(userId, guildId, permission, reason, meta = {}) {

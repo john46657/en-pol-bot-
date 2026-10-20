@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { QualificationsService } from './qualifications.service';
 import { saveSchema } from './qualifications.config';
 import { WebApplyService } from './web-apply.service';
-import { BotService, CurrentActor, Public, RequirePermission } from '../authz/decorators';
+import { BotService, CurrentActor, DiscordManagerAllows, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
@@ -43,12 +43,12 @@ export class QualificationsController {
   sendQualiPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendQualiPanel(a, b.mode, q.guildId); }
   @Get('applications') @RequirePermission('qualifications.view')
   list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
-  @Get('history') @RequirePermission('qualifications.view')
+  @Get('history') @RequirePermission('qualifications.view') @DiscordManagerAllows('quali')
   history(@Query(zodBody(historyQ)) q: z.infer<typeof historyQ>) { return this.q.history(q.discordId); }
-  @Get('applications/:id') @RequirePermission('qualifications.view')
+  @Get('applications/:id') @RequirePermission('qualifications.view') @DiscordManagerAllows('quali')
   get(@Param('id', ParseUUIDPipe) id: string) { return this.q.get(id); }
-  /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
-  @Post('applications/:id/decision') @HttpCode(200) @RequirePermission('qualifications.decide')
+  /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers – oder seiner Manager-Rolle der Einheit. */
+  @Post('applications/:id/decision') @HttpCode(200) @RequirePermission('qualifications.decide') @DiscordManagerAllows('quali')
   decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.q.decide(a, id, b.status, b.reason); }
   @Delete('applications/:id') @HttpCode(204) @RequirePermission('qualifications.delete')
   remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.q.remove(a, id); }

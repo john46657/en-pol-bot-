@@ -14,6 +14,9 @@ function mapError(e) {
         return (0, format_1.errorReply)('Dein Discord-Konto ist nicht verknüpft. Verknüpfe es im Dashboard (Chat-Symbol oben rechts → „Mit Discord verknüpfen“).');
     if (e.status === 401)
         return (0, format_1.errorReply)(`Authentifizierung fehlgeschlagen.${rid}`);
+    // fehlendes Recht benennen (bei Bewerbungen reicht im Discord auch eine „Bewerbungs-Verwalter“-Rolle)
+    if (e.status === 403 && e.permission && /^[a-z_.-]+$/.test(e.permission))
+        return (0, format_1.errorReply)(`Dazu hast du keine Berechtigung – dir fehlt das Recht \`${e.permission}\`${/^(applications|qualifications)\./.test(e.permission) ? ' oder eine Rolle als „Bewerbungs-Verwalter“ dieser Bewerbung (Bewerbungs-Einstellungen → Rollen)' : ''}. Ein Admin kann es dir im Dashboard unter **Rollen** geben.`);
     // Fachliche Begründungen (z. B. Server-Verbindung fehlt) mitgeben, die allgemeine Rechte-Meldung nicht (sonst doppelt)
     if (e.status === 403)
         return (0, format_1.errorReply)(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : 'Dazu hast du keine Berechtigung.');

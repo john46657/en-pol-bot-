@@ -69,7 +69,7 @@ let ApplicationsController = class ApplicationsController {
     decide(a, id, b) {
         return this.a.transition(a, id, b.accept ? 'ACCEPTED' : 'REJECTED', b.reason);
     }
-    /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
+    /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. Manager-Rolle reicht. */
     discordDecide(a, id, b) {
         return this.a.discordDecide(a, id, b.status, b.reason);
     }
@@ -122,6 +122,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('history'),
     (0, decorators_1.RequirePermission)('applications.view'),
+    (0, decorators_1.DiscordManagerAllows)('police'),
     __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) })))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -149,6 +150,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.RequirePermission)('applications.view'),
+    (0, decorators_1.DiscordManagerAllows)('police'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -178,6 +180,7 @@ __decorate([
     (0, common_1.Post)(':id/discord-decision'),
     (0, common_1.HttpCode)(200),
     (0, decorators_1.RequirePermission)('applications.decide'),
+    (0, decorators_1.DiscordManagerAllows)('police'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']), reason: zod_1.z.string().trim().max(1000).optional() })))),

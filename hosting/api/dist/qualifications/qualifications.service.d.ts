@@ -30,6 +30,11 @@ export declare class QualificationsService {
     private keyOf;
     private read;
     config(guildId?: string | null): Promise<QualificationConfig>;
+    /**
+     * Discord-Buttons: hat der Klickende auf `guildId` eine der Manager-Rollen dieser Bewerbung (`id`) bzw. – ohne `id` – irgendeiner
+     * Bewerbungsart dieser Sorte? Bewerbungen eines anderen Servers zählen nie.
+     */
+    isDiscordManager(guildId: string, roles: string[], kind: 'police' | 'quali', id?: string): Promise<boolean>;
     /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
     policeForm(guildId?: string | null): Promise<FormField[]>;
     /** Alles für „Setup“ an einem Ort; `own` = dieser Server hat eigene Einstellungen. */
@@ -61,18 +66,18 @@ export declare class QualificationsService {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -82,7 +87,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -104,18 +109,18 @@ export declare class QualificationsService {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -172,18 +177,18 @@ export declare class QualificationsService {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -193,7 +198,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -215,18 +220,18 @@ export declare class QualificationsService {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -272,18 +277,18 @@ export declare class QualificationsService {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };
@@ -293,7 +298,7 @@ export declare class QualificationsService {
             };
             key: string;
             pingRoleIds: string[];
-            panel: "apply" | "quali";
+            panel: "quali" | "apply";
             channelId?: string | undefined;
             roleId?: string | undefined;
             acceptedChannelId?: string | undefined;
@@ -315,18 +320,18 @@ export declare class QualificationsService {
                 };
                 roles: {
                     denied: string[];
-                    pending: string[];
-                    accepted: string[];
                     required: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
+                    accepted: string[];
                     restricted: {
                         mode: "ALL" | "ANY";
                         ids: string[];
                     };
                     acceptedRemove: string[];
                     deniedRemove: string[];
+                    pending: string[];
                     removeOnSubmit: string[];
                     managers: string[];
                 };

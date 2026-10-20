@@ -20,41 +20,41 @@ export declare const teamChanceSchema: z.ZodEffects<z.ZodObject<{
     title: string;
     description: string;
     channelId: string | null;
+    pingRoleIds: string[];
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
     slots: number;
-    pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
     title: string;
     description: string;
     channelId: string | null;
+    pingRoleIds: string[];
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
     slots: number;
-    pingRoleIds: string[];
     restrictApplications: boolean;
 }>, {
     title: string;
     description: string;
     channelId: string | null;
+    pingRoleIds: string[];
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
     slots: number;
-    pingRoleIds: string[];
     restrictApplications: boolean;
 }, {
     title: string;
     description: string;
     channelId: string | null;
+    pingRoleIds: string[];
     open: boolean;
     opensAt: string | null;
     closesAt: string | null;
     slots: number;
-    pingRoleIds: string[];
     restrictApplications: boolean;
 }>;
 export type TeamChanceCfg = z.infer<typeof teamChanceSchema> & {
@@ -81,11 +81,11 @@ export declare class TeamChanceService {
         title: string;
         description: string;
         channelId: string | null;
+        pingRoleIds: string[];
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
         slots: number;
-        pingRoleIds: string[];
         restrictApplications: boolean;
         openedAt?: string | null;
     }>;
@@ -99,11 +99,11 @@ export declare class TeamChanceService {
         title: string;
         description: string;
         channelId: string | null;
+        pingRoleIds: string[];
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
         slots: number;
-        pingRoleIds: string[];
         restrictApplications: boolean;
         openedAt?: string | null;
     }>;

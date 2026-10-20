@@ -12,12 +12,14 @@ class BotApiError extends Error {
     code;
     requestId;
     reason;
-    constructor(status, code, message, requestId, reason) {
+    permission;
+    constructor(status, code, message, requestId, reason, permission) {
         super(message);
         this.status = status;
         this.code = code;
         this.requestId = requestId;
         this.reason = reason;
+        this.permission = permission;
     }
 }
 exports.BotApiError = BotApiError;
@@ -49,7 +51,7 @@ class HttpApi {
             }
             if (res.status >= 400) {
                 const details = json?.details;
-                throw new BotApiError(res.status, String(json?.code ?? 'ERROR'), String(json?.message ?? `HTTP ${res.status}`), json?.requestId, details?.reason);
+                throw new BotApiError(res.status, String(json?.code ?? 'ERROR'), String(json?.message ?? `HTTP ${res.status}`), json?.requestId, details?.reason, details?.permission);
             }
             return json;
         }

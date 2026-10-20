@@ -19,11 +19,11 @@ export declare class TeamChanceController {
         title: string;
         description: string;
         channelId: string | null;
+        pingRoleIds: string[];
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
         slots: number;
-        pingRoleIds: string[];
         restrictApplications: boolean;
         openedAt?: string | null;
     }>;
@@ -35,11 +35,11 @@ export declare class TeamChanceController {
         title: string;
         description: string;
         channelId: string | null;
+        pingRoleIds: string[];
         open: boolean;
         opensAt: string | null;
         closesAt: string | null;
         slots: number;
-        pingRoleIds: string[];
         restrictApplications: boolean;
         openedAt?: string | null;
     }>;

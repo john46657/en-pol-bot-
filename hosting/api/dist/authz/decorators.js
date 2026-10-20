@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CurrentActor = exports.CurrentUser = exports.RequirePermission = exports.ServiceAuthorized = exports.BotService = exports.Public = exports.SERVICE_AUTHORIZED_KEY = exports.BOT_SERVICE_KEY = exports.PERMISSION_KEY = exports.PUBLIC_KEY = void 0;
+exports.CurrentActor = exports.CurrentUser = exports.DiscordManagerAllows = exports.DISCORD_MANAGER_KEY = exports.RequirePermission = exports.ServiceAuthorized = exports.BotService = exports.Public = exports.SERVICE_AUTHORIZED_KEY = exports.BOT_SERVICE_KEY = exports.PERMISSION_KEY = exports.PUBLIC_KEY = void 0;
 const common_1 = require("@nestjs/common");
 const common_2 = require("@nestjs/common");
 exports.PUBLIC_KEY = 'isPublic';
@@ -21,6 +21,13 @@ exports.ServiceAuthorized = ServiceAuthorized;
 /** Alle genannten Permissions werden benötigt. */
 const RequirePermission = (...p) => (0, common_1.SetMetadata)(exports.PERMISSION_KEY, p);
 exports.RequirePermission = RequirePermission;
+exports.DISCORD_MANAGER_KEY = 'discordManager';
+/**
+ * Discord-Buttons an Bewerbungen: wer im Discord eine der eingestellten Manager-Rollen (Setup → Role Config) hat, darf die
+ * Aktion über den Bot auch ohne das Recht im System ausführen. Server, Mitgliedschaft und Modul werden trotzdem geprüft.
+ */
+const DiscordManagerAllows = (kind) => (0, common_1.SetMetadata)(exports.DISCORD_MANAGER_KEY, kind);
+exports.DiscordManagerAllows = DiscordManagerAllows;
 exports.CurrentUser = (0, common_2.createParamDecorator)((_d, ctx) => ctx.switchToHttp().getRequest().user);
 exports.CurrentActor = (0, common_2.createParamDecorator)((_d, ctx) => {
     const r = ctx.switchToHttp().getRequest();

@@ -204,38 +204,38 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
         deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-        /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+        /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
         managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         denied: string[];
-        pending: string[];
-        accepted: string[];
         required: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
+        accepted: string[];
         restricted: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
         acceptedRemove: string[];
         deniedRemove: string[];
+        pending: string[];
         removeOnSubmit: string[];
         managers: string[];
     }, {
         denied?: string[] | undefined;
-        pending?: string[] | undefined;
-        accepted?: string[] | undefined;
         required?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
+        accepted?: string[] | undefined;
         restricted?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
         acceptedRemove?: string[] | undefined;
         deniedRemove?: string[] | undefined;
+        pending?: string[] | undefined;
         removeOnSubmit?: string[] | undefined;
         managers?: string[] | undefined;
     }>>;
@@ -257,18 +257,18 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     };
     roles: {
         denied: string[];
-        pending: string[];
-        accepted: string[];
         required: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
+        accepted: string[];
         restricted: {
             mode: "ALL" | "ANY";
             ids: string[];
         };
         acceptedRemove: string[];
         deniedRemove: string[];
+        pending: string[];
         removeOnSubmit: string[];
         managers: string[];
     };
@@ -286,18 +286,18 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     } | undefined;
     roles?: {
         denied?: string[] | undefined;
-        pending?: string[] | undefined;
-        accepted?: string[] | undefined;
         required?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
+        accepted?: string[] | undefined;
         restricted?: {
             mode?: "ALL" | "ANY" | undefined;
             ids?: string[] | undefined;
         } | undefined;
         acceptedRemove?: string[] | undefined;
         deniedRemove?: string[] | undefined;
+        pending?: string[] | undefined;
         removeOnSubmit?: string[] | undefined;
         managers?: string[] | undefined;
     } | undefined;
@@ -450,38 +450,38 @@ export declare const unitSchema: z.ZodObject<{
             deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-            /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+            /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
             managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             denied: string[];
-            pending: string[];
-            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
+            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             acceptedRemove: string[];
             deniedRemove: string[];
+            pending: string[];
             removeOnSubmit: string[];
             managers: string[];
         }, {
             denied?: string[] | undefined;
-            pending?: string[] | undefined;
-            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
+            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             acceptedRemove?: string[] | undefined;
             deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         }>>;
@@ -503,18 +503,18 @@ export declare const unitSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
-            pending: string[];
-            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
+            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             acceptedRemove: string[];
             deniedRemove: string[];
+            pending: string[];
             removeOnSubmit: string[];
             managers: string[];
         };
@@ -532,18 +532,18 @@ export declare const unitSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
-            pending?: string[] | undefined;
-            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
+            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             acceptedRemove?: string[] | undefined;
             deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
@@ -574,18 +574,18 @@ export declare const unitSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
-            pending: string[];
-            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
+            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             acceptedRemove: string[];
             deniedRemove: string[];
+            pending: string[];
             removeOnSubmit: string[];
             managers: string[];
         };
@@ -595,7 +595,7 @@ export declare const unitSchema: z.ZodObject<{
     };
     key: string;
     pingRoleIds: string[];
-    panel: "apply" | "quali";
+    panel: "quali" | "apply";
     channelId?: string | undefined;
     roleId?: string | undefined;
     acceptedChannelId?: string | undefined;
@@ -629,18 +629,18 @@ export declare const unitSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
-            pending?: string[] | undefined;
-            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
+            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             acceptedRemove?: string[] | undefined;
             deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
@@ -651,7 +651,7 @@ export declare const unitSchema: z.ZodObject<{
     channelId?: string | undefined;
     roleId?: string | undefined;
     pingRoleIds?: string[] | undefined;
-    panel?: "apply" | "quali" | undefined;
+    panel?: "quali" | "apply" | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }>;
@@ -712,38 +712,38 @@ export declare const policeSchema: z.ZodObject<{
             deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-            /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+            /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
             managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             denied: string[];
-            pending: string[];
-            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
+            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             acceptedRemove: string[];
             deniedRemove: string[];
+            pending: string[];
             removeOnSubmit: string[];
             managers: string[];
         }, {
             denied?: string[] | undefined;
-            pending?: string[] | undefined;
-            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
+            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             acceptedRemove?: string[] | undefined;
             deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         }>>;
@@ -765,18 +765,18 @@ export declare const policeSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
-            pending: string[];
-            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
+            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             acceptedRemove: string[];
             deniedRemove: string[];
+            pending: string[];
             removeOnSubmit: string[];
             managers: string[];
         };
@@ -794,18 +794,18 @@ export declare const policeSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
-            pending?: string[] | undefined;
-            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
+            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             acceptedRemove?: string[] | undefined;
             deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
@@ -829,18 +829,18 @@ export declare const policeSchema: z.ZodObject<{
         };
         roles: {
             denied: string[];
-            pending: string[];
-            accepted: string[];
             required: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
+            accepted: string[];
             restricted: {
                 mode: "ALL" | "ANY";
                 ids: string[];
             };
             acceptedRemove: string[];
             deniedRemove: string[];
+            pending: string[];
             removeOnSubmit: string[];
             managers: string[];
         };
@@ -869,18 +869,18 @@ export declare const policeSchema: z.ZodObject<{
         } | undefined;
         roles?: {
             denied?: string[] | undefined;
-            pending?: string[] | undefined;
-            accepted?: string[] | undefined;
             required?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
+            accepted?: string[] | undefined;
             restricted?: {
                 mode?: "ALL" | "ANY" | undefined;
                 ids?: string[] | undefined;
             } | undefined;
             acceptedRemove?: string[] | undefined;
             deniedRemove?: string[] | undefined;
+            pending?: string[] | undefined;
             removeOnSubmit?: string[] | undefined;
             managers?: string[] | undefined;
         } | undefined;
@@ -1042,38 +1042,38 @@ export declare const configSchema: z.ZodObject<{
                 deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             }>>;
@@ -1095,18 +1095,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1124,18 +1124,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1166,18 +1166,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1187,7 +1187,7 @@ export declare const configSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
-        panel: "apply" | "quali";
+        panel: "quali" | "apply";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1221,18 +1221,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1243,7 +1243,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        panel?: "apply" | "quali" | undefined;
+        panel?: "quali" | "apply" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
@@ -1262,18 +1262,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1283,7 +1283,7 @@ export declare const configSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
-        panel: "apply" | "quali";
+        panel: "quali" | "apply";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1317,18 +1317,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1339,7 +1339,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        panel?: "apply" | "quali" | undefined;
+        panel?: "quali" | "apply" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[]>;
@@ -1399,38 +1399,38 @@ export declare const configSchema: z.ZodObject<{
                 deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             }>>;
@@ -1452,18 +1452,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1481,18 +1481,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1516,18 +1516,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1556,18 +1556,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1599,18 +1599,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1620,7 +1620,7 @@ export declare const configSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
-        panel: "apply" | "quali";
+        panel: "quali" | "apply";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -1642,18 +1642,18 @@ export declare const configSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -1699,18 +1699,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1721,7 +1721,7 @@ export declare const configSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        panel?: "apply" | "quali" | undefined;
+        panel?: "quali" | "apply" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -1742,18 +1742,18 @@ export declare const configSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -1919,38 +1919,38 @@ export declare const saveSchema: z.ZodObject<{
                 deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             }>>;
@@ -1972,18 +1972,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2001,18 +2001,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -2043,18 +2043,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2064,7 +2064,7 @@ export declare const saveSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
-        panel: "apply" | "quali";
+        panel: "quali" | "apply";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2098,18 +2098,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -2120,7 +2120,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        panel?: "apply" | "quali" | undefined;
+        panel?: "quali" | "apply" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }>, "many">, {
@@ -2139,18 +2139,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2160,7 +2160,7 @@ export declare const saveSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
-        panel: "apply" | "quali";
+        panel: "quali" | "apply";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2194,18 +2194,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -2216,7 +2216,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        panel?: "apply" | "quali" | undefined;
+        panel?: "quali" | "apply" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[]>;
@@ -2276,38 +2276,38 @@ export declare const saveSchema: z.ZodObject<{
                 deniedRemove: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 pending: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
                 removeOnSubmit: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-                /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+                /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
                 managers: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             }, "strip", z.ZodTypeAny, {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             }, {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             }>>;
@@ -2329,18 +2329,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2358,18 +2358,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -2393,18 +2393,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2433,18 +2433,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -2568,18 +2568,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2589,7 +2589,7 @@ export declare const saveSchema: z.ZodObject<{
         };
         key: string;
         pingRoleIds: string[];
-        panel: "apply" | "quali";
+        panel: "quali" | "apply";
         channelId?: string | undefined;
         roleId?: string | undefined;
         acceptedChannelId?: string | undefined;
@@ -2611,18 +2611,18 @@ export declare const saveSchema: z.ZodObject<{
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
@@ -2681,18 +2681,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;
@@ -2703,7 +2703,7 @@ export declare const saveSchema: z.ZodObject<{
         channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
-        panel?: "apply" | "quali" | undefined;
+        panel?: "quali" | "apply" | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
     }[];
@@ -2724,18 +2724,18 @@ export declare const saveSchema: z.ZodObject<{
             } | undefined;
             roles?: {
                 denied?: string[] | undefined;
-                pending?: string[] | undefined;
-                accepted?: string[] | undefined;
                 required?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
+                accepted?: string[] | undefined;
                 restricted?: {
                     mode?: "ALL" | "ANY" | undefined;
                     ids?: string[] | undefined;
                 } | undefined;
                 acceptedRemove?: string[] | undefined;
                 deniedRemove?: string[] | undefined;
+                pending?: string[] | undefined;
                 removeOnSubmit?: string[] | undefined;
                 managers?: string[] | undefined;
             } | undefined;

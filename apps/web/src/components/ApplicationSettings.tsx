@@ -125,7 +125,7 @@ export function ApplicationSettingsEditor({ value, onChange, name, onName, quest
         {R('deniedRemove', 'Entfernen bei Ablehnung', 'Werden bei Ablehnung entfernt.')}
         {R('pending', 'Rollen während der Prüfung', 'Werden vergeben, solange die Bewerbung geprüft wird (nach der Entscheidung entfernt).')}
         {R('removeOnSubmit', 'Entfernen beim Absenden', 'Werden beim Absenden der Bewerbung entfernt.')}
-        {R('managers', 'Bewerbungs-Verwalter', 'Nur Personen mit diesen Rollen können im Discord annehmen/ablehnen (leer = alle mit der Berechtigung).')}
+        {R('managers', 'Bewerbungs-Verwalter', 'Personen mit diesen Rollen können im Discord annehmen/ablehnen und ein Ticket öffnen – auch ohne Berechtigung im System. Andere dann nicht mehr (leer = alle mit der Berechtigung).')}
       </Section>
       <Section title="Sonstiges">
         <Box title="Team-Threads" desc="Erstellt zu jeder Einsendung einen Thread, damit das Team darüber sprechen kann."><Toggle label="Team-Threads" checked={s.staffThreads} onChange={(v) => set({ staffThreads: v })} /></Box>

@@ -52,7 +52,7 @@ let QualificationsController = class QualificationsController {
     list(f) { return this.q.list(f); }
     history(q) { return this.q.history(q.discordId); }
     get(id) { return this.q.get(id); }
-    /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers. */
+    /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers – oder seiner Manager-Rolle der Einheit. */
     decide(a, id, b) { return this.q.decide(a, id, b.status, b.reason); }
     remove(a, id) { return this.q.remove(a, id); }
     /** „Ticket mit Bewerber öffnen“ (wie der Discord-Button). */
@@ -119,6 +119,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('history'),
     (0, decorators_1.RequirePermission)('qualifications.view'),
+    (0, decorators_1.DiscordManagerAllows)('quali'),
     __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(historyQ))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [void 0]),
@@ -127,6 +128,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('applications/:id'),
     (0, decorators_1.RequirePermission)('qualifications.view'),
+    (0, decorators_1.DiscordManagerAllows)('quali'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -136,6 +138,7 @@ __decorate([
     (0, common_1.Post)('applications/:id/decision'),
     (0, common_1.HttpCode)(200),
     (0, decorators_1.RequirePermission)('qualifications.decide'),
+    (0, decorators_1.DiscordManagerAllows)('quali'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(decision))),

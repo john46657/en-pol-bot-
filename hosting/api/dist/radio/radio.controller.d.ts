@@ -24,12 +24,12 @@ declare const listQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
     status: z.ZodDefault<z.ZodEnum<["active", "suspended", "expired", "pending", "disabled", "revoked", "all", "open"]>>;
 }, "strip", z.ZodTypeAny, {
-    status: "active" | "all" | "open" | "disabled" | "pending" | "suspended" | "expired" | "revoked";
+    status: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked";
     page: number;
     pageSize: number;
     q?: string | undefined;
 }, {
-    status?: "active" | "all" | "open" | "disabled" | "pending" | "suspended" | "expired" | "revoked" | undefined;
+    status?: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -487,9 +487,9 @@ declare const integrationB: z.ZodObject<{
 declare const exportQ: z.ZodObject<{
     status: z.ZodDefault<z.ZodEnum<["active", "suspended", "expired", "pending", "disabled", "revoked", "all", "open"]>>;
 }, "strip", z.ZodTypeAny, {
-    status: "active" | "all" | "open" | "disabled" | "pending" | "suspended" | "expired" | "revoked";
+    status: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked";
 }, {
-    status?: "active" | "all" | "open" | "disabled" | "pending" | "suspended" | "expired" | "revoked" | undefined;
+    status?: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked" | undefined;
 }>;
 declare const importB: z.ZodObject<{
     csv: z.ZodString;
