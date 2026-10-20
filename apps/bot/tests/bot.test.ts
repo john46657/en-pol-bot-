@@ -42,6 +42,10 @@ describe('error mapping', () => {
   it('explains unlinked accounts, permission problems and hides internals', () => {
     expect(text(mapError(new BotApiError(401, 'UNAUTHENTICATED', 'x', 'r1', 'NOT_LINKED')))).toContain('Mit Discord verknüpfen');
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'secret internal detail')))).toContain('keine Berechtigung');
+    const perm = text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.', 'r2', 'PERMISSION', 'applications.decide')));
+    expect(perm).toContain('`applications.decide`');
+    expect(perm).toContain('Bewerbungs-Verwalter');
+    expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'x', 'r3', 'PERMISSION', 'persons.view')))).not.toContain('Bewerbungs-Verwalter');
     // allgemeine (deutsche) Rechte-Meldung der API nicht doppelt anhängen
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.')))).not.toContain(':');
     expect(text(mapError(new BotApiError(403, 'PERMISSION_DENIED', 'Diese Funktion steht dem Bot nicht zur Verfügung.')))).not.toContain('Verfügung');

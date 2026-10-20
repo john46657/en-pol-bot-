@@ -49,6 +49,26 @@ export class QualificationsService {
     return parsed?.success ? parsed.data : DEFAULT_CONFIG;
   }
 
+  /**
+   * Discord-Buttons: hat der Klickende auf `guildId` eine der Manager-Rollen dieser Bewerbung (`id`) bzw. – ohne `id` – irgendeiner
+   * Bewerbungsart dieser Sorte? Bewerbungen eines anderen Servers zählen nie.
+   */
+  async isDiscordManager(guildId: string, roles: string[], kind: 'police' | 'quali', id?: string): Promise<boolean> {
+    if (!roles.length) return false;
+    const cfg = await this.config(guildId);
+    const has = (managers?: string[]) => !!managers?.some((r) => roles.includes(r));
+    const uuid = id && /^[0-9a-f-]{36}$/i.test(id) ? id : undefined;
+    if (id && !uuid) return false;
+    if (kind === 'police') {
+      if (uuid) { const a = await this.prisma.application.findUnique({ where: { id: uuid }, select: { guildId: true } }); if (!a || (a.guildId && a.guildId !== guildId)) return false; }
+      return has(cfg.police.settings.roles.managers);
+    }
+    if (!uuid) return cfg.units.some((u) => has(u.settings.roles.managers));
+    const a = await this.prisma.qualificationApplication.findUnique({ where: { id: uuid }, select: { unit: true, guildId: true } });
+    if (!a || (a.guildId && a.guildId !== guildId)) return false;
+    return has(cfg.units.find((u) => u.key === a.unit)?.settings.roles.managers);
+  }
+
   /** Fragen der Polizei-Bewerbung (dasselbe Formular wie /apply und Studio). */
   async policeForm(guildId?: string | null): Promise<FormField[]> {
     const p = formSchema.safeParse((await this.read(FORM_KEY, guildId)).value);

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { APPLICATION_STATUSES } from '@enrp/shared';
 import { ApplicationsService } from './applications.service';
 import { ApplicationsAnalyticsService } from './applications-analytics.service';
-import { CurrentActor, Public, RequirePermission } from '../authz/decorators';
+import { CurrentActor, DiscordManagerAllows, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { RobloxService } from '../persons/roblox.service';
@@ -42,7 +42,7 @@ export class ApplicationsController {
   /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
   @Get('analytics') @RequirePermission('applications.view')
   analytics(@Query(zodBody(analyticsQ)) q: z.infer<typeof analyticsQ>) { return this.stats.overview({ ...q, guildId: currentGuild() }); }
-  @Get('history') @RequirePermission('applications.view')
+  @Get('history') @RequirePermission('applications.view') @DiscordManagerAllows('police')
   history(@Query(zodBody(z.object({ discordId: z.string().regex(/^\d{15,25}$/) }))) q: { discordId: string }) { return this.a.history(q.discordId); }
   /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
   @Get('inbox') @RequirePermission('applications.view')
@@ -52,7 +52,7 @@ export class ApplicationsController {
   }
   @Delete(':id') @HttpCode(204) @RequirePermission('applications.delete')
   remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.a.remove(a, id); }
-  @Get(':id') @RequirePermission('applications.view')
+  @Get(':id') @RequirePermission('applications.view') @DiscordManagerAllows('police')
   get(@Param('id', ParseUUIDPipe) id: string) { return this.a.get(id); }
   /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
   @Put(':id/status') @RequirePermission('applications.review')
@@ -63,8 +63,8 @@ export class ApplicationsController {
   decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ accept: z.boolean(), reason: z.string().trim().min(3).max(1000) }))) b: { accept: boolean; reason: string }) {
     return this.a.transition(a, id, b.accept ? 'ACCEPTED' : 'REJECTED', b.reason);
   }
-  /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
-  @Post(':id/discord-decision') @HttpCode(200) @RequirePermission('applications.decide')
+  /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. Manager-Rolle reicht. */
+  @Post(':id/discord-decision') @HttpCode(200) @RequirePermission('applications.decide') @DiscordManagerAllows('police')
   discordDecide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), reason: z.string().trim().max(1000).optional() }))) b: { status: 'ACCEPTED' | 'REJECTED'; reason?: string }) {
     return this.a.discordDecide(a, id, b.status, b.reason);
   }

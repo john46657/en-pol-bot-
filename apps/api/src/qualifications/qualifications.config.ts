@@ -37,7 +37,7 @@ export const appSettingsSchema = z.object({
   roles: z.object({
     restricted: roleRule, required: roleRule,
     accepted: roleList, denied: roleList, acceptedRemove: roleList, deniedRemove: roleList, pending: roleList, removeOnSubmit: roleList,
-    /** Wer im Discord annehmen/ablehnen darf (zusätzlich zum Recht im System); leer = alle mit dem Recht. */
+    /** Wer im Discord annehmen/ablehnen darf (reicht dort auch ohne Recht im System); leer = alle mit dem Recht. */
     managers: roleList,
   }).default({}),
   staffThreads: z.boolean().default(false),

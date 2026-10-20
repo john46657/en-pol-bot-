@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { ModuleRef, Reflector } from '@nestjs/core';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { BOT_SERVICE_KEY, PERMISSION_KEY, PUBLIC_KEY } from './decorators';
+import { BOT_SERVICE_KEY, DISCORD_MANAGER_KEY, PERMISSION_KEY, PUBLIC_KEY } from './decorators';
 import { DiscordService } from '../discord/discord.service';
 import { DiscordAccessService } from './discord-access.service';
 import { AuthorizationService } from './authorization.service';
@@ -10,6 +10,7 @@ import { currentGuild } from '../common/guild-context';
 import { loadEnv } from '../config/env';
 import { AppError } from '../common/errors';
 import type { AppRequest } from '../common/request-context';
+import { QualificationsService } from '../qualifications/qualifications.service';
 
 export const SESSION_COOKIE = 'enrp_session';
 export const hashToken = (t: string) => createHash('sha256').update(t).digest('hex');
@@ -113,7 +114,7 @@ export class AuthGuard implements CanActivate {
  */
 @Injectable()
 export class PermissionGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector, private readonly authz: AuthorizationService) {}
+  constructor(private readonly reflector: Reflector, private readonly authz: AuthorizationService, private readonly moduleRef: ModuleRef) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     if (ctx.getType() !== 'http') return true;
@@ -121,7 +122,23 @@ export class PermissionGuard implements CanActivate {
     if (!required?.length) return true;
     const req = ctx.switchToHttp().getRequest<AppRequest>();
     if (!req.user) throw new AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
-    for (const p of required) await this.authz.assert(req.user.id, currentGuild(), p, {}, { requestId: req.requestId, ip: req.ip });
+    const manager = this.reflector.getAllAndOverride<'police' | 'quali' | undefined>(DISCORD_MANAGER_KEY, [ctx.getHandler(), ctx.getClass()]);
+    for (const p of required) {
+      if (manager && (await this.discordManager(req, p, manager))) continue;
+      await this.authz.assert(req.user.id, currentGuild(), p, {}, { requestId: req.requestId, ip: req.ip });
+    }
     return true;
+  }
+
+  /** Bot-Klick mit Manager-Rolle der Bewerbung: fehlt NUR das Recht (Server, Mitgliedschaft, Modul passen), reicht die Rolle. */
+  private async discordManager(req: AppRequest, permission: string, kind: 'police' | 'quali'): Promise<boolean> {
+    const guildId = currentGuild();
+    if (req.user?.sessionId !== 'bot' || !guildId) return false;
+    const d = await this.authz.authorize(req.user.id, guildId, permission);
+    if (d.allowed || d.reason !== 'PERMISSION') return false;
+    const raw = req.headers['x-discord-roles'];
+    const roles = typeof raw === 'string' ? raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) : [];
+    const id = typeof req.params?.id === 'string' ? req.params.id : undefined;
+    return this.moduleRef.get(QualificationsService, { strict: false }).isDiscordManager(guildId, roles, kind, id);
   }
 }

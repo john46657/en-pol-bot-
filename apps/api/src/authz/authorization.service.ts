@@ -101,7 +101,7 @@ export class AuthorizationService {
     await this.recordDenied(userId, guildId, permission, d.reason, meta);
     // fremde Datensätze verraten nicht, dass es sie gibt
     if (d.reason === 'FOREIGN_RECORD') throw new AppError('NOT_FOUND', 'Nicht gefunden.');
-    throw new AppError('PERMISSION_DENIED', d.message, { reason: d.reason });
+    throw new AppError('PERMISSION_DENIED', d.message, { reason: d.reason, ...(d.reason === 'PERMISSION' ? { permission } : {}) });
   }
 
   /** Verweigerte sicherheitsrelevante Zugriffe: SecurityEvent + Audit (DENIED), je Benutzer/Recht/Server höchstens einmal pro Minute. */

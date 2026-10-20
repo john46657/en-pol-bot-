@@ -7,7 +7,7 @@ export const rolesScope = new AsyncLocalStorage<string[]>();
 
 /** Fehler der System-API (mit Request-ID, ohne Stacktrace). */
 export class BotApiError extends Error {
-  constructor(public readonly status: number, public readonly code: string, message: string, public readonly requestId?: string, public readonly reason?: string) {
+  constructor(public readonly status: number, public readonly code: string, message: string, public readonly requestId?: string, public readonly reason?: string, public readonly permission?: string) {
     super(message);
   }
 }
@@ -38,8 +38,8 @@ export class HttpApi implements Api {
       let json: Record<string, unknown> | undefined;
       try { json = text ? (JSON.parse(text) as Record<string, unknown>) : undefined; } catch { json = undefined; }
       if (res.status >= 400) {
-        const details = json?.details as { reason?: string } | undefined;
-        throw new BotApiError(res.status, String(json?.code ?? 'ERROR'), String(json?.message ?? `HTTP ${res.status}`), json?.requestId as string | undefined, details?.reason);
+        const details = json?.details as { reason?: string; permission?: string } | undefined;
+        throw new BotApiError(res.status, String(json?.code ?? 'ERROR'), String(json?.message ?? `HTTP ${res.status}`), json?.requestId as string | undefined, details?.reason, details?.permission);
       }
       return json as T;
     } catch (e) {
