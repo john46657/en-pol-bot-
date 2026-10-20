@@ -187,11 +187,11 @@ export declare class PanelsService {
             label: string;
             text: string;
             title: string;
-            description: string;
             id: string;
             color: string;
             image: string;
             emoji: string;
+            description: string;
         }[];
         text: string;
         title: string;
@@ -209,11 +209,11 @@ export declare class PanelsService {
             label: string;
             text: string;
             title: string;
-            description: string;
             id: string;
             color: string;
             image: string;
             emoji: string;
+            description: string;
         }[];
         text: string;
         title: string;
@@ -235,11 +235,11 @@ export declare class PanelsService {
             label: string;
             text: string;
             title: string;
-            description: string;
             id: string;
             color: string;
             image: string;
             emoji: string;
+            description: string;
         }[];
         text: string;
         title: string;

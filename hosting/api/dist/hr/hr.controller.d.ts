@@ -139,18 +139,6 @@ export declare class HrController {
     private readonly people;
     constructor(core: HrCoreService, people: HrPeopleService);
     config(): Promise<{
-        transfer: {
-            stages: {
-                roleIds: string[];
-                id: string;
-                name: string;
-            }[];
-            approvalsRequired: number;
-            autoExecute: boolean;
-            discordRoles: boolean;
-            dashboardRoles: boolean;
-            announceChannelId: string | null;
-        };
         promotion: {
             stages: {
                 roleIds: string[];
@@ -171,12 +159,24 @@ export declare class HrController {
                 emoji: string;
             }>>;
         };
+        transfer: {
+            stages: {
+                roleIds: string[];
+                id: string;
+                name: string;
+            }[];
+            approvalsRequired: number;
+            autoExecute: boolean;
+            discordRoles: boolean;
+            dashboardRoles: boolean;
+            announceChannelId: string | null;
+        };
         awards: {
-            description: string;
             id: string;
             name: string;
             color: string;
             active: boolean;
+            description: string;
             icon: string;
             requirements: string;
             public: boolean;
@@ -211,10 +211,10 @@ export declare class HrController {
             emoji: string;
         }[];
         departments: {
-            description: string;
             id: string;
             name: string;
             color: string;
+            description: string;
             discordRoleIds: string[];
             dashboardRoleIds: string[];
         }[];
@@ -252,18 +252,6 @@ export declare class HrController {
         emoji: string;
     }[]>;
     saveConfig(a: Actor, b: HrConfig): Promise<{
-        transfer: {
-            stages: {
-                roleIds: string[];
-                id: string;
-                name: string;
-            }[];
-            approvalsRequired: number;
-            autoExecute: boolean;
-            discordRoles: boolean;
-            dashboardRoles: boolean;
-            announceChannelId: string | null;
-        };
         promotion: {
             stages: {
                 roleIds: string[];
@@ -284,12 +272,24 @@ export declare class HrController {
                 emoji: string;
             }>>;
         };
+        transfer: {
+            stages: {
+                roleIds: string[];
+                id: string;
+                name: string;
+            }[];
+            approvalsRequired: number;
+            autoExecute: boolean;
+            discordRoles: boolean;
+            dashboardRoles: boolean;
+            announceChannelId: string | null;
+        };
         awards: {
-            description: string;
             id: string;
             name: string;
             color: string;
             active: boolean;
+            description: string;
             icon: string;
             requirements: string;
             public: boolean;
@@ -324,10 +324,10 @@ export declare class HrController {
             emoji: string;
         }[];
         departments: {
-            description: string;
             id: string;
             name: string;
             color: string;
+            description: string;
             discordRoleIds: string[];
             dashboardRoleIds: string[];
         }[];
@@ -835,9 +835,9 @@ declare const reqQ: z.ZodObject<{
     personnelId?: string | undefined;
     requesterId?: string | undefined;
     approverId?: string | undefined;
+    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
-    q?: string | undefined;
 }, {
     status?: string | undefined;
     kind?: "PROMOTION" | "TRANSFER" | undefined;
@@ -846,9 +846,9 @@ declare const reqQ: z.ZodObject<{
     personnelId?: string | undefined;
     requesterId?: string | undefined;
     approverId?: string | undefined;
+    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
-    q?: string | undefined;
 }>;
 declare const createR: z.ZodObject<{
     kind: z.ZodEnum<["PROMOTION", "TRANSFER"]>;

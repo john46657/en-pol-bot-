@@ -13,14 +13,10 @@ declare const PERMISSION_CATALOG: {
     readonly vehicles: readonly ["view", "create", "edit", "archive"];
     /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
     readonly fleet: readonly ["view", "view_details", "edit", "assign", "manage_catalog", "manage"];
-    /** Waffenregister im MDT */
-    readonly weapons: readonly ["view", "create", "edit"];
     readonly reports: readonly ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"];
     readonly tickets: readonly ["view", "create", "edit", "void"];
     readonly complaints: readonly ["view", "create", "assign", "investigate", "resolve", "close"];
-    readonly investigations: readonly ["view", "create", "edit", "close"];
     readonly wanted: readonly ["view", "create", "edit", "activate", "clear"];
-    readonly evidence: readonly ["view", "create", "transfer", "release"];
     /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
     readonly personnel: readonly ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"];
     /** Beförderungssystem */
@@ -70,10 +66,6 @@ declare const PERMISSION_CATALOG: {
      * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
      */
     readonly messagebuilder: readonly ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"];
-    /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
-    readonly connections: readonly ["view", "manage"];
-    /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
-    readonly sync: readonly ["view", "retry"];
 };
 type Catalog = typeof PERMISSION_CATALOG;
 type PermissionKey = {
@@ -146,15 +138,9 @@ declare const TICKET_TRANSITIONS: TransitionMap<TicketStatus>;
 declare const COMPLAINT_STATUSES: readonly ["RECEIVED", "SCREENING", "ASSIGNED", "INVESTIGATION", "REVIEW", "RESOLVED", "CLOSED"];
 type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number];
 declare const COMPLAINT_TRANSITIONS: TransitionMap<ComplaintStatus>;
-declare const INVESTIGATION_STATUSES: readonly ["OPEN", "ACTIVE", "SUSPENDED", "CLOSED", "ARCHIVED"];
-type InvestigationStatus = (typeof INVESTIGATION_STATUSES)[number];
-declare const INVESTIGATION_TRANSITIONS: TransitionMap<InvestigationStatus>;
 declare const WANTED_STATUSES: readonly ["ACTIVE", "CLEARED", "CANCELLED", "EXPIRED", "ARCHIVED"];
 type WantedStatus = (typeof WANTED_STATUSES)[number];
 declare const WANTED_TRANSITIONS: TransitionMap<WantedStatus>;
-declare const EVIDENCE_CUSTODY_STATES: readonly ["COLLECTED", "STORED", "TRANSFERRED", "REVIEWED", "RELEASED", "ARCHIVED"];
-type EvidenceCustodyState = (typeof EVIDENCE_CUSTODY_STATES)[number];
-declare const EVIDENCE_TRANSITIONS: TransitionMap<EvidenceCustodyState>;
 declare const APPLICATION_STATUSES: readonly ["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"];
 type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 declare const APPLICATION_TRANSITIONS: TransitionMap<ApplicationStatus>;
@@ -1377,20 +1363,20 @@ declare const infoOptionSchema: z.ZodObject<{
     label: string;
     text: string;
     title: string;
-    description: string;
     id: string;
     color: string;
     image: string;
     emoji: string;
+    description: string;
 }, {
     label: string;
     id: string;
     text?: string | undefined;
     title?: string | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     image?: string | undefined;
     emoji?: string | undefined;
+    description?: string | undefined;
 }>;
 declare const infoPanelSchema: z.ZodObject<{
     id: z.ZodString;
@@ -1418,31 +1404,31 @@ declare const infoPanelSchema: z.ZodObject<{
         label: string;
         text: string;
         title: string;
-        description: string;
         id: string;
         color: string;
         image: string;
         emoji: string;
+        description: string;
     }, {
         label: string;
         id: string;
         text?: string | undefined;
         title?: string | undefined;
-        description?: string | undefined;
         color?: string | undefined;
         image?: string | undefined;
         emoji?: string | undefined;
+        description?: string | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
     options: {
         label: string;
         text: string;
         title: string;
-        description: string;
         id: string;
         color: string;
         image: string;
         emoji: string;
+        description: string;
     }[];
     text: string;
     title: string;
@@ -1462,10 +1448,10 @@ declare const infoPanelSchema: z.ZodObject<{
         id: string;
         text?: string | undefined;
         title?: string | undefined;
-        description?: string | undefined;
         color?: string | undefined;
         image?: string | undefined;
         emoji?: string | undefined;
+        description?: string | undefined;
     }[] | undefined;
     text?: string | undefined;
     title?: string | undefined;
@@ -1571,7 +1557,6 @@ declare const reportTemplateSchema: z.ZodObject<{
     /** Darstellung in Discord: FIELDS = Embed-Felder, LIST = „➣ **Feld:** Wert“-Liste mit Trennlinien */
     layout: z.ZodDefault<z.ZodEnum<["FIELDS", "LIST"]>>;
 }, "strip", z.ZodTypeAny, {
-    description: string;
     id: string;
     name: string;
     guildId: string | null;
@@ -1591,6 +1576,7 @@ declare const reportTemplateSchema: z.ZodObject<{
     }[];
     pingRoleIds: string[];
     emoji: string;
+    description: string;
     period: "DAILY" | "WEEKLY" | "FREE";
     onePerPeriod: boolean;
     authorCanEdit: boolean;
@@ -1609,13 +1595,13 @@ declare const reportTemplateSchema: z.ZodObject<{
         inline?: boolean | undefined;
         separator?: boolean | undefined;
     }[];
-    description?: string | undefined;
     guildId?: string | null | undefined;
     channelId?: string | null | undefined;
     color?: string | undefined;
     active?: boolean | undefined;
     pingRoleIds?: string[] | undefined;
     emoji?: string | undefined;
+    description?: string | undefined;
     period?: "DAILY" | "WEEKLY" | "FREE" | undefined;
     onePerPeriod?: boolean | undefined;
     authorCanEdit?: boolean | undefined;
@@ -1728,9 +1714,9 @@ interface ModuleDef {
 declare const MODULES: readonly [{
     readonly key: "core";
     readonly name: "Grundsystem";
-    readonly description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen";
+    readonly description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server";
     readonly system: true;
-    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"];
+    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"];
 }, {
     readonly key: "cad";
     readonly name: "CAD-Leitstelle";
@@ -1739,8 +1725,8 @@ declare const MODULES: readonly [{
 }, {
     readonly key: "mdt";
     readonly name: "MDT";
-    readonly description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bußgelder";
-    readonly permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"];
+    readonly description: "Personen, Fahrzeuge, Haftbefehle, Bußgelder";
+    readonly permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"];
 }, {
     readonly key: "dispatch";
     readonly name: "Dispatch";
@@ -1758,9 +1744,9 @@ declare const MODULES: readonly [{
     readonly permissionPrefixes: ["team"];
 }, {
     readonly key: "investigations";
-    readonly name: "Ermittlungen";
-    readonly description: "Beschwerden, Ermittlungen, Beweismittel";
-    readonly permissionPrefixes: ["complaints", "investigations", "evidence"];
+    readonly name: "Beschwerden";
+    readonly description: "Beschwerden";
+    readonly permissionPrefixes: ["complaints"];
 }, {
     readonly key: "personnel";
     readonly name: "Personal";
@@ -1799,53 +1785,6 @@ declare const moduleDef: (key: string) => ModuleDef | undefined;
 declare function moduleOfPermission(permission: string): string;
 /** Abhängigkeitsprüfung: Fehlermeldung oder null. `enabled` = Zielzustand aller Module des Servers. */
 declare function moduleDependencyError(key: string, enabled: boolean, state: Record<string, boolean>): string | null;
-/** Arten serverübergreifend freigebbarer Daten. `source` = woher die Ereignisse kommen (null = noch keine Quelle angebunden). */
-declare const SYNC_DATA_TYPES: readonly [{
-    readonly key: "reports";
-    readonly module: "reports";
-    readonly label: "Berichte (eingereicht/freigegeben)";
-    readonly source: "reports";
-}, {
-    readonly key: "unit_status";
-    readonly module: "shift_logs";
-    readonly label: "Dienststatus der Beamten";
-    readonly source: "duty";
-}, {
-    readonly key: "shift_statistics";
-    readonly module: "shift_logs";
-    readonly label: "Wochenstatistik (Shift Logs)";
-    readonly source: "weekly-reset";
-}, {
-    readonly key: "team_overview";
-    readonly module: "shift_logs";
-    readonly label: "Teamübersicht (wer ist im Dienst)";
-    readonly source: "duty";
-}, {
-    readonly key: "incidents";
-    readonly module: "cad";
-    readonly label: "Einsätze";
-    readonly source: null;
-}, {
-    readonly key: "incident_status";
-    readonly module: "cad";
-    readonly label: "Einsatzstatus";
-    readonly source: null;
-}, {
-    readonly key: "radio_messages";
-    readonly module: "cad";
-    readonly label: "Funksprüche";
-    readonly source: null;
-}];
-type SyncDataType = (typeof SYNC_DATA_TYPES)[number]['key'];
-declare const SYNC_DIRECTIONS: readonly ["A_TO_B", "B_TO_A", "BIDIRECTIONAL", "NONE"];
-type SyncDirection = (typeof SYNC_DIRECTIONS)[number];
-/** Fließen Daten von `from` nach `to` laut Freigabe (source→target mit Richtung)? */
-declare function policyAllowsFlow(p: {
-    sourceServerId: string;
-    targetServerId: string;
-    direction: string;
-    enabled: boolean;
-}, from: string, to: string): boolean;
 /**
  * Discord-Slash-Befehl → Modul. Der Bot registriert je Server nur Befehle aktivierter Module (Komfort). Maßgeblich bleibt
  * die Prüfung im Backend bei JEDER Ausführung – ein sichtbarer Befehl umgeht nie die Rechte- und Modulprüfung.
@@ -1884,17 +1823,17 @@ declare const departmentSchema: z.ZodObject<{
     dashboardRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     description: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    description: string;
     id: string;
     name: string;
     color: string;
+    description: string;
     discordRoleIds: string[];
     dashboardRoleIds: string[];
 }, {
     id: string;
     name: string;
-    description?: string | undefined;
     color?: string | undefined;
+    description?: string | undefined;
     discordRoleIds?: string[] | undefined;
     dashboardRoleIds?: string[] | undefined;
 }>;
@@ -1928,11 +1867,11 @@ declare const awardDefSchema: z.ZodObject<{
     discordRoleId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     active: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    description: string;
     id: string;
     name: string;
     color: string;
     active: boolean;
+    description: string;
     icon: string;
     requirements: string;
     public: boolean;
@@ -1940,9 +1879,9 @@ declare const awardDefSchema: z.ZodObject<{
 }, {
     id: string;
     name: string;
-    description?: string | undefined;
     color?: string | undefined;
     active?: boolean | undefined;
+    description?: string | undefined;
     icon?: string | undefined;
     requirements?: string | undefined;
     public?: boolean | undefined;
@@ -2041,17 +1980,17 @@ declare const hrConfigSchema: z.ZodObject<{
         dashboardRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         description: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        description: string;
         id: string;
         name: string;
         color: string;
+        description: string;
         discordRoleIds: string[];
         dashboardRoleIds: string[];
     }, {
         id: string;
         name: string;
-        description?: string | undefined;
         color?: string | undefined;
+        description?: string | undefined;
         discordRoleIds?: string[] | undefined;
         dashboardRoleIds?: string[] | undefined;
     }>, "many">>;
@@ -2101,11 +2040,11 @@ declare const hrConfigSchema: z.ZodObject<{
         discordRoleId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
         active: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        description: string;
         id: string;
         name: string;
         color: string;
         active: boolean;
+        description: string;
         icon: string;
         requirements: string;
         public: boolean;
@@ -2113,9 +2052,9 @@ declare const hrConfigSchema: z.ZodObject<{
     }, {
         id: string;
         name: string;
-        description?: string | undefined;
         color?: string | undefined;
         active?: boolean | undefined;
+        description?: string | undefined;
         icon?: string | undefined;
         requirements?: string | undefined;
         public?: boolean | undefined;
@@ -2349,18 +2288,6 @@ declare const hrConfigSchema: z.ZodObject<{
         signature?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    transfer: {
-        stages: {
-            roleIds: string[];
-            id: string;
-            name: string;
-        }[];
-        approvalsRequired: number;
-        autoExecute: boolean;
-        discordRoles: boolean;
-        dashboardRoles: boolean;
-        announceChannelId: string | null;
-    };
     promotion: {
         stages: {
             roleIds: string[];
@@ -2381,12 +2308,24 @@ declare const hrConfigSchema: z.ZodObject<{
             emoji: string;
         }>>;
     };
+    transfer: {
+        stages: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }[];
+        approvalsRequired: number;
+        autoExecute: boolean;
+        discordRoles: boolean;
+        dashboardRoles: boolean;
+        announceChannelId: string | null;
+    };
     awards: {
-        description: string;
         id: string;
         name: string;
         color: string;
         active: boolean;
+        description: string;
         icon: string;
         requirements: string;
         public: boolean;
@@ -2421,10 +2360,10 @@ declare const hrConfigSchema: z.ZodObject<{
         emoji: string;
     }[];
     departments: {
-        description: string;
         id: string;
         name: string;
         color: string;
+        description: string;
         discordRoleIds: string[];
         dashboardRoleIds: string[];
     }[];
@@ -2455,18 +2394,6 @@ declare const hrConfigSchema: z.ZodObject<{
         signature: string;
     };
 }, {
-    transfer?: {
-        stages?: {
-            id: string;
-            name: string;
-            roleIds?: string[] | undefined;
-        }[] | undefined;
-        approvalsRequired?: number | undefined;
-        autoExecute?: boolean | undefined;
-        discordRoles?: boolean | undefined;
-        dashboardRoles?: boolean | undefined;
-        announceChannelId?: string | null | undefined;
-    } | undefined;
     promotion?: {
         stages?: {
             id: string;
@@ -2487,12 +2414,24 @@ declare const hrConfigSchema: z.ZodObject<{
             emoji: string;
         }>> | undefined;
     } | undefined;
+    transfer?: {
+        stages?: {
+            id: string;
+            name: string;
+            roleIds?: string[] | undefined;
+        }[] | undefined;
+        approvalsRequired?: number | undefined;
+        autoExecute?: boolean | undefined;
+        discordRoles?: boolean | undefined;
+        dashboardRoles?: boolean | undefined;
+        announceChannelId?: string | null | undefined;
+    } | undefined;
     awards?: {
         id: string;
         name: string;
-        description?: string | undefined;
         color?: string | undefined;
         active?: boolean | undefined;
+        description?: string | undefined;
         icon?: string | undefined;
         requirements?: string | undefined;
         public?: boolean | undefined;
@@ -2529,8 +2468,8 @@ declare const hrConfigSchema: z.ZodObject<{
     departments?: {
         id: string;
         name: string;
-        description?: string | undefined;
         color?: string | undefined;
+        description?: string | undefined;
         discordRoleIds?: string[] | undefined;
         dashboardRoleIds?: string[] | undefined;
     }[] | undefined;
@@ -2623,10 +2562,10 @@ declare const rankSchema: z.ZodObject<{
     }>, "many">>;
     active: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    description: string | null;
     name: string;
     color: string;
     active: boolean;
+    description: string | null;
     discordRoleIds: string[];
     dashboardRoleIds: string[];
     icon: string | null;
@@ -2642,10 +2581,10 @@ declare const rankSchema: z.ZodObject<{
     id?: string | undefined;
 }, {
     name: string;
-    description?: string | null | undefined;
     id?: string | undefined;
     color?: string | undefined;
     active?: boolean | undefined;
+    description?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
     dashboardRoleIds?: string[] | undefined;
     icon?: string | null | undefined;
@@ -3082,8 +3021,8 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     category: string | null;
     title: string;
-    description: string | null;
     active: boolean;
+    description: string | null;
     layout: "LIST" | "PAGED";
     instructions: string | null;
     questions: {
@@ -3119,8 +3058,8 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
 }, {
     title: string;
     category?: string | null | undefined;
-    description?: string | null | undefined;
     active?: boolean | undefined;
+    description?: string | null | undefined;
     layout?: "LIST" | "PAGED" | undefined;
     instructions?: string | null | undefined;
     questions?: {
@@ -3156,8 +3095,8 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     category: string | null;
     title: string;
-    description: string | null;
     active: boolean;
+    description: string | null;
     layout: "LIST" | "PAGED";
     instructions: string | null;
     questions: {
@@ -3193,8 +3132,8 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
 }, {
     title: string;
     category?: string | null | undefined;
-    description?: string | null | undefined;
     active?: boolean | undefined;
+    description?: string | null | undefined;
     layout?: "LIST" | "PAGED" | undefined;
     instructions?: string | null | undefined;
     questions?: {
@@ -3258,9 +3197,9 @@ declare const LOG_CATEGORIES: readonly [{
     readonly modules: readonly ["cad", "dispatch", "incidents", "erlc", "radio", "fleet"];
 }, {
     readonly key: "akten";
-    readonly label: "Akten & Ermittlungen";
+    readonly label: "Akten";
     readonly emoji: "🗂️";
-    readonly modules: readonly ["persons", "vehicles", "weapons", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"];
+    readonly modules: readonly ["persons", "vehicles", "wanted", "reports", "tickets", "complaints"];
 }, {
     readonly key: "bewerbungen";
     readonly label: "Bewerbungen & Qualifikationen";
@@ -3436,22 +3375,6 @@ declare const mdtConfigSchema: z.ZodObject<{
         label: string;
         tone: "warning" | "danger" | "info" | "neutral";
     }[]>;
-    weaponTypes: z.ZodEffects<z.ZodArray<z.ZodObject<{
-        key: z.ZodString;
-        label: z.ZodString;
-    }, "strip", z.ZodTypeAny, {
-        key: string;
-        label: string;
-    }, {
-        key: string;
-        label: string;
-    }>, "many">, {
-        key: string;
-        label: string;
-    }[], {
-        key: string;
-        label: string;
-    }[]>;
     genders: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
     licenses: {
@@ -3463,10 +3386,6 @@ declare const mdtConfigSchema: z.ZodObject<{
         label: string;
         tone: "warning" | "danger" | "info" | "neutral";
     }[];
-    weaponTypes: {
-        key: string;
-        label: string;
-    }[];
     genders: string[];
 }, {
     licenses: {
@@ -3478,34 +3397,10 @@ declare const mdtConfigSchema: z.ZodObject<{
         label: string;
         tone: "warning" | "danger" | "info" | "neutral";
     }[];
-    weaponTypes: {
-        key: string;
-        label: string;
-    }[];
     genders: string[];
 }>;
 type MdtConfig = z.infer<typeof mdtConfigSchema>;
 declare const DEFAULT_MDT_CONFIG: MdtConfig;
-/** Status eines registrierten Gegenstands im Waffenregister. */
-declare const WEAPON_STATUSES: readonly [{
-    readonly key: "REGISTERED";
-    readonly label: "Registriert";
-    readonly tone: "success";
-}, {
-    readonly key: "STOLEN";
-    readonly label: "Gestohlen";
-    readonly tone: "danger";
-}, {
-    readonly key: "SEIZED";
-    readonly label: "Beschlagnahmt";
-    readonly tone: "warning";
-}, {
-    readonly key: "DESTROYED";
-    readonly label: "Vernichtet";
-    readonly tone: "neutral";
-}];
-type WeaponStatus = (typeof WEAPON_STATUSES)[number]['key'];
-declare const WEAPON_STATUS_KEYS: [WeaponStatus, ...WeaponStatus[]];
 /** Personalien einer Person im MDT (alle optional; Datum als YYYY-MM-DD). */
 declare const personDetailsSchema: z.ZodObject<{
     fullName: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -3675,8 +3570,8 @@ declare const fleetModelSchema: z.ZodObject<{
     category: string;
     name: string;
     erlcName: string;
-    description?: string | null | undefined;
     active?: boolean | undefined;
+    description?: string | null | undefined;
     department?: string | null | undefined;
     internalCode?: string | null | undefined;
     tags?: string[] | undefined;
@@ -3684,8 +3579,8 @@ declare const fleetModelSchema: z.ZodObject<{
     category: string;
     name: string;
     erlcName: string;
-    description?: string | null | undefined;
     active?: boolean | undefined;
+    description?: string | null | undefined;
     department?: string | null | undefined;
     internalCode?: string | null | undefined;
     tags?: string[] | undefined;
@@ -3869,7 +3764,6 @@ declare const mbSelectOptionSchema: z.ZodObject<{
     }>]>>;
 }, "strip", z.ZodTypeAny, {
     label: string;
-    description: string;
     action: {
         type: "reply";
         text: string;
@@ -3880,10 +3774,10 @@ declare const mbSelectOptionSchema: z.ZodObject<{
     };
     id: string;
     emoji: string;
+    description: string;
 }, {
     id: string;
     label?: string | undefined;
-    description?: string | undefined;
     action?: {
         type: "reply";
         text?: string | undefined;
@@ -3893,6 +3787,7 @@ declare const mbSelectOptionSchema: z.ZodObject<{
         mode?: "remove" | "add" | "toggle" | undefined;
     } | undefined;
     emoji?: string | undefined;
+    description?: string | undefined;
 }>;
 type MbSelectOption = z.infer<typeof mbSelectOptionSchema>;
 declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
@@ -4036,7 +3931,6 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         }>]>>;
     }, "strip", z.ZodTypeAny, {
         label: string;
-        description: string;
         action: {
             type: "reply";
             text: string;
@@ -4047,10 +3941,10 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         };
         id: string;
         emoji: string;
+        description: string;
     }, {
         id: string;
         label?: string | undefined;
-        description?: string | undefined;
         action?: {
             type: "reply";
             text?: string | undefined;
@@ -4060,11 +3954,11 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
             mode?: "remove" | "add" | "toggle" | undefined;
         } | undefined;
         emoji?: string | undefined;
+        description?: string | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
     options: {
         label: string;
-        description: string;
         action: {
             type: "reply";
             text: string;
@@ -4075,6 +3969,7 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         };
         id: string;
         emoji: string;
+        description: string;
     }[];
     type: "select";
     id: string;
@@ -4086,7 +3981,6 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
     options?: {
         id: string;
         label?: string | undefined;
-        description?: string | undefined;
         action?: {
             type: "reply";
             text?: string | undefined;
@@ -4096,6 +3990,7 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
             mode?: "remove" | "add" | "toggle" | undefined;
         } | undefined;
         emoji?: string | undefined;
+        description?: string | undefined;
     }[] | undefined;
     placeholder?: string | undefined;
     disabled?: boolean | undefined;
@@ -4153,7 +4048,6 @@ declare const mbEmbedSchema: z.ZodObject<{
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
     title: string;
-    description: string;
     id: string;
     color: string;
     timestamp: "send" | "custom" | "none";
@@ -4163,6 +4057,7 @@ declare const mbEmbedSchema: z.ZodObject<{
         name: string;
         inline: boolean;
     }[];
+    description: string;
     url: string;
     authorName: string;
     authorUrl: string;
@@ -4175,7 +4070,6 @@ declare const mbEmbedSchema: z.ZodObject<{
 }, {
     id: string;
     title?: string | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     timestamp?: "send" | "custom" | "none" | undefined;
     fields?: {
@@ -4184,6 +4078,7 @@ declare const mbEmbedSchema: z.ZodObject<{
         name?: string | undefined;
         inline?: boolean | undefined;
     }[] | undefined;
+    description?: string | undefined;
     url?: string | undefined;
     authorName?: string | undefined;
     authorUrl?: string | undefined;
@@ -4233,7 +4128,6 @@ declare const mbMessageSchema: z.ZodObject<{
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
         title: string;
-        description: string;
         id: string;
         color: string;
         timestamp: "send" | "custom" | "none";
@@ -4243,6 +4137,7 @@ declare const mbMessageSchema: z.ZodObject<{
             name: string;
             inline: boolean;
         }[];
+        description: string;
         url: string;
         authorName: string;
         authorUrl: string;
@@ -4255,7 +4150,6 @@ declare const mbMessageSchema: z.ZodObject<{
     }, {
         id: string;
         title?: string | undefined;
-        description?: string | undefined;
         color?: string | undefined;
         timestamp?: "send" | "custom" | "none" | undefined;
         fields?: {
@@ -4264,6 +4158,7 @@ declare const mbMessageSchema: z.ZodObject<{
             name?: string | undefined;
             inline?: boolean | undefined;
         }[] | undefined;
+        description?: string | undefined;
         url?: string | undefined;
         authorName?: string | undefined;
         authorUrl?: string | undefined;
@@ -4415,7 +4310,6 @@ declare const mbMessageSchema: z.ZodObject<{
             }>]>>;
         }, "strip", z.ZodTypeAny, {
             label: string;
-            description: string;
             action: {
                 type: "reply";
                 text: string;
@@ -4426,10 +4320,10 @@ declare const mbMessageSchema: z.ZodObject<{
             };
             id: string;
             emoji: string;
+            description: string;
         }, {
             id: string;
             label?: string | undefined;
-            description?: string | undefined;
             action?: {
                 type: "reply";
                 text?: string | undefined;
@@ -4439,11 +4333,11 @@ declare const mbMessageSchema: z.ZodObject<{
                 mode?: "remove" | "add" | "toggle" | undefined;
             } | undefined;
             emoji?: string | undefined;
+            description?: string | undefined;
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
         options: {
             label: string;
-            description: string;
             action: {
                 type: "reply";
                 text: string;
@@ -4454,6 +4348,7 @@ declare const mbMessageSchema: z.ZodObject<{
             };
             id: string;
             emoji: string;
+            description: string;
         }[];
         type: "select";
         id: string;
@@ -4465,7 +4360,6 @@ declare const mbMessageSchema: z.ZodObject<{
         options?: {
             id: string;
             label?: string | undefined;
-            description?: string | undefined;
             action?: {
                 type: "reply";
                 text?: string | undefined;
@@ -4475,6 +4369,7 @@ declare const mbMessageSchema: z.ZodObject<{
                 mode?: "remove" | "add" | "toggle" | undefined;
             } | undefined;
             emoji?: string | undefined;
+            description?: string | undefined;
         }[] | undefined;
         placeholder?: string | undefined;
         disabled?: boolean | undefined;
@@ -4498,7 +4393,6 @@ declare const mbMessageSchema: z.ZodObject<{
     content: string;
     embeds: {
         title: string;
-        description: string;
         id: string;
         color: string;
         timestamp: "send" | "custom" | "none";
@@ -4508,6 +4402,7 @@ declare const mbMessageSchema: z.ZodObject<{
             name: string;
             inline: boolean;
         }[];
+        description: string;
         url: string;
         authorName: string;
         authorUrl: string;
@@ -4541,7 +4436,6 @@ declare const mbMessageSchema: z.ZodObject<{
     } | {
         options: {
             label: string;
-            description: string;
             action: {
                 type: "reply";
                 text: string;
@@ -4552,6 +4446,7 @@ declare const mbMessageSchema: z.ZodObject<{
             };
             id: string;
             emoji: string;
+            description: string;
         }[];
         type: "select";
         id: string;
@@ -4569,7 +4464,6 @@ declare const mbMessageSchema: z.ZodObject<{
     embeds?: {
         id: string;
         title?: string | undefined;
-        description?: string | undefined;
         color?: string | undefined;
         timestamp?: "send" | "custom" | "none" | undefined;
         fields?: {
@@ -4578,6 +4472,7 @@ declare const mbMessageSchema: z.ZodObject<{
             name?: string | undefined;
             inline?: boolean | undefined;
         }[] | undefined;
+        description?: string | undefined;
         url?: string | undefined;
         authorName?: string | undefined;
         authorUrl?: string | undefined;
@@ -4614,7 +4509,6 @@ declare const mbMessageSchema: z.ZodObject<{
         options?: {
             id: string;
             label?: string | undefined;
-            description?: string | undefined;
             action?: {
                 type: "reply";
                 text?: string | undefined;
@@ -4624,6 +4518,7 @@ declare const mbMessageSchema: z.ZodObject<{
                 mode?: "remove" | "add" | "toggle" | undefined;
             } | undefined;
             emoji?: string | undefined;
+            description?: string | undefined;
         }[] | undefined;
         placeholder?: string | undefined;
         disabled?: boolean | undefined;
@@ -4675,7 +4570,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
             title: string;
-            description: string;
             id: string;
             color: string;
             timestamp: "send" | "custom" | "none";
@@ -4685,6 +4579,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 name: string;
                 inline: boolean;
             }[];
+            description: string;
             url: string;
             authorName: string;
             authorUrl: string;
@@ -4697,7 +4592,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         }, {
             id: string;
             title?: string | undefined;
-            description?: string | undefined;
             color?: string | undefined;
             timestamp?: "send" | "custom" | "none" | undefined;
             fields?: {
@@ -4706,6 +4600,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 name?: string | undefined;
                 inline?: boolean | undefined;
             }[] | undefined;
+            description?: string | undefined;
             url?: string | undefined;
             authorName?: string | undefined;
             authorUrl?: string | undefined;
@@ -4857,7 +4752,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 }>]>>;
             }, "strip", z.ZodTypeAny, {
                 label: string;
-                description: string;
                 action: {
                     type: "reply";
                     text: string;
@@ -4868,10 +4762,10 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
+                description: string;
             }, {
                 id: string;
                 label?: string | undefined;
-                description?: string | undefined;
                 action?: {
                     type: "reply";
                     text?: string | undefined;
@@ -4881,11 +4775,11 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
+                description?: string | undefined;
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
             options: {
                 label: string;
-                description: string;
                 action: {
                     type: "reply";
                     text: string;
@@ -4896,6 +4790,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
+                description: string;
             }[];
             type: "select";
             id: string;
@@ -4907,7 +4802,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             options?: {
                 id: string;
                 label?: string | undefined;
-                description?: string | undefined;
                 action?: {
                     type: "reply";
                     text?: string | undefined;
@@ -4917,6 +4811,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
+                description?: string | undefined;
             }[] | undefined;
             placeholder?: string | undefined;
             disabled?: boolean | undefined;
@@ -4940,7 +4835,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         content: string;
         embeds: {
             title: string;
-            description: string;
             id: string;
             color: string;
             timestamp: "send" | "custom" | "none";
@@ -4950,6 +4844,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 name: string;
                 inline: boolean;
             }[];
+            description: string;
             url: string;
             authorName: string;
             authorUrl: string;
@@ -4983,7 +4878,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         } | {
             options: {
                 label: string;
-                description: string;
                 action: {
                     type: "reply";
                     text: string;
@@ -4994,6 +4888,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
+                description: string;
             }[];
             type: "select";
             id: string;
@@ -5011,7 +4906,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         embeds?: {
             id: string;
             title?: string | undefined;
-            description?: string | undefined;
             color?: string | undefined;
             timestamp?: "send" | "custom" | "none" | undefined;
             fields?: {
@@ -5020,6 +4914,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 name?: string | undefined;
                 inline?: boolean | undefined;
             }[] | undefined;
+            description?: string | undefined;
             url?: string | undefined;
             authorName?: string | undefined;
             authorUrl?: string | undefined;
@@ -5056,7 +4951,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             options?: {
                 id: string;
                 label?: string | undefined;
-                description?: string | undefined;
                 action?: {
                     type: "reply";
                     text?: string | undefined;
@@ -5066,6 +4960,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
+                description?: string | undefined;
             }[] | undefined;
             placeholder?: string | undefined;
             disabled?: boolean | undefined;
@@ -5093,7 +4988,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         content: string;
         embeds: {
             title: string;
-            description: string;
             id: string;
             color: string;
             timestamp: "send" | "custom" | "none";
@@ -5103,6 +4997,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 name: string;
                 inline: boolean;
             }[];
+            description: string;
             url: string;
             authorName: string;
             authorUrl: string;
@@ -5136,7 +5031,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         } | {
             options: {
                 label: string;
-                description: string;
                 action: {
                     type: "reply";
                     text: string;
@@ -5147,6 +5041,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 };
                 id: string;
                 emoji: string;
+                description: string;
             }[];
             type: "select";
             id: string;
@@ -5170,7 +5065,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
         embeds?: {
             id: string;
             title?: string | undefined;
-            description?: string | undefined;
             color?: string | undefined;
             timestamp?: "send" | "custom" | "none" | undefined;
             fields?: {
@@ -5179,6 +5073,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 name?: string | undefined;
                 inline?: boolean | undefined;
             }[] | undefined;
+            description?: string | undefined;
             url?: string | undefined;
             authorName?: string | undefined;
             authorUrl?: string | undefined;
@@ -5215,7 +5110,6 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             options?: {
                 id: string;
                 label?: string | undefined;
-                description?: string | undefined;
                 action?: {
                     type: "reply";
                     text?: string | undefined;
@@ -5225,6 +5119,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     mode?: "remove" | "add" | "toggle" | undefined;
                 } | undefined;
                 emoji?: string | undefined;
+                description?: string | undefined;
             }[] | undefined;
             placeholder?: string | undefined;
             disabled?: boolean | undefined;
@@ -5482,4 +5377,4 @@ declare const AI_CHECK_HINT = "Nur ein Hinweis, kein Beweis \u2013 im Zweifel im
 /** Prüft alle Antworten einer Bewerbung. `durationSec` = Zeit zum Ausfüllen (Discord-Chat / Webformular), wenn bekannt. */
 declare function aiCheck(answers: AiCheckAnswer[], durationSec?: number | null): AiCheckResult;
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVIDENCE_CUSTODY_STATES, EVIDENCE_TRANSITIONS, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EvidenceCustodyState, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, INVESTIGATION_STATUSES, INVESTIGATION_TRANSITIONS, type InfoOption, type InfoPanel, InvalidTransitionError, type InvestigationStatus, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, SYNC_DATA_TYPES, SYNC_DIRECTIONS, type StaffList, type StaffMember, type StatusKind, type SupportTime, type SyncDataType, type SyncDirection, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEAPON_STATUSES, WEAPON_STATUS_KEYS, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeaponStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parsePlayer, parseQuestions, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, poiForPlace, policeReportFields, policyAllowsFlow, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketButtonsOf, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parsePlayer, parseQuestions, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketButtonsOf, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

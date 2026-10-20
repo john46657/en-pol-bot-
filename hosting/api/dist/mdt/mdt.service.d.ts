@@ -33,10 +33,6 @@ export declare class MdtService {
             label: string;
             tone: "warning" | "danger" | "info" | "neutral";
         }[];
-        weaponTypes: {
-            key: string;
-            label: string;
-        }[];
         genders: string[];
     }>;
     private citizen;
@@ -110,11 +106,8 @@ export declare class MdtService {
         counts: {
             activeWarrants: number | null;
             vehicles: number | null;
-            weapons: number | null;
             incidents: number | null;
             reports: number | null;
-            investigations: number | null;
-            evidence: number | null;
         };
         vehicles: {
             serverId: string | null;
@@ -130,19 +123,6 @@ export declare class MdtService {
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
-        }[] | null;
-        weapons: {
-            serverId: string | null;
-            model: string | null;
-            id: string;
-            status: string;
-            notes: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            version: number;
-            ownerId: string | null;
-            serial: string;
-            type: string;
         }[] | null;
         warrants: {
             number: string | null;
@@ -291,73 +271,6 @@ export declare class MdtService {
             action: string;
             actorId: string | null;
         }[];
-    }>;
-    weapons(p: PageQuery & {
-        ownerId?: string;
-        status?: string;
-    }): Promise<{
-        items: ({
-            owner: {
-                id: string;
-                robloxUsername: string;
-                fullName: string | null;
-            } | null;
-        } & {
-            serverId: string | null;
-            model: string | null;
-            id: string;
-            status: string;
-            notes: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            version: number;
-            ownerId: string | null;
-            serial: string;
-            type: string;
-        })[];
-        total: number;
-        page: number;
-        pageSize: number;
-    }>;
-    private checkWeapon;
-    createWeapon(actor: Actor, d: {
-        serial: string;
-        type: string;
-        model?: string | null;
-        ownerId?: string | null;
-        status?: string;
-        notes?: string | null;
-    }): Promise<{
-        serverId: string | null;
-        model: string | null;
-        id: string;
-        status: string;
-        notes: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        ownerId: string | null;
-        serial: string;
-        type: string;
-    }>;
-    updateWeapon(actor: Actor, id: string, version: number, d: {
-        type?: string;
-        model?: string | null;
-        ownerId?: string | null;
-        status?: string;
-        notes?: string | null;
-    }): Promise<{
-        serverId: string | null;
-        model: string | null;
-        id: string;
-        status: string;
-        notes: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        ownerId: string | null;
-        serial: string;
-        type: string;
     }>;
     warrants(status: 'ACTIVE' | 'ALL'): Promise<{
         person: {

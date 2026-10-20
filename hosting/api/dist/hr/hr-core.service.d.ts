@@ -16,18 +16,6 @@ export declare class HrCoreService {
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, live: DiscordLiveService);
     config(): Promise<HrConfig>;
     saveConfig(actor: Actor, input: HrConfig): Promise<{
-        transfer: {
-            stages: {
-                roleIds: string[];
-                id: string;
-                name: string;
-            }[];
-            approvalsRequired: number;
-            autoExecute: boolean;
-            discordRoles: boolean;
-            dashboardRoles: boolean;
-            announceChannelId: string | null;
-        };
         promotion: {
             stages: {
                 roleIds: string[];
@@ -48,12 +36,24 @@ export declare class HrCoreService {
                 emoji: string;
             }>>;
         };
+        transfer: {
+            stages: {
+                roleIds: string[];
+                id: string;
+                name: string;
+            }[];
+            approvalsRequired: number;
+            autoExecute: boolean;
+            discordRoles: boolean;
+            dashboardRoles: boolean;
+            announceChannelId: string | null;
+        };
         awards: {
-            description: string;
             id: string;
             name: string;
             color: string;
             active: boolean;
+            description: string;
             icon: string;
             requirements: string;
             public: boolean;
@@ -88,10 +88,10 @@ export declare class HrCoreService {
             emoji: string;
         }[];
         departments: {
-            description: string;
             id: string;
             name: string;
             color: string;
+            description: string;
             discordRoleIds: string[];
             dashboardRoleIds: string[];
         }[];

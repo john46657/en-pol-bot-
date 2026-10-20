@@ -530,7 +530,7 @@ export declare class RadioWhitelistController {
             department: string | null;
             externalName: string | null;
             status: string;
-            effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+            effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
             authorized: boolean;
             source: string;
             reason: string | null;
@@ -593,7 +593,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -621,7 +621,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -649,7 +649,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -677,7 +677,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -705,7 +705,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -733,7 +733,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -761,7 +761,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -789,7 +789,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -817,7 +817,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -845,7 +845,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -873,7 +873,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -901,7 +901,7 @@ export declare class RadioWhitelistController {
         department: string | null;
         externalName: string | null;
         status: string;
-        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED";
+        effectiveStatus: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED";
         authorized: boolean;
         source: string;
         reason: string | null;
@@ -1187,7 +1187,7 @@ export declare class RadioWhitelistBotController {
         createdAt: Date;
     }>;
     status(id: string): Promise<{
-        status: "PENDING" | "ACTIVE" | "DISABLED" | "SUSPENDED" | "EXPIRED" | "REVOKED" | null;
+        status: "PENDING" | "ACTIVE" | "DISABLED" | "EXPIRED" | "SUSPENDED" | "REVOKED" | null;
         authorized: boolean;
         expiresAt: Date | null;
         suspendedUntil: Date | null;

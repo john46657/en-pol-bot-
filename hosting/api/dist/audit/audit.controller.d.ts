@@ -20,20 +20,20 @@ declare const q: z.ZodObject<{
     entityType?: string | undefined;
     action?: string | undefined;
     actorUserId?: string | undefined;
+    q?: string | undefined;
     from?: Date | undefined;
     to?: Date | undefined;
-    q?: string | undefined;
 }, {
     entityId?: string | undefined;
     module?: string | undefined;
     entityType?: string | undefined;
     action?: string | undefined;
     actorUserId?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
+    from?: Date | undefined;
+    to?: Date | undefined;
 }>;
 /** Lesbarer Satz für Rechteänderungen („Max hat der Rolle Moderator die Berechtigung ticket.delete entzogen.“). */
 export declare function auditSummary(e: {

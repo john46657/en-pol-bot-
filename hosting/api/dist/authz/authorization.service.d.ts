@@ -2,7 +2,7 @@ import { type PermissionKey } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { PermissionService } from './permission.service';
-export type DenyReason = 'UNKNOWN_SERVER' | 'SERVER_DISABLED' | 'NOT_MEMBER' | 'MODULE_DISABLED' | 'PERMISSION' | 'FOREIGN_RECORD' | 'NO_POLICY' | 'READ_ONLY';
+export type DenyReason = 'UNKNOWN_SERVER' | 'SERVER_DISABLED' | 'NOT_MEMBER' | 'MODULE_DISABLED' | 'PERMISSION' | 'FOREIGN_RECORD';
 export type Decision = {
     allowed: true;
 } | {
@@ -14,12 +14,6 @@ export type Decision = {
 export interface ResourceContext {
     /** Akten-Bereich des Datensatzes (Spalte `serverId`; `null` = gemeinsamer Bestand). `undefined` = kein Datensatzbezug. */
     space?: string | null;
-    /** Serverübergreifend: Daten von `sourceGuildId` auf dem aktuellen Server lesen bzw. ändern */
-    crossServer?: {
-        sourceGuildId: string;
-        dataType: string;
-        action: 'read' | 'write';
-    };
 }
 export interface ServerRow {
     id: string;
@@ -76,6 +70,4 @@ export declare class AuthorizationService {
         source: import("@enrp/shared").ResolutionSource;
         blockedBy: DenyReason | null;
     }[]>;
-    /** Ist eine Datenfreigabe von `fromGuild` nach `toGuild` für `dataType` aktiv (Verbindung aktiv, beide Mitglied, Richtung passt)? */
-    flowActive(fromGuild: string, toGuild: string, dataType: string): Promise<boolean>;
 }

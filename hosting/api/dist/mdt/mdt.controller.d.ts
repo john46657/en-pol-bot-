@@ -91,49 +91,7 @@ declare const citizenUpdate: z.ZodObject<{
     licenses?: string[] | undefined;
     flags?: string[] | undefined;
 }>;
-declare const weaponQ: z.ZodObject<{
-    page: z.ZodDefault<z.ZodNumber>;
-    pageSize: z.ZodDefault<z.ZodNumber>;
-    q: z.ZodOptional<z.ZodString>;
-} & {
-    ownerId: z.ZodOptional<z.ZodString>;
-    status: z.ZodOptional<z.ZodEnum<["REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED", ...("REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED")[]]>>;
-}, "strip", z.ZodTypeAny, {
-    page: number;
-    pageSize: number;
-    status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | undefined;
-    q?: string | undefined;
-}, {
-    status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    ownerId?: string | undefined;
-    page?: number | undefined;
-    pageSize?: number | undefined;
-    q?: string | undefined;
-}>;
-declare const weaponBody: z.ZodObject<{
-    serial: z.ZodString;
-    type: z.ZodString;
-    model: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    ownerId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    status: z.ZodOptional<z.ZodEnum<["REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED", ...("REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED")[]]>>;
-    notes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-}, "strip", z.ZodTypeAny, {
-    serial: string;
-    type: string;
-    model?: string | null | undefined;
-    status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    notes?: string | null | undefined;
-    ownerId?: string | null | undefined;
-}, {
-    serial: string;
-    type: string;
-    model?: string | null | undefined;
-    status?: "REGISTERED" | "STOLEN" | "SEIZED" | "DESTROYED" | undefined;
-    notes?: string | null | undefined;
-    ownerId?: string | null | undefined;
-}>;
-/** Polizei-MDT (Streifen-Terminal): Bürger, Fahrzeuge, Waffen, Haftbefehle. Gleiche Akten und Rechte wie im Dashboard. */
+/** Polizei-MDT (Streifen-Terminal): Bürger, Fahrzeuge, Haftbefehle. Gleiche Akten und Rechte wie im Dashboard. */
 export declare class MdtController {
     private readonly s;
     constructor(s: MdtService);
@@ -147,10 +105,6 @@ export declare class MdtController {
             label: string;
             tone: "warning" | "danger" | "info" | "neutral";
         }[];
-        weaponTypes: {
-            key: string;
-            label: string;
-        }[];
         genders: string[];
     }>;
     saveConfig(a: Actor, b: Partial<z.infer<typeof mdtConfigSchema>>): Promise<{
@@ -162,10 +116,6 @@ export declare class MdtController {
             key: string;
             label: string;
             tone: "warning" | "danger" | "info" | "neutral";
-        }[];
-        weaponTypes: {
-            key: string;
-            label: string;
         }[];
         genders: string[];
     }>;
@@ -236,11 +186,8 @@ export declare class MdtController {
         counts: {
             activeWarrants: number | null;
             vehicles: number | null;
-            weapons: number | null;
             incidents: number | null;
             reports: number | null;
-            investigations: number | null;
-            evidence: number | null;
         };
         vehicles: {
             serverId: string | null;
@@ -256,19 +203,6 @@ export declare class MdtController {
             color: string | null;
             ownerId: string | null;
             erlcReference: string | null;
-        }[] | null;
-        weapons: {
-            serverId: string | null;
-            model: string | null;
-            id: string;
-            status: string;
-            notes: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            version: number;
-            ownerId: string | null;
-            serial: string;
-            type: string;
         }[] | null;
         warrants: {
             number: string | null;
@@ -405,58 +339,6 @@ export declare class MdtController {
             action: string;
             actorId: string | null;
         }[];
-    }>;
-    weapons(q: z.infer<typeof weaponQ>): Promise<{
-        items: ({
-            owner: {
-                id: string;
-                robloxUsername: string;
-                fullName: string | null;
-            } | null;
-        } & {
-            serverId: string | null;
-            model: string | null;
-            id: string;
-            status: string;
-            notes: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            version: number;
-            ownerId: string | null;
-            serial: string;
-            type: string;
-        })[];
-        total: number;
-        page: number;
-        pageSize: number;
-    }>;
-    createWeapon(a: Actor, b: z.infer<typeof weaponBody>): Promise<{
-        serverId: string | null;
-        model: string | null;
-        id: string;
-        status: string;
-        notes: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        ownerId: string | null;
-        serial: string;
-        type: string;
-    }>;
-    updateWeapon(a: Actor, id: string, b: {
-        version: number;
-    } & Partial<Omit<z.infer<typeof weaponBody>, 'serial'>>): Promise<{
-        serverId: string | null;
-        model: string | null;
-        id: string;
-        status: string;
-        notes: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        version: number;
-        ownerId: string | null;
-        serial: string;
-        type: string;
     }>;
     warrants(q: {
         status?: 'ACTIVE' | 'ALL';

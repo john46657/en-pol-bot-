@@ -1,3 +1,3 @@
-/** Multi-Server: Server/Mandanten, Module je Server, Rollen & Rechte je Server, Verbindungen, Datenfreigaben, Synchronisierung. */
+/** Multi-Server: Server/Mandanten, Module je Server, Rollen & Rechte je Server. */
 export declare class MultiServerModule {
 }

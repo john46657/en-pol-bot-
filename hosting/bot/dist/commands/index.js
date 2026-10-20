@@ -100,7 +100,7 @@ exports.COMMANDS = [
                             { name: 'Konto', value: '`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`' },
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
-                            { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`' },
+                            { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`' },
                             { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
@@ -435,24 +435,6 @@ exports.COMMANDS = [
         },
     },
     {
-        name: 'ermittlung', description: 'Eröffnet einen Ermittlungsfall',
-        options: [
-            { name: 'titel', description: 'Titel des Falls', type: 'string', required: true, maxLength: 200 },
-            { name: 'beschreibung', description: 'Beschreibung', type: 'string', maxLength: 4000 },
-        ],
-        async run(c) {
-            if (str(c, 'titel').length < 3)
-                return (0, format_1.errorReply)('Der Titel ist zu kurz (mindestens 3 Zeichen).');
-            try {
-                const r = await c.api.asUser(c.discordId, 'POST', '/investigations', { title: str(c, 'titel'), ...(str(c, 'beschreibung') ? { description: str(c, 'beschreibung') } : {}) });
-                return (0, format_1.okReply)(`Fall **${r.caseNumber}** eröffnet.`);
-            }
-            catch (e) {
-                return (0, errors_1.mapError)(e);
-            }
-        },
-    },
-    {
         name: 'fahndung', description: 'Schreibt eine Person zur Fahndung aus',
         options: [
             { name: 'person', description: 'Roblox-Name oder -ID', type: 'string', required: true, maxLength: 64 },
@@ -472,25 +454,6 @@ exports.COMMANDS = [
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);
-            }
-        },
-    },
-    {
-        name: 'beweis', description: 'Erfasst ein Beweisstück',
-        options: [
-            { name: 'typ', description: 'z. B. Waffe, Foto', type: 'string', required: true, maxLength: 64 },
-            { name: 'beschreibung', description: 'Beschreibung', type: 'string', required: true, maxLength: 2000 },
-            { name: 'fall', description: 'Fallnummer, z. B. CASE-2026-ABC123', type: 'string', maxLength: 40 },
-        ],
-        async run(c) {
-            if (str(c, 'typ').length < 2 || str(c, 'beschreibung').length < 3)
-                return (0, format_1.errorReply)('Typ oder Beschreibung sind zu kurz.');
-            try {
-                const e = await c.api.asUser(c.discordId, 'POST', '/evidence', { type: str(c, 'typ'), description: str(c, 'beschreibung'), ...(str(c, 'fall') ? { caseRef: str(c, 'fall').toUpperCase() } : {}) });
-                return (0, format_1.okReply)(`Beweis **${e.number}** erfasst.`);
-            }
-            catch (err) {
-                return (0, errors_1.mapError)(err);
             }
         },
     },

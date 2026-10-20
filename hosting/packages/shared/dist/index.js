@@ -73,8 +73,6 @@ __export(index_exports, {
   ERLC_POSTALS: () => ERLC_POSTALS,
   ERLC_STATUSES: () => ERLC_STATUSES,
   ERLC_STATUS_LABEL: () => ERLC_STATUS_LABEL,
-  EVIDENCE_CUSTODY_STATES: () => EVIDENCE_CUSTODY_STATES,
-  EVIDENCE_TRANSITIONS: () => EVIDENCE_TRANSITIONS,
   EXAM_ATTEMPT_STATUSES: () => EXAM_ATTEMPT_STATUSES,
   EXAM_ATTEMPT_STATUS_LABEL: () => EXAM_ATTEMPT_STATUS_LABEL,
   EXAM_EXPORT_FORMAT: () => EXAM_EXPORT_FORMAT,
@@ -90,8 +88,6 @@ __export(index_exports, {
   FORM_QUESTION_TYPES: () => FORM_QUESTION_TYPES,
   HR_EVENTS: () => HR_EVENTS,
   HR_EVENT_LABEL: () => HR_EVENT_LABEL,
-  INVESTIGATION_STATUSES: () => INVESTIGATION_STATUSES,
-  INVESTIGATION_TRANSITIONS: () => INVESTIGATION_TRANSITIONS,
   InvalidTransitionError: () => InvalidTransitionError,
   JOIN_LOG_TOLERANCE_MS: () => JOIN_LOG_TOLERANCE_MS,
   LEGACY_DANGER: () => LEGACY_DANGER,
@@ -136,8 +132,6 @@ __export(index_exports, {
   ROBLOX_VERIFICATION_STATUSES: () => ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS: () => STATUS_KINDS,
   STATUS_LABEL: () => STATUS_LABEL,
-  SYNC_DATA_TYPES: () => SYNC_DATA_TYPES,
-  SYNC_DIRECTIONS: () => SYNC_DIRECTIONS,
   TICKET_ACTIONS: () => TICKET_ACTIONS,
   TICKET_ACTION_KEYS: () => TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS: () => TICKET_PLACEHOLDERS,
@@ -154,8 +148,6 @@ __export(index_exports, {
   WANTED_TRANSITIONS: () => WANTED_TRANSITIONS,
   WARNING_TEMPLATE: () => WARNING_TEMPLATE,
   WARNING_VARIABLES: () => WARNING_VARIABLES,
-  WEAPON_STATUSES: () => WEAPON_STATUSES,
-  WEAPON_STATUS_KEYS: () => WEAPON_STATUS_KEYS,
   WEEKDAYS: () => WEEKDAYS,
   WEEK_COUNTED_STATUSES: () => WEEK_COUNTED_STATUSES,
   WEEK_TIMEZONE: () => WEEK_TIMEZONE,
@@ -280,7 +272,6 @@ __export(index_exports, {
   playerKey: () => playerKey,
   poiForPlace: () => poiForPlace,
   policeReportFields: () => policeReportFields,
-  policyAllowsFlow: () => policyAllowsFlow,
   postalMatchRate: () => postalMatchRate,
   postalPosition: () => postalPosition,
   qualiPanelParts: () => qualiPanelParts,
@@ -340,14 +331,10 @@ var PERMISSION_CATALOG = {
   vehicles: ["view", "create", "edit", "archive"],
   /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
   fleet: ["view", "view_details", "edit", "assign", "manage_catalog", "manage"],
-  /** Waffenregister im MDT */
-  weapons: ["view", "create", "edit"],
   reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
   tickets: ["view", "create", "edit", "void"],
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
-  investigations: ["view", "create", "edit", "close"],
   wanted: ["view", "create", "edit", "activate", "clear"],
-  evidence: ["view", "create", "transfer", "release"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
   /** Beförderungssystem */
@@ -396,11 +383,7 @@ var PERMISSION_CATALOG = {
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
    * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
    */
-  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"],
-  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
-  connections: ["view", "manage"],
-  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
-  sync: ["view", "retry"]
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -487,29 +470,12 @@ var COMPLAINT_TRANSITIONS = {
   RESOLVED: ["CLOSED"],
   CLOSED: []
 };
-var INVESTIGATION_STATUSES = ["OPEN", "ACTIVE", "SUSPENDED", "CLOSED", "ARCHIVED"];
-var INVESTIGATION_TRANSITIONS = {
-  OPEN: ["ACTIVE", "CLOSED"],
-  ACTIVE: ["SUSPENDED", "CLOSED"],
-  SUSPENDED: ["ACTIVE", "CLOSED"],
-  CLOSED: ["ARCHIVED", "ACTIVE"],
-  ARCHIVED: []
-};
 var WANTED_STATUSES = ["ACTIVE", "CLEARED", "CANCELLED", "EXPIRED", "ARCHIVED"];
 var WANTED_TRANSITIONS = {
   ACTIVE: ["CLEARED", "CANCELLED", "EXPIRED"],
   CLEARED: ["ARCHIVED"],
   CANCELLED: ["ARCHIVED"],
   EXPIRED: ["ARCHIVED", "ACTIVE"],
-  ARCHIVED: []
-};
-var EVIDENCE_CUSTODY_STATES = ["COLLECTED", "STORED", "TRANSFERRED", "REVIEWED", "RELEASED", "ARCHIVED"];
-var EVIDENCE_TRANSITIONS = {
-  COLLECTED: ["STORED", "TRANSFERRED"],
-  STORED: ["TRANSFERRED", "REVIEWED", "RELEASED", "ARCHIVED"],
-  TRANSFERRED: ["STORED", "REVIEWED", "RELEASED"],
-  REVIEWED: ["STORED", "TRANSFERRED", "RELEASED", "ARCHIVED"],
-  RELEASED: ["ARCHIVED"],
   ARCHIVED: []
 };
 var APPLICATION_STATUSES = ["SUBMITTED", "SCREENING", "INTERVIEW", "PENDING_DECISION", "ACCEPTED", "REJECTED", "WITHDRAWN"];
@@ -1192,7 +1158,6 @@ var WORKFLOW_TRIGGERS = [
   { key: "complaint.create", label: "Beschwerde eingegangen", fields: ["title", "status"] },
   { key: "wanted.create", label: "Fahndung angelegt", fields: ["subject", "priority", "kind", "status"] },
   { key: "investigation.create", label: "Ermittlung er\xF6ffnet", fields: ["title", "status"] },
-  { key: "evidence.create", label: "Beweismittel erfasst", fields: ["description", "status"] },
   { key: "person.create", label: "Personenakte angelegt", fields: ["robloxUsername", "status"] },
   { key: "ticket.create", label: "Strafzettel ausgestellt", fields: ["number", "status"] },
   { key: "application.submit", label: "Bewerbung eingegangen", fields: ["status"] },
@@ -1867,13 +1832,13 @@ function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
 
 // src/modules.ts
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
-  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
+  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
   { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
   { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
-  { key: "investigations", name: "Ermittlungen", description: "Beschwerden, Ermittlungen, Beweismittel", permissionPrefixes: ["complaints", "investigations", "evidence"] },
+  { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
   { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
@@ -1900,22 +1865,6 @@ function moduleDependencyError(key3, enabled, state) {
   }
   return null;
 }
-var SYNC_DATA_TYPES = [
-  { key: "reports", module: "reports", label: "Berichte (eingereicht/freigegeben)", source: "reports" },
-  { key: "unit_status", module: "shift_logs", label: "Dienststatus der Beamten", source: "duty" },
-  { key: "shift_statistics", module: "shift_logs", label: "Wochenstatistik (Shift Logs)", source: "weekly-reset" },
-  { key: "team_overview", module: "shift_logs", label: "Team\xFCbersicht (wer ist im Dienst)", source: "duty" },
-  { key: "incidents", module: "cad", label: "Eins\xE4tze", source: null },
-  { key: "incident_status", module: "cad", label: "Einsatzstatus", source: null },
-  { key: "radio_messages", module: "cad", label: "Funkspr\xFCche", source: null }
-];
-var SYNC_DIRECTIONS = ["A_TO_B", "B_TO_A", "BIDIRECTIONAL", "NONE"];
-function policyAllowsFlow(p, from, to) {
-  if (!p.enabled || p.direction === "NONE") return false;
-  const forward = p.sourceServerId === from && p.targetServerId === to;
-  const backward = p.sourceServerId === to && p.targetServerId === from;
-  return forward && (p.direction === "A_TO_B" || p.direction === "BIDIRECTIONAL") || backward && (p.direction === "B_TO_A" || p.direction === "BIDIRECTIONAL");
-}
 var BOT_COMMAND_MODULES = {
   cad: "cad",
   bericht: "reports",
@@ -1938,8 +1887,6 @@ var BOT_COMMAND_MODULES = {
   einsatzstatus: "dispatch",
   einsatzzuweisen: "dispatch",
   beschwerde: "investigations",
-  ermittlung: "investigations",
-  beweis: "investigations",
   abmeldung: "personnel",
   leave: "personnel",
   ausbildung: "personnel",
@@ -2437,7 +2384,7 @@ var examExportSchema = import_zod4.z.object({ format: import_zod4.z.literal(EXAM
 var import_zod5 = require("zod");
 var LOG_CATEGORIES = [
   { key: "einsaetze", label: "Eins\xE4tze & Leitstelle", emoji: "\u{1F6A8}", modules: ["cad", "dispatch", "incidents", "erlc", "radio", "fleet"] },
-  { key: "akten", label: "Akten & Ermittlungen", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "weapons", "wanted", "investigations", "evidence", "reports", "tickets", "complaints"] },
+  { key: "akten", label: "Akten", emoji: "\u{1F5C2}\uFE0F", modules: ["persons", "vehicles", "wanted", "reports", "tickets", "complaints"] },
   { key: "bewerbungen", label: "Bewerbungen & Qualifikationen", emoji: "\u{1F4CB}", modules: ["applications", "qualifications"] },
   { key: "personal", label: "Personal & Ausbildung", emoji: "\u{1F46E}", modules: ["personnel", "promotion", "dienstnummer", "training", "exam", "academy", "sek"] },
   { key: "dienst", label: "Dienst, Abmeldungen & Berichte", emoji: "\u{1F552}", modules: ["team", "dutyreports", "leave"] },
@@ -2453,8 +2400,6 @@ var LOG_TYPES = {
   "fleet.model.update": "fleet",
   "fleet.model.create": "fleet",
   "fleet.config": "fleet",
-  "weapon.update": "weapons",
-  "weapon.create": "weapons",
   "person.photo": "persons",
   "mdt.config": "settings",
   "academy.config": "academy",
@@ -2516,8 +2461,6 @@ var LOG_TYPES = {
   "erlc.command": "erlc",
   "erlc.server.create": "erlc",
   "erlc.server.delete": "erlc",
-  "evidence.confirm": "evidence",
-  "evidence.create": "evidence",
   "exam.delete": "exam",
   "exam.grade": "exam",
   "exam.start": "exam",
@@ -2525,9 +2468,6 @@ var LOG_TYPES = {
   "incident.attach": "incidents",
   "incident.create": "incidents",
   "incident.update": "incidents",
-  "investigation.create": "investigations",
-  "investigation.person.add": "investigations",
-  "investigation.status": "investigations",
   "leave.config": "leave",
   "leave.request": "leave",
   "lock.takeover": "locks",
@@ -2780,7 +2720,6 @@ var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
 var mdtConfigSchema = import_zod7.z.object({
   licenses: import_zod7.z.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
   flags: import_zod7.z.array(option.extend({ tone: import_zod7.z.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
-  weaponTypes: import_zod7.z.array(option).max(40).refine(unique, "Schl\xFCssel doppelt"),
   genders: import_zod7.z.array(import_zod7.z.string().trim().min(1).max(30)).max(10)
 });
 var DEFAULT_MDT_CONFIG = {
@@ -2798,24 +2737,8 @@ var DEFAULT_MDT_CONFIG = {
     { key: "VIOLENT", label: "Gewaltbereit", tone: "warning" },
     { key: "GANG", label: "Bandenzugeh\xF6rigkeit", tone: "warning" }
   ],
-  weaponTypes: [
-    { key: "PISTOL", label: "Pistole" },
-    { key: "RIFLE", label: "Gewehr" },
-    { key: "SHOTGUN", label: "Schrotflinte" },
-    { key: "SMG", label: "Maschinenpistole" },
-    { key: "TASER", label: "Taser" },
-    { key: "KNIFE", label: "Messer" },
-    { key: "OTHER", label: "Sonstige" }
-  ],
   genders: ["M\xE4nnlich", "Weiblich", "Divers"]
 };
-var WEAPON_STATUSES = [
-  { key: "REGISTERED", label: "Registriert", tone: "success" },
-  { key: "STOLEN", label: "Gestohlen", tone: "danger" },
-  { key: "SEIZED", label: "Beschlagnahmt", tone: "warning" },
-  { key: "DESTROYED", label: "Vernichtet", tone: "neutral" }
-];
-var WEAPON_STATUS_KEYS = WEAPON_STATUSES.map((s) => s.key);
 var personDetailsSchema = import_zod7.z.object({
   fullName: import_zod7.z.string().trim().max(80).nullish(),
   dateOfBirth: import_zod7.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
@@ -3511,8 +3434,6 @@ function aiCheck(answers, durationSec) {
   ERLC_POSTALS,
   ERLC_STATUSES,
   ERLC_STATUS_LABEL,
-  EVIDENCE_CUSTODY_STATES,
-  EVIDENCE_TRANSITIONS,
   EXAM_ATTEMPT_STATUSES,
   EXAM_ATTEMPT_STATUS_LABEL,
   EXAM_EXPORT_FORMAT,
@@ -3528,8 +3449,6 @@ function aiCheck(answers, durationSec) {
   FORM_QUESTION_TYPES,
   HR_EVENTS,
   HR_EVENT_LABEL,
-  INVESTIGATION_STATUSES,
-  INVESTIGATION_TRANSITIONS,
   InvalidTransitionError,
   JOIN_LOG_TOLERANCE_MS,
   LEGACY_DANGER,
@@ -3574,8 +3493,6 @@ function aiCheck(answers, durationSec) {
   ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS,
   STATUS_LABEL,
-  SYNC_DATA_TYPES,
-  SYNC_DIRECTIONS,
   TICKET_ACTIONS,
   TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS,
@@ -3592,8 +3509,6 @@ function aiCheck(answers, durationSec) {
   WANTED_TRANSITIONS,
   WARNING_TEMPLATE,
   WARNING_VARIABLES,
-  WEAPON_STATUSES,
-  WEAPON_STATUS_KEYS,
   WEEKDAYS,
   WEEK_COUNTED_STATUSES,
   WEEK_TIMEZONE,
@@ -3718,7 +3633,6 @@ function aiCheck(answers, durationSec) {
   playerKey,
   poiForPlace,
   policeReportFields,
-  policyAllowsFlow,
   postalMatchRate,
   postalPosition,
   qualiPanelParts,

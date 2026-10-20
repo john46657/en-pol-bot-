@@ -27,14 +27,11 @@ const KEY = 'mdt.config';
 const PHOTO_MAX = 8 * 1024 * 1024;
 const ACTIVE_WANTED = ['ACTIVE'];
 const dateOnly = (d) => (d ? d.toISOString().slice(0, 10) : null);
-const normSerial = (s) => s.trim().toUpperCase().replace(/\s+/g, '');
 /** Welche verknüpften Akten das Profil zeigt – und mit welchem Recht. */
 const LINKED = [
     { type: 'Incident', perm: 'incidents.view', tab: 'incidents' },
     { type: 'Report', perm: 'reports.view', tab: 'reports' },
-    { type: 'Investigation', perm: 'investigations.view', tab: 'investigations' },
     { type: 'Complaint', perm: 'complaints.view', tab: 'complaints' },
-    { type: 'Evidence', perm: 'evidence.view', tab: 'evidence' },
 ];
 /**
  * Polizei-MDT: Bürger-, Fahrzeug- und Waffenakten in der Ansicht eines Streifen-Terminals.
@@ -110,10 +107,9 @@ let MdtService = class MdtService {
         if (!p)
             throw new errors_1.AppError('NOT_FOUND', 'Person nicht gefunden.');
         const can = async (perm) => this.perms.has(actor.userId, perm);
-        const [canVehicles, canWeapons, canWanted] = await Promise.all([can('vehicles.view'), can('weapons.view'), can('wanted.view')]);
-        const [vehicles, weapons, warrants, links, timeline] = await Promise.all([
+        const [canVehicles, canWanted] = await Promise.all([can('vehicles.view'), can('wanted.view')]);
+        const [vehicles, warrants, links, timeline] = await Promise.all([
             canVehicles ? this.prisma.vehicle.findMany({ where: { ownerId: id }, orderBy: { plate: 'asc' } }) : null,
-            canWeapons ? this.prisma.weapon.findMany({ where: { ownerId: id }, orderBy: { serial: 'asc' } }) : null,
             canWanted ? this.prisma.wantedRecord.findMany({ where: { personId: id }, orderBy: { createdAt: 'desc' }, take: 100 }) : null,
             this.prisma.recordLink.findMany({ where: { personId: id }, orderBy: { createdAt: 'desc' }, take: 300 }),
             this.timeline.list('Person', id),
@@ -131,21 +127,17 @@ let MdtService = class MdtService {
                 ? (await this.prisma.incident.findMany({ where: { id: { in: ids } } })).map((r) => ({ id: r.id, ref: r.number, title: r.title, status: r.status, createdAt: r.createdAt }))
                 : l.type === 'Report'
                     ? (await this.prisma.report.findMany({ where: { id: { in: ids } } })).map((r) => ({ id: r.id, ref: r.number, title: r.title, status: r.status, createdAt: r.createdAt }))
-                    : l.type === 'Investigation'
-                        ? (await this.prisma.investigation.findMany({ where: { id: { in: ids } } })).map((r) => ({ id: r.id, ref: r.caseNumber, title: r.title, status: r.status, createdAt: r.createdAt }))
-                        : l.type === 'Complaint'
-                            ? (await this.prisma.complaint.findMany({ where: { id: { in: ids } } })).map((r) => ({ id: r.id, ref: r.number, title: r.category, status: r.status, createdAt: r.createdAt }))
-                            : (await this.prisma.evidence.findMany({ where: { id: { in: ids } } })).map((r) => ({ id: r.id, ref: r.number, title: r.description, status: r.custodyState, createdAt: r.createdAt }));
+                    : (await this.prisma.complaint.findMany({ where: { id: { in: ids } } })).map((r) => ({ id: r.id, ref: r.number, title: r.category, status: r.status, createdAt: r.createdAt }));
             linked[l.tab] = rows.map((r) => ({ ...r, role: role(r.id) })).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         }
         const active = warrants?.filter((w) => ACTIVE_WANTED.includes(w.status)).length ?? 0;
         return {
             person: { ...this.citizen(p, active), notes: p.notes, custom: p.custom, createdAt: p.createdAt },
             counts: {
-                activeWarrants: warrants ? active : null, vehicles: vehicles?.length ?? null, weapons: weapons?.length ?? null,
-                incidents: linked.incidents?.length ?? null, reports: linked.reports?.length ?? null, investigations: linked.investigations?.length ?? null, evidence: linked.evidence?.length ?? null,
+                activeWarrants: warrants ? active : null, vehicles: vehicles?.length ?? null,
+                incidents: linked.incidents?.length ?? null, reports: linked.reports?.length ?? null,
             },
-            vehicles, weapons, warrants, ...linked, timeline,
+            vehicles, warrants, ...linked, timeline,
         };
     }
     async updateCitizen(actor, id, version, d) {
@@ -248,56 +240,6 @@ let MdtService = class MdtService {
         const incIds = links.filter((l) => l.entityType === 'Incident').map((l) => l.entityId);
         const incidents = incIds.length && (await this.perms.has(actor.userId, 'incidents.view')) ? await this.prisma.incident.findMany({ where: { id: { in: incIds } }, select: { id: true, number: true, title: true, status: true, createdAt: true } }) : [];
         return { vehicle: { ...v, owner: v.owner ? { ...v.owner, photoUrl: v.owner.photoId ? `/api/v1/media/${v.owner.photoId}` : null } : null }, wanted, incidents, timeline };
-    }
-    // ───────── Waffen ─────────
-    async weapons(p) {
-        const q = p.q?.trim();
-        const where = {
-            ...(0, guild_context_1.recordWhere)(), ...(p.ownerId ? { ownerId: p.ownerId } : {}), ...(p.status ? { status: p.status } : {}),
-            ...(q ? { OR: [{ serial: { contains: normSerial(q) } }, { model: { contains: q, mode: 'insensitive' } }, { owner: { OR: [{ robloxUsername: { contains: q, mode: 'insensitive' } }, { fullName: { contains: q, mode: 'insensitive' } }] } }] } : {}),
-        };
-        const [items, total] = await Promise.all([
-            this.prisma.weapon.findMany({ where, include: { owner: { select: { id: true, robloxUsername: true, fullName: true } } }, orderBy: { serial: 'asc' }, ...(0, pagination_1.skipTake)(p) }),
-            this.prisma.weapon.count({ where }),
-        ]);
-        return (0, pagination_1.pageResult)(items, total, p);
-    }
-    async checkWeapon(d) {
-        const cfg = await this.config();
-        if (d.type && !cfg.weaponTypes.some((t) => t.key === d.type))
-            throw new errors_1.AppError('VALIDATION_FAILED', `Unbekannte Waffenart „${d.type}“.`);
-        if (d.ownerId && !(await this.prisma.person.findFirst({ where: { id: d.ownerId, ...(0, guild_context_1.recordWhere)() }, select: { id: true } })))
-            throw new errors_1.AppError('NOT_FOUND', 'Besitzer nicht gefunden.');
-    }
-    async createWeapon(actor, d) {
-        await this.checkWeapon(d);
-        const serial = normSerial(d.serial);
-        const serverId = (0, guild_context_1.recordSpace)() ?? null;
-        if (await this.prisma.weapon.findFirst({ where: { serial, serverId } }))
-            throw new errors_1.AppError('CONFLICT', `Die Seriennummer ${serial} ist schon registriert.`);
-        return this.prisma.$transaction(async (tx) => {
-            const w = await tx.weapon.create({ data: { ...d, serial, serverId } });
-            if (w.ownerId)
-                await this.timeline.add(tx, { entityType: 'Person', entityId: w.ownerId, action: 'weapon.linked', summary: `Waffe ${serial} registriert`, actorId: actor.userId });
-            await this.audit.record(actor, { action: 'weapon.create', module: 'weapons', entityType: 'Weapon', entityId: w.id, after: w }, tx);
-            return w;
-        });
-    }
-    async updateWeapon(actor, id, version, d) {
-        await this.checkWeapon(d);
-        const before = await this.prisma.weapon.findFirst({ where: { id, ...(0, guild_context_1.recordWhere)() } });
-        if (!before)
-            throw new errors_1.AppError('NOT_FOUND', 'Waffe nicht gefunden.');
-        return this.prisma.$transaction(async (tx) => {
-            const r = await tx.weapon.updateMany({ where: { id, version }, data: { ...d, version: { increment: 1 } } });
-            if (!r.count)
-                throw new errors_1.AppError('CONFLICT', 'Der Eintrag wurde inzwischen geändert. Bitte neu laden.');
-            const after = await tx.weapon.findUniqueOrThrow({ where: { id } });
-            if (d.ownerId !== undefined && d.ownerId !== before.ownerId && d.ownerId)
-                await this.timeline.add(tx, { entityType: 'Person', entityId: d.ownerId, action: 'weapon.linked', summary: `Waffe ${after.serial} zugeordnet`, actorId: actor.userId });
-            await this.audit.record(actor, { action: 'weapon.update', module: 'weapons', entityType: 'Weapon', entityId: id, before: Object.fromEntries(Object.keys(d).map((k) => [k, before[k]])), after: d }, tx);
-            return after;
-        });
     }
     // ───────── Haftbefehle / Fahndungen ─────────
     async warrants(status) {
