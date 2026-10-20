@@ -95,6 +95,7 @@ export class HrTrainingController {
 // ───────────── Prüfungen ─────────────
 const answersBody = z.object({ answers: z.record(z.string().max(40), z.unknown()), flagged: z.array(z.string().max(40)).max(200).optional() });
 const gradeBody = z.object({ scores: z.record(z.string().max(40), z.number().min(0).max(100)), feedback: z.string().max(2000).optional() });
+const examPost = z.object({ channelId: z.string().regex(/^\d{15,25}$/, 'Bitte einen Discord-Kanal wählen.'), pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/)).max(10).default([]), message: z.string().trim().max(1500).optional() });
 const attemptsQ = z.object({ examId: uuid.optional(), status: z.enum(EXAM_ATTEMPT_STATUSES).optional() });
 
 @ApiTags('hr')
@@ -107,6 +108,7 @@ export class HrExamController {
   @Put('exams/:id') @RequirePermission('exam.manage') save(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(examSchema)) b: ExamInput) { return this.s.save(a, b, id); }
   @Delete('exams/:id') @HttpCode(204) @RequirePermission('exam.manage') remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.remove(a, id); }
   @Post('exams/:id/duplicate') @RequirePermission('exam.create') duplicate(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.duplicate(a, id); }
+  @Post('exams/:id/discord') @HttpCode(200) @RequirePermission('exam.manage') postDiscord(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(examPost)) b: z.infer<typeof examPost>) { return this.s.postToDiscord(a, id, b); }
   @Get('exams/:id/results') @RequirePermission('exam.view') results(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.results(a, id); }
   @Post('exams/:id/start') @HttpCode(200) @RequirePermission('exam.view') start(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.start(a, id); }
   @Get('attempts') @RequirePermission('exam.view') attempts(@CurrentActor() a: Actor, @Query(zodBody(attemptsQ)) q: z.infer<typeof attemptsQ>) { return this.s.attempts(a, q); }
