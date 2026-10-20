@@ -6,7 +6,7 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { hasPending, onRejected, onSaved, pendingBody, queueSave } from '../../lib/autosave';
 import { guildName, useGuilds, useServer } from '../../lib/guilds';
-import { ACTION_LABELS, MODULE_LABELS } from '../../lib/permLabels';
+import { EDITOR_CATALOG, ACTION_LABELS, MODULE_LABELS } from '../../lib/permLabels';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, Input, PageHeader, SkeletonRows, Tabs, Textarea } from '../../components/ui';
 import { RolePicker } from '../../components/DiscordPickers';
 
@@ -159,10 +159,10 @@ function RoleEditor({ role, editable, scope, onMeta, onPerm, onDuplicate, onDele
   const wildcard = effectOf(role, '*') === 'ALLOW';
   const [pf, setPf] = useState('');
   const f = pf.toLowerCase();
-  const modules = Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => ({ mod, actions: (actions as readonly string[]).filter((a) => !f || `${mod}.${a} ${MODULE_LABELS[mod] ?? ''} ${ACTION_LABELS[a] ?? ''}`.toLowerCase().includes(f)) })).filter((m) => m.actions.length);
-  const allKeys = Object.entries(PERMISSION_CATALOG).flatMap(([m, acts]) => (acts as readonly string[]).map((a) => `${m}.${a}`));
+  const modules = Object.entries(EDITOR_CATALOG).map(([mod, actions]) => ({ mod, actions: (actions as readonly string[]).filter((a) => !f || `${mod}.${a} ${MODULE_LABELS[mod] ?? ''} ${ACTION_LABELS[a] ?? ''}`.toLowerCase().includes(f)) })).filter((m) => m.actions.length);
+  const allKeys = Object.entries(EDITOR_CATALOG).flatMap(([m, acts]) => (acts as readonly string[]).map((a) => `${m}.${a}`));
   const allowed = allKeys.filter((k) => grantedOf(role, k) === 'ALLOW').length, denied = allKeys.filter((k) => grantedOf(role, k) === 'DENY').length;
-  const mods = Object.keys(PERMISSION_CATALOG);
+  const mods = Object.keys(EDITOR_CATALOG);
   const everything = allowed === allKeys.length;
   /** Alles auswählen: „alle“ jedes Bereichs erlauben und einzelne Verweigerungen aufheben; nochmal klicken leert alles. */
   const toggleEverything = () => {
@@ -219,7 +219,7 @@ function Matrix({ roles, editable, onSet }: { roles: Role[]; editable: (r: Role)
   const [filter, setFilter] = useState('');
   const [hidden, setHidden] = useState<string[]>([]);
   const shown = roles.filter((r) => !hidden.includes(r.id));
-  const rows = Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => ({ mod, keys: actions.map((a) => `${mod}.${a}`).filter((k) => !filter || `${k} ${MODULE_LABELS[mod]} ${ACTION_LABELS[k.slice(mod.length + 1)] ?? ''}`.toLowerCase().includes(filter.toLowerCase())) })).filter((g) => g.keys.length);
+  const rows = Object.entries(EDITOR_CATALOG).map(([mod, actions]) => ({ mod, keys: actions.map((a) => `${mod}.${a}`).filter((k) => !filter || `${k} ${MODULE_LABELS[mod]} ${ACTION_LABELS[k.slice(mod.length + 1)] ?? ''}`.toLowerCase().includes(filter.toLowerCase())) })).filter((g) => g.keys.length);
   const granted = (r: Role, k: string) => {
     const own = effectOf(r, k);
     if (own !== 'NONE') return own;

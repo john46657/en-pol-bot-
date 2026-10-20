@@ -1,3 +1,10 @@
+import { PERMISSION_CATALOG } from '@enrp/shared';
+
+/** Bereiche, die im Rollen-/Rechte-Editor nicht angeboten werden (werden auf diesem Server nicht genutzt). */
+export const HIDDEN_PERMISSION_MODULES: readonly string[] = ['investigations', 'evidence', 'weapons', 'connections'];
+/** Rechte-Katalog für Editoren (Rollen, Matrix, Benutzer-Ausnahmen) – ohne ausgeblendete Bereiche. */
+export const EDITOR_CATALOG = Object.fromEntries(Object.entries(PERMISSION_CATALOG).filter(([m]) => !HIDDEN_PERMISSION_MODULES.includes(m))) as Record<string, readonly string[]>;
+
 /** Lesbare Namen für die Rechte-Matrix (Schlüssel bleiben sichtbar für Profis). */
 export const MODULE_LABELS: Record<string, string> = {
   dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', cad: '🗺️ CAD-Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
