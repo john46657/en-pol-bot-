@@ -143,4 +143,27 @@ describe('Prüfungen: überarbeitetes System', () => {
     expect((await u.get('/api/v1/hr/exams')).body.find((e: { id: string }) => e.id === id).me.state).toBe('NO_PROFILE');
     expect((await u.post(`/api/v1/hr/exams/${id}/start`)).status).toBe(409);
   });
+  it('Prüfung in Discord senden: nur aktive, mit Link-Button zur Prüfung; Teilnehmer dürfen es nicht', async () => {
+    const staff = (await login(app, 'ex_staff')).agent;
+    const cadet = (await login(app, 'ex_cadet')).agent;
+    const draft = await staff.post('/api/v1/hr/exams').send({ title: 'Discord-Entwurf', questions, active: false });
+    exams.push(draft.body.id);
+    const CH = '930000000000000001', ROLE = '930000000000000002';
+    expect((await staff.post(`/api/v1/hr/exams/${draft.body.id}/discord`).send({ channelId: CH })).status).toBe(409);
+    const live = await staff.post('/api/v1/hr/exams').send({ title: 'Discord-Prüfung', description: 'Grundwissen', questions, timeLimitMin: 20 });
+    exams.push(live.body.id);
+    expect((await cadet.post(`/api/v1/hr/exams/${live.body.id}/discord`).send({ channelId: CH })).status).toBe(403);
+    expect((await staff.post(`/api/v1/hr/exams/${live.body.id}/discord`).send({})).status).toBe(400);
+    const r = await staff.post(`/api/v1/hr/exams/${live.body.id}/discord`).send({ channelId: CH, pingRoleIds: [ROLE], message: 'Bis Freitag!' });
+    expect(r.status).toBe(200);
+    expect(r.body.url).toMatch(new RegExp(`/trainings/exams/${live.body.id}$`));
+    const out = await prisma.discordOutbox.findFirst({ where: { type: 'message.post' }, orderBy: { createdAt: 'desc' } });
+    const p = out!.payload as { channelId: string; message: { content: string; mentionRoles: string[]; embeds: { title: string; description: string; fields: { name: string; value: string }[] }[]; buttons: { url: string; label: string }[] } };
+    expect(p.channelId).toBe(CH);
+    expect(p.message.content).toBe(`<@&${ROLE}>`);
+    expect(p.message.mentionRoles).toEqual([ROLE]);
+    expect(p.message.embeds[0]).toMatchObject({ title: '📝 Prüfung: Discord-Prüfung', description: 'Bis Freitag!\n\nGrundwissen' });
+    expect(p.message.embeds[0]!.fields.map((f) => f.value)).toEqual(expect.arrayContaining(['4', '20 Min.']));
+    expect(p.message.buttons[0]).toMatchObject({ label: 'Zur Prüfung im Dashboard', url: r.body.url });
+  });
 });

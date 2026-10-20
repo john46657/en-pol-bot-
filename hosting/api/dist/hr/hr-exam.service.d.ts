@@ -190,6 +190,15 @@ export declare class HrExamService {
         availableUntil: Date | null;
         notifyExaminers: boolean;
     }>;
+    /** Prüfung in einen Discord-Kanal schicken: Eckdaten + Link-Button direkt zur Prüfung im Dashboard (optional mit Rollen-Ping). */
+    postToDiscord(actor: Actor, id: string, b: {
+        channelId: string;
+        pingRoleIds: string[];
+        message?: string;
+    }): Promise<{
+        ok: boolean;
+        url: string;
+    }>;
     remove(actor: Actor, id: string): Promise<void>;
     /** Prüfung starten (oder laufenden Versuch fortsetzen). Liefert Fragen OHNE Lösungen. */
     start(actor: Actor, examId: string): Promise<{

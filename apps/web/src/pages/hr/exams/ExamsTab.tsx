@@ -1,12 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, Copy, Download, FileUp, Pencil, Play, Plus, Search, Sparkles } from 'lucide-react';
+import { BarChart3, Copy, Download, FileUp, Pencil, Play, Plus, Search, Send, Sparkles } from 'lucide-react';
 import { EXAM_EXPORT_FORMAT, examSchema } from '@enrp/shared';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 import { errText } from '../../../lib/tickets';
-import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, Select, SkeletonRows } from '../../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, Field, fmt, Input, Modal, Select, SkeletonRows, Textarea } from '../../../components/ui';
+import { ChannelPicker, RolePicker } from '../../../components/DiscordPickers';
 import { download, fileSafe, Meter, plural, STATE_INFO, StatTile, useExams, type ExamDetail, type ExamListItem, type ExamState } from './common';
 import { EXAM_TEMPLATE } from './template';
 
@@ -24,6 +25,7 @@ export function ExamsTab() {
   const [category, setCategory] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [err, setErr] = useState<string>();
+  const [send, setSend] = useState<ExamListItem>();
   const file = useRef<HTMLInputElement>(null);
   const duplicate = useMutation({
     mutationFn: (id: string) => api<{ id: string }>(`/hr/exams/${id}/duplicate`, { method: 'POST' }),
@@ -152,21 +154,47 @@ export function ExamsTab() {
               <section key={cat || '-'} aria-label={cat || 'Ohne Kategorie'}>
                 {(ordered.length > 1 || cat) && <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{cat || 'Ohne Kategorie'} <span className="font-normal">· {items.length}</span></h3>}
                 <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {items.map((e) => <ExamCard key={e.id} e={e} onDuplicate={can('exam.create') ? () => duplicate.mutate(e.id) : undefined} onExport={e.canEdit ? () => exportExam.mutate(e.id) : undefined} busy={duplicate.isPending || exportExam.isPending} />)}
+                  {items.map((e) => <ExamCard key={e.id} e={e} onDuplicate={can('exam.create') ? () => duplicate.mutate(e.id) : undefined} onExport={e.canEdit ? () => exportExam.mutate(e.id) : undefined} onSend={e.canEdit ? () => setSend(e) : undefined} busy={duplicate.isPending || exportExam.isPending} />)}
                 </ul>
               </section>
             ))}
           </div>
         )}
       </Card>
+      {send && <SendToDiscord exam={send} onClose={() => setSend(undefined)} />}
     </div>
+  );
+}
+
+/** Prüfung in einen Discord-Kanal schicken – mit Button, der direkt zur Prüfung im Dashboard führt. */
+function SendToDiscord({ exam, onClose }: { exam: ExamListItem; onClose: () => void }) {
+  const [channelId, setChannelId] = useState<string | null>(null);
+  const [pingRoleIds, setPing] = useState<string[]>([]);
+  const [message, setMessage] = useState('');
+  const post = useMutation({ mutationFn: () => api(`/hr/exams/${exam.id}/discord`, { body: { channelId, pingRoleIds, ...(message.trim() ? { message: message.trim() } : {}) } }) });
+  return (
+    <Modal open title={`„${exam.title}“ in Discord senden`} onClose={onClose}>
+      <div className="grid gap-3">
+        {!exam.active && <p role="alert" className="rounded-md border border-warning/40 bg-warning/10 p-2 text-sm text-warning">Die Prüfung ist noch ein Entwurf. Aktiviere sie zuerst (Bearbeiten → aktiv), sonst kann sie über den Link niemand starten.</p>}
+        <p className="text-sm text-muted">Der Bot postet die Eckdaten (Fragen, Zeit, Bestehensgrenze, Versuche) mit dem Button „Zur Prüfung im Dashboard“ – ein Klick öffnet die Prüfung direkt.</p>
+        <div className="grid gap-1"><span className="text-xs font-medium text-muted">Discord-Kanal</span><ChannelPicker ariaLabel="Discord-Kanal" value={channelId} onChange={setChannelId} /></div>
+        <div className="grid gap-1"><span className="text-xs font-medium text-muted">Rollen pingen (optional)</span><RolePicker ariaLabel="Rollen pingen" value={pingRoleIds} max={10} onChange={setPing} /></div>
+        <Field label="Zusätzlicher Text (optional)">{(id) => <Textarea id={id} rows={3} maxLength={1500} value={message} placeholder="z. B. Bitte bis Freitag ablegen." onChange={(e) => setMessage(e.target.value)} />}</Field>
+        {post.error && <p role="alert" className="text-sm text-danger">{errText(post.error)}</p>}
+        {post.isSuccess && <p role="status" className="text-sm text-success">✅ Wird in Discord gepostet.</p>}
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>{post.isSuccess ? 'Schließen' : 'Abbrechen'}</Button>
+          {!post.isSuccess && <Button disabled={!channelId || !exam.active || post.isPending} onClick={() => post.mutate()}><Send size={14} />Senden</Button>}
+        </div>
+      </div>
+    </Modal>
   );
 }
 
 const avg = (xs: (number | null)[]) => { const v = xs.filter((x): x is number => x !== null); return v.length ? `${Math.round(v.reduce((n, x) => n + x, 0) / v.length)} %` : null; };
 const best = (all: ExamListItem[]) => { const v = all.map((e) => e.me.bestPercent).filter((x): x is number => x !== null); return v.length ? `${Math.max(...v)} %` : '—'; };
 
-function ExamCard({ e, onDuplicate, onExport, busy }: { e: ExamListItem; onDuplicate?: () => void; onExport?: () => void; busy: boolean }) {
+function ExamCard({ e, onDuplicate, onExport, onSend, busy }: { e: ExamListItem; onDuplicate?: () => void; onExport?: () => void; onSend?: () => void; busy: boolean }) {
   const nav = useNavigate();
   const st = e.active ? STATE_INFO[e.me.state] : STATE_INFO.INACTIVE;
   const canTake = e.active && OPEN.includes(e.me.state);
@@ -209,6 +237,7 @@ function ExamCard({ e, onDuplicate, onExport, busy }: { e: ExamListItem; onDupli
         <span className="ml-auto flex gap-0.5">
           {e.canEdit && <Button size="sm" variant="ghost" aria-label={`${e.title} bearbeiten`} title="Bearbeiten" onClick={() => nav(`/trainings/exams/${e.id}/edit`)}><Pencil size={14} /></Button>}
           {onDuplicate && e.canEdit && <Button size="sm" variant="ghost" aria-label={`${e.title} duplizieren`} title="Duplizieren" disabled={busy} onClick={onDuplicate}><Copy size={14} /></Button>}
+          {onSend && <Button size="sm" variant="ghost" aria-label={`${e.title} in Discord senden`} title="In Discord senden" onClick={onSend}><Send size={14} /></Button>}
           {onExport && <Button size="sm" variant="ghost" aria-label={`${e.title} exportieren`} title="Als Datei exportieren" disabled={busy} onClick={onExport}><Download size={14} /></Button>}
         </span>
       </div>

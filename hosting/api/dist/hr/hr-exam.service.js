@@ -15,6 +15,7 @@ const node_crypto_1 = require("node:crypto");
 const shared_1 = require("@enrp/shared");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
+const web_url_1 = require("../common/web-url");
 const hr_core_service_1 = require("./hr-core.service");
 const GRACE_MS = 30_000;
 const shuffled = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) {
@@ -177,6 +178,32 @@ let HrExamService = class HrExamService {
         const e = await this.prisma.hrExam.create({ data: { ...rest, title: `Kopie von ${src.title}`.slice(0, 120), active: false, questions: src.questions } });
         await this.core.audit.record(actor, { action: 'exam.duplicate', module: 'exam', entityType: 'HrExam', entityId: e.id, after: { from: id, title: e.title } });
         return e;
+    }
+    /** Prüfung in einen Discord-Kanal schicken: Eckdaten + Link-Button direkt zur Prüfung im Dashboard (optional mit Rollen-Ping). */
+    async postToDiscord(actor, id, b) {
+        const e = await this.prisma.hrExam.findUnique({ where: { id } });
+        if (!e)
+            throw new errors_1.AppError('NOT_FOUND', 'Prüfung nicht gefunden.');
+        if (!e.active)
+            throw new errors_1.AppError('CONFLICT', 'Die Prüfung ist noch ein Entwurf – erst aktivieren (Bearbeiten → aktiv), dann in Discord senden.');
+        const total = (0, shared_1.parseQuestions)(e.questions).length;
+        const count = e.questionCount > 0 && e.questionCount < total ? `${e.questionCount} von ${total}` : String(total);
+        const url = (0, web_url_1.webUrl)(`/trainings/exams/${e.id}`);
+        const description = [b.message, e.description].filter(Boolean).join('\n\n').slice(0, 4000) || undefined;
+        await this.core.discord.postMessage(`exam-${e.id}`, b.channelId, {
+            ...(b.pingRoleIds.length ? { content: b.pingRoleIds.map((r) => `<@&${r}>`).join(' '), mentionRoles: b.pingRoleIds } : {}),
+            embeds: [{ title: `📝 Prüfung: ${e.title}`.slice(0, 256), url, description, color: 0x3b82f6, timestamp: new Date().toISOString(), fields: [
+                        { name: '❓ Fragen', value: count, inline: true },
+                        { name: '⏱️ Zeit', value: e.timeLimitMin ? `${e.timeLimitMin} Min.` : 'ohne Zeitlimit', inline: true },
+                        { name: '🎯 Bestanden ab', value: `${e.passPercent} %`, inline: true },
+                        { name: '🔁 Versuche', value: String(e.maxAttempts), inline: true },
+                        ...(e.category ? [{ name: '🗂️ Kategorie', value: e.category.slice(0, 1024), inline: true }] : []),
+                        ...(e.availableUntil ? [{ name: '📅 Verfügbar bis', value: berlin(e.availableUntil), inline: true }] : []),
+                    ] }],
+            buttons: [{ id: 'link', label: 'Zur Prüfung im Dashboard', emoji: '📝', style: 'secondary', url }],
+        }, { forceNew: true });
+        await this.core.audit.record(actor, { action: 'exam.post_discord', module: 'exam', entityType: 'HrExam', entityId: id, after: { channelId: b.channelId, pingRoleIds: b.pingRoleIds } });
+        return { ok: true, url };
     }
     async remove(actor, id) {
         const e = await this.prisma.hrExam.delete({ where: { id } }).catch(() => null);

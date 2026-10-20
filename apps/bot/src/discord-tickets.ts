@@ -18,6 +18,7 @@ export function embedOf(e: EmbedSpec, stamp = true) {
   if (e.color !== undefined) b.setColor(e.color);
   if (https(e.thumbnail)) b.setThumbnail(e.thumbnail!);
   if (https(e.image)) b.setImage(e.image!);
+  if (e.url && /^https?:\/\//.test(e.url)) b.setURL(e.url); // Titel als Link
   if (e.author) b.setAuthor({ name: e.author.slice(0, 256), ...(https(e.authorIcon) ? { iconURL: e.authorIcon } : {}) });
   if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...(https(e.footerIcon) ? { iconURL: e.footerIcon } : {}) });
   if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f) => ({ name: f.name.slice(0, 256) || '​', value: f.value.slice(0, 1024) || '​', inline: f.inline ?? false })));
