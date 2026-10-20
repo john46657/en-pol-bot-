@@ -110,7 +110,6 @@ test('MDT: permission-aware search and quick action create an incident', async (
   await uiLogin(p2, u.username, u.password);
   await p2.goto('/mdt');
   await expect(p2.getByRole('button', { name: 'Bericht anlegen' })).toBeVisible();
-  await expect(p2.getByRole('button', { name: 'Ermittlung anlegen' })).toHaveCount(0);
   await expect(p2.getByRole('button', { name: 'Fahndung anlegen' })).toHaveCount(0);
   await ctx.close();
 });

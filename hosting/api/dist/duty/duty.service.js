@@ -18,7 +18,6 @@ const errors_1 = require("../common/errors");
 const discord_service_1 = require("../discord/discord.service");
 const shifts_1 = require("./shifts");
 const guild_context_1 = require("../common/guild-context");
-const sync_service_1 = require("../multi-server/sync.service");
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 let DutyService = class DutyService {
     prisma;
@@ -26,14 +25,12 @@ let DutyService = class DutyService {
     rt;
     discord;
     shifts;
-    sync;
-    constructor(prisma, audit, rt, discord, shifts, sync) {
+    constructor(prisma, audit, rt, discord, shifts) {
         this.prisma = prisma;
         this.audit = audit;
         this.rt = rt;
         this.discord = discord;
         this.shifts = shifts;
-        this.sync = sync;
     }
     async setStatus(actor, status, d, targetUserId) {
         const userId = targetUserId ?? actor.userId;
@@ -68,13 +65,6 @@ let DutyService = class DutyService {
                 const pers = await tx.personnel.findFirst({ where: { userId } });
                 // servereigene Dienstzeit: Akten-Bereich des Servers (bzw. der gemeinsamen Shift-Log-Gruppe); ohne Server gemeinsamer Bestand
                 created = await tx.dutySession.create({ data: { userId, serverId: (0, guild_context_1.recordSpace)() ?? null, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
-            }
-            // Dienststatus an verbundene Server (nur bei aktiver Freigabe „unit_status“ bzw. „team_overview“; Outbox in derselben Transaktion)
-            if ((0, guild_context_1.currentGuild)()) {
-                const who = await tx.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { ...(0, guild_context_1.onePersonnel)(), select: { callsign: true, rank: true } } } });
-                const payload = { userId, name: who?.displayName ?? '—', callsign: who?.personnel[0]?.callsign ?? null, rank: who?.personnel[0]?.rank ?? null, status, since: at.toISOString() };
-                for (const dataType of ['unit_status', 'team_overview'])
-                    await this.sync.emit(tx, { dataType, eventType: 'duty.status', recordId: userId, version: (0, sync_service_1.versionAt)(at), payload });
             }
             await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
             return created ?? { status: 'OFF_DUTY' };
@@ -329,6 +319,6 @@ let DutyService = class DutyService {
 exports.DutyService = DutyService;
 exports.DutyService = DutyService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, shifts_1.ShiftsService, sync_service_1.SyncService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, shifts_1.ShiftsService])
 ], DutyService);
 //# sourceMappingURL=duty.service.js.map

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
-import { Car, FileText, Fingerprint, Flag, Search, Siren, type LucideIcon } from 'lucide-react';
+import { Car, FileText, Fingerprint, Flag, Siren, type LucideIcon } from 'lucide-react';
 import { api, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useRealtime } from '../lib/realtime';
@@ -14,18 +14,17 @@ import type { ResourceConfig } from '../components/ResourcePage';
 
 type Row = Record<string, unknown> & { id: string };
 interface Hit { type: string; id: string; label: string; sub?: string }
-const ROUTE: Record<string, string> = { person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', investigation: 'investigations', wanted: 'wanted', evidence: 'evidence', personnel: 'personnel' };
-const TYPE_LABELS: Record<string, string> = { person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', investigation: 'Ermittlung', wanted: 'Fahndung', evidence: 'Beweismittel', personnel: 'Personal' };
+const ROUTE: Record<string, string> = { person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', wanted: 'wanted', personnel: 'personnel' };
+const TYPE_LABELS: Record<string, string> = { person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', wanted: 'Fahndung', personnel: 'Personal' };
 
-/** Im MDT öffnen Personen und Fahrzeuge die MDT-Akte, Einsätze/Berichte/Ermittlungen die MDT-Ansicht; alles andere das Dashboard. */
-const MDT_PATH: Record<string, string> = { person: '/mdt/citizens?id=', vehicle: '/mdt/vehicles?id=', incident: '/mdt/incidents/', report: '/mdt/reports/', investigation: '/mdt/investigations/' };
+/** Im MDT öffnen Personen und Fahrzeuge die MDT-Akte, Einsätze/Berichte die MDT-Ansicht; alles andere das Dashboard. */
+const MDT_PATH: Record<string, string> = { person: '/mdt/citizens?id=', vehicle: '/mdt/vehicles?id=', incident: '/mdt/incidents/', report: '/mdt/reports/' };
 const hitPath = (h: Hit) => (MDT_PATH[h.type] ? `${MDT_PATH[h.type]}${h.id}` : `/${ROUTE[h.type]}/${h.id}`);
 
 interface Quick { key: string; label: string; icon: LucideIcon; perm: string; cfg: ResourceConfig<Row>; route: string }
 const QUICK: Quick[] = [
   { key: 'incident', label: 'Einsatz anlegen', icon: Siren, perm: 'incidents.create', cfg: R.incidents as never, route: 'incidents' },
   { key: 'report', label: 'Bericht anlegen', icon: FileText, perm: 'reports.create', cfg: R.reports as never, route: 'reports' },
-  { key: 'investigation', label: 'Ermittlung anlegen', icon: Search, perm: 'investigations.create', cfg: R.investigations as never, route: 'investigations' },
   { key: 'wanted', label: 'Fahndung anlegen', icon: Flag, perm: 'wanted.create', cfg: R.wanted as never, route: 'wanted' },
 ];
 

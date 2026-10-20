@@ -6,13 +6,12 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { DiscordService } from '../discord/discord.service';
 import { ShiftsService, type ShiftsConfig, type ShiftType } from './shifts';
-import { currentGuild, recordSpace, recordWhere, onePersonnel } from '../common/guild-context';
-import { SyncService, versionAt } from '../multi-server/sync.service';
+import { recordSpace, recordWhere, onePersonnel } from '../common/guild-context';
 
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 @Injectable()
 export class DutyService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly shifts: ShiftsService, private readonly sync: SyncService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly shifts: ShiftsService) {}
 
   async setStatus(actor: Actor, status: DutyStatus, d: { unitId?: string; callsign?: string; shiftType?: string; discordRoleIds?: string[] }, targetUserId?: string) {
     const userId = targetUserId ?? actor.userId!;
@@ -41,12 +40,6 @@ export class DutyService {
         const pers = await tx.personnel.findFirst({ where: { userId } });
         // servereigene Dienstzeit: Akten-Bereich des Servers (bzw. der gemeinsamen Shift-Log-Gruppe); ohne Server gemeinsamer Bestand
         created = await tx.dutySession.create({ data: { userId, serverId: recordSpace() ?? null, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
-      }
-      // Dienststatus an verbundene Server (nur bei aktiver Freigabe „unit_status“ bzw. „team_overview“; Outbox in derselben Transaktion)
-      if (currentGuild()) {
-        const who = await tx.user.findUnique({ where: { id: userId }, select: { displayName: true, personnel: { ...onePersonnel(), select: { callsign: true, rank: true } } } });
-        const payload = { userId, name: who?.displayName ?? '—', callsign: who?.personnel[0]?.callsign ?? null, rank: who?.personnel[0]?.rank ?? null, status, since: at.toISOString() };
-        for (const dataType of ['unit_status', 'team_overview']) await this.sync.emit(tx, { dataType, eventType: 'duty.status', recordId: userId, version: versionAt(at), payload });
       }
       await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
       return created ?? { status: 'OFF_DUTY' };

@@ -15,9 +15,8 @@ Dieses Dokument beschreibt den Stand des Codes. Was noch fehlt, steht unter [Bek
 | Rollen und Berechtigungen | `authz/permission.service.ts`, `users/roles.service.ts`, `packages/shared/src/permissions.ts` |
 | **Zentrale Autorisierung** | `authz/authorization.service.ts` (`AuthorizationService.authorize/assert`) |
 | Fachmodule | jeweilige Module (CAD, MDT, Berichte, Dienst/Shift Logs …) |
-| Serverübergreifende Synchronisierung | `multi-server/sync.service.ts`, `multi-server/connections.service.ts` |
 | Audit-Logging | `audit/audit.service.ts` (`AuditLog`, unveränderlich) |
-| Hintergrundaufgaben | Sync-Worker (alle 5 s), Wochen-Reset (alle 30 s und beim Start), Discord-Abgleich (alle 5 min) |
+| Hintergrundaufgaben | Wochen-Reset (alle 30 s und beim Start), Discord-Abgleich (alle 5 min) |
 | Web-Dashboard | `apps/web/src/pages/admin/MultiServer.tsx` (*Administration → Server & Module*) |
 
 ## Datenmodell
@@ -50,8 +49,8 @@ Getrennt wird zentral in der Datenbankschicht (`apps/api/src/prisma/server-scope
 
 | Bereich | Tabellen / Inhalte |
 |---|---|
-| Akten & MDT | Personen, Fahrzeuge, Waffen, Haftbefehle, Bußgelder, **Tatbestände** |
-| Berichte & Ermittlungen | Berichte, Beschwerden, Ermittlungen, Beweismittel |
+| Akten & MDT | Personen, Fahrzeuge, Haftbefehle, Bußgelder, **Tatbestände** |
+| Berichte | Berichte, Beschwerden |
 | **Leitstelle (CAD)** | Einsätze, Einheiten (Rufnamen je Server), Karte, CAD-Mitglieder, Funk, Schichtübergaben, Statistik, ER:LC-Server samt Notrufen und Befehlslog |
 | **Personal & HR** | Personalakte (eine **je Server**: eigener Dienstgrad, Rufname, Dienstnummer), Beförderungen/Versetzungen, Ausbildungen, Prüfungen, Dienstgrade, Dienstnummern-Kreise, Einstellungs-Warteschlange, Academy |
 | Dienst | Dienstzeiten, Wochenranglisten |
@@ -59,11 +58,10 @@ Getrennt wird zentral in der Datenbankschicht (`apps/api/src/prisma/server-scope
 | **Rollen & Rechte** | Auf einem Server zählen **nur** dessen Rollen (plus globaler Systemadministrator). Persönliche Ausnahmen gelten je Server. |
 | **Einstellungen** | Kanäle, CAD-, MDT-, HR-, Ticket-, Willkommens-, Verifizierungs-, Logging-, Schicht-, Abmeldungs-Konfiguration usw. je Server (`PER_SERVER_SETTING_KEYS`), **ohne** Rückgriff auf Werte anderer Server |
 
-Gemeinsam (global) bleiben nur: Benutzerkonten und Anmeldung, Backups, der Server-Verbund selbst, Serververbindungen, das Audit-Log (mit Server-Spalte) und der Bot-Zustand.
+Gemeinsam (global) bleiben nur: Benutzerkonten und Anmeldung, Backups, der Server-Verbund selbst, das Audit-Log (mit Server-Spalte) und der Bot-Zustand.
 
 Ausnahmen gibt es **nur ausdrücklich**:
 - **Server-Verbund-Gruppe mit „Akten teilen“**: gemeinsamer Bereich für die Gruppe.
-- **Datenfreigabe** über eine Serververbindung: nur lesende Kopien.
 - **CAD-Querverbindung**: Ein Discord-Befehl von einem verbundenen Server (z. B. SEK/K9) arbeitet nur dann im Bereich der Leitstelle, wenn **beide Seiten** es eingerichtet haben. Der SEK-Server trägt die Leitstelle als Heimat-Server ein (CAD → Einstellungen), die Leitstelle legt die Verbindung an (`CadServerLink`). Welche Aktionen erlaubt sind (Status, Funk, Einsätze sehen, Disponieren), bestimmt weiterhin die Verbindung. Dashboard-Anfragen werden nie umgeleitet (`apps/api/src/cad/cad-link.interceptor.ts`).
 
 ### Datenbereiche
@@ -72,10 +70,7 @@ Ausnahmen gibt es **nur ausdrücklich**:
 |---|---|
 | Servereigene Daten | Spalte `serverId` = Akten-Bereich des Servers (`ownSpace(guildId)`), gefiltert mit `recordWhere()`. Neu auch für Dienstzeiten (`DutySession`). |
 | Gemeinsam genutzte Daten | Server-Verbund-Gruppe mit „Akten teilen“: gleicher Bereich (Gruppen-ID). Ausdrücklich eingestellt unter *Administration → Server-Verbund*. |
-| Nur lesend synchronisierte Daten | `SyncedRecord`. Sichtbar nur mit Lese-Recht auf dem Zielserver **und** solange die Freigabe aktiv ist. |
 | Benachrichtigungen über Daten anderer Server | Die bestehenden Discord-Ausgaben je Kanal. Eine eigene Benachrichtigungsart „fremder Datensatz“ gibt es noch nicht. |
-
-Ein Datensatz wird **nicht** global sichtbar, nur weil eine Verbindung besteht: Das Original bleibt beim fremden Server und liefert dort `404`. Freigegeben wird nur die Kopie.
 
 ## Zentraler Berechtigungsdienst
 
@@ -91,7 +86,7 @@ Ein Datensatz wird **nicht** global sichtbar, nur weil eine Verbindung besteht: 
 
 Wo die Prüfung greift:
 - **Jede** Route mit `@RequirePermission` läuft über den `PermissionGuard` und damit über diesen Dienst. Das betrifft alle bestehenden Fachmodule und die Bot-Aufrufe.
-- Die Routen unter `/servers/:serverId/…` und `/connections/…` sind mit `@ServiceAuthorized()` markiert. Sie prüfen gegen den Server **aus dem Pfad**, ein Header kann ihn nicht übersteuern. Der Test „route authorization coverage“ verlangt diese ausdrückliche Markierung.
+- Die Routen unter `/servers/:serverId/…` sind mit `@ServiceAuthorized()` markiert. Sie prüfen gegen den Server **aus dem Pfad**, ein Header kann ihn nicht übersteuern. Der Test „route authorization coverage“ verlangt diese ausdrückliche Markierung.
 - Verweigerungen werden protokolliert: `SecurityEvent` plus `AuditLog` mit `result = DENIED`, höchstens einmal pro Minute je Benutzer, Recht und Server.
 
 Globaler Systemadministrator ≠ Serveradministrator:
@@ -117,45 +112,18 @@ Module: `GET /servers/:serverId/modules`, `GET/PATCH /servers/:serverId/modules/
 Rollen: `GET/POST /servers/:serverId/roles`, `PATCH/DELETE /servers/:serverId/roles/:roleId`
 Rechte: `GET /servers/:serverId/permissions`, `GET/PUT /servers/:serverId/roles/:roleId/permissions`, `GET /servers/:serverId/users/:userId/effective-permissions`
 Discord-Rollen: `GET/PUT /servers/:serverId/role-mappings`
-Verbindungen: `GET/POST /connections`, `GET/PATCH/DELETE /connections/:connectionId`, `POST /connections/:connectionId/members`, `DELETE /connections/:connectionId/members/:serverId`
-Freigaben: `GET/POST /connections/:connectionId/policies`, `PATCH/DELETE /connections/:connectionId/policies/:policyId`
-Synchronisierung: `GET /connections/:connectionId/sync-status`, `GET /connections/:connectionId/sync-events`, `POST /connections/:connectionId/retry-failed`, `GET /servers/:serverId/synced/:dataType`
-Audit: `GET /servers/:serverId/audit-logs`, `GET /connections/:connectionId/audit-logs`
+Audit: `GET /servers/:serverId/audit-logs`
 Bot: `GET /bot/servers/:guildId/modules` (nur mit Bot-Token)
 
 Fehler kommen wie gewohnt als `{ code, message, details }`. Bei verweigertem Zugriff steht in `details.reason` z. B. `NOT_MEMBER`, `MODULE_DISABLED` oder `VERSION_CONFLICT`.
 
-Neue Rechte: `servers.view/manage`, `modules.view/manage`, `connections.view/manage`, `sync.view/retry`. Der Systemadministrator hat sie über `*`, andere Rollen nur, wenn man sie ausdrücklich vergibt.
+Neue Rechte: `servers.view/manage`, `modules.view/manage`. Der Systemadministrator hat sie über `*`, andere Rollen nur, wenn man sie ausdrücklich vergibt.
 
-## Verbindungen, Freigaben und Synchronisierung
-
-- **Verbindung verwalten** erfordert `connections.manage` auf **jedem** Mitgliedsserver (oder einen globalen Systemadministrator). **Freigabe anlegen oder ändern** erfordert `connections.manage` auf Quell- **und** Zielserver.
-- Richtungen: `A_TO_B` (Quelle → Ziel), `B_TO_A`, `BIDIRECTIONAL`, `NONE`. Unidirektional bleibt unidirektional (`policyAllowsFlow`).
-- Ablauf (Outbox):
-  1. Die Fachaktion schreibt ihre Daten und ruft `SyncService.emit` **in derselben Transaktion** auf.
-  2. Je erlaubtem Ziel entsteht ein `SyncEvent` mit Idempotenzschlüssel. Doppelte Ereignisse werden übersprungen.
-  3. Der Worker holt Ereignisse mit `FOR UPDATE SKIP LOCKED`, sodass mehrere Instanzen gefahrlos parallel laufen können.
-  4. Auf der Zielseite prüft der Worker Verbindung, Freigabe, Richtung, Zielserver und Modul **erneut**.
-  5. Dann schreibt er idempotent ein `SyncedRecord`. Ältere Versionen überschreiben nie neuere (Status `SKIPPED`, Audit `sync.conflict`).
-- Fehler: Wiederholung mit Backoff (10 s, 20 s, 40 s …, höchstens 30 min). Nach 6 Versuchen gilt ein Ereignis als `FAILED` (Audit `sync.failed`) und kann manuell wiederholt werden (`retry-failed`). Durch die Idempotenz entstehen dabei keine Duplikate.
-- Ratenbegrenzung: höchstens 100 Ereignisse je Verbindung und Durchlauf (alle 5 s).
-- **Deaktivierung** einer Verbindung, Änderung oder Entfernung einer Freigabe, Austritt eines Servers oder Archivierung: Offene Ereignisse werden verworfen (`CANCELLED`) und nie ausgeführt. Fachdaten und bereits übertragene Kopien werden **nicht** gelöscht, die Kopien sind ohne aktive Freigabe aber unsichtbar.
-- Schleifen sind ausgeschlossen: Kopien lösen nie neue Ereignisse aus.
-- Ereignislisten liefern nur Metadaten, nie die Inhalte.
-
-Angebundene Quellen (Datenarten mit echten Ereignissen):
-
-| Datenart | Quelle |
-|---|---|
-| `reports` | Statuswechsel eines Berichts (eingereicht, geprüft …) |
-| `unit_status`, `team_overview` | Dienststatus-Wechsel auf einem Server |
-| `shift_statistics` | Wochenarchiv eines Servers bzw. einer Shift-Log-Gruppe |
-
-`incidents`, `incident_status` und `radio_messages` lassen sich anlegen, haben aber **noch keine Quelle**.
+> Serververbindungen, Datenfreigaben und die serverübergreifende Synchronisierung wurden entfernt. Die alten Tabellen (`server_connections`, `connection_data_policies`, `sync_events`, `SyncedRecord`) bleiben mit ihren Daten in der Datenbank, werden aber nicht mehr benutzt.
 
 ## Module je Server
 
-Katalog: `core` (System, immer an), `cad`, `mdt`, `dispatch`, `reports`, `shift_logs`, `investigations`, `personnel`, `applications`, `support`, `sek`, `communication`. Ein Recht gehört über sein Präfix zu einem Modul (z. B. `cad.*`/`fleet.*` → `cad`, `persons.*` → `mdt`).
+Katalog: `core` (System, immer an), `cad`, `mdt`, `dispatch`, `reports`, `shift_logs`, `investigations` (Beschwerden), `personnel`, `applications`, `support`, `sek`, `communication`. Ein Recht gehört über sein Präfix zu einem Modul (z. B. `cad.*`/`fleet.*` → `cad`, `persons.*` → `mdt`).
 
 - Ohne Eintrag ist ein Modul **an**. Bestehende Installationen funktionieren also unverändert.
 - Abhängigkeiten werden geprüft. MDT hängt **nicht** von CAD ab.

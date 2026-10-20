@@ -11,14 +11,12 @@ const common_1 = require("@nestjs/common");
 const users_module_1 = require("../users/users.module");
 const multi_server_controller_1 = require("./multi-server.controller");
 const servers_service_1 = require("./servers.service");
-const connections_service_1 = require("./connections.service");
-const sync_service_1 = require("./sync.service");
-/** Multi-Server: Server/Mandanten, Module je Server, Rollen & Rechte je Server, Verbindungen, Datenfreigaben, Synchronisierung. */
+/** Multi-Server: Server/Mandanten, Module je Server, Rollen & Rechte je Server. */
 let MultiServerModule = class MultiServerModule {
 };
 exports.MultiServerModule = MultiServerModule;
 exports.MultiServerModule = MultiServerModule = __decorate([
     (0, common_1.Global)(),
-    (0, common_1.Module)({ imports: [users_module_1.UsersModule], controllers: [multi_server_controller_1.ServersController, multi_server_controller_1.ConnectionsController, multi_server_controller_1.BotServersController], providers: [servers_service_1.ServersService, connections_service_1.ConnectionsService, sync_service_1.SyncService], exports: [servers_service_1.ServersService, connections_service_1.ConnectionsService, sync_service_1.SyncService] })
+    (0, common_1.Module)({ imports: [users_module_1.UsersModule], controllers: [multi_server_controller_1.ServersController, multi_server_controller_1.BotServersController], providers: [servers_service_1.ServersService], exports: [servers_service_1.ServersService] })
 ], MultiServerModule);
 //# sourceMappingURL=multi-server.module.js.map

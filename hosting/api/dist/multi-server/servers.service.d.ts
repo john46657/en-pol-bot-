@@ -104,7 +104,7 @@ export declare class ServersService implements OnModuleInit {
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
-    /** „Löschen“ = archivieren: nicht mehr wählbar, keine Synchronisierung, aber ALLE Fachdaten und Archive bleiben erhalten. */
+    /** „Löschen“ = archivieren: nicht mehr wählbar, aber ALLE Fachdaten und Archive bleiben erhalten. */
     archive(actor: Actor, serverId: string): Promise<{
         id: string;
         status: string;

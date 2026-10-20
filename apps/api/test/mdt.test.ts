@@ -48,31 +48,21 @@ describe('Polizei-MDT', () => {
     expect((await officer.patch(`/api/v1/mdt/citizens/${personId}`).send({ version, job: 'x' })).status).toBe(403);
   });
 
-  it('Profil: Haftbefehle, Fahrzeuge, Waffen und verknüpfte Akten mit Zählern', async () => {
+  it('Profil: Haftbefehle, Fahrzeuge und verknüpfte Akten mit Zählern', async () => {
     const admin = (await login(app, 'mdt_admin')).agent;
     expect((await admin.post('/api/v1/wanted').send({ personId, reason: 'Bewaffneter Raub', priority: 'HIGH' })).status).toBe(201);
     expect((await admin.post('/api/v1/vehicles').send({ plate: 'MDT 1', model: 'Falcon', ownerId: personId })).status).toBe(201);
-    const w = await admin.post('/api/v1/mdt/weapons').send({ serial: 'ab-1234', type: 'PISTOL', model: 'Glock', ownerId: personId });
-    expect(w.status).toBe(201);
-    expect(w.body.serial).toBe('AB-1234');
-    expect((await admin.post('/api/v1/mdt/weapons').send({ serial: ' Ab-1234 ', type: 'PISTOL' })).status).toBe(409);
-    expect((await admin.post('/api/v1/mdt/weapons').send({ serial: 'XY-1', type: 'LASER' })).status).toBe(400);
 
     const r = await admin.get(`/api/v1/mdt/citizens/${personId}`);
     expect(r.status).toBe(200);
     expect(r.body.person).toMatchObject({ fullName: 'Noah Keller', activeWarrants: 1 });
-    expect(r.body.counts).toMatchObject({ activeWarrants: 1, vehicles: 1, weapons: 1 });
-    expect(r.body.weapons[0]).toMatchObject({ serial: 'AB-1234' });
+    expect(r.body.counts).toMatchObject({ activeWarrants: 1, vehicles: 1 });
+    expect(r.body.weapons).toBeUndefined(); // Waffenregister entfernt
     expect(r.body.warrants[0]).toMatchObject({ reason: 'Bewaffneter Raub' });
     expect(Array.isArray(r.body.incidents)).toBe(true);
 
-    // Waffenregister: Suche nach Seriennummer und Besitzer; Status ändern (gestohlen)
     const officer = (await login(app, 'mdt_officer')).agent;
-    expect((await officer.get('/api/v1/mdt/weapons').query({ q: 'ab-12' })).body.items.map((x: { serial: string }) => x.serial)).toContain('AB-1234');
-    expect((await officer.get('/api/v1/mdt/weapons').query({ q: 'keller' })).body.total).toBeGreaterThanOrEqual(1);
-    expect((await officer.patch(`/api/v1/mdt/weapons/${w.body.id}`).send({ version: 1, status: 'STOLEN' })).status).toBe(403);
-    const senior = (await login(app, 'mdt_senior')).agent;
-    expect((await senior.patch(`/api/v1/mdt/weapons/${w.body.id}`).send({ version: 1, status: 'STOLEN' })).body.status).toBe('STOLEN');
+    expect((await officer.get('/api/v1/mdt/weapons')).status).toBe(404); // Waffenregister entfernt
 
     // Fahrzeug-Liste und -Akte
     const v = await officer.get('/api/v1/mdt/vehicles').query({ q: 'mdt1' });

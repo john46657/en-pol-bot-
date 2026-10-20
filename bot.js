@@ -80106,14 +80106,10 @@ var PERMISSION_CATALOG = {
   vehicles: ["view", "create", "edit", "archive"],
   /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
   fleet: ["view", "view_details", "edit", "assign", "manage_catalog", "manage"],
-  /** Waffenregister im MDT */
-  weapons: ["view", "create", "edit"],
   reports: ["view", "create", "edit", "submit", "review", "approve", "reject", "archive"],
   tickets: ["view", "create", "edit", "void"],
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
-  investigations: ["view", "create", "edit", "close"],
   wanted: ["view", "create", "edit", "activate", "clear"],
-  evidence: ["view", "create", "transfer", "release"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
   /** Beförderungssystem */
@@ -80162,11 +80158,7 @@ var PERMISSION_CATALOG = {
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
    * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
    */
-  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"],
-  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
-  connections: ["view", "manage"],
-  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
-  sync: ["view", "retry"]
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -80554,13 +80546,13 @@ function periodLabel(period2, start2) {
 var LINE_LONG = "\u23AF".repeat(20);
 var LINE_SHORT = "\u23AF".repeat(12);
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server, Verbindungen", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "connections", "sync"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
-  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Waffen, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "weapons", "wanted", "tickets"] },
+  { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
   { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
   { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
-  { key: "investigations", name: "Ermittlungen", description: "Beschwerden, Ermittlungen, Beweismittel", permissionPrefixes: ["complaints", "investigations", "evidence"] },
+  { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
   { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
@@ -80591,8 +80583,6 @@ var BOT_COMMAND_MODULES = {
   einsatzstatus: "dispatch",
   einsatzzuweisen: "dispatch",
   beschwerde: "investigations",
-  ermittlung: "investigations",
-  beweis: "investigations",
   abmeldung: "personnel",
   leave: "personnel",
   ausbildung: "personnel",
@@ -80867,16 +80857,8 @@ var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
 var mdtConfigSchema = external_exports.object({
   licenses: external_exports.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
   flags: external_exports.array(option.extend({ tone: external_exports.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
-  weaponTypes: external_exports.array(option).max(40).refine(unique, "Schl\xFCssel doppelt"),
   genders: external_exports.array(external_exports.string().trim().min(1).max(30)).max(10)
 });
-var WEAPON_STATUSES = [
-  { key: "REGISTERED", label: "Registriert", tone: "success" },
-  { key: "STOLEN", label: "Gestohlen", tone: "danger" },
-  { key: "SEIZED", label: "Beschlagnahmt", tone: "warning" },
-  { key: "DESTROYED", label: "Vernichtet", tone: "neutral" }
-];
-var WEAPON_STATUS_KEYS = WEAPON_STATUSES.map((s) => s.key);
 var personDetailsSchema = external_exports.object({
   fullName: external_exports.string().trim().max(80).nullish(),
   dateOfBirth: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
@@ -84236,7 +84218,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
-        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/ermittlung` `/fahndung` `/beweis`" },
+        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
@@ -84557,23 +84539,6 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     }
   },
   {
-    name: "ermittlung",
-    description: "Er\xF6ffnet einen Ermittlungsfall",
-    options: [
-      { name: "titel", description: "Titel des Falls", type: "string", required: true, maxLength: 200 },
-      { name: "beschreibung", description: "Beschreibung", type: "string", maxLength: 4e3 }
-    ],
-    async run(c) {
-      if (str3(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const r = await c.api.asUser(c.discordId, "POST", "/investigations", { title: str3(c, "titel"), ...str3(c, "beschreibung") ? { description: str3(c, "beschreibung") } : {} });
-        return okReply(`Fall **${r.caseNumber}** er\xF6ffnet.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
     name: "fahndung",
     description: "Schreibt eine Person zur Fahndung aus",
     options: [
@@ -84591,24 +84556,6 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         return okReply(`**${plain2(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
       } catch (e) {
         return mapError(e);
-      }
-    }
-  },
-  {
-    name: "beweis",
-    description: "Erfasst ein Beweisst\xFCck",
-    options: [
-      { name: "typ", description: "z. B. Waffe, Foto", type: "string", required: true, maxLength: 64 },
-      { name: "beschreibung", description: "Beschreibung", type: "string", required: true, maxLength: 2e3 },
-      { name: "fall", description: "Fallnummer, z. B. CASE-2026-ABC123", type: "string", maxLength: 40 }
-    ],
-    async run(c) {
-      if (str3(c, "typ").length < 2 || str3(c, "beschreibung").length < 3) return errorReply("Typ oder Beschreibung sind zu kurz.");
-      try {
-        const e = await c.api.asUser(c.discordId, "POST", "/evidence", { type: str3(c, "typ"), description: str3(c, "beschreibung"), ...str3(c, "fall") ? { caseRef: str3(c, "fall").toUpperCase() } : {} });
-        return okReply(`Beweis **${e.number}** erfasst.`);
-      } catch (err) {
-        return mapError(err);
       }
     }
   },

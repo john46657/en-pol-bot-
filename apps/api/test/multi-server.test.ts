@@ -4,8 +4,6 @@ import { ALL_PERMISSIONS } from '@enrp/shared';
 import type { INestApplication } from '@nestjs/common';
 import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { SyncService } from '../src/multi-server/sync.service';
-import { AuthorizationService } from '../src/authz/authorization.service';
 import { WeeklyResetService, scopeOfSpace } from '../src/duty/weekly-reset';
 import { ownSpace } from '../src/server-links/server-links.service';
 
@@ -17,7 +15,7 @@ const srv: Record<string, string> = {};
 const uid: Record<string, string> = {};
 const roleId: Record<string, string> = {};
 const bot = (guild?: string, roles?: string[]) => ({ Authorization: `Bot ${TOKEN}`, 'X-Discord-User': D_BOT, ...(guild ? { 'X-Guild-Id': guild } : {}), ...(roles ? { 'X-Discord-Roles': roles.join(',') } : {}) });
-const ADMIN_GRANTS = ['servers.view', 'servers.manage', 'modules.view', 'modules.manage', 'roles.view', 'roles.manage', 'connections.view', 'connections.manage', 'sync.view', 'sync.retry', 'audit.view', 'reports.*', 'team.*', 'cad.view', 'persons.view', 'incidents.view', 'dashboard.view'];
+const ADMIN_GRANTS = ['servers.view', 'servers.manage', 'modules.view', 'modules.manage', 'roles.view', 'roles.manage', 'audit.view', 'reports.*', 'team.*', 'cad.view', 'persons.view', 'incidents.view', 'dashboard.view'];
 const OFFICER_GRANTS = ['reports.view', 'reports.create', 'reports.edit', 'reports.submit', 'team.view', 'cad.view', 'persons.view', 'incidents.view', 'dashboard.view'];
 
 async function serverRole(guildId: string, name: string, grants: string[], priority: number) {
@@ -174,101 +172,6 @@ describe('Rechte: global vs. Server', () => {
     expect((await http().get('/api/v1/incidents').set(bot(undefined, [R_DISCORD]))).status).toBe(403); // DM: keine Server-Rechte
     // Discord-Rolle verloren → Rolle auf A weg
     expect((await http().get('/api/v1/incidents').set(bot(A, []))).status).toBe(403);
-  });
-});
-
-describe('Serververbindungen und Datenfreigaben', () => {
-  let conn = '';
-  const sync = () => app.get(SyncService);
-  it('Verbindung nur mit Rechten auf allen Servern; Freigaben nur zwischen Mitgliedern', async () => {
-    const adminA = await as('ms_admina'), gadmin = await as('ms_gadmin');
-    expect((await adminA.post('/api/v1/connections').send({ name: 'A+B', serverIds: [srv.A, srv.B] })).status).toBe(403);
-    const c = await gadmin.post('/api/v1/connections').send({ name: 'A+B', serverIds: [srv.A, srv.B] });
-    expect(c.status).toBe(201);
-    conn = c.body.id;
-    expect((await gadmin.post(`/api/v1/connections/${conn}/policies`).send({ sourceServerId: srv.A, targetServerId: srv.C, dataType: 'reports' })).status).toBe(400);
-    expect((await adminA.post(`/api/v1/connections/${conn}/policies`).send({ sourceServerId: srv.A, targetServerId: srv.B, dataType: 'reports' })).status).toBe(403); // keine Rechte auf B
-    // adminA sieht die Verbindung (Mitglied A), darf sie aber nicht allein ändern
-    expect((await adminA.get(`/api/v1/connections/${conn}`)).status).toBe(200);
-    expect((await adminA.patch(`/api/v1/connections/${conn}`).send({ name: 'x', version: 1 })).status).toBe(403);
-  });
-
-  it('eine Verbindung allein überträgt nichts', async () => {
-    const offA = await as('ms_offa');
-    const r = await offA.post('/api/v1/reports').set('X-Guild-Id', A).send({ type: 'GENERAL', title: 'Ohne Freigabe', content: { text: '…' } });
-    expect((await offA.post(`/api/v1/reports/${r.body.id}/submit`).set('X-Guild-Id', A)).status).toBe(201);
-    expect(await prisma.syncEvent.count({ where: { connectionId: conn } })).toBe(0);
-  });
-
-  it('A_TO_B: Berichte kommen nur lesend auf B an; B → A fließt nichts; keine Bearbeitungsrechte', async () => {
-    const gadmin = await as('ms_gadmin'), offA = await as('ms_offa'), offB = await as('ms_offb');
-    const p = await gadmin.post(`/api/v1/connections/${conn}/policies`).send({ sourceServerId: srv.A, targetServerId: srv.B, dataType: 'reports', direction: 'A_TO_B' });
-    expect(p.status).toBe(201);
-    const r = await offA.post('/api/v1/reports').set('X-Guild-Id', A).send({ type: 'GENERAL', title: 'Geteilt', content: { text: '…' } });
-    await offA.post(`/api/v1/reports/${r.body.id}/submit`).set('X-Guild-Id', A);
-    expect(await prisma.syncEvent.count({ where: { connectionId: conn, sourceRecordId: r.body.id, status: 'PENDING' } })).toBe(1);
-    expect((await sync().tick()).processed).toBeGreaterThanOrEqual(1);
-    const onB = (await offB.get(`/api/v1/servers/${srv.B}/synced/reports`)).body as { sourceRecordId: string; readOnly: boolean; data: { title: string }; source: { guildId: string } }[];
-    expect(onB.find((x) => x.sourceRecordId === r.body.id)).toMatchObject({ readOnly: true, data: { title: 'Geteilt' }, source: { guildId: A } });
-    // Original bleibt fremd: kein Lesen/Ändern über den Datensatz
-    expect((await offB.get(`/api/v1/reports/${r.body.id}`).set('X-Guild-Id', B)).status).toBe(404);
-    const authz = app.get(AuthorizationService);
-    expect(await authz.authorize(uid.ms_offb!, B, 'reports.view', { crossServer: { sourceGuildId: A, dataType: 'reports', action: 'read' } })).toEqual({ allowed: true });
-    expect(await authz.authorize(uid.ms_offb!, B, 'reports.edit', { crossServer: { sourceGuildId: A, dataType: 'reports', action: 'write' } })).toMatchObject({ allowed: false, reason: 'READ_ONLY' });
-    expect(await authz.authorize(uid.ms_offb!, B, 'reports.view', { crossServer: { sourceGuildId: A, dataType: 'unit_status', action: 'read' } })).toMatchObject({ allowed: false, reason: 'NO_POLICY' });
-    // unidirektional: Bericht auf B erzeugt nichts für A
-    const rb = await offB.post('/api/v1/reports').set('X-Guild-Id', B).send({ type: 'GENERAL', title: 'Nur B', content: { text: '…' } });
-    await offB.post(`/api/v1/reports/${rb.body.id}/submit`).set('X-Guild-Id', B);
-    expect(await prisma.syncEvent.count({ where: { sourceRecordId: rb.body.id } })).toBe(0);
-    expect((await offA.get(`/api/v1/servers/${srv.A}/synced/reports`)).body).toEqual([]);
-    // nur Mitglieder mit Lese-Recht auf B sehen die Kopien
-    expect((await offA.get(`/api/v1/servers/${srv.B}/synced/reports`)).status).toBe(404);
-  });
-
-  it('wiederholte Ereignisse erzeugen keine Duplikate; ältere Stände werden als Konflikt übersprungen', async () => {
-    const s = sync();
-    const rec = 'dup-test-1';
-    const emit = (version: number, title: string) => s.emit(prisma, { sourceGuildId: A, dataType: 'reports', eventType: 'report.test', recordId: rec, version, payload: { title } });
-    expect(await emit(5, 'v5')).toBe(1);
-    expect(await emit(5, 'v5')).toBe(0); // gleicher Idempotenzschlüssel
-    await s.tick();
-    await prisma.syncEvent.updateMany({ where: { sourceRecordId: rec }, data: { status: 'PENDING', nextAttemptAt: new Date() } }); // erneute Zustellung
-    await s.tick();
-    expect(await prisma.syncedRecord.count({ where: { sourceRecordId: rec } })).toBe(1);
-    expect(await emit(3, 'alt')).toBe(1);
-    await s.tick();
-    expect(await prisma.syncEvent.findFirstOrThrow({ where: { sourceRecordId: rec, sourceVersion: 3 } })).toMatchObject({ status: 'SKIPPED' });
-    expect((await prisma.syncedRecord.findFirstOrThrow({ where: { sourceRecordId: rec } })).data).toEqual({ title: 'v5' });
-    expect(await prisma.auditLog.count({ where: { action: 'sync.conflict', entityId: conn } })).toBe(1);
-  });
-
-  it('fehlgeschlagene Ereignisse: manuell wiederholbar ohne doppelte Ausführung', async () => {
-    const gadmin = await as('ms_gadmin');
-    const ev = await prisma.syncEvent.findFirstOrThrow({ where: { sourceRecordId: 'dup-test-1', sourceVersion: 5 } });
-    await prisma.syncEvent.update({ where: { id: ev.id }, data: { status: 'FAILED', attemptCount: 6, lastError: 'Ziel nicht erreichbar' } });
-    const st = (await gadmin.get(`/api/v1/connections/${conn}/sync-status`)).body;
-    expect(st.counts.FAILED).toBe(1);
-    expect((await gadmin.post(`/api/v1/connections/${conn}/retry-failed`)).body).toEqual({ requeued: 1 });
-    await sync().tick();
-    expect(await prisma.syncEvent.findUniqueOrThrow({ where: { id: ev.id } })).toMatchObject({ status: 'DONE' });
-    expect(await prisma.syncedRecord.count({ where: { sourceRecordId: 'dup-test-1' } })).toBe(1);
-    const events = (await gadmin.get(`/api/v1/connections/${conn}/sync-events?status=DONE`)).body.items as Record<string, unknown>[];
-    expect(events.length).toBeGreaterThan(0);
-    expect(events[0]).not.toHaveProperty('payload'); // keine Inhalte in der Ereignisliste
-  });
-
-  it('deaktivierte Verbindung: offene Ereignisse verworfen, keine neuen; Kopien bleiben gespeichert, aber unsichtbar', async () => {
-    const gadmin = await as('ms_gadmin'), offB = await as('ms_offb');
-    expect(await sync().emit(prisma, { sourceGuildId: A, dataType: 'reports', eventType: 'report.test', recordId: 'pending-1', version: 1, payload: {} })).toBe(1);
-    const c = (await gadmin.get(`/api/v1/connections/${conn}`)).body;
-    expect((await gadmin.patch(`/api/v1/connections/${conn}`).send({ status: 'DISABLED', version: c.version })).status).toBe(200);
-    expect(await prisma.syncEvent.findFirstOrThrow({ where: { sourceRecordId: 'pending-1' } })).toMatchObject({ status: 'CANCELLED' });
-    expect(await sync().emit(prisma, { sourceGuildId: A, dataType: 'reports', eventType: 'report.test', recordId: 'pending-2', version: 1, payload: {} })).toBe(0);
-    expect((await offB.get(`/api/v1/servers/${srv.B}/synced/reports`)).body).toEqual([]);
-    expect(await prisma.syncedRecord.count({ where: { targetServerId: srv.B } })).toBeGreaterThan(0); // nichts gelöscht
-    expect((await gadmin.post(`/api/v1/connections/${conn}/retry-failed`)).status).toBe(409);
-    const audit = (await gadmin.get(`/api/v1/connections/${conn}/audit-logs`)).body.items as { action: string }[];
-    expect(audit.map((x) => x.action)).toEqual(expect.arrayContaining(['connection.create', 'connection.policy.create', 'connection.disable', 'sync.retry']));
   });
 });
 

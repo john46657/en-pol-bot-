@@ -185,10 +185,10 @@ declare const listQ: z.ZodObject<{
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     q?: string | undefined;
+    from?: Date | undefined;
     creator?: string | undefined;
+    to?: Date | undefined;
     claimer?: string | undefined;
 }, {
     guildId?: string | undefined;
@@ -196,12 +196,12 @@ declare const listQ: z.ZodObject<{
     categoryId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
+    from?: Date | undefined;
     creator?: string | undefined;
+    to?: Date | undefined;
     claimer?: string | undefined;
 }>;
 declare const transcriptQ: z.ZodObject<{
@@ -221,22 +221,22 @@ declare const transcriptQ: z.ZodObject<{
     number?: number | undefined;
     status?: string | undefined;
     categoryName?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     q?: string | undefined;
     staff?: string | undefined;
+    from?: Date | undefined;
     creator?: string | undefined;
+    to?: Date | undefined;
 }, {
     number?: number | undefined;
     status?: string | undefined;
     categoryName?: string | undefined;
-    from?: Date | undefined;
-    to?: Date | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
     staff?: string | undefined;
+    from?: Date | undefined;
     creator?: string | undefined;
+    to?: Date | undefined;
 }>;
 declare const ratingQ: z.ZodObject<{
     stars: z.ZodOptional<z.ZodNumber>;

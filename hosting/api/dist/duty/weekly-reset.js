@@ -26,7 +26,6 @@ const zod_pipe_1 = require("../common/zod.pipe");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
 const servers_service_1 = require("../multi-server/servers.service");
-const sync_service_1 = require("../multi-server/sync.service");
 const CONFIG_KEY = 'duty.weeklyReset';
 const STATE_KEY = 'duty.weeklyReset.state';
 /** Postgres-Advisory-Lock (je Bereich): nur eine Instanz führt einen Reset gleichzeitig aus. */
@@ -62,14 +61,12 @@ let WeeklyResetService = class WeeklyResetService {
     discord;
     rt;
     servers;
-    sync;
-    constructor(prisma, audit, discord, rt, servers, sync) {
+    constructor(prisma, audit, discord, rt, servers) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.rt = rt;
         this.servers = servers;
-        this.sync = sync;
     }
     async config() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: CONFIG_KEY } }))?.value;
@@ -225,10 +222,6 @@ let WeeklyResetService = class WeeklyResetService {
         // gleicher Schlüssel je Woche (und Server): selbst ein erneut eingereihter Auftrag bearbeitet nur die schon gesendete Nachricht
         for (const p of posts)
             await this.discord.postMessage(p.guildId ? `wr-${p.guildId}-${created.weekKey}` : `week-rank-${created.weekKey}`, p.channelId, this.message(scope.cfg, label, start, end, ranking, totalMinutes), { tx });
-        // Wochenstatistik an verbundene Server (nur mit aktiver Freigabe „shift_statistics“; gleiche Transaktion = Outbox)
-        const top = ranking.slice(0, 25).map((r) => ({ place: r.place, name: r.name, callsign: r.callsign, minutes: r.minutes }));
-        for (const g of scope.guildIds)
-            await this.sync.emit(tx, { sourceGuildId: g, dataType: 'shift_statistics', eventType: 'week.archived', recordId: `${created.scope}:${created.weekKey}`, version: 1, payload: { label, weekKey: created.weekKey, totalMinutes, activeUsers: ranking.length, top } });
         await this.audit.record({ userId: null }, { action: 'duty.weekly_reset', module: 'team', entityType: 'DutyWeekArchive', entityId: created.id, serverId: scope.guildIds[0] ?? null, after: { scope: scope.key, week: created.weekKey, label, activeUsers: ranking.length, totalMinutes, discordChannelId: created.discordChannelId, catchUp: created.catchUp } }, tx);
         return { id: created.id, posted: posts.length };
     }
@@ -296,7 +289,7 @@ let WeeklyResetService = class WeeklyResetService {
 exports.WeeklyResetService = WeeklyResetService;
 exports.WeeklyResetService = WeeklyResetService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, realtime_service_1.RealtimeService, servers_service_1.ServersService, sync_service_1.SyncService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, realtime_service_1.RealtimeService, servers_service_1.ServersService])
 ], WeeklyResetService);
 let WeeklyResetController = class WeeklyResetController {
     s;

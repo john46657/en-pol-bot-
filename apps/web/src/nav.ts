@@ -1,4 +1,4 @@
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Search, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -13,7 +13,7 @@ export type Group = 'Operations' | 'Records' | 'Organisation' | 'Administration'
 const grp = (label: string, icon: LucideIcon, group: Group, tabs: NavTab[]): NavItem => ({ path: tabs[0]!.path, label, icon, group, tabs });
 
 export const NAV: NavItem[] = [
-  { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations', keywords: 'bürger haftbefehl waffen' },
+  { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations', keywords: 'bürger haftbefehl' },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
   grp('Leitstelle', MapPinned, 'Operations', [
     { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
@@ -39,7 +39,6 @@ export const NAV: NavItem[] = [
     { path: '/duty-reports', label: 'Tages-/Wochenberichte', perm: 'dutyreports.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
-  { path: '/investigations', label: 'Ermittlungen', icon: Search, perm: 'investigations.view', group: 'Records' },
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   grp('Personal', UserCheck, 'Organisation', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },

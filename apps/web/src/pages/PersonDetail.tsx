@@ -16,8 +16,8 @@ interface Overview {
   timeline: TimelineItem[];
 }
 const TABS = ['Übersicht', 'Fahrzeuge', 'Verknüpfte Akten', 'Verlauf'];
-const ROUTES: Record<string, string> = { Incident: 'incidents', Report: 'reports', Ticket: 'tickets', Complaint: 'complaints', Investigation: 'investigations', Wanted: 'wanted', Evidence: 'evidence' };
-const ENTITY_LABELS: Record<string, string> = { Incident: 'Einsatz', Report: 'Bericht', Ticket: 'Strafzettel', Complaint: 'Beschwerde', Investigation: 'Ermittlung', Wanted: 'Fahndung', Evidence: 'Beweismittel', Person: 'Person', Vehicle: 'Fahrzeug' };
+const ROUTES: Record<string, string> = { Incident: 'incidents', Report: 'reports', Ticket: 'tickets', Complaint: 'complaints', Wanted: 'wanted' };
+const ENTITY_LABELS: Record<string, string> = { Incident: 'Einsatz', Report: 'Bericht', Ticket: 'Strafzettel', Complaint: 'Beschwerde', Wanted: 'Fahndung', Person: 'Person', Vehicle: 'Fahrzeug' };
 
 export function PersonDetail() {
   const { id = '' } = useParams();

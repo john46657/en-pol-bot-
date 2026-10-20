@@ -183,11 +183,11 @@ export declare class PanelsController {
             label: string;
             text: string;
             title: string;
-            description: string;
             id: string;
             color: string;
             image: string;
             emoji: string;
+            description: string;
         }[];
         text: string;
         title: string;
@@ -205,11 +205,11 @@ export declare class PanelsController {
             label: string;
             text: string;
             title: string;
-            description: string;
             id: string;
             color: string;
             image: string;
             emoji: string;
+            description: string;
         }[];
         text: string;
         title: string;
@@ -290,11 +290,11 @@ export declare class BotPanelsController {
             label: string;
             text: string;
             title: string;
-            description: string;
             id: string;
             color: string;
             image: string;
             emoji: string;
+            description: string;
         }[];
         text: string;
         title: string;

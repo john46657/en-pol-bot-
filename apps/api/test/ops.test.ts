@@ -122,39 +122,7 @@ describe('complaints', () => {
   });
 });
 
-describe('investigations, wanted, evidence', () => {
-  it('investigation links persons by role and ties evidence via case number', async () => {
-    const admin = (await login(app, 'o_admin')).agent;
-    const p1 = await person(admin, 'Suspect1');
-    const inv = (await admin.post('/api/v1/investigations').send({ title: 'Armed robbery', persons: [{ personId: p1, role: 'SUSPECT' }] })).body;
-    expect(inv.caseNumber).toMatch(/^CASE-/);
-    const ev = await admin.post('/api/v1/evidence').send({ type: 'Weapon', description: 'Pistol', caseRef: inv.caseNumber, personIds: [p1] });
-    expect(ev.status).toBe(201);
-    expect((await admin.post('/api/v1/evidence').send({ type: 'x1', description: 'ghost', caseRef: 'CASE-0000-NONE' })).status).toBe(404);
-    const detail = await admin.get(`/api/v1/investigations/${inv.id}`);
-    expect(detail.body.links).toHaveLength(1);
-    expect(detail.body.evidence).toHaveLength(1);
-    expect((await admin.put(`/api/v1/investigations/${inv.id}/status`).send({ status: 'CLOSED' })).status).toBe(400);
-    expect((await admin.put(`/api/v1/investigations/${inv.id}/status`).send({ status: 'ACTIVE' })).status).toBe(200);
-  });
-  it('investigation: edit with version check, lead by name, notes with author in the timeline', async () => {
-    const admin = (await login(app, 'o_admin')).agent;
-    const officer = (await login(app, 'o_officer')).agent;
-    const sup = await prisma.user.findUniqueOrThrow({ where: { username: 'o_sup' } });
-    const inv = (await admin.post('/api/v1/investigations').send({ title: 'Bank job' })).body;
-    expect((await admin.get(`/api/v1/investigations/${inv.id}`)).body.investigation.lead.displayName).toBe('o_admin');
-    const up = await admin.patch(`/api/v1/investigations/${inv.id}`).send({ title: 'Bank job (Downtown)', leadId: sup.id, version: inv.version });
-    expect(up.status).toBe(200);
-    expect((await admin.patch(`/api/v1/investigations/${inv.id}`).send({ title: 'stale', version: inv.version })).status).toBe(409);
-    expect((await officer.patch(`/api/v1/investigations/${inv.id}`).send({ title: 'nope' })).status).toBe(403);
-    expect((await admin.post(`/api/v1/investigations/${inv.id}/notes`).send({ text: 'x' })).status).toBe(400);
-    expect((await admin.post(`/api/v1/investigations/${inv.id}/notes`).send({ text: 'Zeuge befragt' })).status).toBe(201);
-    const d = (await admin.get(`/api/v1/investigations/${inv.id}`)).body;
-    expect(d.investigation.title).toBe('Bank job (Downtown)');
-    expect(d.investigation.lead.displayName).toBe('o_sup');
-    const note = d.timeline.find((t: { action: string }) => t.action === 'investigation.note');
-    expect(note).toMatchObject({ summary: 'Zeuge befragt', actorName: 'o_admin' });
-  });
+describe('wanted', () => {
   it('wanted: one active record per subject, clear needs permission+reason, expiry honoured', async () => {
     const admin = (await login(app, 'o_admin')).agent;
     const o = (await login(app, 'o_officer')).agent;
@@ -194,25 +162,6 @@ describe('investigations, wanted, evidence', () => {
     expect(v.status).toBe(200);
     expect(v.body).toMatchObject({ plate: 'ED100', color: 'Rot', ownerId: pid });
     expect(await prisma.timelineEvent.count({ where: { entityType: 'Person', entityId: pid, action: 'vehicle.linked' } })).toBe(1);
-  });
-  it('evidence: custody chain, release permission, handover confirmation', async () => {
-    const admin = (await login(app, 'o_admin')).agent;
-    const o2 = await prisma.user.findUniqueOrThrow({ where: { username: 'o_officer2' } });
-    const ev = (await admin.post('/api/v1/evidence').send({ type: 'Photo', description: 'Scene photo' })).body;
-    expect((await admin.post(`/api/v1/evidence/${ev.id}/transfer`).send({ to: 'RELEASED', reason: 'nope' })).status).toBe(400);
-    expect((await admin.post(`/api/v1/evidence/${ev.id}/transfer`).send({ to: 'STORED', reason: 'Locker 4', storageLocation: 'Locker 4' })).status).toBe(201);
-    expect((await admin.post(`/api/v1/evidence/${ev.id}/transfer`).send({ to: 'TRANSFERRED', reason: 'to lab' })).status).toBe(400);
-    expect((await admin.post(`/api/v1/evidence/${ev.id}/transfer`).send({ to: 'TRANSFERRED', toUserId: o2.id, reason: 'to officer2' })).status).toBe(201);
-    const pending = await prisma.evidenceTransfer.findFirstOrThrow({ where: { evidenceId: ev.id, toState: 'TRANSFERRED' } });
-    expect(pending.confirmed).toBe(false);
-    const o2agent = (await login(app, 'o_officer2')).agent;
-    expect((await admin.post(`/api/v1/evidence/${ev.id}/confirm`)).status).toBe(404); // only recipient
-    await prisma.userPermissionOverride.create({ data: { userId: o2.id, permissionKey: 'evidence.transfer', effect: 'ALLOW' } });
-    expect((await o2agent.post(`/api/v1/evidence/${ev.id}/confirm`)).status).toBe(201);
-    expect((await o2agent.post(`/api/v1/evidence/${ev.id}/release`).send({ reason: 'case closed' })).status).toBe(403);
-    expect((await admin.post(`/api/v1/evidence/${ev.id}/release`).send({ reason: 'case closed' })).status).toBe(201);
-    const full = await admin.get(`/api/v1/evidence/${ev.id}`);
-    expect(full.body.transfers.map((t: { toState: string }) => t.toState)).toEqual(['COLLECTED', 'STORED', 'TRANSFERRED', 'RELEASED']);
   });
 });
 

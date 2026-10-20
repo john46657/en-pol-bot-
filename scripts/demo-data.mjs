@@ -100,8 +100,6 @@ await post(o1, `/reports/${r1.id}/submit`);
 await post(o1, '/reports', { type: 'ARREST', title: 'Draft: arrest report bank robbery', content: { body: 'Draft…' }, personIds: [P.Cody_Crook] });
 const c1 = await post(o1, '/complaints', { subjectId: P.Bella_Banks, category: 'Conduct', description: 'Complainant states the officer was rude during a traffic stop on Elm Avenue.' });
 void c1;
-const inv = await post(det, '/investigations', { title: 'Liberty Bank robbery ring', description: 'Linked to two earlier robberies.', persons: [{ personId: P.Cody_Crook, role: 'SUSPECT' }, { personId: P.Eli_Witness, role: 'WITNESS' }] });
-await post(det, '/evidence', { type: 'Weapon', description: 'Pistol recovered near Main St', caseRef: inv.caseNumber, storageLocation: 'Locker 4', personIds: [P.Cody_Crook] });
 await post(sup, '/wanted', { personId: P.Cody_Crook, reason: 'Armed robbery — Liberty Bank', priority: 'URGENT', description: 'Armed and dangerous' });
 await post(det, '/communication/channels/TEAM/messages', { body: 'Briefing at 20:00 — focus on the bank robbery case.' }).catch(() => undefined);
 await post(admin, '/communication/channels/ANNOUNCEMENT/messages', { body: 'Welcome to EN Polizei! This is demo data.' });

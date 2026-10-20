@@ -24,8 +24,6 @@ const MESSAGES = {
     MODULE_DISABLED: 'Dieses Modul ist auf diesem Server deaktiviert.',
     PERMISSION: 'Dafür fehlt dir die Berechtigung.',
     FOREIGN_RECORD: 'Dieser Datensatz gehört zu einem anderen Server.',
-    NO_POLICY: 'Für diese Daten gibt es keine aktive Freigabe zwischen den Servern.',
-    READ_ONLY: 'Freigegebene Daten anderer Server sind nur lesbar.',
 };
 const deny = (reason, message = MESSAGES[reason]) => ({ allowed: false, reason, message });
 const TTL = 5_000;
@@ -102,14 +100,6 @@ let AuthorizationService = class AuthorizationService {
             if (allowed !== undefined && resource.space !== allowed)
                 return deny('FOREIGN_RECORD');
         }
-        if (resource.crossServer) {
-            if (!guildId)
-                return deny('NO_POLICY');
-            if (resource.crossServer.action !== 'read')
-                return deny('READ_ONLY');
-            if (!(await this.flowActive(resource.crossServer.sourceGuildId, guildId, resource.crossServer.dataType)))
-                return deny('NO_POLICY');
-        }
         return { allowed: true };
     }
     /** Wie `authorize`, wirft aber `PERMISSION_DENIED`/`NOT_FOUND` und protokolliert die Verweigerung (gedrosselt). */
@@ -165,16 +155,6 @@ let AuthorizationService = class AuthorizationService {
             const r = (0, shared_1.resolvePermission)(ctx, p);
             return { permission: p, module: m, allowed: g.allowed && r.allowed, source: r.source, blockedBy: g.allowed ? null : g.reason };
         }));
-    }
-    /** Ist eine Datenfreigabe von `fromGuild` nach `toGuild` für `dataType` aktiv (Verbindung aktiv, beide Mitglied, Richtung passt)? */
-    async flowActive(fromGuild, toGuild, dataType) {
-        const [from, to] = await Promise.all([this.server(fromGuild), this.server(toGuild)]);
-        if (!from || !to || from.id === to.id)
-            return false;
-        const policies = await this.prisma.connectionDataPolicy.findMany({
-            where: { dataType, enabled: true, connection: { status: 'ACTIVE' }, OR: [{ sourceServerId: from.id, targetServerId: to.id }, { sourceServerId: to.id, targetServerId: from.id }] },
-        });
-        return policies.some((p) => (0, shared_1.policyAllowsFlow)(p, from.id, to.id));
     }
 };
 exports.AuthorizationService = AuthorizationService;

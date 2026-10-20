@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { ShiftsService } from './shifts';
-import { SyncService } from '../multi-server/sync.service';
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 export declare class DutyService {
     private readonly prisma;
@@ -12,8 +11,7 @@ export declare class DutyService {
     private readonly rt;
     private readonly discord;
     private readonly shifts;
-    private readonly sync;
-    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService, shifts: ShiftsService, sync: SyncService);
+    constructor(prisma: PrismaService, audit: AuditService, rt: RealtimeService, discord: DiscordService, shifts: ShiftsService);
     setStatus(actor: Actor, status: DutyStatus, d: {
         unitId?: string;
         callsign?: string;

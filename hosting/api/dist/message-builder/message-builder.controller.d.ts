@@ -66,7 +66,6 @@ export declare class MessageBuilderController {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -76,6 +75,7 @@ export declare class MessageBuilderController {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -109,7 +109,6 @@ export declare class MessageBuilderController {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -120,6 +119,7 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -155,7 +155,6 @@ export declare class MessageBuilderController {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -165,6 +164,7 @@ export declare class MessageBuilderController {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -198,7 +198,6 @@ export declare class MessageBuilderController {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -209,6 +208,7 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -244,7 +244,6 @@ export declare class MessageBuilderController {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -254,6 +253,7 @@ export declare class MessageBuilderController {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -287,7 +287,6 @@ export declare class MessageBuilderController {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -298,6 +297,7 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -333,7 +333,6 @@ export declare class MessageBuilderController {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -343,6 +342,7 @@ export declare class MessageBuilderController {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -376,7 +376,6 @@ export declare class MessageBuilderController {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -387,6 +386,7 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -422,7 +422,6 @@ export declare class MessageBuilderController {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -432,6 +431,7 @@ export declare class MessageBuilderController {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -465,7 +465,6 @@ export declare class MessageBuilderController {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -476,6 +475,7 @@ export declare class MessageBuilderController {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;

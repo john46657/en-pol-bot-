@@ -60,27 +60,26 @@ declare const listQ: z.ZodObject<{
     discordId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
+    q?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
-    q?: string | undefined;
 }, {
     status?: "SUBMITTED" | "REVIEWED" | "RETURNED" | undefined;
     authorId?: string | undefined;
     discordId?: string | undefined;
     templateId?: string | undefined;
     mine?: boolean | undefined;
-    from?: string | undefined;
-    to?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
+    from?: string | undefined;
+    to?: string | undefined;
 }>;
 /** 🗓️ Tages-/Wochenberichte (auch vom Discord-Bot im Namen des verknüpften Benutzers benutzt). */
 export declare class DutyReportsController {
     private readonly s;
     constructor(s: DutyReportsService);
     templates(active?: string): Promise<{
-        description: string;
         id: string;
         name: string;
         guildId: string | null;
@@ -100,13 +99,13 @@ export declare class DutyReportsController {
         }[];
         pingRoleIds: string[];
         emoji: string;
+        description: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
         layout: "FIELDS" | "LIST";
     }[]>;
     saveTemplate(a: Actor, id: string, b: ReportTemplate): Promise<{
-        description: string;
         id: string;
         name: string;
         guildId: string | null;
@@ -126,6 +125,7 @@ export declare class DutyReportsController {
         }[];
         pingRoleIds: string[];
         emoji: string;
+        description: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
@@ -136,7 +136,6 @@ export declare class DutyReportsController {
         values: Record<string, string>;
     }>;
     dup(a: Actor, id: string): Promise<{
-        description: string;
         id: string;
         name: string;
         guildId: string | null;
@@ -156,6 +155,7 @@ export declare class DutyReportsController {
         }[];
         pingRoleIds: string[];
         emoji: string;
+        description: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
@@ -195,7 +195,6 @@ export declare class DutyReportsController {
     }>;
     get(a: Actor, id: string): Promise<{
         template: {
-            description: string;
             id: string;
             name: string;
             guildId: string | null;
@@ -215,6 +214,7 @@ export declare class DutyReportsController {
             }[];
             pingRoleIds: string[];
             emoji: string;
+            description: string;
             period: "DAILY" | "WEEKLY" | "FREE";
             onePerPeriod: boolean;
             authorCanEdit: boolean;

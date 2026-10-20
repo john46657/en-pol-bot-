@@ -5,7 +5,6 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { ServersService } from '../multi-server/servers.service';
-import { SyncService } from '../multi-server/sync.service';
 export declare const weeklyResetConfigSchema: z.ZodObject<{
     /** Wochen-Reset aktiv (Archiv + Rangliste + Zähler auf null) */
     enabled: z.ZodDefault<z.ZodBoolean>;
@@ -68,8 +67,7 @@ export declare class WeeklyResetService {
     private readonly discord;
     private readonly rt;
     private readonly servers;
-    private readonly sync;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, rt: RealtimeService, servers: ServersService, sync: SyncService);
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, rt: RealtimeService, servers: ServersService);
     config(): Promise<WeeklyResetConfig>;
     saveConfig(actor: Actor, input: WeeklyResetConfig): Promise<{
         enabled: boolean;

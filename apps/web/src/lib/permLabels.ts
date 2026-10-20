@@ -1,12 +1,12 @@
 /** Lesbare Namen für die Rechte-Matrix (Schlüssel bleiben sichtbar für Profis). */
 export const MODULE_LABELS: Record<string, string> = {
   dashboard: '🏠 Dashboard & Bereiche', team: '👥 Team', dispatch: '📡 Leitstelle', cad: '🗺️ CAD-Leitstelle', incidents: '🚨 Einsätze', persons: '🧑 Personen', vehicles: '🚗 Fahrzeuge',
-  reports: '📄 Berichte', dutyreports: '🗓️ Tages-/Wochenberichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', investigations: '🔍 Ermittlungen', wanted: '🚩 Fahndungen', evidence: '💼 Beweismittel',
+  reports: '📄 Berichte', dutyreports: '🗓️ Tages-/Wochenberichte', tickets: '🧾 Strafzettel', complaints: '⚖️ Beschwerden', wanted: '🚩 Fahndungen',
   personnel: '🪪 Personal', promotion: '🎖️ Beförderungen', transfer: '🔀 Versetzungen', training: '🎓 Ausbildungen', exam: '📝 Prüfungen', warning: '⚠️ Verwarnungen', awards: '🏅 Auszeichnungen', dienstnummer: '🪪 Dienstnummern', leave: '🏖️ Abmeldungen', applications: '📝 Bewerbungen', academy: '🎓 Akademie', sek: '🎯 SEK', qualifications: '🏅 Qualifikationen',
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
   settings: '⚙️ Bot-Einstellungen', users: '👤 Benutzer', roles: '🛡️ Rollen & Rechte',
-  fleet: '🚓 Polizeifahrzeuge', weapons: '🔫 Waffenregister', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
-  messagebuilder: '✉️ Message Builder', connections: '🔗 Serververbindungen', sync: '🔄 Synchronisierung',
+  fleet: '🚓 Polizeifahrzeuge', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
+  messagebuilder: '✉️ Message Builder',
   radiowhitelist: '🎙️ Funk-Whitelist',
 };
 

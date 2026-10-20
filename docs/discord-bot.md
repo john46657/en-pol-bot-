@@ -34,9 +34,7 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/funk kanal text` | Nachricht in Systemkanal team/dispatch | `communication.send` |
 | `/bericht titel text [typ] [einreichen]` | Bericht als Entwurf oder direkt einreichen | `reports.create` (+ `reports.submit`) |
 | `/beschwerde kategorie beschreibung [person]` | Beschwerde erfassen | `complaints.create` |
-| `/ermittlung titel [beschreibung]` | Ermittlungsfall eröffnen | `investigations.create` |
 | `/fahndung person grund [prioritaet]` | Person zur Fahndung ausschreiben | `wanted.create` |
-| `/beweis typ beschreibung [fall]` | Beweisstück erfassen | `evidence.create` |
 | `/benachrichtigungen` | ungelesene Benachrichtigungen | – |
 | `/bewerbung` | Bewerbung bei EN Polizei – Fragen einzeln per **Direktnachricht** (auch **ohne** Verknüpfung); Entscheidung kommt per DM | – |
 | `/bewerbungspanel` | postet das Bewerbungs-Panel mit Button „Jetzt bewerben“ (startet denselben DM-Ablauf) | Discord „Server verwalten“ |
@@ -108,7 +106,7 @@ Jede Person: Web → Chat-Symbol oben rechts („Discord verknüpfen“) → *Mi
 
 ## Sicherheitsmodell
 - Der Bot authentifiziert sich mit `Authorization: Bot <BOT_API_TOKEN>` (konstante Zeit verglichen). Ohne gesetztes Token ist **jeder** Bot-Zugang in der API deaktiviert.
-- Im Namen eines Benutzers (`X-Discord-User`) darf der Bot nur eine **feste Allowlist** an Routen aufrufen (`BOT_USER_ROUTES` in `apps/api/src/authz/guards.ts`: lesen von Personen/Fahrzeugen/Fahndungen/Einsätzen/Team, Anlegen von Einsätzen/Tickets/Berichten/Beschwerden/Ermittlungen/Fahndungen/Beweisen, Einsatzsteuerung, eigener Dienststatus/Profil). Alles andere (Benutzer, Rollen, Audit, Einstellungen, Personal …) liefert `403`, auch für Admins.
+- Im Namen eines Benutzers (`X-Discord-User`) darf der Bot nur eine **feste Allowlist** an Routen aufrufen (`BOT_USER_ROUTES` in `apps/api/src/authz/guards.ts`: lesen von Personen/Fahrzeugen/Fahndungen/Einsätzen/Team, Anlegen von Einsätzen/Tickets/Berichten/Beschwerden/Fahndungen, Einsatzsteuerung, eigener Dienststatus/Profil). Alles andere (Benutzer, Rollen, Audit, Einstellungen, Personal …) liefert `403`, auch für Admins.
 - Die normalen Permission-Prüfungen gelten unverändert; Audit-Einträge zeigen den verknüpften Benutzer als Akteur.
 - Bot-Dienstrouten (`/bot/*`) akzeptieren **nur** das Bot-Token, nie eine Browser-Session.
 - Verknüpfungscodes: 8 Zeichen, nur der Hash wird gespeichert, 10 Minuten, einmalig, Rate-Limit. Ein Discord-Konto ↔ ein Benutzer.

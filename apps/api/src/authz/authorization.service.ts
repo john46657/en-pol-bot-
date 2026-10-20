@@ -1,20 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { ALL_PERMISSIONS, moduleOfPermission, policyAllowsFlow, resolvePermission, type PermissionKey } from '@enrp/shared';
+import { ALL_PERMISSIONS, moduleOfPermission, resolvePermission, type PermissionKey } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { PermissionService } from './permission.service';
 import { AppError } from '../common/errors';
 import { currentGuild, recordSpace } from '../common/guild-context';
 
-export type DenyReason = 'UNKNOWN_SERVER' | 'SERVER_DISABLED' | 'NOT_MEMBER' | 'MODULE_DISABLED' | 'PERMISSION' | 'FOREIGN_RECORD' | 'NO_POLICY' | 'READ_ONLY';
+export type DenyReason = 'UNKNOWN_SERVER' | 'SERVER_DISABLED' | 'NOT_MEMBER' | 'MODULE_DISABLED' | 'PERMISSION' | 'FOREIGN_RECORD';
 export type Decision = { allowed: true } | { allowed: false; reason: DenyReason; message: string };
 
 /** Zugriffskontext auf einen konkreten Datensatz bzw. eine serverübergreifende Aktion. */
 export interface ResourceContext {
   /** Akten-Bereich des Datensatzes (Spalte `serverId`; `null` = gemeinsamer Bestand). `undefined` = kein Datensatzbezug. */
   space?: string | null;
-  /** Serverübergreifend: Daten von `sourceGuildId` auf dem aktuellen Server lesen bzw. ändern */
-  crossServer?: { sourceGuildId: string; dataType: string; action: 'read' | 'write' };
 }
 
 export interface ServerRow { id: string; guildId: string; name: string; status: string; archivedAt: Date | null }
@@ -25,8 +23,6 @@ const MESSAGES: Record<DenyReason, string> = {
   MODULE_DISABLED: 'Dieses Modul ist auf diesem Server deaktiviert.',
   PERMISSION: 'Dafür fehlt dir die Berechtigung.',
   FOREIGN_RECORD: 'Dieser Datensatz gehört zu einem anderen Server.',
-  NO_POLICY: 'Für diese Daten gibt es keine aktive Freigabe zwischen den Servern.',
-  READ_ONLY: 'Freigegebene Daten anderer Server sind nur lesbar.',
 };
 const deny = (reason: DenyReason, message = MESSAGES[reason]): Decision => ({ allowed: false, reason, message });
 const TTL = 5_000;
@@ -95,11 +91,6 @@ export class AuthorizationService {
       const allowed = recordSpace(guildId);
       if (allowed !== undefined && resource.space !== allowed) return deny('FOREIGN_RECORD');
     }
-    if (resource.crossServer) {
-      if (!guildId) return deny('NO_POLICY');
-      if (resource.crossServer.action !== 'read') return deny('READ_ONLY');
-      if (!(await this.flowActive(resource.crossServer.sourceGuildId, guildId, resource.crossServer.dataType))) return deny('NO_POLICY');
-    }
     return { allowed: true };
   }
 
@@ -151,15 +142,5 @@ export class AuthorizationService {
       const r = resolvePermission(ctx, p);
       return { permission: p, module: m, allowed: g.allowed && r.allowed, source: r.source, blockedBy: g.allowed ? null : g.reason };
     }));
-  }
-
-  /** Ist eine Datenfreigabe von `fromGuild` nach `toGuild` für `dataType` aktiv (Verbindung aktiv, beide Mitglied, Richtung passt)? */
-  async flowActive(fromGuild: string, toGuild: string, dataType: string): Promise<boolean> {
-    const [from, to] = await Promise.all([this.server(fromGuild), this.server(toGuild)]);
-    if (!from || !to || from.id === to.id) return false;
-    const policies = await this.prisma.connectionDataPolicy.findMany({
-      where: { dataType, enabled: true, connection: { status: 'ACTIVE' }, OR: [{ sourceServerId: from.id, targetServerId: to.id }, { sourceServerId: to.id, targetServerId: from.id }] },
-    });
-    return policies.some((p) => policyAllowsFlow(p, from.id, to.id));
   }
 }

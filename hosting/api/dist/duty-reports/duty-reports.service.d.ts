@@ -24,7 +24,6 @@ export declare class DutyReportsService {
     readonly templates: JsonListStore<ReportTemplate>;
     constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, discord: DiscordService);
     listTemplates(guildId: string | null, onlyActive?: boolean): Promise<{
-        description: string;
         id: string;
         name: string;
         guildId: string | null;
@@ -44,13 +43,13 @@ export declare class DutyReportsService {
         }[];
         pingRoleIds: string[];
         emoji: string;
+        description: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
         layout: "FIELDS" | "LIST";
     }[]>;
     saveTemplate(actor: Actor, t: ReportTemplate): Promise<{
-        description: string;
         id: string;
         name: string;
         guildId: string | null;
@@ -70,13 +69,13 @@ export declare class DutyReportsService {
         }[];
         pingRoleIds: string[];
         emoji: string;
+        description: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
         layout: "FIELDS" | "LIST";
     }>;
     duplicateTemplate(actor: Actor, id: string): Promise<{
-        description: string;
         id: string;
         name: string;
         guildId: string | null;
@@ -96,6 +95,7 @@ export declare class DutyReportsService {
         }[];
         pingRoleIds: string[];
         emoji: string;
+        description: string;
         period: "DAILY" | "WEEKLY" | "FREE";
         onePerPeriod: boolean;
         authorCanEdit: boolean;
@@ -137,7 +137,6 @@ export declare class DutyReportsService {
     }>;
     get(actor: Actor, idOrNumber: string): Promise<{
         template: {
-            description: string;
             id: string;
             name: string;
             guildId: string | null;
@@ -157,6 +156,7 @@ export declare class DutyReportsService {
             }[];
             pingRoleIds: string[];
             emoji: string;
+            description: string;
             period: "DAILY" | "WEEKLY" | "FREE";
             onePerPeriod: boolean;
             authorCanEdit: boolean;

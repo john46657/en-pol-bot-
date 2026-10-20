@@ -12,7 +12,6 @@ import { zodBody } from '../common/zod.pipe';
 import { AppError } from '../common/errors';
 import { currentGuild, recordSpace, onePersonnel } from '../common/guild-context';
 import { ServersService } from '../multi-server/servers.service';
-import { SyncService } from '../multi-server/sync.service';
 
 const CONFIG_KEY = 'duty.weeklyReset';
 const STATE_KEY = 'duty.weeklyReset.state';
@@ -62,7 +61,7 @@ export const scopeOfSpace = (space: string | null) => `space:${space ?? 'shared'
  */
 @Injectable()
 export class WeeklyResetService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly rt: RealtimeService, private readonly servers: ServersService, private readonly sync: SyncService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly rt: RealtimeService, private readonly servers: ServersService) {}
 
   async config(): Promise<WeeklyResetConfig> {
     const v = (await this.prisma.systemSetting.findUnique({ where: { key: CONFIG_KEY } }))?.value;
@@ -204,9 +203,6 @@ export class WeeklyResetService {
     });
     // gleicher Schlüssel je Woche (und Server): selbst ein erneut eingereihter Auftrag bearbeitet nur die schon gesendete Nachricht
     for (const p of posts) await this.discord.postMessage(p.guildId ? `wr-${p.guildId}-${created.weekKey}` : `week-rank-${created.weekKey}`, p.channelId, this.message(scope.cfg, label, start, end, ranking, totalMinutes), { tx });
-    // Wochenstatistik an verbundene Server (nur mit aktiver Freigabe „shift_statistics“; gleiche Transaktion = Outbox)
-    const top = ranking.slice(0, 25).map((r) => ({ place: r.place, name: r.name, callsign: r.callsign, minutes: r.minutes }));
-    for (const g of scope.guildIds) await this.sync.emit(tx, { sourceGuildId: g, dataType: 'shift_statistics', eventType: 'week.archived', recordId: `${created.scope}:${created.weekKey}`, version: 1, payload: { label, weekKey: created.weekKey, totalMinutes, activeUsers: ranking.length, top } });
     await this.audit.record({ userId: null }, { action: 'duty.weekly_reset', module: 'team', entityType: 'DutyWeekArchive', entityId: created.id, serverId: scope.guildIds[0] ?? null, after: { scope: scope.key, week: created.weekKey, label, activeUsers: ranking.length, totalMinutes, discordChannelId: created.discordChannelId, catchUp: created.catchUp } }, tx);
     return { id: created.id, posted: posts.length };
   }

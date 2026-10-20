@@ -47,7 +47,6 @@ export declare const createDocSchema: z.ZodObject<{
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -57,6 +56,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -69,7 +69,6 @@ export declare const createDocSchema: z.ZodObject<{
             }, {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -78,6 +77,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -228,7 +228,6 @@ export declare const createDocSchema: z.ZodObject<{
                     }>]>>;
                 }, "strip", z.ZodTypeAny, {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -239,10 +238,10 @@ export declare const createDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }, {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -252,11 +251,11 @@ export declare const createDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -267,6 +266,7 @@ export declare const createDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -278,7 +278,6 @@ export declare const createDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -288,6 +287,7 @@ export declare const createDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -310,7 +310,6 @@ export declare const createDocSchema: z.ZodObject<{
             content: string;
             embeds: {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -320,6 +319,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -353,7 +353,6 @@ export declare const createDocSchema: z.ZodObject<{
             } | {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -364,6 +363,7 @@ export declare const createDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -381,7 +381,6 @@ export declare const createDocSchema: z.ZodObject<{
             embeds?: {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -390,6 +389,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -426,7 +426,6 @@ export declare const createDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -436,6 +435,7 @@ export declare const createDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -462,7 +462,6 @@ export declare const createDocSchema: z.ZodObject<{
             content: string;
             embeds: {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -472,6 +471,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -505,7 +505,6 @@ export declare const createDocSchema: z.ZodObject<{
             } | {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -516,6 +515,7 @@ export declare const createDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -539,7 +539,6 @@ export declare const createDocSchema: z.ZodObject<{
             embeds?: {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -548,6 +547,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -584,7 +584,6 @@ export declare const createDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -594,6 +593,7 @@ export declare const createDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -619,7 +619,6 @@ export declare const createDocSchema: z.ZodObject<{
             content: string;
             embeds: {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -629,6 +628,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -662,7 +662,6 @@ export declare const createDocSchema: z.ZodObject<{
             } | {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -673,6 +672,7 @@ export declare const createDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -701,7 +701,6 @@ export declare const createDocSchema: z.ZodObject<{
             embeds?: {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -710,6 +709,7 @@ export declare const createDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -746,7 +746,6 @@ export declare const createDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -756,6 +755,7 @@ export declare const createDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -813,7 +813,6 @@ export declare const updateDocSchema: z.ZodObject<{
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -823,6 +822,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -835,7 +835,6 @@ export declare const updateDocSchema: z.ZodObject<{
             }, {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -844,6 +843,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -994,7 +994,6 @@ export declare const updateDocSchema: z.ZodObject<{
                     }>]>>;
                 }, "strip", z.ZodTypeAny, {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -1005,10 +1004,10 @@ export declare const updateDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }, {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -1018,11 +1017,11 @@ export declare const updateDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -1033,6 +1032,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -1044,7 +1044,6 @@ export declare const updateDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -1054,6 +1053,7 @@ export declare const updateDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -1076,7 +1076,6 @@ export declare const updateDocSchema: z.ZodObject<{
             content: string;
             embeds: {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -1086,6 +1085,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -1119,7 +1119,6 @@ export declare const updateDocSchema: z.ZodObject<{
             } | {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -1130,6 +1129,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -1147,7 +1147,6 @@ export declare const updateDocSchema: z.ZodObject<{
             embeds?: {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -1156,6 +1155,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -1192,7 +1192,6 @@ export declare const updateDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -1202,6 +1201,7 @@ export declare const updateDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -1228,7 +1228,6 @@ export declare const updateDocSchema: z.ZodObject<{
             content: string;
             embeds: {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -1238,6 +1237,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -1271,7 +1271,6 @@ export declare const updateDocSchema: z.ZodObject<{
             } | {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -1282,6 +1281,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -1305,7 +1305,6 @@ export declare const updateDocSchema: z.ZodObject<{
             embeds?: {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -1314,6 +1313,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -1350,7 +1350,6 @@ export declare const updateDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -1360,6 +1359,7 @@ export declare const updateDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -1387,7 +1387,6 @@ export declare const updateDocSchema: z.ZodObject<{
             content: string;
             embeds: {
                 title: string;
-                description: string;
                 id: string;
                 color: string;
                 timestamp: "send" | "custom" | "none";
@@ -1397,6 +1396,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name: string;
                     inline: boolean;
                 }[];
+                description: string;
                 url: string;
                 authorName: string;
                 authorUrl: string;
@@ -1430,7 +1430,6 @@ export declare const updateDocSchema: z.ZodObject<{
             } | {
                 options: {
                     label: string;
-                    description: string;
                     action: {
                         type: "reply";
                         text: string;
@@ -1441,6 +1440,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     };
                     id: string;
                     emoji: string;
+                    description: string;
                 }[];
                 type: "select";
                 id: string;
@@ -1469,7 +1469,6 @@ export declare const updateDocSchema: z.ZodObject<{
             embeds?: {
                 id: string;
                 title?: string | undefined;
-                description?: string | undefined;
                 color?: string | undefined;
                 timestamp?: "send" | "custom" | "none" | undefined;
                 fields?: {
@@ -1478,6 +1477,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     name?: string | undefined;
                     inline?: boolean | undefined;
                 }[] | undefined;
+                description?: string | undefined;
                 url?: string | undefined;
                 authorName?: string | undefined;
                 authorUrl?: string | undefined;
@@ -1514,7 +1514,6 @@ export declare const updateDocSchema: z.ZodObject<{
                 options?: {
                     id: string;
                     label?: string | undefined;
-                    description?: string | undefined;
                     action?: {
                         type: "reply";
                         text?: string | undefined;
@@ -1524,6 +1523,7 @@ export declare const updateDocSchema: z.ZodObject<{
                         mode?: "remove" | "add" | "toggle" | undefined;
                     } | undefined;
                     emoji?: string | undefined;
+                    description?: string | undefined;
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
@@ -1605,7 +1605,6 @@ export declare class MessageBuilderService {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -1615,6 +1614,7 @@ export declare class MessageBuilderService {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -1648,7 +1648,6 @@ export declare class MessageBuilderService {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -1659,6 +1658,7 @@ export declare class MessageBuilderService {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -1694,7 +1694,6 @@ export declare class MessageBuilderService {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -1704,6 +1703,7 @@ export declare class MessageBuilderService {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -1737,7 +1737,6 @@ export declare class MessageBuilderService {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -1748,6 +1747,7 @@ export declare class MessageBuilderService {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -1783,7 +1783,6 @@ export declare class MessageBuilderService {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -1793,6 +1792,7 @@ export declare class MessageBuilderService {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -1826,7 +1826,6 @@ export declare class MessageBuilderService {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -1837,6 +1836,7 @@ export declare class MessageBuilderService {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -1873,7 +1873,6 @@ export declare class MessageBuilderService {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -1883,6 +1882,7 @@ export declare class MessageBuilderService {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -1916,7 +1916,6 @@ export declare class MessageBuilderService {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -1927,6 +1926,7 @@ export declare class MessageBuilderService {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;
@@ -1963,7 +1963,6 @@ export declare class MessageBuilderService {
                 content: string;
                 embeds: {
                     title: string;
-                    description: string;
                     id: string;
                     color: string;
                     timestamp: "send" | "custom" | "none";
@@ -1973,6 +1972,7 @@ export declare class MessageBuilderService {
                         name: string;
                         inline: boolean;
                     }[];
+                    description: string;
                     url: string;
                     authorName: string;
                     authorUrl: string;
@@ -2006,7 +2006,6 @@ export declare class MessageBuilderService {
                 } | {
                     options: {
                         label: string;
-                        description: string;
                         action: {
                             type: "reply";
                             text: string;
@@ -2017,6 +2016,7 @@ export declare class MessageBuilderService {
                         };
                         id: string;
                         emoji: string;
+                        description: string;
                     }[];
                     type: "select";
                     id: string;

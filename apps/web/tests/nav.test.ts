@@ -32,7 +32,8 @@ describe('Menü mit zusammengefassten Punkten', () => {
 describe('Menüsuche und Gruppen', () => {
   const all = () => true;
   it('findet Menüpunkte über Namen, Suchbegriffe und Reiter (ohne Akzente/Groß-Klein)', () => {
-    expect(searchNav(NAV, 'ermittl', all)[0]?.item.label).toBe('Ermittlungen');
+    expect(searchNav(NAV, 'fahnd', all)[0]?.item.label).toBe('Fahndungen');
+    expect(searchNav(NAV, 'ermittl', all)).toEqual([]); // Ermittlungen entfernt
     expect(searchNav(NAV, 'abstimmung', all).some((h) => h.item.path === '/announcements')).toBe(false); // Mitteilungen entfernt
     const hit = searchNav(NAV, 'Beforderung', all)[0]!;
     expect(hit.item.label).toBe('Personal');

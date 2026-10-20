@@ -85,7 +85,6 @@ import { getServer } from './lib/server';
 const MdtCitizens = lazy(() => import('./pages/mdt/Citizens').then((m) => ({ default: m.MdtCitizens })));
 const MdtVehicles = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtVehicles })));
 const MdtWarrants = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtWarrants })));
-const MdtWeapons = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtWeapons })));
 const MdtSettings = lazy(() => import('./pages/mdt/MdtRecords').then((m) => ({ default: m.MdtSettings })));
 
 /** Statistik: allgemeine Statistik ODER Bewerbungs-Statistik genügt. */
@@ -147,14 +146,11 @@ export function App() {
           <Route path="citizens" element={<Guard perm="persons.view"><MdtCitizens /></Guard>} />
           <Route path="vehicles" element={<Guard perm="vehicles.view"><MdtVehicles /></Guard>} />
           <Route path="warrants" element={<Guard perm="wanted.view"><MdtWarrants /></Guard>} />
-          <Route path="weapons" element={<Guard perm="weapons.view"><MdtWeapons /></Guard>} />
           <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
           <Route path="reports" element={list({ ...R.reports, detailPath: (r) => `/mdt/reports/${r.id}` }, 'reports.view')} />
           <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
           <Route path="incidents" element={list({ ...R.incidents, detailPath: (r) => `/mdt/incidents/${r.id}` }, 'incidents.view')} />
           <Route path="incidents/:id" element={<Guard perm="incidents.view"><RecordPage cfg={{ ...R.records.incidents!, back: '/mdt/incidents' }} /></Guard>} />
-          <Route path="investigations" element={list({ ...R.investigations, detailPath: (r) => `/mdt/investigations/${r.id}` }, 'investigations.view')} />
-          <Route path="investigations/:id" element={<Guard perm="investigations.view"><RecordPage cfg={{ ...R.records.investigations!, back: '/mdt/investigations' }} /></Guard>} />
           <Route path="roster" element={<Guard perm="team.view"><TeamList /></Guard>} />
           <Route path="officers" element={list(R.personnel, 'personnel.view')} />
           <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
@@ -212,12 +208,9 @@ export function App() {
           {/* Beschwerden laufen über Support-Tickets; alte Beschwerden bleiben per Link (Suche, Personenakte) erreichbar */}
           <Route path="complaints" element={<Navigate to="/support-tickets" replace />} />
           <Route path="complaints/:id" element={rec('complaints', 'complaints.view')} />
-          <Route path="investigations" element={list(R.investigations as never, 'investigations.view')} />
-          <Route path="investigations/:id" element={rec('investigations', 'investigations.view')} />
           <Route path="wanted" element={list(R.wanted as never, 'wanted.view')} />
           <Route path="wanted/hits" element={<WantedHitsRedirect />} />
           <Route path="wanted/:id" element={rec('wanted', 'wanted.view')} />
-          <Route path="evidence/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="personnel" element={<Guard perm="personnel.view"><PersonnelOverview /></Guard>} />
           <Route path="personnel/:id" element={<Guard perm="personnel.view"><PersonnelFile /></Guard>} />
           <Route path="warnings" element={<Guard perm="warning.view"><Warnings /></Guard>} />
