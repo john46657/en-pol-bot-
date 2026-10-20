@@ -43,7 +43,7 @@ const requestsQ = zod_1.z.object({ status: zod_1.z.enum(['PENDING', 'DONE', 'ALL
 const decideB = zod_1.z.object({ decision: zod_1.z.enum(['APPROVE', 'REJECT']), reason: optText(1000), expiresAt: date.nullish() });
 const roleIds = zod_1.z.array(snowflake).max(50);
 const rolesB = zod_1.z.object({
-    roleSync: zod_1.z.object({ enabled: zod_1.z.boolean(), grantRoleIds: roleIds, requiredRoleIds: roleIds, onRoleGain: zod_1.z.enum(['ACTIVATE', 'PENDING', 'NONE']), onRoleLoss: zod_1.z.enum(['REVOKE', 'DISABLE', 'NONE']), manualOnRoleLoss: zod_1.z.enum(['KEEP', 'DISABLE', 'REVOKE']) }),
+    roleSync: zod_1.z.object({ enabled: zod_1.z.boolean(), roleOnly: zod_1.z.boolean().default(false), grantRoleIds: roleIds, requiredRoleIds: roleIds, onRoleGain: zod_1.z.enum(['ACTIVATE', 'PENDING', 'NONE']), onRoleLoss: zod_1.z.enum(['REVOKE', 'DISABLE', 'NONE']), manualOnRoleLoss: zod_1.z.enum(['KEEP', 'DISABLE', 'REVOKE']) }),
     radioRoleIds: roleIds,
 });
 const panelB = zod_1.z.object({ channelId: snowflake.nullable(), title: text(256).min(1), text: text(4000).min(1), buttonLabel: text(80).min(1), color: zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #RRGGBB.') });

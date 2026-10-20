@@ -89,6 +89,11 @@ let RadioWhitelistService = class RadioWhitelistService {
         const v = (await (0, guild_context_1.unscoped)(() => this.prisma.systemSetting.findUnique({ where: { key: CONFIG_KEY } })))?.value;
         return { ...exports.DEFAULT_CONFIG, ...v, roleSync: { ...exports.DEFAULT_CONFIG.roleSync, ...v?.roleSync }, requests: { ...exports.DEFAULT_CONFIG.requests, ...v?.requests, panel: { ...exports.DEFAULT_PANEL, ...v?.requests?.panel }, form: normalizeForm(v?.requests?.form) } };
     }
+    /** „Nur über Discord-Rolle“: manuelle Wege (Freischalten, Anträge, Import) sind dann gesperrt. */
+    async assertNotRoleOnly(what) {
+        if ((0, shared_1.isRadioRoleOnly)((await this.config()).roleSync))
+            throw new errors_1.AppError('CAPABILITY_UNAVAILABLE', `${what} ist nicht möglich – die Funk-Whitelist läuft nur über die Discord-Rolle. Vergib stattdessen die Rolle in Discord.`);
+    }
     async saveConfig(actor, next, action, before, after) {
         await this.prisma.$transaction(async (tx) => {
             await tx.systemSetting.upsert({ where: { key: CONFIG_KEY }, create: { key: CONFIG_KEY, value: next }, update: { value: next } });
@@ -97,8 +102,14 @@ let RadioWhitelistService = class RadioWhitelistService {
         return next;
     }
     async updateRoleConfig(actor, b) {
+        if (b.roleSync.roleOnly && b.roleSync.enabled && !b.roleSync.grantRoleIds.length)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte mindestens eine Rolle wählen, die für den Funk freischaltet.');
         const cur = await this.config();
-        return this.saveConfig(actor, { ...cur, roleSync: b.roleSync, radioRoleIds: b.radioRoleIds }, 'radio.config.roles', { roleSync: cur.roleSync, radioRoleIds: cur.radioRoleIds }, b);
+        const next = await this.saveConfig(actor, { ...cur, roleSync: b.roleSync, radioRoleIds: b.radioRoleIds }, 'radio.config.roles', { roleSync: cur.roleSync, radioRoleIds: cur.radioRoleIds }, b);
+        // „nur über Rolle“ gerade eingeschaltet → sofort vollständig abgleichen, damit die Whitelist gleich stimmt
+        if ((0, shared_1.isRadioRoleOnly)(next.roleSync) && !(0, shared_1.isRadioRoleOnly)(cur.roleSync))
+            await this.requestRoleSync(actor).catch((e) => this.log.warn(`role sync not queued: ${errMsg(e)}`));
+        return next;
     }
     async updateRequestConfig(actor, b) {
         const cur = await this.config();
@@ -265,6 +276,7 @@ let RadioWhitelistService = class RadioWhitelistService {
         return { discordId: g.discordId, discordName: g.discordName, status: g.status, source: g.source, expiresAt: g.expiresAt, suspendedUntil: g.suspendedUntil, externalName: g.externalName, rank: g.rank, department: g.department, archived: !!g.archivedAt };
     }
     async create(actor, b) {
+        await this.assertNotRoleOnly('Manuelles Freischalten');
         if (b.expiresAt && b.expiresAt.getTime() <= Date.now())
             throw new errors_1.AppError('VALIDATION_FAILED', 'Das Ablaufdatum muss in der Zukunft liegen.');
         const { row, before } = await this.prisma.$transaction((tx) => this.upsertGrant(tx, actor, { ...b, source: 'MANUAL' }));
@@ -466,6 +478,8 @@ let RadioWhitelistService = class RadioWhitelistService {
     /** Antrag über Discord (Bot-Dienst; Identität = Discord-ID der Interaktion). */
     async createRequest(b) {
         const cfg = await this.config();
+        if ((0, shared_1.isRadioRoleOnly)(cfg.roleSync))
+            throw new errors_1.AppError('CAPABILITY_UNAVAILABLE', 'Anträge sind nicht nötig – die Funkfreigabe kommt automatisch mit der Discord-Rolle.');
         if (!cfg.requests.enabled)
             throw new errors_1.AppError('CAPABILITY_UNAVAILABLE', 'Anträge auf Funkfreigabe sind derzeit deaktiviert.');
         const main = await this.mainGuildId();
@@ -514,6 +528,8 @@ let RadioWhitelistService = class RadioWhitelistService {
         return { id: req.id, status: req.status, createdAt: req.createdAt };
     }
     async decide(actor, id, b) {
+        if (b.decision === 'APPROVE')
+            await this.assertNotRoleOnly('Das Genehmigen von Anträgen');
         if (b.decision === 'REJECT' && (b.reason ?? '').trim().length < 3)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte eine Begründung für die Ablehnung angeben.');
         if (b.expiresAt && b.expiresAt.getTime() <= Date.now())
@@ -569,7 +585,7 @@ let RadioWhitelistService = class RadioWhitelistService {
         ]);
         return {
             status: grant ? (grant.archivedAt ? 'REVOKED' : (0, shared_1.effectiveRadioStatus)(grant)) : null, authorized: !!grant && !grant.archivedAt && (0, shared_1.isRadioAuthorized)(grant),
-            expiresAt: grant?.expiresAt ?? null, suspendedUntil: grant?.suspendedUntil ?? null, pendingSince: pending?.createdAt ?? null, requestsEnabled: cfg.requests.enabled, form: cfg.requests.form,
+            expiresAt: grant?.expiresAt ?? null, suspendedUntil: grant?.suspendedUntil ?? null, pendingSince: pending?.createdAt ?? null, requestsEnabled: cfg.requests.enabled && !(0, shared_1.isRadioRoleOnly)(cfg.roleSync), roleOnly: (0, shared_1.isRadioRoleOnly)(cfg.roleSync), form: cfg.requests.form,
         };
     }
     // ================= Discord-Rollenabgleich =================
@@ -646,8 +662,8 @@ let RadioWhitelistService = class RadioWhitelistService {
             }
             case 'reactivate': {
                 await this.transition(SYSTEM, grant.id, {
-                    from: ['REVOKED', 'DISABLED'], action: 'radio.grant.role_restored', reason,
-                    data: () => ({ status: action.status, archivedAt: null, roleRevoked: false, ...(action.status === 'ACTIVE' ? { grantedAt: new Date(), grantedById: null } : {}) }),
+                    from: (0, shared_1.isRadioRoleOnly)(rules) ? ['REVOKED', 'DISABLED', 'PENDING', 'EXPIRED'] : ['REVOKED', 'DISABLED'], action: 'radio.grant.role_restored', reason,
+                    data: (g) => ({ status: action.status, archivedAt: null, roleRevoked: false, ...(action.status === 'ACTIVE' ? { grantedAt: new Date(), grantedById: null } : {}), ...((0, shared_1.isRadioRoleOnly)(rules) && g.expiresAt ? { expiresAt: null } : {}) }),
                     dm: () => (action.status === 'ACTIVE' ? '✅ Deine Funkfreigabe ist über deine Discord-Rolle wieder aktiv.' : null),
                 });
                 return true;
@@ -833,6 +849,7 @@ let RadioWhitelistService = class RadioWhitelistService {
      * vorhandene nur um Name/Zello-Name/Dienstgrad/Abteilung ergänzt – Status werden NIE per Import geändert, nichts wird gelöscht.
      */
     async importCsv(actor, text, dryRun) {
+        await this.assertNotRoleOnly('Der Import');
         const { header, rows } = (0, shared_1.parseCsv)(text);
         if (!header.includes('discord_id'))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Die CSV braucht eine Spalte „discord_id“ (Kopfzeile wie beim Export).');
@@ -935,6 +952,7 @@ let RadioWhitelistService = class RadioWhitelistService {
         return { whitelisted: !!g && !g.archivedAt && (0, shared_1.isRadioAuthorized)(g), displayName: g?.discordName ?? target.user?.displayName ?? target.discordId ?? '—' };
     }
     async legacyAdd(actor, t) {
+        await this.assertNotRoleOnly('Manuelles Freischalten');
         const target = await this.resolveTarget(t);
         if (!target.discordId)
             throw new errors_1.AppError('VALIDATION_FAILED', `${target.user?.displayName ?? 'Dieses Konto'} ist nicht mit Discord verknüpft – bitte die Discord-ID angeben.`);

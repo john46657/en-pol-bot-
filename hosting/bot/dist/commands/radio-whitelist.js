@@ -20,6 +20,8 @@ async function openRequestForm(c) {
     let s;
     try {
         s = await c.api.service('GET', `/bot/radio-whitelist/status/${c.discordId}`);
+        if (s.roleOnly)
+            return s.authorized ? (0, format_1.okReply)('Du bist bereits für den Funk freigegeben.') : (0, format_1.errorReply)('Ein Antrag ist nicht nötig – die Funkfreigabe kommt automatisch mit der Funk-Rolle in Discord. Wende dich an die Leitung, wenn du die Rolle bekommen sollst.');
         if (!s.requestsEnabled)
             return (0, format_1.errorReply)('Anträge auf Funkfreigabe sind derzeit deaktiviert.');
         if (s.authorized)

@@ -102,6 +102,8 @@ export declare class RadioWhitelistService {
     zelloFactory: (c: ZelloCredentials) => Pick<ZelloWorkClient, 'login' | 'logout' | 'channelExists' | 'addToChannel' | 'removeFromChannel'>;
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, live: DiscordLiveService, notify: NotifyService);
     config(): Promise<RadioWhitelistConfig>;
+    /** „Nur über Discord-Rolle“: manuelle Wege (Freischalten, Anträge, Import) sind dann gesperrt. */
+    private assertNotRoleOnly;
     private saveConfig;
     updateRoleConfig(actor: Actor, b: {
         roleSync: RadioRoleRules;
@@ -655,6 +657,7 @@ export declare class RadioWhitelistService {
         suspendedUntil: Date | null;
         pendingSince: Date | null;
         requestsEnabled: boolean;
+        roleOnly: boolean;
         form: RequestForm;
     }>;
     syncTargets(): Promise<{

@@ -32,7 +32,7 @@ const requestsQ = z.object({ status: z.enum(['PENDING', 'DONE', 'ALL']).default(
 const decideB = z.object({ decision: z.enum(['APPROVE', 'REJECT']), reason: optText(1000), expiresAt: date.nullish() });
 const roleIds = z.array(snowflake).max(50);
 const rolesB = z.object({
-  roleSync: z.object({ enabled: z.boolean(), grantRoleIds: roleIds, requiredRoleIds: roleIds, onRoleGain: z.enum(['ACTIVATE', 'PENDING', 'NONE']), onRoleLoss: z.enum(['REVOKE', 'DISABLE', 'NONE']), manualOnRoleLoss: z.enum(['KEEP', 'DISABLE', 'REVOKE']) }),
+  roleSync: z.object({ enabled: z.boolean(), roleOnly: z.boolean().default(false), grantRoleIds: roleIds, requiredRoleIds: roleIds, onRoleGain: z.enum(['ACTIVATE', 'PENDING', 'NONE']), onRoleLoss: z.enum(['REVOKE', 'DISABLE', 'NONE']), manualOnRoleLoss: z.enum(['KEEP', 'DISABLE', 'REVOKE']) }),
   radioRoleIds: roleIds,
 });
 const panelB = z.object({ channelId: snowflake.nullable(), title: text(256).min(1), text: text(4000).min(1), buttonLabel: text(80).min(1), color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #RRGGBB.') });

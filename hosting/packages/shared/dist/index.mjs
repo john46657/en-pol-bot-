@@ -2913,9 +2913,11 @@ function effectiveRadioStatus(g, now = /* @__PURE__ */ new Date()) {
   return RADIO_GRANT_STATUSES.includes(g.status) ? g.status : "DISABLED";
 }
 var isRadioAuthorized = (g, now = /* @__PURE__ */ new Date()) => !!g && effectiveRadioStatus(g, now) === "ACTIVE";
-var DEFAULT_RADIO_ROLE_RULES = { enabled: false, grantRoleIds: [], requiredRoleIds: [], onRoleGain: "ACTIVATE", onRoleLoss: "REVOKE", manualOnRoleLoss: "KEEP" };
+var DEFAULT_RADIO_ROLE_RULES = { enabled: false, roleOnly: false, grantRoleIds: [], requiredRoleIds: [], onRoleGain: "ACTIVATE", onRoleLoss: "REVOKE", manualOnRoleLoss: "KEEP" };
+var isRadioRoleOnly = (rules) => rules.enabled && !!rules.roleOnly && rules.grantRoleIds.length > 0;
 function radioRoleSyncAction(rules, roleIds, grant, now = /* @__PURE__ */ new Date()) {
   if (!rules.enabled) return { kind: "none", why: "Rollenabgleich ist ausgeschaltet." };
+  if (isRadioRoleOnly(rules)) return roleOnlyAction(rules, roleIds, grant, now);
   const has = (ids) => !!roleIds && ids.some((r) => roleIds.includes(r));
   const hasGrantRole = rules.grantRoleIds.length > 0 && has(rules.grantRoleIds);
   const required = rules.requiredRoleIds.length ? rules.requiredRoleIds : rules.grantRoleIds;
@@ -2933,6 +2935,15 @@ function radioRoleSyncAction(rules, roleIds, grant, now = /* @__PURE__ */ new Da
   if (policy === "REVOKE") return { kind: "revoke" };
   if (policy === "DISABLE") return { kind: "disable" };
   return { kind: "none", why: grant.source === "ROLE" ? "Regel: bei Rollenverlust nichts tun." : "Manuelle Freigabe bleibt laut Regel bestehen." };
+}
+function roleOnlyAction(rules, roleIds, grant, now) {
+  const hasRole = !!roleIds && rules.grantRoleIds.some((r) => roleIds.includes(r));
+  if (!grant) return hasRole ? { kind: "create", status: "ACTIVE" } : { kind: "none", why: "Keine Freigabe und keine berechtigende Rolle." };
+  const status = effectiveRadioStatus(grant, now);
+  if (status === "SUSPENDED") return { kind: "none", why: "Gesperrt \u2013 Sperren hebt nur eine F\xFChrungskraft auf." };
+  const inactive = grant.archived || status === "REVOKED" || status === "DISABLED" || status === "PENDING" || status === "EXPIRED";
+  if (hasRole) return inactive ? { kind: "reactivate", status: "ACTIVE" } : { kind: "none", why: "Berechtigende Rolle vorhanden." };
+  return grant.archived || status === "REVOKED" ? { kind: "none", why: "Keine berechtigende Rolle." } : { kind: "revoke" };
 }
 var RADIO_CSV_COLUMNS = ["discord_id", "discord_name", "external_name", "status", "rank", "department", "expires_at", "reason"];
 function csvCell(v) {
@@ -3329,6 +3340,7 @@ export {
   isInputQuestion,
   isPermissionKey,
   isRadioAuthorized,
+  isRadioRoleOnly,
   isRobloxField,
   isSupportOpen,
   isValidEmoji,
