@@ -1,10 +1,9 @@
 import { ErlcLiveCard } from '../components/ErlcLiveCard';
 import { DiscordChannelHint } from '../components/DiscordChannelHint';
 import { PersonnelTeamEditor } from '../components/PersonnelTeamEditor';
-import { InvestigationEdit, InvestigationPersons } from '../components/InvestigationPersons';
 import { WantedHitList, WantedHitsNotice, WantedSettingsCard } from './WantedHits';
 import { Link } from 'react-router';
-import { COMPLAINT_STATUSES, DISPATCH_STATUSES, INVESTIGATION_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
+import { COMPLAINT_STATUSES, DISPATCH_STATUSES, PRIORITIES, REPORT_STATUSES, REPORT_TYPES, WANTED_STATUSES, APPLICATION_STATUSES } from '@enrp/shared';
 import type { ResourceConfig } from '../components/ResourcePage';
 import { RecordEdit, type RecordConfig } from '../components/RecordPage';
 import { fmt, PriorityBadge, StatusBadge, Badge, statusLabel } from '../components/ui';
@@ -47,23 +46,11 @@ export const complaints: ResourceConfig<Row> = {
   create: { perm: 'complaints.create', label: 'Neue Beschwerde', fields: [{ name: 'category', label: 'Kategorie', required: true, min: 2, max: 64 }, { name: 'subjectId', label: 'Betroffene Person', type: 'person' }, { name: 'complainantId', label: 'Beschwerdeführer', type: 'person' }, { name: 'description', label: 'Beschreibung', type: 'textarea', required: true, min: 10, max: 10000 }] },
 };
 
-export const investigations: ResourceConfig<Row> = {
-  title: 'Ermittlungen', endpoint: '/investigations', queryKey: 'investigations', emptyText: 'Keine Fälle.', statusFilter: INVESTIGATION_STATUSES, detailPath: (r) => `/investigations/${r.id}`,
-  columns: [{ key: 'caseNumber', label: 'Fall' }, { key: 'title', label: 'Titel' }, { key: 'status', label: 'Status', render: status }, { key: 'createdAt', label: 'Eröffnet', render: date('createdAt') }],
-  create: { perm: 'investigations.create', label: 'Neuer Fall', fields: [{ name: 'title', label: 'Titel', required: true, min: 3, max: 200 }, { name: 'description', label: 'Beschreibung', type: 'textarea' }] },
-};
-
 export const wanted: ResourceConfig<Row> = {
   notice: <><WantedSettingsCard /><DiscordChannelHint channel="wanted" what="Fahndungen" /><WantedHitsNotice /></>,
   title: 'Fahndungen', subtitle: 'Standardmäßig nur aktive Fahndungen', endpoint: '/wanted', queryKey: 'wanted', emptyText: 'Keine aktiven Fahndungen.', statusFilter: WANTED_STATUSES, detailPath: (r) => `/wanted/${r.id}`,
   columns: [{ key: 'number', label: 'Nummer', render: (r) => s(r.number) }, { key: 'reason', label: 'Grund' }, { key: 'priority', label: 'Priorität', render: (r) => <PriorityBadge priority={String(r.priority)} /> }, { key: 'status', label: 'Status', render: status }, { key: 'expiresAt', label: 'Läuft ab', render: (r) => (r.expiresAt ? fmt(r.expiresAt as string) : 'Nie') }],
   create: { perm: 'wanted.create', label: 'Neue Fahndung', fields: [{ name: 'personId', label: 'Person', type: 'person', required: true }, { name: 'reason', label: 'Grund', required: true, min: 3, max: 500 }, { name: 'priority', label: 'Priorität', type: 'select', options: PRIORITIES }, { name: 'description', label: 'Beschreibung', type: 'textarea' }] },
-};
-
-export const evidence: ResourceConfig<Row> = {
-  title: 'Beweismittel', endpoint: '/evidence', queryKey: 'evidence', emptyText: 'Keine Beweismittel erfasst.', detailPath: (r) => `/evidence/${r.id}`,
-  columns: [{ key: 'number', label: 'Nummer' }, { key: 'type', label: 'Art' }, { key: 'description', label: 'Beschreibung' }, { key: 'custodyState', label: 'Verwahrung', render: (r) => <StatusBadge status={String(r.custodyState)} /> }],
-  create: { perm: 'evidence.create', label: 'Beweismittel erfassen', fields: [{ name: 'type', label: 'Art', required: true, min: 2, max: 64 }, { name: 'description', label: 'Beschreibung', type: 'textarea', required: true, min: 3 }, { name: 'caseRef', label: 'Fallnummer', hint: 'z. B. CASE-2026-ABC123' }, { name: 'storageLocation', label: 'Lagerort' }, { name: 'personId', label: 'Beteiligte Person', type: 'person' }], toBody: (v) => ({ ...v, personId: undefined, personIds: v.personId ? [v.personId] : undefined }) },
 };
 
 export const personnel: ResourceConfig<Row> = {
@@ -88,18 +75,6 @@ export const records: Record<string, RecordConfig> = {
       { label: 'Als gelöst markieren', perm: 'complaints.resolve', path: (id) => `/complaints/${id}/resolve`, reason: 'required', reasonField: 'resolution', show: (r) => r.status === 'REVIEW' },
       { label: 'Schließen', perm: 'complaints.close', path: (id) => `/complaints/${id}/close`, show: (r) => r.status === 'RESOLVED' || r.status === 'SCREENING' },
     ] },
-  investigations: { endpoint: '/investigations', queryKey: 'investigations', back: '/investigations', title: (r) => `Fall ${r.caseNumber}`, pick: nested('investigation'),
-    fields: [{ key: 'title', label: 'Titel' }, { key: 'description', label: 'Beschreibung', render: (v) => (v ? <span className="whitespace-pre-wrap">{String(v)}</span> : '—') }, { key: 'lead', label: 'Leitung', render: (v) => s((v as Row | null)?.displayName) }, { key: 'createdAt', label: 'Eröffnet' }, { key: 'updatedAt', label: 'Zuletzt geändert' }],
-    headerExtra: (r) => <InvestigationEdit record={r} />,
-    notes: { perm: 'investigations.edit', path: (id) => `/investigations/${id}/notes`, show: (r) => r.status !== 'ARCHIVED' },
-    actions: [
-      { label: 'Ermittlung aufnehmen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ACTIVE' }, reason: 'optional', show: (r) => r.status === 'OPEN' || r.status === 'SUSPENDED' },
-      { label: 'Ruhen lassen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'SUSPENDED' }, reason: 'optional', show: (r) => r.status === 'ACTIVE' },
-      { label: 'Fall wieder öffnen', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ACTIVE' }, reason: 'required', show: (r) => r.status === 'CLOSED' },
-      { label: 'Archivieren', perm: 'investigations.edit', path: (id) => `/investigations/${id}/status`, method: 'PUT', body: { status: 'ARCHIVED' }, reason: 'optional', show: (r) => r.status === 'CLOSED' },
-      { label: 'Fall schließen', perm: 'investigations.close', path: (id) => `/investigations/${id}/close`, danger: true, reason: 'required', show: (r) => r.status !== 'CLOSED' && r.status !== 'ARCHIVED' },
-    ],
-    extra: (r, d) => <><InvestigationPersons id={String(r.id)} status={String(r.status)} links={(d.links as never) ?? []} />{((d.evidence as Row[] | undefined)?.length ? <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Beweismittel</h3><ul className="text-sm">{(d.evidence as Row[]).map((e) => <li key={String(e.id)}><Link className="text-primary underline" to={`/evidence/${e.id}`}>{String(e.number)}</Link> · {String(e.type)} · <Badge>{statusLabel(String(e.custodyState))}</Badge></li>)}</ul></div> : null)}</> },
   wanted: { endpoint: '/wanted', queryKey: 'wanted', back: '/wanted', title: (r) => `Fahndung${r.number ? ` ${r.number}` : ''}: ${r.reason}`, pick: nested('wanted'),
     extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Fahndungstreffer (ER:LC)</h3><WantedHitList wantedId={String(r.id)} compact /></div>,
     headerExtra: (r) => <RecordEdit record={r} perm="wanted.edit" endpoint={`/wanted/${r.id}`} queryKey="wanted" title="Fahndung bearbeiten" show={r.status === 'ACTIVE'}
@@ -119,10 +94,6 @@ export const records: Record<string, RecordConfig> = {
     actions: [{ label: 'Archivieren', perm: 'vehicles.archive', path: (id) => `/vehicles/${id}/archive`, danger: true, reason: 'required', show: (r) => r.status !== 'ARCHIVED' }],
     headerExtra: (r) => <RecordEdit record={r} perm="vehicles.edit" endpoint={`/vehicles/${r.id}`} queryKey="vehicles" title="Fahrzeug bearbeiten" show={r.status !== 'ARCHIVED'}
       fields={[{ name: 'plate', label: 'Kennzeichen', required: true, min: 2, max: 16 }, { name: 'model', label: 'Modell', max: 64 }, { name: 'color', label: 'Farbe', max: 32 }, { name: 'ownerId', label: 'Halter', type: 'person', display: (r.owner as Row | null)?.robloxUsername as string | undefined }, { name: 'notes', label: 'Notizen', type: 'textarea', max: 2000 }]} /> },
-  evidence: { endpoint: '/evidence', queryKey: 'evidence', back: '/evidence', title: (r) => `Beweismittel ${r.number}`, pick: (d) => ({ record: d as Row, timeline: undefined }),
-    fields: [{ key: 'type', label: 'Art' }, { key: 'description', label: 'Beschreibung' }, { key: 'caseRef', label: 'Fall' }, { key: 'storageLocation', label: 'Lagerort' }, { key: 'custodyState', label: 'Verwahrungsstatus', render: (v) => <StatusBadge status={String(v)} /> }],
-    actions: [{ label: 'Freigeben', perm: 'evidence.release', path: (id) => `/evidence/${id}/release`, reason: 'required', show: (r) => r.custodyState !== 'RELEASED' && r.custodyState !== 'ARCHIVED' }],
-    extra: (r) => <div className="mt-4"><h3 className="mb-1 text-xs text-muted">Beweismittelkette</h3><ol className="space-y-1 text-sm">{((r.transfers as Row[]) ?? []).map((t) => <li key={String(t.id)}>{fmt(t.createdAt as string)} — {statusLabel(String(t.fromState))} → <b>{statusLabel(String(t.toState))}</b> · {String(t.reason)} {t.confirmed ? '✓' : '(unbestätigt)'}</li>)}</ol></div> },
   personnel: { endpoint: '/personnel', queryKey: 'personnel', back: '/personnel', title: (r) => `${(r.user as Row)?.displayName} (${r.callsign ?? 'kein Rufname'})`, pick: (d) => ({ record: d as Row, timeline: undefined }),
     fields: [{ key: 'rank', label: 'Rang' }, { key: 'team', label: 'Team' }, { key: 'office', label: 'Büro' }, { key: 'serviceNumber', label: 'Dienstnummer' }, { key: 'callsign', label: 'Rufname' }, { key: 'joinDate', label: 'Eingetreten' }, { key: 'qualifications', label: 'Qualifikationen', render: (v) => (Array.isArray(v) && v.length ? v.join(', ') : '—') }],
     extra: (r) => <><PersonnelTeamEditor record={r} /><div className="mt-4"><h3 className="mb-1 text-xs text-muted">Einträge (Beförderungen, Auszeichnungen, Disziplinarmaßnahmen)</h3>{((r.records as Row[]) ?? []).length === 0 ? <p className="text-sm text-muted">Keine Einträge.</p> : <ul className="space-y-1 text-sm">{(r.records as Row[]).map((x) => <li key={String(x.id)}><Badge>{statusLabel(String(x.type))}</Badge> {String(x.summary)} <span className="text-xs text-muted">{fmt(x.createdAt as string)}</span></li>)}</ul>}</div></> },

@@ -8,9 +8,9 @@ Three levels, from no-code to code.
 - **Legal codes**: Admin → Legal Codes.
 
 ## 2. Add a permission
-1. Add the action to `PERMISSION_CATALOG` in `packages/shared/src/permissions.ts` (e.g. `evidence: [..., 'destroy']`).
+1. Add the action to `PERMISSION_CATALOG` in `packages/shared/src/permissions.ts` (e.g. `wanted: [..., 'destroy']`).
 2. `pnpm db:seed` registers it (idempotent). Grant it to roles in the UI (or add it to `STARTER_ROLES` in `apps/api/src/seed/seed-lib.ts` for new installs).
-3. Protect endpoints with `@RequirePermission('evidence.destroy')`; hide UI with `can('evidence.destroy')`.
+3. Protect endpoints with `@RequirePermission('wanted.destroy')`; hide UI with `can('wanted.destroy')`.
 
 ## 3. Add a new module (example: "Citations of Property" → `seizures`)
 Follow an existing small module as template — **vehicles** (`apps/api/src/vehicles`, `apps/web/src/pages/resources.tsx`).

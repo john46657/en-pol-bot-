@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Polizei-MDT (Bürger-, Fahrzeug- und Waffenakten). Lizenzen, Merkmale/Warnhinweise und Waffenarten sind im Dashboard
+ * Polizei-MDT (Bürger- und Fahrzeugakten). Lizenzen und Merkmale/Warnhinweise sind im Dashboard
  * einstellbar (Einstellungen → MDT); hier stehen nur die Standardwerte.
  */
 const option = z.object({ key: z.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, 'Schlüssel: nur A–Z, 0–9 und _'), label: z.string().trim().min(1).max(40) });
@@ -9,7 +9,6 @@ const unique = <T extends { key: string }>(xs: T[]) => new Set(xs.map((x) => x.k
 export const mdtConfigSchema = z.object({
   licenses: z.array(option).max(30).refine(unique, 'Schlüssel doppelt'),
   flags: z.array(option.extend({ tone: z.enum(['danger', 'warning', 'info', 'neutral']) })).max(30).refine(unique, 'Schlüssel doppelt'),
-  weaponTypes: z.array(option).max(40).refine(unique, 'Schlüssel doppelt'),
   genders: z.array(z.string().trim().min(1).max(30)).max(10),
 });
 export type MdtConfig = z.infer<typeof mdtConfigSchema>;
@@ -24,20 +23,8 @@ export const DEFAULT_MDT_CONFIG: MdtConfig = {
     { key: 'FLIGHT_RISK', label: 'Fluchtgefahr', tone: 'warning' }, { key: 'VIOLENT', label: 'Gewaltbereit', tone: 'warning' },
     { key: 'GANG', label: 'Bandenzugehörigkeit', tone: 'warning' },
   ],
-  weaponTypes: [
-    { key: 'PISTOL', label: 'Pistole' }, { key: 'RIFLE', label: 'Gewehr' }, { key: 'SHOTGUN', label: 'Schrotflinte' },
-    { key: 'SMG', label: 'Maschinenpistole' }, { key: 'TASER', label: 'Taser' }, { key: 'KNIFE', label: 'Messer' }, { key: 'OTHER', label: 'Sonstige' },
-  ],
   genders: ['Männlich', 'Weiblich', 'Divers'],
 };
-
-/** Status eines registrierten Gegenstands im Waffenregister. */
-export const WEAPON_STATUSES = [
-  { key: 'REGISTERED', label: 'Registriert', tone: 'success' }, { key: 'STOLEN', label: 'Gestohlen', tone: 'danger' },
-  { key: 'SEIZED', label: 'Beschlagnahmt', tone: 'warning' }, { key: 'DESTROYED', label: 'Vernichtet', tone: 'neutral' },
-] as const;
-export type WeaponStatus = (typeof WEAPON_STATUSES)[number]['key'];
-export const WEAPON_STATUS_KEYS = WEAPON_STATUSES.map((s) => s.key) as [WeaponStatus, ...WeaponStatus[]];
 
 /** Personalien einer Person im MDT (alle optional; Datum als YYYY-MM-DD). */
 export const personDetailsSchema = z.object({

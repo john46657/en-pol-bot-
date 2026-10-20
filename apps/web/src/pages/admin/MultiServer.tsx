@@ -1,27 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Network, Plus, RotateCcw, Server, ShieldCheck, Trash2 } from 'lucide-react';
+import { Plus, Server, ShieldCheck, Trash2 } from 'lucide-react';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
 import { Toggle } from '../../components/ApplicationSettings';
-import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, Select, SkeletonRows, confirmDialog } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, fmt, Input, PageHeader, SkeletonRows, confirmDialog } from '../../components/ui';
 
 interface ServerRow { id: string; guildId: string; name: string; status: 'ACTIVE' | 'DISABLED' | 'ERROR'; archivedAt: string | null; version: number }
 interface ModuleRow { key: string; name: string; description: string; system: boolean; enabled: boolean; version: number; updatedAt: string | null }
 interface Effective { globalAdmin: boolean; membership: { status: string; source: string; lastVerifiedAt: string | null } | null; allowed: string[]; details: { permission: string; module: string; allowed: boolean; source: string; blockedBy: string | null }[] }
 interface Member { id: string; status: string; source: string; lastVerifiedAt: string | null; user: { id: string; displayName: string; username: string } }
-interface Connection { id: string; name: string; status: 'ACTIVE' | 'DISABLED'; version: number; members: { serverId: string; server: { id: string; name: string; guildId: string } }[] }
-interface Policy { id: string; sourceServerId: string; targetServerId: string; dataType: string; direction: string; enabled: boolean; version: number }
-interface SyncStatus { counts: Record<string, number>; lastProcessedAt: string | null; oldestPendingAt: string | null }
-interface SyncEventRow { id: string; dataType: string; eventType: string; status: string; attemptCount: number; lastError: string | null; createdAt: string; processedAt: string | null }
 
 const STATUS: Record<string, { label: string; tone: 'success' | 'neutral' | 'danger' | 'warning' | 'info' }> = {
   ACTIVE: { label: 'Aktiv', tone: 'success' }, DISABLED: { label: 'Deaktiviert', tone: 'neutral' }, ERROR: { label: 'Verbindungsfehler', tone: 'danger' },
   PENDING: { label: 'Offen', tone: 'info' }, DONE: { label: 'Erledigt', tone: 'success' }, SKIPPED: { label: 'Übersprungen (Konflikt)', tone: 'warning' }, FAILED: { label: 'Fehlgeschlagen', tone: 'danger' }, CANCELLED: { label: 'Verworfen', tone: 'neutral' },
 };
-const DATA_TYPES: Record<string, string> = { reports: 'Berichte', unit_status: 'Dienststatus', team_overview: 'Teamübersicht', shift_statistics: 'Wochenstatistik', incidents: 'Einsätze (noch keine Quelle)', incident_status: 'Einsatzstatus (noch keine Quelle)', radio_messages: 'Funksprüche (noch keine Quelle)' };
-const DIRECTIONS: Record<string, string> = { A_TO_B: 'Quelle → Ziel', B_TO_A: 'Ziel → Quelle', BIDIRECTIONAL: 'beide Richtungen', NONE: 'keine' };
 const BLOCKED: Record<string, string> = { NOT_MEMBER: 'kein Mitglied', MODULE_DISABLED: 'Modul aus', SERVER_DISABLED: 'Server deaktiviert', UNKNOWN_SERVER: 'Server unbekannt' };
 const conflictText = (e: unknown) => (e instanceof ApiError && e.status === 409 ? 'Inzwischen von jemand anderem geändert – Ansicht wurde neu geladen, deine Änderung ist NICHT gespeichert.' : errText(e));
 
@@ -37,7 +31,7 @@ export function MultiServer() {
   const server = servers.data?.find((s) => s.id === sel);
   return (
     <>
-      <PageHeader title="Server & Module" subtitle="Jeder Discord-Server arbeitet getrennt: eigene Module, Rollen und Rechte. Verbindungen tauschen nur freigegebene Daten aus – nur lesend." />
+      <PageHeader title="Server & Module" subtitle="Jeder Discord-Server arbeitet getrennt: eigene Module, Rollen und Rechte." />
       {servers.error ? <ErrorState error={servers.error} onRetry={() => void servers.refetch()} /> : servers.isLoading ? <SkeletonRows /> : (
         <>
           <ServerList servers={servers.data ?? []} selected={sel} onSelect={setSel} globalAdmin={!!user?.globalAdmin} />
@@ -46,7 +40,6 @@ export function MultiServer() {
             <EffectiveCard server={server} userId={user!.id} />
             <MembersCard server={server} />
           </>}
-          <ConnectionsCard servers={servers.data ?? []} />
         </>
       )}
     </>
@@ -143,86 +136,5 @@ function MembersCard({ server }: { server: ServerRow }) {
         <ul className="grid gap-1 text-sm md:grid-cols-2">{members.slice(0, 200).map((m) => <li key={m.id} className="flex justify-between gap-2"><span>{m.user.displayName}</span><span className="text-xs text-muted">{m.source === 'DISCORD' ? 'Discord' : 'manuell'}{m.lastVerifiedAt ? ` · ${fmt(m.lastVerifiedAt)}` : ''}</span></li>)}</ul>
       )}
     </Card>
-  );
-}
-
-function ConnectionsCard({ servers }: { servers: ServerRow[] }) {
-  const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['ms-connections'], queryFn: () => api<Connection[]>('/connections') });
-  const [name, setName] = useState('');
-  const [pick, setPick] = useState<string[]>([]);
-  const refresh = () => void qc.invalidateQueries({ queryKey: ['ms-connections'] });
-  const create = useMutation({ mutationFn: () => api('/connections', { body: { name, serverIds: pick } }), onSuccess: () => { setName(''); setPick([]); refresh(); } });
-  return (
-    <Card className="mt-4" title={<span className="flex items-center gap-2"><Network size={16} aria-hidden />Serververbindungen</span>}>
-      <p className="mb-3 text-xs text-muted">Eine Verbindung allein überträgt nichts. Daten fließen nur über aktive Freigaben – als lesende Kopie, nie mit Bearbeitungsrechten. Zum Anlegen und Ändern brauchst du „connections.manage“ auf den beteiligten Servern.</p>
-      {q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : q.isLoading ? <SkeletonRows rows={2} /> : !q.data?.length ? <EmptyState text="Keine Verbindungen." /> : (
-        <div className="grid gap-3">{q.data.map((c) => <ConnectionItem key={c.id} c={c} onChange={refresh} />)}</div>
-      )}
-      <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); create.mutate(); }}>
-        <label className="grid gap-1 text-xs text-muted">Name<Input value={name} onChange={(e) => setName(e.target.value)} /></label>
-        <fieldset className="flex flex-wrap gap-2 text-sm"><legend className="text-xs text-muted">Server</legend>{servers.filter((s) => !s.archivedAt).map((s) => (
-          <label key={s.id} className="flex items-center gap-1"><input type="checkbox" checked={pick.includes(s.id)} onChange={(e) => setPick(e.target.checked ? [...pick, s.id] : pick.filter((x) => x !== s.id))} />{s.name}</label>
-        ))}</fieldset>
-        <Button size="sm" type="submit" disabled={create.isPending || !name.trim() || pick.length < 2}><Plus size={14} aria-hidden />Verbindung anlegen</Button>
-      </form>
-      {create.error && <p role="alert" className="mt-2 text-sm text-danger">{errText(create.error)}</p>}
-    </Card>
-  );
-}
-
-function ConnectionItem({ c, onChange }: { c: Connection; onChange: () => void }) {
-  const qc = useQueryClient();
-  const policies = useQuery({ queryKey: ['ms-policies', c.id], queryFn: () => api<Policy[]>(`/connections/${c.id}/policies`) });
-  const status = useQuery({ queryKey: ['ms-sync', c.id], queryFn: () => api<SyncStatus>(`/connections/${c.id}/sync-status`), refetchInterval: 10_000, retry: false });
-  const events = useQuery({ queryKey: ['ms-events', c.id], queryFn: () => api<{ items: SyncEventRow[] }>(`/connections/${c.id}/sync-events?pageSize=10`), retry: false });
-  const name = (id: string) => c.members.find((m) => m.serverId === id)?.server.name ?? id;
-  const [p, setP] = useState({ sourceServerId: c.members[0]?.serverId ?? '', targetServerId: c.members[1]?.serverId ?? '', dataType: 'reports', direction: 'A_TO_B' });
-  const reload = () => { onChange(); void qc.invalidateQueries({ queryKey: ['ms-policies', c.id] }); void qc.invalidateQueries({ queryKey: ['ms-sync', c.id] }); void qc.invalidateQueries({ queryKey: ['ms-events', c.id] }); };
-  const toggle = useMutation({ mutationFn: () => api(`/connections/${c.id}`, { method: 'PATCH', body: { status: c.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE', version: c.version } }), onSettled: reload });
-  const addPolicy = useMutation({ mutationFn: () => api(`/connections/${c.id}/policies`, { body: p }), onSettled: reload });
-  const patchPolicy = useMutation({ mutationFn: (v: { pol: Policy; body: Record<string, unknown> }) => api(`/connections/${c.id}/policies/${v.pol.id}`, { method: 'PATCH', body: { ...v.body, version: v.pol.version } }), onSettled: reload });
-  const removePolicy = useMutation({ mutationFn: (pol: Policy) => api(`/connections/${c.id}/policies/${pol.id}`, { method: 'DELETE' }), onSettled: reload });
-  const retry = useMutation({ mutationFn: () => api<{ requeued: number }>(`/connections/${c.id}/retry-failed`, { method: 'POST' }), onSettled: reload });
-  const err = toggle.error ?? addPolicy.error ?? patchPolicy.error ?? removePolicy.error ?? retry.error;
-  return (
-    <div className="rounded-lg border border-line p-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">{c.name}</span><Badge tone={STATUS[c.status]?.tone}>{STATUS[c.status]?.label}</Badge>
-        <span className="text-xs text-muted">{c.members.map((m) => m.server.name).join(' · ')}</span>
-        <Button className="ml-auto" size="sm" variant="secondary" disabled={toggle.isPending} onClick={() => toggle.mutate()}>{c.status === 'ACTIVE' ? 'Deaktivieren' : 'Aktivieren'}</Button>
-      </div>
-      <table className="mt-2 w-full text-sm">
-        <thead className="text-left text-xs uppercase text-muted"><tr><th className="py-1">Daten</th><th>Quelle</th><th>Ziel</th><th>Richtung</th><th>Aktiv</th><th /></tr></thead>
-        <tbody>{(policies.data ?? []).map((pol) => (
-          <tr key={pol.id} className="border-t border-line">
-            <td className="py-1">{DATA_TYPES[pol.dataType] ?? pol.dataType}</td><td>{name(pol.sourceServerId)}</td><td>{name(pol.targetServerId)}</td>
-            <td><Select aria-label="Richtung" className="w-auto py-0.5 text-xs" value={pol.direction} onChange={(e) => patchPolicy.mutate({ pol, body: { direction: e.target.value } })}>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select></td>
-            <td><Toggle label="Freigabe aktiv" checked={pol.enabled} onChange={(v) => patchPolicy.mutate({ pol, body: { enabled: v } })} /></td>
-            <td><Button size="sm" variant="ghost" aria-label="Freigabe entfernen" onClick={() => removePolicy.mutate(pol)}><Trash2 size={14} /></Button></td>
-          </tr>
-        ))}</tbody>
-      </table>
-      <form className="mt-2 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); addPolicy.mutate(); }}>
-        <Select aria-label="Datenart" className="w-auto py-1 text-xs" value={p.dataType} onChange={(e) => setP({ ...p, dataType: e.target.value })}>{Object.entries(DATA_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
-        <Select aria-label="Quelle" className="w-auto py-1 text-xs" value={p.sourceServerId} onChange={(e) => setP({ ...p, sourceServerId: e.target.value })}>{c.members.map((m) => <option key={m.serverId} value={m.serverId}>{m.server.name}</option>)}</Select>
-        <Select aria-label="Ziel" className="w-auto py-1 text-xs" value={p.targetServerId} onChange={(e) => setP({ ...p, targetServerId: e.target.value })}>{c.members.map((m) => <option key={m.serverId} value={m.serverId}>{m.server.name}</option>)}</Select>
-        <Select aria-label="Richtung der neuen Freigabe" className="w-auto py-1 text-xs" value={p.direction} onChange={(e) => setP({ ...p, direction: e.target.value })}>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
-        <Button size="sm" type="submit" disabled={addPolicy.isPending || p.sourceServerId === p.targetServerId}><Plus size={14} aria-hidden />Freigabe</Button>
-      </form>
-      {status.data && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          {Object.entries(status.data.counts).map(([k, v]) => <Badge key={k} tone={STATUS[k]?.tone}>{STATUS[k]?.label ?? k}: {v}</Badge>)}
-          {status.data.lastProcessedAt && <span className="text-muted">zuletzt {fmt(status.data.lastProcessedAt)}</span>}
-          {(status.data.counts.FAILED ?? 0) > 0 && <Button size="sm" variant="secondary" disabled={retry.isPending} onClick={() => retry.mutate()}><RotateCcw size={14} aria-hidden />Fehlgeschlagene wiederholen</Button>}
-        </div>
-      )}
-      {!!events.data?.items.length && (
-        <details className="mt-2"><summary className="cursor-pointer text-xs text-muted">Letzte Ereignisse</summary>
-          <ul className="mt-1 grid gap-1 text-xs">{events.data.items.map((e) => <li key={e.id} className="flex flex-wrap gap-2"><Badge tone={STATUS[e.status]?.tone}>{STATUS[e.status]?.label ?? e.status}</Badge>{DATA_TYPES[e.dataType] ?? e.dataType} · {e.eventType} · {fmt(e.createdAt)}{e.lastError && <span className="text-muted">({e.lastError})</span>}</li>)}</ul>
-        </details>
-      )}
-      {err && <p role="alert" className="mt-2 text-sm text-danger">{conflictText(err)}</p>}
-    </div>
   );
 }

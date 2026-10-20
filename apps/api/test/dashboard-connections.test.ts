@@ -29,14 +29,6 @@ describe('dashboard connections', () => {
     expect((await admin.get('/api/v1/academy/courses/00000000-0000-0000-0000-000000000000')).status).toBe(404);
   });
 
-  it('investigation detail includes the names of linked persons', async () => {
-    const admin = (await login(app, 'conn_admin')).agent;
-    const person = await prisma.person.create({ data: { robloxUsername: 'conn_suspect' } });
-    const inv = (await admin.post('/api/v1/investigations').send({ title: 'Verbindungstest Fall' })).body as { id: string };
-    expect((await admin.post(`/api/v1/investigations/${inv.id}/persons`).send({ personId: person.id, role: 'SUSPECT' })).status).toBeLessThan(300);
-    const d = (await admin.get(`/api/v1/investigations/${inv.id}`)).body;
-    expect(d.links).toEqual([expect.objectContaining({ role: 'SUSPECT', person: { id: person.id, robloxUsername: 'conn_suspect' } })]);
-  });
 
   it('user detail shows the Discord link, which an admin can remove', async () => {
     const admin = (await login(app, 'conn_admin')).agent;

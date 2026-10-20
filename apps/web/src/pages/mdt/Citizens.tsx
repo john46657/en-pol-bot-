@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, ExternalLink, ImageUp } from 'lucide-react';
-import { DEFAULT_MDT_CONFIG, WEAPON_STATUSES, type MdtConfig } from '@enrp/shared';
+import { DEFAULT_MDT_CONFIG, type MdtConfig } from '@enrp/shared';
 import { api, ApiError, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useDebounced } from '../../components/DataTable';
@@ -26,14 +26,12 @@ type RobloxResult = { status: 'ok' | 'not_found' | 'unreachable' | 'disabled'; p
 interface Linked { id: string; ref: string; title: string; status: string; role: string; createdAt: string }
 interface Profile {
   person: Citizen & { notes: string | null; createdAt: string };
-  counts: Record<'activeWarrants' | 'vehicles' | 'weapons' | 'incidents' | 'reports' | 'investigations' | 'evidence', number | null>;
+  counts: Record<'activeWarrants' | 'vehicles' | 'incidents' | 'reports', number | null>;
   vehicles: { id: string; plate: string; model: string | null; color: string | null; status: string }[] | null;
-  weapons: Weapon[] | null;
   warrants: { id: string; reason: string; description: string | null; priority: string; status: string; createdAt: string }[] | null;
-  incidents: Linked[] | null; reports: Linked[] | null; investigations: Linked[] | null; complaints: Linked[] | null; evidence: Linked[] | null;
+  incidents: Linked[] | null; reports: Linked[] | null; complaints: Linked[] | null;
   timeline: { id: string; summary: string; createdAt: string }[];
 }
-export interface Weapon { id: string; serial: string; type: string; model: string | null; status: string; notes: string | null; version: number; owner?: { id: string; robloxUsername: string; fullName: string | null } | null }
 
 export const errText = (e: unknown) => (e instanceof ApiError ? e.message : 'Fehlgeschlagen');
 export const nameOf = (p: { fullName: string | null; robloxUsername: string }) => p.fullName || p.robloxUsername;
@@ -111,11 +109,11 @@ export function MdtCitizens() {
 }
 
 const TABS = [
-  ['overview', 'Übersicht'], ['roblox', 'Roblox'], ['licenses', 'Lizenzen'], ['warrants', 'Haftbefehle'], ['vehicles', 'Fahrzeuge'], ['weapons', 'Waffen'], ['incidents', 'Einsätze'],
-  ['reports', 'Berichte'], ['investigations', 'Ermittlungen'], ['notes', 'Notizen'], ['flags', 'Merkmale'], ['history', 'Verlauf'],
+  ['overview', 'Übersicht'], ['roblox', 'Roblox'], ['licenses', 'Lizenzen'], ['warrants', 'Haftbefehle'], ['vehicles', 'Fahrzeuge'], ['incidents', 'Einsätze'],
+  ['reports', 'Berichte'], ['notes', 'Notizen'], ['flags', 'Merkmale'], ['history', 'Verlauf'],
 ] as const;
 type TabKey = (typeof TABS)[number][0];
-const LINK_PATH: Record<string, string> = { incidents: '/mdt/incidents', reports: '/mdt/reports', investigations: '/mdt/investigations' };
+const LINK_PATH: Record<string, string> = { incidents: '/mdt/incidents', reports: '/mdt/reports' };
 
 /** Bürgerakte im MDT: Foto, Warnhinweise, Kennzahlen und alle verknüpften Akten in Reitern. Bearbeiten nur mit `persons.edit`. */
 export function CitizenProfile({ id, onClose }: { id: string | null; onClose: () => void }) {
@@ -191,7 +189,7 @@ export function CitizenProfile({ id, onClose }: { id: string | null; onClose: ()
             </div>
           </section>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {([['Aktive Haftbefehle', d.counts.activeWarrants, 'warrants'], ['Fahrzeuge', d.counts.vehicles, 'vehicles'], ['Waffen', d.counts.weapons, 'weapons'], ['Einsätze', d.counts.incidents, 'incidents'], ['Berichte', d.counts.reports, 'reports']] as [string, number | null, TabKey][]).filter(([, v]) => v !== null).map(([k, v, t]) => (
+            {([['Aktive Haftbefehle', d.counts.activeWarrants, 'warrants'], ['Fahrzeuge', d.counts.vehicles, 'vehicles'], ['Einsätze', d.counts.incidents, 'incidents'], ['Berichte', d.counts.reports, 'reports']] as [string, number | null, TabKey][]).filter(([, v]) => v !== null).map(([k, v, t]) => (
               <button key={k} type="button" onClick={() => setTab(t)} className={`rounded-md border px-2 py-2 text-center ${t === 'warrants' && v ? 'border-danger/50' : 'border-line'} hover:bg-panel-2`}>
                 <p className={`text-xl font-semibold tabular-nums ${t === 'warrants' && v ? 'text-danger' : 'text-primary'}`}>{v}</p><p className="text-[10px] uppercase tracking-wide text-muted">{k}</p>
               </button>
@@ -208,8 +206,7 @@ export function CitizenProfile({ id, onClose }: { id: string | null; onClose: ()
             {tab === 'notes' && <Notes value={p.notes} canEdit={edit} busy={save.isPending} onSave={(notes) => save.mutate({ notes })} />}
             {tab === 'warrants' && <Rows empty="Keine Haftbefehle/Fahndungen." items={d.warrants?.map((w) => ({ id: w.id, to: `/mdt/warrants`, main: w.reason, sub: w.description ?? '', right: <><PriorityBadge priority={w.priority} /><StatusBadge status={w.status} /></>, at: w.createdAt })) ?? []} />}
             {tab === 'vehicles' && <Rows empty="Keine Fahrzeuge." items={d.vehicles?.map((v) => ({ id: v.id, to: `/mdt/vehicles?id=${v.id}`, main: v.plate, sub: [v.model, v.color].filter(Boolean).join(' · '), right: <StatusBadge status={v.status} /> })) ?? []} />}
-            {tab === 'weapons' && <PersonWeapons ownerId={p.id} weapons={d.weapons ?? []} onChanged={refresh} />}
-            {(['incidents', 'reports', 'investigations'] as const).map((k) => tab === k && <Rows key={k} empty="Keine Einträge." items={(d[k] ?? []).map((r) => ({ id: r.id, to: `${LINK_PATH[k]}/${r.id}`, main: `${r.ref} · ${r.title}`, sub: r.role === 'SUBJECT' ? '' : r.role, right: <StatusBadge status={r.status} />, at: r.createdAt }))} />)}
+            {(['incidents', 'reports'] as const).map((k) => tab === k && <Rows key={k} empty="Keine Einträge." items={(d[k] ?? []).map((r) => ({ id: r.id, to: `${LINK_PATH[k]}/${r.id}`, main: `${r.ref} · ${r.title}`, sub: r.role === 'SUBJECT' ? '' : r.role, right: <StatusBadge status={r.status} />, at: r.createdAt }))} />)}
             {tab === 'history' && (d.timeline.length ? <ul className="space-y-1 text-sm">{d.timeline.map((t) => <li key={t.id}><span className="text-xs text-muted">{fmt(t.createdAt)}</span> · {t.summary}</li>)}</ul> : <p className="text-sm text-muted">Kein Verlauf.</p>)}
           </div>
         </div>
@@ -296,36 +293,6 @@ function Rows({ items, empty }: { items: { id: string; to: string; main: string;
       <span className="flex items-center gap-1.5 text-xs">{i.at && <span className="text-muted">{fmt(i.at)}</span>}{i.right}</span>
     </li>
   ))}</ul>;
-}
-
-/** Waffen einer Person – mit „Waffe registrieren“ (Recht weapons.create). */
-function PersonWeapons({ ownerId, weapons, onChanged }: { ownerId: string; weapons: Weapon[]; onChanged: () => void }) {
-  const { can } = useAuth();
-  const cfg = useMdtConfig();
-  const [v, setV] = useState({ serial: '', type: cfg.weaponTypes[0]?.key ?? '', model: '' });
-  const [err, setErr] = useState<string>();
-  const add = useMutation({ mutationFn: () => api('/mdt/weapons', { body: { ...v, model: v.model || null, ownerId } }), onSuccess: () => { setV({ ...v, serial: '', model: '' }); setErr(undefined); onChanged(); }, onError: (e) => setErr(errText(e)) });
-  return (
-    <div className="space-y-2">
-      {weapons.length ? <ul className="divide-y divide-line text-sm">{weapons.map((w) => (
-        <li key={w.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5"><span><b className="font-mono">{w.serial}</b> · {labelOf(cfg.weaponTypes, w.type)}{w.model ? ` · ${w.model}` : ''}</span><WeaponStatusBadge status={w.status} /></li>
-      ))}</ul> : <p className="text-sm text-muted">Keine registrierten Waffen.</p>}
-      {can('weapons.create') && (
-        <form className="grid gap-2 border-t border-line pt-2 sm:grid-cols-[1fr_1fr_1fr_auto]" onSubmit={(e) => { e.preventDefault(); if (v.serial.trim()) add.mutate(); }}>
-          <Input aria-label="Seriennummer" placeholder="Seriennummer" maxLength={40} value={v.serial} onChange={(e) => setV({ ...v, serial: e.target.value })} />
-          <Select aria-label="Waffenart" value={v.type} onChange={(e) => setV({ ...v, type: e.target.value })}>{cfg.weaponTypes.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}</Select>
-          <Input aria-label="Modell" placeholder="Modell (optional)" maxLength={60} value={v.model} onChange={(e) => setV({ ...v, model: e.target.value })} />
-          <Button type="submit" disabled={!v.serial.trim() || add.isPending}>Registrieren</Button>
-          {err && <p role="alert" className="text-sm text-danger sm:col-span-4">{err}</p>}
-        </form>
-      )}
-    </div>
-  );
-}
-
-export function WeaponStatusBadge({ status }: { status: string }) {
-  const s = WEAPON_STATUSES.find((x) => x.key === status);
-  return <Badge tone={(s?.tone ?? 'neutral') as Tone}>{s?.label ?? status}</Badge>;
 }
 
 const years = (iso: string) => { const d = new Date(iso); const y = (Date.now() - d.getTime()) / (365.25 * 86_400_000); return y >= 1 ? `${Math.floor(y)} Jahr${Math.floor(y) === 1 ? '' : 'e'}` : `${Math.max(1, Math.floor(y * 12))} Monat(e)`; };

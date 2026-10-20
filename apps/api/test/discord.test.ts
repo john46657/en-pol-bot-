@@ -105,12 +105,10 @@ describe('bot authentication & authorization', () => {
   it('new allowlisted write routes still enforce the user\u2019s own permissions', async () => {
     const adm = (await login(app, 'd_admin')).agent;
     const person = (await adm.post('/api/v1/persons').send({ robloxUsername: 'Bot_Perm_Target' })).body.person;
-    // d_off (Police Member): Bericht ja, Fahndung/Ermittlung/Beweis nein?  -> Police Member hat reports.create + evidence.create + complaints.create
+    // d_off (Police Member): Bericht und Beschwerde ja, Fahndung nein
     expect((await http().post('/api/v1/reports').set(bot(D1)).send({ type: 'PATROL', title: 'Via Discord', content: { body: 'text' } })).status).toBe(201);
     expect((await http().post('/api/v1/complaints').set(bot(D1)).send({ category: 'Conduct', description: 'Filed through the Discord bot.' })).status).toBe(201);
-    expect((await http().post('/api/v1/evidence').set(bot(D1)).send({ type: 'Photo', description: 'Scene photo' })).status).toBe(201);
     expect((await http().post('/api/v1/wanted').set(bot(D1)).send({ personId: person.id, reason: 'Nope' })).status).toBe(403); // wanted.create fehlt
-    expect((await http().post('/api/v1/investigations').set(bot(D1)).send({ title: 'Nope nope' })).status).toBe(403); // investigations.create fehlt
     expect((await http().get('/api/v1/auth/me').set(bot(D1))).body.username).toBe('d_off');
     // Unlink über den Bot (eigene Verknüpfung)
     const d4 = '100000000000000004';

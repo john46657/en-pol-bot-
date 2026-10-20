@@ -11,14 +11,10 @@ export const PERMISSION_CATALOG = {
   vehicles: ['view', 'create', 'edit', 'archive'],
   /** Polizeifahrzeuge (Live aus ER:LC + Modellkatalog); edit = Status/Notizen/Tags/Kennung, assign = Einheit zuweisen */
   fleet: ['view', 'view_details', 'edit', 'assign', 'manage_catalog', 'manage'],
-  /** Waffenregister im MDT */
-  weapons: ['view', 'create', 'edit'],
   reports: ['view', 'create', 'edit', 'submit', 'review', 'approve', 'reject', 'archive'],
   tickets: ['view', 'create', 'edit', 'void'],
   complaints: ['view', 'create', 'assign', 'investigate', 'resolve', 'close'],
-  investigations: ['view', 'create', 'edit', 'close'],
   wanted: ['view', 'create', 'edit', 'activate', 'clear'],
-  evidence: ['view', 'create', 'transfer', 'release'],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ['view', 'view_sensitive', 'create', 'edit', 'delete', 'promote', 'discipline'],
   /** Beförderungssystem */
@@ -68,10 +64,6 @@ export const PERMISSION_CATALOG = {
    * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
    */
   messagebuilder: ['view', 'create', 'templates_create', 'templates_edit', 'templates_delete', 'send', 'history', 'channels', 'webhooks', 'roles'],
-  /** Serververbindungen und Datenfreigaben (wirksam nur mit dem Recht auf JEDEM beteiligten Server) */
-  connections: ['view', 'manage'],
-  /** Synchronisierungsereignisse einsehen bzw. fehlgeschlagene erneut anstoßen */
-  sync: ['view', 'retry'],
 } as const;
 
 type Catalog = typeof PERMISSION_CATALOG;

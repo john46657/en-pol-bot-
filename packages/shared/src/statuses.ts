@@ -53,16 +53,6 @@ export const COMPLAINT_TRANSITIONS: TransitionMap<ComplaintStatus> = {
   CLOSED: [],
 };
 
-export const INVESTIGATION_STATUSES = ['OPEN','ACTIVE','SUSPENDED','CLOSED','ARCHIVED'] as const;
-export type InvestigationStatus = (typeof INVESTIGATION_STATUSES)[number];
-export const INVESTIGATION_TRANSITIONS: TransitionMap<InvestigationStatus> = {
-  OPEN: ['ACTIVE', 'CLOSED'],
-  ACTIVE: ['SUSPENDED', 'CLOSED'],
-  SUSPENDED: ['ACTIVE', 'CLOSED'],
-  CLOSED: ['ARCHIVED', 'ACTIVE'],
-  ARCHIVED: [],
-};
-
 export const WANTED_STATUSES = ['ACTIVE','CLEARED','CANCELLED','EXPIRED','ARCHIVED'] as const;
 export type WantedStatus = (typeof WANTED_STATUSES)[number];
 export const WANTED_TRANSITIONS: TransitionMap<WantedStatus> = {
@@ -70,17 +60,6 @@ export const WANTED_TRANSITIONS: TransitionMap<WantedStatus> = {
   CLEARED: ['ARCHIVED'],
   CANCELLED: ['ARCHIVED'],
   EXPIRED: ['ARCHIVED', 'ACTIVE'],
-  ARCHIVED: [],
-};
-
-export const EVIDENCE_CUSTODY_STATES = ['COLLECTED','STORED','TRANSFERRED','REVIEWED','RELEASED','ARCHIVED'] as const;
-export type EvidenceCustodyState = (typeof EVIDENCE_CUSTODY_STATES)[number];
-export const EVIDENCE_TRANSITIONS: TransitionMap<EvidenceCustodyState> = {
-  COLLECTED: ['STORED', 'TRANSFERRED'],
-  STORED: ['TRANSFERRED', 'REVIEWED', 'RELEASED', 'ARCHIVED'],
-  TRANSFERRED: ['STORED', 'REVIEWED', 'RELEASED'],
-  REVIEWED: ['STORED', 'TRANSFERRED', 'RELEASED', 'ARCHIVED'],
-  RELEASED: ['ARCHIVED'],
   ARCHIVED: [],
 };
 

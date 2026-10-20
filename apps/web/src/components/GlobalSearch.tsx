@@ -8,9 +8,9 @@ import { useDebounced } from './DataTable';
 import { RobloxCard } from './RobloxCard';
 
 interface Hit { type: string; id: string; label: string; sub?: string }
-const ROUTE: Record<string, string> = { 'radio-code': 'radio-codes', member: 'teamlist', 'support-ticket': 'support-tickets', application: 'applications', person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', investigation: 'investigations', wanted: 'wanted', evidence: 'evidence', personnel: 'personnel' };
+const ROUTE: Record<string, string> = { 'radio-code': 'radio-codes', member: 'teamlist', 'support-ticket': 'support-tickets', application: 'applications', person: 'persons', vehicle: 'vehicles', incident: 'incidents', report: 'reports', ticket: 'tickets', complaint: 'complaints', wanted: 'wanted', personnel: 'personnel' };
 
-const TYPE_LABEL: Record<string, string> = { 'radio-code': 'Funk', member: 'Team', 'support-ticket': 'Ticket', application: 'Bewerbung', person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', investigation: 'Ermittlung', wanted: 'Fahndung', evidence: 'Beweis', personnel: 'Personal' };
+const TYPE_LABEL: Record<string, string> = { 'radio-code': 'Funk', member: 'Team', 'support-ticket': 'Ticket', application: 'Bewerbung', person: 'Person', vehicle: 'Fahrzeug', incident: 'Einsatz', report: 'Bericht', ticket: 'Strafzettel', complaint: 'Beschwerde', wanted: 'Fahndung', personnel: 'Personal' };
 
 /** Ctrl/Cmd+K. Die Suche ist serverseitig permission-aware. */
 export function GlobalSearch() {

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, Plus, ShieldCheck } from 'lucide-react';
+import { PERMISSION_CATALOG } from '@enrp/shared';
 import { api, ApiError, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { guildName, useGuilds, useServer } from '../../lib/guilds';
-import { EDITOR_CATALOG, ACTION_LABELS, MODULE_LABELS, permLabel } from '../../lib/permLabels';
+import { ACTION_LABELS, MODULE_LABELS, permLabel } from '../../lib/permLabels';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, StatusBadge, Tabs } from '../../components/ui';
 import { DataTable, useDebounced, useTablePageSize } from '../../components/DataTable';
 import { FormModal } from '../../components/FormModal';
@@ -229,7 +230,7 @@ function PermsTab({ u, manage, busy, run }: { u: U; manage: boolean; busy: boole
   const groups = useMemo(() => {
     const f = filter.toLowerCase();
     const byKey = new Map((eff.data?.entries ?? []).map((e) => [e.key, e]));
-    return Object.entries(EDITOR_CATALOG).map(([mod, actions]) => ({
+    return Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => ({
       mod, items: actions.map((a) => byKey.get(`${mod}.${a}`)).filter((e): e is NonNullable<typeof e> => !!e)
         .filter((e) => (only === 'all' || (only === 'allowed' ? e.allowed : !e.allowed && e.source !== 'DEFAULT_DENY')) && (!f || `${e.key} ${permLabel(e.key)}`.toLowerCase().includes(f))),
     })).filter((g) => g.items.length);
@@ -249,7 +250,7 @@ function PermsTab({ u, manage, busy, run }: { u: U; manage: boolean; busy: boole
           </ul>
         )}
         {manage && <div className="grid items-end gap-2 sm:grid-cols-[2fr_auto_2fr_auto]">
-          <Field label="Recht">{(fid) => <Select id={fid} value={perm} onChange={(e) => setPerm(e.target.value)}><option value="">– auswählen –</option>{Object.entries(EDITOR_CATALOG).map(([mod, actions]) => <optgroup key={mod} label={MODULE_LABELS[mod] ?? mod}>{actions.map((a) => <option key={a} value={`${mod}.${a}`}>{ACTION_LABELS[a] ?? a} ({mod}.{a})</option>)}</optgroup>)}</Select>}</Field>
+          <Field label="Recht">{(fid) => <Select id={fid} value={perm} onChange={(e) => setPerm(e.target.value)}><option value="">– auswählen –</option>{Object.entries(PERMISSION_CATALOG).map(([mod, actions]) => <optgroup key={mod} label={MODULE_LABELS[mod] ?? mod}>{actions.map((a) => <option key={a} value={`${mod}.${a}`}>{ACTION_LABELS[a] ?? a} ({mod}.{a})</option>)}</optgroup>)}</Select>}</Field>
           <Field label="Wirkung">{(fid) => <Select id={fid} value={effect} onChange={(e) => setEffect(e.target.value as 'ALLOW' | 'DENY')}><option value="DENY">Verweigern</option><option value="ALLOW">Erlauben</option></Select>}</Field>
           <Field label="Grund (optional)">{(fid) => <Input id={fid} maxLength={500} value={why} onChange={(e) => setWhy(e.target.value)} />}</Field>
           <Button disabled={busy || !perm} onClick={() => void run(async () => { await api(`/users/${u.id}/overrides`, { method: 'PUT', body: { permission: perm, effect, reason: why || undefined } }); setWhy(''); })}>Setzen</Button>

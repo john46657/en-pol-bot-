@@ -128,15 +128,14 @@ export class ServersService implements OnModuleInit {
     return r;
   }
 
-  /** „Löschen“ = archivieren: nicht mehr wählbar, keine Synchronisierung, aber ALLE Fachdaten und Archive bleiben erhalten. */
+  /** „Löschen“ = archivieren: nicht mehr wählbar, aber ALLE Fachdaten und Archive bleiben erhalten. */
   async archive(actor: Actor, serverId: string) {
     await this.requireGlobalAdmin(actor, 'archive');
     const s = await this.load(serverId);
     if (s.archivedAt) return s;
     const r = await this.prisma.$transaction(async (tx) => {
       const after = await tx.discordServer.update({ where: { id: serverId }, data: { archivedAt: new Date(), status: 'DISABLED', version: { increment: 1 } } });
-      const cancelled = await tx.syncEvent.updateMany({ where: { status: 'PENDING', OR: [{ sourceServerId: serverId }, { targetServerId: serverId }] }, data: { status: 'CANCELLED', lastError: 'Server archiviert', processedAt: new Date() } });
-      await this.audit.record(actor, { action: 'server.archive', module: 'servers', entityType: 'DiscordServer', entityId: serverId, serverId: s.guildId, before: { status: s.status }, after: { archived: true, cancelledSyncEvents: cancelled.count } }, tx);
+      await this.audit.record(actor, { action: 'server.archive', module: 'servers', entityType: 'DiscordServer', entityId: serverId, serverId: s.guildId, before: { status: s.status }, after: { archived: true } }, tx);
       return after;
     });
     this.authz.invalidate();

@@ -99,11 +99,10 @@ describe('search (mandatory test 13)', () => {
     const off = (await login(app, 'g_off')).agent;
     const none = (await login(app, 'g_none')).agent;
     await adm.post('/api/v1/persons').send({ robloxUsername: 'Zebrafinch', robloxUserId: '9090' });
-    await adm.post('/api/v1/investigations').send({ title: 'Zebrafinch smuggling ring' });
     const forAdmin = (await adm.get('/api/v1/search?q=zebrafinch')).body.results;
-    expect(forAdmin.map((r: { type: string }) => r.type).sort()).toEqual(['investigation', 'person']);
+    expect(forAdmin.map((r: { type: string }) => r.type)).toEqual(['person']);
     const forOfficer = (await off.get('/api/v1/search?q=zebrafinch')).body.results;
-    expect(forOfficer.map((r: { type: string }) => r.type)).toEqual(['person']); // no investigations.view
+    expect(forOfficer.map((r: { type: string }) => r.type)).toEqual(['person']);
     expect((await off.get('/api/v1/search?q=9090')).body.results).toHaveLength(1); // roblox id
     expect((await none.get('/api/v1/search?q=zebrafinch')).body.results).toEqual([]);
   });

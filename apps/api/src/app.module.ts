@@ -21,9 +21,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { ReportsModule } from './reports/reports.module';
 import { ComplaintsModule } from './complaints/complaints.module';
-import { InvestigationsModule } from './investigations/investigations.module';
 import { WantedModule } from './wanted/wanted.module';
-import { EvidenceModule } from './evidence/evidence.module';
 import { PersonnelModule } from './personnel/personnel.module';
 import { DutyModule } from './duty/duty.module';
 import { ApplicationsModule } from './applications/applications.module';
@@ -72,7 +70,7 @@ import { HrModule } from './hr/hr.module';
   imports: [
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
-    DispatchModule, ReportsModule, ComplaintsModule, InvestigationsModule, WantedModule, EvidenceModule,
+    DispatchModule, ReportsModule, ComplaintsModule, WantedModule,
     PersonnelModule, DutyModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerLinksModule, MultiServerModule, MultiServerRestoreModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
   ],
   controllers: [HealthController, AuditController],

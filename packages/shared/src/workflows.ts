@@ -16,7 +16,6 @@ export const WORKFLOW_TRIGGERS: WorkflowTrigger[] = [
   { key: 'complaint.create', label: 'Beschwerde eingegangen', fields: ['title', 'status'] },
   { key: 'wanted.create', label: 'Fahndung angelegt', fields: ['subject', 'priority', 'kind', 'status'] },
   { key: 'investigation.create', label: 'Ermittlung eröffnet', fields: ['title', 'status'] },
-  { key: 'evidence.create', label: 'Beweismittel erfasst', fields: ['description', 'status'] },
   { key: 'person.create', label: 'Personenakte angelegt', fields: ['robloxUsername', 'status'] },
   { key: 'ticket.create', label: 'Strafzettel ausgestellt', fields: ['number', 'status'] },
   { key: 'application.submit', label: 'Bewerbung eingegangen', fields: ['status'] },

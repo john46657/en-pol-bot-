@@ -281,11 +281,10 @@ describe('extended commands', () => {
     expect(text(await run('beschwerde', { kategorie: 'Verhalten', beschreibung: 'Der Beamte war unhöflich.', person: 'bella' }, a.api))).toContain('C-2026-AAA');
     expect(a.calls.at(-1)!.body).toMatchObject({ category: 'Verhalten', subjectId: 'p1' });
   });
-  it('/ermittlung, /beweis, /fahndung create records', async () => {
-    const a = fakeApi({ 'POST /investigations': { caseNumber: 'CASE-2026-AAA' }, 'POST /evidence': { number: 'E-2026-AAA' }, 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'Cody', robloxUserId: '3' }], total: 1 }, 'POST /wanted': {} });
-    expect(text(await run('ermittlung', { titel: 'Bankraub-Serie' }, a.api))).toContain('CASE-2026-AAA');
-    expect(text(await run('beweis', { typ: 'Waffe', beschreibung: 'Pistole', fall: 'case-2026-aaa' }, a.api))).toContain('E-2026-AAA');
-    expect(a.calls.at(-1)!.body).toMatchObject({ caseRef: 'CASE-2026-AAA' });
+  it('/fahndung creates a record; /ermittlung and /beweis no longer exist', async () => {
+    const a = fakeApi({ 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'Cody', robloxUserId: '3' }], total: 1 }, 'POST /wanted': {} });
+    expect(byName('ermittlung')).toBeUndefined();
+    expect(byName('beweis')).toBeUndefined();
     expect(text(await run('fahndung', { person: 'Cody', grund: 'Raub', prioritaet: 'dringend' }, a.api))).toContain('Fahndung');
     expect(a.calls.at(-1)!.body).toEqual({ personId: 'p1', reason: 'Raub', priority: 'URGENT' });
   });
