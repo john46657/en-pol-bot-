@@ -423,6 +423,7 @@ exports.HrTrainingController = HrTrainingController = __decorate([
 // ───────────── Prüfungen ─────────────
 const answersBody = zod_1.z.object({ answers: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.unknown()), flagged: zod_1.z.array(zod_1.z.string().max(40)).max(200).optional() });
 const gradeBody = zod_1.z.object({ scores: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.number().min(0).max(100)), feedback: zod_1.z.string().max(2000).optional() });
+const examPost = zod_1.z.object({ channelId: zod_1.z.string().regex(/^\d{15,25}$/, 'Bitte einen Discord-Kanal wählen.'), pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(10).default([]), message: zod_1.z.string().trim().max(1500).optional() });
 const attemptsQ = zod_1.z.object({ examId: uuid.optional(), status: zod_1.z.enum(shared_1.EXAM_ATTEMPT_STATUSES).optional() });
 let HrExamController = class HrExamController {
     s;
@@ -435,6 +436,7 @@ let HrExamController = class HrExamController {
     save(a, id, b) { return this.s.save(a, b, id); }
     remove(a, id) { return this.s.remove(a, id); }
     duplicate(a, id) { return this.s.duplicate(a, id); }
+    postDiscord(a, id, b) { return this.s.postToDiscord(a, id, b); }
     results(a, id) { return this.s.results(a, id); }
     start(a, id) { return this.s.start(a, id); }
     attempts(a, q) { return this.s.attempts(a, q); }
@@ -500,6 +502,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], HrExamController.prototype, "duplicate", null);
+__decorate([
+    (0, common_1.Post)('exams/:id/discord'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('exam.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(examPost))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "postDiscord", null);
 __decorate([
     (0, common_1.Get)('exams/:id/results'),
     (0, decorators_1.RequirePermission)('exam.view'),

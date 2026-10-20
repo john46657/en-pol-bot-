@@ -75773,6 +75773,7 @@ function embedOf(e, stamp = true) {
   if (e.color !== void 0) b.setColor(e.color);
   if (https(e.thumbnail)) b.setThumbnail(e.thumbnail);
   if (https(e.image)) b.setImage(e.image);
+  if (e.url && /^https?:\/\//.test(e.url)) b.setURL(e.url);
   if (e.author) b.setAuthor({ name: e.author.slice(0, 256), ...https(e.authorIcon) ? { iconURL: e.authorIcon } : {} });
   if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...https(e.footerIcon) ? { iconURL: e.footerIcon } : {} });
   if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f2) => ({ name: f2.name.slice(0, 256) || "\u200B", value: f2.value.slice(0, 1024) || "\u200B", inline: f2.inline ?? false })));

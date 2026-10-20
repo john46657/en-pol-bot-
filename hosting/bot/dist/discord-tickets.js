@@ -22,6 +22,8 @@ function embedOf(e, stamp = true) {
         b.setThumbnail(e.thumbnail);
     if (https(e.image))
         b.setImage(e.image);
+    if (e.url && /^https?:\/\//.test(e.url))
+        b.setURL(e.url); // Titel als Link
     if (e.author)
         b.setAuthor({ name: e.author.slice(0, 256), ...(https(e.authorIcon) ? { iconURL: e.authorIcon } : {}) });
     if (e.footer)

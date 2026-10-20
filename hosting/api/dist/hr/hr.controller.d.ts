@@ -1261,6 +1261,19 @@ declare const gradeBody: z.ZodObject<{
     scores: Record<string, number>;
     feedback?: string | undefined;
 }>;
+declare const examPost: z.ZodObject<{
+    channelId: z.ZodString;
+    pingRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    message: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    channelId: string;
+    pingRoleIds: string[];
+    message?: string | undefined;
+}, {
+    channelId: string;
+    message?: string | undefined;
+    pingRoleIds?: string[] | undefined;
+}>;
 declare const attemptsQ: z.ZodObject<{
     examId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["IN_PROGRESS", "SUBMITTED", "GRADED", "VOIDED"]>>;
@@ -1481,6 +1494,10 @@ export declare class HrExamController {
         availableFrom: Date | null;
         availableUntil: Date | null;
         notifyExaminers: boolean;
+    }>;
+    postDiscord(a: Actor, id: string, b: z.infer<typeof examPost>): Promise<{
+        ok: boolean;
+        url: string;
     }>;
     results(a: Actor, id: string): Promise<{
         exam: {
