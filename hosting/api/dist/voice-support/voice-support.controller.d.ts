@@ -13,10 +13,10 @@ declare const casesQ: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "WAITING", "CLAIMED", "DECLINED", "ABANDONED", "CLOSED"]>>;
 }, "strip", z.ZodTypeAny, {
-    status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
+    status?: "OPEN" | "CLAIMED" | "CLOSED" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
     guildId?: string | undefined;
 }, {
-    status?: "CLAIMED" | "CLOSED" | "OPEN" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
+    status?: "OPEN" | "CLAIMED" | "CLOSED" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
     guildId?: string | undefined;
 }>;
 declare const voice: z.ZodObject<{

@@ -81383,17 +81383,19 @@ var import_node_async_hooks = require("node:async_hooks");
 var guildScope = new import_node_async_hooks.AsyncLocalStorage();
 var rolesScope = new import_node_async_hooks.AsyncLocalStorage();
 var BotApiError = class extends Error {
-  constructor(status, code, message, requestId, reason) {
+  constructor(status, code, message, requestId, reason, permission) {
     super(message);
     this.status = status;
     this.code = code;
     this.requestId = requestId;
     this.reason = reason;
+    this.permission = permission;
   }
   status;
   code;
   requestId;
   reason;
+  permission;
 };
 var HttpApi = class {
   constructor(baseUrl, token, doFetch = fetch) {
@@ -81423,7 +81425,7 @@ var HttpApi = class {
       }
       if (res.status >= 400) {
         const details = json?.details;
-        throw new BotApiError(res.status, String(json?.code ?? "ERROR"), String(json?.message ?? `HTTP ${res.status}`), json?.requestId, details?.reason);
+        throw new BotApiError(res.status, String(json?.code ?? "ERROR"), String(json?.message ?? `HTTP ${res.status}`), json?.requestId, details?.reason, details?.permission);
       }
       return json;
     } catch (e) {
@@ -81862,6 +81864,7 @@ function mapError(e) {
   if (e.status === 0) return errorReply("Das System ist gerade nicht erreichbar. Bitte sp\xE4ter erneut versuchen.");
   if (e.status === 401 && e.reason === "NOT_LINKED") return errorReply("Dein Discord-Konto ist nicht verkn\xFCpft. Verkn\xFCpfe es im Dashboard (Chat-Symbol oben rechts \u2192 \u201EMit Discord verkn\xFCpfen\u201C).");
   if (e.status === 401) return errorReply(`Authentifizierung fehlgeschlagen.${rid}`);
+  if (e.status === 403 && e.permission && /^[a-z_.-]+$/.test(e.permission)) return errorReply(`Dazu hast du keine Berechtigung \u2013 dir fehlt das Recht \`${e.permission}\`${/^(applications|qualifications)\./.test(e.permission) ? " oder eine Rolle als \u201EBewerbungs-Verwalter\u201C dieser Bewerbung (Bewerbungs-Einstellungen \u2192 Rollen)" : ""}. Ein Admin kann es dir im Dashboard unter **Rollen** geben.`);
   if (e.status === 403) return errorReply(/[äöüß]|Server|Einheit|Leitstelle/.test(e.message) && !/^You do not have permission|^This route|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/.test(e.message) ? `Dazu hast du keine Berechtigung: ${e.message}` : "Dazu hast du keine Berechtigung.");
   if (e.status === 404) return errorReply("Nicht gefunden.");
   if (e.status === 429) return errorReply("Zu viele Anfragen \u2013 bitte kurz warten.");

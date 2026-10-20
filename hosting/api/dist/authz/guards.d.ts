@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { ModuleRef, Reflector } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
 import { DiscordService } from '../discord/discord.service';
 import { DiscordAccessService } from './discord-access.service';
@@ -26,6 +26,9 @@ export declare class AuthGuard implements CanActivate {
 export declare class PermissionGuard implements CanActivate {
     private readonly reflector;
     private readonly authz;
-    constructor(reflector: Reflector, authz: AuthorizationService);
+    private readonly moduleRef;
+    constructor(reflector: Reflector, authz: AuthorizationService, moduleRef: ModuleRef);
     canActivate(ctx: ExecutionContext): Promise<boolean>;
+    /** Bot-Klick mit Manager-Rolle der Bewerbung: fehlt NUR das Recht (Server, Mitgliedschaft, Modul passen), reicht die Rolle. */
+    private discordManager;
 }

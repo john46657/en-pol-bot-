@@ -65,12 +65,12 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "OPEN" | undefined;
     guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "OPEN" | undefined;
     guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     page?: number | undefined;
@@ -299,7 +299,7 @@ export declare class ApplicationsController {
         grantRoleIds: string[];
         durationSec: number | null;
     }>;
-    /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. */
+    /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. Manager-Rolle reicht. */
     discordDecide(a: Actor, id: string, b: {
         status: 'ACCEPTED' | 'REJECTED';
         reason?: string;

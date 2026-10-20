@@ -66,18 +66,18 @@ export declare class ApplicationsService {
             };
             roles: {
                 denied: string[];
-                pending: string[];
-                accepted: string[];
                 required: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
+                accepted: string[];
                 restricted: {
                     mode: "ALL" | "ANY";
                     ids: string[];
                 };
                 acceptedRemove: string[];
                 deniedRemove: string[];
+                pending: string[];
                 removeOnSubmit: string[];
                 managers: string[];
             };
