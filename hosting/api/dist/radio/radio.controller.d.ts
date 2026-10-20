@@ -192,6 +192,7 @@ declare const decideB: z.ZodObject<{
 declare const rolesB: z.ZodObject<{
     roleSync: z.ZodObject<{
         enabled: z.ZodBoolean;
+        roleOnly: z.ZodDefault<z.ZodBoolean>;
         grantRoleIds: z.ZodArray<z.ZodString, "many">;
         requiredRoleIds: z.ZodArray<z.ZodString, "many">;
         onRoleGain: z.ZodEnum<["ACTIVATE", "PENDING", "NONE"]>;
@@ -201,6 +202,7 @@ declare const rolesB: z.ZodObject<{
         enabled: boolean;
         grantRoleIds: string[];
         requiredRoleIds: string[];
+        roleOnly: boolean;
         onRoleGain: "PENDING" | "NONE" | "ACTIVATE";
         onRoleLoss: "NONE" | "REVOKE" | "DISABLE";
         manualOnRoleLoss: "REVOKE" | "DISABLE" | "KEEP";
@@ -211,6 +213,7 @@ declare const rolesB: z.ZodObject<{
         onRoleGain: "PENDING" | "NONE" | "ACTIVATE";
         onRoleLoss: "NONE" | "REVOKE" | "DISABLE";
         manualOnRoleLoss: "REVOKE" | "DISABLE" | "KEEP";
+        roleOnly?: boolean | undefined;
     }>;
     radioRoleIds: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -218,6 +221,7 @@ declare const rolesB: z.ZodObject<{
         enabled: boolean;
         grantRoleIds: string[];
         requiredRoleIds: string[];
+        roleOnly: boolean;
         onRoleGain: "PENDING" | "NONE" | "ACTIVATE";
         onRoleLoss: "NONE" | "REVOKE" | "DISABLE";
         manualOnRoleLoss: "REVOKE" | "DISABLE" | "KEEP";
@@ -231,6 +235,7 @@ declare const rolesB: z.ZodObject<{
         onRoleGain: "PENDING" | "NONE" | "ACTIVATE";
         onRoleLoss: "NONE" | "REVOKE" | "DISABLE";
         manualOnRoleLoss: "REVOKE" | "DISABLE" | "KEEP";
+        roleOnly?: boolean | undefined;
     };
     radioRoleIds: string[];
 }>;
@@ -1188,6 +1193,7 @@ export declare class RadioWhitelistBotController {
         suspendedUntil: Date | null;
         pendingSince: Date | null;
         requestsEnabled: boolean;
+        roleOnly: boolean;
         form: import("./radio-whitelist.service").RequestForm;
     }>;
     targets(): Promise<{
