@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUS_LABEL, type RadioGrantSource, type RadioGrantStatus, type RadioRoleRules } from '@enrp/shared';
+import { isRadioRoleOnly, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUS_LABEL, type RadioGrantSource, type RadioGrantStatus, type RadioRoleRules } from '@enrp/shared';
 import { Download, Plus, RefreshCw, Search, Upload } from 'lucide-react';
 import { api, apiHeaders, ApiError, type Page } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -67,18 +67,25 @@ function DurationField({ dur, date, setDur, setDate, label = 'Gültigkeit' }: { 
   );
 }
 
+/** Einstellungen der Funk-Whitelist (geteilt zwischen den Tabs). */
+const useRadioConfig = () => useQuery({ queryKey: ['radiowl', 'config'], queryFn: () => api<Config>('/radio-whitelist/config') });
+/** Läuft die Whitelist nur über die Discord-Rolle? Dann gibt es kein manuelles Freischalten, keine Anträge und keinen Import. */
+const useRoleOnly = () => { const c = useRadioConfig(); return !!c.data && isRadioRoleOnly(c.data.roleSync); };
+
 /** 🎙️ Funk-Whitelist für den externen Funkdienst. Sichtbar nur mit radiowhitelist.view – jede Aktion prüft die API erneut. */
 export function RadioWhitelist() {
   const { can } = useAuth();
+  const roleOnly = useRoleOnly();
   const tabs = useMemo(() => [
-    'Whitelist', ...(can('radiowhitelist.requests') ? ['Anträge'] : []), 'Discord-Rollen', 'Funkdienst', 'Import & Export', ...(can('radiowhitelist.logs') ? ['Protokoll'] : []),
-  ], [can]);
+    'Whitelist', ...(can('radiowhitelist.requests') && !roleOnly ? ['Anträge'] : []), 'Discord-Rollen', 'Funkdienst', 'Import & Export', ...(can('radiowhitelist.logs') ? ['Protokoll'] : []),
+  ], [can, roleOnly]);
   const [tab, setTab] = useState('Whitelist');
   const summary = useQuery({ queryKey: ['radiowl', 'summary'], queryFn: () => api<Summary>('/radio-whitelist/summary'), refetchInterval: 60_000 });
   const s = summary.data;
   return (
     <>
       <PageHeader title="🎙️ Funk-Whitelist" subtitle="Wer für den externen Funkdienst freigeschaltet ist – eindeutig über die Discord-ID. Änderungen werden dauerhaft gespeichert und protokolliert." />
+      {roleOnly && <p className="mb-4 rounded border border-info/40 bg-info/10 px-3 py-2 text-sm">🔒 <b>Nur über Discord-Rolle:</b> Wer die Funk-Rolle hat, ist automatisch freigegeben – wer sie verliert, wird automatisch entfernt. Zum Freischalten die Rolle in Discord vergeben.</p>}
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" aria-label="Übersicht">
         {([['Aktiv', s?.active, 'text-success'], ['Ausstehend', s?.pending, 'text-info'], ['Gesperrt', s?.suspended, 'text-danger'], ['Abgelaufen', s?.expired, 'text-warning'], ['Offene Anträge', s?.openRequests, 'text-primary'], ['Im Funkdienst zu erledigen', s?.manualTodo, 'text-warning']] as const).map(([l, v, c]) => (
           <div key={l} className="card border border-line px-3 py-2">
@@ -109,11 +116,12 @@ function GrantsTab() {
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState<string | null>(null);
   const [create, setCreate] = useState(false);
+  const roleOnly = useRoleOnly();
   useEffect(() => { const t = setTimeout(() => { setQuery(q.trim()); setPage(1); }, 300); return () => clearTimeout(t); }, [q]);
   const list = useQuery({ queryKey: ['radiowl', 'grants', status, query, page], queryFn: () => api<Page<Grant>>('/radio-whitelist/grants', { query: { status, q: query || undefined, page, pageSize: 50 } }), placeholderData: (p) => p });
   const pages = list.data ? Math.max(1, Math.ceil(list.data.total / list.data.pageSize)) : 1;
   return (
-    <Card title={`Freigaben${list.data ? ` (${list.data.total})` : ''}`} actions={can('radiowhitelist.grant') && <Button size="sm" onClick={() => setCreate(true)}><Plus size={14} aria-hidden /> Mitglied freischalten</Button>}>
+    <Card title={`Freigaben${list.data ? ` (${list.data.total})` : ''}`} actions={can('radiowhitelist.grant') && !roleOnly && <Button size="sm" onClick={() => setCreate(true)}><Plus size={14} aria-hidden /> Mitglied freischalten</Button>}>
       <div className="mb-3 flex flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <Search size={14} aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
@@ -482,7 +490,7 @@ function RolesTab() {
   const { can } = useAuth();
   const refresh = useInvalidate();
   const edit = can('radiowhitelist.roles');
-  const cfg = useQuery({ queryKey: ['radiowl', 'config'], queryFn: () => api<Config>('/radio-whitelist/config') });
+  const cfg = useRadioConfig();
   const st = useQuery({ queryKey: ['radiowl', 'rolesync'], queryFn: () => api<RoleSyncStatus>('/radio-whitelist/role-sync'), refetchInterval: 15_000 });
   const [d, setD] = useState<Pick<Config, 'roleSync' | 'radioRoleIds'> | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
@@ -498,18 +506,26 @@ function RolesTab() {
     <div className="grid gap-4 xl:grid-cols-[1fr_22rem]">
       <Card title="Regeln für den Discord-Rollenabgleich">
         <fieldset disabled={!edit} className="space-y-4">
-          <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={r.enabled} onChange={(e) => setR({ enabled: e.target.checked })} />Rollenabgleich einschalten</label>
+          <label className="flex items-start gap-2 rounded border border-line p-3 text-sm">
+            <input type="checkbox" className="mt-0.5" checked={!!r.roleOnly && r.enabled} onChange={(e) => setR(e.target.checked ? { roleOnly: true, enabled: true } : { roleOnly: false })} />
+            <span><span className="font-medium">Nur über Discord-Rolle (empfohlen)</span><span className="block text-xs text-muted">Wer eine der Rollen unten hat, ist automatisch auf der Funk-Whitelist – wer sie nicht (mehr) hat, wird automatisch entfernt, auch manuell Freigeschaltete. Manuelles Freischalten, Anträge und Import sind dann aus. Sperren wirken weiterhin.</span></span>
+          </label>
+          {!r.roleOnly && <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={r.enabled} onChange={(e) => setR({ enabled: e.target.checked })} />Rollenabgleich einschalten</label>}
           <Field label="Rollen, die eine Funkberechtigung geben" hint="Eine dieser Rollen genügt.">{() => <RolePicker ariaLabel="Berechtigende Rollen" value={r.grantRoleIds} onChange={(v) => setR({ grantRoleIds: v })} disabled={!edit} />}</Field>
+          {!r.roleOnly && <>
           <Field label="Erforderliche Rollen (zum Behalten)" hint="Leer = die berechtigenden Rollen oben. Fehlen alle, greift die Regel bei Rollenverlust.">{() => <RolePicker ariaLabel="Erforderliche Rollen" value={r.requiredRoleIds} onChange={(v) => setR({ requiredRoleIds: v })} disabled={!edit} />}</Field>
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Rolle erhalten">{(id) => <Select id={id} value={r.onRoleGain} onChange={(e) => setR({ onRoleGain: e.target.value as RadioRoleRules['onRoleGain'] })}>{GAIN.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select>}</Field>
             <Field label="Rolle verloren (über Rolle erteilt)">{(id) => <Select id={id} value={r.onRoleLoss} onChange={(e) => setR({ onRoleLoss: e.target.value as RadioRoleRules['onRoleLoss'] })}>{LOSS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select>}</Field>
             <Field label="Rolle verloren (manuell/Antrag)">{(id) => <Select id={id} value={r.manualOnRoleLoss} onChange={(e) => setR({ manualOnRoleLoss: e.target.value as RadioRoleRules['manualOnRoleLoss'] })}>{MANUAL.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select>}</Field>
           </div>
+          </>}
           <Field label="Funkrolle für freigegebene Mitglieder" hint="Diese Discord-Rolle(n) bekommt, wer aktiv freigegeben ist – und verliert sie beim Entzug. Leer = Funkrolle aus Einstellungen → Discord.">{() => <RolePicker ariaLabel="Funkrolle" value={d.radioRoleIds} onChange={(v) => setD({ ...d, radioRoleIds: v })} disabled={!edit} max={5} />}</Field>
           <ul className="list-disc space-y-1 pl-5 text-xs text-muted">
             <li>Gesperrte Mitglieder bleiben gesperrt – Rollen heben eine Sperre nie auf.</li>
-            <li>Manuell entzogene oder deaktivierte Freigaben werden nie automatisch wieder aktiv – nur solche, die der Abgleich selbst entzogen hat.</li>
+            {r.roleOnly
+              ? <li>Wer die Rolle hat, wird immer (wieder) freigegeben – zum Entfernen die Rolle in Discord wegnehmen.</li>
+              : <li>Manuell entzogene oder deaktivierte Freigaben werden nie automatisch wieder aktiv – nur solche, die der Abgleich selbst entzogen hat.</li>}
             <li>Die Entscheidung trifft immer der Server; der Bot meldet nur die Rollen.</li>
           </ul>
         </fieldset>
@@ -620,6 +636,7 @@ function ImportExportTab() {
   const [err, setErr] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const roleOnly = useRoleOnly();
   const download = async () => {
     setBusy(true); setErr(undefined);
     try {
@@ -639,7 +656,7 @@ function ImportExportTab() {
         {err && <p role="alert" className="mt-2 text-sm text-danger">{err}</p>}
       </Card>
       <Card title={<span className="flex items-center gap-2"><Upload size={15} aria-hidden /> Import (CSV)</span>}>
-        {!can('radiowhitelist.grant') ? <p className="text-sm text-muted">Für den Import brauchst du das Recht „Funk-Whitelist: freischalten“.</p> : (
+        {roleOnly ? <p className="text-sm text-muted">Nicht verfügbar – die Funk-Whitelist läuft nur über die Discord-Rolle.</p> : !can('radiowhitelist.grant') ? <p className="text-sm text-muted">Für den Import brauchst du das Recht „Funk-Whitelist: freischalten“.</p> : (
           <div className="space-y-3">
             <p className="text-sm text-muted">Erste Zeile = Spaltennamen, Pflicht ist <code>discord_id</code>. Neue Discord-IDs werden als aktive Freigabe angelegt; vorhandene Einträge werden nur ergänzt (Name, Funkname, Dienstgrad, Abteilung). Status werden nie per Import geändert, nichts wird gelöscht. Erst Probelauf, dann übernehmen.</p>
             <input type="file" accept=".csv,text/csv" aria-label="CSV-Datei wählen" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) void f.text().then((t) => { setCsv(t); setReport(null); }); }} />

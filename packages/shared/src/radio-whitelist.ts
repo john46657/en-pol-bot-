@@ -31,6 +31,11 @@ export const isRadioAuthorized = (g: RadioGrantState | null | undefined, now = n
 // ---------- Discord-Rollenabgleich ----------
 export interface RadioRoleRules {
   enabled: boolean;
+  /**
+   * Nur über die Discord-Rolle: Wer eine berechtigende Rolle hat, ist freigegeben – wer sie nicht hat, nicht (auch manuelle Freigaben
+   * werden entzogen). Manuelles Freischalten, Anträge und Import sind dann aus. Nur Sperren wirken zusätzlich.
+   */
+  roleOnly?: boolean;
   /** Rollen, die eine Funkberechtigung geben (eine genügt). */
   grantRoleIds: string[];
   /** Rollen, von denen mindestens eine nötig ist, um eine Freigabe zu behalten. Leer = die Rollen aus grantRoleIds. */
@@ -42,7 +47,10 @@ export interface RadioRoleRules {
   /** Rolle verloren – manuell/per Antrag erteilte Freigaben: behalten (Standard), deaktivieren oder entziehen. */
   manualOnRoleLoss: 'KEEP' | 'DISABLE' | 'REVOKE';
 }
-export const DEFAULT_RADIO_ROLE_RULES: RadioRoleRules = { enabled: false, grantRoleIds: [], requiredRoleIds: [], onRoleGain: 'ACTIVATE', onRoleLoss: 'REVOKE', manualOnRoleLoss: 'KEEP' };
+export const DEFAULT_RADIO_ROLE_RULES: RadioRoleRules = { enabled: false, roleOnly: false, grantRoleIds: [], requiredRoleIds: [], onRoleGain: 'ACTIVATE', onRoleLoss: 'REVOKE', manualOnRoleLoss: 'KEEP' };
+
+/** Ist „nur über Discord-Rolle“ wirksam (eingeschaltet und mindestens eine berechtigende Rolle gewählt)? */
+export const isRadioRoleOnly = (rules: RadioRoleRules) => rules.enabled && !!rules.roleOnly && rules.grantRoleIds.length > 0;
 
 export interface RoleSyncGrant { status: string; source: string; roleRevoked: boolean; archived: boolean; expiresAt: Date | string | null; suspendedUntil?: Date | string | null; statusBeforeSuspend?: string | null }
 export type RoleSyncAction =
@@ -59,6 +67,7 @@ export type RoleSyncAction =
  */
 export function radioRoleSyncAction(rules: RadioRoleRules, roleIds: readonly string[] | null, grant: RoleSyncGrant | null, now = new Date()): RoleSyncAction {
   if (!rules.enabled) return { kind: 'none', why: 'Rollenabgleich ist ausgeschaltet.' };
+  if (isRadioRoleOnly(rules)) return roleOnlyAction(rules, roleIds, grant, now);
   const has = (ids: readonly string[]) => !!roleIds && ids.some((r) => roleIds.includes(r));
   const hasGrantRole = rules.grantRoleIds.length > 0 && has(rules.grantRoleIds);
   const required = rules.requiredRoleIds.length ? rules.requiredRoleIds : rules.grantRoleIds;
@@ -77,6 +86,17 @@ export function radioRoleSyncAction(rules: RadioRoleRules, roleIds: readonly str
   if (policy === 'REVOKE') return { kind: 'revoke' };
   if (policy === 'DISABLE') return { kind: 'disable' };
   return { kind: 'none', why: grant.source === 'ROLE' ? 'Regel: bei Rollenverlust nichts tun.' : 'Manuelle Freigabe bleibt laut Regel bestehen.' };
+}
+
+/** „Nur über Discord-Rolle“: Rolle vorhanden ⇔ freigegeben. Sperren bleiben bestehen. */
+function roleOnlyAction(rules: RadioRoleRules, roleIds: readonly string[] | null, grant: RoleSyncGrant | null, now: Date): RoleSyncAction {
+  const hasRole = !!roleIds && rules.grantRoleIds.some((r) => roleIds.includes(r));
+  if (!grant) return hasRole ? { kind: 'create', status: 'ACTIVE' } : { kind: 'none', why: 'Keine Freigabe und keine berechtigende Rolle.' };
+  const status = effectiveRadioStatus(grant, now);
+  if (status === 'SUSPENDED') return { kind: 'none', why: 'Gesperrt – Sperren hebt nur eine Führungskraft auf.' };
+  const inactive = grant.archived || status === 'REVOKED' || status === 'DISABLED' || status === 'PENDING' || status === 'EXPIRED';
+  if (hasRole) return inactive ? { kind: 'reactivate', status: 'ACTIVE' } : { kind: 'none', why: 'Berechtigende Rolle vorhanden.' };
+  return grant.archived || status === 'REVOKED' ? { kind: 'none', why: 'Keine berechtigende Rolle.' } : { kind: 'revoke' };
 }
 
 // ---------- CSV (Export/Import für Funkdienste ohne API) ----------

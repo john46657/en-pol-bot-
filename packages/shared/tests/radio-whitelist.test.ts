@@ -17,6 +17,29 @@ describe('effektiver Status', () => {
   });
 });
 
+describe('nur über Discord-Rolle', () => {
+  const rules = { ...DEFAULT_RADIO_ROLE_RULES, enabled: true, roleOnly: true, grantRoleIds: ['R1'], onRoleGain: 'NONE' as const, manualOnRoleLoss: 'KEEP' as const };
+  const g = (o: Partial<RoleSyncGrant>): RoleSyncGrant => ({ status: 'ACTIVE', source: 'MANUAL', roleRevoked: false, archived: false, expiresAt: null, ...o });
+  it('Rolle vorhanden → freigegeben (auch nach manuellem Entzug, ausstehend oder abgelaufen)', () => {
+    expect(radioRoleSyncAction(rules, ['R1'], null, now)).toEqual({ kind: 'create', status: 'ACTIVE' });
+    expect(radioRoleSyncAction(rules, ['R1'], g({ status: 'REVOKED', archived: true }), now)).toEqual({ kind: 'reactivate', status: 'ACTIVE' });
+    expect(radioRoleSyncAction(rules, ['R1'], g({ status: 'PENDING' }), now)).toEqual({ kind: 'reactivate', status: 'ACTIVE' });
+    expect(radioRoleSyncAction(rules, ['R1'], g({ expiresAt: past }), now)).toEqual({ kind: 'reactivate', status: 'ACTIVE' });
+    expect(radioRoleSyncAction(rules, ['R1'], g({}), now).kind).toBe('none');
+  });
+  it('Rolle fehlt → auch manuelle Freigaben entzogen; Sperren bleiben', () => {
+    expect(radioRoleSyncAction(rules, ['X'], g({}), now)).toEqual({ kind: 'revoke' });
+    expect(radioRoleSyncAction(rules, null, g({ status: 'DISABLED' }), now)).toEqual({ kind: 'revoke' });
+    expect(radioRoleSyncAction(rules, ['X'], g({ status: 'REVOKED', archived: true }), now).kind).toBe('none');
+    expect(radioRoleSyncAction(rules, ['X'], null, now).kind).toBe('none');
+    expect(radioRoleSyncAction(rules, ['R1'], g({ status: 'SUSPENDED', suspendedUntil: null }), now).kind).toBe('none');
+  });
+  it('ohne Rolle oder ausgeschaltet → normale Regeln', () => {
+    expect(radioRoleSyncAction({ ...rules, grantRoleIds: [] }, ['R1'], null, now).kind).toBe('none');
+    expect(radioRoleSyncAction({ ...rules, enabled: false }, ['R1'], null, now).kind).toBe('none');
+  });
+});
+
 describe('Rollenabgleich-Regeln', () => {
   const rules = { ...DEFAULT_RADIO_ROLE_RULES, enabled: true, grantRoleIds: ['R1'] };
   const g = (o: Partial<RoleSyncGrant>): RoleSyncGrant => ({ status: 'ACTIVE', source: 'ROLE', roleRevoked: false, archived: false, expiresAt: null, ...o });

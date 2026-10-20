@@ -4,7 +4,7 @@ import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
 interface FormField { key: string; label: string; placeholder: string; paragraph: boolean; required: boolean; maxLength: number }
-interface MemberStatus { status: string | null; authorized: boolean; expiresAt: string | null; suspendedUntil: string | null; pendingSince: string | null; requestsEnabled: boolean; form?: { title: string; fields: FormField[] } }
+interface MemberStatus { status: string | null; authorized: boolean; expiresAt: string | null; suspendedUntil: string | null; pendingSince: string | null; requestsEnabled: boolean; roleOnly?: boolean; form?: { title: string; fields: FormField[] } }
 /** Rückfall, falls das System (ältere Version) kein Formular mitschickt – entspricht dem Standardformular. */
 const DEFAULT_FORM = { title: 'Antrag auf Funkfreigabe', fields: [
   { key: 'reason', label: 'Begründung', placeholder: 'Warum brauchst du Zugang zum Funk?', paragraph: true, required: true, maxLength: 1000 },
@@ -21,6 +21,7 @@ async function openRequestForm(c: Ctx): Promise<Reply> {
   let s: MemberStatus;
   try {
     s = await c.api.service<MemberStatus>('GET', `/bot/radio-whitelist/status/${c.discordId}`);
+    if (s.roleOnly) return s.authorized ? okReply('Du bist bereits für den Funk freigegeben.') : errorReply('Ein Antrag ist nicht nötig – die Funkfreigabe kommt automatisch mit der Funk-Rolle in Discord. Wende dich an die Leitung, wenn du die Rolle bekommen sollst.');
     if (!s.requestsEnabled) return errorReply('Anträge auf Funkfreigabe sind derzeit deaktiviert.');
     if (s.authorized) return okReply('Du bist bereits für den Funk freigegeben.');
     if (s.status === 'SUSPENDED') return errorReply(`Deine Funkfreigabe ist gesperrt${s.suspendedUntil ? ` bis ${ts(s.suspendedUntil)}` : ''} – ein Antrag ist derzeit nicht möglich.`);

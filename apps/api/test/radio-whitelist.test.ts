@@ -327,6 +327,33 @@ describe('Discord-Rollenabgleich', () => {
     expect(await prisma.auditLog.count({ where: { action: 'radio.rolesync.failed', result: 'FAILED' } })).toBeGreaterThanOrEqual(2);
     expect((await as.rw_lead!.get('/api/v1/radio-whitelist/role-sync')).body.last).toMatchObject({ ok: false, failed: 1, errors: [expect.stringContaining('DB kaputt')] });
   });
+
+  it('nur über Discord-Rolle: Rolle ⇔ Freigabe, manuelle Wege gesperrt, Sperren bleiben', async () => {
+    const lead = as.rw_lead!;
+    const rules = { enabled: true, roleOnly: true, grantRoleIds: [GRANT_ROLE], requiredRoleIds: [], onRoleGain: 'NONE', onRoleLoss: 'NONE', manualOnRoleLoss: 'KEEP' };
+    const man = await lead.post('/api/v1/radio-whitelist/grants').send({ discordId: M(80), reason: 'vorher manuell' }).expect(201);
+    expect((await lead.put('/api/v1/radio-whitelist/config/roles').send({ roleSync: { ...rules, grantRoleIds: [] }, radioRoleIds: [RADIO_ROLE] })).status).toBe(400);
+    const outbox = await prisma.discordOutbox.count({ where: { type: 'bot.radio.rolesync' } });
+    await lead.put('/api/v1/radio-whitelist/config/roles').send({ roleSync: rules, radioRoleIds: [RADIO_ROLE] }).expect(200);
+    expect(await prisma.discordOutbox.count({ where: { type: 'bot.radio.rolesync' } })).toBe(outbox + 1); // sofort vollständig abgleichen
+    // manuelle Freigabe ohne Rolle → entzogen; Rolle → (wieder) aktiv
+    await snap([{ discordId: M(80), roleIds: [OTHER_ROLE] }, { discordId: M(81), roleIds: [GRANT_ROLE] }]);
+    expect(await prisma.radioGrant.findUnique({ where: { id: man.body.id } })).toMatchObject({ status: 'REVOKED', archivedAt: expect.any(Date) });
+    expect(await prisma.radioGrant.findUnique({ where: { discordId: M(81) } })).toMatchObject({ status: 'ACTIVE', source: 'ROLE' });
+    await snap([{ discordId: M(80), roleIds: [GRANT_ROLE] }]);
+    expect(await prisma.radioGrant.findUnique({ where: { id: man.body.id } })).toMatchObject({ status: 'ACTIVE', archivedAt: null });
+    // manuell freischalten, Anträge, Import → gesperrt
+    expect((await lead.post('/api/v1/radio-whitelist/grants').send({ discordId: M(82), reason: 'manuell' })).status).toBe(503);
+    expect((await lead.post('/api/v1/radio-whitelist/import').send({ csv: `discord_id\n${M(82)}`, dryRun: true })).status).toBe(503);
+    expect((await http().get(`/api/v1/bot/radio-whitelist/status/${M(82)}`).set(bot)).body).toMatchObject({ roleOnly: true, requestsEnabled: false });
+    // Sperre bleibt trotz Rolle
+    const g81 = (await prisma.radioGrant.findUnique({ where: { discordId: M(81) } }))!;
+    await lead.post(`/api/v1/radio-whitelist/grants/${g81.id}/suspend`).send({ reason: 'Sperre' }).expect(200);
+    await snap([{ discordId: M(81), roleIds: [GRANT_ROLE] }]);
+    expect(await prisma.radioGrant.findUnique({ where: { id: g81.id } })).toMatchObject({ status: 'SUSPENDED' });
+    await lead.put('/api/v1/radio-whitelist/config/roles').send({ roleSync: { ...rules, roleOnly: false, enabled: false }, radioRoleIds: [RADIO_ROLE] }).expect(200);
+    await prisma.radioGrant.deleteMany({ where: { discordId: { in: [M(80), M(81), M(82)] } } }); // spätere Zählungen nicht verfälschen
+  });
 });
 
 describe('Externer Funkdienst', () => {
