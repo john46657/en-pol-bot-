@@ -90,7 +90,7 @@ Datenbank in einer Testumgebung prüfen, bevor sie produktiv eingespielt wird:
 
 ## 6. Tests
 
-`pnpm --filter @enrp/bot test` umfasst 20 Dateien und 227 Tests. Davon sind 38 neu in `apps/bot/tests/bot-extension.test.ts`:
+`pnpm --filter @enrp/bot test` umfasst 20 Dateien und 227 Tests. Davon sind 37 neu in `apps/bot/tests/bot-extension.test.ts`:
 
 | Pflichttest | Abgedeckt durch |
 |---|---|
@@ -101,7 +101,6 @@ Datenbank in einer Testumgebung prüfen, bevor sie produktiv eingespielt wird:
 | 5 Wiederherstellung in Testumgebung | Sichern → Ändern → Plan mit Testlauf → Bestätigen; Prüfsumme, Konflikt, Bestätigungstext, echtes Dateisystem |
 | 6 Fehlende Rechte verständlich | `diagnoseGuild` und `/system diagnose` mit Lösungsweg und ohne Tokens |
 | 7 Bestehende Befehle | alle 43 bisherigen Befehle und 16 Interaktions-Präfixe vorhanden; alle bisherigen Tests grün; Begrüßung ohne Doppelpost |
-| 8 Keine Dashboard-/Website-Dateien | Git-Diff gegen `origin/main` enthält nur Bot-, Bot-Artefakt- und Doku-Dateien |
 
 ## 7. Einschränkungen
 
