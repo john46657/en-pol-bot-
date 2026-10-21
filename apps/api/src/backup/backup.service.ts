@@ -10,12 +10,18 @@ import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { loadEnv } from '../config/env';
+import { MonitorService } from '../integrations/monitor.service';
 
 const KEY = 'backup.config';
 /** Flüchtige Daten (Sitzungen, Bot-Warteschlange, Sperren, Einmal-Codes) und die Discord-Backups selbst gehören nicht in ein Daten-Backup. */
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup']);
-/** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
-const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
+/**
+ * Beim Einspielen unangetastet: Audit-Log, Wochenarchive und Lageberichte sind unveränderlich (nur anhängen) und bleiben vollständig
+ * erhalten; Backup-Läufe und Störungsprotokoll beschreiben den Betrieb dieser Installation und werden nicht durch einen alten Stand ersetzt.
+ */
+const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive', 'SituationReport', 'BackupRun', 'IntegrationEvent']);
+/** Wiederherstellungstest: Einspielen läuft vollständig, wird danach aber zurückgerollt. */
+class RollbackAfterVerify extends Error {}
 /**
  * Bewusst entfernte Tabellen: ältere Backups enthalten sie noch – beim Einspielen werden sie übersprungen und die Zeilen,
  * die die zugehörige Migration ebenfalls gelöscht hat, herausgefiltert (sonst kämen z. B. gelöschte Rechte zurück).
@@ -28,8 +34,9 @@ const REMOVED_ROWS: Record<string, (r: Record<string, unknown>) => boolean> = {
   RolePermission: (r) => removedPermission(r.permissionKey),
   UserPermissionOverride: (r) => removedPermission(r.permissionKey),
 };
-const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver|vor-zusammenfuehrung)-(\d{8}-\d{6})\.json\.gz$/;
-export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver' | 'vor-zusammenfuehrung';
+const FILE = /^(auto|manuell|vor-wiederherstellung|vor-umstellung|vor-mehrserver|vor-zusammenfuehrung|vor-migration)-(\d{8}-\d{6})\.json\.gz$/;
+export type DataBackupKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver' | 'vor-zusammenfuehrung' | 'vor-migration';
+type BackupBody = { app?: string; version?: number; tables?: Record<string, Record<string, unknown>[]> };
 /** Nach dem Einspielen (z. B. eines Backups aus dem Ein-Server-Betrieb): gesetzt vom MultiServerRestoreService. */
 let afterRestore: (() => Promise<unknown>) | null = null;
 export const setAfterRestore = (fn: (() => Promise<unknown>) | null) => { afterRestore = fn; };
@@ -76,7 +83,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
   private readonly log = new Logger('Backup');
   private readonly dir = path.resolve(loadEnv().STORAGE_DIR, 'backups');
   private timer?: NodeJS.Timeout;
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly monitor: MonitorService) {}
 
   onModuleInit() {
     if (process.env.NODE_ENV === 'test') return;
@@ -103,7 +110,14 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     if (cfg.dataAuto) {
       // Dashboard-Daten stündlich (der Timer läuft jede Stunde – kleine Verschiebungen dürfen keinen Lauf auslassen)
       const last = (await this.listData()).find((f) => f.kind === 'auto');
-      if (!last || now.getTime() - new Date(last.createdAt).getTime() > 50 * 60_000) await this.createData(null, 'auto');
+      if (!last || now.getTime() - new Date(last.createdAt).getTime() > 50 * 60_000) await this.createData(null, 'auto').catch(() => undefined); // Fehler: protokolliert + Alarm in createData
+    }
+    if (cfg.verifyAuto) {
+      // Wiederherstellungstest einmal täglich nachts (Europe/Berlin 03–05 Uhr): das neueste Backup wirklich einspielen und zurückrollen
+      const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', hourCycle: 'h23' }).format(now));
+      const lastVerify = await this.prisma.backupRun.findFirst({ where: { action: 'VERIFY' }, orderBy: { startedAt: 'desc' } });
+      const newest = (await this.listData())[0];
+      if (newest && hour >= 3 && hour < 5 && (!lastVerify || now.getTime() - lastVerify.startedAt.getTime() > 20 * 3_600_000)) await this.verifyData(null, newest.name).catch(() => undefined);
     }
     if (cfg.discordAuto) {
       for (const g of await this.discord.guilds()) {
@@ -125,11 +139,29 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       const t = m[2]!;
       return { name, kind: m[1] as DataBackupKind, size: st.size, createdAt: new Date(`${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}T${t.slice(9, 11)}:${t.slice(11, 13)}:${t.slice(13, 15)}Z`).toISOString() };
     }));
-    return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Ergebnis des letzten Wiederherstellungstests je Datei (eine Datei allein beweist keine Wiederherstellbarkeit)
+    const verifies = await this.prisma.backupRun.findMany({ where: { action: 'VERIFY', fileName: { in: out.map((f) => f.name) }, status: { not: 'RUNNING' } }, orderBy: { startedAt: 'desc' } });
+    return out.map((f) => { const v = verifies.find((x) => x.fileName === f.name); return { ...f, verify: v ? { status: v.status, at: v.finishedAt ?? v.startedAt, error: v.error } : null }; });
   }
 
   /** Alle Tabellen als JSON (gzip) in den Speicherordner; automatische werden auf „keep“ begrenzt. */
   async createData(actor: Actor | null, kind: DataBackupKind = 'manuell') {
+    const run = await this.prisma.backupRun.create({ data: { action: 'CREATE', kind, createdById: actor?.userId ?? null } });
+    try {
+      const r = await this.writeData(actor, kind);
+      await this.prisma.backupRun.update({ where: { id: run.id }, data: { status: 'SUCCESS', fileName: r.name, rows: r.rows, size: r.size, finishedAt: new Date() } });
+      await this.monitor.recovered('BACKUP', null, 'Erstellen');
+      return r;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.log.error(`Backup (${kind}) fehlgeschlagen: ${msg}`);
+      await this.prisma.backupRun.update({ where: { id: run.id }, data: { status: 'FAILED', error: msg.slice(0, 500), finishedAt: new Date() } }).catch(() => undefined);
+      await this.monitor.failure('BACKUP', null, 'Daten-Backup', 'Erstellen', `Backup (${kind}) fehlgeschlagen: ${msg}`, { kind }, true);
+      throw e;
+    }
+  }
+  private async writeData(actor: Actor | null, kind: DataBackupKind) {
     await mkdir(this.dir, { recursive: true });
     const tables: Record<string, unknown[]> = {};
     let rows = 0;
@@ -167,41 +199,112 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
    * Daten einspielen (gespeichertes Backup oder hochgeladene Datei): vorher wird automatisch der aktuelle Stand gesichert,
    * dann werden alle Tabellen in einer Transaktion ersetzt. Sitzungen und das Audit-Log bleiben – angemeldete Benutzer bleiben angemeldet.
    */
-  async restoreData(actor: Actor, source: { name?: string; buffer?: Buffer }) {
-    const raw = source.name ? await this.readData(source.name) : source.buffer;
+  private parseBackup(raw: Buffer | undefined): BackupBody {
     if (!raw?.length) throw new AppError('VALIDATION_FAILED', 'Keine Backup-Datei.');
-    let body: { app?: string; version?: number; tables?: Record<string, Record<string, unknown>[]> };
+    let body: BackupBody;
     try { body = JSON.parse((raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw) : raw).toString('utf8')); } catch { throw new AppError('VALIDATION_FAILED', 'Die Datei ist kein gültiges Backup.'); }
     if (body.app !== 'en-polizei' || body.version !== 1 || !body.tables) throw new AppError('VALIDATION_FAILED', 'Die Datei ist kein Backup dieses Dashboards.');
     const order = modelOrder().filter((m) => !KEEP_ON_RESTORE.has(m.name));
     const unknown = Object.keys(body.tables).filter((t) => !order.some((m) => m.name === t) && !SKIP.has(t) && !KEEP_ON_RESTORE.has(t) && !REMOVED_TABLES.has(t));
     if (unknown.length) throw new AppError('VALIDATION_FAILED', `Das Backup passt nicht zu dieser Version (unbekannte Tabellen: ${unknown.slice(0, 5).join(', ')}).`);
+    return body;
+  }
+
+  /** Alle Tabellen in der Transaktion ersetzen (gemeinsam für Wiederherstellung und Wiederherstellungstest). Liefert die erwarteten Zeilen je Tabelle. */
+  private async applyBackup(tx: Prisma.TransactionClient, body: BackupBody) {
+    const order = modelOrder().filter((m) => !KEEP_ON_RESTORE.has(m.name));
+    const db = tx as unknown as Record<string, { deleteMany(): Promise<unknown>; createMany(a: { data: unknown[] }): Promise<unknown> }>;
+    const expected: Record<string, number> = {};
+    // Sitzungen hängen an den Benutzern (werden beim Leeren mitgelöscht) → danach für weiterhin vorhandene Benutzer zurückholen
+    const sessions = await tx.session.findMany();
+    for (const m of [...order].reverse()) await db[delegate(m.name)]!.deleteMany();
+    for (const m of order) {
+      const list = (body.tables![m.name] ?? []).filter((r) => !REMOVED_ROWS[m.name]?.(r));
+      const fields = new Map(m.fields.filter((f) => f.kind === 'scalar' || f.kind === 'enum').map((f) => [f.name, f]));
+      const data = list.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => fields.has(k)).map(([k, v]) => [k, v === null && fields.get(k)!.type === 'Json' ? Prisma.DbNull : v])));
+      for (let i = 0; i < data.length; i += 500) await db[delegate(m.name)]!.createMany({ data: data.slice(i, i + 500) });
+      expected[m.name] = data.length;
+    }
+    const users = new Set((await tx.user.findMany({ select: { id: true } })).map((u) => u.id));
+    const keep = sessions.filter((x) => users.has(x.userId));
+    if (keep.length) await tx.session.createMany({ data: keep, skipDuplicates: true });
+    // Wochenarchive und Lageberichte aus dem Backup, die hier fehlen, ergänzen – vorhandene werden nie überschrieben
+    const weeks = (body.tables!.DutyWeekArchive ?? []) as Prisma.DutyWeekArchiveCreateManyInput[];
+    for (let i = 0; i < weeks.length; i += 500) await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
+    const lage = (body.tables!.SituationReport ?? []) as Prisma.SituationReportCreateManyInput[];
+    for (let i = 0; i < lage.length; i += 500) await tx.situationReport.createMany({ data: lage.slice(i, i + 500), skipDuplicates: true });
+    return { order, expected };
+  }
+
+  /**
+   * Daten einspielen (gespeichertes Backup oder hochgeladene Datei): vorher wird automatisch der aktuelle Stand gesichert,
+   * dann werden alle Tabellen in einer Transaktion ersetzt. Sitzungen und das Audit-Log bleiben – angemeldete Benutzer bleiben angemeldet.
+   */
+  async restoreData(actor: Actor, source: { name?: string; buffer?: Buffer }) {
+    const body = this.parseBackup(source.name ? await this.readData(source.name) : source.buffer);
     const safety = await this.createData(null, 'vor-wiederherstellung');
+    const run = await this.prisma.backupRun.create({ data: { action: 'RESTORE', kind: source.name ? FILE.exec(source.name)?.[1] ?? null : 'upload', fileName: source.name ?? null, createdById: actor.userId } });
     let rows = 0;
-    // vollständiger Bestand aller Server, ohne Filter (sonst blieben z. B. unter „Alle Server“ ausgeblendete Altbestände stehen → Konflikte)
-    await unscoped(() => this.prisma.$transaction(async (tx) => {
-      const db = tx as unknown as Record<string, { deleteMany(): Promise<unknown>; createMany(a: { data: unknown[] }): Promise<unknown> }>;
-      // Sitzungen hängen an den Benutzern (werden beim Leeren mitgelöscht) → danach für weiterhin vorhandene Benutzer zurückholen
-      const sessions = await tx.session.findMany();
-      for (const m of [...order].reverse()) await db[delegate(m.name)]!.deleteMany();
-      for (const m of order) {
-        const list = (body.tables![m.name] ?? []).filter((r) => !REMOVED_ROWS[m.name]?.(r));
-        const fields = new Map(m.fields.filter((f) => f.kind === 'scalar' || f.kind === 'enum').map((f) => [f.name, f]));
-        const data = list.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => fields.has(k)).map(([k, v]) => [k, v === null && fields.get(k)!.type === 'Json' ? Prisma.DbNull : v])));
-        for (let i = 0; i < data.length; i += 500) await db[delegate(m.name)]!.createMany({ data: data.slice(i, i + 500) });
-        rows += data.length;
-      }
-      const users = new Set((await tx.user.findMany({ select: { id: true } })).map((u) => u.id));
-      const keep = sessions.filter((x) => users.has(x.userId));
-      if (keep.length) await tx.session.createMany({ data: keep, skipDuplicates: true });
-      // Wochenarchive aus dem Backup, die hier fehlen, ergänzen – vorhandene werden nie überschrieben
-      const weeks = (body.tables!.DutyWeekArchive ?? []) as Prisma.DutyWeekArchiveCreateManyInput[];
-      for (let i = 0; i < weeks.length; i += 500) await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
-    }, { timeout: 10 * 60_000, maxWait: 30_000 }));
+    try {
+      // vollständiger Bestand aller Server, ohne Filter (sonst blieben z. B. unter „Alle Server“ ausgeblendete Altbestände stehen → Konflikte)
+      await unscoped(() => this.prisma.$transaction(async (tx) => {
+        const { expected } = await this.applyBackup(tx, body);
+        rows = Object.values(expected).reduce((a, b) => a + b, 0);
+      }, { timeout: 10 * 60_000, maxWait: 30_000 }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await this.prisma.backupRun.update({ where: { id: run.id }, data: { status: 'FAILED', error: msg.slice(0, 500), finishedAt: new Date(), details: { safety: safety.name } } });
+      await this.monitor.failure('BACKUP', null, 'Daten-Backup', 'Wiederherstellen', `Wiederherstellung fehlgeschlagen (nichts geändert): ${msg}`, undefined, true);
+      throw e;
+    }
+    await this.prisma.backupRun.update({ where: { id: run.id }, data: { status: 'SUCCESS', rows, finishedAt: new Date(), details: { safety: safety.name } } });
     await this.audit.record(actor, { action: 'backup.data.restore', module: 'settings', entityType: 'Backup', entityId: source.name ?? 'upload', after: { rows, safety: safety.name } });
     // Backup aus dem Ein-Server-Betrieb eingespielt → Daten wieder dem Server zuordnen (siehe MultiServerRestoreService)
     if (afterRestore) await afterRestore().catch((e) => this.log.warn(`Nach dem Einspielen: ${e instanceof Error ? e.message : e}`));
     return { rows, safety: safety.name };
+  }
+
+  /**
+   * Wiederherstellungstest: das Backup wird tatsächlich in die Datenbank eingespielt (gleicher Weg wie bei der Wiederherstellung), die
+   * Zeilenzahl jeder Tabelle mit der Datei verglichen und danach alles zurückgerollt – am Datenbestand ändert sich nichts.
+   * Nur ein bestandener Test gilt als „wiederherstellbar“. Hinweis: Während des Tests warten schreibende Zugriffe kurz.
+   */
+  async verifyData(actor: Actor | null, name: string) {
+    const run = await this.prisma.backupRun.create({ data: { action: 'VERIFY', kind: FILE.exec(name)?.[1] ?? null, fileName: name, createdById: actor?.userId ?? null } });
+    const started = Date.now();
+    let details: { tables: number; rows: number; mismatches: { table: string; expected: number; actual: number }[]; durationMs: number } | null = null;
+    try {
+      const body = this.parseBackup(await this.readData(name));
+      await unscoped(() => this.prisma.$transaction(async (tx) => {
+        const { order, expected } = await this.applyBackup(tx, body);
+        const db = tx as unknown as Record<string, { count(): Promise<number> }>;
+        const mismatches: { table: string; expected: number; actual: number }[] = [];
+        for (const m of order) { const actual = await db[delegate(m.name)]!.count(); if (actual !== expected[m.name]) mismatches.push({ table: m.name, expected: expected[m.name] ?? 0, actual }); }
+        details = { tables: order.length, rows: Object.values(expected).reduce((a, b) => a + b, 0), mismatches, durationMs: Date.now() - started };
+        throw new RollbackAfterVerify();
+      }, { timeout: 10 * 60_000, maxWait: 30_000 })).catch((e) => { if (!(e instanceof RollbackAfterVerify)) throw e; });
+      const d = details!;
+      const ok = d.mismatches.length === 0;
+      const error = ok ? null : `Abweichende Zeilenzahl in ${d.mismatches.map((m) => `${m.table} (${m.actual}/${m.expected})`).slice(0, 5).join(', ')}`;
+      await this.prisma.backupRun.update({ where: { id: run.id }, data: { status: ok ? 'SUCCESS' : 'FAILED', rows: d.rows, error, details: d as unknown as Prisma.InputJsonValue, finishedAt: new Date() } });
+      if (ok) await this.monitor.recovered('BACKUP', null, 'Wiederherstellungstest');
+      else await this.monitor.failure('BACKUP', null, 'Daten-Backup', 'Wiederherstellungstest', `Wiederherstellungstest ${name} fehlgeschlagen: ${error}`, { name }, true);
+      if (actor) await this.audit.record(actor, { action: 'backup.data.verify', module: 'settings', entityType: 'Backup', entityId: name, after: { ok, rows: d.rows, durationMs: d.durationMs }, result: ok ? 'SUCCESS' : 'FAILED' });
+      return { ok, name, rows: d.rows, tables: d.tables, mismatches: d.mismatches, durationMs: d.durationMs, error };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await this.prisma.backupRun.update({ where: { id: run.id }, data: { status: 'FAILED', error: msg.slice(0, 500), finishedAt: new Date() } }).catch(() => undefined);
+      await this.monitor.failure('BACKUP', null, 'Daten-Backup', 'Wiederherstellungstest', `Wiederherstellungstest ${name} fehlgeschlagen: ${msg}`, { name }, true);
+      if (actor) await this.audit.record(actor, { action: 'backup.data.verify', module: 'settings', entityType: 'Backup', entityId: name, after: { ok: false, error: msg.slice(0, 300) }, result: 'FAILED' });
+      return { ok: false, name, rows: 0, tables: 0, mismatches: [], durationMs: Date.now() - started, error: msg.slice(0, 500) };
+    }
+  }
+
+  /** Verlauf: Erstellen, Wiederherstellungstests und Wiederherstellungen mit Zeitpunkt und Ergebnis. */
+  async runs(take = 100) {
+    const rows = await this.prisma.backupRun.findMany({ orderBy: { startedAt: 'desc' }, take: Math.min(take, 500) });
+    const names = new Map((await this.prisma.user.findMany({ where: { id: { in: [...new Set(rows.map((r) => r.createdById).filter((x): x is string => !!x))] } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName]));
+    return rows.map((r) => ({ ...r, createdByName: r.createdById ? names.get(r.createdById) ?? '—' : 'System' }));
   }
 
   // ───────────── Discord-Server ─────────────

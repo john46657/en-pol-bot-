@@ -24,5 +24,7 @@ export const backupConfigSchema = z.object({
   discordAuto: z.boolean().default(false),
   /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
   keep: z.number().int().min(1).max(60).default(14),
+  /** Täglicher Wiederherstellungstest des neuesten Daten-Backups (nachts 03–05 Uhr; Schreibzugriffe warten währenddessen kurz) */
+  verifyAuto: z.boolean().default(false),
 });
 export type BackupConfig = z.infer<typeof backupConfigSchema>;

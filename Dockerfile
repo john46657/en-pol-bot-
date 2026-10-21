@@ -18,8 +18,8 @@ RUN mkdir -p /app/uploads && chown node:node /app/uploads
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-# Migrationen vor dem Start anwenden (nur `migrate deploy`, niemals `db push`/`migrate reset`)
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/main.js"]
+# Migrationen vor dem Start anwenden (nur `migrate deploy`, niemals `db push`/`migrate reset`) – vorher Pflicht-Sicherung bei ausstehenden Migrationen
+CMD ["sh", "-c", "node dist/backup/pre-migrate.js prisma/migrations && ./node_modules/.bin/prisma migrate deploy && node dist/main.js"]
 
 # ---- Discord-Bot ----
 FROM node:22-bookworm-slim AS bot

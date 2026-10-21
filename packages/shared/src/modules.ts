@@ -6,14 +6,14 @@
 export interface ModuleDef { key: string; name: string; description: string; system?: boolean; dependsOn?: string[]; permissionPrefixes: string[] }
 
 export const MODULES = [
-  { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules'] },
+  { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules', 'situation', 'integrations', 'backups'] },
   { key: 'cad', name: 'CAD-Leitstelle', description: 'Einsätze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge', permissionPrefixes: ['cad', 'fleet'] },
   { key: 'mdt', name: 'MDT', description: 'Personen, Fahrzeuge, Haftbefehle, Bußgelder', permissionPrefixes: ['persons', 'vehicles', 'wanted', 'tickets'] },
   { key: 'dispatch', name: 'Dispatch', description: 'Einsatzverwaltung und Einheiten-Board', permissionPrefixes: ['dispatch', 'incidents'] },
-  { key: 'reports', name: 'Berichte', description: 'Einsatzberichte, Tages-/Wochenberichte', permissionPrefixes: ['reports', 'dutyreports'] },
+  { key: 'reports', name: 'Berichte', description: 'Einsatzberichte, Tages-/Wochenberichte, Vorgänge, Qualitätsprüfung', permissionPrefixes: ['reports', 'dutyreports', 'cases', 'quality'] },
   { key: 'shift_logs', name: 'Shift Logs', description: 'Dienststatus, Schichten, Dienstzeiten, Wochenranglisten', permissionPrefixes: ['team'] },
   { key: 'investigations', name: 'Beschwerden', description: 'Beschwerden', permissionPrefixes: ['complaints'] },
-  { key: 'personnel', name: 'Personal', description: 'Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern', permissionPrefixes: ['personnel', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'leave'] },
+  { key: 'personnel', name: 'Personal', description: 'Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern', permissionPrefixes: ['personnel', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'leave', 'career', 'forecast'] },
   { key: 'applications', name: 'Bewerbungen', description: 'Bewerbungen, Qualifikationen, Academy, Team-Chance', permissionPrefixes: ['applications', 'qualifications', 'academy', 'teamchance'] },
   { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },

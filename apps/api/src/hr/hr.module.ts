@@ -8,12 +8,13 @@ import { HrRequestsService } from './hr-requests.service';
 import { HrTrainingService } from './hr-training.service';
 import { HrExamService } from './hr-exam.service';
 import { ServiceNumbersService } from './service-numbers.service';
+import { HrCareerService } from './hr-career.service';
 
 /** Personal- & Verwaltungssystem: Personalakte, Ränge/Beförderungen, Versetzungen, Ausbildungen/Prüfungen, Dienstnummern. */
 @Module({
   imports: [BackupModule],
   controllers: [HrController, HrExamController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, BotTrainingSessionsController, ServiceNumbersController],
-  providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrExamService, HrTrainingSessionsService, ServiceNumbersService],
+  providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrExamService, HrTrainingSessionsService, ServiceNumbersService, HrCareerService],
   exports: [HrCoreService, ServiceNumbersService],
 })
 export class HrModule {}

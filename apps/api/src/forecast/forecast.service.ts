@@ -1,0 +1,134 @@
+import { Injectable } from '@nestjs/common';
+import {
+  anomalies, CONFIDENCE_LABEL, confidenceFor, estimateNext, lowStaffingWindows, staffingHeatmap, weekKey, weekStartOf, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE,
+} from '@enrp/shared';
+import { PrismaService } from '../prisma/prisma.service';
+import { AuditService, type Actor } from '../audit/audit.service';
+import { QualityService } from '../quality/quality.service';
+
+const DAY = 86_400_000;
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/**
+ * Personalbedarfs- und Aktivitätsprognose für Führungskräfte. Rechnet ausschließlich mit gespeicherten Daten (Dienstzeiten,
+ * Personalakten, Einsatzstatistik, Ausbildung/Prüfungen, Berichte) und kennzeichnet jede Prognose als Schätzung mit Datenbasis,
+ * Zeitraum und Aussagekraft. Löst nie etwas aus (keine Sanktionen, Herabstufungen oder Beförderungen).
+ */
+@Injectable()
+export class ForecastService {
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly quality: QualityService) {}
+
+  async forecast(actor: Actor, q: { weeks: number; minStaff: number; department?: string }, now = new Date()) {
+    // ganze Wochen (Montag 00:00 Europe/Berlin) – die laufende Woche zählt nicht mit, sie ist unvollständig
+    const to = weekStartOf(now);
+    const from = new Date(to.getTime() - q.weeks * 7 * DAY);
+    const weekStarts = Array.from({ length: q.weeks }, (_, i) => weekStartOf(new Date(from.getTime() + i * 7 * DAY + 12 * 3_600_000)));
+    const idx = (d: Date) => weekStarts.findIndex((w, i) => d >= w && d < (weekStarts[i + 1] ?? to));
+    const labels = weekStarts.map((w) => weekKey(w));
+
+    const personnel = await this.prisma.personnel.findMany({ select: { userId: true, team: true, employmentStatus: true, joinDate: true } });
+    const deptOf = new Map(personnel.map((p) => [p.userId, p.team ?? 'ohne Abteilung']));
+    const inDept = (userId: string) => !q.department || deptOf.get(userId) === q.department;
+
+    // ---- Dienstzeiten ----
+    const sessions = (await this.prisma.dutySession.findMany({
+      where: { status: { in: [...WEEK_COUNTED_STATUSES] }, startedAt: { lt: to }, OR: [{ endedAt: null }, { endedAt: { gt: from } }] },
+      select: { userId: true, startedAt: true, endedAt: true },
+    })).filter((s) => inDept(s.userId));
+    const spans = sessions.map((s) => ({ start: s.startedAt, end: s.endedAt ?? (now < to ? now : to), userId: s.userId }));
+    const heat = staffingHeatmap(spans, from, to);
+    const hoursPerWeek = labels.map(() => 0);
+    const officersPerWeek = labels.map(() => new Set<string>());
+    const byDept = new Map<string, number[]>();
+    for (const s of spans) {
+      for (let i = 0; i < weekStarts.length; i++) {
+        const a = Math.max(s.start.getTime(), weekStarts[i]!.getTime()), b = Math.min(s.end.getTime(), (weekStarts[i + 1] ?? to).getTime());
+        if (b <= a) continue;
+        const h = (b - a) / 3_600_000;
+        hoursPerWeek[i]! += h;
+        officersPerWeek[i]!.add(s.userId);
+        const d = deptOf.get(s.userId) ?? 'ohne Personalakte';
+        const row = byDept.get(d) ?? labels.map(() => 0);
+        row[i]! += h;
+        byDept.set(d, row);
+      }
+    }
+
+    // ---- Einsätze (dauerhafte Statistik + noch vorhandene Einsätze, ohne Doppelzählung) ----
+    const [stats, liveIncidents] = await Promise.all([
+      this.prisma.cadIncidentStat.findMany({ where: { createdAt: { gte: from, lt: to } }, select: { incidentId: true, createdAt: true } }),
+      this.prisma.incident.findMany({ where: { createdAt: { gte: from, lt: to } }, select: { id: true, createdAt: true } }),
+    ]);
+    const incidentAt = new Map<string, Date>([...liveIncidents.map((i) => [i.id, i.createdAt] as const), ...stats.map((s) => [s.incidentId, s.createdAt] as const)]);
+    const incidentsPerWeek = labels.map(() => 0);
+    for (const at of incidentAt.values()) { const i = idx(at); if (i >= 0) incidentsPerWeek[i]!++; }
+    const demand = staffingHeatmap([...incidentAt.values()].map((at) => ({ start: at, end: new Date(at.getTime() + 60_000) })), from, to);
+    const oldestStat = await this.prisma.cadIncidentStat.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } });
+
+    // ---- Berichte und Unvollständigkeit (aktueller Stand der Qualitätsprüfung) ----
+    const reports = await this.prisma.report.findMany({ where: { createdAt: { gte: from, lt: to } }, select: { id: true, createdAt: true, authorId: true }, take: 3000 });
+    const relevant = reports.filter((r) => inDept(r.authorId));
+    const checked = await this.quality.incompleteReports(relevant.map((r) => r.id));
+    const incomplete = new Set(checked.filter((c) => c.errors.length).map((c) => c.id));
+    const reportsPerWeek = labels.map(() => 0), incompletePerWeek = labels.map(() => 0);
+    for (const r of relevant) { const i = idx(r.createdAt); if (i < 0) continue; reportsPerWeek[i]!++; if (incomplete.has(r.id)) incompletePerWeek[i]!++; }
+
+    // ---- Ausbildung und Prüfungen (offen, aktueller Stand) ----
+    const [trainingsOpen, examsToGrade, upcomingSessions] = await Promise.all([
+      this.prisma.hrTrainingProgress.count({ where: { status: { in: ['NOT_STARTED', 'IN_PROGRESS'] } } }),
+      this.prisma.hrExamAttempt.count({ where: { status: 'SUBMITTED' } }),
+      this.prisma.hrTrainingSession.count({ where: { startsAt: { gte: now } } }),
+    ]);
+
+    // ---- Schätzungen ----
+    const weeksWithDuty = hoursPerWeek.filter((h) => h > 0).length;
+    const dutyConf = confidenceFor(weeksWithDuty, sessions.length);
+    const incConf = confidenceFor(incidentsPerWeek.filter((n) => n > 0).length, incidentAt.size);
+    const nextIncidents = estimateNext(incidentsPerWeek, 2);
+    const nextHours = estimateNext(hoursPerWeek.map(round1), 2);
+    const totalHours = hoursPerWeek.reduce((a, b) => a + b, 0), totalIncidents = incidentsPerWeek.reduce((a, b) => a + b, 0);
+    // Einsätze je Dienststunde im Zeitraum → benötigte Dienststunden für die geschätzte Einsatzzahl (gleiches Verhältnis wie bisher)
+    const perHour = totalHours > 0 ? totalIncidents / totalHours : null;
+    const neededHours = nextIncidents && perHour ? round1(nextIncidents[0]!.value / perHour) : null;
+    const low = lowStaffingWindows(heat.avg, q.minStaff);
+    // Bedarf ohne Besetzung: Stunden mit Einsätzen im Mittel, aber unter der Mindestbesetzung
+    const hotspots = heat.avg.flatMap((row, d) => row.map((v, h) => ({ weekday: d, hour: h, staff: v, incidents: demand.avg[d]![h] ?? 0 })))
+      .filter((x) => x.staff !== null && x.staff < q.minStaff && (x.incidents ?? 0) > 0)
+      .sort((a, b) => (b.incidents ?? 0) - (a.incidents ?? 0)).slice(0, 10);
+    const DAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+    const suggestions = [
+      ...hotspots.slice(0, 5).map((x) => `${DAYS[x.weekday]} ${String(x.hour).padStart(2, '0')}–${String(x.hour + 1).padStart(2, '0')} Uhr: im Mittel ${x.incidents} Einsätze bei ${x.staff} Beamten im Dienst – Schicht verstärken prüfen.`),
+      ...(neededHours !== null && nextHours ? [nextHours[0]!.value < neededHours
+        ? `Für die geschätzten ${nextIncidents![0]!.value} Einsätze der nächsten Woche wären bei bisherigem Verhältnis ca. ${neededHours} Dienststunden nötig; geschätzt werden ${nextHours[0]!.value} h – Mehrbedarf ca. ${round1(neededHours - nextHours[0]!.value)} h.`
+        : `Geschätzte Dienststunden (${nextHours[0]!.value} h) decken den geschätzten Bedarf (${neededHours} h) bei bisherigem Verhältnis.`] : []),
+      ...(trainingsOpen + examsToGrade > 0 ? [`${trainingsOpen} offene Ausbildungen und ${examsToGrade} unbewertete Prüfungen binden Ausbilderzeit – bei der Schichtplanung berücksichtigen.`] : []),
+    ];
+
+    const missing: string[] = [];
+    if (!sessions.length) missing.push('Keine Dienstzeiten im Zeitraum erfasst.');
+    if (!incidentAt.size) missing.push('Keine Einsätze im Zeitraum erfasst.');
+    if (oldestStat && oldestStat.createdAt > from) missing.push(`Einsatzstatistik reicht nur bis ${oldestStat.createdAt.toLocaleDateString('de-DE')} zurück (Einsätze werden einen Tag nach Abschluss gelöscht, Kennzahlen bleiben).`);
+    if (!oldestStat && liveIncidents.length) missing.push('Ältere Einsätze sind gelöscht und nicht in der Statistik – frühere Wochen können zu niedrig sein.');
+    if (q.department) missing.push(`Gefiltert auf Abteilung „${q.department}“ – Einsätze sind nicht abteilungsbezogen und werden insgesamt gezählt.`);
+
+    await this.audit.record(actor, { action: 'forecast.read', module: 'personnel', entityType: 'Forecast', after: { weeks: q.weeks, department: q.department ?? null } });
+    return {
+      generatedAt: now.toISOString(), estimateNotice: 'Alle Prognosen sind Schätzungen auf Basis der gespeicherten Daten. Sie lösen keine Maßnahmen aus.',
+      basis: { from: from.toISOString(), to: to.toISOString(), weeks: q.weeks, timezone: WEEK_TIMEZONE, dutySessions: sessions.length, incidents: incidentAt.size, reports: relevant.length, personnel: personnel.length, missing },
+      confidence: { duty: { ...dutyConf, label: CONFIDENCE_LABEL[dutyConf.level] }, incidents: { ...incConf, label: CONFIDENCE_LABEL[incConf.level] } },
+      weekly: labels.map((w, i) => ({ week: w, dutyHours: round1(hoursPerWeek[i]!), officers: officersPerWeek[i]!.size, incidents: incidentsPerWeek[i]!, reports: reportsPerWeek[i]!, incompleteReports: incompletePerWeek[i]! })),
+      heatmap: heat.avg, demandHeatmap: demand.avg,
+      byDepartment: [...byDept].map(([department, hours]) => ({ department, hours: hours.map(round1), total: round1(hours.reduce((a, b) => a + b, 0)), officers: personnel.filter((p) => (p.team ?? 'ohne Abteilung') === department && !['RESIGNED', 'TERMINATED', 'INACTIVE'].includes(p.employmentStatus)).length })).sort((a, b) => b.total - a.total),
+      lowStaffing: low, hotspots,
+      estimates: { nextWeeksIncidents: nextIncidents, nextWeeksDutyHours: nextHours, incidentsPerDutyHour: perHour !== null ? Math.round(perHour * 1000) / 1000 : null, neededDutyHoursNextWeek: neededHours },
+      anomalies: {
+        incidents: anomalies(labels.map((w, i) => ({ label: w, value: incidentsPerWeek[i]! }))),
+        dutyHours: anomalies(labels.map((w, i) => ({ label: w, value: round1(hoursPerWeek[i]!) }))),
+        incompleteReports: anomalies(labels.map((w, i) => ({ label: w, value: incompletePerWeek[i]! }))),
+      },
+      openTraining: { trainingsOpen, examsToGrade, upcomingSessions },
+      suggestions,
+      departments: [...new Set(personnel.map((p) => p.team).filter((x): x is string => !!x))].sort(),
+    };
+  }
+}

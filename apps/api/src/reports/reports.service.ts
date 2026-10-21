@@ -12,13 +12,14 @@ import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { LocksService } from '../locks/locks.service';
+import { QualityService } from '../quality/quality.service';
 
 const stable = (v: unknown): string => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
 export const hashContent = (c: unknown) => createHash('sha256').update(stable(c)).digest('hex');
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly perms: PermissionService, private readonly locks: LocksService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly perms: PermissionService, private readonly locks: LocksService, private readonly quality: QualityService) {}
 
   /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
   private async canSeeAll(userId: string) { return (await this.perms.has(userId, 'reports.review')) || (await this.perms.has(userId, 'reports.approve')); }
@@ -82,6 +83,8 @@ export class ReportsService {
 
   async transition(actor: Actor, id: string, to: ReportStatus, reason?: string) {
     const userId = actor.userId!;
+    // Qualitätsprüfung vor dem Einreichen (nur wenn unter Qualitätsprüfer → Einstellungen aktiviert)
+    if (to === 'SUBMITTED') await this.quality.assertReportSubmittable(actor, id);
     return this.prisma.$transaction(async (tx) => {
       const r = await tx.report.findUnique({ where: { id } });
       if (!r || !(await this.visible(userId, r))) throw new AppError('NOT_FOUND', 'Bericht nicht gefunden.');

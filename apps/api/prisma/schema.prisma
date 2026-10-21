@@ -1397,6 +1397,10 @@ model ErlcServer {
   /// Letzter erfolgreicher Fahndungsabgleich (Spielerliste ↔ aktive Fahndungen) und letzter Fehler dabei
   wantedCheckAt    DateTime?
   wantedCheckError String?
+  /// seit wann Abrufe ununterbrochen fehlschlagen (null = letzter Abruf erfolgreich) – übersteht Neustarts, Grundlage der Admin-Alarme
+  failingSince     DateTime?
+  /// aufeinanderfolgende Fehlschläge (dauerhaft gespeichert)
+  failureCount     Int                  @default(0)
   calls            ErlcEmergencyCall[]
   commands         ErlcCommandLog[]
   liveVehicles     ErlcLiveVehicle[]
@@ -1480,6 +1484,11 @@ model ErlcEmergencyCall {
   claimedById        String?    @db.Uuid
   incidentId         String?    @db.Uuid
   source             String     @default("API") // API | WEBHOOK
+  /// Herkunft der Kartenposition: CALLER (Standort des Anrufers laut API) | POI (Ortsname → eigener POI) | POSTAL (PLZ aus der Ortsangabe) |
+  /// CALIBRATED (Notruf-Position mit gelernter Umrechnung) | API (Notruf-Position liegt auf der Karte) | NONE (keine genaue Position); null = Altbestand
+  positionSource     String?
+  /// zuletzt in einem erfolgreichen API-Abruf enthalten (fehlt er danach, gilt der Notruf in ER:LC als nicht mehr gemeldet → veraltet)
+  lastSeenAt         DateTime?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   server             ErlcServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
@@ -1901,6 +1910,8 @@ model HrExam {
   questions        Json            @default("[]")
   /// zufällig gezogene Fragen je Versuch (0 = alle)
   questionCount    Int             @default(0)
+  /// Zufällige Zusammenstellung nach Thema/Schwierigkeit [{ topic, difficulty, count }] (leer = questionCount)
+  drawRules        Json            @default("[]")
   passPercent      Int             @default(70)
   timeLimitMin     Int?
   maxAttempts      Int             @default(3)
@@ -1946,6 +1957,10 @@ model HrExamAttempt {
   flagged     String[]  @default([])
   /// erreichte Punkte je Frage (nach der Bewertung)
   questionScores Json?
+  /// Kriterienkatalog: vergebene Punkte je Frage und Kriterium { [frageId]: { [kriteriumId]: Punkte } }
+  rubricScores Json?
+  /// Themen unter der Bestehensgrenze (für spätere Wiederholung)
+  weakTopics  String[]  @default([])
   voidReason  String?
   voidedById  String?   @db.Uuid
   voidedAt    DateTime?
@@ -2508,4 +2523,151 @@ model MessageBuilderWebhook {
   archivedAt  DateTime?
 
   @@index([guildId])
+}
+
+// ───────────── Premium-Funktionen: Vorgänge, Qualität, Lage, Überwachung, Backups ─────────────
+
+/// Vorgang: bündelt Datensätze aus CAD, MDT, Berichten, Fahndungen, Personal unter einer eindeutigen Vorgangsnummer (z. B. V-2026-00001).
+model CaseFile {
+  id          String     @id @default(uuid()) @db.Uuid
+  /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts)
+  serverId    String?    @db.Uuid
+  number      String     @unique
+  title       String
+  description String?
+  /// OPEN | IN_PROGRESS | CLOSED
+  status      String     @default("OPEN")
+  createdById String     @db.Uuid
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  closedAt    DateTime?
+  /// bei manueller Zusammenführung: in welchen Vorgang übernommen
+  mergedIntoId String?   @db.Uuid
+  version     Int        @default(1)
+  links       CaseLink[]
+
+  @@index([serverId])
+  @@index([status, updatedAt])
+}
+
+/// Verknüpfung Vorgang ↔ Datensatz. Wird nie gelöscht, sondern gelöst (wer/wann/warum) – nachvollziehbar.
+/// Aktiv eindeutig je Vorgang + Datensatz (Teil-Index in der Migration).
+model CaseLink {
+  id           String    @id @default(uuid()) @db.Uuid
+  caseId       String    @db.Uuid
+  /// INCIDENT | CALL | REPORT | WANTED | PERSON | VEHICLE | TICKET | COMPLAINT | UNIT | OFFICER | HR_REQUEST | PERSONNEL_RECORD
+  entityType   String
+  entityId     String
+  role         String?
+  note         String?
+  /// Bezeichnung beim Verknüpfen (Nummer/Titel) – bleibt lesbar, wenn der Datensatz später nicht mehr existiert
+  label        String
+  /// Zeitpunkt des Datensatzes (für die Ereignisübersicht)
+  occurredAt   DateTime?
+  addedById    String    @db.Uuid
+  addedAt      DateTime  @default(now())
+  removedById  String?   @db.Uuid
+  removedAt    DateTime?
+  removeReason String?
+  case         CaseFile  @relation(fields: [caseId], references: [id], onDelete: Restrict)
+
+  @@index([caseId])
+  @@index([entityType, entityId])
+}
+
+/// Entscheidung über einen Duplikat-Vorschlag (damit geprüfte Paare nicht erneut vorgeschlagen werden).
+model CaseDuplicateDecision {
+  id          String   @id @default(uuid()) @db.Uuid
+  /// kleinere ID zuerst
+  caseAId     String   @db.Uuid
+  caseBId     String   @db.Uuid
+  /// NOT_DUPLICATE | MERGED
+  decision    String
+  note        String?
+  decidedById String   @db.Uuid
+  decidedAt   DateTime @default(now())
+
+  @@unique([caseAId, caseBId])
+}
+
+/// Begründete Ausnahme zu einem Befund des Qualitätsprüfers (aktiv eindeutig je Datensatz + Regel, Teil-Index in der Migration).
+model QualityException {
+  id          String    @id @default(uuid()) @db.Uuid
+  serverId    String?   @db.Uuid
+  /// REPORT | WANTED | INCIDENT
+  targetType  String
+  targetId    String
+  code        String
+  reason      String
+  createdById String    @db.Uuid
+  createdAt   DateTime  @default(now())
+  revokedById String?   @db.Uuid
+  revokedAt   DateTime?
+
+  @@index([targetType, targetId])
+  @@index([serverId])
+}
+
+/// Gespeicherter Lagebericht (unveränderliche Momentaufnahme mit Datenstand und Zeitstempeln).
+model SituationReport {
+  id          String   @id @default(uuid()) @db.Uuid
+  serverId    String?  @db.Uuid
+  number      String   @unique
+  /// strukturierte Daten zum Erstellungszeitpunkt
+  data        Json
+  /// lesbarer Text (Markdown)
+  text        String
+  note        String?
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  @@index([serverId, createdAt])
+}
+
+/// Technische Störung / Ereignis der Überwachung (ER:LC-API, Verarbeitungsschritte, Backups, Discord-Ausgang).
+/// Wiederholte Fehler derselben Quelle werden zusammengefasst (count/lastAt) statt das Protokoll zu fluten.
+model IntegrationEvent {
+  id               String    @id @default(uuid()) @db.Uuid
+  /// ERLC | ERLC_STEP | BACKUP | OUTBOX
+  source           String
+  sourceId         String?
+  sourceName       String?
+  /// Verarbeitungsschritt (z. B. calls, wanted, records, fleet) oder Backup-Art
+  step             String?
+  /// OPEN | RESOLVED | ACKNOWLEDGED
+  status           String    @default("OPEN")
+  message          String
+  details          Json?
+  count            Int       @default(1)
+  firstAt          DateTime  @default(now())
+  lastAt           DateTime  @default(now())
+  resolvedAt       DateTime?
+  alertedAt        DateTime?
+  acknowledgedById String?   @db.Uuid
+  acknowledgedAt   DateTime?
+
+  @@index([status, lastAt])
+  @@index([source, sourceId, step])
+}
+
+/// Lauf einer Daten-Sicherung: Erstellen, Wiederherstellungstest oder Wiederherstellung – mit Zeitpunkt und Ergebnis.
+model BackupRun {
+  id          String    @id @default(uuid()) @db.Uuid
+  /// CREATE | VERIFY | RESTORE
+  action      String
+  /// auto | manuell | vor-wiederherstellung | vor-migration | …
+  kind        String?
+  /// RUNNING | SUCCESS | FAILED
+  status      String    @default("RUNNING")
+  fileName    String?
+  rows        Int?
+  size        Int?
+  error       String?
+  details     Json?
+  createdById String?   @db.Uuid
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+
+  @@index([action, startedAt])
+  @@index([fileName])
 }

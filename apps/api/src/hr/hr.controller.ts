@@ -12,6 +12,7 @@ import { HrTrainingService, trainingSchema, TRAINING_STATUSES } from './hr-train
 import { HrExamService } from './hr-exam.service';
 import { ServiceNumbersService } from './service-numbers.service';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
+import { HrCareerService } from './hr-career.service';
 
 const uuid = z.string().uuid();
 const date = z.string().date();
@@ -27,7 +28,7 @@ const editRecord = z.object({ summary: z.string().trim().min(2).max(300).optiona
 @ApiTags('hr')
 @Controller('hr')
 export class HrController {
-  constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService) {}
+  constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService, private readonly careers: HrCareerService) {}
   @Get('config') @RequirePermission('personnel.view') config() { return this.core.config(); }
   /** Abwesenheitsarten für den Abmeldeantrag (alle im Dashboard). */
   @Get('absence-types') @RequirePermission('dashboard.view') async absenceTypes() { return (await this.core.config()).absenceTypes; }
@@ -36,6 +37,8 @@ export class HrController {
   @Get('people') @RequirePermission('personnel.view') overview(@CurrentActor() a: Actor, @Query(zodBody(overviewQ)) q: z.infer<typeof overviewQ>) { return this.people.overview(a, q); }
   @Post('people') @RequirePermission('personnel.create') create(@CurrentActor() a: Actor, @Body(zodBody(createP)) b: z.infer<typeof createP>) { return this.people.create(a, b); }
   @Get('people/:id') @RequirePermission('personnel.view') profile(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.people.profile(a, id); }
+  /** Digitale Beamtenlaufbahn: chronologische Personalhistorie mit Beförderungsvoraussetzungen */
+  @Get('people/:id/career') @RequirePermission('career.view') career(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.careers.career(a, id); }
   @Patch('people/:id') @RequirePermission('personnel.edit') update(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(updateP)) b: z.infer<typeof updateP>) { return this.people.update(a, id, b); }
   @Delete('people/:id') @HttpCode(204) @RequirePermission('personnel.delete') remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.people.remove(a, id); }
   /** Verwarnungen (Übersicht) und Verwarnen über Discord (/verwarnen). */
@@ -94,7 +97,7 @@ export class HrTrainingController {
 
 // ───────────── Prüfungen ─────────────
 const answersBody = z.object({ answers: z.record(z.string().max(40), z.unknown()), flagged: z.array(z.string().max(40)).max(200).optional() });
-const gradeBody = z.object({ scores: z.record(z.string().max(40), z.number().min(0).max(100)), feedback: z.string().max(2000).optional() });
+const gradeBody = z.object({ scores: z.record(z.string().max(40), z.number().min(0).max(100)), criteria: z.record(z.string().max(40), z.record(z.string().max(40), z.number().min(0).max(100))).optional(), feedback: z.string().max(2000).optional() });
 const examPost = z.object({ channelId: z.string().regex(/^\d{15,25}$/, 'Bitte einen Discord-Kanal wählen.'), pingRoleIds: z.array(z.string().regex(/^\d{15,25}$/)).max(10).default([]), message: z.string().trim().max(1500).optional() });
 const attemptsQ = z.object({ examId: uuid.optional(), status: z.enum(EXAM_ATTEMPT_STATUSES).optional() });
 
@@ -116,6 +119,9 @@ export class HrExamController {
   @Put('attempts/:id/answers') @RequirePermission('exam.view') answers(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(answersBody)) b: z.infer<typeof answersBody>) { return this.s.saveAnswers(a, id, b.answers, b.flagged); }
   @Post('attempts/:id/submit') @HttpCode(200) @RequirePermission('exam.view') submit(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(answersBody)) b: z.infer<typeof answersBody>) { return this.s.submit(a, id, b.answers); }
   @Post('attempts/:id/grade') @HttpCode(200) @RequirePermission('exam.view') grade(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(gradeBody)) b: z.infer<typeof gradeBody>) { return this.s.grade(a, id, b); }
+  /** Ausbildungs- und Prüfungsfortschritt eines Beamten (Personalakte) bzw. der eigene */
+  @Get('people/:id/exam-progress') @RequirePermission('personnel.view', 'exam.view') progress(@Param('id', ParseUUIDPipe) id: string) { return this.s.progress(id); }
+  @Get('me/exam-progress') @RequirePermission('exam.view') myProgress(@CurrentActor() a: Actor) { return this.s.myProgress(a); }
   @Post('attempts/:id/void') @HttpCode(200) @RequirePermission('exam.view') void(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ reason: z.string().trim().min(3).max(500) }))) b: { reason: string }) { return this.s.void(a, id, b.reason); }
 }
 
