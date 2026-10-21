@@ -95,6 +95,10 @@ function migrateEnv() {
   }
 }
 
+// Vor ausstehenden Migrationen den Datenbestand sichern (Pflicht; ohne erfolgreiche Sicherung wird nicht migriert).
+// Nur im Notfall abschaltbar: SKIP_PRE_MIGRATION_BACKUP=1 (dann auf eigene Verantwortung).
+if (process.env.SKIP_PRE_MIGRATION_BACKUP === '1') log('WARNUNG: Sicherung vor Migrationen ist abgeschaltet (SKIP_PRE_MIGRATION_BACKUP=1).');
+else runNode('Sicherung vor Migration', [path.join(root, 'api/dist/backup/pre-migrate.js'), path.join(root, 'api/prisma/migrations')], migrateEnv());
 log('Datenbank-Migrationen …');
 runNode('prisma migrate deploy', [require.resolve('prisma/build/index.js'), 'migrate', 'deploy', '--schema', path.join(root, 'api/prisma/schema.prisma')], migrateEnv(), 3);
 log('Erster Administrator (nur falls noch kein Benutzer existiert) …');

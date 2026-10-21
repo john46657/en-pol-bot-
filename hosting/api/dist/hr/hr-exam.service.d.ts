@@ -78,16 +78,29 @@ export declare class HrExamService {
     detail(actor: Actor, id: string): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
             text: string;
             id: string;
             image: string | null;
             partial: boolean;
+            points: number;
             matches: string[];
             correct: string[];
-            points: number;
             tolerance: number;
             explanation: string | null;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+            rubric: {
+                label: string;
+                id: string;
+                points: number;
+            }[];
+        }[];
+        drawRules: {
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD" | null;
+            count: number;
         }[];
         attemptCount: number;
         serverId: string | null;
@@ -121,16 +134,24 @@ export declare class HrExamService {
     save(actor: Actor, d: ExamInput, id?: string): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
             text: string;
             id: string;
             image: string | null;
             partial: boolean;
+            points: number;
             matches: string[];
             correct: string[];
-            points: number;
             tolerance: number;
             explanation: string | null;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+            rubric: {
+                label: string;
+                id: string;
+                points: number;
+            }[];
         }[];
         serverId: string | null;
         id: string;
@@ -142,6 +163,7 @@ export declare class HrExamService {
         active: boolean;
         instructions: string | null;
         questionCount: number;
+        drawRules: Prisma.JsonValue;
         passPercent: number;
         timeLimitMin: number | null;
         maxAttempts: number;
@@ -172,6 +194,7 @@ export declare class HrExamService {
         instructions: string | null;
         questions: Prisma.JsonValue;
         questionCount: number;
+        drawRules: Prisma.JsonValue;
         passPercent: number;
         timeLimitMin: number | null;
         maxAttempts: number;
@@ -230,12 +253,6 @@ export declare class HrExamService {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -244,6 +261,21 @@ export declare class HrExamService {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -251,9 +283,11 @@ export declare class HrExamService {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -296,12 +330,6 @@ export declare class HrExamService {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -310,6 +338,21 @@ export declare class HrExamService {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -317,9 +360,11 @@ export declare class HrExamService {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -362,12 +407,6 @@ export declare class HrExamService {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -376,6 +415,21 @@ export declare class HrExamService {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -383,9 +437,11 @@ export declare class HrExamService {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -430,12 +486,6 @@ export declare class HrExamService {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -444,6 +494,21 @@ export declare class HrExamService {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -451,9 +516,11 @@ export declare class HrExamService {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -469,6 +536,7 @@ export declare class HrExamService {
     /** Manuelle Bewertung (Prüfer der Prüfung oder exam.grade/exam.manage). Auch Neubewertung. */
     grade(actor: Actor, attemptId: string, d: {
         scores: Record<string, number>;
+        criteria?: Record<string, Record<string, number>>;
         feedback?: string;
     }): Promise<{
         id: string;
@@ -499,12 +567,6 @@ export declare class HrExamService {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -513,6 +575,21 @@ export declare class HrExamService {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -520,9 +597,11 @@ export declare class HrExamService {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -565,12 +644,6 @@ export declare class HrExamService {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -579,6 +652,21 @@ export declare class HrExamService {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -586,9 +674,11 @@ export declare class HrExamService {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -603,6 +693,102 @@ export declare class HrExamService {
     }>;
     /** Ergebnis in die Personalakte übernehmen; bestanden → Benachrichtigung und verknüpfte Ausbildung „in Bearbeitung“. */
     private afterGrade;
+    /** Schwache Themen: aus dem jeweils letzten bewerteten Versuch je Prüfung (später bestandene Themen fallen damit heraus). */
+    weakTopicsFor(personnelId: string): Promise<string[]>;
+    /** Ausbildungs- und Prüfungsfortschritt eines Beamten: je Prüfung Versuche/Ergebnis, offene Themen, Ausbildungen. */
+    progress(personnelId: string): Promise<{
+        personnelId: string;
+        name: string;
+        rank: string | null;
+        weakTopics: string[];
+        exams: {
+            examId: string;
+            title: string;
+            category: string | null;
+            passPercent: number;
+            attemptsUsed: number;
+            attemptsLeft: number;
+            passed: boolean;
+            bestPercent: number | null;
+            pending: boolean;
+            lastAt: Date | null;
+            lastPercent: number | null;
+            weakTopics: string[];
+            feedback: string | null;
+            history: {
+                id: string;
+                status: string;
+                percent: number | null;
+                passed: boolean | null;
+                startedAt: Date;
+                gradedAt: Date | null;
+            }[];
+        }[];
+        trainings: {
+            id: string;
+            trainingId: string;
+            name: string;
+            status: string;
+            progress: number;
+            modules: number;
+            doneModules: number;
+            completedAt: Date | null;
+            expiresAt: Date | null;
+        }[];
+        summary: {
+            examsPassed: number;
+            examsTotal: number;
+            trainingsPassed: number;
+            trainingsTotal: number;
+        };
+    }>;
+    /** Eigener Fortschritt (Personalakte des angemeldeten Benutzers). */
+    myProgress(actor: Actor): Promise<{
+        personnelId: string;
+        name: string;
+        rank: string | null;
+        weakTopics: string[];
+        exams: {
+            examId: string;
+            title: string;
+            category: string | null;
+            passPercent: number;
+            attemptsUsed: number;
+            attemptsLeft: number;
+            passed: boolean;
+            bestPercent: number | null;
+            pending: boolean;
+            lastAt: Date | null;
+            lastPercent: number | null;
+            weakTopics: string[];
+            feedback: string | null;
+            history: {
+                id: string;
+                status: string;
+                percent: number | null;
+                passed: boolean | null;
+                startedAt: Date;
+                gradedAt: Date | null;
+            }[];
+        }[];
+        trainings: {
+            id: string;
+            trainingId: string;
+            name: string;
+            status: string;
+            progress: number;
+            modules: number;
+            doneModules: number;
+            completedAt: Date | null;
+            expiresAt: Date | null;
+        }[];
+        summary: {
+            examsPassed: number;
+            examsTotal: number;
+            trainingsPassed: number;
+            trainingsTotal: number;
+        };
+    }>;
     /** Versuche (ohne Antworten) für Prüfer: alle Prüfungen mit exam.grade/exam.manage, sonst nur die eigenen Prüfer-Prüfungen. */
     attempts(actor: Actor, q: {
         examId?: string;

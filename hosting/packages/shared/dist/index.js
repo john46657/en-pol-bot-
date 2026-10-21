@@ -40,11 +40,18 @@ __export(index_exports, {
   CAD_LINK_SEND_TYPES: () => CAD_LINK_SEND_TYPES,
   CAD_WIDGETS: () => CAD_WIDGETS,
   CAD_WIDGET_LABELS: () => CAD_WIDGET_LABELS,
+  CASE_LINK_LABEL: () => CASE_LINK_LABEL,
+  CASE_LINK_ROLES: () => CASE_LINK_ROLES,
+  CASE_LINK_TYPES: () => CASE_LINK_TYPES,
+  CASE_LINK_VIEW_PERMISSION: () => CASE_LINK_VIEW_PERMISSION,
+  CASE_STATUSES: () => CASE_STATUSES,
+  CASE_STATUS_LABEL: () => CASE_STATUS_LABEL,
   CLAIM_MODES: () => CLAIM_MODES,
   CLOSE_REASON_MODES: () => CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES: () => CLOSE_REASON_SOURCES,
   COMPLAINT_STATUSES: () => COMPLAINT_STATUSES,
   COMPLAINT_TRANSITIONS: () => COMPLAINT_TRANSITIONS,
+  CONFIDENCE_LABEL: () => CONFIDENCE_LABEL,
   DEFAULT_APPLICATION_MESSAGES: () => DEFAULT_APPLICATION_MESSAGES,
   DEFAULT_CAD_CONFIG: () => DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG: () => DEFAULT_DANGER_CONFIG,
@@ -75,12 +82,18 @@ __export(index_exports, {
   ERLC_STATUS_LABEL: () => ERLC_STATUS_LABEL,
   EXAM_ATTEMPT_STATUSES: () => EXAM_ATTEMPT_STATUSES,
   EXAM_ATTEMPT_STATUS_LABEL: () => EXAM_ATTEMPT_STATUS_LABEL,
+  EXAM_CASE_KINDS: () => EXAM_CASE_KINDS,
+  EXAM_CASE_KIND_LABEL: () => EXAM_CASE_KIND_LABEL,
+  EXAM_CASE_TEMPLATES: () => EXAM_CASE_TEMPLATES,
+  EXAM_DIFFICULTIES: () => EXAM_DIFFICULTIES,
+  EXAM_DIFFICULTY_LABEL: () => EXAM_DIFFICULTY_LABEL,
   EXAM_EXPORT_FORMAT: () => EXAM_EXPORT_FORMAT,
   EXAM_LAYOUTS: () => EXAM_LAYOUTS,
   EXAM_LAYOUT_LABEL: () => EXAM_LAYOUT_LABEL,
   EXAM_QUESTION_TYPES: () => EXAM_QUESTION_TYPES,
   EXAM_QUESTION_TYPE_HINT: () => EXAM_QUESTION_TYPE_HINT,
   EXAM_QUESTION_TYPE_LABEL: () => EXAM_QUESTION_TYPE_LABEL,
+  EXAM_REMOVED_TASKS: () => EXAM_REMOVED_TASKS,
   EXAM_REVIEW_LABEL: () => EXAM_REVIEW_LABEL,
   EXAM_REVIEW_MODES: () => EXAM_REVIEW_MODES,
   EXAM_SHUFFLE_TYPES: () => EXAM_SHUFFLE_TYPES,
@@ -113,6 +126,8 @@ __export(index_exports, {
   PROFILE_FIELD_LABEL: () => PROFILE_FIELD_LABEL,
   PROFILE_SECTIONS: () => PROFILE_SECTIONS,
   PROFILE_SECTION_LABEL: () => PROFILE_SECTION_LABEL,
+  QUALITY_TARGETS: () => QUALITY_TARGETS,
+  QUALITY_TARGET_LABEL: () => QUALITY_TARGET_LABEL,
   QUESTION_TYPES: () => QUESTION_TYPES,
   RADIO_CSV_COLUMNS: () => RADIO_CSV_COLUMNS,
   RADIO_GRANT_SOURCES: () => RADIO_GRANT_SOURCES,
@@ -160,6 +175,7 @@ __export(index_exports, {
   accountAge: () => accountAge,
   ageOf: () => ageOf,
   aiCheck: () => aiCheck,
+  anomalies: () => anomalies,
   applyCallCalibration: () => applyCallCalibration,
   applyPanelParts: () => applyPanelParts,
   areaGrantsFor: () => areaGrantsFor,
@@ -170,10 +186,15 @@ __export(index_exports, {
   canDelegate: () => canDelegate,
   canTransition: () => canTransition,
   checkAnswer: () => checkAnswer,
+  checkIncident: () => checkIncident,
+  checkReport: () => checkReport,
+  checkWanted: () => checkWanted,
   cleanReportValues: () => cleanReportValues,
   cloneWithNewIds: () => cloneWithNewIds,
   commandsForServer: () => commandsForServer,
   conditionMatches: () => conditionMatches,
+  confidenceFor: () => confidenceFor,
+  contradictoryTimeSpans: () => contradictoryTimeSpans,
   csvCell: () => csvCell,
   dangerLevelOf: () => dangerLevelOf,
   defaultTicketButtons: () => defaultTicketButtons,
@@ -181,6 +202,8 @@ __export(index_exports, {
   describeDiscordError: () => describeDiscordError,
   diffPresence: () => diffPresence,
   dnSettingsSchema: () => dnSettingsSchema,
+  drawQuestions: () => drawQuestions,
+  drawRuleSchema: () => drawRuleSchema,
   dutyTimeText: () => dutyTimeText,
   effectivePermissions: () => effectivePermissions,
   effectiveRadioStatus: () => effectiveRadioStatus,
@@ -188,6 +211,7 @@ __export(index_exports, {
   emptyMbDocument: () => emptyMbDocument,
   emptyMbEmbed: () => emptyMbEmbed,
   emptyMbMessage: () => emptyMbMessage,
+  estimateNext: () => estimateNext,
   examExportSchema: () => examExportSchema,
   examProblems: () => examProblems,
   examSchema: () => examSchema,
@@ -213,6 +237,7 @@ __export(index_exports, {
   hireMappingSchema: () => hireMappingSchema,
   hrConfigSchema: () => hrConfigSchema,
   hrStatusSchema: () => hrStatusSchema,
+  incidentNumbersIn: () => incidentNumbersIn,
   infoOptionEmbed: () => infoOptionEmbed,
   infoOptionSchema: () => infoOptionSchema,
   infoPanelMessage: () => infoPanelMessage,
@@ -225,17 +250,20 @@ __export(index_exports, {
   isPermissionKey: () => isPermissionKey,
   isRadioAuthorized: () => isRadioAuthorized,
   isRadioRoleOnly: () => isRadioRoleOnly,
+  isRemovedExamTask: () => isRemovedExamTask,
   isRobloxField: () => isRobloxField,
   isSupportOpen: () => isSupportOpen,
   isValidEmoji: () => isValidEmoji,
   isValidRobloxUserId: () => isValidRobloxUserId,
   isoWeek: () => isoWeek,
+  linearTrend: () => linearTrend,
   localMidnight: () => localMidnight,
   localTime: () => localTime,
   logCategoryOf: () => logCategoryOf,
   logChannelFor: () => logChannelFor,
   logTypeLabel: () => logTypeLabel,
   loggingConfigSchema: () => loggingConfigSchema,
+  lowStaffingWindows: () => lowStaffingWindows,
   maskGaps: () => maskGaps,
   matchWantedPlayer: () => matchWantedPlayer,
   matchingBinds: () => matchingBinds,
@@ -275,6 +303,7 @@ __export(index_exports, {
   postalMatchRate: () => postalMatchRate,
   postalPosition: () => postalPosition,
   qualiPanelParts: () => qualiPanelParts,
+  qualityConfigSchema: () => qualityConfigSchema,
   questionProblems: () => questionProblems,
   questionSchema: () => questionSchema,
   radioRoleSyncAction: () => radioRoleSyncAction,
@@ -294,21 +323,27 @@ __export(index_exports, {
   requirementSchema: () => requirementSchema,
   resolvePermission: () => resolvePermission,
   rolesMatch: () => rolesMatch,
+  rubricItemSchema: () => rubricItemSchema,
+  rubricScore: () => rubricScore,
   severitySchema: () => severitySchema,
+  splitFindings: () => splitFindings,
   splitGaps: () => splitGaps,
   staffListSchema: () => staffListSchema,
   staffSectionSchema: () => staffSectionSchema,
+  staffingHeatmap: () => staffingHeatmap,
   stageSchema: () => stageSchema,
   statusLabel: () => statusLabel,
   ticketButtonsOf: () => ticketButtonsOf,
   ticketChannelName: () => ticketChannelName,
   ticketNumber: () => ticketNumber,
+  titleSimilarity: () => titleSimilarity,
   toDiscordPayload: () => toDiscordPayload,
   toPartialEmoji: () => toPartialEmoji,
   triggerMatches: () => triggerMatches,
   validateMbDocument: () => validateMbDocument,
   validateMbMessage: () => validateMbMessage,
   verifyActions: () => verifyActions,
+  weakTopicsOf: () => weakTopicsOf,
   weekIso: () => weekIso,
   weekKey: () => weekKey,
   weekLabel: () => weekLabel,
@@ -383,7 +418,21 @@ var PERMISSION_CATALOG = {
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
    * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
    */
-  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"],
+  /** Lageassistent: view = Lageübersicht ansehen, create = Lageberichte erzeugen und speichern */
+  situation: ["view", "create"],
+  /** Digitale Beamtenlaufbahn: chronologische Personalhistorie einsehen (Beförderungen, Versetzungen, Prüfungen, Dienstzeiten …) */
+  career: ["view"],
+  /** Vorgangsverknüpfung: view = Vorgänge und Verknüpfungen sehen, manage = Vorgänge anlegen, Datensätze verknüpfen/lösen, Duplikate prüfen */
+  cases: ["view", "manage"],
+  /** Qualitätsprüfer: view = Prüfungen ausführen und Ergebnisse sehen, exception = begründete Ausnahmen dokumentieren, manage = Prüfregeln/Pflicht vor Abschluss einstellen */
+  quality: ["view", "exception", "manage"],
+  /** Personalbedarfs- und Aktivitätsprognose (sensible Personaldaten, nur Führungskräfte) */
+  forecast: ["view"],
+  /** Technische Überwachung: view = API-/Synchronisierungsstatus und Störungen, manage = Störungen quittieren, Wiederholung anstoßen, Alarmschwellen */
+  integrations: ["view", "manage"],
+  /** Daten-Backups: view = Liste/Ergebnisse, manage = erstellen, löschen, Zeitplan, Wiederherstellungstest; restore = Daten tatsächlich einspielen */
+  backups: ["view", "manage", "restore"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -571,18 +620,18 @@ var ROBLOX_NAME = /^[A-Za-z0-9_]{3,20}$/;
 var isInputQuestion = (t2) => !t2 || t2 === "TEXT" || t2 === "ROBLOX";
 var MAX_FORM_QUESTIONS = 50;
 var MAX_FORM_OPTIONS = 25;
-function normalizeField(f) {
-  const type = f.type ?? "TEXT";
+function normalizeField(f2) {
+  const type = f2.type ?? "TEXT";
   const input = isInputQuestion(type);
   return {
-    key: f.key,
-    label: f.label,
-    required: f.required,
+    key: f2.key,
+    label: f2.label,
+    required: f2.required,
     type,
-    minLength: type === "TEXT" ? Math.max(0, f.minLength ?? 0) : 0,
-    maxLength: type === "ROBLOX" ? 20 : f.maxLength,
-    options: input ? [] : (f.options ?? []).slice(0, MAX_FORM_OPTIONS),
-    multiple: !input && !!f.multiple
+    minLength: type === "TEXT" ? Math.max(0, f2.minLength ?? 0) : 0,
+    maxLength: type === "ROBLOX" ? 20 : f2.maxLength,
+    options: input ? [] : (f2.options ?? []).slice(0, MAX_FORM_OPTIONS),
+    multiple: !input && !!f2.multiple
   };
 }
 function freeFieldKey(used) {
@@ -590,26 +639,26 @@ function freeFieldKey(used) {
   for (let n = 1; ; n++) if (!set.has(`frage${n}`)) return `frage${n}`;
 }
 function checkAnswer(field, value) {
-  const f = normalizeField(field);
-  if (f.type === "ROBLOX") {
+  const f2 = normalizeField(field);
+  if (f2.type === "ROBLOX") {
     const v = (Array.isArray(value) ? value[0] ?? "" : value ?? "").trim().replace(/^@/, "");
-    if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
-    if (!ROBLOX_NAME.test(v)) return { ok: false, error: `Bei \u201E${f.label}\u201C bitte einen g\xFCltigen Roblox-Benutzernamen angeben (3\u201320 Zeichen, Buchstaben, Ziffern, _).` };
+    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (!ROBLOX_NAME.test(v)) return { ok: false, error: `Bei \u201E${f2.label}\u201C bitte einen g\xFCltigen Roblox-Benutzernamen angeben (3\u201320 Zeichen, Buchstaben, Ziffern, _).` };
     return { ok: true, text: v, roleIds: [] };
   }
-  if (f.type === "TEXT") {
+  if (f2.type === "TEXT") {
     const v = (Array.isArray(value) ? value.join("\n") : value ?? "").trim();
-    if (!v) return f.required ? { ok: false, error: `\u201E${f.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
-    if (v.length < f.minLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu kurz (mindestens ${f.minLength} Zeichen).` };
-    if (v.length > f.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f.label}\u201C ist zu lang (h\xF6chstens ${f.maxLength} Zeichen).` };
+    if (!v) return f2.required ? { ok: false, error: `\u201E${f2.label}\u201C ist eine Pflichtfrage.` } : { ok: true, text: "", roleIds: [] };
+    if (v.length < f2.minLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu kurz (mindestens ${f2.minLength} Zeichen).` };
+    if (v.length > f2.maxLength) return { ok: false, error: `Die Antwort auf \u201E${f2.label}\u201C ist zu lang (h\xF6chstens ${f2.maxLength} Zeichen).` };
     return { ok: true, text: v, roleIds: [] };
   }
   const picked = [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((x) => x.trim()).filter(Boolean))];
-  if (!picked.length) return f.required ? { ok: false, error: `Bitte bei \u201E${f.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
-  if (!f.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f.label}\u201C ist nur eine Auswahl erlaubt.` };
-  const opts = picked.map((p) => f.options.find((o) => o.label === p));
-  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f.label}\u201C.` };
-  return { ok: true, text: picked.join(", "), roleIds: f.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
+  if (!picked.length) return f2.required ? { ok: false, error: `Bitte bei \u201E${f2.label}\u201C etwas ausw\xE4hlen.` } : { ok: true, text: "", roleIds: [] };
+  if (!f2.multiple && picked.length > 1) return { ok: false, error: `Bei \u201E${f2.label}\u201C ist nur eine Auswahl erlaubt.` };
+  const opts = picked.map((p) => f2.options.find((o) => o.label === p));
+  if (opts.some((o) => !o)) return { ok: false, error: `Ung\xFCltige Auswahl bei \u201E${f2.label}\u201C.` };
+  return { ok: true, text: picked.join(", "), roleIds: f2.type === "ROLE" ? opts.map((o) => o.roleId).filter((r) => !!r && /^\d{15,25}$/.test(r)) : [] };
 }
 var APPLICATION_VARIABLES = {
   "{applicationName}": "Name der Bewerbung (z. B. Polizeianw\xE4rter, Flugstaffel)",
@@ -663,7 +712,7 @@ var CAD_FEEDBACK = [
   { key: "under_control", label: "Einsatz unter Kontrolle", emoji: "\u{1F6E1}\uFE0F" },
   { key: "completed", label: "Einsatz abgeschlossen (Meldung)", emoji: "\u{1F3C1}" }
 ];
-var CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f) => f.key);
+var CAD_FEEDBACK_KEYS = CAD_FEEDBACK.map((f2) => f2.key);
 var CAD_LINK_SEND_TYPES = ["incidents", "incident_status", "unit_requests", "calls", "announcements", "radio"];
 var CAD_LINK_ACTIONS = ["status_report", "radio", "view_incidents", "dispatch"];
 var CAD_LINK_LABELS = {
@@ -926,13 +975,13 @@ function postalPosition(text) {
   const p = postal ? ERLC_POSTALS[postal] : void 0;
   return postal && p ? { postal, x: p[0], z: p[1] } : null;
 }
-var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z10]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z10 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
+var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z11]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z11 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
 function postalMatchRate(m, samples) {
   const labels = postalLabels(m.width, m.height);
   const known = samples.filter((s) => ERLC_POSTALS[s[2]]);
   if (!known.length) return 0;
-  const hits = known.filter(([x, z10, k]) => {
-    const px = m.originX + x * m.scale, py = m.originY + z10 * m.scale;
+  const hits = known.filter(([x, z11, k]) => {
+    const px = m.originX + x * m.scale, py = m.originY + z11 * m.scale;
     let best = labels[0], d = Infinity;
     for (const l of labels) {
       const dd2 = (l.px - px) ** 2 + (l.py - py) ** 2;
@@ -955,28 +1004,28 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
     const scale = pts2.reduce((a, p) => a + (p.x - mx) * (p.lx - mlx) + (p.z - mz) * (p.ly - mly), 0) / den;
     return { scale, originX: mlx - scale * mx, originY: mly - scale * mz };
   };
-  let pts = samples.flatMap(([x, z10, k]) => {
+  let pts = samples.flatMap(([x, z11, k]) => {
     const l = labels.get(k);
-    return l && Number.isFinite(x) && Number.isFinite(z10) ? [{ x, z: z10, lx: l.px, ly: l.py, k }] : [];
+    return l && Number.isFinite(x) && Number.isFinite(z11) ? [{ x, z: z11, lx: l.px, ly: l.py, k }] : [];
   });
   const enough = (p) => p.length >= 20 && new Set(p.map((q) => q.k)).size >= 6 && Math.max(...p.map((q) => q.x)) - Math.min(...p.map((q) => q.x)) >= 1e3 && Math.max(...p.map((q) => q.z)) - Math.min(...p.map((q) => q.z)) >= 1e3;
   if (!enough(pts)) return null;
-  let f = fit(pts);
-  if (!f) return null;
+  let f2 = fit(pts);
+  if (!f2) return null;
   const err = (p, c) => Math.hypot(c.originX + p.x * c.scale - p.lx, c.originY + p.z * c.scale - p.ly);
-  const med = [...pts.map((p) => err(p, f))].sort((a, b) => a - b)[Math.floor(pts.length / 2)];
-  const kept = pts.filter((p) => err(p, f) <= Math.max(3 * med, 150));
+  const med = [...pts.map((p) => err(p, f2))].sort((a, b) => a - b)[Math.floor(pts.length / 2)];
+  const kept = pts.filter((p) => err(p, f2) <= Math.max(3 * med, 150));
   if (enough(kept)) {
     pts = kept;
-    f = fit(pts) ?? f;
+    f2 = fit(pts) ?? f2;
   }
-  if (!(f.scale > 0)) return null;
+  if (!(f2.scale > 0)) return null;
   const r = (v, d = 1) => Math.round(v * 10 ** d) / 10 ** d;
-  const out = { scale: r(f.scale, 4), originX: r(f.originX), originY: r(f.originY) };
+  const out = { scale: r(f2.scale, 4), originX: r(f2.originX), originY: r(f2.originY) };
   return { ...out, n: pts.length, postals: new Set(pts.map((p) => p.k)).size, match: postalMatchRate({ width, height, ...out }, samples) };
 }
-var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
-var onErlcMap = (x, z10) => typeof x === "number" && typeof z10 === "number" && Number.isFinite(x) && Number.isFinite(z10) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z10) <= ERLC_MAP_SIZE / 2;
+var gameToPixel = (m, x, z11) => ({ px: m.originX + x * m.scale, py: m.originY + z11 * m.scale });
+var onErlcMap = (x, z11) => typeof x === "number" && typeof z11 === "number" && Number.isFinite(x) && Number.isFinite(z11) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z11) <= ERLC_MAP_SIZE / 2;
 function poiForPlace(place, pois) {
   const norm2 = (v) => v.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
   const p = place ? norm2(place) : "";
@@ -997,8 +1046,8 @@ function outlierScore(pairs, i) {
   const others = pairs.filter((_, j) => j !== i);
   const line = (from, to) => {
     const n = from.length, mf = from.reduce((a2, b) => a2 + b, 0) / n, mt = to.reduce((a2, b) => a2 + b, 0) / n;
-    const sxx = from.reduce((a2, f) => a2 + (f - mf) ** 2, 0) || 1;
-    const a = from.reduce((acc, f, k) => acc + (f - mf) * (to[k] - mt), 0) / sxx;
+    const sxx = from.reduce((a2, f2) => a2 + (f2 - mf) ** 2, 0) || 1;
+    const a = from.reduce((acc, f2, k) => acc + (f2 - mf) * (to[k] - mt), 0) / sxx;
     return { a, b: mt - a * mf };
   };
   const lx = line(others.map((p2) => p2.px), others.map((p2) => p2.cx)), lz = line(others.map((p2) => p2.pz), others.map((p2) => p2.cz));
@@ -1009,16 +1058,16 @@ function fitExact(pairs) {
   if (pairs.length < 3) return null;
   const axis = (from, to) => {
     const n = from.length, mf = from.reduce((a2, b2) => a2 + b2, 0) / n, mt = to.reduce((a2, b2) => a2 + b2, 0) / n;
-    const sxx = from.reduce((a2, f) => a2 + (f - mf) ** 2, 0);
+    const sxx = from.reduce((a2, f2) => a2 + (f2 - mf) ** 2, 0);
     if (Math.max(...from) - Math.min(...from) < 100 || sxx === 0) return null;
-    const a = from.reduce((acc, f, i) => acc + (f - mf) * (to[i] - mt), 0) / sxx, b = mt - a * mf;
-    const worst = Math.max(...from.map((f, i) => Math.abs(a * f + b - to[i])));
+    const a = from.reduce((acc, f2, i) => acc + (f2 - mf) * (to[i] - mt), 0) / sxx, b = mt - a * mf;
+    const worst = Math.max(...from.map((f2, i) => Math.abs(a * f2 + b - to[i])));
     return worst <= 60 && a > 0 ? { a, b } : null;
   };
-  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z10 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
-  return x && z10 ? { ax: x.a, bx: x.b, az: z10.a, bz: z10.b, n: pairs.length } : null;
+  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z11 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
+  return x && z11 ? { ax: x.a, bx: x.b, az: z11.a, bz: z11.b, n: pairs.length } : null;
 }
-var applyCallCalibration = (c, x, z10) => ({ x: c.ax * x + c.bx, z: c.az * z10 + c.bz });
+var applyCallCalibration = (c, x, z11) => ({ x: c.ax * x + c.bx, z: c.az * z11 + c.bz });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -1371,8 +1420,8 @@ var minutes = (hhmm) => {
   return (h ?? 0) * 60 + (m ?? 0);
 };
 function localTime(d, timeZone = "Europe/Berlin") {
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
-  const get = (t2) => parts.find((p) => p.type === t2)?.value ?? "";
+  const parts2 = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const get = (t2) => parts2.find((p) => p.type === t2)?.value ?? "";
   return { day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday")), minute: Number(get("hour")) * 60 + Number(get("minute")) };
 }
 function isSupportOpen(times, d = /* @__PURE__ */ new Date(), timeZone = "Europe/Berlin") {
@@ -1668,22 +1717,22 @@ function periodLabel(period, start) {
   }
   return dd(s);
 }
-var isDutyTimeField = (f) => f.type !== "select" && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f.id} ${f.label}`);
+var isDutyTimeField = (f2) => f2.type !== "select" && /dienst ?zeit|dienststunden|arbeitszeit|dienstzeit/i.test(`${f2.id} ${f2.label}`);
 function policeReportFields() {
-  const f = (id3, label, type, o = {}) => ({ id: id3, label, type, placeholder: "", required: false, options: [], maxLength: type === "number" ? 10 : type === "long" ? 1e3 : 100, inline: false, separator: false, ...o });
+  const f2 = (id3, label, type, o = {}) => ({ id: id3, label, type, placeholder: "", required: false, options: [], maxLength: type === "number" ? 10 : type === "long" ? 1e3 : 100, inline: false, separator: false, ...o });
   return [
-    f("roblox", "Roblox-Username", "short", { required: true }),
-    f("dienstzeit", "Zeitraum", "short", { placeholder: "wird automatisch aus der Dienstzeit gef\xFCllt" }),
-    f("verfolgungen", "Verfolgungen", "number", { separator: true }),
-    f("dispatch", "Dispatch", "number"),
-    f("geblitzt", "Geblitzt", "number", { separator: true }),
-    f("verkehrskontrollen", "Verkehrskontrollen", "number"),
-    f("festnahmen", "Festnahmen", "number", { separator: true }),
-    f("geiselnahmen", "Geiselnahmen", "number"),
-    f("notiz", "Notiz", "long", { separator: true })
+    f2("roblox", "Roblox-Username", "short", { required: true }),
+    f2("dienstzeit", "Zeitraum", "short", { placeholder: "wird automatisch aus der Dienstzeit gef\xFCllt" }),
+    f2("verfolgungen", "Verfolgungen", "number", { separator: true }),
+    f2("dispatch", "Dispatch", "number"),
+    f2("geblitzt", "Geblitzt", "number", { separator: true }),
+    f2("verkehrskontrollen", "Verkehrskontrollen", "number"),
+    f2("festnahmen", "Festnahmen", "number", { separator: true }),
+    f2("geiselnahmen", "Geiselnahmen", "number"),
+    f2("notiz", "Notiz", "long", { separator: true })
   ];
 }
-var isRobloxField = (f) => f.type !== "select" && /roblox/i.test(`${f.id} ${f.label}`);
+var isRobloxField = (f2) => f2.type !== "select" && /roblox/i.test(`${f2.id} ${f2.label}`);
 function periodEnd(period, start) {
   const e = new Date(start);
   e.setUTCDate(e.getUTCDate() + (period === "WEEKLY" ? 7 : 1));
@@ -1714,12 +1763,12 @@ function dutyTimeText(period, sessions, from, to, timeZone = "Europe/Berlin", no
 }
 function cleanReportValues(t2, input) {
   const values = {};
-  for (const f of t2.fields) {
-    const v = String(input[f.id] ?? "").trim().slice(0, f.maxLength);
-    if (f.required && !v) return { error: `\u201E${f.label}\u201C fehlt.` };
-    if (v && f.type === "number" && !/^-?\d+([.,]\d+)?$/.test(v)) return { error: `\u201E${f.label}\u201C muss eine Zahl sein.` };
-    if (v && f.type === "select" && f.options.length && !f.options.includes(v)) return { error: `\u201E${f.label}\u201C: bitte eine der M\xF6glichkeiten w\xE4hlen (${f.options.join(", ")}).` };
-    values[f.id] = v;
+  for (const f2 of t2.fields) {
+    const v = String(input[f2.id] ?? "").trim().slice(0, f2.maxLength);
+    if (f2.required && !v) return { error: `\u201E${f2.label}\u201C fehlt.` };
+    if (v && f2.type === "number" && !/^-?\d+([.,]\d+)?$/.test(v)) return { error: `\u201E${f2.label}\u201C muss eine Zahl sein.` };
+    if (v && f2.type === "select" && f2.options.length && !f2.options.includes(v)) return { error: `\u201E${f2.label}\u201C: bitte eine der M\xF6glichkeiten w\xE4hlen (${f2.options.join(", ")}).` };
+    values[f2.id] = v;
   }
   return { values };
 }
@@ -1730,13 +1779,13 @@ var statusLines = (r) => r.status !== "SUBMITTED" ? `
 **${REPORT_STATUS_LABEL[r.status] ?? r.status}**${r.reviewerName ? ` von ${r.reviewerName}` : ""}${r.reviewNote ? `
 > ${r.reviewNote.replace(/\n/g, "\n> ").slice(0, 900)}` : ""}` : "";
 function listEmbed(t2, r) {
-  const parts = [LINE_LONG, ""];
-  t2.fields.forEach((f, i) => {
-    if (f.separator && i > 0) parts.push("", LINE_SHORT, "");
-    parts.push(`\u27A3 **${f.label}:** ${(r.values[f.id] ?? "").slice(0, 1e3)}`);
+  const parts2 = [LINE_LONG, ""];
+  t2.fields.forEach((f2, i) => {
+    if (f2.separator && i > 0) parts2.push("", LINE_SHORT, "");
+    parts2.push(`\u27A3 **${f2.label}:** ${(r.values[f2.id] ?? "").slice(0, 1e3)}`);
   });
   const status = statusLines(r);
-  let description = parts.join("\n");
+  let description = parts2.join("\n");
   if (description.length + status.length > 4096) description = `${description.slice(0, 4090 - status.length)}\u2026`;
   return {
     title: `${t2.emoji ? `${t2.emoji} ` : ""}${t2.name} ${r.authorName}`.slice(0, 256),
@@ -1757,7 +1806,7 @@ function reportMessage(t2, r, id3) {
   ] };
 }
 function fieldsEmbed(t2, r) {
-  const fields = t2.fields.filter((f) => r.values[f.id]).map((f) => ({ name: f.label, value: r.values[f.id].slice(0, 1024), inline: f.inline }));
+  const fields = t2.fields.filter((f2) => r.values[f2.id]).map((f2) => ({ name: f2.label, value: r.values[f2.id].slice(0, 1024), inline: f2.inline }));
   return {
     title: `${t2.emoji ? `${t2.emoji} ` : ""}${t2.name} \u2013 ${periodLabel(t2.period, r.periodStart)}`.slice(0, 256),
     description: `**Verfasser:** ${r.authorDiscordId ? `<@${r.authorDiscordId}>` : r.authorName}${statusLines(r)}`,
@@ -1808,8 +1857,8 @@ function weekKey(weekStart, timeZone = WEEK_TIMEZONE) {
 function weekLabel(weekStart, timeZone = WEEK_TIMEZONE) {
   const { year, week } = weekIso(weekStart, timeZone);
   const [y, m, d] = weekKey(weekStart, timeZone).split("-").map(Number);
-  const f = (x, withYear = false) => x.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", ...withYear ? { year: "numeric" } : {} });
-  return `KW ${week}/${year} \xB7 ${f(new Date(Date.UTC(y, m - 1, d)))}\u2013${f(new Date(Date.UTC(y, m - 1, d + 6)), true)}`;
+  const f2 = (x, withYear = false) => x.toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", ...withYear ? { year: "numeric" } : {} });
+  return `KW ${week}/${year} \xB7 ${f2(new Date(Date.UTC(y, m - 1, d)))}\u2013${f2(new Date(Date.UTC(y, m - 1, d + 6)), true)}`;
 }
 var WEEK_COUNTED_STATUSES = ["ON_DUTY", "TRAINING", "ADMINISTRATIVE"];
 function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
@@ -1832,14 +1881,14 @@ function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
 
 // src/modules.ts
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "situation", "integrations", "backups"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
-  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
+  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte, Vorg\xE4nge, Qualit\xE4tspr\xFCfung", permissionPrefixes: ["reports", "dutyreports", "cases", "quality"] },
   { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
-  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave", "career", "forecast"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
@@ -1869,6 +1918,7 @@ var BOT_COMMAND_MODULES = {
   cad: "cad",
   bericht: "reports",
   dienstbericht: "reports",
+  vorgang: "reports",
   person: "mdt",
   kennzeichen: "mdt",
   fahndungen: "mdt",
@@ -2065,7 +2115,7 @@ var DEFAULT_HR_CONFIG = hrConfigSchema.parse({
   warningCategories: ["Verhalten", "Dienstvergehen", "Funk", "Regelversto\xDF", "Sonstiges"],
   awards: [{ id: id(10), name: "Besondere Leistung", icon: "\u{1F3C5}", description: "F\xFCr au\xDFergew\xF6hnliche Leistungen.", color: "#eab308" }],
   sections: Object.fromEntries(PROFILE_SECTIONS.map((s) => [s, { visible: true, sensitive: ["warnings", "notes", "history"].includes(s) }])),
-  fields: Object.fromEntries(PROFILE_FIELDS.map((f) => [f, { visible: true, sensitive: f === "discordId" || f === "robloxId" }])),
+  fields: Object.fromEntries(PROFILE_FIELDS.map((f2) => [f2, { visible: true, sensitive: f2 === "discordId" || f2 === "robloxId" }])),
   notifications: {
     "promotion.requested": { dashboard: true },
     "promotion.approved": { dashboard: true },
@@ -2184,7 +2234,7 @@ function fillTemplate(tpl, vars) {
 
 // src/exams.ts
 var import_zod4 = require("zod");
-var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP", "CASE"];
 var EXAM_QUESTION_TYPE_LABEL = {
   SINGLE: "Single Choice",
   MULTI: "Multiple Choice",
@@ -2193,7 +2243,8 @@ var EXAM_QUESTION_TYPE_LABEL = {
   NUMBER: "Zahl",
   ORDER: "Reihenfolge",
   MATCH: "Zuordnung",
-  GAP: "L\xFCckentext"
+  GAP: "L\xFCckentext",
+  CASE: "Fallbeispiel"
 };
 var EXAM_QUESTION_TYPE_HINT = {
   SINGLE: "Genau eine Antwort ist richtig.",
@@ -2203,8 +2254,16 @@ var EXAM_QUESTION_TYPE_HINT = {
   NUMBER: "Zahl, optional mit Toleranz.",
   ORDER: "Eintr\xE4ge in die richtige Reihenfolge bringen. Im Editor in der richtigen Reihenfolge eintragen \u2013 sie werden beim Versuch gemischt.",
   MATCH: "Jedem Begriff links das passende Gegenst\xFCck rechts zuordnen. Im Editor jeweils als richtiges Paar eintragen.",
-  GAP: "L\xFCcken im Text mit {{Antwort}} markieren, Alternativen mit | trennen, z. B. \u201EInnerorts gilt {{50|f\xFCnfzig}} km/h\u201C."
+  GAP: "L\xFCcken im Text mit {{Antwort}} markieren, Alternativen mit | trennen, z. B. \u201EInnerorts gilt {{50|f\xFCnfzig}} km/h\u201C.",
+  CASE: "Fiktives Fallbeispiel mit offener Antwort. Bewertet wird von Hand anhand des Kriterienkatalogs."
 };
+var EXAM_DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
+var EXAM_DIFFICULTY_LABEL = { EASY: "Leicht", MEDIUM: "Mittel", HARD: "Schwer" };
+var EXAM_CASE_KINDS = ["TRAFFIC_STOP", "ARREST", "LEADERSHIP", "OTHER"];
+var EXAM_CASE_KIND_LABEL = { TRAFFIC_STOP: "Verkehrskontrolle", ARREST: "Festnahme", LEADERSHIP: "F\xFChrungsaufgabe", OTHER: "Sonstiges" };
+var EXAM_REMOVED_TASKS = /verkehrsunfall|unfallaufnahme|leitstellen-?\s?(ü|ue)bung/i;
+var isRemovedExamTask = (text) => !!text && EXAM_REMOVED_TASKS.test(text);
+var rubricItemSchema = import_zod4.z.object({ id: import_zod4.z.string().min(1).max(40), label: import_zod4.z.string().trim().min(1).max(300), points: import_zod4.z.number().min(0).max(100) });
 var EXAM_SHUFFLE_TYPES = ["SINGLE", "MULTI", "ORDER", "MATCH"];
 var questionSchema = import_zod4.z.object({
   id: import_zod4.z.string().min(1).max(40),
@@ -2224,8 +2283,76 @@ var questionSchema = import_zod4.z.object({
   /** Erklärung, die nach der Bewertung (Einsicht mit Lösungen) angezeigt wird */
   explanation: import_zod4.z.string().max(2e3).nullable().default(null),
   /** optionales Bild (nur https) */
-  image: import_zod4.z.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null)
+  image: import_zod4.z.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null),
+  /** Thema (z. B. „Verkehrskontrolle“, „Festnahme“, „Rechtsgrundlagen“) – für Zufallsauswahl und Wiederholung schwacher Themen */
+  topic: import_zod4.z.string().trim().max(60).nullable().default(null),
+  difficulty: import_zod4.z.enum(EXAM_DIFFICULTIES).default("MEDIUM"),
+  /** Fallbeispiel-Art (nur CASE) */
+  caseKind: import_zod4.z.enum(EXAM_CASE_KINDS).nullable().default(null),
+  /** Kriterienkatalog für die manuelle Bewertung (Freitext ohne Stichworte und Fallbeispiele) */
+  rubric: import_zod4.z.array(rubricItemSchema).max(20).default([])
 });
+var drawRuleSchema = import_zod4.z.object({ topic: import_zod4.z.string().trim().max(60).nullable().default(null), difficulty: import_zod4.z.enum(EXAM_DIFFICULTIES).nullable().default(null), count: import_zod4.z.number().int().min(1).max(200) });
+function drawQuestions(all, rules, prefer, rand) {
+  const used = /* @__PURE__ */ new Set();
+  const shuffle = (a) => {
+    const r = [...a];
+    for (let i = r.length - 1; i > 0; i--) {
+      const j = rand(i + 1);
+      [r[i], r[j]] = [r[j], r[i]];
+    }
+    return r;
+  };
+  const weak = new Set(prefer.map((t2) => t2.toLowerCase()));
+  let missing = 0;
+  for (const rule of rules) {
+    const fits = all.filter((q) => !used.has(q.id) && (!rule.topic || (q.topic ?? "").toLowerCase() === rule.topic.toLowerCase()) && (!rule.difficulty || q.difficulty === rule.difficulty));
+    const mixed = shuffle(fits);
+    const ordered = [...mixed.filter((q) => weak.has((q.topic ?? "").toLowerCase())), ...mixed.filter((q) => !weak.has((q.topic ?? "").toLowerCase()))];
+    const take = ordered.slice(0, rule.count);
+    take.forEach((q) => used.add(q.id));
+    missing += rule.count - take.length;
+  }
+  return { questions: all.filter((q) => used.has(q.id)), missing };
+}
+function weakTopicsOf(questions, scores, passPercent) {
+  const by = /* @__PURE__ */ new Map();
+  for (const q of questions) {
+    if (!q.topic || q.points <= 0) continue;
+    const e = by.get(q.topic) ?? { got: 0, max: 0 };
+    e.got += scores[q.id] ?? 0;
+    e.max += q.points;
+    by.set(q.topic, e);
+  }
+  return [...by].filter(([, v]) => v.max > 0 && v.got / v.max * 100 < passPercent).map(([t2]) => t2).sort((a, b) => a.localeCompare(b, "de"));
+}
+function rubricScore(q, awarded) {
+  const sum = q.rubric.reduce((n, r) => n + Math.max(0, Math.min(r.points, awarded[r.id] ?? 0)), 0);
+  return Math.round(Math.min(q.points, sum) * 100) / 100;
+}
+var EXAM_CASE_TEMPLATES = [
+  {
+    caseKind: "TRAFFIC_STOP",
+    topic: "Verkehrskontrolle",
+    points: 10,
+    text: "Fiktiver Fall: Du h\xE4ltst nachts auf der Hauptstra\xDFe einen Pkw an, der ohne Licht f\xE4hrt. Der Fahrer wirkt nerv\xF6s und greift wiederholt ins Handschuhfach. Beschreibe dein Vorgehen von der Anhaltung bis zum Abschluss der Kontrolle.",
+    rubric: [{ label: "Sichere Anhaltung (Position, Licht, Funkmeldung an die Leitstelle)", points: 2 }, { label: "Eigensicherung bei verd\xE4chtigen Bewegungen", points: 3 }, { label: "Korrekte Kontrolle der Papiere und Abfrage im MDT", points: 2 }, { label: "Angemessene Ma\xDFnahme (Verwarnung/Bu\xDFgeld) mit Begr\xFCndung", points: 2 }, { label: "Dokumentation im Bericht", points: 1 }]
+  },
+  {
+    caseKind: "ARREST",
+    topic: "Festnahme",
+    points: 10,
+    text: "Fiktiver Fall: Bei einer Fahndung triffst du die gesuchte Person vor einem Gesch\xE4ft an. Sie leistet passiven Widerstand. Beschreibe Festnahme, Belehrung und die anschlie\xDFenden Schritte.",
+    rubric: [{ label: "Identit\xE4t und Fahndungstreffer sicher best\xE4tigt", points: 2 }, { label: "Verh\xE4ltnism\xE4\xDFige Zwangsmittel und Eigensicherung", points: 3 }, { label: "Vollst\xE4ndige Belehrung", points: 2 }, { label: "Durchsuchung und Transport korrekt", points: 2 }, { label: "Fahndung erledigt und Bericht verkn\xFCpft", points: 1 }]
+  },
+  {
+    caseKind: "LEADERSHIP",
+    topic: "F\xFChrungsaufgabe",
+    points: 10,
+    text: "Fiktiver Fall: Als Schichtleitung hast du drei Einheiten im Dienst, zwei parallele Eins\xE4tze mit hoher Priorit\xE4t und einen neuen Notruf. Beschreibe, wie du priorisierst, Einheiten verteilst und die Kommunikation f\xFChrst.",
+    rubric: [{ label: "Nachvollziehbare Priorisierung nach Gefahr und Dringlichkeit", points: 3 }, { label: "Sinnvolle Verteilung der Einheiten, Nachforderung bei Bedarf", points: 3 }, { label: "Klare Funkkommunikation und Lagemeldungen", points: 2 }, { label: "Dokumentation und \xDCbergabe", points: 2 }]
+  }
+];
 function parseQuestions(raw) {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((q) => {
@@ -2269,6 +2396,8 @@ function gradeAnswer(q, a) {
   const partial = q.partial ?? false;
   const score = (hits, total) => total <= 0 ? 0 : partial ? round(pts * Math.max(0, Math.min(1, hits / total))) : hits >= total ? pts : 0;
   switch (q.type) {
+    case "CASE":
+      return null;
     case "TEXT": {
       if (!q.correct.length) return null;
       const t2 = norm(a);
@@ -2324,6 +2453,11 @@ function questionProblems(q, label) {
     if (opts.length < 2) out.push(`${label}: mindestens 2 Paare`);
     if (opts.some((o) => !o.trim()) || (q.matches ?? []).some((o) => !o.trim()) || (q.matches ?? []).length !== opts.length) out.push(`${label}: jedes Paar braucht beide Seiten`);
   }
+  if (q.type === "CASE") {
+    if (!q.rubric.length) out.push(`${label}: Fallbeispiel braucht einen Kriterienkatalog`);
+    else if (q.rubric.reduce((n, r) => n + r.points, 0) < q.points) out.push(`${label}: die Kriterien ergeben weniger Punkte als die Frage hat`);
+  }
+  if (isRemovedExamTask(q.topic)) out.push(`${label}: das Thema \u201E${q.topic}\u201C wurde entfernt und darf nicht wieder verwendet werden`);
   if (q.type === "GAP") {
     const gaps = gapAnswers(q.text);
     if (!gaps.length) out.push(`${label}: mindestens eine L\xFCcke {{\u2026}} im Text`);
@@ -2346,6 +2480,8 @@ var examSchema = import_zod4.z.object({
   category: import_zod4.z.string().trim().max(60).nullable().default(null),
   questions: import_zod4.z.array(questionSchema).max(200).default([]),
   questionCount: import_zod4.z.number().int().min(0).max(200).default(0),
+  /** Zufällige Zusammenstellung nach Thema/Schwierigkeit (leer = `questionCount` bzw. alle Fragen) */
+  drawRules: import_zod4.z.array(drawRuleSchema).max(30).default([]),
   passPercent: import_zod4.z.number().int().min(1).max(100).default(70),
   timeLimitMin: import_zod4.z.number().int().min(1).max(600).nullable().default(null),
   maxAttempts: import_zod4.z.number().int().min(1).max(50).default(3),
@@ -2371,6 +2507,12 @@ var examSchema = import_zod4.z.object({
 function examProblems(e) {
   const out = [];
   if (!e.title.trim()) out.push("Titel fehlt");
+  if (isRemovedExamTask(e.title) || isRemovedExamTask(e.category)) out.push("Verkehrsunfall und Leitstellen\xFCbung wurden entfernt und d\xFCrfen nicht wieder eingef\xFChrt werden");
+  for (const r of e.drawRules ?? []) {
+    if (isRemovedExamTask(r.topic)) out.push(`Ziehregel: das Thema \u201E${r.topic}\u201C wurde entfernt`);
+    const n = e.questions.filter((q) => (!r.topic || (q.topic ?? "").toLowerCase() === r.topic.toLowerCase()) && (!r.difficulty || q.difficulty === r.difficulty)).length;
+    if (n < r.count) out.push(`Ziehregel ${r.topic ?? "alle Themen"}/${r.difficulty ? EXAM_DIFFICULTY_LABEL[r.difficulty] : "jede Schwierigkeit"}: nur ${n} passende Fragen f\xFCr ${r.count} gew\xFCnschte`);
+  }
   const ids = e.questions.map((q) => q.id);
   if (new Set(ids).size !== ids.length) out.push("Fragen-IDs m\xFCssen eindeutig sein");
   e.questions.forEach((q, i) => out.push(...questionProblems(q, `Frage ${i + 1}`)));
@@ -2676,10 +2818,10 @@ var VERBS = {
   grade: "bewertet"
 };
 function logTypeLabel(action) {
-  const parts = action.split(".");
-  const last = parts[parts.length - 1];
+  const parts2 = action.split(".");
+  const last = parts2[parts2.length - 1];
   const verb = VERBS[last];
-  const nouns = (verb ? parts.slice(0, -1) : parts).filter((p) => p !== "cad" || parts.length === 1);
+  const nouns = (verb ? parts2.slice(0, -1) : parts2).filter((p) => p !== "cad" || parts2.length === 1);
   const noun = [...new Set(nouns.map((p) => WORDS[p] ?? p))].slice(-2).join(" ");
   return verb ? `${noun} ${verb}` : noun || action;
 }
@@ -2710,7 +2852,9 @@ var backupConfigSchema = import_zod6.z.object({
   /** Discord-Server täglich automatisch sichern */
   discordAuto: import_zod6.z.boolean().default(false),
   /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
-  keep: import_zod6.z.number().int().min(1).max(60).default(14)
+  keep: import_zod6.z.number().int().min(1).max(60).default(14),
+  /** Täglicher Wiederherstellungstest des neuesten Daten-Backups (nachts 03–05 Uhr; Schreibzugriffe warten währenddessen kurz) */
+  verifyAuto: import_zod6.z.boolean().default(false)
 });
 
 // src/mdt.ts
@@ -2928,7 +3072,7 @@ function isHttpUrl(u) {
 }
 var HEX = /^#[0-9a-fA-F]{6}$/;
 var len = (s) => [...s].length;
-var embedChars = (e) => len(e.title) + len(e.description) + len(e.authorName) + len(e.footerText) + e.fields.reduce((n, f) => n + len(f.name) + len(f.value), 0);
+var embedChars = (e) => len(e.title) + len(e.description) + len(e.authorName) + len(e.footerText) + e.fields.reduce((n, f2) => n + len(f2.name) + len(f2.value), 0);
 function validateMbMessage(m, idx, o = {}) {
   const out = [];
   const base = `Nachricht ${idx + 1}`;
@@ -2967,12 +3111,12 @@ function validateMbMessage(m, idx, o = {}) {
     if (e.footerIconUrl && !e.footerText.trim()) add("error", w, p("footerText"), "Ein Fu\xDFzeilen-Icon braucht einen Fu\xDFzeilentext.");
     if (e.timestamp === "custom" && (!e.timestampAt || Number.isNaN(Date.parse(e.timestampAt)))) add("error", w, p("timestampAt"), "Zeitstempel: g\xFCltiges Datum w\xE4hlen.");
     if (e.fields.length > DISCORD_LIMITS.fields) add("error", w, p("fields"), `H\xF6chstens ${DISCORD_LIMITS.fields} Felder je Embed.`);
-    e.fields.forEach((f, fi) => {
+    e.fields.forEach((f2, fi) => {
       const fw = `${w} \u203A Feld ${fi + 1}`;
-      if (!f.name.trim()) add("error", fw, p("fields", fi, "name"), "Feldname fehlt (Discord verlangt Name und Wert).");
-      if (!f.value.trim()) add("error", fw, p("fields", fi, "value"), "Feldwert fehlt (Discord verlangt Name und Wert).");
-      if (len(f.name) > DISCORD_LIMITS.fieldName) add("error", fw, p("fields", fi, "name"), `Feldname: ${len(f.name)}/${DISCORD_LIMITS.fieldName} Zeichen.`);
-      if (len(f.value) > DISCORD_LIMITS.fieldValue) add("error", fw, p("fields", fi, "value"), `Feldwert: ${len(f.value)}/${DISCORD_LIMITS.fieldValue} Zeichen.`);
+      if (!f2.name.trim()) add("error", fw, p("fields", fi, "name"), "Feldname fehlt (Discord verlangt Name und Wert).");
+      if (!f2.value.trim()) add("error", fw, p("fields", fi, "value"), "Feldwert fehlt (Discord verlangt Name und Wert).");
+      if (len(f2.name) > DISCORD_LIMITS.fieldName) add("error", fw, p("fields", fi, "name"), `Feldname: ${len(f2.name)}/${DISCORD_LIMITS.fieldName} Zeichen.`);
+      if (len(f2.value) > DISCORD_LIMITS.fieldValue) add("error", fw, p("fields", fi, "value"), `Feldwert: ${len(f2.value)}/${DISCORD_LIMITS.fieldValue} Zeichen.`);
     });
     const empty = !e.title.trim() && !e.description.trim() && !e.fields.length && !e.imageUrl && !e.thumbnailUrl && !e.authorName.trim() && !e.footerText.trim();
     if (empty) add("error", w, p(), "Das Embed ist leer \u2013 Titel, Beschreibung, Feld, Bild, Autor oder Fu\xDFzeile n\xF6tig.");
@@ -3060,7 +3204,7 @@ function toDiscordPayload(m, o = {}) {
     if (e.footerText) x.footer = { text: e.footerText, ...e.footerIconUrl ? { icon_url: e.footerIconUrl } : {} };
     if (e.timestamp === "send") x.timestamp = now.toISOString();
     if (e.timestamp === "custom" && e.timestampAt && !Number.isNaN(Date.parse(e.timestampAt))) x.timestamp = new Date(e.timestampAt).toISOString();
-    if (e.fields.length) x.fields = e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline }));
+    if (e.fields.length) x.fields = e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline }));
     return x;
   });
   const components = [];
@@ -3100,8 +3244,8 @@ function toDiscordPayload(m, o = {}) {
 function mbSummary(m) {
   const buttons = m.rows.reduce((n, r) => n + (r.type === "buttons" ? r.buttons.length : 0), 0);
   const selects = m.rows.filter((r) => r.type === "select").length;
-  const parts = [m.content.trim() ? "Text" : "", m.embeds.length ? `${m.embeds.length} Embed${m.embeds.length > 1 ? "s" : ""}` : "", buttons ? `${buttons} Button${buttons > 1 ? "s" : ""}` : "", selects ? `${selects} Auswahlmen\xFC${selects > 1 ? "s" : ""}` : ""].filter(Boolean);
-  return parts.join(" \xB7 ") || "leer";
+  const parts2 = [m.content.trim() ? "Text" : "", m.embeds.length ? `${m.embeds.length} Embed${m.embeds.length > 1 ? "s" : ""}` : "", buttons ? `${buttons} Button${buttons > 1 ? "s" : ""}` : "", selects ? `${selects} Auswahlmen\xFC${selects > 1 ? "s" : ""}` : ""].filter(Boolean);
+  return parts2.join(" \xB7 ") || "leer";
 }
 function interactiveComponents(m) {
   return m.rows.flatMap((r) => r.type === "buttons" ? r.buttons.filter((b) => b.kind === "action").map((b) => ({ componentId: b.id, kind: "button", action: b.action })) : [{ componentId: r.id, kind: "select", options: Object.fromEntries(r.options.map((op) => [op.id, op.action])) }]);
@@ -3379,6 +3523,231 @@ function aiCheck(answers, durationSec) {
     flagged: [...flagged].sort((a, b) => a - b)
   };
 }
+
+// src/quality.ts
+var import_zod10 = require("zod");
+var QUALITY_TARGETS = ["REPORT", "WANTED", "INCIDENT"];
+var QUALITY_TARGET_LABEL = { REPORT: "Bericht", WANTED: "Fahndung", INCIDENT: "Einsatz" };
+var qualityConfigSchema = import_zod10.z.object({
+  /** Bericht erst einreichen, wenn keine Fehler (ohne dokumentierte Ausnahme) offen sind */
+  enforceReportSubmit: import_zod10.z.boolean().default(false),
+  /** Einsatz erst abschließen, wenn keine Fehler (ohne dokumentierte Ausnahme) offen sind */
+  enforceIncidentClose: import_zod10.z.boolean().default(false),
+  /** Mindestlänge des Berichtstexts (Zeichen) – kürzer = Warnung */
+  reportMinLength: import_zod10.z.number().int().min(0).max(5e3).default(80),
+  /** Berichtsarten, die eine Einsatznummer brauchen */
+  reportTypesRequiringIncident: import_zod10.z.array(import_zod10.z.string().max(32)).max(20).default(["INCIDENT", "ARREST", "TRAFFIC", "COLLISION"]),
+  /** Mindestlänge der Fahndungsbeschreibung (Zeichen) – kürzer = Warnung */
+  wantedMinDescription: import_zod10.z.number().int().min(0).max(2e3).default(30),
+  /** Abgeschlossener Einsatz ohne Bericht: aus, Warnung oder Fehler */
+  incidentReportRequired: import_zod10.z.enum(["OFF", "WARNING", "ERROR"]).default("WARNING"),
+  /** Entwurf gilt nach so vielen Stunden als liegen geblieben (0 = aus) */
+  staleDraftHours: import_zod10.z.number().int().min(0).max(24 * 30).default(48),
+  /** Offener Einsatz ohne Änderung nach so vielen Stunden (0 = aus) */
+  staleIncidentHours: import_zod10.z.number().int().min(0).max(24 * 30).default(6)
+});
+var f = (level, code, field, message, hint) => ({ code, level, field, message, hint });
+var hours = (a, b) => (b.getTime() - a.getTime()) / 36e5;
+var PLACEHOLDER = (t2) => /\bTODO\b|\bXXX\b|\?\?\?|\[\s*\.{3}\s*\]/.test(t2) || /<\s*(name|ort|datum|uhrzeit|zeit)\s*>|\blorem ipsum\b/i.test(t2);
+var TIME_SPAN = /(?:von\s+)?\b([01]?\d|2[0-3])[:.]([0-5]\d)\s*(?:uhr\s*)?(?:-|–|bis)\s*([01]?\d|2[0-3])[:.]([0-5]\d)\b/gi;
+function contradictoryTimeSpans(text) {
+  const out = [];
+  for (const m of text.matchAll(TIME_SPAN)) {
+    const start = Number(m[1]) * 60 + Number(m[2]), end = Number(m[3]) * 60 + Number(m[4]);
+    if (end < start && start - end < 12 * 60) out.push(m[0].trim());
+  }
+  return out;
+}
+var incidentNumbersIn = (text, prefix = "[A-Z]{1,4}") => [...new Set([...text.matchAll(new RegExp(`\\b${prefix}-20\\d{2}-\\d{3,6}\\b`, "g"))].map((m) => m[0]))];
+function checkReport(r, cfg, now = /* @__PURE__ */ new Date()) {
+  const out = [];
+  const body = r.body.trim();
+  if (r.title.trim().length < 5) out.push(f("ERROR", "report.title", "title", "Titel fehlt oder ist zu kurz.", "Einen aussagekr\xE4ftigen Titel mit mindestens 5 Zeichen eintragen (z. B. \u201EFestnahme nach Ladendiebstahl, Postal 210\u201C)."));
+  if (!body) out.push(f("ERROR", "report.body_missing", "body", "Der Berichtstext fehlt.", "Sachverhalt, beteiligte Personen, Ma\xDFnahmen und Ergebnis im Berichtstext beschreiben."));
+  else if (body.length < cfg.reportMinLength) out.push(f("WARNING", "report.body_short", "body", `Der Berichtstext ist sehr kurz (${body.length} von empfohlen ${cfg.reportMinLength} Zeichen).`, "Pr\xFCfen, ob Sachverhalt, Ma\xDFnahmen und Ergebnis vollst\xE4ndig beschrieben sind."));
+  if (body && PLACEHOLDER(body)) out.push(f("WARNING", "report.placeholder", "body", "Im Text stehen noch Platzhalter (z. B. TODO, ???, <Name>).", "Platzhalter durch die tats\xE4chlichen Angaben ersetzen oder entfernen."));
+  if (cfg.reportTypesRequiringIncident.includes(r.type) && !r.incidentId) out.push(f("ERROR", "report.incident_missing", "incidentId", "Die Einsatznummer fehlt \u2013 diese Berichtsart geh\xF6rt zu einem Einsatz.", "Den zugeh\xF6rigen CAD-Einsatz verkn\xFCpfen. Gab es keinen Einsatz, eine begr\xFCndete Ausnahme dokumentieren."));
+  if (r.incidentId && !r.incident) out.push(f("ERROR", "report.incident_invalid", "incidentId", "Der verkn\xFCpfte Einsatz existiert nicht (mehr).", "Die Verkn\xFCpfung pr\xFCfen und den richtigen Einsatz ausw\xE4hlen."));
+  for (const n of r.unknownNumbers) out.push(f("WARNING", "report.unknown_number", "body", `Im Text wird die Einsatznummer ${n} genannt, die es nicht gibt.`, "Nummer auf Tippfehler pr\xFCfen. \xC4ltere, schon gel\xF6schte Eins\xE4tze k\xF6nnen ebenfalls betroffen sein."));
+  for (const span of contradictoryTimeSpans(body)) out.push(f("WARNING", "report.time_span", "body", `Zeitangabe \u201E${span}\u201C: das Ende liegt vor dem Beginn.`, "Uhrzeiten pr\xFCfen. Lief der Vorgang \xFCber Mitternacht, kann die Warnung ignoriert oder als Ausnahme dokumentiert werden."));
+  if (r.incident && r.createdAt.getTime() + 5 * 6e4 < r.incident.createdAt.getTime()) out.push(f("WARNING", "report.before_incident", "incidentId", `Der Bericht wurde vor dem Einsatz ${r.incident.number} angelegt.`, "Pr\xFCfen, ob der richtige Einsatz verkn\xFCpft ist."));
+  if (cfg.staleDraftHours > 0 && r.status === "DRAFT" && hours(r.updatedAt, now) >= cfg.staleDraftHours) out.push(f("WARNING", "report.stale_draft", "status", `Entwurf seit ${Math.floor(hours(r.updatedAt, now))} Stunden nicht eingereicht.`, "Bericht vervollst\xE4ndigen und einreichen."));
+  if (r.status === "REJECTED") out.push(f("WARNING", "report.rejected_open", "status", "Der Bericht wurde abgelehnt und noch nicht \xFCberarbeitet.", "Ablehnungsgrund im Verlauf lesen, Bericht \xFCberarbeiten und erneut einreichen."));
+  return out;
+}
+function checkWanted(w, cfg, now = /* @__PURE__ */ new Date()) {
+  const out = [];
+  const desc = (w.description ?? "").trim();
+  if (!w.personId && !w.vehicleId) out.push(f("ERROR", "wanted.subject_missing", "personId", "Weder eine Person noch ein Fahrzeug ist verkn\xFCpft.", "Die gesuchte Person bzw. das Fahrzeug aus der Akte verkn\xFCpfen."));
+  if (w.personId && !w.person) out.push(f("ERROR", "wanted.person_invalid", "personId", "Die verkn\xFCpfte Person existiert nicht (mehr).", "Die richtige Personenakte verkn\xFCpfen."));
+  if (w.vehicleId && !w.vehicle) out.push(f("ERROR", "wanted.vehicle_invalid", "vehicleId", "Das verkn\xFCpfte Fahrzeug existiert nicht (mehr).", "Das richtige Fahrzeug verkn\xFCpfen."));
+  if (w.reason.trim().length < 3) out.push(f("ERROR", "wanted.reason", "reason", "Der Fahndungsgrund fehlt.", "Den Tatvorwurf bzw. Grund der Fahndung angeben."));
+  if (!desc) out.push(f("ERROR", "wanted.description_missing", "description", "Die Fahndungsbeschreibung fehlt.", "Beschreibung erg\xE4nzen: Aussehen/Kleidung, Fahrzeug, zuletzt gesehen (Ort, Zeit), Gef\xE4hrlichkeit."));
+  else if (desc.length < cfg.wantedMinDescription) out.push(f("WARNING", "wanted.description_short", "description", `Die Fahndungsbeschreibung ist unvollst\xE4ndig (${desc.length} von empfohlen ${cfg.wantedMinDescription} Zeichen).`, "Merkmale erg\xE4nzen, an denen Kolleginnen und Kollegen die gesuchte Person bzw. das Fahrzeug erkennen."));
+  if (w.person && !w.person.robloxUserId) out.push(f("WARNING", "wanted.no_roblox_id", "personId", "Die Person hat keine Roblox-ID \u2013 der ER:LC-Abgleich kann nur unsichere Namenstreffer melden.", "Roblox-ID in der Personenakte nachtragen, sobald sie bekannt ist."));
+  if (w.expiresAt && w.expiresAt.getTime() < w.createdAt.getTime()) out.push(f("ERROR", "wanted.expiry_before_start", "expiresAt", "Das Ablaufdatum liegt vor dem Erstellungsdatum.", "Ablaufdatum korrigieren."));
+  else if (w.expiresAt && w.status === "ACTIVE" && w.expiresAt < now) out.push(f("WARNING", "wanted.expired_active", "expiresAt", "Die Fahndung ist abgelaufen, steht aber noch auf aktiv.", "Fahndung verl\xE4ngern oder erledigen."));
+  return out;
+}
+function checkIncident(i, cfg, now = /* @__PURE__ */ new Date()) {
+  const out = [];
+  if (!i.number) out.push(f("ERROR", "incident.number", "number", "Der Einsatz hat keine Einsatznummer.", "Systemfehler melden \u2013 Einsatznummern werden automatisch vergeben."));
+  if (i.title.trim().length < 3) out.push(f("ERROR", "incident.title", "title", "Das Einsatzstichwort/der Titel fehlt.", "Kurzbeschreibung eintragen."));
+  if (!i.location?.trim() && (i.mapX === null || i.mapZ === null)) out.push(f(i.closed ? "ERROR" : "WARNING", "incident.location", "location", "Kein Einsatzort angegeben.", "Ort (Stra\xDFe/Postal) eintragen oder die Position auf der Karte setzen."));
+  if (!i.type) out.push(f("WARNING", "incident.type", "type", "Keine Einsatzart gew\xE4hlt.", "Passende Einsatzart w\xE4hlen (f\xFCr Statistik und Kartenfilter)."));
+  if (i.closed && !i.description?.trim()) out.push(f("WARNING", "incident.description", "description", "Der abgeschlossene Einsatz hat keine Beschreibung.", "Kurz festhalten, was vorgefallen ist und wie der Einsatz endete."));
+  if (i.closedAt && i.closedAt.getTime() < i.createdAt.getTime()) out.push(f("ERROR", "incident.closed_before_created", "closedAt", "Die Abschlusszeit liegt vor der Anlagezeit.", "Zeitangaben pr\xFCfen (Systemuhr, nachtr\xE4gliche \xC4nderungen)."));
+  if (i.closed && i.unitsEver === 0) out.push(f("WARNING", "incident.no_units", "units", "Dem Einsatz war nie eine Einheit zugewiesen.", "Eingesetzte Einheit nachtragen oder dokumentieren, warum keine ausr\xFCckte."));
+  if (i.closed && i.reports === 0 && cfg.incidentReportRequired !== "OFF") out.push(f(cfg.incidentReportRequired, "incident.report_missing", "reports", "Zum abgeschlossenen Einsatz gibt es keinen Bericht.", "Einsatzbericht schreiben und mit dem Einsatz verkn\xFCpfen."));
+  if (!i.closed && cfg.staleIncidentHours > 0 && hours(i.updatedAt, now) >= cfg.staleIncidentHours) out.push(f("WARNING", "incident.stale", "status", `Offener Einsatz seit ${Math.floor(hours(i.updatedAt, now))} Stunden ohne \xC4nderung.`, "Status aktualisieren oder Einsatz abschlie\xDFen."));
+  return out;
+}
+function splitFindings(findings, exceptions) {
+  const ex = new Map(exceptions.map((e) => [e.code, e]));
+  const open = findings.filter((x) => !ex.has(x.code));
+  return {
+    errors: open.filter((x) => x.level === "ERROR"),
+    warnings: open.filter((x) => x.level === "WARNING"),
+    excepted: findings.filter((x) => ex.has(x.code)).map((x) => ({ ...x, exception: ex.get(x.code) })),
+    ok: !open.some((x) => x.level === "ERROR")
+  };
+}
+
+// src/forecast.ts
+var CONFIDENCE_LABEL = { NONE: "keine Daten", LOW: "gering (kleine Stichprobe)", MEDIUM: "mittel", HIGH: "hoch" };
+function confidenceFor(weeksWithData, samples) {
+  if (weeksWithData === 0 || samples === 0) return { level: "NONE", reason: "Im gew\xE4hlten Zeitraum liegen keine Daten vor." };
+  if (weeksWithData < 3 || samples < 20) return { level: "LOW", reason: `Nur ${weeksWithData} Woche(n) bzw. ${samples} Datens\xE4tze \u2013 Ergebnisse sind sehr unsicher.` };
+  if (weeksWithData < 6 || samples < 100) return { level: "MEDIUM", reason: `${weeksWithData} Wochen bzw. ${samples} Datens\xE4tze \u2013 Tendenzen erkennbar, Einzelwerte unsicher.` };
+  return { level: "HIGH", reason: `${weeksWithData} Wochen bzw. ${samples} Datens\xE4tze.` };
+}
+var parts = (d, timeZone) => {
+  const p = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short", hour: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const wd = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.find((x) => x.type === "weekday").value);
+  return { weekday: wd, hour: Number(p.find((x) => x.type === "hour").value) };
+};
+function staffingHeatmap(spans, from, to, timeZone = WEEK_TIMEZONE) {
+  const minutes2 = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  const slots = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  const H = 36e5;
+  const first = Math.ceil(from.getTime() / H) * H;
+  for (let t2 = first; t2 + H <= to.getTime(); t2 += H) {
+    const { weekday, hour } = parts(new Date(t2), timeZone);
+    slots[weekday][hour]++;
+  }
+  for (const s of spans) {
+    const a = Math.max(s.start.getTime(), from.getTime()), b = Math.min(s.end.getTime(), to.getTime());
+    for (let t2 = Math.floor(a / H) * H; t2 < b; t2 += H) {
+      const overlap = Math.min(b, t2 + H) - Math.max(a, t2);
+      if (overlap <= 0) continue;
+      const { weekday, hour } = parts(new Date(t2), timeZone);
+      minutes2[weekday][hour] += overlap / 6e4;
+    }
+  }
+  const avg = minutes2.map((row, d) => row.map((m, h) => slots[d][h] ? Math.round(m / 60 / slots[d][h] * 100) / 100 : null));
+  return { avg, slots };
+}
+function linearTrend(values) {
+  const n = values.length;
+  if (n < 2) return null;
+  const mx = (n - 1) / 2, my = values.reduce((a, b) => a + b, 0) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  values.forEach((y, x) => {
+    sxy += (x - mx) * (y - my);
+    sxx += (x - mx) ** 2;
+    syy += (y - my) ** 2;
+  });
+  const slope = sxx ? sxy / sxx : 0;
+  const intercept = my - slope * mx;
+  const r2 = syy ? sxy * sxy / (sxx * syy) : 0;
+  return { slope, intercept, r2 };
+}
+function estimateNext(values, steps = 1) {
+  if (values.length < 3) return null;
+  const t2 = linearTrend(values);
+  const recent = values.slice(-4);
+  const mean = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const sd = Math.sqrt(recent.reduce((a, b) => a + (b - mean) ** 2, 0) / recent.length);
+  return Array.from({ length: steps }, (_, i) => {
+    const v = Math.max(0, mean + t2.slope * (i + 1 + (recent.length - 1) / 2));
+    return { value: Math.round(v * 10) / 10, low: Math.max(0, Math.round((v - sd) * 10) / 10), high: Math.round((v + sd) * 10) / 10 };
+  });
+}
+function anomalies(series, z11 = 2) {
+  const out = [];
+  for (let i = 4; i < series.length; i++) {
+    const prev = series.slice(0, i).map((s) => s.value);
+    const mean = prev.reduce((a, b) => a + b, 0) / prev.length;
+    const sd = Math.sqrt(prev.reduce((a, b) => a + (b - mean) ** 2, 0) / prev.length);
+    const v = series[i].value;
+    const unusual = sd > 0 ? Math.abs(v - mean) > z11 * sd : Math.abs(v - mean) >= Math.max(1, mean * 0.5);
+    if (unusual) out.push({ label: series[i].label, value: v, expected: Math.round(mean * 10) / 10, direction: v > mean ? "up" : "down" });
+  }
+  return out;
+}
+var DAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+function lowStaffingWindows(avg, minStaff) {
+  const out = [];
+  avg.forEach((row, d) => {
+    let start = -1;
+    let sum = 0;
+    for (let h = 0; h <= 24; h++) {
+      const v = h < 24 ? row[h] : null;
+      const low = v !== null && v !== void 0 && v < minStaff;
+      if (low && start < 0) {
+        start = h;
+        sum = 0;
+      }
+      if (low) sum += v;
+      if (!low && start >= 0) {
+        out.push({ weekday: d, day: DAYS[d], from: start, to: h, avg: Math.round(sum / (h - start) * 100) / 100 });
+        start = -1;
+      }
+    }
+  });
+  return out;
+}
+
+// src/cases.ts
+var CASE_LINK_TYPES = ["INCIDENT", "CALL", "REPORT", "WANTED", "PERSON", "VEHICLE", "TICKET", "COMPLAINT", "UNIT", "OFFICER", "HR_REQUEST", "PERSONNEL_RECORD"];
+var CASE_LINK_LABEL = {
+  INCIDENT: "CAD-Einsatz",
+  CALL: "Notruf",
+  REPORT: "Einsatzbericht",
+  WANTED: "Fahndung",
+  PERSON: "Beteiligte Person",
+  VEHICLE: "Fahrzeug",
+  TICKET: "Bu\xDFgeld (MDT)",
+  COMPLAINT: "Beschwerde",
+  UNIT: "Einheit",
+  OFFICER: "Beamter",
+  HR_REQUEST: "Personalvorgang (Bef\xF6rderung/Versetzung)",
+  PERSONNEL_RECORD: "Personalakten-Eintrag"
+};
+var CASE_LINK_VIEW_PERMISSION = {
+  INCIDENT: "cad.view",
+  CALL: "cad.view",
+  REPORT: "reports.view",
+  WANTED: "wanted.view",
+  PERSON: "persons.view",
+  VEHICLE: "vehicles.view",
+  TICKET: "tickets.view",
+  COMPLAINT: "complaints.view",
+  UNIT: "cad.view",
+  OFFICER: "personnel.view",
+  HR_REQUEST: "personnel.view_sensitive",
+  PERSONNEL_RECORD: "personnel.view_sensitive"
+};
+var CASE_LINK_ROLES = ["BETEILIGT", "TATVERD\xC4CHTIG", "ZEUGE", "GESCH\xC4DIGT", "EINGESETZT", "BEZUG"];
+var CASE_STATUSES = ["OPEN", "IN_PROGRESS", "CLOSED"];
+var CASE_STATUS_LABEL = { OPEN: "Offen", IN_PROGRESS: "In Bearbeitung", CLOSED: "Abgeschlossen" };
+function titleSimilarity(a, b) {
+  const words = (s) => new Set(s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[^a-z0-9äöüß]+/).filter((w) => w.length >= 3));
+  const x = words(a), y = words(b);
+  if (!x.size || !y.size) return 0;
+  const inter = [...x].filter((w) => y.has(w)).length;
+  return inter / (x.size + y.size - inter);
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AI_CHECK_HINT,
@@ -3401,11 +3770,18 @@ function aiCheck(answers, durationSec) {
   CAD_LINK_SEND_TYPES,
   CAD_WIDGETS,
   CAD_WIDGET_LABELS,
+  CASE_LINK_LABEL,
+  CASE_LINK_ROLES,
+  CASE_LINK_TYPES,
+  CASE_LINK_VIEW_PERMISSION,
+  CASE_STATUSES,
+  CASE_STATUS_LABEL,
   CLAIM_MODES,
   CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES,
   COMPLAINT_STATUSES,
   COMPLAINT_TRANSITIONS,
+  CONFIDENCE_LABEL,
   DEFAULT_APPLICATION_MESSAGES,
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
@@ -3436,12 +3812,18 @@ function aiCheck(answers, durationSec) {
   ERLC_STATUS_LABEL,
   EXAM_ATTEMPT_STATUSES,
   EXAM_ATTEMPT_STATUS_LABEL,
+  EXAM_CASE_KINDS,
+  EXAM_CASE_KIND_LABEL,
+  EXAM_CASE_TEMPLATES,
+  EXAM_DIFFICULTIES,
+  EXAM_DIFFICULTY_LABEL,
   EXAM_EXPORT_FORMAT,
   EXAM_LAYOUTS,
   EXAM_LAYOUT_LABEL,
   EXAM_QUESTION_TYPES,
   EXAM_QUESTION_TYPE_HINT,
   EXAM_QUESTION_TYPE_LABEL,
+  EXAM_REMOVED_TASKS,
   EXAM_REVIEW_LABEL,
   EXAM_REVIEW_MODES,
   EXAM_SHUFFLE_TYPES,
@@ -3474,6 +3856,8 @@ function aiCheck(answers, durationSec) {
   PROFILE_FIELD_LABEL,
   PROFILE_SECTIONS,
   PROFILE_SECTION_LABEL,
+  QUALITY_TARGETS,
+  QUALITY_TARGET_LABEL,
   QUESTION_TYPES,
   RADIO_CSV_COLUMNS,
   RADIO_GRANT_SOURCES,
@@ -3521,6 +3905,7 @@ function aiCheck(answers, durationSec) {
   accountAge,
   ageOf,
   aiCheck,
+  anomalies,
   applyCallCalibration,
   applyPanelParts,
   areaGrantsFor,
@@ -3531,10 +3916,15 @@ function aiCheck(answers, durationSec) {
   canDelegate,
   canTransition,
   checkAnswer,
+  checkIncident,
+  checkReport,
+  checkWanted,
   cleanReportValues,
   cloneWithNewIds,
   commandsForServer,
   conditionMatches,
+  confidenceFor,
+  contradictoryTimeSpans,
   csvCell,
   dangerLevelOf,
   defaultTicketButtons,
@@ -3542,6 +3932,8 @@ function aiCheck(answers, durationSec) {
   describeDiscordError,
   diffPresence,
   dnSettingsSchema,
+  drawQuestions,
+  drawRuleSchema,
   dutyTimeText,
   effectivePermissions,
   effectiveRadioStatus,
@@ -3549,6 +3941,7 @@ function aiCheck(answers, durationSec) {
   emptyMbDocument,
   emptyMbEmbed,
   emptyMbMessage,
+  estimateNext,
   examExportSchema,
   examProblems,
   examSchema,
@@ -3574,6 +3967,7 @@ function aiCheck(answers, durationSec) {
   hireMappingSchema,
   hrConfigSchema,
   hrStatusSchema,
+  incidentNumbersIn,
   infoOptionEmbed,
   infoOptionSchema,
   infoPanelMessage,
@@ -3586,17 +3980,20 @@ function aiCheck(answers, durationSec) {
   isPermissionKey,
   isRadioAuthorized,
   isRadioRoleOnly,
+  isRemovedExamTask,
   isRobloxField,
   isSupportOpen,
   isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
+  linearTrend,
   localMidnight,
   localTime,
   logCategoryOf,
   logChannelFor,
   logTypeLabel,
   loggingConfigSchema,
+  lowStaffingWindows,
   maskGaps,
   matchWantedPlayer,
   matchingBinds,
@@ -3636,6 +4033,7 @@ function aiCheck(answers, durationSec) {
   postalMatchRate,
   postalPosition,
   qualiPanelParts,
+  qualityConfigSchema,
   questionProblems,
   questionSchema,
   radioRoleSyncAction,
@@ -3655,21 +4053,27 @@ function aiCheck(answers, durationSec) {
   requirementSchema,
   resolvePermission,
   rolesMatch,
+  rubricItemSchema,
+  rubricScore,
   severitySchema,
+  splitFindings,
   splitGaps,
   staffListSchema,
   staffSectionSchema,
+  staffingHeatmap,
   stageSchema,
   statusLabel,
   ticketButtonsOf,
   ticketChannelName,
   ticketNumber,
+  titleSimilarity,
   toDiscordPayload,
   toPartialEmoji,
   triggerMatches,
   validateMbDocument,
   validateMbMessage,
   verifyActions,
+  weakTopicsOf,
   weekIso,
   weekKey,
   weekLabel,

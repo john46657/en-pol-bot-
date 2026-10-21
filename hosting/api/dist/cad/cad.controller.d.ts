@@ -433,6 +433,8 @@ export declare class CadController {
             callerName: string | null;
             positionDescriptor: string | null;
             claimedById: string | null;
+            positionSource: string | null;
+            lastSeenAt: Date | null;
         }[];
         radio: {
             authorName: string | null;
@@ -467,6 +469,13 @@ export declare class CadController {
     }>;
     map(a: CadActor): Promise<{
         incidents: {
+            stale: boolean;
+            cases: {
+                number: string;
+                id: string;
+                status: string;
+                title: string;
+            }[];
             calls: {
                 id: string;
                 incidentId: string | null;
@@ -512,6 +521,14 @@ export declare class CadController {
             restrictRoleIds: string[];
         }[];
         calls: {
+            positionSource: string | null;
+            notReported: boolean;
+            cases: {
+                number: string;
+                id: string;
+                status: string;
+                title: string;
+            }[];
             incident: {
                 number: string;
                 id: string;
@@ -538,6 +555,7 @@ export declare class CadController {
             callerName: string | null;
             positionDescriptor: string | null;
             claimedById: string | null;
+            lastSeenAt: Date | null;
         }[];
         units: {
             crew: {
@@ -647,6 +665,44 @@ export declare class CadController {
             uncertain: boolean;
         }[];
         stale: boolean;
+        erlc: {
+            id: string;
+            name: string;
+            status: string;
+            lastSyncAt: Date | null;
+        }[];
+        unplaced: {
+            incidents: {
+                id: string;
+                number: string;
+                title: string;
+                priority: string;
+                status: string;
+                type: string | null;
+                location: string | null;
+                cases: {
+                    number: string;
+                    id: string;
+                    status: string;
+                    title: string;
+                }[];
+            }[];
+            calls: {
+                id: string;
+                callNumber: number;
+                description: string | null;
+                positionDescriptor: string | null;
+                status: string;
+                startedAt: Date;
+                notReported: boolean;
+                cases: {
+                    number: string;
+                    id: string;
+                    status: string;
+                    title: string;
+                }[];
+            }[];
+        };
     }>;
     incidents(a: CadActor & {
         roles: string[];
@@ -716,6 +772,8 @@ export declare class CadController {
             callerName: string | null;
             positionDescriptor: string | null;
             claimedById: string | null;
+            positionSource: string | null;
+            lastSeenAt: Date | null;
         }[];
         names: {
             [k: string]: string;
@@ -1348,6 +1406,8 @@ export declare class CadController {
         callerName: string | null;
         positionDescriptor: string | null;
         claimedById: string | null;
+        positionSource: string | null;
+        lastSeenAt: Date | null;
     }[]>;
     callAction(a: CadActor & {
         roles: string[];
@@ -1369,6 +1429,8 @@ export declare class CadController {
         callerName: string | null;
         positionDescriptor: string | null;
         claimedById: string | null;
+        positionSource: string | null;
+        lastSeenAt: Date | null;
     } | {
         number: string;
         serverId: string | null;

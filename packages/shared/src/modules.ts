@@ -53,7 +53,7 @@ export function moduleDependencyError(key: string, enabled: boolean, state: Reco
  */
 export const BOT_COMMAND_MODULES: Record<string, string> = {
   cad: 'cad',
-  bericht: 'reports', dienstbericht: 'reports',
+  bericht: 'reports', dienstbericht: 'reports', vorgang: 'reports',
   person: 'mdt', kennzeichen: 'mdt', fahndungen: 'mdt', fahndung: 'mdt',
   shift: 'shift_logs', dienst: 'shift_logs', dienststunden: 'shift_logs', team: 'shift_logs', dienstpanel: 'shift_logs', teamliste: 'shift_logs',
   einheiten: 'dispatch', einheitstatus: 'dispatch', einsaetze: 'dispatch', einsatz: 'dispatch', einsatzinfo: 'dispatch', einsatzstatus: 'dispatch', einsatzzuweisen: 'dispatch',

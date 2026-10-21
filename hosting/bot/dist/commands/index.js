@@ -101,7 +101,7 @@ exports.COMMANDS = [
                             { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
                             { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
                             { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`' },
-                            { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
+                            { name: 'Leitung & Team', value: '`/lage` `/vorgang` `/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
@@ -305,6 +305,51 @@ exports.COMMANDS = [
                 const on = rows.filter((r) => r.dutyStatus !== 'OFF_DUTY');
                 const lines = on.slice(0, 25).map((r) => `• **${(0, format_1.plain)(r.callsign ?? '—')}** ${(0, format_1.plain)(r.name)} — ${(0, format_1.label)(r.dutyStatus)}${r.unit ? ` · ${(0, format_1.plain)(r.unit.callsign)}` : ''}${r.currentIncident ? ` · 🚨 ${r.currentIncident.number}` : ''}`);
                 return { ephemeral: true, embeds: [(0, format_1.listEmbed)(`👮 Im Dienst (${on.length} von ${rows.length})`, lines, 'Aktuell ist niemand im Dienst.')] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
+    {
+        name: 'lage', description: 'Lageübersicht (nur Führung): Personal, Einsätze, Fahndungen, Berichte, Störungen',
+        async run(c) {
+            try {
+                const o = await c.api.asUser(c.discordId, 'GET', '/situation');
+                const open = o.tasks.items.filter((t) => t.count > 0);
+                return { ephemeral: true, embeds: [{ title: '🧭 Lage', color: o.critical.length ? format_1.COLORS.danger : format_1.COLORS.info, description: o.critical.length ? (0, format_1.clip)(o.critical.slice(0, 8).map((x) => `⚠️ ${(0, format_1.plain)(x.text)}`).join('\n'), 2000) : 'Keine kritischen Vorgänge.', fields: [
+                                { name: 'Personal', value: `${o.officers.onDuty} im Dienst · ${o.officers.available} ohne Einheit`, inline: true },
+                                { name: 'Einsätze', value: `${o.incidents.total} aktiv · ${o.incidents.unassigned} ohne Einheit`, inline: true },
+                                { name: 'Einheiten', value: `${o.units.assigned.length} im Einsatz / ${o.units.total}`, inline: true },
+                                { name: 'Fahndungen', value: `${o.wanted.total} aktiv · ${o.wanted.hitsToReview} Treffer zu prüfen`, inline: true },
+                                { name: 'Berichte', value: `${o.reports.incomplete.length} unvollständig`, inline: true },
+                                { name: 'Störungen', value: (0, format_1.clip)(o.disruptions.items.map((d) => `${(0, format_1.plain)(d.sourceName ?? d.source)}: ${(0, format_1.plain)(d.message)}`).join('\n') || 'keine', 1024) },
+                                { name: 'Offene Aufgaben', value: (0, format_1.clip)(open.map((t) => `${(0, format_1.plain)(t.label)}: ${t.count}`).join('\n') || 'keine', 1024) },
+                            ], footer: `Datenstand ${new Date(o.generatedAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} · nur erfasste Daten` }] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
+    {
+        name: 'vorgang', description: 'Zeigt einen Vorgang (Vorgangs- oder Einsatznummer)',
+        options: [{ name: 'nummer', description: 'z. B. V-2026-00001 oder Einsatznummer E-2026-00012', type: 'string', required: true, maxLength: 40 }],
+        async run(c) {
+            try {
+                const n = str(c, 'nummer');
+                const byCase = await c.api.asUser(c.discordId, 'GET', `/cases?q=${q(n)}&pageSize=10`);
+                let hit = byCase.items.find((x) => String(x.number).toLowerCase() === n.toLowerCase());
+                if (!hit)
+                    hit = (await c.api.asUser(c.discordId, 'GET', `/cases?incidentNumber=${q(n)}&pageSize=10`)).items[0];
+                if (!hit)
+                    return (0, format_1.errorReply)(`Kein Vorgang zu „${(0, format_1.plain)(n)}“ gefunden.`);
+                const d = await c.api.asUser(c.discordId, 'GET', `/cases/${hit.id}`);
+                return { ephemeral: true, embeds: [{ title: (0, format_1.clip)(`🗂️ ${d.number} — ${(0, format_1.plain)(d.title)}`, 256), color: format_1.COLORS.info, fields: [
+                                { name: 'Status', value: (0, format_1.plain)(d.statusLabel), inline: true },
+                                { name: `Verknüpft (${d.links.length})`, value: (0, format_1.clip)(d.links.map((l) => `• ${(0, format_1.plain)(l.typeLabel)}: ${(0, format_1.plain)(l.label)}`).join('\n') || '—', 1024) },
+                                { name: 'Letzte Ereignisse', value: (0, format_1.clip)(d.events.slice(-6).map((e) => `• ${(0, format_1.plain)(e.text)}`).join('\n') || '—', 1024) },
+                            ] }] };
             }
             catch (e) {
                 return (0, errors_1.mapError)(e);

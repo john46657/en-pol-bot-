@@ -27,6 +27,7 @@ const pctOf = (score, max) => (score != null && max ? Math.round((score / max) *
 const round = (n) => Math.round(n * 100) / 100;
 const berlin = (d) => d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' });
 /** Gemischt, aber nie zufällig genau die Lösung (bei Reihenfolge/Zuordnung). */
+const parseRules = (raw) => (Array.isArray(raw) ? raw.flatMap((r) => { const x = shared_1.drawRuleSchema.safeParse(r); return x.success ? [x.data] : []; }) : []);
 const derange = (n) => { let r = shuffled(range(n)); for (let i = 0; i < 5 && n > 1 && r.every((x, j) => x === j); i++)
     r = shuffled(range(n)); return r; };
 /** Prüfungen: Verwaltung, Ablauf (Start → Zwischenspeichern → Abgabe), Bewertung, Annullieren und Auswertung. */
@@ -148,7 +149,7 @@ let HrExamService = class HrExamService {
         const e = await this.prisma.hrExam.findUnique({ where: { id } });
         if (!e || !((await this.perms.has(actor.userId, 'exam.manage')) || (await this.canGrade(e, actor.userId))))
             throw new errors_1.AppError('NOT_FOUND', 'Prüfung nicht gefunden.');
-        return { ...e, questions: (0, shared_1.parseQuestions)(e.questions), attemptCount: await this.prisma.hrExamAttempt.count({ where: { examId: id } }) };
+        return { ...e, questions: (0, shared_1.parseQuestions)(e.questions), drawRules: parseRules(e.drawRules), attemptCount: await this.prisma.hrExamAttempt.count({ where: { examId: id } }) };
     }
     // ---------------- Verwaltung ----------------
     async save(actor, d, id) {
@@ -164,7 +165,7 @@ let HrExamService = class HrExamService {
             throw new errors_1.AppError('NOT_FOUND', 'Prüfung nicht gefunden.');
         const data = {
             ...d, category: d.category?.trim() || null, description: d.description?.trim() || null, instructions: d.instructions?.trim() || null,
-            questions: d.questions, availableFrom: d.availableFrom ? new Date(d.availableFrom) : null, availableUntil: d.availableUntil ? new Date(d.availableUntil) : null,
+            questions: d.questions, drawRules: d.drawRules, availableFrom: d.availableFrom ? new Date(d.availableFrom) : null, availableUntil: d.availableUntil ? new Date(d.availableUntil) : null,
         };
         const e = id ? await this.prisma.hrExam.update({ where: { id }, data }) : await this.prisma.hrExam.create({ data });
         await this.core.audit.record(actor, { action: id ? 'exam.update' : 'exam.create', module: 'exam', entityType: 'HrExam', entityId: e.id, before: before ? { title: before.title, questions: (0, shared_1.parseQuestions)(before.questions).length, active: before.active } : undefined, after: { title: e.title, questions: d.questions.length, active: e.active } });
@@ -175,7 +176,7 @@ let HrExamService = class HrExamService {
         if (!src)
             throw new errors_1.AppError('NOT_FOUND', 'Prüfung nicht gefunden.');
         const rest = Object.fromEntries(Object.entries(src).filter(([k]) => !['id', 'serverId', 'createdAt', 'updatedAt'].includes(k)));
-        const e = await this.prisma.hrExam.create({ data: { ...rest, title: `Kopie von ${src.title}`.slice(0, 120), active: false, questions: src.questions } });
+        const e = await this.prisma.hrExam.create({ data: { ...rest, title: `Kopie von ${src.title}`.slice(0, 120), active: false, questions: src.questions, drawRules: src.drawRules } });
         await this.core.audit.record(actor, { action: 'exam.duplicate', module: 'exam', entityType: 'HrExam', entityId: e.id, after: { from: id, title: e.title } });
         return e;
     }
@@ -206,6 +207,10 @@ let HrExamService = class HrExamService {
         return { ok: true, url };
     }
     async remove(actor, id) {
+        // Prüfungsnachweise (Versuche) bleiben erhalten: eine Prüfung mit Versuchen wird nur deaktiviert, nie samt Nachweisen gelöscht
+        const attempts = await this.prisma.hrExamAttempt.count({ where: { examId: id } });
+        if (attempts)
+            throw new errors_1.AppError('CONFLICT', `Diese Prüfung hat ${attempts} Versuch(e) – sie kann nicht gelöscht werden, damit die Prüfungsnachweise erhalten bleiben. Bitte stattdessen deaktivieren.`);
         const e = await this.prisma.hrExam.delete({ where: { id } }).catch(() => null);
         if (!e)
             throw new errors_1.AppError('NOT_FOUND', 'Prüfung nicht gefunden.');
@@ -235,10 +240,23 @@ let HrExamService = class HrExamService {
         if (st.state !== 'AVAILABLE')
             throw new errors_1.AppError('CONFLICT', st.reason ?? 'Die Prüfung kann gerade nicht gestartet werden.');
         const all = (0, shared_1.parseQuestions)(e.questions);
-        const limit = e.questionCount && e.questionCount < all.length ? e.questionCount : all.length;
-        let pick = e.shuffleQuestions || limit < all.length ? shuffled(all).slice(0, limit) : all;
-        if (!e.shuffleQuestions)
-            pick = all.filter((q) => pick.includes(q)); // Zufallsauswahl, aber in der Reihenfolge der Prüfung
+        const rules = parseRules(e.drawRules);
+        let pick;
+        if (rules.length) {
+            // Adaptiv: Fragen aus den Themen, die die Person zuletzt nicht bestanden hat, werden innerhalb der Regeln bevorzugt
+            const weak = await this.weakTopicsFor(me.id);
+            pick = (0, shared_1.drawQuestions)(all, rules, weak, (n) => (0, node_crypto_1.randomInt)(n)).questions;
+            if (!pick.length)
+                throw new errors_1.AppError('CONFLICT', 'Für die Ziehregeln dieser Prüfung gibt es keine passenden Fragen.');
+            if (e.shuffleQuestions)
+                pick = shuffled(pick);
+        }
+        else {
+            const limit = e.questionCount && e.questionCount < all.length ? e.questionCount : all.length;
+            pick = e.shuffleQuestions || limit < all.length ? shuffled(all).slice(0, limit) : all;
+            if (!e.shuffleQuestions)
+                pick = all.filter((q) => pick.includes(q)); // Zufallsauswahl, aber in der Reihenfolge der Prüfung
+        }
         const sh = { o: {}, m: {} };
         for (const q of pick) {
             if (q.type === 'ORDER')
@@ -284,7 +302,9 @@ let HrExamService = class HrExamService {
             questions: qs.map((q) => {
                 const auto = (0, shared_1.gradeAnswer)(q, answers[q.id]);
                 return {
-                    id: q.id, type: q.type, text: q.type === 'GAP' ? (0, shared_1.maskGaps)(q.text) : q.text, image: q.image, points: q.points, partial: q.partial,
+                    id: q.id, type: q.type, text: q.type === 'GAP' ? (0, shared_1.maskGaps)(q.text) : q.text, image: q.image, points: q.points, partial: q.partial, topic: q.topic, difficulty: q.difficulty, caseKind: q.caseKind,
+                    // Kriterienkatalog: Prüfer bewerten damit; Teilnehmer sehen ihn erst nach der Bewertung (bei Einsicht mit Lösungen)
+                    ...(grader || (graded && review === 'SOLUTIONS') ? { rubric: q.rubric, rubricAwarded: (a.rubricScores ?? {})[q.id] ?? null } : {}),
                     options: q.type === 'YESNO' || q.type === 'TEXT' || q.type === 'NUMBER' || q.type === 'GAP' ? [] : order(q.options, sh.o?.[q.id]),
                     matches: q.type === 'MATCH' ? order(q.matches, sh.m?.[q.id]) : [],
                     ...(graded && review !== 'NONE' && showScore ? { earned: stored?.[q.id] ?? auto } : {}),
@@ -293,7 +313,7 @@ let HrExamService = class HrExamService {
                     ...(grader ? { auto } : {}),
                 };
             }),
-            result: graded ? (showScore ? { score: a.score, maxScore: a.maxScore, percent: pctOf(a.score, a.maxScore), passed: a.passed, feedback: a.feedback } : { passed: a.passed, feedback: a.feedback }) : null,
+            result: graded ? (showScore ? { score: a.score, maxScore: a.maxScore, percent: pctOf(a.score, a.maxScore), passed: a.passed, feedback: a.feedback, weakTopics: a.weakTopics } : { passed: a.passed, feedback: a.feedback, weakTopics: a.weakTopics }) : null,
             gradedBy: grader ? nameOf(a.gradedById) : null, gradedAt: a.gradedAt,
             voided: a.status === 'VOIDED' ? { reason: a.voidReason, at: a.voidedAt, by: grader ? nameOf(a.voidedById) : null } : null,
         };
@@ -326,7 +346,8 @@ let HrExamService = class HrExamService {
         const score = round(scores.reduce((n, s) => n + (s ?? 0), 0));
         const passed = auto ? maxScore > 0 && (score / maxScore) * 100 >= a.exam.passPercent : null;
         const questionScores = Object.fromEntries(qs.map((q, i) => [q.id, scores[i] ?? 0]));
-        await this.prisma.hrExamAttempt.update({ where: { id: attemptId }, data: { answers: final, submittedAt: new Date(), status: auto ? 'GRADED' : 'SUBMITTED', maxScore, ...(auto ? { score, passed, gradedAt: new Date(), questionScores } : {}) } });
+        const weakTopics = auto ? (0, shared_1.weakTopicsOf)(qs, questionScores, a.exam.passPercent) : [];
+        await this.prisma.hrExamAttempt.update({ where: { id: attemptId }, data: { answers: final, submittedAt: new Date(), status: auto ? 'GRADED' : 'SUBMITTED', maxScore, ...(auto ? { score, passed, gradedAt: new Date(), questionScores, weakTopics } : {}) } });
         await this.core.audit.record(actor, { action: forced ? 'exam.timeout' : 'exam.submit', module: 'exam', entityType: 'HrExamAttempt', entityId: attemptId, after: auto ? { score, maxScore, passed } : { waiting: true } });
         if (auto)
             await this.afterGrade(attemptId, false);
@@ -354,12 +375,22 @@ let HrExamService = class HrExamService {
             throw new errors_1.AppError('CONFLICT', 'Annullierte Versuche werden nicht bewertet.');
         const qs = this.questionsOf(a, a.exam);
         const answers = a.answers;
-        const questionScores = Object.fromEntries(qs.map((q) => [q.id, round(Math.max(0, Math.min(q.points, d.scores[q.id] ?? (0, shared_1.gradeAnswer)(q, answers[q.id]) ?? 0)))]));
+        // Kriterienkatalog: vergebene Kriterien ergeben die Punkte der Frage (nachvollziehbar gespeichert); sonst die eingetragene Punktzahl
+        const criteria = d.criteria ?? {};
+        const rubricScores = {};
+        for (const q of qs) {
+            const given = criteria[q.id];
+            if (!q.rubric.length || !given)
+                continue;
+            rubricScores[q.id] = Object.fromEntries(q.rubric.map((r) => [r.id, round(Math.max(0, Math.min(r.points, given[r.id] ?? 0)))]));
+        }
+        const questionScores = Object.fromEntries(qs.map((q) => [q.id, rubricScores[q.id] ? (0, shared_1.rubricScore)(q, rubricScores[q.id]) : round(Math.max(0, Math.min(q.points, d.scores[q.id] ?? (0, shared_1.gradeAnswer)(q, answers[q.id]) ?? 0)))]));
         const score = round(Object.values(questionScores).reduce((n, s) => n + s, 0));
         const maxScore = qs.reduce((n, q) => n + q.points, 0);
         const passed = maxScore > 0 && (score / maxScore) * 100 >= a.exam.passPercent;
         const wasPassed = a.status === 'GRADED' && a.passed === true;
-        await this.prisma.hrExamAttempt.update({ where: { id: attemptId }, data: { score, maxScore, passed, questionScores, status: 'GRADED', gradedById: actor.userId, gradedAt: new Date(), feedback: d.feedback?.trim() || null } });
+        const weakTopics = (0, shared_1.weakTopicsOf)(qs, questionScores, a.exam.passPercent);
+        await this.prisma.hrExamAttempt.update({ where: { id: attemptId }, data: { score, maxScore, passed, questionScores, rubricScores: rubricScores, weakTopics, status: 'GRADED', gradedById: actor.userId, gradedAt: new Date(), feedback: d.feedback?.trim() || null } });
         await this.core.audit.record(actor, { action: a.status === 'GRADED' ? 'exam.regrade' : 'exam.grade', module: 'exam', entityType: 'HrExamAttempt', entityId: attemptId, before: { score: a.score, passed: a.passed }, after: { score, maxScore, passed } });
         await this.prisma.notification.create({ data: { userId: a.personnel.userId, type: 'PERSONNEL', title: `📝 Prüfung bewertet: ${a.exam.title}`.slice(0, 200), body: passed ? 'Bestanden 🟢' : 'Nicht bestanden 🔴', entityType: 'HrExamAttempt', entityId: attemptId } });
         // offene „Zu bewerten“-Hinweise der Prüfer erledigt
@@ -390,7 +421,8 @@ let HrExamService = class HrExamService {
     async afterGrade(attemptId, wasPassed) {
         const a = await this.prisma.hrExamAttempt.findUniqueOrThrow({ where: { id: attemptId }, include: { exam: true, personnel: { include: { user: { select: { displayName: true } } } } } });
         const pct = pctOf(a.score, a.maxScore) ?? 0;
-        await this.prisma.personnelRecord.create({ data: { personnelId: a.personnelId, type: 'EXAM', summary: `Prüfung „${a.exam.title}“: ${a.passed ? 'bestanden' : 'nicht bestanden'} (${pct} %)`, data: { examId: a.examId, attemptId: a.id, score: a.score, maxScore: a.maxScore, passed: a.passed }, createdById: a.gradedById ?? a.personnel.userId } });
+        // Ergebnis + Feedback + zu wiederholende Themen dauerhaft in der Personalakte (Bestehen löst keine Beförderung aus)
+        await this.prisma.personnelRecord.create({ data: { personnelId: a.personnelId, type: 'EXAM', summary: `Prüfung „${a.exam.title}“: ${a.passed ? 'bestanden' : 'nicht bestanden'} (${pct} %)`, details: a.feedback, data: { examId: a.examId, attemptId: a.id, score: a.score, maxScore: a.maxScore, passed: a.passed, weakTopics: a.weakTopics, gradedById: a.gradedById }, createdById: a.gradedById ?? a.personnel.userId } });
         if (!a.passed || wasPassed)
             return;
         await this.core.notify('exam.passed', { memberUserId: a.personnel.userId, title: `📝 Prüfung bestanden: ${a.exam.title}`, entityType: 'Personnel', entityId: a.personnelId, publicText: `**${a.personnel.user.displayName}** hat die Prüfung **${a.exam.title}** bestanden.`, dmText: `Glückwunsch! Du hast die Prüfung **${a.exam.title}** bestanden (${pct} %).`, color: 0x22c55e });
@@ -402,6 +434,57 @@ let HrExamService = class HrExamService {
             if (!t || t.status === 'NOT_STARTED')
                 await this.prisma.hrTrainingProgress.upsert({ where: { trainingId_personnelId: { trainingId: a.exam.trainingId, personnelId: a.personnelId } }, create: { trainingId: a.exam.trainingId, personnelId: a.personnelId, status: 'IN_PROGRESS', progress, startedAt: new Date() }, update: { status: 'IN_PROGRESS', progress } });
         }
+    }
+    /** Schwache Themen: aus dem jeweils letzten bewerteten Versuch je Prüfung (später bestandene Themen fallen damit heraus). */
+    async weakTopicsFor(personnelId) {
+        const graded = await this.prisma.hrExamAttempt.findMany({ where: { personnelId, status: 'GRADED' }, orderBy: { gradedAt: 'desc' }, select: { examId: true, weakTopics: true } });
+        const seen = new Set();
+        const out = new Set();
+        for (const g of graded) {
+            if (seen.has(g.examId))
+                continue;
+            seen.add(g.examId);
+            g.weakTopics.forEach((t) => out.add(t));
+        }
+        return [...out].sort((a, b) => a.localeCompare(b, 'de'));
+    }
+    /** Ausbildungs- und Prüfungsfortschritt eines Beamten: je Prüfung Versuche/Ergebnis, offene Themen, Ausbildungen. */
+    async progress(personnelId) {
+        const p = await this.prisma.personnel.findUnique({ where: { id: personnelId }, include: { user: { select: { displayName: true } } } });
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
+        const [attempts, trainings] = await Promise.all([
+            this.prisma.hrExamAttempt.findMany({ where: { personnelId }, include: { exam: { select: { id: true, title: true, passPercent: true, maxAttempts: true, category: true } } }, orderBy: { startedAt: 'asc' } }),
+            this.prisma.hrTrainingProgress.findMany({ where: { personnelId }, include: { training: { select: { id: true, name: true, modules: true } } }, orderBy: { updatedAt: 'desc' } }),
+        ]);
+        const byExam = new Map();
+        for (const a of attempts)
+            byExam.set(a.examId, [...(byExam.get(a.examId) ?? []), a]);
+        const exams = [...byExam.values()].map((list) => {
+            const e = list[0].exam;
+            const counted = list.filter((a) => a.status !== 'VOIDED' && a.status !== 'IN_PROGRESS');
+            const graded = list.filter((a) => a.status === 'GRADED');
+            const last = graded[graded.length - 1];
+            return {
+                examId: e.id, title: e.title, category: e.category, passPercent: e.passPercent, attemptsUsed: counted.length, attemptsLeft: Math.max(0, e.maxAttempts - counted.length),
+                passed: graded.some((a) => a.passed), bestPercent: graded.length ? Math.max(...graded.map((a) => pctOf(a.score, a.maxScore) ?? 0)) : null,
+                pending: list.some((a) => a.status === 'SUBMITTED'), lastAt: last?.gradedAt ?? null, lastPercent: last ? pctOf(last.score, last.maxScore) : null, weakTopics: last?.weakTopics ?? [], feedback: last?.feedback ?? null,
+                history: list.map((a) => ({ id: a.id, status: a.status, percent: pctOf(a.score, a.maxScore), passed: a.passed, startedAt: a.startedAt, gradedAt: a.gradedAt })),
+            };
+        });
+        const done = trainings.filter((t) => t.status === 'PASSED').length;
+        return {
+            personnelId, name: p.user.displayName, rank: p.rank, weakTopics: await this.weakTopicsFor(personnelId), exams,
+            trainings: trainings.map((t) => ({ id: t.id, trainingId: t.trainingId, name: t.training.name, status: t.status, progress: t.progress, modules: t.training.modules.length, doneModules: t.doneModules.length, completedAt: t.completedAt, expiresAt: t.expiresAt })),
+            summary: { examsPassed: exams.filter((x) => x.passed).length, examsTotal: exams.length, trainingsPassed: done, trainingsTotal: trainings.length },
+        };
+    }
+    /** Eigener Fortschritt (Personalakte des angemeldeten Benutzers). */
+    async myProgress(actor) {
+        const me = await this.me(actor);
+        if (!me)
+            throw new errors_1.AppError('NOT_FOUND', 'Du hast noch keine Personalakte.');
+        return this.progress(me.id);
     }
     // ---------------- Bewertung & Auswertung ----------------
     /** Versuche (ohne Antworten) für Prüfer: alle Prüfungen mit exam.grade/exam.manage, sonst nur die eigenen Prüfer-Prüfungen. */

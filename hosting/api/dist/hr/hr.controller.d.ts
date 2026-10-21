@@ -8,6 +8,7 @@ import { HrTrainingService, trainingSchema } from './hr-training.service';
 import { HrExamService } from './hr-exam.service';
 import { ServiceNumbersService } from './service-numbers.service';
 import { HrTrainingSessionsService } from './hr-training-sessions.service';
+import { HrCareerService } from './hr-career.service';
 declare const reason: z.ZodObject<{
     reason: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
@@ -97,7 +98,7 @@ declare const record: z.ZodObject<{
     awardId: z.ZodOptional<z.ZodString>;
     attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    type: "NOTE" | "AWARD" | "RECOMMENDATION" | "WARNING";
+    type: "NOTE" | "WARNING" | "AWARD" | "RECOMMENDATION";
     summary: string;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
@@ -106,7 +107,7 @@ declare const record: z.ZodObject<{
     severity?: string | undefined;
     awardId?: string | undefined;
 }, {
-    type: "NOTE" | "AWARD" | "RECOMMENDATION" | "WARNING";
+    type: "NOTE" | "WARNING" | "AWARD" | "RECOMMENDATION";
     summary: string;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
@@ -137,7 +138,8 @@ declare const editRecord: z.ZodObject<{
 export declare class HrController {
     private readonly core;
     private readonly people;
-    constructor(core: HrCoreService, people: HrPeopleService);
+    private readonly careers;
+    constructor(core: HrCoreService, people: HrPeopleService, careers: HrCareerService);
     config(): Promise<{
         promotion: {
             stages: {
@@ -615,6 +617,8 @@ export declare class HrController {
             shuffle: import("@prisma/client/runtime/library").JsonValue;
             flagged: string[];
             questionScores: import("@prisma/client/runtime/library").JsonValue | null;
+            rubricScores: import("@prisma/client/runtime/library").JsonValue | null;
+            weakTopics: string[];
             voidedAt: Date | null;
             maxScore: number | null;
             gradedAt: Date | null;
@@ -660,6 +664,25 @@ export declare class HrController {
             awards: number;
             warnings: number;
         };
+    }>;
+    /** Digitale Beamtenlaufbahn: chronologische Personalhistorie mit Beförderungsvoraussetzungen */
+    career(a: Actor, id: string): Promise<{
+        personnelId: string;
+        name: string;
+        rank: string | null;
+        rankSince: Date;
+        department: string | null;
+        joinDate: Date;
+        status: string;
+        totals: {
+            dutyMinutes: number;
+            reports: number;
+            incidentsCreated: number;
+            promotions: number;
+            trainings: number;
+        };
+        next: import("@enrp/shared").PromotionCheck[];
+        entries: import("./hr-career.service").CareerEntry[];
     }>;
     update(a: Actor, id: string, b: z.infer<typeof updateP>): Promise<{
         serverId: string | null;
@@ -1253,13 +1276,16 @@ declare const answersBody: z.ZodObject<{
 }>;
 declare const gradeBody: z.ZodObject<{
     scores: z.ZodRecord<z.ZodString, z.ZodNumber>;
+    criteria: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodRecord<z.ZodString, z.ZodNumber>>>;
     feedback: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     scores: Record<string, number>;
     feedback?: string | undefined;
+    criteria?: Record<string, Record<string, number>> | undefined;
 }, {
     scores: Record<string, number>;
     feedback?: string | undefined;
+    criteria?: Record<string, Record<string, number>> | undefined;
 }>;
 declare const examPost: z.ZodObject<{
     channelId: z.ZodString;
@@ -1340,16 +1366,29 @@ export declare class HrExamController {
     detail(a: Actor, id: string): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
             text: string;
             id: string;
             image: string | null;
             partial: boolean;
+            points: number;
             matches: string[];
             correct: string[];
-            points: number;
             tolerance: number;
             explanation: string | null;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+            rubric: {
+                label: string;
+                id: string;
+                points: number;
+            }[];
+        }[];
+        drawRules: {
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD" | null;
+            count: number;
         }[];
         attemptCount: number;
         serverId: string | null;
@@ -1383,16 +1422,24 @@ export declare class HrExamController {
     create(a: Actor, b: ExamInput): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
             text: string;
             id: string;
             image: string | null;
             partial: boolean;
+            points: number;
             matches: string[];
             correct: string[];
-            points: number;
             tolerance: number;
             explanation: string | null;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+            rubric: {
+                label: string;
+                id: string;
+                points: number;
+            }[];
         }[];
         serverId: string | null;
         id: string;
@@ -1404,6 +1451,7 @@ export declare class HrExamController {
         active: boolean;
         instructions: string | null;
         questionCount: number;
+        drawRules: import("@prisma/client/runtime/library").JsonValue;
         passPercent: number;
         timeLimitMin: number | null;
         maxAttempts: number;
@@ -1425,16 +1473,24 @@ export declare class HrExamController {
     save(a: Actor, id: string, b: ExamInput): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
             text: string;
             id: string;
             image: string | null;
             partial: boolean;
+            points: number;
             matches: string[];
             correct: string[];
-            points: number;
             tolerance: number;
             explanation: string | null;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+            rubric: {
+                label: string;
+                id: string;
+                points: number;
+            }[];
         }[];
         serverId: string | null;
         id: string;
@@ -1446,6 +1502,7 @@ export declare class HrExamController {
         active: boolean;
         instructions: string | null;
         questionCount: number;
+        drawRules: import("@prisma/client/runtime/library").JsonValue;
         passPercent: number;
         timeLimitMin: number | null;
         maxAttempts: number;
@@ -1477,6 +1534,7 @@ export declare class HrExamController {
         instructions: string | null;
         questions: import("@prisma/client/runtime/library").JsonValue;
         questionCount: number;
+        drawRules: import("@prisma/client/runtime/library").JsonValue;
         passPercent: number;
         timeLimitMin: number | null;
         maxAttempts: number;
@@ -1587,12 +1645,6 @@ export declare class HrExamController {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -1601,6 +1653,21 @@ export declare class HrExamController {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -1608,9 +1675,11 @@ export declare class HrExamController {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -1678,12 +1747,6 @@ export declare class HrExamController {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -1692,6 +1755,21 @@ export declare class HrExamController {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -1699,9 +1777,11 @@ export declare class HrExamController {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -1743,12 +1823,6 @@ export declare class HrExamController {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -1757,6 +1831,21 @@ export declare class HrExamController {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -1764,9 +1853,11 @@ export declare class HrExamController {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -1810,12 +1901,6 @@ export declare class HrExamController {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -1824,6 +1909,21 @@ export declare class HrExamController {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -1831,9 +1931,11 @@ export declare class HrExamController {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -1875,12 +1977,6 @@ export declare class HrExamController {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -1889,6 +1985,21 @@ export declare class HrExamController {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -1896,9 +2007,11 @@ export declare class HrExamController {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;
@@ -1910,6 +2023,99 @@ export declare class HrExamController {
             at: Date | null;
             by: string | null;
         } | null;
+    }>;
+    /** Ausbildungs- und Prüfungsfortschritt eines Beamten (Personalakte) bzw. der eigene */
+    progress(id: string): Promise<{
+        personnelId: string;
+        name: string;
+        rank: string | null;
+        weakTopics: string[];
+        exams: {
+            examId: string;
+            title: string;
+            category: string | null;
+            passPercent: number;
+            attemptsUsed: number;
+            attemptsLeft: number;
+            passed: boolean;
+            bestPercent: number | null;
+            pending: boolean;
+            lastAt: Date | null;
+            lastPercent: number | null;
+            weakTopics: string[];
+            feedback: string | null;
+            history: {
+                id: string;
+                status: string;
+                percent: number | null;
+                passed: boolean | null;
+                startedAt: Date;
+                gradedAt: Date | null;
+            }[];
+        }[];
+        trainings: {
+            id: string;
+            trainingId: string;
+            name: string;
+            status: string;
+            progress: number;
+            modules: number;
+            doneModules: number;
+            completedAt: Date | null;
+            expiresAt: Date | null;
+        }[];
+        summary: {
+            examsPassed: number;
+            examsTotal: number;
+            trainingsPassed: number;
+            trainingsTotal: number;
+        };
+    }>;
+    myProgress(a: Actor): Promise<{
+        personnelId: string;
+        name: string;
+        rank: string | null;
+        weakTopics: string[];
+        exams: {
+            examId: string;
+            title: string;
+            category: string | null;
+            passPercent: number;
+            attemptsUsed: number;
+            attemptsLeft: number;
+            passed: boolean;
+            bestPercent: number | null;
+            pending: boolean;
+            lastAt: Date | null;
+            lastPercent: number | null;
+            weakTopics: string[];
+            feedback: string | null;
+            history: {
+                id: string;
+                status: string;
+                percent: number | null;
+                passed: boolean | null;
+                startedAt: Date;
+                gradedAt: Date | null;
+            }[];
+        }[];
+        trainings: {
+            id: string;
+            trainingId: string;
+            name: string;
+            status: string;
+            progress: number;
+            modules: number;
+            doneModules: number;
+            completedAt: Date | null;
+            expiresAt: Date | null;
+        }[];
+        summary: {
+            examsPassed: number;
+            examsTotal: number;
+            trainingsPassed: number;
+            trainingsTotal: number;
+        };
     }>;
     void(a: Actor, id: string, b: {
         reason: string;
@@ -1942,12 +2148,6 @@ export declare class HrExamController {
             explanation?: string | null | undefined;
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
-            id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
-            text: string;
-            image: string | null;
-            points: number;
-            partial: boolean;
             options: {
                 i: number;
                 text: string;
@@ -1956,6 +2156,21 @@ export declare class HrExamController {
                 i: number;
                 text: string;
             }[];
+            rubric?: {
+                label: string;
+                id: string;
+                points: number;
+            }[] | undefined;
+            rubricAwarded?: Record<string, number> | null | undefined;
+            id: string;
+            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP" | "CASE";
+            text: string;
+            image: string | null;
+            points: number;
+            partial: boolean;
+            topic: string | null;
+            difficulty: "MEDIUM" | "EASY" | "HARD";
+            caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
         }[];
         result: {
             score: number | null;
@@ -1963,9 +2178,11 @@ export declare class HrExamController {
             percent: number | null;
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
         } | {
             passed: boolean | null;
             feedback: string | null;
+            weakTopics: string[];
             score?: undefined;
             maxScore?: undefined;
             percent?: undefined;

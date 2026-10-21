@@ -80158,7 +80158,21 @@ var PERMISSION_CATALOG = {
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
    * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
    */
-  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"],
+  /** Lageassistent: view = Lageübersicht ansehen, create = Lageberichte erzeugen und speichern */
+  situation: ["view", "create"],
+  /** Digitale Beamtenlaufbahn: chronologische Personalhistorie einsehen (Beförderungen, Versetzungen, Prüfungen, Dienstzeiten …) */
+  career: ["view"],
+  /** Vorgangsverknüpfung: view = Vorgänge und Verknüpfungen sehen, manage = Vorgänge anlegen, Datensätze verknüpfen/lösen, Duplikate prüfen */
+  cases: ["view", "manage"],
+  /** Qualitätsprüfer: view = Prüfungen ausführen und Ergebnisse sehen, exception = begründete Ausnahmen dokumentieren, manage = Prüfregeln/Pflicht vor Abschluss einstellen */
+  quality: ["view", "exception", "manage"],
+  /** Personalbedarfs- und Aktivitätsprognose (sensible Personaldaten, nur Führungskräfte) */
+  forecast: ["view"],
+  /** Technische Überwachung: view = API-/Synchronisierungsstatus und Störungen, manage = Störungen quittieren, Wiederholung anstoßen, Alarmschwellen */
+  integrations: ["view", "manage"],
+  /** Daten-Backups: view = Liste/Ergebnisse, manage = erstellen, löschen, Zeitplan, Wiederherstellungstest; restore = Daten tatsächlich einspielen */
+  backups: ["view", "manage", "restore"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -80546,14 +80560,14 @@ function periodLabel(period2, start2) {
 var LINE_LONG = "\u23AF".repeat(20);
 var LINE_SHORT = "\u23AF".repeat(12);
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "situation", "integrations", "backups"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
-  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
+  { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte, Vorg\xE4nge, Qualit\xE4tspr\xFCfung", permissionPrefixes: ["reports", "dutyreports", "cases", "quality"] },
   { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
-  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave", "career", "forecast"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
@@ -80565,6 +80579,7 @@ var BOT_COMMAND_MODULES = {
   cad: "cad",
   bericht: "reports",
   dienstbericht: "reports",
+  vorgang: "reports",
   person: "mdt",
   kennzeichen: "mdt",
   fahndungen: "mdt",
@@ -80780,7 +80795,10 @@ var dnSettingsSchema = external_exports.object({
   /** Wechsel der Nummer braucht eine zweite Person (Genehmiger) */
   changeNeedsApprover: external_exports.boolean().default(false)
 });
-var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP", "CASE"];
+var EXAM_DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
+var EXAM_CASE_KINDS = ["TRAFFIC_STOP", "ARREST", "LEADERSHIP", "OTHER"];
+var rubricItemSchema = external_exports.object({ id: external_exports.string().min(1).max(40), label: external_exports.string().trim().min(1).max(300), points: external_exports.number().min(0).max(100) });
 var questionSchema = external_exports.object({
   id: external_exports.string().min(1).max(40),
   type: external_exports.enum(EXAM_QUESTION_TYPES),
@@ -80799,8 +80817,16 @@ var questionSchema = external_exports.object({
   /** Erklärung, die nach der Bewertung (Einsicht mit Lösungen) angezeigt wird */
   explanation: external_exports.string().max(2e3).nullable().default(null),
   /** optionales Bild (nur https) */
-  image: external_exports.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null)
+  image: external_exports.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null),
+  /** Thema (z. B. „Verkehrskontrolle“, „Festnahme“, „Rechtsgrundlagen“) – für Zufallsauswahl und Wiederholung schwacher Themen */
+  topic: external_exports.string().trim().max(60).nullable().default(null),
+  difficulty: external_exports.enum(EXAM_DIFFICULTIES).default("MEDIUM"),
+  /** Fallbeispiel-Art (nur CASE) */
+  caseKind: external_exports.enum(EXAM_CASE_KINDS).nullable().default(null),
+  /** Kriterienkatalog für die manuelle Bewertung (Freitext ohne Stichworte und Fallbeispiele) */
+  rubric: external_exports.array(rubricItemSchema).max(20).default([])
 });
+var drawRuleSchema = external_exports.object({ topic: external_exports.string().trim().max(60).nullable().default(null), difficulty: external_exports.enum(EXAM_DIFFICULTIES).nullable().default(null), count: external_exports.number().int().min(1).max(200) });
 var EXAM_REVIEW_MODES = ["NONE", "ANSWERS", "SOLUTIONS"];
 var EXAM_LAYOUTS = ["PAGED", "LIST"];
 var isoDate = external_exports.string().datetime({ offset: true });
@@ -80812,6 +80838,8 @@ var examSchema = external_exports.object({
   category: external_exports.string().trim().max(60).nullable().default(null),
   questions: external_exports.array(questionSchema).max(200).default([]),
   questionCount: external_exports.number().int().min(0).max(200).default(0),
+  /** Zufällige Zusammenstellung nach Thema/Schwierigkeit (leer = `questionCount` bzw. alle Fragen) */
+  drawRules: external_exports.array(drawRuleSchema).max(30).default([]),
   passPercent: external_exports.number().int().min(1).max(100).default(70),
   timeLimitMin: external_exports.number().int().min(1).max(600).nullable().default(null),
   maxAttempts: external_exports.number().int().min(1).max(50).default(3),
@@ -80850,7 +80878,9 @@ var backupConfigSchema = external_exports.object({
   /** Discord-Server täglich automatisch sichern */
   discordAuto: external_exports.boolean().default(false),
   /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
-  keep: external_exports.number().int().min(1).max(60).default(14)
+  keep: external_exports.number().int().min(1).max(60).default(14),
+  /** Täglicher Wiederherstellungstest des neuesten Daten-Backups (nachts 03–05 Uhr; Schreibzugriffe warten währenddessen kurz) */
+  verifyAuto: external_exports.boolean().default(false)
 });
 var option = external_exports.object({ key: external_exports.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: external_exports.string().trim().min(1).max(40) });
 var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
@@ -81111,6 +81141,24 @@ function aiCheck(answers, durationSec) {
     flagged: [...flagged].sort((a, b) => a - b)
   };
 }
+var qualityConfigSchema = external_exports.object({
+  /** Bericht erst einreichen, wenn keine Fehler (ohne dokumentierte Ausnahme) offen sind */
+  enforceReportSubmit: external_exports.boolean().default(false),
+  /** Einsatz erst abschließen, wenn keine Fehler (ohne dokumentierte Ausnahme) offen sind */
+  enforceIncidentClose: external_exports.boolean().default(false),
+  /** Mindestlänge des Berichtstexts (Zeichen) – kürzer = Warnung */
+  reportMinLength: external_exports.number().int().min(0).max(5e3).default(80),
+  /** Berichtsarten, die eine Einsatznummer brauchen */
+  reportTypesRequiringIncident: external_exports.array(external_exports.string().max(32)).max(20).default(["INCIDENT", "ARREST", "TRAFFIC", "COLLISION"]),
+  /** Mindestlänge der Fahndungsbeschreibung (Zeichen) – kürzer = Warnung */
+  wantedMinDescription: external_exports.number().int().min(0).max(2e3).default(30),
+  /** Abgeschlossener Einsatz ohne Bericht: aus, Warnung oder Fehler */
+  incidentReportRequired: external_exports.enum(["OFF", "WARNING", "ERROR"]).default("WARNING"),
+  /** Entwurf gilt nach so vielen Stunden als liegen geblieben (0 = aus) */
+  staleDraftHours: external_exports.number().int().min(0).max(24 * 30).default(48),
+  /** Offener Einsatz ohne Änderung nach so vielen Stunden (0 = aus) */
+  staleIncidentHours: external_exports.number().int().min(0).max(24 * 30).default(6)
+});
 
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
@@ -84222,7 +84270,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
         { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
         { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`" },
-        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Leitung & Team", value: "`/lage` `/vorgang` `/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -84422,6 +84470,49 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
         const lines = on.slice(0, 25).map((r) => `\u2022 **${plain2(r.callsign ?? "\u2014")}** ${plain2(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain2(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
         return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "lage",
+    description: "Lage\xFCbersicht (nur F\xFChrung): Personal, Eins\xE4tze, Fahndungen, Berichte, St\xF6rungen",
+    async run(c) {
+      try {
+        const o = await c.api.asUser(c.discordId, "GET", "/situation");
+        const open = o.tasks.items.filter((t) => t.count > 0);
+        return { ephemeral: true, embeds: [{ title: "\u{1F9ED} Lage", color: o.critical.length ? COLORS.danger : COLORS.info, description: o.critical.length ? clip2(o.critical.slice(0, 8).map((x) => `\u26A0\uFE0F ${plain2(x.text)}`).join("\n"), 2e3) : "Keine kritischen Vorg\xE4nge.", fields: [
+          { name: "Personal", value: `${o.officers.onDuty} im Dienst \xB7 ${o.officers.available} ohne Einheit`, inline: true },
+          { name: "Eins\xE4tze", value: `${o.incidents.total} aktiv \xB7 ${o.incidents.unassigned} ohne Einheit`, inline: true },
+          { name: "Einheiten", value: `${o.units.assigned.length} im Einsatz / ${o.units.total}`, inline: true },
+          { name: "Fahndungen", value: `${o.wanted.total} aktiv \xB7 ${o.wanted.hitsToReview} Treffer zu pr\xFCfen`, inline: true },
+          { name: "Berichte", value: `${o.reports.incomplete.length} unvollst\xE4ndig`, inline: true },
+          { name: "St\xF6rungen", value: clip2(o.disruptions.items.map((d) => `${plain2(d.sourceName ?? d.source)}: ${plain2(d.message)}`).join("\n") || "keine", 1024) },
+          { name: "Offene Aufgaben", value: clip2(open.map((t) => `${plain2(t.label)}: ${t.count}`).join("\n") || "keine", 1024) }
+        ], footer: `Datenstand ${new Date(o.generatedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} \xB7 nur erfasste Daten` }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "vorgang",
+    description: "Zeigt einen Vorgang (Vorgangs- oder Einsatznummer)",
+    options: [{ name: "nummer", description: "z. B. V-2026-00001 oder Einsatznummer E-2026-00012", type: "string", required: true, maxLength: 40 }],
+    async run(c) {
+      try {
+        const n = str3(c, "nummer");
+        const byCase = await c.api.asUser(c.discordId, "GET", `/cases?q=${q(n)}&pageSize=10`);
+        let hit = byCase.items.find((x) => String(x.number).toLowerCase() === n.toLowerCase());
+        if (!hit) hit = (await c.api.asUser(c.discordId, "GET", `/cases?incidentNumber=${q(n)}&pageSize=10`)).items[0];
+        if (!hit) return errorReply(`Kein Vorgang zu \u201E${plain2(n)}\u201C gefunden.`);
+        const d = await c.api.asUser(c.discordId, "GET", `/cases/${hit.id}`);
+        return { ephemeral: true, embeds: [{ title: clip2(`\u{1F5C2}\uFE0F ${d.number} \u2014 ${plain2(d.title)}`, 256), color: COLORS.info, fields: [
+          { name: "Status", value: plain2(d.statusLabel), inline: true },
+          { name: `Verkn\xFCpft (${d.links.length})`, value: clip2(d.links.map((l) => `\u2022 ${plain2(l.typeLabel)}: ${plain2(l.label)}`).join("\n") || "\u2014", 1024) },
+          { name: "Letzte Ereignisse", value: clip2(d.events.slice(-6).map((e) => `\u2022 ${plain2(e.text)}`).join("\n") || "\u2014", 1024) }
+        ] }] };
       } catch (e) {
         return mapError(e);
       }

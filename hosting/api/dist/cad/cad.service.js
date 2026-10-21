@@ -25,6 +25,7 @@ const cad_config_service_1 = require("./cad-config.service");
 const cad_notify_service_1 = require("./cad-notify.service");
 const locks_service_1 = require("../locks/locks.service");
 const fleet_service_1 = require("../fleet/fleet.service");
+const quality_service_1 = require("../quality/quality.service");
 const unitInclude = { members: true, incidents: { where: { clearedAt: null }, include: { incident: { select: { id: true, number: true, title: true, status: true } } } } };
 const incidentInclude = { units: { include: { unit: { select: { id: true, callsign: true, name: true, type: true, status: true } } } } };
 /** Notruf mit Position außerhalb der ER:LC-Karte (ältere Daten): Position des POI zum Ortsnamen oder der PLZ, sonst keine. */
@@ -44,7 +45,8 @@ let CadService = class CadService {
     notify;
     locks;
     fleet;
-    constructor(prisma, audit, perms, rt, timeline, cfg, notify, locks, fleet) {
+    quality;
+    constructor(prisma, audit, perms, rt, timeline, cfg, notify, locks, fleet, quality) {
         this.prisma = prisma;
         this.audit = audit;
         this.perms = perms;
@@ -54,6 +56,7 @@ let CadService = class CadService {
         this.notify = notify;
         this.locks = locks;
         this.fleet = fleet;
+        this.quality = quality;
     }
     // ───────── Hilfen ─────────
     label(list, key) {
@@ -74,7 +77,11 @@ let CadService = class CadService {
         const rows = await this.prisma.incident.findMany({ where: { status: { in: closed }, OR: [{ closedAt: { lt: before } }, { closedAt: null, updatedAt: { lt: before } }] }, select: { id: true } });
         if (!rows.length)
             return 0;
-        const ids = rows.map((r) => r.id);
+        // Einsätze, die mit einem Vorgang verknüpft sind, bleiben erhalten (Vorgangsakte muss nachvollziehbar bleiben)
+        const linked = new Set((await this.prisma.caseLink.findMany({ where: { entityType: 'INCIDENT', entityId: { in: rows.map((r) => r.id) }, removedAt: null }, select: { entityId: true } })).map((l) => l.entityId));
+        const ids = rows.map((r) => r.id).filter((id) => !linked.has(id));
+        if (!ids.length)
+            return 0;
         // Kennzahlen bleiben für die Statistik (ältere Einsätze ohne Eintrag werden hier nachgetragen)
         await this.prisma.$transaction((tx) => this.archiveStats(tx, ids, true));
         await this.prisma.$transaction([
@@ -301,6 +308,9 @@ let CadService = class CadService {
         if (inc.status === status)
             return inc;
         await this.assertStatusAllowed(actor, cfg, inc.status, status);
+        // Pflichtangaben vor dem Abschluss (nur wenn unter Qualitätsprüfer → Einstellungen aktiviert); Abbrechen (Fehlalarm) bleibt immer möglich
+        if (st.closed && status !== 'CANCELLED' && !cfg.incidentStatuses.find((x) => x.key === inc.status)?.closed)
+            await this.quality.assertIncidentClosable(id);
         const after = await this.prisma.$transaction(async (tx) => {
             const row = await tx.incident.update({ where: { id }, data: { status, closedAt: st.closed ? new Date() : null, version: { increment: 1 } } });
             if (st.closed) {
@@ -825,12 +835,36 @@ let CadService = class CadService {
                     if (p.team?.toLowerCase() !== 'sheriff')
                         players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
             }
+        // Verknüpfte Vorgänge (direkt aus der Karte öffnen) – nur mit Leserecht auf Vorgänge
+        const casesAllowed = await this.perms.has(actor.userId, 'cases.view');
+        const links = casesAllowed ? await this.prisma.caseLink.findMany({ where: { removedAt: null, OR: [{ entityType: 'INCIDENT', entityId: { in: incidents.map((i) => i.id) } }, { entityType: 'CALL', entityId: { in: calls.map((c) => c.id) } }] }, select: { entityType: true, entityId: true, case: { select: { id: true, number: true, title: true, status: true } } } }) : [];
+        const casesOf = (type, id) => links.filter((l) => l.entityType === type && l.entityId === id).map((l) => l.case);
+        const staleHours = (await this.quality.config()).staleIncidentHours;
+        const lastSync = new Map(servers.map((s) => [s.id, s.status === 'CONNECTED' ? s.lastSyncAt : null]));
+        const now = Date.now();
+        const placedCalls = calls.map((c) => {
+            const p = placeCall(c, objects);
+            // Notruf fehlt im letzten erfolgreichen Abruf → in ER:LC nicht mehr gemeldet (bleibt sichtbar, aber als veraltet gekennzeichnet).
+            // lastSeenAt wird bei jedem Abruf NACH lastSyncAt gesetzt – älter als der letzte Abruf heißt: dort nicht mehr enthalten.
+            const synced = lastSync.get(c.serverId);
+            // Ohne lastSeenAt (Altbestand vor dieser Funktion) ist es unbekannt – dann wird nichts behauptet.
+            const notReported = !!synced && !!c.lastSeenAt && c.lastSeenAt.getTime() < synced.getTime();
+            const positionSource = p.mapX === null ? 'NONE' : p.mapX !== c.mapX || p.mapZ !== c.mapZ ? 'POI' : c.positionSource;
+            return { ...p, positionSource, notReported, cases: casesOf('CALL', c.id) };
+        });
+        const withIncidentMeta = incidents.map((i) => ({ ...i, stale: staleHours > 0 && now - i.updatedAt.getTime() > staleHours * 3_600_000, cases: casesOf('INCIDENT', i.id) }));
         return {
-            incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),
+            incidents: withIncidentMeta.filter((i) => i.mapX !== null && i.mapZ !== null),
             // ältere Notrufe mit Position außerhalb der Karte: POI zum Ortsnamen, sonst ohne Marker
-            calls: calls.map((c) => placeCall(c, objects)).filter((c) => c.mapX !== null && c.mapZ !== null),
+            calls: placedCalls.filter((c) => c.mapX !== null && c.mapZ !== null),
             units: units.filter((u) => u.position), objects, players, vehicles,
             stale: servers.some((s) => s.status !== 'CONNECTED'),
+            erlc: servers.map((s) => ({ id: s.id, name: s.name, status: s.status, lastSyncAt: s.lastSyncAt })),
+            // Ohne genaue Position: nie raten, sondern ausdrücklich auflisten
+            unplaced: {
+                incidents: withIncidentMeta.filter((i) => i.mapX === null || i.mapZ === null).map((i) => ({ id: i.id, number: i.number, title: i.title, priority: i.priority, status: i.status, type: i.type, location: i.location, cases: i.cases })),
+                calls: placedCalls.filter((c) => c.mapX === null || c.mapZ === null).map((c) => ({ id: c.id, callNumber: c.callNumber, description: c.description, positionDescriptor: c.positionDescriptor, status: c.status, startedAt: c.startedAt, notReported: c.notReported, cases: c.cases })),
+            },
         };
     }
 };
@@ -839,7 +873,7 @@ exports.CadService = CadService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, permission_service_1.PermissionService, realtime_service_1.RealtimeService,
         timeline_service_1.TimelineService, cad_config_service_1.CadConfigService, cad_notify_service_1.CadNotifyService, locks_service_1.LocksService,
-        fleet_service_1.FleetService])
+        fleet_service_1.FleetService, quality_service_1.QualityService])
 ], CadService);
 /** Punkt-in-Polygon (Strahlverfahren). */
 function inside(x, z, pts) {

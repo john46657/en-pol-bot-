@@ -264,6 +264,8 @@ export declare class HrPeopleService {
             shuffle: Prisma.JsonValue;
             flagged: string[];
             questionScores: Prisma.JsonValue | null;
+            rubricScores: Prisma.JsonValue | null;
+            weakTopics: string[];
             voidedAt: Date | null;
             maxScore: number | null;
             gradedAt: Date | null;

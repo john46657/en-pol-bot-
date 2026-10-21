@@ -31,7 +31,7 @@ afterAll(async () => { await app.close(); });
 describe('Berechtigungen (Standard: verweigert, serverseitig geprüft)', () => {
   it('ohne ausdrückliches Recht gibt es keinen Zugriff', async () => {
     for (const [method, path] of [['get', '/situation'], ['post', '/situation/reports'], ['get', '/cases'], ['post', '/cases'], ['get', '/quality/overview'], ['put', '/quality/config'], ['get', '/forecast'], ['get', '/integrations/overview'], ['get', '/backups/data'], ['post', '/backups/data']] as const) {
-      const r = await (member as unknown as Record<string, (p: string) => { send: (b: unknown) => Promise<{ status: number }> }>)[method](`/api/v1${path}`).send({});
+      const r = await member[method](`/api/v1${path}`).send({});
       expect([403], `${method} ${path}`).toContain(r.status);
     }
   });

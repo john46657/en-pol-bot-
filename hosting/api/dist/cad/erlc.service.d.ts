@@ -10,6 +10,7 @@ import { ErlcClient, type ErlcResult } from './erlc-client';
 import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
 import { ErlcWantedService } from './erlc-wanted.service';
+import { MonitorService } from '../integrations/monitor.service';
 export declare const erlcServerInput: z.ZodObject<{
     name: z.ZodString;
     serverRef: z.ZodOptional<z.ZodNullable<z.ZodString>>;
@@ -169,12 +170,13 @@ export declare class ErlcService {
     private readonly records;
     private readonly fleet;
     private readonly wanted;
+    private readonly monitor;
     private readonly log;
     readonly client: ErlcClient;
     private readonly rt;
     private webhookKey;
     private readonly seen;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService, fleet: FleetService, wanted: ErlcWantedService);
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, realtime: RealtimeService, notify: CadNotifyService, records: ErlcSyncService, fleet: FleetService, wanted: ErlcWantedService, monitor: MonitorService);
     /** Nur für Tests: andere Gegenstelle/Signaturschlüssel. */
     useClient(c: ErlcClient): void;
     useWebhookKey(spkiBase64: string): void;

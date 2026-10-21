@@ -98,7 +98,7 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Abfragen', value: '`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`' },
         { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
         { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`' },
-        { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
+        { name: 'Leitung & Team', value: '`/lage` `/vorgang` `/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
         { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
         { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
@@ -254,6 +254,43 @@ export const COMMANDS: CommandDef[] = [
         const on = rows.filter((r) => r.dutyStatus !== 'OFF_DUTY');
         const lines = on.slice(0, 25).map((r) => `• **${plain(r.callsign ?? '—')}** ${plain(r.name)} — ${label(r.dutyStatus)}${r.unit ? ` · ${plain((r.unit as Row).callsign)}` : ''}${r.currentIncident ? ` · 🚨 ${(r.currentIncident as Row).number}` : ''}`);
         return { ephemeral: true, embeds: [listEmbed(`👮 Im Dienst (${on.length} von ${rows.length})`, lines, 'Aktuell ist niemand im Dienst.')] };
+      } catch (e) { return mapError(e); }
+    },
+  },
+  {
+    name: 'lage', description: 'Lageübersicht (nur Führung): Personal, Einsätze, Fahndungen, Berichte, Störungen',
+    async run(c) {
+      try {
+        const o = await c.api.asUser<{ generatedAt: string; incidents: { total: number; unassigned: number }; officers: { onDuty: number; available: number }; units: { assigned: unknown[]; total: number }; wanted: { total: number; hitsToReview: number }; reports: { incomplete: unknown[]; byStatus: Record<string, number> }; disruptions: { items: { sourceName: string | null; source: string; message: string }[] }; tasks: { items: { label: string; count: number }[] }; critical: { text: string }[] }>(c.discordId, 'GET', '/situation');
+        const open = o.tasks.items.filter((t) => t.count > 0);
+        return { ephemeral: true, embeds: [{ title: '🧭 Lage', color: o.critical.length ? COLORS.danger : COLORS.info, description: o.critical.length ? clip(o.critical.slice(0, 8).map((x) => `⚠️ ${plain(x.text)}`).join('\n'), 2000) : 'Keine kritischen Vorgänge.', fields: [
+          { name: 'Personal', value: `${o.officers.onDuty} im Dienst · ${o.officers.available} ohne Einheit`, inline: true },
+          { name: 'Einsätze', value: `${o.incidents.total} aktiv · ${o.incidents.unassigned} ohne Einheit`, inline: true },
+          { name: 'Einheiten', value: `${o.units.assigned.length} im Einsatz / ${o.units.total}`, inline: true },
+          { name: 'Fahndungen', value: `${o.wanted.total} aktiv · ${o.wanted.hitsToReview} Treffer zu prüfen`, inline: true },
+          { name: 'Berichte', value: `${o.reports.incomplete.length} unvollständig`, inline: true },
+          { name: 'Störungen', value: clip(o.disruptions.items.map((d) => `${plain(d.sourceName ?? d.source)}: ${plain(d.message)}`).join('\n') || 'keine', 1024) },
+          { name: 'Offene Aufgaben', value: clip(open.map((t) => `${plain(t.label)}: ${t.count}`).join('\n') || 'keine', 1024) },
+        ], footer: `Datenstand ${new Date(o.generatedAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} · nur erfasste Daten` }] };
+      } catch (e) { return mapError(e); }
+    },
+  },
+  {
+    name: 'vorgang', description: 'Zeigt einen Vorgang (Vorgangs- oder Einsatznummer)',
+    options: [{ name: 'nummer', description: 'z. B. V-2026-00001 oder Einsatznummer E-2026-00012', type: 'string', required: true, maxLength: 40 }],
+    async run(c) {
+      try {
+        const n = str(c, 'nummer');
+        const byCase = await c.api.asUser<{ items: Row[] }>(c.discordId, 'GET', `/cases?q=${q(n)}&pageSize=10`);
+        let hit = byCase.items.find((x) => String(x.number).toLowerCase() === n.toLowerCase());
+        if (!hit) hit = (await c.api.asUser<{ items: Row[] }>(c.discordId, 'GET', `/cases?incidentNumber=${q(n)}&pageSize=10`)).items[0];
+        if (!hit) return errorReply(`Kein Vorgang zu „${plain(n)}“ gefunden.`);
+        const d = await c.api.asUser<{ number: string; title: string; statusLabel: string; links: { typeLabel: string; label: string }[]; events: { at: string; text: string }[] }>(c.discordId, 'GET', `/cases/${hit.id}`);
+        return { ephemeral: true, embeds: [{ title: clip(`🗂️ ${d.number} — ${plain(d.title)}`, 256), color: COLORS.info, fields: [
+          { name: 'Status', value: plain(d.statusLabel), inline: true },
+          { name: `Verknüpft (${d.links.length})`, value: clip(d.links.map((l) => `• ${plain(l.typeLabel)}: ${plain(l.label)}`).join('\n') || '—', 1024) },
+          { name: 'Letzte Ereignisse', value: clip(d.events.slice(-6).map((e) => `• ${plain(e.text)}`).join('\n') || '—', 1024) },
+        ] }] };
       } catch (e) { return mapError(e); }
     },
   },

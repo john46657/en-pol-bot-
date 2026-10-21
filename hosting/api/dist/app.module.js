@@ -73,6 +73,11 @@ const verification_module_1 = require("./verification/verification.module");
 const panels_module_1 = require("./discord-panels/panels.module");
 const duty_reports_module_1 = require("./duty-reports/duty-reports.module");
 const hr_module_1 = require("./hr/hr.module");
+const integrations_module_1 = require("./integrations/integrations.module");
+const quality_module_1 = require("./quality/quality.module");
+const cases_module_1 = require("./cases/cases.module");
+const situation_module_1 = require("./situation/situation.module");
+const forecast_module_1 = require("./forecast/forecast.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(request_id_middleware_1.RequestIdMiddleware, origin_middleware_1.OriginMiddleware, guild_context_1.GuildContextMiddleware).forRoutes('{*splat}');
@@ -86,6 +91,7 @@ exports.AppModule = AppModule = __decorate([
             core_1.DiscoveryModule, prisma_module_1.PrismaModule, authz_module_1.AuthzModule, audit_module_1.AuditModule, auth_module_1.AuthModule, users_module_1.UsersModule, persons_module_1.PersonsModule, vehicles_module_1.VehiclesModule, tickets_module_1.TicketsModule,
             dispatch_module_1.DispatchModule, reports_module_1.ReportsModule, complaints_module_1.ComplaintsModule, wanted_module_1.WantedModule,
             personnel_module_1.PersonnelModule, duty_module_1.DutyModule, applications_module_1.ApplicationsModule, application_bans_module_1.ApplicationBansModule, academy_module_1.AcademyModule, notifications_module_1.NotificationsModule, search_module_1.SearchModule, communication_module_1.CommunicationModule, analytics_module_1.AnalyticsModule, realtime_module_1.RealtimeModule, admin_module_1.AdminModule, export_module_1.ExportModule, media_module_1.MediaModule, studio_module_1.StudioModule, discord_module_1.DiscordModule, danger_module_1.DangerModule, radio_module_1.RadioModule, sek_module_1.SekModule, qualifications_module_1.QualificationsModule, tickets_module_2.SupportTicketsModule, leave_module_1.LeaveModule, roster_module_1.RosterModule, me_module_1.MeModule, radio_codes_module_1.RadioCodesModule, teamchance_module_1.TeamChanceModule, cad_module_1.CadModule, mdt_module_1.MdtModule, fleet_module_1.FleetModule, locks_module_1.LocksModule, workflows_module_1.WorkflowsModule, welcome_module_1.WelcomeModule, voice_support_module_1.VoiceSupportModule, embeds_module_1.EmbedsModule, message_builder_module_1.MessageBuilderModule, server_links_module_1.ServerLinksModule, multi_server_module_1.MultiServerModule, multi_server_restore_module_1.MultiServerRestoreModule, logging_module_1.LoggingModule, backup_module_1.BackupModule, verification_module_1.VerificationModule, panels_module_1.PanelsModule, duty_reports_module_1.DutyReportsModule, hr_module_1.HrModule,
+            integrations_module_1.IntegrationsModule, quality_module_1.QualityModule, cases_module_1.CasesModule, situation_module_1.SituationModule, forecast_module_1.ForecastModule,
         ],
         controllers: [health_controller_1.HealthController, audit_controller_1.AuditController],
         providers: [

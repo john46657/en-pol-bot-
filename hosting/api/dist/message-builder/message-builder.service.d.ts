@@ -693,7 +693,6 @@ export declare const createDocSchema: z.ZodObject<{
 }, {
     name: string;
     kind: "DRAFT" | "TEMPLATE";
-    categoryId?: string | null | undefined;
     data?: {
         messages?: {
             id: string;
@@ -771,6 +770,7 @@ export declare const createDocSchema: z.ZodObject<{
             avatarUrl?: string | undefined;
         } | undefined;
     } | undefined;
+    categoryId?: string | null | undefined;
 }>;
 export declare const updateDocSchema: z.ZodObject<{
     name: z.ZodString;
@@ -1380,7 +1380,6 @@ export declare const updateDocSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     version: number;
     name: string;
-    categoryId: string | null;
     data: {
         messages: {
             id: string;
@@ -1458,6 +1457,7 @@ export declare const updateDocSchema: z.ZodObject<{
             avatarUrl: string;
         };
     };
+    categoryId: string | null;
     channelId: string | null;
 }, {
     version: number;

@@ -2,7 +2,10 @@ import type { Response } from 'express';
 import { BACKUP_PARTS, type BackupConfig, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
 import { BackupService } from './backup.service';
 import type { Actor } from '../audit/audit.service';
-/** Administration → Backups. Daten-Backups enthalten alles (auch Konten) – nur mit settings.manage. */
+/**
+ * Administration → Backups. Eigene Rechte: backups.view (Liste, Verlauf), backups.manage (erstellen, herunterladen, löschen, Zeitplan,
+ * Wiederherstellungstest), backups.restore (tatsächlich einspielen). Daten-Backups enthalten alles (auch Konten).
+ */
 export declare class BackupController {
     private readonly s;
     constructor(s: BackupService);
@@ -10,13 +13,20 @@ export declare class BackupController {
         dataAuto: boolean;
         discordAuto: boolean;
         keep: number;
+        verifyAuto: boolean;
     }>;
     saveConfig(a: Actor, b: BackupConfig): Promise<{
         dataAuto: boolean;
         discordAuto: boolean;
         keep: number;
+        verifyAuto: boolean;
     }>;
     listData(): Promise<{
+        verify: {
+            status: string;
+            at: Date;
+            error: string | null;
+        } | null;
         name: string;
         kind: import("./backup.service").DataBackupKind;
         size: number;
@@ -28,6 +38,35 @@ export declare class BackupController {
         size: number;
     }>;
     download(name: string, res: Response): Promise<void>;
+    /** Wiederherstellungstest: einspielen, prüfen, zurückrollen (ändert nichts am Datenbestand) */
+    verify(a: Actor, name: string): Promise<{
+        ok: boolean;
+        name: string;
+        rows: number;
+        tables: number;
+        mismatches: {
+            table: string;
+            expected: number;
+            actual: number;
+        }[];
+        durationMs: number;
+        error: string | null;
+    }>;
+    runs(): Promise<{
+        createdByName: string;
+        error: string | null;
+        id: string;
+        status: string;
+        createdById: string | null;
+        startedAt: Date;
+        kind: string | null;
+        finishedAt: Date | null;
+        details: import("@prisma/client/runtime/library").JsonValue | null;
+        size: number | null;
+        action: string;
+        fileName: string | null;
+        rows: number | null;
+    }[]>;
     deleteData(a: Actor, name: string): Promise<void>;
     restore(a: Actor, name: string, _b: unknown): Promise<{
         rows: number;
