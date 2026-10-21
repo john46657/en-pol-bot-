@@ -47,6 +47,8 @@ export interface Ctx {
     /** Eine Rolle geben/nehmen/umschalten (Message-Builder-Buttons); liefert, was passiert ist. */
     setRole?(guildId: string, userId: string, roleId: string, mode: 'toggle' | 'add' | 'remove'): Promise<'added' | 'removed' | 'unchanged'>;
   };
+  /** ID der Discord-Interaktion (Idempotenz: dieselbe Interaktion erzeugt nie zwei Tickets). */
+  interactionId?: string;
   /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
   voiceSupport?: VoiceSupportRuntime;
 }
@@ -64,5 +66,5 @@ export interface CommandDef {
   run(ctx: Ctx): Promise<Reply>;
 }
 /** Buttons/Formulare/Auswahlmenüs: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen, `values` nur bei Auswahlmenüs. */
-export interface InteractionDef { prefix: string; /** true: Antwort ist ein Formular (kein deferReply vorher). */ opensModal?: (args: string[]) => boolean;
-  /** true: Antwort ersetzt die Nachricht mit dem Button (z. B. Panel von `/shift manage`) statt einer neuen Antwort. */ updatesMessage?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[] }): Promise<Reply> }
+export interface InteractionDef { prefix: string; /** true: Antwort ist ein Formular (kein deferReply vorher); `values`: Auswahl bei Menüs. */ opensModal?: (args: string[], values?: string[]) => boolean;
+  /** true: Antwort ersetzt die Nachricht mit dem Button (z. B. Panel von `/shift manage`) statt einer neuen Antwort. */ updatesMessage?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[]; /** alle Formular-Eingaben (Auswahl, Dateien) */ modal?: { values: Record<string, string | string[] | boolean>; files: Record<string, import('@enrp/shared').FormFile[]> } }): Promise<Reply> }

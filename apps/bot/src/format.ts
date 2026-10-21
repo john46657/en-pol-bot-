@@ -8,7 +8,11 @@ export interface EmbedData { title: string; description?: string; color?: number
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string; /** ausgegraut (nicht klickbar) */ disabled?: boolean }
 /** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */
 export interface SelectSpec { id: string; placeholder: string; options: { label: string; value: string; description?: string; emoji?: string }[]; kind?: 'string' | 'user' | 'role'; min?: number; max?: number }
-export interface ModalField { id: string; label: string; paragraph?: boolean; required?: boolean; minLength?: number; maxLength?: number; placeholder?: string; /** vorausgefüllt (Bearbeiten) */ value?: string }
+export interface ModalField {
+  id: string; label: string; paragraph?: boolean; required?: boolean; minLength?: number; maxLength?: number; placeholder?: string; /** vorausgefüllt (Bearbeiten) */ value?: string;
+  /** Ticket-Formulare: Auswahlmenü bzw. Datei-Upload (Discord-Formular mit Beschriftungen); Standard: Textfeld */
+  kind?: 'text' | 'select' | 'file'; description?: string; options?: { label: string; value: string; default?: boolean }[]; minValues?: number; maxValues?: number;
+}
 export interface ModalSpec { id: string; title: string; fields: ModalField[] }
 /** `decided`: die Nachricht mit dem geklickten Button wird aktualisiert (Farbe, Feld „Entscheidung“, Entscheidungs-Buttons entfernt). */
 export interface Reply {

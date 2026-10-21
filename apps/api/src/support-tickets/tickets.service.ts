@@ -1,12 +1,13 @@
 import { NotifyService } from '../notifications/notify.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, type SupportTicket, type TicketPriority, type TicketStatus } from '@prisma/client';
+import { Prisma, type SupportTicket, type TicketDepartment, type TicketPriority, type TicketStatus, type TicketTranscript } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  renderTicketText, ticketChannelName, ticketNumber, TICKET_ACTIONS, ticketButtonsOf,
-  type ComponentButton, type EmbedSpec, type MessageSpec, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketVars,
+  renderTicketText, ticketChannelName, ticketNumber, TICKET_ACTIONS, ticketButtonsOf, ticketRef, parseTicketRef, validateForm, formModal, planFormSteps, activeFields,
+  checkStatusChange, statusPermission, slaState, FORM_FILE_TYPES,
+  type ComponentButton, type ComponentSelect, type EmbedSpec, type FormAnswer, type FormFile, type FormRawValue, type MessageSpec, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketVars,
 } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionService } from '../authz/permission.service';
@@ -14,32 +15,56 @@ import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { loadEnv } from '../config/env';
 import { webUrl } from '../common/web-url';
+import { AuditService } from '../audit/audit.service';
+import { currentRequestId, runInGuild } from '../common/guild-context';
 import { TicketConfigService } from './config.service';
-import { renderTranscript, type TranscriptData } from './transcript';
-import type { TicketSettings } from './config.schemas';
+import { TicketTranscriptService, type TranscriptNotify } from './transcript.service';
+import type { NotifyEvent, TicketSettings } from './config.schemas';
 
 /** Wer handelt: Mitarbeiter (System-Benutzer), Ticket-Ersteller über den Bot oder die Automatik. */
-export interface TicketActor { userId: string | null; discordId: string | null; name: string; viaBot: boolean; system?: boolean }
+export interface TicketActor { userId: string | null; discordId: string | null; name: string; viaBot: boolean; system?: boolean; /** Korrelations-ID (Automatik) */ requestId?: string }
 type Category = Awaited<ReturnType<TicketConfigService['category']>>;
-interface Loaded { t: SupportTicket; cat: Category; status: TicketStatus; priority: TicketPriority | null; settings: TicketSettings; tz: string }
+interface Loaded { t: SupportTicket; cat: Category; status: TicketStatus; priority: TicketPriority | null; settings: TicketSettings; tz: string; dept: TicketDepartment | null }
 
 const MAX_ATTACHMENT = 8 * 1024 * 1024;
-const INLINE_IMAGE = 2 * 1024 * 1024;
+/** angefangene Discord-Formulare verfallen nach so vielen Minuten */
+const DRAFT_MINUTES = 30;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const mention = (id: string) => `<@${id}>`;
+const NOTIFY_LABEL: Record<string, string> = {
+  created: 'neues Ticket', claimed: 'übernommen', assigned: 'Zuständigkeit geändert', user_message: 'neue Nachricht', info_requested: 'Rückfrage gestellt', priority: 'Priorität geändert',
+  escalated: 'eskaliert', closed: 'geschlossen', reopened: 'wieder geöffnet', transcript_ready: 'Transkript erstellt', transcript_failed: 'Transkript fehlgeschlagen',
+};
 
 export type ActionInput =
   | { action: 'close'; reason?: string } | { action: 'close_request' } | { action: 'reopen' } | { action: 'claim' } | { action: 'unclaim'; targetId?: string }
   | { action: 'add_access'; targetId: string; kind: 'USER' | 'ROLE'; minutes?: number } | { action: 'remove_access'; targetId: string }
   | { action: 'priority'; priorityId: string } | { action: 'status'; statusId: string } | { action: 'category'; categoryId: string }
   | { action: 'rename'; name: string } | { action: 'move'; parentId: string | null } | { action: 'transcript' }
-  | { action: 'lock' } | { action: 'unlock' } | { action: 'escalate' } | { action: 'note'; text: string } | { action: 'rating' } | { action: 'delete' } | { action: 'reply'; text: string };
+  | { action: 'lock' } | { action: 'unlock' } | { action: 'escalate' } | { action: 'note'; text: string } | { action: 'rating' } | { action: 'delete' } | { action: 'reply'; text: string }
+  | { action: 'assign'; targetId: string } | { action: 'department'; departmentId: string } | { action: 'request_info'; text: string } | { action: 'archive' }
+  | { action: 'transcript_retry'; transcriptId: string };
+
+export interface OpenInput {
+  categoryId: string; panelId?: string | null; guildId: string; discordId: string; discordName: string; memberRoleIds: string[];
+  /** Idempotenz-Schlüssel (Discord-Interaktion bzw. Formular-Entwurf) */
+  openKey?: string;
+  /** geprüfte Formular-Antworten (Formular vor dem Erstellen) */
+  form?: { version: number; answers: FormAnswer[]; subject?: string | null };
+}
 
 /** Welches Recht welche API-Aktion braucht (Katalog in @enrp/shared). */
-const PERM: Record<Exclude<ActionInput['action'], 'reply'>, TicketAction> = {
+const PERM: Record<Exclude<ActionInput['action'], 'reply' | 'assign' | 'department' | 'request_info' | 'archive' | 'transcript_retry'>, TicketAction> = {
   close: 'close', close_request: 'close_request', reopen: 'reopen', claim: 'claim', unclaim: 'unclaim', add_access: 'add_user', remove_access: 'remove_user', priority: 'priority', status: 'status',
   category: 'category', rename: 'rename', move: 'move', transcript: 'transcript', lock: 'lock', unlock: 'unlock', escalate: 'escalate', note: 'note', rating: 'rating', delete: 'delete',
 };
+/** Rechte der neuen Aktionen. Antworten/Rückfragen: wer Tickets bearbeiten (übernehmen) darf. */
+const EXTRA_PERM: Record<'reply' | 'assign' | 'department' | 'request_info' | 'archive' | 'transcript_retry', string> = {
+  reply: 'ticket.claim', assign: 'ticket.assign', department: 'ticket.change_department', request_info: 'ticket.claim', archive: 'ticket.archive', transcript_retry: 'ticket.transcript_manage',
+};
+export const permissionFor = (a: ActionInput['action']) => (a in EXTRA_PERM ? EXTRA_PERM[a as keyof typeof EXTRA_PERM] : TICKET_ACTIONS[PERM[a as keyof typeof PERM]].permission);
+/** Aktionen, die zusätzlich ins (unveränderliche) Audit-Protokoll gehören. */
+const AUDITED = new Set(['created', 'claimed', 'claim_transferred', 'unclaimed', 'assigned', 'department_changed', 'category_changed', 'priority_changed', 'status_changed', 'note_added', 'closed', 'reopened', 'archived', 'deleted', 'user_added', 'user_removed', 'role_added', 'role_removed', 'escalated', 'locked', 'unlocked', 'info_requested', 'transcript_requested', 'transcript_retry', 'routing_warning']);
 
 /**
  * Support-Ticket-System. Das System entscheidet (Rechte, Regeln, Daten, Protokoll), der Bot führt die Discord-Seite aus (Effekte).
@@ -49,7 +74,16 @@ const PERM: Record<Exclude<ActionInput['action'], 'reply'>, TicketAction> = {
 export class SupportTicketsService {
   private readonly log = new Logger('Tickets');
   private readonly dir = path.resolve(loadEnv().STORAGE_DIR, 'tickets');
-  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly discord: DiscordService, private readonly config: TicketConfigService, private readonly notify: NotifyService) {}
+  constructor(
+    private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly discord: DiscordService, private readonly config: TicketConfigService,
+    private readonly notify: NotifyService, private readonly audit: AuditService, private readonly transcriptsSvc: TicketTranscriptService,
+  ) {
+    transcriptsSvc.onFinished((tr, ok) => this.transcriptFinished(tr, ok));
+  }
+
+  /** Einstellungen des Servers, zu dem das Ticket gehört (Ticket-Einstellungen können je Server gelten). */
+  private settingsFor(guildId: string | null | undefined) { return guildId ? runInGuild(guildId, () => this.config.settings()) : this.config.settings(); }
+  ref(n: number, settings?: Pick<TicketSettings, 'refPrefix'>) { return ticketRef(n, settings?.refPrefix); }
 
   // ================= Hilfsfunktionen =================
   async actorFromUser(u: { id: string; displayName: string; sessionId: string }): Promise<TicketActor> {
@@ -69,17 +103,17 @@ export class SupportTicketsService {
   private async load(id: string): Promise<Loaded> {
     const t = await this.prisma.supportTicket.findUnique({ where: { id } });
     if (!t || t.deletedAt) throw new AppError('NOT_FOUND', 'Ticket nicht gefunden.');
-    const [cat, status, priority, settings, tz] = await Promise.all([
+    const [cat, status, priority, settings, tz, dept] = await Promise.all([
       this.config.category(t.categoryId), this.prisma.ticketStatus.findUniqueOrThrow({ where: { id: t.statusId } }),
-      t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : Promise.resolve(null), this.config.settings(), this.timezone(),
+      t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : Promise.resolve(null), this.settingsFor(t.guildId), this.timezone(), this.config.department(t.departmentId),
     ]);
-    return { t, cat, status, priority, settings, tz };
+    return { t, cat, status, priority, settings, tz, dept };
   }
 
-  private vars(l: Pick<Loaded, 't' | 'cat' | 'status' | 'priority' | 'tz'>, extra: TicketVars = {}): TicketVars {
+  private vars(l: Pick<Loaded, 't' | 'cat' | 'status' | 'priority' | 'tz'> & { settings?: TicketSettings }, extra: TicketVars = {}): TicketVars {
     const { t, cat, status, priority, tz } = l;
     return {
-      '{user}': mention(t.creatorId), '{username}': t.creatorName, '{user_id}': t.creatorId, '{ticket_id}': ticketNumber(t.number), '{category}': cat.name,
+      '{user}': mention(t.creatorId), '{username}': t.creatorName, '{user_id}': t.creatorId, '{ticket_id}': ticketNumber(t.number), '{ticket_ref}': this.ref(t.number, l.settings), '{category}': cat.name,
       '{staff}': t.claimers.length ? t.claimers.map(mention).join(', ') : 'niemand', '{status}': `${status.emoji} ${status.name}`.trim(),
       '{priority}': priority ? `${priority.emoji} ${priority.name}`.trim() : '—', '{reason}': t.closeReason ?? '—', '{closed_by}': t.closedByName ?? '—',
       '{created_at}': this.fmt(t.createdAt, tz), '{closed_at}': this.fmt(t.closedAt, tz), '{channel}': t.channelId ? `<#${t.channelId}>` : `#${t.name}`, ...extra,
@@ -106,14 +140,16 @@ export class SupportTicketsService {
       buttons.push({ id: b.action === 'close' ? `tk:close:${l.t.id}:${this.closeMode(l.cat)}` : `tk:${b.action}:${l.t.id}`, label: b.label, emoji: b.emoji, style: b.style });
     }
     const fields = [
+      ...(l.t.subject ? [{ name: 'Betreff', value: l.t.subject.slice(0, 1024), inline: false }] : []),
       { name: 'Status', value: v['{status}']!, inline: true }, { name: 'Priorität', value: v['{priority}']!, inline: true },
+      ...(l.dept ? [{ name: 'Abteilung', value: `${l.dept.emoji ? `${l.dept.emoji} ` : ''}${l.dept.name}`, inline: true }] : []),
       { name: l.cat.claimMode === 'PRIMARY' && l.t.claimers.length > 1 ? 'Bearbeiter (Haupt + Helfer)' : 'Bearbeiter', value: v['{staff}']!, inline: true },
       ...(l.t.locked ? [{ name: 'Gesperrt', value: '⛔ Der Ersteller kann nicht schreiben.', inline: false }] : []),
     ];
     const embed: EmbedSpec = {
       title: renderTicketText(l.cat.welcomeTitle || '🎫 {category}', v).slice(0, 256),
       description: renderTicketText(l.cat.welcomeMessage || 'Hallo {user}!', v).slice(0, 4000),
-      color: closed ? l.settings.closedColor : l.priority?.color ?? l.cat.color, fields, footer: `Ticket #${ticketNumber(l.t.number)} · erstellt ${this.fmt(l.t.createdAt, l.tz)}`,
+      color: closed ? l.settings.closedColor : l.priority?.color ?? l.cat.color, fields, footer: `Ticket ${this.ref(l.t.number, l.settings)} · erstellt ${this.fmt(l.t.createdAt, l.tz)}`,
       ...(l.cat.welcomeImageUrl ? { image: l.cat.welcomeImageUrl } : {}),
     };
     return { embeds: [embed], buttons: buttons.slice(0, 25) };
@@ -125,23 +161,39 @@ export class SupportTicketsService {
   }
 
   private questionMessage(t: SupportTicket, cat: Category, idx: number): MessageSpec | null {
-    const qs = cat.questions as TicketQuestion[];
+    const qs = activeFields(cat.questions as TicketQuestion[]);
     const q = qs[idx];
     if (!q) return null;
     const buttons: ComponentButton[] = [];
     let select: MessageSpec['select'];
     // Zeichenlimit im Button (das Formular in Discord kennt die Frage sonst nicht): …:l:min-max
     const lim = q.minLength || q.maxLength ? `:${q.minLength ?? 0}-${q.maxLength ?? (q.type === 'LONG' ? 2000 : 200)}` : '';
-    if (q.type === 'SHORT' || q.type === 'LONG') buttons.push({ id: `tk:ans:${t.id}:${q.id}:${q.type === 'LONG' ? 'l' : 's'}${lim}`, label: 'Antworten', emoji: '✍️', style: 'primary' });
+    if (q.type === 'SHORT' || q.type === 'LONG' || q.type === 'NUMBER' || q.type === 'DATE') buttons.push({ id: `tk:ans:${t.id}:${q.id}:${q.type === 'LONG' ? 'l' : 's'}${lim}`, label: 'Antworten', emoji: '✍️', style: 'primary' });
+    if (q.type === 'CHECKBOX') buttons.push({ id: `tk:ansv:${t.id}:${q.id}:Ja`, label: 'Bestätigen', emoji: '☑️', style: 'success' });
+    if (q.type === 'FILE') buttons.push({ id: `tk:ansv:${t.id}:${q.id}:hochgeladen`, label: 'Datei ist hochgeladen', emoji: '📎', style: 'primary' });
     if (q.type === 'YESNO') buttons.push({ id: `tk:ansv:${t.id}:${q.id}:Ja`, label: 'Ja', style: 'success' }, { id: `tk:ansv:${t.id}:${q.id}:Nein`, label: 'Nein', style: 'danger' });
     if (q.type === 'SELECT' || q.type === 'MULTI') select = { id: `tk:anss:${t.id}:${q.id}`, placeholder: q.placeholder || 'Bitte auswählen …', min: q.required ? 1 : 0, max: q.type === 'MULTI' ? q.options.length : 1, options: q.options.slice(0, 25).map((o) => ({ label: o.slice(0, 100), value: o.slice(0, 100) })) };
     if (!q.required) buttons.push({ id: `tk:skip:${t.id}:${q.id}`, label: 'Überspringen', style: 'secondary' });
-    return { embeds: [{ title: `Frage ${idx + 1}/${qs.length}`, description: `${q.label}${q.description ? `\n-# ${q.description}` : ''}${q.required ? '' : '\n\n*(optional)*'}`, color: cat.color, footer: 'Nur der Ticket-Ersteller kann antworten.' }], buttons, select };
+    const hint = q.type === 'FILE' ? '\n\n📎 Lade die Datei einfach hier im Kanal hoch und klicke danach auf den Button.' : q.type === 'DATE' ? '\n-# Format: TT.MM.JJJJ' : q.type === 'NUMBER' ? '\n-# Bitte eine Zahl eingeben.' : '';
+    return { embeds: [{ title: `Frage ${idx + 1}/${qs.length}`, description: `${q.label}${q.description ? `\n-# ${q.description}` : ''}${hint}${q.required ? '' : '\n\n*(optional)*'}`, color: cat.color, footer: 'Nur der Ticket-Ersteller kann antworten.' }], buttons, select };
   }
 
-  private async logAction(l: { t: SupportTicket; settings: TicketSettings }, action: string, actor: TicketActor, detail: Record<string, unknown>, effects: TicketEffect[], text?: string) {
+  private async logAction(l: { t: SupportTicket; settings: TicketSettings; cat?: { confidential: boolean } }, action: string, actor: TicketActor, detail: Record<string, unknown>, effects: TicketEffect[], text?: string) {
     await this.prisma.ticketLog.create({ data: { ticketId: l.t.id, action, actorId: actor.discordId, actorName: actor.name, detail: detail as Prisma.InputJsonValue } });
-    if (l.settings.logChannelId && text) effects.push({ type: 'post', channelId: l.settings.logChannelId, message: { embeds: [{ description: `**#${ticketNumber(l.t.number)}** (${l.t.name}) · ${text}`, color: 0x64748b, footer: actor.name }] } });
+    const ref = this.ref(l.t.number, l.settings);
+    // vertrauliche Tickets: im Log-Kanal nur Ticket-ID und Art der Aktion (keine Gründe, Namen, Inhalte)
+    const shown = l.cat?.confidential && text ? `🔒 vertraulich · ${text.split(/ von | – |: |\(/)[0]!.trim()}` : text;
+    if (l.settings.logChannelId && shown) effects.push({ type: 'post', channelId: l.settings.logChannelId, message: { embeds: [{ description: `**${ref}**${l.cat?.confidential ? '' : ` (${l.t.name})`} · ${shown}`, color: 0x64748b, footer: actor.name }] } });
+    if (AUDITED.has(action)) await this.auditTicket(actor, action, l.t, { ref, ...this.auditDetail(detail) });
+  }
+  /** Nur unkritische Metadaten ins Audit (keine Notiztexte, Gründe oder Nachrichten – das Audit kann in Discord-Logkanäle gespiegelt werden). */
+  private auditDetail(d: Record<string, unknown>) {
+    const keep = ['from', 'to', 'target', 'claimers', 'category', 'priority', 'status', 'transcriptId', 'version', 'departmentId'];
+    return Object.fromEntries(Object.entries(d).filter(([k]) => keep.includes(k)));
+  }
+  private async auditTicket(actor: TicketActor, action: string, t: { id: string; guildId: string }, after: Record<string, unknown>, result: 'SUCCESS' | 'DENIED' | 'FAILED' = 'SUCCESS') {
+    await this.audit.record({ userId: actor.userId, requestId: currentRequestId() ?? actor.requestId ?? `system-${randomUUID()}` }, { action: `ticket.${action}`, module: 'tickets', entityType: 'SupportTicket', entityId: t.id, after, serverId: t.guildId, result })
+      .catch((e: Error) => this.log.warn(`audit failed: ${e.message}`));
   }
 
   private async dispatch(effects: TicketEffect[], viaBot: boolean): Promise<TicketEffect[]> {
@@ -151,88 +203,207 @@ export class SupportTicketsService {
     return [];
   }
 
-  /** Darf der Mitarbeiter diese Kategorie sehen / dieses Recht ausüben? (ticket.manage darf alles) */
-  private async assertCan(actor: TicketActor, perm: string, cat: { accessRoleNames: string[] }) {
+  /**
+   * Darf der Mitarbeiter dieses Ticket sehen / dieses Recht ausüben? Standard: verweigern. ticket.manage darf alles.
+   * Abgelehnte Versuche landen im Audit-Protokoll (ohne Inhalte).
+   */
+  private async assertCan(actor: TicketActor, perm: string, cat: { accessRoleNames: string[]; confidential?: boolean }, dept?: { accessRoleNames: string[] } | null, ticket?: { id: string; guildId: string }) {
     if (actor.system) return;
-    if (!actor.userId) throw new AppError('PERMISSION_DENIED', 'Dein Discord-Konto ist mit keinem Team-Konto verknüpft.');
+    const deny = async (msg: string) => {
+      if (ticket) await this.auditTicket(actor, 'access_denied', ticket, { permission: perm }, 'DENIED');
+      throw new AppError('PERMISSION_DENIED', msg);
+    };
+    if (!actor.userId) return deny('Dein Discord-Konto ist mit keinem Team-Konto verknüpft.');
     if (await this.perms.has(actor.userId, 'ticket.manage')) return;
-    if (!(await this.perms.has(actor.userId, perm))) throw new AppError('PERMISSION_DENIED', 'Dafür fehlt dir die Berechtigung.');
-    if (!(await this.categoryVisible(actor.userId, cat))) throw new AppError('PERMISSION_DENIED', 'Du hast keinen Zugriff auf Tickets dieser Art.');
+    if (!(await this.perms.has(actor.userId, perm))) return deny('Dafür fehlt dir die Berechtigung.');
+    if (!(await this.categoryVisible(actor.userId, cat, dept))) return deny('Du hast keinen Zugriff auf Tickets dieser Art.');
   }
-  private async categoryVisible(userId: string, cat: { accessRoleNames: string[] }) {
-    if (!cat.accessRoleNames.length) return true;
-    const roles = await this.prisma.userRole.findMany({ where: { userId }, include: { role: { select: { name: true } } } });
-    return roles.some((r) => cat.accessRoleNames.includes(r.role.name));
+  private async roleNames(userId: string) {
+    return new Set((await this.prisma.userRole.findMany({ where: { userId }, include: { role: { select: { name: true } } } })).map((r) => r.role.name));
   }
-  /** IDs der Kategorien, deren Tickets der Benutzer sehen darf (null = alle). */
+  /**
+   * Sichtbarkeit eines Tickets: Systemrollen der Kategorie und der Abteilung des Tickets. Ohne eingestellte Rollen sehen alle mit
+   * ticket.view das Ticket – außer bei vertraulichen Kategorien (dann nur ticket.manage).
+   */
+  private async categoryVisible(userId: string, cat: { accessRoleNames: string[]; confidential?: boolean }, dept?: { accessRoleNames: string[] } | null) {
+    const names = [...cat.accessRoleNames, ...(dept?.accessRoleNames ?? [])];
+    if (!names.length) return !cat.confidential;
+    const mine = await this.roleNames(userId);
+    return names.some((n) => mine.has(n));
+  }
+  /** IDs der Kategorien, deren Tickets der Benutzer grundsätzlich sehen darf (null = alle) – für Bewertungen/Statistiken je Kategorie. */
   async visibleCategoryIds(userId: string): Promise<string[] | null> {
     if (await this.perms.has(userId, 'ticket.manage')) return null;
-    const [cats, roles] = await Promise.all([
-      this.prisma.ticketCategory.findMany({ select: { id: true, accessRoleNames: true } }),
-      this.prisma.userRole.findMany({ where: { userId }, include: { role: { select: { name: true } } } }),
+    const [cats, mine] = await Promise.all([this.prisma.ticketCategory.findMany({ select: { id: true, accessRoleNames: true, confidential: true } }), this.roleNames(userId)]);
+    return cats.filter((c) => (!c.accessRoleNames.length ? !c.confidential : c.accessRoleNames.some((n) => mine.has(n)))).map((c) => c.id);
+  }
+  /** Filter für alle Tickets, die der Benutzer sehen darf (null = alle). Gleiche Regel wie `categoryVisible`, aber als Datenbank-Abfrage. */
+  async visibleWhere(userId: string): Promise<Prisma.SupportTicketWhereInput | null> {
+    if (await this.perms.has(userId, 'ticket.manage')) return null;
+    const [cats, deps, mine] = await Promise.all([
+      this.prisma.ticketCategory.findMany({ select: { id: true, accessRoleNames: true, confidential: true } }),
+      this.prisma.ticketDepartment.findMany({ select: { id: true, accessRoleNames: true } }), this.roleNames(userId),
     ]);
-    const mine = new Set(roles.map((r) => r.role.name));
-    return cats.filter((c) => !c.accessRoleNames.length || c.accessRoleNames.some((n) => mine.has(n))).map((c) => c.id);
+    const has = (names: string[]) => names.some((n) => mine.has(n));
+    const catMine = cats.filter((c) => has(c.accessRoleNames)).map((c) => c.id);
+    const depMine = deps.filter((d) => has(d.accessRoleNames)).map((d) => d.id);
+    const catOpen = cats.filter((c) => !c.accessRoleNames.length && !c.confidential).map((c) => c.id);
+    const depOpen = deps.filter((d) => !d.accessRoleNames.length).map((d) => d.id);
+    return { OR: [
+      { categoryId: { in: catMine } }, { departmentId: { in: depMine } },
+      { categoryId: { in: catOpen }, OR: [{ departmentId: null }, { departmentId: { in: depOpen } }] },
+    ] };
+  }
+  /** Zuständige Discord-Rollen eines Tickets (Kategorie + Abteilung) mit sicherem Ersatz, falls keine eingerichtet sind. */
+  private async routing(cat: Category, dept: TicketDepartment | null, settings: TicketSettings) {
+    const own = [...new Set([...cat.staffRoleIds, ...(dept?.active ? dept.staffRoleIds : [])])];
+    if (own.length) return { responsible: own, warning: null as string | null };
+    if (cat.confidential) {
+      // vertraulich: NIE die allgemeine Staff-Rolle – nur die eingestellten Ersatz-Rollen (z. B. Leitung)
+      return { responsible: settings.confidentialFallbackRoleIds, warning: `Für die vertrauliche Kategorie „${cat.name}“ ist keine zuständige Abteilung/Rolle eingerichtet. ${settings.confidentialFallbackRoleIds.length ? 'Das Ticket ist nur für die Ersatz-Rollen (Allgemein → Vertrauliche Tickets) sichtbar.' : 'Das Ticket ist im Discord-Kanal nur für den Ersteller sichtbar; im Dashboard nur für Personen mit ticket.manage.'}` };
+    }
+    const general = ((await this.discord.channels()).staffRole ?? '').split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
+    return { responsible: general, warning: general.length ? null : `Für „${cat.name}“ ist keine zuständige Rolle eingerichtet und keine allgemeine Staff-Rolle hinterlegt.` };
   }
 
   // ================= Öffnen =================
   /** Prüft alle Voraussetzungen, legt das Ticket an und liefert den „create“-Effekt (Channel, Rechte, Ticket-Embed, erste Frage). */
   /** `byStaff`: vom Team für ein Mitglied geöffnet (Recht ticket.create) – ohne Rollen-, Limit- und Cooldown-Prüfung. */
-  async open(d: { categoryId: string; panelId?: string | null; guildId: string; discordId: string; discordName: string; memberRoleIds: string[] }, actor: TicketActor, byStaff = false) {
+  async open(d: OpenInput, actor: TicketActor, byStaff = false): Promise<{ ticket: ReturnType<SupportTicketsService['summary']>; effects: TicketEffect[]; existing?: boolean } | { form: { categoryId: string; panelId: string | null } }> {
     const cat = await this.config.category(d.categoryId);
-    if (!cat.active) throw new AppError('CONFLICT', 'Diese Ticket-Art ist derzeit deaktiviert.');
-    if (cat.guildId && cat.guildId !== d.guildId) throw new AppError('CONFLICT', 'Diese Ticket-Art gibt es auf diesem Server nicht.');
-    if (!byStaff) await this.checkCanOpen(cat, d);
-    return this.create(cat, d, actor);
+    await this.checkOpenable(cat, d.guildId);
+    // Formular vor dem Erstellen: ohne eingereichte Antworten wird nichts angelegt (der Bot zeigt das Formular)
+    if (cat.formMode === 'MODAL' && !d.form && !byStaff && activeFields(cat.questions as TicketQuestion[]).length) return { form: { categoryId: cat.id, panelId: d.panelId ?? null } };
+    if (d.openKey) {
+      const prev = await this.prisma.supportTicket.findUnique({ where: { openKey: d.openKey } });
+      if (prev) return { ticket: this.summary(await this.load(prev.id)), effects: [], existing: true };
+    }
+    let made: Awaited<ReturnType<SupportTicketsService['create']>> | { existingId: string };
+    try {
+      made = await this.prisma.$transaction(async (tx) => {
+        // gleichzeitige Klicks desselben Nutzers nacheinander prüfen (Limit, Cooldown, Doppelklick)
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`ticket-open:${d.discordId}`}))`;
+        // dieselbe Interaktion wurde inzwischen (parallel) verarbeitet → kein zweites Ticket
+        if (d.openKey) { const prev = await tx.supportTicket.findUnique({ where: { openKey: d.openKey }, select: { id: true } }); if (prev) return { existingId: prev.id }; }
+        if (!byStaff) await this.checkCanOpen(cat, d, tx);
+        return this.create(cat, d, tx);
+      }, { timeout: 20_000 });
+    } catch (e) {
+      // gleiche Interaktion parallel verarbeitet → vorhandenes Ticket zurückgeben
+      if (d.openKey && e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        const prev = await this.prisma.supportTicket.findUnique({ where: { openKey: d.openKey } });
+        if (prev) return { ticket: this.summary(await this.load(prev.id)), effects: [], existing: true };
+      }
+      throw e;
+    }
+    if ('existingId' in made) return { ticket: this.summary(await this.load(made.existingId)), effects: [], existing: true };
+    return this.finishCreate(made, d, actor);
   }
 
-  private async checkCanOpen(cat: Awaited<ReturnType<TicketConfigService['category']>>, d: { panelId?: string | null; discordId: string; memberRoleIds: string[] }) {
+  /** Nach dem Speichern: Protokoll, Hinweis auf fehlende Zuständigkeit, Formular-Anhänge, Panel-Auslastung, Benachrichtigungen. */
+  private async finishCreate({ l, effects, warning }: Awaited<ReturnType<SupportTicketsService['create']>>, d: OpenInput, actor: TicketActor) {
+    const { t, cat, settings } = l;
+    const ref = this.ref(t.number, settings);
+    await this.logAction(l, 'created', actor, { category: cat.name, by: actor.discordId === d.discordId ? 'creator' : actor.name, ...(d.form ? { formVersion: d.form.version } : {}) }, effects, `🎫 Ticket erstellt von ${mention(d.discordId)} (${cat.name})`);
+    if (warning) {
+      // sichtbarer Hinweis (Log-Kanal, Ticket-Verlauf, Audit) ohne Inhalte des Tickets
+      if (settings.logChannelId) effects.push({ type: 'post', channelId: settings.logChannelId, message: { embeds: [{ title: '⚠️ Ticket-Zuständigkeit fehlt', description: `${ref}: ${warning}`, color: 0xf59e0b }] } });
+      await this.logAction(l, 'routing_warning', { ...actor, system: true }, { warning }, effects);
+    }
+    const files = d.form?.answers.flatMap((a) => a.files ?? []) ?? [];
+    if (files.length) await this.storeFormFiles(t, files);
+    await this.panelLoad(cat.id, effects);
+    await this.queueNotify(l, 'created', effects, `🎫 Neues Ticket **${ref}** · ${cat.name}${cat.confidential ? '' : ` · ${d.discordName}`}`);
+    return { ticket: this.summary(l), effects: await this.dispatch(effects, actor.viaBot) };
+  }
+
+  /** Formular-Anhänge sicher ablegen und als Nachricht im Verlauf speichern (Dashboard, Transkript). */
+  private async storeFormFiles(t: SupportTicket, files: FormFile[]) {
+    const attachments = [];
+    for (const f of files.slice(0, 10)) attachments.push({ name: f.name.slice(0, 200), size: f.size, contentType: f.contentType ?? null, url: f.url, storageKey: await this.storeAttachment(f.url, f.size, f.name) });
+    await this.prisma.ticketMessage.create({ data: { ticketId: t.id, authorId: t.creatorId, authorName: t.creatorName, content: '📎 Anhang aus dem Formular', attachments: attachments as unknown as Prisma.InputJsonValue, createdAt: t.createdAt } });
+  }
+
+  private async checkOpenable(cat: Category, guildId: string) {
+    if (!cat.active || cat.archivedAt) throw new AppError('CONFLICT', 'Diese Ticket-Art ist derzeit deaktiviert.');
+    if (cat.guildId && cat.guildId !== guildId) throw new AppError('CONFLICT', 'Diese Ticket-Art gibt es auf diesem Server nicht.');
+    const settings = await this.settingsFor(guildId);
+    if (settings.guildId && settings.guildId !== guildId) throw new AppError('CONFLICT', 'Tickets können nur auf dem eingestellten Discord-Server geöffnet werden.');
+  }
+
+  private async checkCanOpen(cat: Category, d: { panelId?: string | null; discordId: string; memberRoleIds: string[]; guildId: string }, db: Prisma.TransactionClient | PrismaService = this.prisma) {
     if (d.panelId) {
-      const panel = await this.prisma.ticketPanel.findUnique({ where: { id: d.panelId } });
+      const panel = await db.ticketPanel.findUnique({ where: { id: d.panelId } });
       if (panel?.allowedRoleIds.length && !panel.allowedRoleIds.some((r) => d.memberRoleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Du darfst dieses Ticket-Panel nicht benutzen.');
     }
     if (cat.requiredRoleIds.length && !cat.requiredRoleIds.some((r) => d.memberRoleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Dir fehlt die nötige Rolle für diese Ticket-Art.');
     if (cat.allowedUserIds.length && !cat.allowedUserIds.includes(d.discordId)) throw new AppError('PERMISSION_DENIED', 'Du darfst diese Ticket-Art nicht öffnen.');
+    // Berechtigte Mitarbeiter (verknüpftes Konto mit ticket.bypass_limits) umgehen Limits und Cooldown
+    const link = await db.discordLink.findUnique({ where: { discordId: d.discordId } });
+    if (link && (await this.perms.has(link.userId, 'ticket.bypass_limits'))) return;
     if (cat.maxOpen > 0) {
-      const open = await this.prisma.supportTicket.findMany({ where: { creatorId: d.discordId, categoryId: cat.id, closedAt: null, deletedAt: null }, select: { channelId: true } });
+      const open = await db.supportTicket.findMany({ where: { creatorId: d.discordId, categoryId: cat.id, closedAt: null, deletedAt: null }, select: { channelId: true } });
       if (open.length >= cat.maxOpen) throw new AppError('CONFLICT', `Du hast bereits ${open.length} offene${open.length === 1 ? 's' : ''} Ticket${open.length === 1 ? '' : 's'} dieser Art${open[0]?.channelId ? `: <#${open[0].channelId}>` : ''}.`);
     }
+    const settings = await this.settingsFor(d.guildId);
+    if (settings.maxOpenPerUser > 0) {
+      const all = await db.supportTicket.count({ where: { creatorId: d.discordId, closedAt: null, deletedAt: null } });
+      if (all >= settings.maxOpenPerUser) throw new AppError('CONFLICT', `Du hast bereits ${all} offene Tickets – mehr als ${settings.maxOpenPerUser} gleichzeitig sind nicht möglich. Bitte warte, bis eines abgeschlossen ist.`);
+    }
     if (cat.cooldownMinutes > 0) {
-      const last = await this.prisma.supportTicket.findFirst({ where: { creatorId: d.discordId, categoryId: cat.id }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
+      const last = await db.supportTicket.findFirst({ where: { creatorId: d.discordId, categoryId: cat.id }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
       const wait = last ? last.createdAt.getTime() + cat.cooldownMinutes * 60_000 - Date.now() : 0;
       if (wait > 0) throw new AppError('CONFLICT', `Bitte warte noch ${Math.ceil(wait / 60_000)} Minute(n), bevor du ein neues Ticket dieser Art öffnest.`);
     }
+    // Doppelklick-Schutz auch ohne Limit
+    const recent = await db.supportTicket.findFirst({ where: { creatorId: d.discordId, categoryId: cat.id, deletedAt: null, createdAt: { gte: new Date(Date.now() - 10_000) } }, select: { id: true } });
+    if (recent) throw new AppError('CONFLICT', 'Dein Ticket wird gerade erstellt – bitte einen Moment warten.');
   }
 
-  private async create(cat: Awaited<ReturnType<TicketConfigService['category']>>, d: { panelId?: string | null; guildId: string; discordId: string; discordName: string }, actor: TicketActor) {
-    const status = await this.prisma.ticketStatus.findFirst({ where: { isDefault: true } }) ?? await this.prisma.ticketStatus.findFirst({ where: { kind: 'OPEN' }, orderBy: { position: 'asc' } });
+  private async create(cat: Category, d: OpenInput, tx: Prisma.TransactionClient) {
+    const status = await tx.ticketStatus.findFirst({ where: { isDefault: true } }) ?? await tx.ticketStatus.findFirst({ where: { kind: 'OPEN' }, orderBy: { position: 'asc' } });
     if (!status) throw new AppError('CONFLICT', 'Kein offener Ticket-Status eingerichtet (Dashboard → Tickets → Einstellungen).');
-    const priority = cat.defaultPriorityId ? await this.prisma.ticketPriority.findUnique({ where: { id: cat.defaultPriorityId } }) : await this.prisma.ticketPriority.findFirst({ where: { isDefault: true } });
-    const link = await this.prisma.discordLink.findUnique({ where: { discordId: d.discordId } });
-    let t = await this.prisma.supportTicket.create({ data: { categoryId: cat.id, panelId: d.panelId ?? null, guildId: d.guildId, name: 'ticket', creatorId: d.discordId, creatorName: d.discordName, creatorUserId: link?.userId, statusId: status.id, priorityId: priority?.id } });
-    const [settings, tz] = await Promise.all([this.config.settings(), this.timezone()]);
-    const name = ticketChannelName(cat.channelNameFormat, this.vars({ t, cat, status, priority, tz }));
-    t = await this.prisma.supportTicket.update({ where: { id: t.id }, data: { name } });
-    const l: Loaded = { t, cat, status, priority, settings, tz };
+    const priority = cat.defaultPriorityId ? await tx.ticketPriority.findUnique({ where: { id: cat.defaultPriorityId } }) : await tx.ticketPriority.findFirst({ where: { isDefault: true } });
+    const link = await tx.discordLink.findUnique({ where: { discordId: d.discordId } });
+    const dept = cat.departmentId ? await tx.ticketDepartment.findUnique({ where: { id: cat.departmentId } }) : null;
+    const answers = d.form?.answers ?? [];
+    const subject = d.form?.subject ?? answers.find((a) => a.questionId === 'subject')?.value ?? null;
+    const now = new Date();
+    const sla = slaState({ createdAt: now, firstResponseAt: null, closedAt: null, waitingSince: null, waitingSeconds: 0, firstResponseMinutes: priority?.firstResponseMinutes ?? null, resolutionMinutes: priority?.resolutionMinutes ?? null });
+    let t = await tx.supportTicket.create({ data: {
+      categoryId: cat.id, panelId: d.panelId ?? null, guildId: d.guildId, name: 'ticket', creatorId: d.discordId, creatorName: d.discordName, creatorUserId: link?.userId, statusId: status.id, priorityId: priority?.id,
+      departmentId: dept?.id ?? null, subject: subject?.slice(0, 200) ?? null, openKey: d.openKey ?? null, createdAt: now, lastActivityAt: now,
+      firstResponseDueAt: sla.firstDueAt, resolveDueAt: sla.resolveDueAt,
+      ...(d.form ? { formVersion: d.form.version, answers: answers.map(({ files, ...a }) => ({ ...a, ...(files?.length ? { files: files.map((f) => ({ name: f.name, size: f.size, contentType: f.contentType })) } : {}) })) as unknown as Prisma.InputJsonValue, questionIndex: (cat.questions as TicketQuestion[]).length } : { formVersion: cat.formVersion }),
+    } });
+    const [settings, tz] = await Promise.all([this.settingsFor(d.guildId), this.timezone()]);
+    const name = ticketChannelName(cat.channelNameFormat, this.vars({ t, cat, status, priority, tz, settings }));
+    t = await tx.supportTicket.update({ where: { id: t.id }, data: { name } });
+    const l: Loaded = { t, cat, status, priority, settings, tz, dept };
     const effects: TicketEffect[] = [];
-    await this.logAction(l, 'created', actor, { category: cat.name, by: actor.discordId === d.discordId ? 'creator' : actor.name }, effects, `🎫 Ticket erstellt von ${mention(d.discordId)} (${cat.name})`);
-    const control = this.control(l);
-    // Zuständige Rollen: die der Kategorie – ohne eigene die allgemeine Staff-Rolle (Einstellungen → Discord-Bot-Channels)
-    const fallback = cat.staffRoleIds.length ? [] : ((await this.discord.channels()).staffRole ?? '').split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
-    const responsible = cat.staffRoleIds.length ? cat.staffRoleIds : fallback;
+    const { responsible, warning } = await this.routing(cat, dept, settings);
     const staffRoles = [...new Set([...responsible, ...cat.extraRoleIds])];
+    const control = this.control(l);
     const mentionText = renderTicketText(cat.mentionText || '', this.vars(l)).trim();
+    const prioRoles = priority?.notifyRoleIds.filter((r) => staffRoles.includes(r)) ?? []; // dringend: nur Rollen mit Zugriff pingen
     // neues Ticket: Ersteller und zuständige Rollen werden gepingt
-    control.content = [mention(d.discordId), ...(cat.mentionStaff ? responsible.map((r) => `<@&${r}>`) : []), mentionText].filter(Boolean).join(' ');
+    control.content = [mention(d.discordId), ...(cat.mentionStaff ? responsible.map((r) => `<@&${r}>`) : []), ...prioRoles.filter((r) => !cat.mentionStaff || !responsible.includes(r)).map((r) => `<@&${r}>`), mentionText].filter(Boolean).join(' ');
     control.mentionUsers = [d.discordId];
-    control.mentionRoles = cat.mentionStaff ? responsible : [];
-    const first = this.questionMessage(t, cat, 0);
+    control.mentionRoles = [...new Set([...(cat.mentionStaff ? responsible : []), ...prioRoles])];
+    const messages: MessageSpec[] = [];
+    if (d.form) {
+      messages.push({ embeds: [{ title: `📝 Angaben · ${this.ref(t.number, settings)}`, color: cat.color, fields: answers.slice(0, 25).map((a) => ({ name: a.label.slice(0, 256), value: (a.value || '—').slice(0, 1024) })), footer: `Formular-Version ${d.form.version}` }] });
+      const hasFileField = activeFields(cat.questions as TicketQuestion[]).some((q) => q.type === 'FILE');
+      if (!hasFileField) messages.push({ embeds: [{ description: '📎 Dateien oder Screenshots kannst du jetzt hier im Kanal anhängen.', color: 0x64748b }] });
+    } else {
+      const first = this.questionMessage(t, cat, 0);
+      if (first) messages.push(first);
+    }
     effects.unshift({
-      type: 'create', ticketId: t.id, guildId: d.guildId, name, parentId: cat.discordCategoryId, topic: `Ticket #${ticketNumber(t.number)} · ${cat.name} · ${d.discordName} (${d.discordId})`,
-      viewers: [{ id: d.discordId, kind: 'user', send: true }, ...staffRoles.map((id) => ({ id, kind: 'role' as const, send: true }))], control, messages: first ? [first] : [],
+      type: 'create', ticketId: t.id, guildId: d.guildId, name, parentId: cat.discordCategoryId, topic: `Ticket ${this.ref(t.number, settings)} · ${cat.name}${cat.confidential ? '' : ` · ${d.discordName} (${d.discordId})`}`,
+      viewers: [{ id: d.discordId, kind: 'user', send: true }, ...staffRoles.map((id) => ({ id, kind: 'role' as const, send: true }))], control, messages,
     });
-    await this.panelLoad(cat.id, effects);
-    return { ticket: this.summary(l), effects: await this.dispatch(effects, actor.viaBot) };
+    return { l, effects, warning };
   }
 
   /** Ticket aus dem Dashboard für einen Discord-Benutzer öffnen (Recht ticket.create). */
@@ -269,19 +440,20 @@ export class SupportTicketsService {
     const l = await this.load(id);
     if (l.t.creatorId !== discordId) throw new AppError('PERMISSION_DENIED', 'Nur der Ticket-Ersteller kann die Fragen beantworten.');
     if (this.isClosed(l)) throw new AppError('CONFLICT', 'Das Ticket ist geschlossen.');
-    const qs = l.cat.questions as TicketQuestion[];
+    const qs = activeFields(l.cat.questions as TicketQuestion[]);
     const q = qs[l.t.questionIndex];
     if (!q || q.id !== questionId) throw new AppError('CONFLICT', 'Diese Frage wurde bereits beantwortet.');
     if (values === null && q.required) throw new AppError('VALIDATION_FAILED', 'Diese Frage ist Pflicht.');
     const clean = (values ?? []).map((v) => v.trim()).filter(Boolean);
-    if (q.required && !clean.length) throw new AppError('VALIDATION_FAILED', 'Bitte eine Antwort angeben.');
-    if ((q.type === 'SELECT' || q.type === 'MULTI') && clean.some((v) => !q.options.includes(v))) throw new AppError('VALIDATION_FAILED', 'Ungültige Auswahl.');
-    if ((q.type === 'SHORT' || q.type === 'LONG') && clean.length) {
-      const len = clean.join(', ').length;
-      if (q.minLength && len < q.minLength) throw new AppError('VALIDATION_FAILED', `Die Antwort ist zu kurz (mindestens ${q.minLength} Zeichen).`);
-      if (q.maxLength && len > q.maxLength) throw new AppError('VALIDATION_FAILED', `Die Antwort ist zu lang (höchstens ${q.maxLength} Zeichen).`);
+    let value: string;
+    if (values === null) value = '— (übersprungen)';
+    else if (q.type === 'FILE') value = 'im Ticket-Kanal hochgeladen';
+    else {
+      // gleiche Prüfung wie im Formular (Länge, Auswahl, Zahl, Datum)
+      const v = validateForm([{ ...q, required: true }], { [q.id]: q.type === 'MULTI' ? clean : clean.join(', ') });
+      if (!v.ok || !v.answers[0]) throw new AppError('VALIDATION_FAILED', v.errors[q.id] ?? 'Bitte eine Antwort angeben.');
+      value = v.answers[0].value.slice(0, 2000);
     }
-    const value = values === null ? '— (übersprungen)' : clean.join(', ').slice(0, 2000);
     const answers = [...((l.t.answers as { questionId: string; label: string; value: string }[]) ?? []), { questionId: q.id, label: q.label, value }];
     const t = await this.prisma.supportTicket.update({ where: { id }, data: { answers: answers as unknown as Prisma.InputJsonValue, questionIndex: { increment: 1 }, lastActivityAt: new Date() } });
     const effects: TicketEffect[] = [];
@@ -297,9 +469,8 @@ export class SupportTicketsService {
   // ================= Aktionen =================
   async action(id: string, actor: TicketActor, input: ActionInput) {
     const l = await this.load(id);
-    // Antworten aus dem Dashboard: wer Tickets bearbeiten (übernehmen) darf, darf auch antworten
-    const perm = input.action === 'reply' ? 'ticket.claim' : TICKET_ACTIONS[PERM[input.action]].permission;
-    await this.assertCan(actor, perm, l.cat);
+    const perm = input.action === 'status' ? await this.statusPerm(input.statusId) : permissionFor(input.action);
+    await this.assertCan(actor, perm, l.cat, l.dept, l.t);
     const effects: TicketEffect[] = [];
     const message = await this.perform(l, actor, input, effects);
     return { ok: true, message, ticket: this.summary(await this.load(id).catch(() => l)), effects: await this.dispatch(effects, actor.viaBot) };
@@ -352,6 +523,54 @@ export class SupportTicketsService {
   }
 
   private requireOpen(l: Loaded) { if (this.isClosed(l)) throw new AppError('CONFLICT', 'Das Ticket ist geschlossen.'); }
+  private async statusPerm(statusId: string) {
+    const s = await this.prisma.ticketStatus.findUnique({ where: { id: statusId } });
+    return s ? statusPermission(s) : 'ticket.change_status';
+  }
+  /**
+   * Datenänderung bei jedem Statuswechsel (zentral): Wartezeit auf den Nutzer (SLA ruht), Zeitpunkt „gelöst“, neue Lösungsfrist.
+   */
+  private statusData(l: Loaded, to: TicketStatus, now = new Date()): Prisma.SupportTicketUpdateInput {
+    const t = l.t;
+    const data: Prisma.SupportTicketUpdateInput = { statusId: to.id };
+    let waitingSeconds = t.waitingSeconds;
+    if (to.key === 'WAITING_USER' && !t.waitingSince) data.waitingSince = now;
+    if (to.key !== 'WAITING_USER' && t.waitingSince) {
+      waitingSeconds += Math.max(0, Math.round((now.getTime() - t.waitingSince.getTime()) / 1000));
+      data.waitingSince = null; data.waitingSeconds = waitingSeconds;
+      const sla = slaState({ ...t, waitingSince: null, waitingSeconds, firstResponseMinutes: l.priority?.firstResponseMinutes ?? null, resolutionMinutes: l.priority?.resolutionMinutes ?? null }, now);
+      data.resolveDueAt = sla.resolveDueAt;
+    }
+    if (to.key === 'RESOLVED') data.resolvedAt = now;
+    return data;
+  }
+  private statusByKey(key: string) { return this.prisma.ticketStatus.findUnique({ where: { key } }); }
+  /** Ist das Discord-Konto ein Mitarbeiter mit Zugriff auf dieses Ticket? (Zuweisen, Bearbeiter-Prüfung nach Wechseln) */
+  private async staffWithAccess(discordId: string, cat: { accessRoleNames: string[]; confidential?: boolean }, dept: { accessRoleNames: string[] } | null) {
+    const link = await this.prisma.discordLink.findUnique({ where: { discordId } });
+    if (!link) return null;
+    if (await this.perms.has(link.userId, 'ticket.manage')) return link.userId;
+    if (!(await this.perms.has(link.userId, 'ticket.claim'))) return null;
+    return (await this.categoryVisible(link.userId, cat, dept)) ? link.userId : null;
+  }
+  /** Nach Kategorie-/Abteilungswechsel: Bearbeiter ohne Zugriff entfernen (vertrauliche Inhalte nicht versehentlich offenlegen). */
+  private async revalidateClaimers(l: Loaded, cat: Category, dept: TicketDepartment | null, effects: TicketEffect[]) {
+    const keep: string[] = [], removed: string[] = [];
+    for (const c of l.t.claimers) ((await this.staffWithAccess(c, cat, dept)) ? keep : removed).push(c);
+    if (!removed.length) return removed;
+    await this.prisma.supportTicket.update({ where: { id: l.t.id }, data: { claimers: keep } });
+    if (l.t.channelId) for (const r of removed) effects.push({ type: 'access', channelId: l.t.channelId, targetId: r, kind: 'user', view: null });
+    return removed;
+  }
+  /** Rollen-Zugriff im Kanal von alter auf neue Zuständigkeit umstellen (nur Differenzen). */
+  private async moveRoleAccess(l: Loaded, toCat: Category, toDept: TicketDepartment | null, effects: TicketEffect[]) {
+    const ch = l.t.channelId;
+    if (!ch) return;
+    const before = new Set([...(await this.routing(l.cat, l.dept, l.settings)).responsible, ...l.cat.extraRoleIds]);
+    const after = new Set([...(await this.routing(toCat, toDept, l.settings)).responsible, ...toCat.extraRoleIds]);
+    for (const r of before) if (!after.has(r)) effects.push({ type: 'access', channelId: ch, targetId: r, kind: 'role', view: null });
+    for (const r of after) if (!before.has(r)) effects.push({ type: 'access', channelId: ch, targetId: r, kind: 'role', view: true, send: true });
+  }
   private actorTag(actor: TicketActor) { return actor.discordId ? mention(actor.discordId) : actor.name; }
 
   private async perform(l: Loaded, actor: TicketActor, input: ActionInput, effects: TicketEffect[]): Promise<string> {
@@ -380,13 +599,17 @@ export class SupportTicketsService {
       case 'reopen': {
         if (!this.isClosed(l)) throw new AppError('CONFLICT', 'Das Ticket ist bereits offen.');
         if (!l.cat.allowReopen) throw new AppError('CONFLICT', 'Tickets dieser Art können nicht wieder geöffnet werden.');
+        if (l.status.kind === 'ARCHIVED' && !actor.system && actor.userId && !(await this.perms.has(actor.userId, 'ticket.archive')) && !(await this.perms.has(actor.userId, 'ticket.manage'))) throw new AppError('PERMISSION_DENIED', 'Archivierte Tickets darf nur öffnen, wer archivieren darf.');
         const status = await this.prisma.ticketStatus.findFirst({ where: { isDefault: true } }) ?? await this.prisma.ticketStatus.findFirstOrThrow({ where: { kind: 'OPEN' } });
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { statusId: status.id, closedAt: null, closedById: null, closedByName: null, closeReason: null, deleteAt: null, warnedAt: null, lastActivityAt: new Date() } });
+        const bad = checkStatusChange(l.status, status, 'reopen');
+        if (bad) throw new AppError('CONFLICT', bad);
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { statusId: status.id, closedAt: null, closedById: null, closedByName: null, closeReason: null, deleteAt: null, warnedAt: null, archivedAt: null, resolvedAt: null, lastActivityAt: new Date() } });
         if (ch) for (const u of await users()) effects.push({ type: 'access', channelId: ch, targetId: u, kind: 'user', view: true, send: !t.locked });
         post({ embeds: [{ description: renderTicketText(l.settings.reopenedMessage, this.vars(l, { '{actor}': this.actorTag(actor) })), color: 0x22c55e }] });
         await refresh();
         await this.logAction(l, 'reopened', actor, {}, effects, `🔓 Wieder geöffnet von ${this.actorTag(actor)}`);
         await this.panelLoad(l.cat.id, effects);
+        await this.queueNotify(l, 'reopened', effects, `🔓 Ticket **${this.ref(t.number, l.settings)}** wieder geöffnet von ${actor.name}`);
         return 'Ticket wieder geöffnet.';
       }
       case 'claim': {
@@ -399,8 +622,9 @@ export class SupportTicketsService {
           claimers = [actor.discordId]; // Leitung übernimmt
         }
         const claimedStatus = l.status.isDefault ? await this.prisma.ticketStatus.findFirst({ where: { isClaimed: true, kind: 'OPEN' } }) : null;
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? { statusId: claimedStatus.id } : {}), firstResponseAt: t.firstResponseAt ?? new Date() } });
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? this.statusData(l, claimedStatus) : {}), firstResponseAt: t.firstResponseAt ?? new Date() } });
         const fresh = await refresh();
+        await this.queueNotify(fresh, 'claimed', effects, `👤 Ticket **${this.ref(t.number, l.settings)}** übernommen von ${actor.name}`, claimers.filter((c) => c !== actor.discordId));
         // 🎫 Ticket übernommen → Ersteller (falls mit einem Dashboard-Konto verknüpft)
         if (t.creatorUserId && t.creatorUserId !== actor.userId) await this.notify.notify([t.creatorUserId], { type: 'TICKET_CLAIMED', title: `🎫 Dein Ticket ${ticketNumber(t.number)} wurde übernommen`, body: `Bearbeiter: ${this.actorTag(actor)}`, entityType: 'SupportTicket', entityId: t.id });
         const text = renderTicketText(l.cat.claimMessage || '👤 Bearbeiter: {staff}', this.vars(fresh, { '{actor}': this.actorTag(actor) }));
@@ -459,8 +683,10 @@ export class SupportTicketsService {
           const roles = await this.prisma.userRole.findMany({ where: { userId: actor.userId }, include: { role: { select: { name: true } } } });
           if (!roles.some((r) => p.allowedRoleNames.includes(r.role.name))) throw new AppError('PERMISSION_DENIED', `Du darfst die Priorität „${p.name}“ nicht setzen.`);
         }
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { priorityId: p.id } });
+        const sla = slaState({ ...t, firstResponseMinutes: p.firstResponseMinutes, resolutionMinutes: p.resolutionMinutes });
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { priorityId: p.id, firstResponseDueAt: sla.firstDueAt, resolveDueAt: sla.resolveDueAt, slaFirstWarnedAt: null, slaResolveWarnedAt: null, slaEscalatedAt: null } });
         await refresh();
+        await this.queueNotify(l, 'priority', effects, `🔔 Ticket **${this.ref(t.number, l.settings)}**: Priorität → ${p.name}`);
         post({ content: p.notifyRoleIds.map((r) => `<@&${r}>`).join(' ') || undefined, mentionRoles: p.notifyRoleIds, embeds: [{ description: `🔔 Priorität: **${`${p.emoji} ${p.name}`.trim()}** (von ${this.actorTag(actor)})`, color: p.color }] });
         await this.logAction(l, 'priority_changed', actor, { from: l.priority?.name ?? null, to: p.name }, effects, `🔔 Priorität → ${p.name}`);
         return `Priorität: ${p.name}`;
@@ -468,9 +694,10 @@ export class SupportTicketsService {
       case 'status': {
         const s = await this.prisma.ticketStatus.findUnique({ where: { id: input.statusId } });
         if (!s) throw new AppError('NOT_FOUND', 'Status nicht gefunden.');
-        const closed = this.isClosed(l);
-        if (closed !== (s.kind !== 'OPEN')) throw new AppError('CONFLICT', closed ? 'Geschlossene Tickets: zuerst wieder öffnen (oder Status „Archiviert“).' : 'Zum Schließen bitte „Schließen“ benutzen.');
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { statusId: s.id } });
+        if (s.id === l.status.id) throw new AppError('CONFLICT', 'Das Ticket hat diesen Status bereits.');
+        const bad = checkStatusChange(l.status, s, 'status');
+        if (bad) throw new AppError('CONFLICT', bad);
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { ...this.statusData(l, s), ...(s.kind === 'ARCHIVED' ? { archivedAt: new Date() } : {}) } });
         await refresh();
         post({ embeds: [{ description: `🏷️ Status: **${`${s.emoji} ${s.name}`.trim()}** (von ${this.actorTag(actor)})`, color: s.color }] });
         await this.logAction(l, 'status_changed', actor, { from: l.status.name, to: s.name }, effects, `🏷️ Status → ${s.name}`);
@@ -479,15 +706,17 @@ export class SupportTicketsService {
       case 'category': {
         const to = await this.config.category(input.categoryId);
         if (to.id === l.cat.id) throw new AppError('CONFLICT', 'Das Ticket ist bereits in dieser Kategorie.');
-        await this.assertCan(actor, 'ticket.change_category', to);
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { categoryId: to.id } });
-        if (ch) {
-          const before = new Set([...l.cat.staffRoleIds, ...l.cat.extraRoleIds]), after = new Set([...to.staffRoleIds, ...to.extraRoleIds]);
-          for (const r of before) if (!after.has(r)) effects.push({ type: 'access', channelId: ch, targetId: r, kind: 'role', view: null });
-          for (const r of after) if (!before.has(r)) effects.push({ type: 'access', channelId: ch, targetId: r, kind: 'role', view: true, send: true });
-          if (to.discordCategoryId && to.discordCategoryId !== l.cat.discordCategoryId) effects.push({ type: 'move', channelId: ch, parentId: to.discordCategoryId });
-        }
+        if (to.archivedAt) throw new AppError('CONFLICT', 'Diese Kategorie ist archiviert.');
+        // neue Abteilung: die der Zielkategorie (sonst bleibt die bisherige)
+        const toDept = to.departmentId ? await this.config.department(to.departmentId) : l.dept;
+        await this.assertCan(actor, 'ticket.change_category', to, toDept, t);
+        await this.assertConfidentialMove(actor, l, to);
+        await this.moveRoleAccess(l, to, toDept, effects);
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { categoryId: to.id, departmentId: toDept?.id ?? null } });
+        if (ch && to.discordCategoryId && to.discordCategoryId !== l.cat.discordCategoryId) effects.push({ type: 'move', channelId: ch, parentId: to.discordCategoryId });
+        const removed = await this.revalidateClaimers(l, to, toDept, effects);
         await refresh();
+        if (removed.length) post({ embeds: [{ description: `↩️ ${removed.map(mention).join(', ')} ${removed.length === 1 ? 'hat' : 'haben'} keinen Zugriff auf die neue Kategorie und wurde${removed.length === 1 ? '' : 'n'} als Bearbeiter entfernt.`, color: 0x64748b }] });
         post({ content: to.mentionStaff ? to.staffRoleIds.map((r) => `<@&${r}>`).join(' ') || undefined : undefined, mentionRoles: to.mentionStaff ? to.staffRoleIds : [], embeds: [{ description: `🗂️ Kategorie geändert: **${l.cat.name}** → **${to.name}**`, color: to.color }] });
         await this.logAction(l, 'category_changed', actor, { from: l.cat.name, to: to.name }, effects, `🗂️ Kategorie → ${to.name}`);
         return `Kategorie: ${to.name}`;
@@ -505,11 +734,72 @@ export class SupportTicketsService {
         return 'Ticket verschoben.';
       }
       case 'transcript': {
-        const tr = await this.createTranscript(l.t.id, actor);
+        // neue Version im Hintergrund; der Link/die Datei kommt, sobald sie fertig ist
         const targets = [...new Set([ch, l.cat.transcriptChannelId ?? l.settings.transcriptChannelId].filter((x): x is string => !!x))];
-        effects.push({ type: 'transcript', transcriptId: tr.id, channelIds: targets, filename: `transcript-${ticketNumber(t.number)}.html`, message: { embeds: [{ description: `📋 Transcript für Ticket **#${ticketNumber(t.number)}** (${t.name}) erstellt von ${this.actorTag(actor)}.`, color: 0x5865f2 }] } });
-        await this.logAction(l, 'transcript_created', actor, { transcriptId: tr.id }, effects, '📋 Transcript erstellt');
-        return 'Transcript erstellt.';
+        const { transcript: tr } = await this.transcriptsSvc.enqueue(t.id, { trigger: 'manual', actor: { id: actor.discordId ?? actor.userId, name: actor.name }, notify: { channelIds: targets, message: `📋 Transkript für Ticket **${this.ref(t.number, l.settings)}** erstellt (angefordert von ${actor.name}).` } });
+        await this.logAction(l, 'transcript_requested', actor, { transcriptId: tr.id, version: tr.version }, effects, '📋 Transkript angefordert');
+        return `Transkript (Version ${tr.version}) wird erstellt – es erscheint gleich im Ticket und im Dashboard.`;
+      }
+      case 'transcript_retry': {
+        const tr = await this.prisma.ticketTranscript.findUnique({ where: { id: input.transcriptId } });
+        if (!tr || tr.ticketId !== t.id) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden.');
+        await this.transcriptsSvc.retry(tr.id);
+        await this.logAction(l, 'transcript_retry', actor, { transcriptId: tr.id, version: tr.version }, effects);
+        return `Transkript-Version ${tr.version} wird erneut erstellt.`;
+      }
+      case 'assign': {
+        this.requireOpen(l);
+        const userId = await this.staffWithAccess(input.targetId, l.cat, l.dept);
+        if (!userId) throw new AppError('VALIDATION_FAILED', 'Diese Person ist kein Teammitglied mit Zugriff auf Tickets dieser Art (Discord-Konto verknüpft, Recht ticket.claim, passende Rolle).');
+        if (t.claimers[0] === input.targetId && (l.cat.claimMode !== 'MULTI' || t.claimers.length === 1)) throw new AppError('CONFLICT', 'Diese Person bearbeitet das Ticket bereits.');
+        const claimers = l.cat.claimMode === 'SINGLE' ? [input.targetId] : [input.targetId, ...t.claimers.filter((c) => c !== input.targetId)];
+        const claimedStatus = l.status.isDefault ? await this.prisma.ticketStatus.findFirst({ where: { isClaimed: true, kind: 'OPEN' } }) : null;
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? this.statusData(l, claimedStatus) : {}) } });
+        if (ch) {
+          for (const old of t.claimers.filter((c) => !claimers.includes(c))) if (l.cat.claimLocksChat) effects.push({ type: 'access', channelId: ch, targetId: old, kind: 'user', view: null });
+          if (l.cat.claimLocksChat) effects.push({ type: 'access', channelId: ch, targetId: input.targetId, kind: 'user', view: true, send: true });
+        }
+        const fresh = await refresh();
+        post({ content: mention(input.targetId), mentionUsers: [input.targetId], embeds: [{ description: `🧭 ${mention(input.targetId)} ist jetzt zuständig (zugewiesen von ${this.actorTag(actor)}).`, color: l.cat.color }] });
+        await this.logAction(l, 'assigned', actor, { from: t.claimers.join(', ') || null, to: input.targetId, claimers }, effects, `🧭 Zugewiesen an ${mention(input.targetId)}`);
+        await this.queueNotify(fresh, 'assigned', effects, `🧭 Dir wurde Ticket **${this.ref(t.number, l.settings)}** zugewiesen (${l.cat.name}).`, [input.targetId]);
+        return 'Ticket zugewiesen.';
+      }
+      case 'department': {
+        const to = await this.config.department(input.departmentId);
+        if (!to || !to.active) throw new AppError('NOT_FOUND', 'Abteilung nicht gefunden oder deaktiviert.');
+        if (to.id === t.departmentId) throw new AppError('CONFLICT', 'Das Ticket ist bereits in dieser Abteilung.');
+        // Zugriff auf das Ziel prüfen: nur wer das Ticket danach noch sehen darf, darf es dorthin verschieben (oder ticket.manage)
+        await this.assertCan(actor, 'ticket.change_department', l.cat, to, t);
+        await this.moveRoleAccess(l, l.cat, to, effects);
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { departmentId: to.id, unassignedEscalatedAt: null } });
+        const removed = await this.revalidateClaimers(l, l.cat, to, effects);
+        const fresh = await refresh();
+        post({ embeds: [{ description: `🏢 Abteilung: **${l.dept?.name ?? '—'}** → **${to.name}**${removed.length ? `\n↩️ ${removed.map(mention).join(', ')} ohne Zugriff – als Bearbeiter entfernt.` : ''}`, color: l.cat.color }] });
+        await this.logAction(l, 'department_changed', actor, { from: l.dept?.name ?? null, to: to.name, departmentId: to.id }, effects, `🏢 Abteilung → ${to.name}`);
+        await this.queueNotify(fresh, 'assigned', effects, `🏢 Ticket **${this.ref(t.number, l.settings)}** wurde an **${to.name}** übergeben.`);
+        return `Abteilung: ${to.name}`;
+      }
+      case 'request_info': {
+        this.requireOpen(l);
+        if (!ch) throw new AppError('CONFLICT', 'Das Ticket hat (noch) keinen Discord-Kanal.');
+        const waiting = await this.statusByKey('WAITING_USER');
+        post({ content: mention(t.creatorId), mentionUsers: [t.creatorId], embeds: [{ title: '❔ Rückfrage vom Team', description: input.text, color: 0xeab308, footer: `${actor.name} · Bitte antworte hier im Ticket.` }] });
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { ...(waiting && waiting.id !== l.status.id ? this.statusData(l, waiting) : {}), lastActivityAt: new Date(), firstResponseAt: t.firstResponseAt ?? new Date() } });
+        await refresh();
+        await this.logAction(l, 'info_requested', actor, {}, effects, `❔ Rückfrage an den Ersteller (${this.actorTag(actor)})`);
+        await this.queueNotify(l, 'info_requested', effects, `❔ Rückfrage zu Ticket **${this.ref(t.number, l.settings)}** gestellt von ${actor.name}`);
+        return 'Rückfrage gesendet – das Ticket wartet auf den Nutzer.';
+      }
+      case 'archive': {
+        const st = await this.statusByKey('ARCHIVED') ?? await this.prisma.ticketStatus.findFirst({ where: { kind: 'ARCHIVED' }, orderBy: { position: 'asc' } });
+        if (!st) throw new AppError('CONFLICT', 'Kein Archiv-Status eingerichtet (Tickets → Status & Prioritäten).');
+        const bad = checkStatusChange(l.status, st, 'archive');
+        if (bad) throw new AppError('CONFLICT', bad);
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { statusId: st.id, archivedAt: new Date() } });
+        await refresh();
+        await this.logAction(l, 'archived', actor, { from: l.status.name, to: st.name }, effects, `📦 Archiviert von ${this.actorTag(actor)}`);
+        return 'Ticket archiviert (bleibt vollständig gespeichert und abrufbar).';
       }
       case 'lock': case 'unlock': {
         this.requireOpen(l);
@@ -528,11 +818,12 @@ export class SupportTicketsService {
           this.prisma.ticketStatus.findFirst({ where: { isEscalation: true, kind: 'OPEN' } }),
           l.cat.escalationPriorityId ? this.prisma.ticketPriority.findUnique({ where: { id: l.cat.escalationPriorityId } }) : Promise.resolve(null),
         ]);
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { escalatedAt: new Date(), ...(status ? { statusId: status.id } : {}), ...(prio && (!l.priority || prio.position > l.priority.position) ? { priorityId: prio.id } : {}) } });
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { escalatedAt: new Date(), ...(status ? this.statusData(l, status) : {}), ...(prio && (!l.priority || prio.position > l.priority.position) ? { priorityId: prio.id } : {}) } });
         const fresh = await refresh();
         const roles = [...new Set([...l.cat.escalationRoleIds, ...l.cat.staffRoleIds])];
         post({ content: roles.map((r) => `<@&${r}>`).join(' ') || undefined, mentionRoles: roles, embeds: [{ title: '🟠 Ticket eskaliert', description: renderTicketText(l.cat.escalationMessage || 'Dieses Ticket wurde eskaliert. {staff}', this.vars(fresh, { '{actor}': this.actorTag(actor) })), color: 0xf97316 }] });
         await this.logAction(l, 'escalated', actor, { status: status?.name ?? null, priority: prio?.name ?? null }, effects, `🟠 Eskaliert von ${this.actorTag(actor)}`);
+        await this.queueNotify(fresh, 'escalated', effects, `🟠 Ticket **${this.ref(t.number, l.settings)}** wurde eskaliert (${actor.name}).`, undefined, true);
         return 'Ticket eskaliert.';
       }
       case 'note': {
@@ -556,9 +847,9 @@ export class SupportTicketsService {
       }
       case 'delete': {
         if (l.cat.transcriptOnClose && !(await this.prisma.ticketTranscript.count({ where: { ticketId: t.id } }))) {
-          const tr = await this.createTranscript(t.id, actor);
           const target = l.cat.transcriptChannelId ?? l.settings.transcriptChannelId;
-          if (target) effects.push({ type: 'transcript', transcriptId: tr.id, channelIds: [target], filename: `transcript-${ticketNumber(t.number)}.html` });
+          // der Verlauf liegt in der Datenbank – das Transkript entsteht auch nach dem Löschen des Kanals
+          await this.transcriptsSvc.enqueue(t.id, { trigger: 'delete', key: `delete:${t.id}`, actor: { id: actor.discordId ?? actor.userId, name: actor.name }, notify: { channelIds: target ? [target] : [] } });
         }
         await this.prisma.supportTicket.update({ where: { id: t.id }, data: { deletedAt: new Date(), ...(t.closedAt ? {} : { closedAt: new Date(), closedById: actor.discordId, closedByName: actor.name }) } });
         if (ch) { post({ embeds: [{ description: '🗑️ Dieses Ticket wird in 5 Sekunden gelöscht.', color: 0xef4444 }] }); effects.push({ type: 'delete', channelId: ch, delayMs: 5000 }); }
@@ -575,8 +866,10 @@ export class SupportTicketsService {
     if (!status) throw new AppError('CONFLICT', 'Kein „Geschlossen“-Status eingerichtet (Dashboard → Tickets → Einstellungen).');
     const now = new Date();
     const del = l.cat.deleteAfterMinutes;
+    const bad = checkStatusChange(l.status, status, 'close');
+    if (bad) throw new AppError('CONFLICT', bad);
     const updated = await this.prisma.supportTicket.update({ where: { id: t.id }, data: {
-      statusId: status.id, closedAt: now, closedById: actor.discordId, closedByName: actor.name, closeReason: reason, deleteAt: del > 0 ? new Date(now.getTime() + del * 60_000) : null,
+      ...this.statusData(l, status, now), closedAt: now, closedById: actor.discordId, closedByName: actor.name, closeReason: reason, deleteAt: del > 0 ? new Date(now.getTime() + del * 60_000) : null,
     } });
     const fresh: Loaded = { ...l, t: updated, status };
     const ch = t.channelId;
@@ -591,10 +884,13 @@ export class SupportTicketsService {
     }
     await this.logAction(l, 'closed', actor, { reason }, effects, `🔒 Geschlossen von ${this.actorTag(actor)}${reason ? ` – ${reason}` : ''}`);
     if (l.cat.transcriptOnClose) {
-      const tr = await this.createTranscript(t.id, actor);
+      // Hintergrund-Auftrag (idempotent je Abschluss); schlägt die Erstellung fehl, bleiben alle Nachrichten gespeichert und der Auftrag wird wiederholt
       const targets = [l.cat.transcriptChannelId ?? l.settings.transcriptChannelId].filter((x): x is string => !!x);
-      if (targets.length || l.cat.transcriptToUser) effects.push({ type: 'transcript', transcriptId: tr.id, channelIds: targets, userId: l.cat.transcriptToUser ? t.creatorId : null, filename: `transcript-${ticketNumber(t.number)}.html`, message: { embeds: [{ description: `📋 Transcript – Ticket **#${ticketNumber(t.number)}** (${l.cat.name}) · ${reason ?? 'ohne Grund'}`, color: 0x5865f2 }] } });
+      const notify: TranscriptNotify = { channelIds: targets, userId: l.cat.transcriptToUser ? t.creatorId : null, message: `📋 Transkript – Ticket **${this.ref(t.number, l.settings)}** (${l.cat.name})${l.cat.confidential ? '' : ` · ${reason ?? 'ohne Grund'}`}` };
+      const { transcript: tr } = await this.transcriptsSvc.enqueue(t.id, { trigger: 'close', key: `close:${t.id}:${now.toISOString()}`, actor: { id: actor.discordId ?? actor.userId, name: actor.name }, notify });
+      await this.prisma.ticketLog.create({ data: { ticketId: t.id, action: 'transcript_requested', actorId: actor.discordId, actorName: actor.name, detail: { transcriptId: tr.id, version: tr.version, trigger: 'close' } } });
     }
+    await this.queueNotify(fresh, 'closed', effects, `🔒 Ticket **${this.ref(t.number, l.settings)}** geschlossen von ${actor.name}`);
     if (l.cat.ratingEnabled && !(await this.prisma.ticketRating.count({ where: { ticketId: t.id } }))) effects.push(this.ratingRequest(fresh, reason));
     await this.panelLoad(l.cat.id, effects);
     if (del === 0 && ch) {
@@ -665,6 +961,7 @@ export class SupportTicketsService {
       update: { content: d.content.slice(0, 8000) },
     });
     if (!d.isBot) await this.prisma.supportTicket.update({ where: { id: t.id }, data: { lastActivityAt: new Date(), warnedAt: null, staffAlertedAt: null, ...(staff && !t.firstResponseAt ? { firstResponseAt: new Date() } : {}) } });
+    if (!d.isBot && d.authorId === t.creatorId && !t.closedAt) await this.onCreatorMessage(t.id).catch((e: Error) => this.log.warn(`creator message ${t.id}: ${e.message}`));
     // Auto-Claim: erstes Teammitglied, das schreibt, übernimmt (nur mit Recht ticket.claim)
     if (staff && !t.claimers.length && !t.closedAt) {
       const l = await this.load(t.id);
@@ -676,6 +973,72 @@ export class SupportTicketsService {
       }
     }
     return { ok: true };
+  }
+
+  /** Ersteller schreibt: „Wartet auf Nutzer“ endet (SLA läuft weiter), Bearbeiter werden höchstens alle X Minuten benachrichtigt. */
+  private async onCreatorMessage(id: string) {
+    const l = await this.load(id);
+    if (this.isClosed(l)) return;
+    const effects: TicketEffect[] = [];
+    if (l.status.key === 'WAITING_USER') {
+      const back = await this.statusByKey('IN_PROGRESS') ?? await this.prisma.ticketStatus.findFirst({ where: { isDefault: true } });
+      if (back) {
+        await this.prisma.supportTicket.update({ where: { id }, data: this.statusData(l, back) });
+        const fresh = await this.load(id);
+        if (fresh.t.channelId) effects.push({ type: 'control', ticketId: id, channelId: fresh.t.channelId, messageId: fresh.t.controlMessageId, message: this.control(fresh) });
+        await this.logAction(l, 'status_changed', { userId: l.t.creatorUserId, discordId: l.t.creatorId, name: l.t.creatorName, viaBot: false }, { from: l.status.name, to: back.name }, effects);
+      }
+    }
+    const every = l.settings.userMessageNotifyMinutes * 60_000;
+    if (l.t.claimers.length && (!l.t.userMessageNotifiedAt || Date.now() - l.t.userMessageNotifiedAt.getTime() >= every)) {
+      await this.prisma.supportTicket.update({ where: { id }, data: { userMessageNotifiedAt: new Date() } });
+      await this.queueNotify(l, 'user_message', effects, `💬 Neue Nachricht des Nutzers in Ticket **${this.ref(l.t.number, l.settings)}**`);
+    }
+    await this.dispatch(effects, false);
+  }
+
+  /** Kategoriewechsel aus vertraulich heraus: nur die Leitung (ticket.manage) – sonst würde der bisherige Verlauf für ein größeres Team sichtbar. */
+  private async assertConfidentialMove(actor: TicketActor, l: Loaded, to: Category) {
+    if (!l.cat.confidential || to.confidential || actor.system) return;
+    if (actor.userId && (await this.perms.has(actor.userId, 'ticket.manage'))) return;
+    await this.auditTicket(actor, 'access_denied', l.t, { permission: 'ticket.manage', reason: 'confidential_move' }, 'DENIED');
+    throw new AppError('PERMISSION_DENIED', 'Ein vertrauliches Ticket kann nur die Leitung (ticket.manage) in eine nicht vertrauliche Kategorie verschieben.');
+  }
+
+  // ================= Benachrichtigungen =================
+  /**
+   * Benachrichtigung nach den Regeln unter Allgemein → Benachrichtigungen. Empfänger sind nur Berechtigte: der interne Kanal der
+   * Abteilung, die Bearbeiter (DM) und deren verknüpfte Dashboard-Konten. Vertrauliche Tickets: nur Ticket-ID, keine Details.
+   * `to`: Discord-IDs statt der Bearbeiter (z. B. die zugewiesene Person); `leads`: zusätzlich die Leitung im Kanal erwähnen.
+   */
+  private async queueNotify(l: Loaded, event: NotifyEvent, effects: TicketEffect[], text: string, to?: string[], leads = false) {
+    const rule = l.settings.notifications[event];
+    if (!rule) return;
+    const ref = this.ref(l.t.number, l.settings);
+    const safe = l.cat.confidential ? `🔒 Vertrauliches Ticket **${ref}** · ${NOTIFY_LABEL[event] ?? event}` : text;
+    const link = webUrl(`/support-tickets/${l.t.id}`);
+    const recipients = (to ?? l.t.claimers).filter(Boolean);
+    if (rule.channel && l.dept?.notifyChannelId) {
+      const leadRoles = leads ? (l.dept.leadRoleIds.length ? l.dept.leadRoleIds : l.settings.leadRoleIds) : [];
+      effects.push({ type: 'post', channelId: l.dept.notifyChannelId, message: { content: leadRoles.map((r) => `<@&${r}>`).join(' ') || undefined, mentionRoles: leadRoles, embeds: [{ description: safe, color: 0x3b82f6 }], buttons: [{ id: `tk-open-${l.t.id}`, label: 'Im Dashboard öffnen', style: 'secondary', url: link }] } });
+    }
+    if (rule.dm) for (const id of recipients) if ((await this.staffWithAccess(id, l.cat, l.dept))) effects.push({ type: 'dm', userId: id, message: { embeds: [{ description: safe, color: 0x3b82f6 }], buttons: [{ id: `tk-open-${l.t.id}`, label: 'Im Dashboard öffnen', style: 'secondary', url: link }] } });
+    if (rule.dashboard && recipients.length) {
+      const users: string[] = [];
+      for (const id of recipients) { const u = await this.staffWithAccess(id, l.cat, l.dept); if (u) users.push(u); }
+      if (users.length) await this.notify.notify(users, { type: 'TICKET_EVENT', title: safe.replace(/\*\*/g, '').slice(0, 200), body: l.cat.name, entityType: 'SupportTicket', entityId: l.t.id }).catch((e: Error) => this.log.warn(`notify: ${e.message}`));
+    }
+  }
+
+  /** Transkript fertig bzw. endgültig fehlgeschlagen → Benachrichtigung (fehlgeschlagen zusätzlich im Log-Kanal). */
+  private async transcriptFinished(tr: TicketTranscript, ok: boolean) {
+    const l = await this.load(tr.ticketId).catch(() => null);
+    if (!l) return;
+    const effects: TicketEffect[] = [];
+    const ref = this.ref(l.t.number, l.settings);
+    if (!ok && l.settings.logChannelId) effects.push({ type: 'post', channelId: l.settings.logChannelId, message: { embeds: [{ title: '⚠️ Transkript fehlgeschlagen', description: `${ref} · Version ${tr.version}: Die Erstellung ist nach mehreren Versuchen fehlgeschlagen. Die Nachrichten sind gespeichert – im Dashboard „Erneut versuchen“.`, color: 0xef4444 }] } });
+    await this.queueNotify(l, ok ? 'transcript_ready' : 'transcript_failed', effects, ok ? `📋 Transkript **${ref}** (Version ${tr.version}) ist fertig.` : `⚠️ Transkript **${ref}** (Version ${tr.version}) fehlgeschlagen.`);
+    await this.dispatch(effects, false);
   }
 
   private async storeAttachment(url: string, size: number, name: string): Promise<string | null> {
@@ -706,49 +1069,6 @@ export class SupportTicketsService {
     return { data, name: meta.name, contentType: image ? meta.contentType! : 'application/octet-stream', inline: image };
   }
 
-  // ================= Transcripts =================
-  async createTranscript(id: string, actor: TicketActor) {
-    const t = await this.prisma.supportTicket.findUniqueOrThrow({ where: { id } });
-    const [cat, status, priority, messages, logs, access, tz] = await Promise.all([
-      this.prisma.ticketCategory.findUnique({ where: { id: t.categoryId } }), this.prisma.ticketStatus.findUnique({ where: { id: t.statusId } }),
-      t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : null,
-      this.prisma.ticketMessage.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'asc' }, take: 10_000 }),
-      this.prisma.ticketLog.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'asc' } }),
-      this.prisma.ticketAccess.findMany({ where: { ticketId: id } }), this.timezone(),
-    ]);
-    const names = new Map<string, string>([[t.creatorId, t.creatorName], ...messages.map((m) => [m.authorId, m.authorName] as [string, string])]);
-    const entries: TranscriptData['entries'] = [];
-    for (const m of messages) {
-      const atts = [];
-      for (const a of (m.attachments as { name: string; size: number; contentType?: string | null; storageKey?: string | null }[]) ?? []) {
-        let dataUri: string | null = null;
-        if (a.storageKey && a.contentType && IMAGE_TYPES.includes(a.contentType) && a.size <= INLINE_IMAGE) {
-          const buf = await readFile(path.join(this.dir, a.storageKey)).catch(() => null);
-          if (buf) dataUri = `data:${a.contentType};base64,${buf.toString('base64')}`;
-        }
-        atts.push({ name: a.name, size: a.size, contentType: a.contentType ?? undefined, dataUri, href: a.storageKey ? webUrl(`/api/v1/support-tickets/attachments/${a.storageKey}`) : null });
-      }
-      entries.push({ kind: 'message', at: m.createdAt, author: m.authorName, authorId: m.authorId, avatar: m.authorAvatar, staff: m.isStaff, bot: m.isBot, content: m.content, attachments: atts, embeds: (m.embeds as { title?: string; description?: string }[]) ?? [] });
-    }
-    const LABEL: Record<string, string> = { created: 'Ticket erstellt', answers: 'Fragen beantwortet', claimed: 'Übernommen', claim_transferred: 'Bearbeiter gewechselt', unclaimed: 'Freigegeben', user_added: 'Benutzer hinzugefügt', user_removed: 'Benutzer entfernt', role_added: 'Rolle hinzugefügt', role_removed: 'Rolle entfernt', priority_changed: 'Priorität geändert', status_changed: 'Status geändert', category_changed: 'Kategorie geändert', renamed: 'Umbenannt', moved: 'Verschoben', locked: 'Gesperrt', unlocked: 'Entsperrt', escalated: 'Eskaliert', closed: 'Geschlossen', reopened: 'Wieder geöffnet', transcript_created: 'Transcript erstellt', note_added: 'Interne Notiz', rating_requested: 'Bewertung angefragt', rated: 'Bewertet', access_expired: 'Zugriff abgelaufen', auto_warning: 'Inaktivitäts-Warnung', deleted: 'Gelöscht' };
-    for (const g of logs) {
-      const det = g.detail as Record<string, unknown>;
-      const extra = det.to ? `: ${String(det.from ?? '—')} → ${String(det.to)}` : det.reason ? `: ${String(det.reason)}` : det.target ? `: ${names.get(String(det.target)) ?? String(det.target)}` : '';
-      entries.push({ kind: 'event', at: g.createdAt, text: `${LABEL[g.action] ?? g.action}${extra} · ${g.actorName ?? 'System'}` });
-    }
-    entries.sort((a, b) => a.at.getTime() - b.at.getTime());
-    const html = renderTranscript({
-      number: ticketNumber(t.number), name: t.name, category: cat?.name ?? '—', status: status ? `${status.emoji} ${status.name}`.trim() : '—', priority: priority ? `${priority.emoji} ${priority.name}`.trim() : '—',
-      creator: { id: t.creatorId, name: t.creatorName }, claimers: t.claimers.map((id) => ({ id, name: names.get(id) ?? id })), participants: access.map((a) => (a.kind === 'USER' ? names.get(a.targetId) ?? a.targetId : `Rolle ${a.targetId}`)),
-      createdAt: t.createdAt, closedAt: t.closedAt, closedBy: t.closedByName, closeReason: t.closeReason, generatedAt: new Date(), timezone: tz,
-      answers: ((t.answers as { label: string; value: string }[]) ?? []).map((a) => ({ label: a.label, value: a.value })), entries,
-    });
-    return this.prisma.ticketTranscript.create({ data: {
-      ticketId: id, ticketNumber: t.number, categoryName: cat?.name ?? '—', creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, statusName: status?.name ?? '—',
-      html, sizeBytes: Buffer.byteLength(html), createdById: actor.discordId ?? actor.userId, createdByName: actor.name,
-    } });
-  }
-
   // ================= Abfragen fürs Dashboard =================
   /** Anzeigenamen zu Discord-IDs (verknüpfte Konten, sonst zuletzt gesehener Name in Tickets). */
   private async discordNames(ids: string[]): Promise<Record<string, string>> {
@@ -766,64 +1086,116 @@ export class SupportTicketsService {
   }
 
   summary(l: Loaded) {
-    return { id: l.t.id, number: ticketNumber(l.t.number), name: l.t.name, channelId: l.t.channelId, category: { id: l.cat.id, name: l.cat.name, emoji: l.cat.emoji }, status: l.status, priority: l.priority, claimers: l.t.claimers, creatorId: l.t.creatorId, creatorName: l.t.creatorName, locked: l.t.locked, closedAt: l.t.closedAt, createdAt: l.t.createdAt };
+    return { id: l.t.id, number: ticketNumber(l.t.number), ref: this.ref(l.t.number, l.settings), subject: l.t.subject, name: l.t.name, channelId: l.t.channelId, category: { id: l.cat.id, name: l.cat.name, emoji: l.cat.emoji }, department: l.dept ? { id: l.dept.id, name: l.dept.name } : null, status: l.status, priority: l.priority, claimers: l.t.claimers, creatorId: l.t.creatorId, creatorName: l.t.creatorName, locked: l.t.locked, closedAt: l.t.closedAt, createdAt: l.t.createdAt };
   }
 
-  async list(userId: string, f: { kind?: string; statusId?: string; priorityId?: string; categoryId?: string; claimer?: string; creator?: string; from?: Date; to?: Date; q?: string; guildId?: string; page: number; pageSize: number }) {
-    const visible = await this.visibleCategoryIds(userId);
+  /** Warteschlangen (offen, unzugewiesen, …) als Abfrage; Status-IDs nach Art bzw. fester Bedeutung. */
+  private async queueWhere(queue: string | undefined, now = new Date()): Promise<Prisma.SupportTicketWhereInput> {
+    if (!queue) return {};
+    const statuses = await this.prisma.ticketStatus.findMany();
+    const ids = (f: (s: TicketStatus) => boolean) => statuses.filter(f).map((s) => s.id);
+    const open = { statusId: { in: ids((s) => s.kind === 'OPEN') }, deletedAt: null };
+    switch (queue) {
+      case 'unassigned': return { ...open, claimers: { isEmpty: true } };
+      case 'in_progress': return { ...open, claimers: { isEmpty: false }, statusId: { in: ids((s) => s.kind === 'OPEN' && s.key !== 'WAITING_USER' && s.key !== 'WAITING_INTERNAL') } };
+      case 'waiting': return { deletedAt: null, statusId: { in: ids((s) => s.key === 'WAITING_USER' || s.key === 'WAITING_INTERNAL') } };
+      case 'overdue': return { ...open, OR: [{ firstResponseAt: null, firstResponseDueAt: { lt: now } }, { waitingSince: null, resolveDueAt: { lt: now } }] };
+      default: return {};
+    }
+  }
+
+  async list(userId: string, f: { kind?: string; queue?: string; statusId?: string; priorityId?: string; categoryId?: string; departmentId?: string; claimer?: string; creator?: string; from?: Date; to?: Date; closedFrom?: Date; closedTo?: Date; q?: string; guildId?: string; page: number; pageSize: number }) {
+    const visible = await this.visibleWhere(userId);
     let claimer = f.claimer;
     if (claimer === 'me') claimer = (await this.prisma.discordLink.findUnique({ where: { userId } }))?.discordId ?? '__none__';
     const statuses = await this.prisma.ticketStatus.findMany();
     const kindIds = (k: string) => statuses.filter((s) => s.kind === k).map((s) => s.id);
+    const num = f.q ? parseTicketRef(f.q) : null;
+    const and: Prisma.SupportTicketWhereInput[] = [
+      ...(visible ? [visible] : []), await this.queueWhere(f.queue),
+      ...(f.creator ? [{ OR: [{ creatorId: f.creator }, { creatorName: { contains: f.creator, mode: 'insensitive' as const } }] }] : []),
+      ...(f.q ? [{ OR: [{ name: { contains: f.q, mode: 'insensitive' as const } }, { subject: { contains: f.q, mode: 'insensitive' as const } }, { creatorName: { contains: f.q, mode: 'insensitive' as const } }, ...(num ? [{ number: num }] : [])] }] : []),
+    ];
     const where: Prisma.SupportTicketWhereInput = {
       deletedAt: f.kind === 'deleted' ? { not: null } : undefined,
-      ...(visible ? { categoryId: { in: f.categoryId ? visible.filter((c) => c === f.categoryId) : visible } } : f.categoryId ? { categoryId: f.categoryId } : {}),
+      ...(f.categoryId ? { categoryId: f.categoryId } : {}), ...(f.departmentId ? { departmentId: f.departmentId } : {}),
       ...(f.kind === 'open' ? { statusId: { in: kindIds('OPEN') } } : f.kind === 'closed' ? { statusId: { in: kindIds('CLOSED') } } : f.kind === 'archived' ? { statusId: { in: kindIds('ARCHIVED') } } : f.kind === 'escalated' ? { escalatedAt: { not: null }, statusId: { in: kindIds('OPEN') } } : {}),
       ...(f.statusId ? { statusId: f.statusId } : {}), ...(f.priorityId ? { priorityId: f.priorityId } : {}), ...(f.guildId ? { guildId: f.guildId } : {}),
       ...(claimer ? { claimers: { has: claimer } } : {}),
-      ...(f.creator ? { OR: [{ creatorId: f.creator }, { creatorName: { contains: f.creator, mode: 'insensitive' } }] } : {}),
       ...(f.from || f.to ? { createdAt: { ...(f.from ? { gte: f.from } : {}), ...(f.to ? { lte: f.to } : {}) } } : {}),
-      ...(f.q ? { AND: [{ OR: [{ name: { contains: f.q, mode: 'insensitive' } }, { creatorName: { contains: f.q, mode: 'insensitive' } }, ...(/^#?\d+$/.test(f.q) ? [{ number: Number(f.q.replace('#', '')) }] : [])] }] } : {}),
+      ...(f.closedFrom || f.closedTo ? { closedAt: { ...(f.closedFrom ? { gte: f.closedFrom } : {}), ...(f.closedTo ? { lte: f.closedTo } : {}) } } : {}),
+      AND: and,
     };
-    const [rows, total, cats, prios] = await Promise.all([
+    const [rows, total, cats, prios, deps, settings] = await Promise.all([
       this.prisma.supportTicket.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (f.page - 1) * f.pageSize, take: f.pageSize }),
-      this.prisma.supportTicket.count({ where }), this.prisma.ticketCategory.findMany({ select: { id: true, name: true, emoji: true } }), this.prisma.ticketPriority.findMany(),
+      this.prisma.supportTicket.count({ where }), this.prisma.ticketCategory.findMany({ select: { id: true, name: true, emoji: true, confidential: true } }), this.prisma.ticketPriority.findMany(),
+      this.prisma.ticketDepartment.findMany({ select: { id: true, name: true, emoji: true } }), this.config.settings(),
     ]);
-    return { total, page: f.page, pageSize: f.pageSize, items: rows.map((t) => ({
-      id: t.id, number: ticketNumber(t.number), name: t.name, guildId: t.guildId, creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, locked: t.locked, createdAt: t.createdAt, closedAt: t.closedAt, deletedAt: t.deletedAt, escalatedAt: t.escalatedAt,
-      category: cats.find((c) => c.id === t.categoryId) ?? null, status: statuses.find((s) => s.id === t.statusId) ?? null, priority: prios.find((p) => p.id === t.priorityId) ?? null,
-    })) };
+    const now = new Date();
+    return { total, page: f.page, pageSize: f.pageSize, items: rows.map((t) => {
+      const prio = prios.find((p) => p.id === t.priorityId) ?? null;
+      const sla = slaState({ ...t, firstResponseMinutes: prio?.firstResponseMinutes ?? null, resolutionMinutes: prio?.resolutionMinutes ?? null }, now);
+      return {
+        id: t.id, number: ticketNumber(t.number), ref: this.ref(t.number, settings), subject: t.subject, name: t.name, guildId: t.guildId, creatorId: t.creatorId, creatorName: t.creatorName, claimers: t.claimers, locked: t.locked,
+        createdAt: t.createdAt, closedAt: t.closedAt, deletedAt: t.deletedAt, escalatedAt: t.escalatedAt, waitingSince: t.waitingSince,
+        category: cats.find((c) => c.id === t.categoryId) ?? null, department: deps.find((d) => d.id === t.departmentId) ?? null, status: statuses.find((s) => s.id === t.statusId) ?? null, priority: prio,
+        sla: { firstDueAt: sla.firstDueAt, resolveDueAt: sla.resolveDueAt, overdue: sla.firstOverdue || sla.resolveOverdue, paused: sla.paused },
+      };
+    }) };
+  }
+
+  /** Zahlen für die Übersicht im Ticket-Center (nur sichtbare Tickets). */
+  async overview(userId: string, guildId?: string) {
+    const visible = await this.visibleWhere(userId);
+    const base: Prisma.SupportTicketWhereInput = { deletedAt: null, ...(guildId ? { guildId } : {}), ...(visible ? { AND: [visible] } : {}) };
+    const statuses = await this.prisma.ticketStatus.findMany();
+    const kind = (k: string) => ({ statusId: { in: statuses.filter((s) => s.kind === k).map((s) => s.id) } });
+    const count = async (q: Prisma.SupportTicketWhereInput) => this.prisma.supportTicket.count({ where: { AND: [base, q] } });
+    const [open, unassigned, inProgress, waiting, overdue, closed, archived] = await Promise.all([
+      count(kind('OPEN')), count(await this.queueWhere('unassigned')), count(await this.queueWhere('in_progress')), count(await this.queueWhere('waiting')),
+      count(await this.queueWhere('overdue')), count(kind('CLOSED')), count(kind('ARCHIVED')),
+    ]);
+    return { open, unassigned, inProgress, waiting, overdue, closed, archived };
   }
 
   async detail(userId: string, id: string) {
     const t = await this.prisma.supportTicket.findUnique({ where: { id } });
     if (!t) throw new AppError('NOT_FOUND', 'Ticket nicht gefunden.');
-    const cat = await this.config.category(t.categoryId);
-    await this.assertCan({ userId, discordId: null, name: '', viaBot: false }, 'ticket.view', cat);
+    const [cat, dept] = await Promise.all([this.config.category(t.categoryId), this.config.department(t.departmentId)]);
+    await this.assertCan({ userId, discordId: null, name: '', viaBot: false }, 'ticket.view', cat, dept, t);
     const [canNotes, canTranscripts] = await Promise.all([this.perms.has(userId, 'ticket.internal_notes'), this.perms.has(userId, 'ticket.transcript')]);
-    const [status, priority, access, messages, notes, logs, transcripts, rating] = await Promise.all([
+    const [status, priority, access, messages, notes, logs, transcripts, rating, settings, formVersion] = await Promise.all([
       this.prisma.ticketStatus.findUnique({ where: { id: t.statusId } }), t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : null,
       this.prisma.ticketAccess.findMany({ where: { ticketId: id } }), this.prisma.ticketMessage.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'asc' }, take: 1000 }),
       canNotes ? this.prisma.ticketNote.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'asc' } }) : Promise.resolve(null),
-      this.prisma.ticketLog.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'asc' } }),
-      canTranscripts ? this.prisma.ticketTranscript.findMany({ where: { ticketId: id }, orderBy: { createdAt: 'desc' }, select: { id: true, createdAt: true, createdByName: true, sizeBytes: true } }) : Promise.resolve(null),
-      this.prisma.ticketRating.findUnique({ where: { ticketId: id } }),
+      this.prisma.ticketLog.findMany({ where: { ticketId: id, ...(canNotes ? {} : { action: { not: 'note_added' } }) }, orderBy: { createdAt: 'asc' } }),
+      canTranscripts ? this.prisma.ticketTranscript.findMany({ where: { ticketId: id }, orderBy: { version: 'desc' }, select: { id: true, version: true, status: true, trigger: true, attempts: true, lastError: true, createdAt: true, completedAt: true, createdByName: true, sizeBytes: true, sha256: true } }) : Promise.resolve(null),
+      this.prisma.ticketRating.findUnique({ where: { ticketId: id } }), this.settingsFor(t.guildId),
+      t.formVersion ? this.prisma.ticketFormVersion.findUnique({ where: { categoryId_version: { categoryId: t.categoryId, version: t.formVersion } }, select: { version: true, createdAt: true } }) : null,
     ]);
     const names = await this.discordNames([...t.claimers, ...access.filter((a) => a.kind === 'USER').map((a) => a.targetId)]);
-    return { ...t, number: ticketNumber(t.number), category: { id: cat.id, name: cat.name, emoji: cat.emoji, claimMode: cat.claimMode, closeReasonMode: cat.closeReasonMode, closeReasonSource: cat.closeReasonSource, allowReopen: cat.allowReopen }, status, priority, access, messages, notes, logs, transcripts, rating, names };
+    const sla = slaState({ ...t, firstResponseMinutes: priority?.firstResponseMinutes ?? null, resolutionMinutes: priority?.resolutionMinutes ?? null });
+    return {
+      ...t, number: ticketNumber(t.number), ref: this.ref(t.number, settings), transcriptUrl: webUrl(`/transcript/${this.ref(t.number, settings)}`),
+      category: { id: cat.id, name: cat.name, emoji: cat.emoji, claimMode: cat.claimMode, closeReasonMode: cat.closeReasonMode, closeReasonSource: cat.closeReasonSource, allowReopen: cat.allowReopen, confidential: cat.confidential, active: cat.active && !cat.archivedAt },
+      department: dept ? { id: dept.id, name: dept.name, emoji: dept.emoji } : null, formVersion, sla,
+      status, priority, access, messages, notes, logs, transcripts, rating, names,
+    };
   }
 
   /** Auswahllisten für Discord-Menüs (Priorität, Status, Kategorie, Gründe, Zugriff). */
   async options(actor: TicketActor, id: string) {
     const l = await this.load(id);
-    await this.assertCan(actor, 'ticket.view', l.cat);
-    const [statuses, priorities, categories, reasons, access] = await Promise.all([
-      this.config.statuses(), this.config.priorities(), this.prisma.ticketCategory.findMany({ where: { active: true }, orderBy: { position: 'asc' }, select: { id: true, name: true, emoji: true } }),
-      this.config.reasons(), this.prisma.ticketAccess.findMany({ where: { ticketId: id } }),
+    await this.assertCan(actor, 'ticket.view', l.cat, l.dept, l.t);
+    const [statuses, priorities, categories, reasons, access, departments] = await Promise.all([
+      this.config.statuses(), this.config.priorities(), this.prisma.ticketCategory.findMany({ where: { active: true, archivedAt: null }, orderBy: { position: 'asc' }, select: { id: true, name: true, emoji: true } }),
+      this.config.reasons(), this.prisma.ticketAccess.findMany({ where: { ticketId: id } }), this.prisma.ticketDepartment.findMany({ where: { active: true }, orderBy: { position: 'asc' }, select: { id: true, name: true, emoji: true } }),
     ]);
     const closed = this.isClosed(l);
     return {
-      closed, statuses: statuses.filter((s) => (closed ? s.kind !== 'OPEN' : s.kind === 'OPEN')), priorities, categories: categories.filter((c) => c.id !== l.cat.id), reasons, access,
+      // nur erlaubte Statuswechsel anbieten (zentrale Regel)
+      closed, statuses: statuses.filter((s) => s.id !== l.status.id && !checkStatusChange(l.status, s, 'status')), priorities, categories: categories.filter((c) => c.id !== l.cat.id), reasons, access,
+      departments: departments.filter((d) => d.id !== l.t.departmentId),
       close: { mode: l.cat.closeReasonMode, source: l.cat.closeReasonSource },
     };
   }
@@ -835,40 +1207,107 @@ export class SupportTicketsService {
   }
 
   async transcripts(userId: string, f: { q?: string; categoryName?: string; creator?: string; staff?: string; status?: string; from?: Date; to?: Date; number?: number; page: number; pageSize: number }) {
+    const num = f.q ? parseTicketRef(f.q) : null;
     const where: Prisma.TicketTranscriptWhereInput = {
       ...(f.number ? { ticketNumber: f.number } : {}), ...(f.categoryName ? { categoryName: f.categoryName } : {}), ...(f.status ? { statusName: f.status } : {}),
       ...(f.creator ? { OR: [{ creatorId: f.creator }, { creatorName: { contains: f.creator, mode: 'insensitive' } }] } : {}),
       ...(f.staff ? { claimers: { has: f.staff } } : {}),
       ...(f.from || f.to ? { createdAt: { ...(f.from ? { gte: f.from } : {}), ...(f.to ? { lte: f.to } : {}) } } : {}),
-      ...(f.q ? { OR: [{ creatorName: { contains: f.q, mode: 'insensitive' } }, { categoryName: { contains: f.q, mode: 'insensitive' } }, ...(/^#?\d+$/.test(f.q) ? [{ ticketNumber: Number(f.q.replace('#', '')) }] : [])] } : {}),
+      ...(f.q ? { AND: [{ OR: [{ creatorName: { contains: f.q, mode: 'insensitive' } }, { categoryName: { contains: f.q, mode: 'insensitive' } }, ...(num ? [{ ticketNumber: num }] : [])] }] } : {}),
     };
-    const visible = await this.visibleCategoryIds(userId);
-    if (visible) where.ticketId = { in: (await this.prisma.supportTicket.findMany({ where: { categoryId: { in: visible } }, select: { id: true } })).map((t) => t.id) };
+    const visible = await this.visibleWhere(userId);
+    if (visible) where.ticketId = { in: (await this.prisma.supportTicket.findMany({ where: visible, select: { id: true } })).map((t) => t.id) };
+    const settings = await this.config.settings();
     const [items, total] = await Promise.all([
-      this.prisma.ticketTranscript.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (f.page - 1) * f.pageSize, take: f.pageSize, select: { id: true, ticketId: true, ticketNumber: true, categoryName: true, creatorId: true, creatorName: true, claimers: true, statusName: true, sizeBytes: true, createdAt: true, createdByName: true } }),
+      this.prisma.ticketTranscript.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (f.page - 1) * f.pageSize, take: f.pageSize, select: { id: true, ticketId: true, ticketNumber: true, categoryName: true, creatorId: true, creatorName: true, claimers: true, statusName: true, sizeBytes: true, createdAt: true, createdByName: true, version: true, status: true, attempts: true, lastError: true, completedAt: true } }),
       this.prisma.ticketTranscript.count({ where }),
     ]);
-    return { total, page: f.page, pageSize: f.pageSize, items: items.map((x) => ({ ...x, ticketNumber: ticketNumber(x.ticketNumber) })) };
+    return { total, page: f.page, pageSize: f.pageSize, items: items.map((x) => ({ ...x, ref: this.ref(x.ticketNumber, settings), ticketNumber: ticketNumber(x.ticketNumber) })) };
   }
-  async transcript(userId: string | null, id: string) {
-    const tr = await this.prisma.ticketTranscript.findUnique({ where: { id } });
-    if (!tr) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden.');
-    if (userId) {
-      const t = await this.prisma.supportTicket.findUnique({ where: { id: tr.ticketId } });
-      if (t) await this.assertCan({ userId, discordId: null, name: '', viaBot: false }, 'ticket.transcript', await this.config.category(t.categoryId));
+
+  /**
+   * Zugriff auf ein Transkript – bei JEDEM Abruf serverseitig geprüft (ein Link allein reicht nie):
+   * Mitarbeiter mit ticket.transcript (Export: ticket.transcript_export) und Zugriff auf das Ticket, oder der Ersteller selbst
+   * (verknüpftes Discord-Konto; nur Ansicht/Text, kein JSON). Alles andere: einheitlich „nicht gefunden“ (keine Rückschlüsse) + Audit.
+   */
+  async transcriptAccess(userId: string, ticketId: string, need: 'view' | 'export' | 'json'): Promise<'staff' | 'creator'> {
+    const t = await this.prisma.supportTicket.findUnique({ where: { id: ticketId } });
+    const actor: TicketActor = { userId, discordId: null, name: '', viaBot: false };
+    if (await this.perms.has(userId, 'ticket.manage')) return 'staff';
+    if (t) {
+      const [cat, dept] = await Promise.all([this.config.category(t.categoryId), this.config.department(t.departmentId)]);
+      const perms = need === 'view' ? ['ticket.transcript'] : ['ticket.transcript', 'ticket.transcript_export'];
+      let staff = await this.categoryVisible(userId, cat, dept);
+      for (const p of perms) staff = staff && (await this.perms.has(userId, p));
+      if (staff) return 'staff';
+      const link = await this.prisma.discordLink.findUnique({ where: { userId } });
+      if (link?.discordId === t.creatorId && need !== 'json') return 'creator';
+      await this.auditTicket(actor, 'transcript_denied', t, { need }, 'DENIED');
     }
+    throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
+  }
+
+  /** Ein Transkript (Version) für Ansicht/Download; `userId` null = Bot-Dienst (Zustellung in Discord). */
+  async transcript(userId: string | null, id: string, need: 'view' | 'export' | 'json' = 'view') {
+    const tr = await this.prisma.ticketTranscript.findUnique({ where: { id } });
+    if (!tr) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
+    if (userId) {
+      const who = await this.transcriptAccess(userId, tr.ticketId, need);
+      const t = await this.prisma.supportTicket.findUnique({ where: { id: tr.ticketId }, select: { id: true, guildId: true, number: true } });
+      if (t) await this.auditTicket({ userId, discordId: null, name: '', viaBot: false }, need === 'view' ? 'transcript_viewed' : 'transcript_exported', t, { transcriptId: tr.id, version: tr.version, as: who, format: need });
+    }
+    if (tr.status !== 'DONE') throw new AppError('CONFLICT', tr.status === 'FAILED' ? 'Die Erstellung dieses Transkripts ist fehlgeschlagen – bitte erneut versuchen.' : 'Das Transkript wird noch erstellt. Bitte in einem Moment erneut versuchen.');
     return tr;
   }
+
+  /** Versionen eines Tickets für die Transkript-Seite `/transcript/EMD-000123`. */
+  async transcriptsByRef(userId: string, ref: string) {
+    const n = parseTicketRef(ref);
+    const t = n ? await this.prisma.supportTicket.findUnique({ where: { number: n } }) : null;
+    if (!t) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
+    const settings = await this.settingsFor(t.guildId);
+    // die angefragte Kennung muss zum Präfix passen (keine Mehrdeutigkeit) – Zahl/#Zahl bleibt erlaubt
+    if (/^[A-Za-z]/.test(ref) && !ref.toUpperCase().startsWith(`${settings.refPrefix}-`)) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
+    const who = await this.transcriptAccess(userId, t.id, 'view');
+    const [cat, versions, canExport, canManage] = await Promise.all([
+      this.prisma.ticketCategory.findUnique({ where: { id: t.categoryId }, select: { name: true, emoji: true } }),
+      this.prisma.ticketTranscript.findMany({ where: { ticketId: t.id }, orderBy: { version: 'desc' }, select: { id: true, version: true, status: true, trigger: true, createdAt: true, completedAt: true, createdByName: true, sizeBytes: true, sha256: true, attempts: true, lastError: true } }),
+      who === 'staff' ? this.perms.has(userId, 'ticket.transcript_export') : Promise.resolve(false),
+      who === 'staff' ? this.perms.has(userId, 'ticket.transcript_manage') : Promise.resolve(false),
+    ]);
+    return {
+      ticketId: who === 'staff' ? t.id : null, ref: this.ref(t.number, settings), subject: t.subject, category: cat, createdAt: t.createdAt, closedAt: t.closedAt, as: who,
+      canExport: who === 'staff' ? canExport : true, canJson: who === 'staff' && canExport, canManage,
+      // Fehlertexte nur für Mitarbeiter
+      versions: versions.map((v) => ({ ...v, lastError: who === 'staff' ? v.lastError : null, createdByName: who === 'staff' ? v.createdByName : null })),
+    };
+  }
+
+  /** Audit-Protokoll des Ticket-Systems (nur Metadaten; Recht ticket.audit). */
+  async auditLog(f: { ticketId?: string; action?: string; result?: string; page: number; pageSize: number }) {
+    const where: Prisma.AuditLogWhereInput = { module: 'tickets', ...(f.ticketId ? { entityId: f.ticketId } : {}), ...(f.action ? { action: { contains: f.action } } : {}), ...(f.result ? { result: f.result } : {}) };
+    const [items, total] = await Promise.all([
+      this.prisma.auditLog.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (f.page - 1) * f.pageSize, take: f.pageSize, select: { id: true, actorUserId: true, action: true, entityType: true, entityId: true, after: true, result: true, requestId: true, createdAt: true } }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+    const users = await this.prisma.user.findMany({ where: { id: { in: [...new Set(items.map((i) => i.actorUserId).filter((x): x is string => !!x))] } }, select: { id: true, displayName: true } });
+    return { total, page: f.page, pageSize: f.pageSize, items: items.map((i) => ({ ...i, actorName: users.find((u) => u.id === i.actorUserId)?.displayName ?? (i.actorUserId ? null : 'System / Discord') })) };
+  }
+
   async deleteTranscript(actor: TicketActor, id: string) {
-    const tr = await this.transcript(actor.userId, id);
+    const tr = await this.prisma.ticketTranscript.findUnique({ where: { id } });
+    if (!tr) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
+    if (actor.userId && (await this.transcriptAccess(actor.userId, tr.ticketId, 'view')) !== 'staff') throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
     await this.prisma.ticketTranscript.delete({ where: { id } });
-    await this.prisma.ticketLog.create({ data: { ticketId: tr.ticketId, action: 'transcript_deleted', actorId: actor.discordId, actorName: actor.name, detail: { transcriptId: id } } });
+    await this.prisma.ticketLog.create({ data: { ticketId: tr.ticketId, action: 'transcript_deleted', actorId: actor.discordId, actorName: actor.name, detail: { transcriptId: id, version: tr.version } } });
+    const t = await this.prisma.supportTicket.findUnique({ where: { id: tr.ticketId }, select: { id: true, guildId: true } });
+    if (t) await this.auditTicket(actor, 'transcript_deleted', t, { transcriptId: id, version: tr.version });
     return { ok: true };
   }
 
   async stats(userId: string) {
-    const visible = await this.visibleCategoryIds(userId);
-    const where: Prisma.SupportTicketWhereInput = visible ? { categoryId: { in: visible } } : {};
+    const [visibleTickets, visible] = await Promise.all([this.visibleWhere(userId), this.visibleCategoryIds(userId)]);
+    const where: Prisma.SupportTicketWhereInput = visibleTickets ?? {};
     const now = new Date();
     const day = new Date(now); day.setHours(0, 0, 0, 0);
     const week = new Date(day); week.setDate(day.getDate() - ((day.getDay() + 6) % 7));
@@ -928,7 +1367,7 @@ export class SupportTicketsService {
   async panelMessage(id: string): Promise<MessageSpec> {
     const p = await this.prisma.ticketPanel.findUnique({ where: { id } });
     if (!p) throw new AppError('NOT_FOUND', 'Panel nicht gefunden.');
-    const cats = (await this.prisma.ticketCategory.findMany({ where: { id: { in: p.categoryIds }, active: true } })).sort((a, b) => p.categoryIds.indexOf(a.id) - p.categoryIds.indexOf(b.id));
+    const cats = (await this.prisma.ticketCategory.findMany({ where: { id: { in: p.categoryIds }, active: true, archivedAt: null } })).sort((a, b) => p.categoryIds.indexOf(a.id) - p.categoryIds.indexOf(b.id));
     const embed: EmbedSpec = { title: [p.emoji, p.title].filter(Boolean).join(' ') || undefined, description: p.description || undefined, color: p.color, thumbnail: p.thumbnailUrl ?? undefined, image: p.bannerUrl ?? p.imageUrl ?? undefined, footer: p.footer ?? undefined, footerIcon: p.footerIconUrl ?? undefined, author: p.authorName ?? undefined, authorIcon: p.authorIconUrl ?? undefined };
     if (p.showLoad && cats.length) {
       // offene Tickets je Kategorie (🟢 frei · 🟡 ab 75 % · 🔴 voll)
@@ -940,8 +1379,19 @@ export class SupportTicketsService {
         return `${dot} ${c.emoji ? `${c.emoji} ` : ''}**${c.name}** – ${open}${cap ? `/${cap}` : ''} offen`;
       }).join('\n').slice(0, 1024) }];
     }
-    if (p.style === 'DROPDOWN') return { embeds: [embed], select: { id: `tk:open:${p.id}`, placeholder: p.placeholder, options: cats.slice(0, 25).map((c) => ({ label: c.name.slice(0, 100), value: c.id, description: c.description.slice(0, 100) || undefined, emoji: c.emoji ?? undefined })) } };
-    return { embeds: [embed], buttons: cats.slice(0, 25).map((c) => ({ id: `tk:open:${p.id}:${c.id}`, label: c.name.slice(0, 80), emoji: c.emoji ?? undefined, style: (['primary', 'secondary', 'success', 'danger'].includes(c.buttonStyle) ? c.buttonStyle : 'secondary') as ComponentButton['style'] })) };
+    // Kategorien mit Formular: Kennzeichen „:f“, damit der Bot das Discord-Formular sofort öffnen kann (erste Antwort)
+    const form = (c: typeof cats[number]) => c.formMode === 'MODAL' && activeFields(c.questions as unknown as TicketQuestion[]).length > 0;
+    if (p.style === 'DROPDOWN') {
+      // Discord: höchstens 25 Einträge je Menü → mehrere Menüs (eindeutige IDs), höchstens 4 (die 5. Reihe bleibt frei)
+      const selects: ComponentSelect[] = [];
+      for (let i = 0; i < Math.min(cats.length, 100); i += 25) {
+        const chunk = cats.slice(i, i + 25);
+        selects.push({ id: i ? `tk:open:${p.id}:~${i / 25}` : `tk:open:${p.id}`, placeholder: (cats.length > 25 ? `${p.placeholder} (${i + 1}–${i + chunk.length})` : p.placeholder).slice(0, 150),
+          options: chunk.map((c) => ({ label: c.name.slice(0, 100), value: form(c) ? `${c.id}:f` : c.id, description: c.description.slice(0, 100) || undefined, emoji: c.emoji ?? undefined })) });
+      }
+      return { embeds: [embed], select: selects[0], selects: selects.slice(1) };
+    }
+    return { embeds: [embed], buttons: cats.slice(0, 25).map((c) => ({ id: `tk:open:${p.id}:${c.id}${form(c) ? ':f' : ''}`, label: c.name.slice(0, 80), emoji: c.emoji ?? undefined, style: (['primary', 'secondary', 'success', 'danger'].includes(c.buttonStyle) ? c.buttonStyle : 'secondary') as ComponentButton['style'] })) };
   }
   /** Panel in Discord senden bzw. vorhandenes Panel aktualisieren. */
   async publishPanel(actor: TicketActor, id: string, channelId?: string | null) {
@@ -957,8 +1407,105 @@ export class SupportTicketsService {
     return { ok: true, updating: !!update };
   }
   async panelPosted(id: string, channelId: string, messageId: string) {
-    await this.prisma.ticketPanel.update({ where: { id }, data: { messageChannelId: channelId, messageId } }).catch(() => undefined);
+    await this.prisma.ticketPanel.update({ where: { id }, data: { messageChannelId: channelId, messageId, publishedAt: new Date(), publishError: null } }).catch(() => undefined);
     return { ok: true };
+  }
+  /** Bot meldet: Panel konnte nicht gesendet/aktualisiert werden (Kanal fehlt, Rechte fehlen …) – im Dashboard sichtbar. */
+  async panelFailed(id: string, error: string) {
+    await this.prisma.ticketPanel.update({ where: { id }, data: { publishError: error.slice(0, 300) } }).catch(() => undefined);
+    return { ok: true };
+  }
+
+  // ================= Formular vor dem Erstellen (Discord-Formulare, mehrstufig) =================
+  private async formFields(categoryId: string, version: number): Promise<TicketQuestion[]> {
+    const v = await this.prisma.ticketFormVersion.findUnique({ where: { categoryId_version: { categoryId, version } } });
+    if (v) return v.fields as unknown as TicketQuestion[];
+    return (await this.config.category(categoryId)).questions as TicketQuestion[];
+  }
+  private formTitle(name: string, step: number, steps: number) { return `${name}${steps > 1 ? ` (${step + 1}/${steps})` : ''}`; }
+
+  /**
+   * Klick auf eine Kategorie mit Formular: Voraussetzungen prüfen (bevor jemand umsonst ausfüllt), Entwurf anlegen und Schritt 1 liefern.
+   * `open: true`: die Kategorie braucht (inzwischen) kein Formular – direkt öffnen.
+   */
+  async formStart(d: Omit<OpenInput, 'form' | 'openKey'>) {
+    const cat = await this.config.category(d.categoryId);
+    await this.checkOpenable(cat, d.guildId);
+    const fields = cat.questions as TicketQuestion[];
+    if (cat.formMode !== 'MODAL' || !activeFields(fields).length) return { open: true as const };
+    await this.checkCanOpen(cat, d);
+    const steps = planFormSteps(fields);
+    const draft = await this.prisma.ticketDraft.create({ data: {
+      categoryId: cat.id, panelId: d.panelId ?? null, guildId: d.guildId, discordId: d.discordId, discordName: d.discordName.slice(0, 100), memberRoleIds: d.memberRoleIds,
+      formVersion: cat.formVersion, expiresAt: new Date(Date.now() + DRAFT_MINUTES * 60_000),
+    } });
+    return { draftId: draft.id, steps: steps.length, modal: formModal(`tk:formsub:${draft.id}:0`, this.formTitle(cat.name, 0, steps.length), fields.filter((f) => steps[0]!.includes(f.id))) };
+  }
+
+  private async draftOf(draftId: string, discordId: string) {
+    const draft = await this.prisma.ticketDraft.findUnique({ where: { id: draftId } });
+    // fremde Entwürfe wie nicht vorhandene behandeln
+    if (!draft || draft.discordId !== discordId) throw new AppError('NOT_FOUND', 'Dieses Formular gibt es nicht (mehr). Bitte wähle die Kategorie erneut.');
+    return draft;
+  }
+
+  /** Formular (erneut) für einen Schritt – z. B. nach „Weiter“ oder nach einem Prüffehler mit den zuletzt eingegebenen Werten. */
+  async formModalFor(draftId: string, discordId: string, step: number) {
+    const draft = await this.draftOf(draftId, discordId);
+    if (draft.ticketId) throw new AppError('CONFLICT', 'Dieses Formular wurde bereits abgeschickt.');
+    if (draft.expiresAt < new Date()) throw new AppError('CONFLICT', 'Das Formular ist abgelaufen. Bitte wähle die Kategorie erneut.');
+    if (step > draft.step) throw new AppError('CONFLICT', 'Bitte zuerst die vorherigen Schritte ausfüllen.');
+    const [cat, fields] = await Promise.all([this.config.category(draft.categoryId), this.formFields(draft.categoryId, draft.formVersion)]);
+    const steps = planFormSteps(fields);
+    if (!steps[step]) throw new AppError('NOT_FOUND', 'Diesen Schritt gibt es nicht.');
+    return { modal: formModal(`tk:formsub:${draft.id}:${step}`, this.formTitle(cat.name, step, steps.length), fields.filter((f) => steps[step]!.includes(f.id)), draft.values as Record<string, FormRawValue>) };
+  }
+
+  /**
+   * Schritt absenden: serverseitig prüfen (dieselbe Prüfung wie im Dashboard), Werte am Entwurf speichern; im letzten Schritt
+   * das Ticket anlegen. Ein Entwurf erzeugt höchstens ein Ticket (erneutes Absenden liefert dasselbe Ticket).
+   */
+  async formSubmit(draftId: string, discordId: string, step: number, values: Record<string, FormRawValue>, files: Record<string, FormFile[]>) {
+    const draft = await this.draftOf(draftId, discordId);
+    if (draft.ticketId) {
+      const l = await this.load(draft.ticketId).catch(() => null);
+      if (l) return { ticket: this.summary(l), effects: [] as TicketEffect[], existing: true };
+    }
+    if (draft.expiresAt < new Date()) throw new AppError('CONFLICT', 'Das Formular ist abgelaufen. Bitte wähle die Kategorie erneut.');
+    if (step > draft.step) throw new AppError('CONFLICT', 'Bitte zuerst die vorherigen Schritte ausfüllen.');
+    const fields = await this.formFields(draft.categoryId, draft.formVersion);
+    const steps = planFormSteps(fields);
+    const ids = steps[step];
+    if (!ids) throw new AppError('NOT_FOUND', 'Diesen Schritt gibt es nicht.');
+    // nur Felder dieses Schritts übernehmen (manipulierte Zusatzfelder werden verworfen)
+    const pick = <T>(o: Record<string, T>) => Object.fromEntries(Object.entries(o).filter(([k]) => ids.includes(k)));
+    const allValues = { ...(draft.values as Record<string, FormRawValue>), ...pick(values) };
+    const allFiles = { ...(draft.files as unknown as Record<string, FormFile[]>), ...pick(files) };
+    const check = validateForm(fields, allValues, allFiles, { only: ids });
+    await this.prisma.ticketDraft.update({ where: { id: draft.id }, data: {
+      values: allValues as Prisma.InputJsonValue, files: allFiles as unknown as Prisma.InputJsonValue,
+      ...(check.ok && step === draft.step && step + 1 < steps.length ? { step: step + 1 } : {}),
+    } });
+    if (!check.ok) {
+      const label = new Map(fields.map((f) => [f.id, f.label]));
+      return { errors: Object.entries(check.errors).map(([id, msg]) => ({ field: label.get(id) ?? id, message: msg })), step };
+    }
+    if (step + 1 < steps.length) return { next: step + 1, steps: steps.length };
+    const full = validateForm(fields, allValues, allFiles);
+    if (!full.ok) return { errors: Object.entries(full.errors).map(([id, msg]) => ({ field: fields.find((f) => f.id === id)?.label ?? id, message: msg })), step: steps.findIndex((s) => s.some((id) => full.errors[id])) };
+    const r = await this.open({
+      categoryId: draft.categoryId, panelId: draft.panelId, guildId: draft.guildId, discordId: draft.discordId, discordName: draft.discordName, memberRoleIds: draft.memberRoleIds,
+      openKey: `draft:${draft.id}`, form: { version: draft.formVersion, answers: full.answers, subject: full.answers.find((a) => a.questionId === 'subject')?.value ?? null },
+    }, { userId: null, discordId: draft.discordId, name: draft.discordName, viaBot: true });
+    if ('form' in r) throw new AppError('CONFLICT', 'Das Formular konnte nicht verarbeitet werden.');
+    await this.prisma.ticketDraft.update({ where: { id: draft.id }, data: { ticketId: r.ticket.id, values: {}, files: {} } });
+    return r;
+  }
+
+  /** Dashboard-Vorschau: Formular prüfen, ohne ein Ticket anzulegen. */
+  previewForm(fields: TicketQuestion[], values: Record<string, FormRawValue>) {
+    const r = validateForm(fields, values, Object.fromEntries(fields.filter((f) => f.type === 'FILE').map((f) => [f.id, []])), { allowedFileTypes: FORM_FILE_TYPES });
+    return { ...r, steps: planFormSteps(fields) };
   }
 
   // ================= Automatik (läuft jede Minute) =================
@@ -1028,9 +1575,77 @@ export class SupportTicketsService {
       await this.perform(l, sys, { action: 'delete' }, effects);
       deleted++;
     }
+    const sla = await this.runSla(now, effects);
+    // abgelaufene, nie abgeschickte Formular-Entwürfe (keine Tickets) nach einem Tag entfernen
+    await this.prisma.ticketDraft.deleteMany({ where: { ticketId: null, expiresAt: { lt: new Date(now.getTime() - 86_400_000) } } });
     const settings = await this.config.settings();
+    if (sla.reminded || sla.escalated) this.log.log(JSON.stringify(sla));
     if (settings.transcriptRetentionDays > 0) await this.prisma.ticketTranscript.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - settings.transcriptRetentionDays * 86_400_000) } } });
     await this.dispatch(effects, false);
-    return { closed, warned, deleted, expired, alerted, unclaimed };
+    return { closed, warned, deleted, expired, alerted, unclaimed, ...sla };
+  }
+
+  /**
+   * SLA und Eskalation (nur mit eingestellten Zielzeiten): Erinnerung an die Zuständigen (wiederholt nach Einstellung),
+   * danach einmalige Meldung an die Leitung; unzugewiesene Tickets nach der Wartezeit der Kategorie. Eskalationen geben
+   * NIEMANDEM zusätzlichen Zugriff – die Leitung wird nur benachrichtigt.
+   */
+  private async runSla(now: Date, effects: TicketEffect[]) {
+    const sys: TicketActor = { userId: null, discordId: null, name: 'Automatik', viaBot: false, system: true, requestId: `sla-${now.toISOString()}` };
+    let reminded = 0, escalated = 0;
+    const openIds = (await this.prisma.ticketStatus.findMany({ where: { kind: 'OPEN' } })).map((s) => s.id);
+    const due = await this.prisma.supportTicket.findMany({ where: { statusId: { in: openIds }, deletedAt: null, closedAt: null, OR: [{ firstResponseAt: null, firstResponseDueAt: { lt: now } }, { waitingSince: null, resolveDueAt: { lt: now } }] }, take: 200 });
+    for (const row of due) {
+      const l = await this.load(row.id).catch(() => null);
+      if (!l) continue;
+      const t = l.t, s = l.settings, ref = this.ref(t.number, s);
+      const first = !t.firstResponseAt && !!t.firstResponseDueAt && t.firstResponseDueAt < now;
+      const dueAt = first ? t.firstResponseDueAt! : t.resolveDueAt!;
+      const warnedAt = first ? t.slaFirstWarnedAt : t.slaResolveWarnedAt;
+      const what = first ? 'erste Antwort' : 'Lösung';
+      if (!warnedAt || (s.slaReminderMinutes > 0 && now.getTime() - warnedAt.getTime() >= s.slaReminderMinutes * 60_000)) {
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: first ? { slaFirstWarnedAt: now } : { slaResolveWarnedAt: now } });
+        const text = `⏰ SLA überschritten (${what}) – Ticket **${ref}** seit ${this.fmt(dueAt, l.tz)} fällig.`;
+        const safe = l.cat.confidential ? `⏰ SLA überschritten (${what}) – vertrauliches Ticket **${ref}**.` : text;
+        let sent = false;
+        for (const c of t.claimers) if (await this.staffWithAccess(c, l.cat, l.dept)) { effects.push({ type: 'dm', userId: c, message: { embeds: [{ description: safe, color: 0xf59e0b }], buttons: [{ id: `tk-open-${t.id}`, label: 'Im Dashboard öffnen', style: 'secondary', url: webUrl(`/support-tickets/${t.id}`) }] } }); sent = true; }
+        if (!sent) {
+          const roles = (await this.routing(l.cat, l.dept, s)).responsible;
+          const target = l.dept?.notifyChannelId ?? t.channelId;
+          // im Ticket-Kanal sieht der Ersteller mit: dort nur ein Hinweis an die zuständigen Rollen
+          if (target) effects.push({ type: 'post', channelId: target, message: { content: roles.map((r) => `<@&${r}>`).join(' ') || undefined, mentionRoles: roles, embeds: [{ description: target === t.channelId ? `⏰ Dieses Ticket wartet auf das Team (${what} fällig seit ${this.fmt(dueAt, l.tz)}).` : safe, color: 0xf59e0b }] } });
+        }
+        await this.prisma.ticketLog.create({ data: { ticketId: t.id, action: 'sla_reminder', actorName: sys.name, detail: { kind: first ? 'first_response' : 'resolution' } } });
+        reminded++;
+      }
+      if (!t.slaEscalatedAt && now.getTime() - dueAt.getTime() >= s.slaEscalateAfterMinutes * 60_000) {
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { slaEscalatedAt: now } });
+        await this.leadAlert(l, `🔺 SLA-Eskalation: Ticket **${ref}** (${l.cat.confidential ? 'vertraulich' : l.cat.name}) – ${what} seit ${this.fmt(dueAt, l.tz)} überfällig.`, effects);
+        await this.logAction(l, 'sla_escalated', sys, { kind: first ? 'first_response' : 'resolution' }, effects);
+        escalated++;
+      }
+    }
+    for (const c of await this.prisma.ticketCategory.findMany({ where: { escalateUnassignedMinutes: { gt: 0 } } })) {
+      const rows = await this.prisma.supportTicket.findMany({ where: { categoryId: c.id, statusId: { in: openIds }, deletedAt: null, closedAt: null, claimers: { isEmpty: true }, unassignedEscalatedAt: null, createdAt: { lte: new Date(now.getTime() - c.escalateUnassignedMinutes * 60_000) } }, take: 100 });
+      for (const row of rows) {
+        const l = await this.load(row.id).catch(() => null);
+        if (!l) continue;
+        await this.prisma.supportTicket.update({ where: { id: row.id }, data: { unassignedEscalatedAt: now } });
+        await this.leadAlert(l, `🔺 Ticket **${this.ref(row.number, l.settings)}** (${c.confidential ? 'vertraulich' : c.name}) ist seit ${c.escalateUnassignedMinutes} Minuten niemandem zugewiesen.`, effects);
+        await this.logAction(l, 'unassigned_escalated', sys, {}, effects);
+        escalated++;
+      }
+    }
+    return { reminded, escalated };
+  }
+  /** Meldung an die Leitung im internen Kanal der Abteilung (sonst Log-Kanal) + Benachrichtigungsregel „Eskalation“. */
+  private async leadAlert(l: Loaded, text: string, effects: TicketEffect[]) {
+    const leads = l.dept?.leadRoleIds.length ? l.dept.leadRoleIds : l.settings.leadRoleIds;
+    const channel = l.dept?.notifyChannelId ?? l.settings.logChannelId;
+    if (channel) effects.push({ type: 'post', channelId: channel, message: { content: leads.map((r) => `<@&${r}>`).join(' ') || undefined, mentionRoles: leads, embeds: [{ description: text, color: 0xef4444 }], buttons: [{ id: `tk-open-${l.t.id}`, label: 'Im Dashboard öffnen', style: 'secondary', url: webUrl(`/support-tickets/${l.t.id}`) }] } });
+    else this.log.warn(`escalation for ticket ${l.t.id}: no channel configured`);
+    if (!l.dept?.notifyChannelId) return;
+    const rule = l.settings.notifications.escalated;
+    if (rule.dashboard || rule.dm) await this.queueNotify(l, 'escalated', effects, text);
   }
 }

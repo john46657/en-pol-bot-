@@ -5,6 +5,7 @@ import type { TicketEffect } from '@enrp/shared';
 import { createTestApp, login, makeUser } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
 import { SupportTicketsService } from '../src/support-tickets/tickets.service';
+import { TicketTranscriptService } from '../src/support-tickets/transcript.service';
 
 const TOKEN = 'test-bot-token-support-tickets-0123456789ab';
 const bot = (discordId?: string) => ({ Authorization: `Bot ${TOKEN}`, ...(discordId ? { 'X-Discord-User': discordId } : {}) });
@@ -98,7 +99,7 @@ describe('opening a ticket from Discord', () => {
     expect(c.status).toBe(200);
     const ctl = find(c.body.effects, 'control')[0]!;
     expect(ctl.message.embeds![0]!.fields!.find((f) => f.name.startsWith('Bearbeiter'))!.value).toBe(`<@${STAFF}>`);
-    expect(c.body.ticket.status.name).toBe('In Bearbeitung');
+    expect(c.body.ticket.status.name).toBe('Übernommen'); // Lebenszyklus: Offen → Übernommen → In Bearbeitung …
     expect((await act(id, STAFF, { action: 'claim' })).status).toBe(409);
     // Leitung (ticket.manage) darf übernehmen
     expect((await act(id, LEAD, { action: 'claim' })).body.ticket.claimers).toEqual([LEAD]);
@@ -133,8 +134,16 @@ describe('opening a ticket from Discord', () => {
     const posts = find(r.body.effects, 'post').map((p) => p.message.embeds?.[0]);
     expect(posts.find((e) => e?.title === '🔒 CLOSED')!.description).toContain('**Grund:** Problem gelöst');
     expect(find(r.body.effects, 'access')).toEqual(expect.arrayContaining([expect.objectContaining({ targetId: USER, view: false }), expect.objectContaining({ targetId: OTHER, view: false })]));
-    const tr = find(r.body.effects, 'transcript')[0]!;
+    // Transkript: Hintergrund-Auftrag, danach Zustellung über die Outbox (Datei + Link)
+    expect(find(r.body.effects, 'transcript')).toEqual([]);
+    const job = await prisma.ticketTranscript.findFirstOrThrow({ where: { ticketId: id }, orderBy: { version: 'desc' } });
+    expect(job.status).toBe('PENDING');
+    await prisma.discordOutbox.deleteMany({ where: { type: 'ticket.effects' } });
+    expect(await app.get(TicketTranscriptService).processDue()).toMatchObject({ done: 1 });
+    const out = await prisma.discordOutbox.findMany({ where: { type: 'ticket.effects' } });
+    const tr = out.flatMap((o) => (o.payload as { effects: TicketEffect[] }).effects).find((e): e is Extract<TicketEffect, { type: 'transcript' }> => e.type === 'transcript')!;
     expect(tr.channelIds).toEqual(['920000000000000001']);
+    expect(tr.message!.buttons![0]!.url).toMatch(/\/transcript\/EMD-\d{6}$/);
     expect(find(r.body.effects, 'dm')[0]!.message.buttons!.map((b) => b.id)).toContain(`tk:rate:${id}:5`);
     const controls = find(r.body.effects, 'control')[0]!.message.buttons!.map((b) => b.id.split(':')[1]);
     expect(controls).toEqual(expect.arrayContaining(['delete', 'transcript']));
@@ -346,6 +355,8 @@ describe('GalaxyBot-like features', () => {
     const admin = (await login(app, 'tk_admin')).agent;
     const full = (await admin.get('/api/v1/support-tickets/config')).body.categories.find((c: { id: string }) => c.id === cat);
     expect((await admin.put(`/api/v1/support-tickets/categories/${cat}`).send({ ...full, autoClaimOnMessage: true, staffAlertMinutes: 10, maxOpen: 5, capacity: 0 })).status).toBe(200);
+    // Doppelklick-Schutz (gleiche Person + Art innerhalb von 10 s): frühere Tickets dieses Tests zurückdatieren
+    await prisma.supportTicket.updateMany({ where: { creatorId: U2 }, data: { createdAt: new Date(Date.now() - 60_000) } });
     const o = await http().post('/api/v1/bot/support-tickets/open').set(bot()).send({ categoryId: cat, guildId: GUILD, discordId: U2, discordName: 'Neu' });
     const id = o.body.ticket.id;
     await http().post(`/api/v1/bot/support-tickets/${id}/channel`).set(bot()).send({ channelId: '960000000000000020', controlMessageId: '960000000000000021' });

@@ -648,28 +648,28 @@ model DutyWeekArchive {
 
 /// Abmeldung (Leave of Absence): Antrag → Freigabe → Rolle „abgemeldet“ von Beginn bis Ende.
 model LeaveRequest {
-  id             String    @id @default(uuid()) @db.Uuid
-  number         String    @unique
-  userId         String    @db.Uuid
-  startsAt       DateTime
-  endsAt         DateTime
-  reason         String
-  status         String    @default("PENDING") // PENDING | APPROVED | DENIED | CANCELLED | ENDED
-  guildId        String?
-  decidedById    String?   @db.Uuid
-  decidedAt      DateTime?
-  decisionReason String?
+  id                   String    @id @default(uuid()) @db.Uuid
+  number               String    @unique
+  userId               String    @db.Uuid
+  startsAt             DateTime
+  endsAt               DateTime
+  reason               String
+  status               String    @default("PENDING") // PENDING | APPROVED | DENIED | CANCELLED | ENDED
+  guildId              String?
+  decidedById          String?   @db.Uuid
+  decidedAt            DateTime?
+  decisionReason       String?
   /// Abwesenheitsart (Einstellungen → Personal), z. B. Urlaub, Krank
-  type           String?
-  comment        String?
-  roleApplied    Boolean   @default(false)
-  endedAt        DateTime?
+  type                 String?
+  comment              String?
+  roleApplied          Boolean   @default(false)
+  endedAt              DateTime?
   /// offene Verlängerung (beantragt vom Mitglied, wartet auf die Leitung)
   extensionMinutes     Int?
   extensionReason      String?
   extensionRequestedAt DateTime?
-  createdAt      DateTime  @default(now())
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime  @default(now())
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status, startsAt])
   @@index([userId])
@@ -913,46 +913,48 @@ model RadioWhitelist {
  * Löst die frühere Tabelle RadioWhitelist ab (bleibt als Altbestand unverändert erhalten, siehe docs/radio-whitelist.md).
  */
 model RadioGrant {
-  id               String    @id @default(uuid()) @db.Uuid
+  id                  String    @id @default(uuid()) @db.Uuid
   /// Eindeutige Discord-ID; nur bei übernommenen Alt-Einträgen ohne verknüpftes Discord-Konto leer (muss nachgetragen werden)
-  discordId        String?   @unique
+  discordId           String?   @unique
   /// Zuletzt bekannter Discord-Anzeigename (nur Anzeige, nie zur Identifikation)
-  discordName      String?
+  discordName         String?
   /// verknüpftes Dashboard-Konto (optional)
-  userId           String?   @db.Uuid
-  rank             String?
-  department       String?
+  userId              String?   @db.Uuid
+  rank                String?
+  department          String?
   /// Benutzername beim externen Funkdienst (z. B. Zello)
-  externalName     String?
+  externalName        String?
   /// PENDING | ACTIVE | DISABLED | SUSPENDED | EXPIRED | REVOKED
-  status           String    @default("ACTIVE")
+  status              String    @default("ACTIVE")
   /// MANUAL | ROLE | REQUEST | LEGACY
-  source           String    @default("MANUAL")
-  reason           String?
-  expiresAt        DateTime?
-  suspendedUntil   DateTime?
-  suspendReason    String?
+  source              String    @default("MANUAL")
+  reason              String?
+  expiresAt           DateTime?
+  suspendedUntil      DateTime?
+  suspendReason       String?
   /// Status vor der Sperre (nach Ablauf/Aufhebung zurück)
   statusBeforeSuspend String?
   /// true = zuletzt durch den Discord-Rollenabgleich deaktiviert/entzogen (darf bei Rollengewinn wieder aktiviert werden)
-  roleRevoked      Boolean   @default(false)
-  grantedById      String?   @db.Uuid
-  grantedAt        DateTime?
-  archivedAt       DateTime?
+  roleRevoked         Boolean   @default(false)
+  grantedById         String?   @db.Uuid
+  grantedAt           DateTime?
+  archivedAt          DateTime?
   /// NONE | PENDING | SYNCED | FAILED | MANUAL (nur manuell möglich) | MANUAL_DONE
-  externalStatus   String    @default("NONE")
-  externalSyncedAt DateTime?
-  externalError    String?
-  version          Int       @default(1)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  externalStatus      String    @default("NONE")
+  externalSyncedAt    DateTime?
+  externalError       String?
+  version             Int       @default(1)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([status])
   @@index([expiresAt])
   @@index([userId])
 }
 
-/** Antrag auf Funkfreigabe (über Discord gestellt). Entscheidungen werden nie gelöscht. */
+/**
+ * Antrag auf Funkfreigabe (über Discord gestellt). Entscheidungen werden nie gelöscht.
+ */
 model RadioRequest {
   id             String    @id @default(uuid()) @db.Uuid
   discordId      String
@@ -982,28 +984,28 @@ model RadioRequest {
  * (AES-256-GCM, siehe cad/erlc-crypto.ts) – sie verlassen den Server nie.
  */
 model RadioIntegration {
-  id               String    @id @default("default")
+  id             String    @id @default("default")
   /// NONE | ZELLO_WORK (Server-API, verifiziert) | ZELLO_APP (kein API → manuell) | OTHER_MANUAL
-  provider         String    @default("NONE")
-  displayName      String    @default("Funkdienst")
+  provider       String    @default("NONE")
+  displayName    String    @default("Funkdienst")
   /// Zello Work: Netzwerkname (https://<netzwerk>.zellowork.com)
-  network          String?
+  network        String?
   /// Zello Work: Kanal, dem freigegebene Mitglieder hinzugefügt werden
-  channel          String?
-  adminUsername    String?
-  passwordEnc      String?
-  apiKeyEnc        String?
+  channel        String?
+  adminUsername  String?
+  passwordEnc    String?
+  apiKeyEnc      String?
   /// automatische Synchronisierung bei Änderungen (nur mit unterstützter API)
-  autoSync         Boolean   @default(false)
+  autoSync       Boolean   @default(false)
   /// NOT_CONFIGURED | CONNECTED | ERROR | MANUAL
-  status           String    @default("NOT_CONFIGURED")
-  lastTestAt       DateTime?
-  lastSuccessAt    DateTime?
-  lastSyncAt       DateTime?
-  lastSyncStatus   String?
-  lastError        String?
-  version          Int       @default(1)
-  updatedAt        DateTime  @updatedAt
+  status         String    @default("NOT_CONFIGURED")
+  lastTestAt     DateTime?
+  lastSuccessAt  DateTime?
+  lastSyncAt     DateTime?
+  lastSyncStatus String?
+  lastError      String?
+  version        Int       @default(1)
+  updatedAt      DateTime  @updatedAt
 }
 
 /**
@@ -1090,13 +1092,13 @@ model QualificationApplication {
  * Panel in einem Discord-Channel (Embed + Buttons oder Dropdown mit Ticket-Kategorien).
  */
 model TicketPanel {
-  id               String   @id @default(uuid()) @db.Uuid
+  id               String    @id @default(uuid()) @db.Uuid
   name             String
   guildId          String? // Discord-Server (leer = alle Server)
-  title            String   @default("")
-  description      String   @default("")
+  title            String    @default("")
+  description      String    @default("")
   emoji            String?
-  color            Int      @default(3899638)
+  color            Int       @default(3899638)
   thumbnailUrl     String?
   imageUrl         String?
   bannerUrl        String?
@@ -1104,86 +1106,161 @@ model TicketPanel {
   footerIconUrl    String?
   authorName       String?
   authorIconUrl    String?
-  style            String   @default("BUTTONS") // BUTTONS | DROPDOWN
-  placeholder      String   @default("Wähle eine Kategorie …")
+  style            String    @default("BUTTONS") // BUTTONS | DROPDOWN
+  placeholder      String    @default("Wähle eine Kategorie …")
   channelId        String? // Ziel-Channel für das Panel
-  categoryIds      String[] @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
+  categoryIds      String[]  @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
   allowedRoleIds   String[] // Discord-Rollen, die dieses Panel benutzen dürfen (leer = alle)
   /// Ticketauslastung im Panel anzeigen (offene Tickets je Kategorie)
-  showLoad         Boolean  @default(false)
-  position         Int      @default(0)
+  showLoad         Boolean   @default(false)
+  position         Int       @default(0)
   messageChannelId String?
   messageId        String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  /// letzter Sende-/Aktualisierungsversuch in Discord (Fehlertext, falls fehlgeschlagen)
+  publishedAt      DateTime?
+  publishError     String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+/**
+ * Abteilung (Zuständigkeit): Kategorien und Tickets werden einer Abteilung zugeordnet; ihre Discord-Rollen bearbeiten die Tickets.
+ */
+model TicketDepartment {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String   @unique
+  description     String   @default("")
+  emoji           String?
+  /// zuständige Discord-Rollen (sehen + schreiben im Ticket-Kanal)
+  staffRoleIds    String[]
+  /// Leitung: Eskalationen/SLA-Überschreitungen werden hierhin gemeldet (bekommen dadurch KEINEN Zugriff)
+  leadRoleIds     String[]
+  /// Systemrollen, die Tickets dieser Abteilung im Dashboard sehen (leer = Kategorie-Regeln)
+  accessRoleNames String[]
+  /// interner Kanal für Benachrichtigungen dieser Abteilung (muss für Unbeteiligte unsichtbar sein)
+  notifyChannelId String?
+  active          Boolean  @default(true)
+  position        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/**
+ * Versionen eines Ticket-Formulars – eingereichte Tickets behalten ihre Version und Antworten.
+ */
+model TicketFormVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  categoryId    String   @db.Uuid
+  version       Int
+  fields        Json
+  createdById   String?  @db.Uuid
+  createdByName String?
+  createdAt     DateTime @default(now())
+
+  @@unique([categoryId, version])
+}
+
+/**
+ * Angefangenes Discord-Formular (mehrere Schritte), bevor das Ticket entsteht. Eine Einreichung erzeugt höchstens ein Ticket.
+ */
+model TicketDraft {
+  id            String   @id @default(uuid()) @db.Uuid
+  categoryId    String   @db.Uuid
+  panelId       String?  @db.Uuid
+  guildId       String
+  discordId     String
+  discordName   String
+  memberRoleIds String[]
+  formVersion   Int
+  step          Int      @default(0)
+  values        Json     @default("{}")
+  files         Json     @default("{}")
+  ticketId      String?  @db.Uuid
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([discordId])
+  @@index([expiresAt])
 }
 
 model TicketCategory {
-  id                     String   @id @default(uuid()) @db.Uuid
-  name                   String
-  guildId                String? // Discord-Server (leer = alle Server)
-  description            String   @default("")
-  emoji                  String?
-  color                  Int      @default(3899638)
-  buttonStyle            String   @default("secondary")
-  position               Int      @default(0)
-  active                 Boolean  @default(true)
-  discordCategoryId      String? // Discord-Kategorie für neue Ticket-Channels
-  channelNameFormat      String   @default("ticket-{username}")
-  staffRoleIds           String[] // zuständige Discord-Rollen (sehen + schreiben)
-  extraRoleIds           String[] // zusätzliche Discord-Rollen (sehen + schreiben)
-  accessRoleNames        String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
-  requiredRoleIds        String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
-  allowedUserIds         String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
-  maxOpen                Int      @default(1) // 0 = unbegrenzt
-  cooldownMinutes        Int      @default(0)
-  defaultPriorityId      String?  @db.Uuid
-  questions              Json     @default("[]")
-  welcomeTitle           String   @default("🎫 {category}")
-  welcomeMessage         String   @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
-  mentionStaff           Boolean  @default(true)
-  mentionText            String   @default("")
-  buttons                Json     @default("[]")
-  claimMode              String   @default("SINGLE") // SINGLE | MULTI | PRIMARY
-  claimMessage           String   @default("👤 Bearbeiter: {staff}")
-  claimNotifyStaff       Boolean  @default(false)
-  creatorCanClose        Boolean  @default(true)
-  closeReasonMode        String   @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
-  closeReasonSource      String   @default("BOTH") // PRESET | CUSTOM | BOTH
-  closeRemovesAccess     Boolean  @default(true)
-  allowReopen            Boolean  @default(true)
-  transcriptOnClose      Boolean  @default(true)
-  transcriptChannelId    String?
-  transcriptToUser       Boolean  @default(false)
-  ratingEnabled          Boolean  @default(true)
-  ratingQuestion         String   @default("Wie zufrieden warst du mit dem Support?")
-  autoCloseMinutes       Int      @default(0) // 0 = aus
-  autoCloseWarnMinutes   Int      @default(0) // Warnung so viele Minuten vorher (0 = keine)
-  autoCloseMessage       String   @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
-  deleteAfterMinutes     Int      @default(-1) // -1 = nie, 0 = sofort
-  escalationRoleIds      String[]
-  escalationPriorityId   String?  @db.Uuid
-  escalationMessage      String   @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
+  id                        String    @id @default(uuid()) @db.Uuid
+  name                      String
+  guildId                   String? // Discord-Server (leer = alle Server)
+  description               String    @default("")
+  emoji                     String?
+  color                     Int       @default(3899638)
+  buttonStyle               String    @default("secondary")
+  position                  Int       @default(0)
+  active                    Boolean   @default(true)
+  discordCategoryId         String? // Discord-Kategorie für neue Ticket-Channels
+  channelNameFormat         String    @default("ticket-{username}")
+  staffRoleIds              String[] // zuständige Discord-Rollen (sehen + schreiben)
+  extraRoleIds              String[] // zusätzliche Discord-Rollen (sehen + schreiben)
+  accessRoleNames           String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
+  requiredRoleIds           String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
+  allowedUserIds            String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
+  maxOpen                   Int       @default(1) // 0 = unbegrenzt
+  cooldownMinutes           Int       @default(0)
+  defaultPriorityId         String?   @db.Uuid
+  questions                 Json      @default("[]")
+  welcomeTitle              String    @default("🎫 {category}")
+  welcomeMessage            String    @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
+  mentionStaff              Boolean   @default(true)
+  mentionText               String    @default("")
+  buttons                   Json      @default("[]")
+  claimMode                 String    @default("SINGLE") // SINGLE | MULTI | PRIMARY
+  claimMessage              String    @default("👤 Bearbeiter: {staff}")
+  claimNotifyStaff          Boolean   @default(false)
+  creatorCanClose           Boolean   @default(true)
+  closeReasonMode           String    @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
+  closeReasonSource         String    @default("BOTH") // PRESET | CUSTOM | BOTH
+  closeRemovesAccess        Boolean   @default(true)
+  allowReopen               Boolean   @default(true)
+  transcriptOnClose         Boolean   @default(true)
+  transcriptChannelId       String?
+  transcriptToUser          Boolean   @default(false)
+  ratingEnabled             Boolean   @default(true)
+  ratingQuestion            String    @default("Wie zufrieden warst du mit dem Support?")
+  autoCloseMinutes          Int       @default(0) // 0 = aus
+  autoCloseWarnMinutes      Int       @default(0) // Warnung so viele Minuten vorher (0 = keine)
+  autoCloseMessage          String    @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
+  deleteAfterMinutes        Int       @default(-1) // -1 = nie, 0 = sofort
+  escalationRoleIds         String[]
+  escalationPriorityId      String?   @db.Uuid
+  escalationMessage         String    @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
   /// wie GalaxyBot: Bild im Eröffnungs-Embed
-  welcomeImageUrl        String?
+  welcomeImageUrl           String?
   /// Auslastung: ab so vielen offenen Tickets gilt die Kategorie als voll (0 = aus)
-  capacity               Int      @default(0)
+  capacity                  Int       @default(0)
   /// Ersteller darf weitere Personen hinzufügen
-  creatorCanAddUsers     Boolean  @default(false)
+  creatorCanAddUsers        Boolean   @default(false)
   /// Nach Übernahme in diese Discord-Kategorie verschieben (Claim-Kategorie)
-  claimDiscordCategoryId String?
+  claimDiscordCategoryId    String?
   /// Nach Übernahme dürfen nur noch Bearbeiter, Ersteller und Zusatzrollen schreiben
-  claimLocksChat         Boolean  @default(false)
+  claimLocksChat            Boolean   @default(false)
   /// Auto-Claim, sobald ein Teammitglied schreibt
-  autoClaimOnMessage     Boolean  @default(false)
+  autoClaimOnMessage        Boolean   @default(false)
   /// Auto-Unclaim nach so vielen Minuten Inaktivität (0 = aus)
-  autoUnclaimMinutes     Int      @default(0)
+  autoUnclaimMinutes        Int       @default(0)
   /// Auto-Team-Alert: Bearbeiter nach so vielen Minuten markieren, nach derselben Zeit freigeben (0 = aus)
-  staffAlertMinutes      Int      @default(0)
+  staffAlertMinutes         Int       @default(0)
   /// Close-Request: bestätigt der Ersteller, wird sofort geschlossen
-  closeRequestCloses     Boolean  @default(true)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  closeRequestCloses        Boolean   @default(true)
+  /// zuständige Abteilung
+  departmentId              String?   @db.Uuid
+  /// vertraulich: nie ersatzweise für das allgemeine Team sichtbar, Details nicht in Log-Kanälen
+  confidential              Boolean   @default(false)
+  /// CHANNEL = Fragen nacheinander im Ticket (bisher) · MODAL = Discord-Formular vor dem Erstellen
+  formMode                  String    @default("CHANNEL")
+  formVersion               Int       @default(1)
+  /// unzugewiesene Tickets nach so vielen Minuten an die Leitung melden (0 = aus)
+  escalateUnassignedMinutes Int       @default(0)
+  /// archiviert: nicht mehr wählbar und ausgeblendet; Tickets bleiben vollständig erhalten
+  archivedAt                DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 }
 
 model TicketStatus {
@@ -1197,17 +1274,22 @@ model TicketStatus {
   isClaimed    Boolean @default(false) // beim Übernehmen
   isEscalation Boolean @default(false) // beim Eskalieren
   isClose      Boolean @default(false) // beim Schließen
+  /// feste Bedeutung (OPEN, CLAIMED, IN_PROGRESS, WAITING_USER, WAITING_INTERNAL, RESOLVED, ESCALATED, CLOSED, ARCHIVED)
+  key          String? @unique
 }
 
 model TicketPriority {
-  id               String   @id @default(uuid()) @db.Uuid
-  name             String
-  emoji            String   @default("")
-  color            Int      @default(3899638)
-  position         Int      @default(0)
-  isDefault        Boolean  @default(false)
-  allowedRoleNames String[] // Systemrollen, die diese Priorität setzen dürfen (leer = alle mit ticket.change_priority)
-  notifyRoleIds    String[] // Discord-Rollen, die bei dieser Priorität benachrichtigt werden
+  id                   String   @id @default(uuid()) @db.Uuid
+  name                 String
+  emoji                String   @default("")
+  color                Int      @default(3899638)
+  position             Int      @default(0)
+  isDefault            Boolean  @default(false)
+  allowedRoleNames     String[] // Systemrollen, die diese Priorität setzen dürfen (leer = alle mit ticket.change_priority)
+  notifyRoleIds        String[] // Discord-Rollen, die bei dieser Priorität benachrichtigt werden
+  /// SLA-Zielzeiten in Minuten (leer = keine Frist)
+  firstResponseMinutes Int?
+  resolutionMinutes    Int?
 }
 
 model TicketCloseReason {
@@ -1220,38 +1302,58 @@ model TicketCloseReason {
  * Support-Ticket (nicht zu verwechseln mit `Ticket` = Strafzettel).
  */
 model SupportTicket {
-  id               String    @id @default(uuid()) @db.Uuid
-  number           Int       @unique @default(autoincrement())
-  categoryId       String    @db.Uuid
-  panelId          String?   @db.Uuid
-  guildId          String
-  channelId        String?   @unique
-  controlMessageId String?
-  name             String
-  creatorId        String // Discord-ID
-  creatorName      String
-  creatorUserId    String?   @db.Uuid
-  statusId         String    @db.Uuid
-  priorityId       String?   @db.Uuid
-  claimers         String[] // Discord-IDs; erster = Hauptbearbeiter (PRIMARY)
-  answers          Json      @default("[]")
-  questionIndex    Int       @default(0)
-  locked           Boolean   @default(false)
-  closeReason      String?
-  closedById       String?
-  closedByName     String?
-  closedAt         DateTime?
-  firstResponseAt  DateTime?
-  lastActivityAt   DateTime  @default(now())
-  warnedAt         DateTime?
-  staffAlertedAt   DateTime?
-  closeRequestedAt DateTime?
-  deleteAt         DateTime?
-  deletedAt        DateTime?
-  escalatedAt      DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                    String    @id @default(uuid()) @db.Uuid
+  number                Int       @unique @default(autoincrement())
+  categoryId            String    @db.Uuid
+  panelId               String?   @db.Uuid
+  guildId               String
+  channelId             String?   @unique
+  controlMessageId      String?
+  name                  String
+  creatorId             String // Discord-ID
+  creatorName           String
+  creatorUserId         String?   @db.Uuid
+  statusId              String    @db.Uuid
+  priorityId            String?   @db.Uuid
+  claimers              String[] // Discord-IDs; erster = Hauptbearbeiter (PRIMARY)
+  answers               Json      @default("[]")
+  questionIndex         Int       @default(0)
+  locked                Boolean   @default(false)
+  closeReason           String?
+  closedById            String?
+  closedByName          String?
+  closedAt              DateTime?
+  firstResponseAt       DateTime?
+  lastActivityAt        DateTime  @default(now())
+  warnedAt              DateTime?
+  staffAlertedAt        DateTime?
+  closeRequestedAt      DateTime?
+  deleteAt              DateTime?
+  deletedAt             DateTime?
+  escalatedAt           DateTime?
+  departmentId          String?   @db.Uuid
+  /// Betreff (aus dem Formular) und Formular-Version beim Einreichen
+  subject               String?
+  formVersion           Int?
+  /// Idempotenz: Discord-Interaktion bzw. Formular-Entwurf, aus dem das Ticket entstand
+  openKey               String?   @unique
+  /// Wartezeit auf den Nutzer (SLA ruht): seit wann und bisher insgesamt
+  waitingSince          DateTime?
+  waitingSeconds        Int       @default(0)
+  firstResponseDueAt    DateTime?
+  resolveDueAt          DateTime?
+  slaFirstWarnedAt      DateTime?
+  slaResolveWarnedAt    DateTime?
+  slaEscalatedAt        DateTime?
+  unassignedEscalatedAt DateTime?
+  resolvedAt            DateTime?
+  archivedAt            DateTime?
+  userMessageNotifiedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
+  @@index([departmentId])
+  @@index([closedAt])
   @@index([creatorId, categoryId])
   @@index([statusId])
   @@index([createdAt])
@@ -1317,20 +1419,39 @@ model TicketLog {
 }
 
 model TicketTranscript {
-  id            String   @id @default(uuid()) @db.Uuid
-  ticketId      String   @db.Uuid
+  id            String    @id @default(uuid()) @db.Uuid
+  ticketId      String    @db.Uuid
   ticketNumber  Int
   categoryName  String
   creatorId     String
   creatorName   String
   claimers      String[]
   statusName    String
-  html          String
-  sizeBytes     Int
+  html          String    @default("")
+  sizeBytes     Int       @default(0)
   createdById   String?
   createdByName String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
+  /// Version je Ticket (1, 2, …) – neue Erzeugung = neue Version, alte bleiben erhalten
+  version       Int       @default(1)
+  /// PENDING | RUNNING | DONE | FAILED (Hintergrund-Erstellung mit Wiederholungen)
+  status        String    @default("DONE")
+  trigger       String    @default("manual")
+  /// verhindert doppelte Aufträge (z. B. derselbe Abschluss zweimal gemeldet)
+  jobKey        String?   @unique
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime?
+  lastError     String?
+  completedAt   DateTime?
+  /// Text-Export und strukturierte Daten (JSON-Export) derselben Version, SHA-256 der Daten
+  text          String    @default("")
+  data          Json?
+  sha256        String?
+  /// wohin nach der Erstellung gesendet wird (Kanäle, DM)
+  notify        Json      @default("{}")
 
+  @@unique([ticketId, version])
+  @@index([status, nextAttemptAt])
   @@index([ticketId])
   @@index([createdAt])
 }
@@ -1931,34 +2052,34 @@ model HrExam {
 }
 
 model HrExamAttempt {
-  id          String    @id @default(uuid()) @db.Uuid
-  examId      String    @db.Uuid
-  personnelId String    @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  examId         String    @db.Uuid
+  personnelId    String    @db.Uuid
   /// Fragen-IDs dieses Versuchs (bei Zufallsauswahl)
-  questionIds String[]  @default([])
-  answers     Json      @default("{}")
-  status      String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED | VOIDED
+  questionIds    String[]  @default([])
+  answers        Json      @default("{}")
+  status         String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED | VOIDED
   /// Fragen zum Zeitpunkt des Starts (spätere Änderungen an der Prüfung verändern alte Versuche nicht)
-  snapshot    Json?
+  snapshot       Json?
   /// gemischte Reihenfolge je Frage: { o: { [frageId]: number[] }, m: { [frageId]: number[] } }
-  shuffle     Json      @default("{}")
+  shuffle        Json      @default("{}")
   /// vom Teilnehmer markierte Fragen
-  flagged     String[]  @default([])
+  flagged        String[]  @default([])
   /// erreichte Punkte je Frage (nach der Bewertung)
   questionScores Json?
-  voidReason  String?
-  voidedById  String?   @db.Uuid
-  voidedAt    DateTime?
-  score       Float?
-  maxScore    Float?
-  passed      Boolean?
-  gradedById  String?   @db.Uuid
-  gradedAt    DateTime?
-  feedback    String?
-  startedAt   DateTime  @default(now())
-  submittedAt DateTime?
-  exam        HrExam    @relation(fields: [examId], references: [id], onDelete: Cascade)
-  personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  voidReason     String?
+  voidedById     String?   @db.Uuid
+  voidedAt       DateTime?
+  score          Float?
+  maxScore       Float?
+  passed         Boolean?
+  gradedById     String?   @db.Uuid
+  gradedAt       DateTime?
+  feedback       String?
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  exam           HrExam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  personnel      Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
 
   @@index([examId, personnelId])
   @@index([status])

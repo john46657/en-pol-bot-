@@ -1,8 +1,10 @@
 import {
-  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, EmbedBuilder, OverwriteType, PermissionFlagsBits, RoleSelectMenuBuilder, StringSelectMenuBuilder, UserSelectMenuBuilder,
-  type Client, type Message, type MessageActionRowComponentBuilder, type TextChannel,
+  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, ComponentType, EmbedBuilder, FileUploadBuilder, LabelBuilder, ModalBuilder, OverwriteType, PermissionFlagsBits, RoleSelectMenuBuilder,
+  StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder,
+  type Client, type Message, type MessageActionRowComponentBuilder, type ModalSubmitInteraction, type TextChannel,
 } from 'discord.js';
-import type { ComponentButton, ComponentSelect, EmbedSpec, MessageSpec, TicketEffect } from '@enrp/shared';
+import type { ComponentButton, ComponentSelect, EmbedSpec, FormFile, MessageSpec, TicketEffect } from '@enrp/shared';
+import type { ModalSpec } from './format';
 import type { Api } from './api';
 
 const STYLE = { primary: ButtonStyle.Primary, secondary: ButtonStyle.Secondary, success: ButtonStyle.Success, danger: ButtonStyle.Danger } as const;
@@ -61,10 +63,64 @@ export function payloadOf(m: MessageSpec, stamp = true) {
   return {
     ...(m.content ? { content: m.content.slice(0, 2000) } : {}),
     embeds: (m.embeds ?? []).slice(0, 10).map((e) => embedOf(e, stamp)),
-    components: componentsOf(m.buttons, m.select ? [m.select] : []),
+    components: componentsOf(m.buttons, [...(m.select ? [m.select] : []), ...(m.selects ?? [])]),
     // Nur ausdrücklich gewünschte Erwähnungen pingen – niemals @everyone/@here
     allowedMentions: { parse: [] as never[], users: m.mentionUsers ?? [], roles: m.mentionRoles ?? [] },
   };
+}
+
+/**
+ * Discord-Formular. Reine Textformulare wie bisher (Textfelder in Reihen); sobald ein Feld eine Auswahl, einen Datei-Upload oder
+ * eine Beschreibung hat, mit Beschriftungen (Label-Komponenten) – so unterstützt Discord Auswahlmenüs und Uploads in Formularen.
+ */
+export function modalOf(m: ModalSpec) {
+  const modal = new ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45));
+  const text = (f: ModalSpec['fields'][number], withLabel: boolean) => {
+    const input = new TextInputBuilder().setCustomId(f.id).setStyle(f.paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short).setRequired(!!f.required);
+    if (withLabel) input.setLabel(f.label.slice(0, 45));
+    if (f.maxLength) input.setMaxLength(f.maxLength);
+    if (f.minLength) input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4000));
+    if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
+    if (f.value) input.setValue(f.value.slice(0, f.maxLength ?? 4000));
+    return input;
+  };
+  const fields = m.fields.slice(0, 5);
+  if (!fields.some((f) => (f.kind && f.kind !== 'text') || f.description)) return modal.addComponents(fields.map((f) => new ActionRowBuilder<TextInputBuilder>().addComponents(text(f, true))));
+  return modal.addLabelComponents(fields.map((f) => {
+    const label = new LabelBuilder().setLabel(f.label.slice(0, 45));
+    if (f.description) label.setDescription(f.description.slice(0, 100));
+    if (f.kind === 'select') {
+      const opts = (f.options ?? []).slice(0, 25);
+      const max = Math.max(1, Math.min(f.maxValues ?? 1, opts.length));
+      const sel = new StringSelectMenuBuilder().setCustomId(f.id).setRequired(!!f.required).setMinValues(Math.min(f.minValues ?? (f.required ? 1 : 0), max)).setMaxValues(max)
+        .addOptions(opts.map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...(o.default ? { default: true } : {}) })));
+      if (f.placeholder) sel.setPlaceholder(f.placeholder.slice(0, 150));
+      return label.setStringSelectMenuComponent(sel);
+    }
+    if (f.kind === 'file') {
+      const max = Math.max(1, Math.min(f.maxValues ?? 1, 10));
+      return label.setFileUploadComponent(new FileUploadBuilder().setCustomId(f.id).setRequired(!!f.required).setMinValues(Math.min(f.minValues ?? 0, max)).setMaxValues(max));
+    }
+    return label.setTextInputComponent(text(f, false));
+  }));
+}
+
+/** Alle Eingaben eines abgeschickten Formulars: Text, Auswahl (Liste), Kontrollkästchen und hochgeladene Dateien (Discord-CDN). */
+export function modalValuesOf(i: Pick<ModalSubmitInteraction, 'fields'>) {
+  const values: Record<string, string | string[] | boolean> = {};
+  const files: Record<string, FormFile[]> = {};
+  for (const [id, f] of i.fields.fields) {
+    switch (f.type) {
+      case ComponentType.TextInput: values[id] = f.value; break;
+      case ComponentType.StringSelect: values[id] = [...(f.values ?? [])]; break;
+      case ComponentType.Checkbox: values[id] = f.value; break;
+      case ComponentType.CheckboxGroup: values[id] = [...f.values]; break;
+      case ComponentType.RadioGroup: if (f.value) values[id] = f.value; break;
+      case ComponentType.FileUpload: files[id] = [...f.attachments.values()].slice(0, 10).map((a) => ({ name: a.name.slice(0, 200), url: a.url, size: a.size, contentType: a.contentType ?? null })); break;
+      default: break;
+    }
+  }
+  return { values, files };
 }
 
 /**
@@ -152,12 +208,20 @@ export function createTicketRuntime(client: () => Client, api: Api, log: (m: str
         return;
       }
       case 'panel': {
-        const ch = await text(e.channelId);
-        if (!ch) throw new Error(`panel channel ${e.channelId} not found or not a text channel`);
-        const old = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
-        const p = payloadOf(e.message);
-        const msg = old ? await old.edit(p) : await ch.send(p);
-        await api.service('POST', `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch.id, messageId: msg.id });
+        try {
+          const ch = await text(e.channelId);
+          if (!ch) throw new Error('Der Kanal wurde nicht gefunden oder ist kein Textkanal (Kanal gelöscht oder Bot sieht ihn nicht).');
+          const old = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
+          const p = payloadOf(e.message);
+          const msg = old ? await old.edit(p) : await ch.send(p);
+          await api.service('POST', `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch.id, messageId: msg.id });
+        } catch (err) {
+          // Fehler im Dashboard anzeigen (fehlende Rechte, gelöschter Kanal …) – ohne Geheimnisse, nur die Discord-Meldung
+          const raw = err instanceof Error ? err.message : String(err);
+          const why = /Missing Permissions/i.test(raw) ? 'Dem Bot fehlen im Kanal Rechte (Nachrichten senden, Links einbetten).' : /Missing Access/i.test(raw) ? 'Der Bot hat keinen Zugriff auf den Kanal.' : /Unknown Channel/i.test(raw) ? 'Den Kanal gibt es nicht mehr.' : raw;
+          await api.service('POST', `/bot/support-tickets/panels/${e.panelId}/failed`, { error: why.slice(0, 500) }).catch(() => undefined);
+          throw err;
+        }
         return;
       }
     }

@@ -1,9 +1,9 @@
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentType, ContainerBuilder, EmbedBuilder, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, GatewayIntentBits, MessageFlags, ModalBuilder, OverwriteType, Partials,
-  PermissionFlagsBits, SlashCommandBuilder, TextInputBuilder, TextInputStyle,
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentType, ContainerBuilder, EmbedBuilder, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, GatewayIntentBits, MessageFlags, OverwriteType, Partials,
+  PermissionFlagsBits, SlashCommandBuilder,
   type AnySelectMenuInteraction, type AutocompleteInteraction, type ButtonComponent, type ButtonInteraction, type ChatInputCommandInteraction, type Interaction, type Message, type ModalSubmitInteraction,
 } from 'discord.js';
-import { componentsOf, createTicketRuntime, payloadOf } from './discord-tickets';
+import { componentsOf, createTicketRuntime, modalOf, modalValuesOf, payloadOf } from './discord-tickets';
 import { deleteMessage, postAsUser, postOrUpdate, resolveAssets } from './messages';
 import { createStaffLists } from './staff-lists';
 import { createRadioRoleSync } from './radio-roles';
@@ -101,14 +101,7 @@ const toBox = (list: EmbedData[], buttons?: ButtonSpec[], ping?: string) => [
 ];
 /** Auswahlmenüs als eigene Reihen über den Buttons. */
 const toComponents = (buttons?: ButtonSpec[], select?: SelectSpec, selects: SelectSpec[] = []) => componentsOf(buttons, [...(select ? [select] : []), ...selects]);
-const toModal = (m: ModalSpec) => new ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
-  const input = new TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short).setRequired(!!f.required);
-  if (f.maxLength) input.setMaxLength(f.maxLength);
-  if (f.minLength) input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4000));
-  if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
-  if (f.value) input.setValue(f.value.slice(0, f.maxLength ?? 4000));
-  return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
-}));
+const toModal = (m: ModalSpec) => modalOf(m);
 const replyPayload = (r: Reply) => (r.embeds?.[0]?.box
   // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
   ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: MessageFlags.IsComponentsV2 as const, allowedMentions: { parse: [] as never[] } }
@@ -365,7 +358,7 @@ async function markDecided(message: Message, d: NonNullable<Reply['decided']>) {
 function baseCtx(i: ChatInputCommandInteraction | AutocompleteInteraction | ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction): Omit<Ctx, 'opts'> {
   const perms = i.memberPermissions;
   return {
-    discordId: i.user.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
+    discordId: i.user.id, interactionId: i.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
     guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
     isGuildAdmin: !!perms && (perms.has(PermissionFlagsBits.ManageGuild) || perms.has(PermissionFlagsBits.Administrator)),
     config: () => api.service<DiscordConfig>('GET', '/bot/config'),
@@ -471,7 +464,7 @@ async function resetSelect(i: AnySelectMenuInteraction) {
 async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
-  if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
+  if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : undefined)) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
@@ -490,8 +483,9 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
   }
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
+  const modal = i.isModalSubmit() ? modalValuesOf(i) : undefined;
   const values = i.isAnySelectMenu() ? i.values : undefined;
-  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
+  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal }));
   await i.editReply(replyPayload(reply));
   const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));

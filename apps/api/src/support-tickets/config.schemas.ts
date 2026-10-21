@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TICKET_ACTION_KEYS, QUESTION_TYPES, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, STATUS_KINDS } from '@enrp/shared';
+import { TICKET_ACTION_KEYS, QUESTION_TYPES, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, STATUS_KINDS, TICKET_STATUS_KEYS } from '@enrp/shared';
 
 const snowflake = z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const ids = z.array(snowflake).max(50).default([]);
@@ -16,7 +16,11 @@ export const questionSchema = z.object({
   options: z.array(z.string().trim().min(1).max(100)).max(25).default([]), placeholder: z.string().trim().max(100).optional(),
   description: z.string().trim().max(200).optional(),
   minLength: z.number().int().min(0).max(4000).optional(), maxLength: z.number().int().min(1).max(4000).optional(),
+  min: z.number().min(-1e12).max(1e12).optional(), max: z.number().min(-1e12).max(1e12).optional(), enabled: z.boolean().optional(),
 }).refine((q) => !['SELECT', 'MULTI'].includes(q.type) || q.options.length >= 2, 'Auswahlfragen brauchen mindestens 2 Optionen.')
+  .refine((q) => new Set(q.options).size === q.options.length, 'Die Optionen müssen eindeutig sein.')
+  .refine((q) => q.type !== 'FILE' || q.max === undefined || (Number.isInteger(q.max) && q.max >= 1 && q.max <= 10), { message: 'Anhänge: höchstens 1–10 Dateien.', path: ['max'] })
+  .refine((q) => q.min === undefined || q.max === undefined || q.min <= q.max, { message: 'Der kleinste Wert darf nicht größer als der größte sein.', path: ['min'] })
   .refine((q) => q.minLength === undefined || q.maxLength === undefined || q.minLength <= q.maxLength, { message: 'Die Mindestlänge darf nicht größer als die Höchstlänge sein.', path: ['minLength'] });
 
 export const buttonSchema = z.object({
@@ -53,6 +57,9 @@ export const categorySchema = z.object({
   claimDiscordCategoryId: optId, claimLocksChat: z.boolean().default(false),
   autoClaimOnMessage: z.boolean().default(false), autoUnclaimMinutes: z.number().int().min(0).max(60 * 24 * 30).default(0),
   staffAlertMinutes: z.number().int().min(0).max(60 * 24 * 30).default(0), closeRequestCloses: z.boolean().default(true),
+  // Premium: Abteilung, Vertraulichkeit, Formular vor dem Erstellen, Eskalation unzugewiesener Tickets
+  departmentId: z.string().uuid().nullable().optional().transform((v) => v ?? null), confidential: z.boolean().default(false),
+  formMode: z.enum(['CHANNEL', 'MODAL']).default('CHANNEL'), escalateUnassignedMinutes: z.number().int().min(0).max(60 * 24 * 30).default(0),
 });
 export type CategoryInput = z.infer<typeof categorySchema>;
 
@@ -63,18 +70,46 @@ export const panelSchema = z.object({
   authorName: z.string().trim().max(256).nullish().transform((v) => v || null), authorIconUrl: url,
   style: z.enum(['BUTTONS', 'DROPDOWN']).default('BUTTONS'), placeholder: z.string().trim().min(1).max(150).default('Wähle eine Kategorie …'),
   channelId: optId,
-  categoryIds: z.array(z.string().uuid()).max(25).default([]), allowedRoleIds: ids, showLoad: z.boolean().default(false), position: z.number().int().min(0).max(1000).default(0),
-});
+  // Discord: höchstens 25 Buttons; Dropdown: je Menü 25 Einträge, bis zu 4 Menüs
+  categoryIds: z.array(z.string().uuid()).max(100).default([]), allowedRoleIds: ids, showLoad: z.boolean().default(false), position: z.number().int().min(0).max(1000).default(0),
+}).refine((p) => p.style !== 'BUTTONS' || p.categoryIds.length <= 25, { message: 'Discord erlaubt höchstens 25 Buttons – nutze bei mehr Kategorien ein Dropdown (bis 100).', path: ['categoryIds'] });
 export type PanelInput = z.infer<typeof panelSchema>;
 
 export const statusSchema = z.object({
   name: z.string().trim().min(1).max(60), emoji: z.string().trim().max(64).default(''), color: color.default(0x3b82f6), position: z.number().int().min(0).max(1000).default(0),
   kind: enumOf(STATUS_KINDS).default('OPEN'), isDefault: z.boolean().default(false), isClaimed: z.boolean().default(false), isEscalation: z.boolean().default(false), isClose: z.boolean().default(false),
-});
+  /** feste Bedeutung im Lebenszyklus (je Bedeutung höchstens ein Status) */
+  key: z.union([enumOf(TICKET_STATUS_KEYS), z.null()]).optional().transform((v) => v ?? null),
+}).refine((s) => !s.key || (s.key === 'CLOSED' ? s.kind === 'CLOSED' : s.key === 'ARCHIVED' ? s.kind === 'ARCHIVED' : s.kind === 'OPEN'), { message: 'Die Bedeutung passt nicht zur Art des Status.', path: ['key'] });
 export const prioritySchema = z.object({
   name: z.string().trim().min(1).max(60), emoji: z.string().trim().max(64).default(''), color: color.default(0x3b82f6), position: z.number().int().min(0).max(1000).default(0),
   isDefault: z.boolean().default(false), allowedRoleNames: z.array(z.string().trim().min(1).max(64)).max(30).default([]), notifyRoleIds: ids,
+  /** SLA-Zielzeiten (Minuten); leer = keine Frist */
+  firstResponseMinutes: z.number().int().min(1).max(60 * 24 * 90).nullable().optional().transform((v) => v ?? null),
+  resolutionMinutes: z.number().int().min(1).max(60 * 24 * 365).nullable().optional().transform((v) => v ?? null),
 });
+
+export const departmentSchema = z.object({
+  name: z.string().trim().min(1).max(80), description: z.string().trim().max(500).default(''), emoji,
+  staffRoleIds: ids, leadRoleIds: ids, accessRoleNames: z.array(z.string().trim().min(1).max(64)).max(30).default([]),
+  notifyChannelId: optId, active: z.boolean().default(true), position: z.number().int().min(0).max(1000).default(0),
+});
+export type DepartmentInput = z.infer<typeof departmentSchema>;
+
+/** Ereignisse mit einstellbaren Benachrichtigungen. */
+export const NOTIFY_EVENTS = {
+  created: 'Neues Ticket', claimed: 'Ticket übernommen', assigned: 'Zuständigkeit geändert', user_message: 'Neue Nachricht des Nutzers', info_requested: 'Rückfrage an den Nutzer',
+  priority: 'Priorität geändert', escalated: 'Eskalation (auch SLA / unzugewiesen)', closed: 'Ticket geschlossen', reopened: 'Ticket wieder geöffnet',
+  transcript_ready: 'Transkript erstellt', transcript_failed: 'Transkript fehlgeschlagen',
+} as const;
+export type NotifyEvent = keyof typeof NOTIFY_EVENTS;
+/** channel = interner Kanal der Abteilung · dm = Discord-DM an die Bearbeiter · dashboard = Benachrichtigung im Dashboard an verknüpfte Bearbeiter. */
+const rule = (channel: boolean, dm: boolean, dashboard: boolean) => z.object({ channel: z.boolean().default(channel), dm: z.boolean().default(dm), dashboard: z.boolean().default(dashboard) }).default({});
+export const notifySchema = z.object({
+  created: rule(true, false, false), claimed: rule(false, false, true), assigned: rule(true, true, true), user_message: rule(false, false, true), info_requested: rule(false, false, false),
+  priority: rule(true, false, true), escalated: rule(true, true, true), closed: rule(false, false, false), reopened: rule(true, false, true),
+  transcript_ready: rule(false, false, false), transcript_failed: rule(true, false, true),
+}).default({});
 export const reasonSchema = z.object({ text: z.string().trim().min(1).max(200), position: z.number().int().min(0).max(1000).default(0) });
 
 /** Allgemeine Einstellungen (CLOSED-Anzeige, Log-Channel, Texte). */
@@ -95,6 +130,23 @@ export const settingsSchema = z.object({
   /** Ersteller verlässt den Discord-Server: offene Tickets schließen (braucht den Server Members Intent). */
   memberLeaveAction: z.enum(['NONE', 'CLOSE']).default('NONE'),
   memberLeaveReason: z.string().trim().min(1).max(300).default('Ersteller hat den Server verlassen'),
+  // ---- Premium ----
+  /** Präfix der dauerhaften Ticket-ID (EMD-000123) */
+  refPrefix: z.string().trim().regex(/^[A-Z]{2,8}$/, '2–8 Großbuchstaben').default('EMD'),
+  /** offene Tickets je Nutzer über alle Kategorien (0 = unbegrenzt); Recht ticket.bypass_limits hebt es auf */
+  maxOpenPerUser: z.number().int().min(0).max(100).default(0),
+  /** Discord-Server, auf dem Tickets geöffnet werden dürfen (leer = keine Einschränkung) */
+  guildId: optId,
+  /** vertrauliche Tickets ohne eingerichtete Abteilung: nur diese Rollen (z. B. Leitung) – nie die allgemeine Staff-Rolle */
+  confidentialFallbackRoleIds: ids,
+  /** Leitung für Eskalationen, wenn die Abteilung keine eigene hat (bekommt dadurch keinen Zugriff) */
+  leadRoleIds: ids,
+  /** Erinnerungen bei SLA-Überschreitung wiederholen (Minuten, 0 = nur einmal) und Eskalation an die Leitung nach … Minuten Überschreitung (0 = sofort) */
+  slaReminderMinutes: z.number().int().min(0).max(60 * 24 * 7).default(60),
+  slaEscalateAfterMinutes: z.number().int().min(0).max(60 * 24 * 7).default(30),
+  /** Benachrichtigung „neue Nachricht des Nutzers“ höchstens alle … Minuten je Ticket */
+  userMessageNotifyMinutes: z.number().int().min(1).max(60 * 24).default(10),
+  notifications: notifySchema,
 });
 export type TicketSettings = z.infer<typeof settingsSchema>;
 export const DEFAULT_SETTINGS: TicketSettings = settingsSchema.parse({});

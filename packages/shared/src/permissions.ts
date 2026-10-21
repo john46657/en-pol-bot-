@@ -34,7 +34,7 @@ export const PERMISSION_CATALOG = {
   academy: ['view', 'manage'],
   sek: ['view', 'report', 'manage'],
   qualifications: ['view', 'decide', 'delete', 'manage'],
-  ticket: ['view', 'create', 'claim', 'close', 'reopen', 'delete', 'add_user', 'remove_user', 'change_status', 'change_priority', 'change_category', 'rename', 'move', 'lock', 'escalate', 'transcript', 'transcript_delete', 'internal_notes', 'rate', 'manage', 'settings'],
+  ticket: ['view', 'create', 'claim', 'close', 'reopen', 'delete', 'add_user', 'remove_user', 'change_status', 'change_priority', 'change_category', 'rename', 'move', 'lock', 'escalate', 'transcript', 'transcript_delete', 'internal_notes', 'rate', 'manage', 'settings', 'assign', 'archive', 'change_department', 'transcript_export', 'transcript_manage', 'departments', 'audit', 'bypass_limits'],
   /**
    * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
    * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,

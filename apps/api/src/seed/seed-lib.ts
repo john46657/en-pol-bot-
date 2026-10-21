@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import { ALL_PERMISSIONS, areaGrantsFor, defaultTicketButtons, PermissionKey } from '@enrp/shared';
+import { seedTicketPremium } from './ticket-defaults';
 
 const only = (...mods: string[]): PermissionKey[] => ALL_PERMISSIONS.filter((p) => mods.includes(p.split('.')[0] ?? ''));
 const pick = (...keys: PermissionKey[]) => keys;
@@ -15,7 +16,7 @@ export const STARTER_ROLES: Record<string, { description: string; grants: readon
   Investigator: { description: 'Ermittler', grants: [...pick('complaints.view', 'complaints.investigate', 'persons.edit')] },
   SEK: { description: 'Spezialeinsatzkommando (Mitglieder)', grants: [...pick('sek.view', 'sek.report', 'cad.view', 'cad.radio', 'fleet.view', 'fleet.view_details')] },
   'SEK Leitung': { description: 'Leitung des SEK (Mitglieder, Bewerbungen)', grants: [...only('sek'), ...pick('qualifications.view', 'qualifications.decide')] },
-  'Ticket Support': { description: 'Bearbeitet Support-Tickets', grants: [...pick('ticket.view', 'ticket.create', 'ticket.claim', 'ticket.close', 'ticket.reopen', 'ticket.add_user', 'ticket.remove_user', 'ticket.change_status', 'ticket.change_priority', 'ticket.rename', 'ticket.lock', 'ticket.escalate', 'ticket.transcript', 'ticket.internal_notes', 'ticket.rate')] },
+  'Ticket Support': { description: 'Bearbeitet Support-Tickets', grants: [...pick('ticket.view', 'ticket.create', 'ticket.claim', 'ticket.close', 'ticket.reopen', 'ticket.add_user', 'ticket.remove_user', 'ticket.change_status', 'ticket.change_priority', 'ticket.rename', 'ticket.lock', 'ticket.escalate', 'ticket.transcript', 'ticket.internal_notes', 'ticket.rate', /* wie die Migration für bestehende Rollen */ 'ticket.archive', 'ticket.transcript_export', 'ticket.transcript_manage')] },
   'Ticket Leitung': { description: 'Leitung des Ticket-Systems (alle Ticket-Rechte inkl. Einstellungen)', grants: [...only('ticket')] },
   'Training Staff': { description: 'Academy-Ausbilder', grants: [...pick('academy.view', 'academy.manage', 'personnel.view', 'qualifications.view', 'qualifications.decide'), ...only('training', 'exam')] },
   'Police Administration': { description: 'Polizeiführung', grants: [...only('personnel', 'applications', 'analytics', 'sek', 'qualifications', 'ticket', 'leave', 'dutyreports', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'messagebuilder', 'radiowhitelist'), ...pick('persons.archive', 'vehicles.archive', 'complaints.resolve', 'complaints.close', 'audit.view', 'users.view', 'roles.view', 'dashboard.view', 'team.view', 'team.manage')] },
@@ -65,13 +66,15 @@ export async function seedBase(prisma: PrismaClient) {
 export async function seedTickets(prisma: PrismaClient) {
   if (!(await prisma.ticketStatus.count())) {
     await prisma.ticketStatus.createMany({ data: [
-      { name: 'Offen', emoji: '🟢', color: 0x22c55e, position: 0, kind: 'OPEN', isDefault: true },
-      { name: 'In Bearbeitung', emoji: '🔵', color: 0x3b82f6, position: 1, kind: 'OPEN', isClaimed: true },
-      { name: 'Wartet auf Benutzer', emoji: '🟡', color: 0xeab308, position: 2, kind: 'OPEN' },
-      { name: 'Wartet auf Team', emoji: '🟠', color: 0xf97316, position: 3, kind: 'OPEN' },
-      { name: 'Eskaliert', emoji: '🔴', color: 0xef4444, position: 4, kind: 'OPEN', isEscalation: true },
-      { name: 'Geschlossen', emoji: '⚫', color: 0x64748b, position: 5, kind: 'CLOSED', isClose: true },
-      { name: 'Archiviert', emoji: '📦', color: 0x475569, position: 6, kind: 'ARCHIVED' },
+      { key: 'OPEN', name: 'Offen', emoji: '🟢', color: 0x22c55e, position: 0, kind: 'OPEN', isDefault: true },
+      { key: 'CLAIMED', name: 'Übernommen', emoji: '👤', color: 0x6366f1, position: 1, kind: 'OPEN', isClaimed: true },
+      { key: 'IN_PROGRESS', name: 'In Bearbeitung', emoji: '🔵', color: 0x3b82f6, position: 2, kind: 'OPEN' },
+      { key: 'WAITING_USER', name: 'Wartet auf Nutzer', emoji: '🟡', color: 0xeab308, position: 3, kind: 'OPEN' },
+      { key: 'WAITING_INTERNAL', name: 'Wartet auf interne Rückmeldung', emoji: '🟠', color: 0xf97316, position: 4, kind: 'OPEN' },
+      { key: 'ESCALATED', name: 'Eskaliert', emoji: '🔴', color: 0xef4444, position: 5, kind: 'OPEN', isEscalation: true },
+      { key: 'RESOLVED', name: 'Gelöst', emoji: '✅', color: 0x10b981, position: 6, kind: 'OPEN' },
+      { key: 'CLOSED', name: 'Geschlossen', emoji: '⚫', color: 0x64748b, position: 7, kind: 'CLOSED', isClose: true },
+      { key: 'ARCHIVED', name: 'Archiviert', emoji: '📦', color: 0x475569, position: 8, kind: 'ARCHIVED' },
     ] });
   }
   if (!(await prisma.ticketPriority.count())) {
@@ -96,4 +99,5 @@ export async function seedTickets(prisma: PrismaClient) {
       name: 'Support-Panel', title: '🎫 EN | POLIZEI Support', description: 'Willkommen beim Support.\n\nWähle unten aus, wobei du Hilfe benötigst.', style: 'BUTTONS', categoryIds: [support.id],
     } });
   }
+  await seedTicketPremium(prisma);
 }

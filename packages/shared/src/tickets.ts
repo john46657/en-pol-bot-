@@ -39,12 +39,19 @@ export const defaultTicketButtons = (): TicketButtonConfig[] =>
   (['close', 'close_request', 'claim', 'unclaim', 'add_user', 'remove_user', 'transcript', 'note', 'delete'] as TicketAction[])
     .map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style as ButtonStyleName, enabled: true }));
 
-export const QUESTION_TYPES = { SHORT: 'Kurze Antwort', LONG: 'Lange Antwort', YESNO: 'Ja/Nein', SELECT: 'Auswahl', MULTI: 'Mehrere Optionen' } as const;
+export const QUESTION_TYPES = {
+  SHORT: 'Kurze Antwort', LONG: 'Lange Antwort', YESNO: 'Ja/Nein', SELECT: 'Auswahl', MULTI: 'Mehrere Optionen',
+  CHECKBOX: 'Kontrollkästchen (Bestätigung)', NUMBER: 'Zahl', DATE: 'Datum', FILE: 'Anhang / Screenshot',
+} as const;
 export type QuestionType = keyof typeof QUESTION_TYPES;
 export interface TicketQuestion {
   id: string; label: string; type: QuestionType; required: boolean; options: string[]; placeholder?: string;
   /** Beschreibung unter der Frage; Zeichenlimit für Text-Antworten (wie GalaxyBot). */
   description?: string; minLength?: number; maxLength?: number;
+  /** Zahlenfeld: kleinster/größter Wert; Anhang: höchstens so viele Dateien (`max`). */
+  min?: number; max?: number;
+  /** false = Feld deaktiviert (wird nicht abgefragt, bleibt aber in der Formular-Version erhalten). */
+  enabled?: boolean;
 }
 
 export const CLAIM_MODES = { SINGLE: 'Nur ein Bearbeiter', MULTI: 'Mehrere Bearbeiter', PRIMARY: 'Hauptbearbeiter + Helfer' } as const;
@@ -62,6 +69,7 @@ export const TICKET_PLACEHOLDERS = {
   '{username}': 'Discord-Name des Erstellers',
   '{user_id}': 'Discord-ID des Erstellers',
   '{ticket_id}': 'Ticket-Nummer, z. B. 0042',
+  '{ticket_ref}': 'Dauerhafte Ticket-ID, z. B. EMD-000042',
   '{category}': 'Name der Ticket-Kategorie',
   '{staff}': 'Bearbeiter (Erwähnungen) bzw. „niemand“',
   '{status}': 'Aktueller Status',
@@ -98,7 +106,7 @@ export interface EmbedSpec {
 export interface ComponentButton { id: string; label: string; emoji?: string; style: ButtonStyleName; url?: string; disabled?: boolean }
 export interface ComponentSelect { id: string; placeholder: string; kind?: 'string' | 'user' | 'role'; min?: number; max?: number; options?: { label: string; value: string; description?: string; emoji?: string }[] }
 /** Bilder in Embeds dürfen `media:<id>` sein (hochgeladene Datei – der Bot lädt sie und hängt sie an). `reactions`: Emojis, die der Bot nach dem Senden setzt. */
-export interface MessageSpec { content?: string; embeds?: EmbedSpec[]; buttons?: ComponentButton[]; select?: ComponentSelect; mentionUsers?: string[]; mentionRoles?: string[]; reactions?: string[]; /** beim ersten Senden einen Thread mit diesem Namen starten */ thread?: string }
+export interface MessageSpec { content?: string; embeds?: EmbedSpec[]; buttons?: ComponentButton[]; select?: ComponentSelect; /** weitere Auswahlmenüs (je eine Reihe, z. B. Panels mit mehr als 25 Kategorien) */ selects?: ComponentSelect[]; mentionUsers?: string[]; mentionRoles?: string[]; reactions?: string[]; /** beim ersten Senden einen Thread mit diesem Namen starten */ thread?: string }
 
 export type TicketEffect =
   | { type: 'create'; ticketId: string; guildId: string; name: string; parentId?: string | null; viewers: { id: string; kind: 'user' | 'role'; send: boolean }[]; topic: string; messages: MessageSpec[]; control: MessageSpec }

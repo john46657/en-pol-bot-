@@ -22,6 +22,7 @@ export const ACTION_LABELS: Record<string, string> = {
   investigate: 'ermitteln', resolve: 'abschließen', activate: 'aktivieren', clear: 'aufheben', transfer: 'übergeben', release: 'freigeben', promote: 'befördern',
   discipline: 'Disziplinarmaßnahmen', request: 'beantragen', report: 'melden', send: 'senden', moderate: 'moderieren', export: 'exportieren',
   handover: 'Schichtübergabe erstellen/bestätigen', view_stats: 'Statistik ansehen',
+  change_department: 'Abteilung wechseln', transcript_export: 'Transkript exportieren', transcript_manage: 'Transkript neu erzeugen/wiederholen', departments: 'Abteilungen verwalten', audit: 'Audit-Protokoll ansehen', bypass_limits: 'Ticket-Limits umgehen',
   'tickets.view': 'Bereich Tickets', 'applications.view': 'Bereich Bewerbungen', 'team.view': 'Bereich Team', 'offices.view': 'Bereich Büros',
   'voice.view': 'Bereich Sprachkanäle', 'logs.view': 'Bereich Logs', 'settings.view': 'Bereich Einstellungen',
   'radio.view': 'Bereich Funk-Codes', 'teamchance.view': 'Bereich Team-Chance', 'cad.view': 'Bereich CAD-Leitstelle',

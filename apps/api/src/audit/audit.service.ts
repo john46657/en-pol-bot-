@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService, Tx } from '../prisma/prisma.service';
-import { currentGuild } from '../common/guild-context';
+import { currentGuild, currentRequestId } from '../common/guild-context';
 
 export interface Actor {
   userId: string | null;
@@ -46,7 +46,7 @@ export class AuditService {
       data: {
         actorUserId: actor.userId,
         actorRobloxUserId: actor.robloxUserId ?? null,
-        requestId: actor.requestId,
+        requestId: actor.requestId ?? currentRequestId(), // Korrelations-ID der Anfrage, auch wenn der Aufrufer sie nicht mitgibt
         action: entry.action,
         module: entry.module,
         entityType: entry.entityType,

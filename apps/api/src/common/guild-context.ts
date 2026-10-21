@@ -7,8 +7,10 @@ import type { NextFunction, Request, Response } from 'express';
  * Server laufen getrennt: serverbezogene Rollen gelten nur dort, Teamliste/Voice/Einstellungen zeigen nur diesen Server.
  * Ohne Header = „Alle Server“ (nur serverübergreifende Rollen).
  */
-const store = new AsyncLocalStorage<{ guildId: string | null; request?: boolean; spaces?: Promise<ReadonlySet<string> | null> }>();
+const store = new AsyncLocalStorage<{ guildId: string | null; request?: boolean; spaces?: Promise<ReadonlySet<string> | null>; requestId?: string }>();
 export const currentGuild = (): string | null => store.getStore()?.guildId ?? null;
+/** Request-ID der laufenden Anfrage (Korrelations-ID für Audit/Fehlersuche), außerhalb von Anfragen undefiniert. */
+export const currentRequestId = (): string | undefined => store.getStore()?.requestId;
 export const runInGuild = <T>(guildId: string | null, fn: () => T): T => store.run({ guildId }, fn);
 /** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
 export const inRequest = (): boolean => store.getStore()?.request === true;
@@ -18,7 +20,7 @@ export class GuildContextMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
     const h = req.headers['x-guild-id'];
     const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
-    store.run({ guildId, request: true }, next);
+    store.run({ guildId, request: true, requestId: (req as Request & { requestId?: string }).requestId }, next);
   }
 }
 

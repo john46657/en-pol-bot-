@@ -4,7 +4,7 @@ import { defaultTicketButtons, ticketButtonsOf, type TicketButtonConfig, type Ti
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
-import { DEFAULT_SETTINGS, settingsSchema, type CategoryInput, type PanelInput, type TicketSettings } from './config.schemas';
+import { DEFAULT_SETTINGS, settingsSchema, type CategoryInput, type DepartmentInput, type PanelInput, type TicketSettings } from './config.schemas';
 import type { z } from 'zod';
 import type { prioritySchema, reasonSchema, statusSchema } from './config.schemas';
 
@@ -29,12 +29,12 @@ export class TicketConfigService {
   /** `guildId`: nur Kategorien/Panels dieses Servers und die für alle Server. */
   async all(guildId?: string) {
     const where = guildId ? { OR: [{ guildId }, { guildId: null }] } : {};
-    const [categories, panels, statuses, priorities, reasons, settings] = await Promise.all([
+    const [categories, panels, statuses, priorities, reasons, settings, departments] = await Promise.all([
       this.prisma.ticketCategory.findMany({ where, orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
       this.prisma.ticketPanel.findMany({ where, orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
-      this.statuses(), this.priorities(), this.reasons(), this.settings(),
+      this.statuses(), this.priorities(), this.reasons(), this.settings(), this.departments(),
     ]);
-    return { categories: categories.map((c) => this.categoryOut(c)), panels, statuses, priorities, reasons, settings };
+    return { categories: categories.map((c) => this.categoryOut(c)), panels, statuses, priorities, reasons, settings, departments };
   }
 
   categoryOut<T extends { buttons: Prisma.JsonValue; questions: Prisma.JsonValue }>(c: T) {
@@ -44,6 +44,8 @@ export class TicketConfigService {
   statuses() { return this.prisma.ticketStatus.findMany({ orderBy: { position: 'asc' } }); }
   priorities() { return this.prisma.ticketPriority.findMany({ orderBy: { position: 'asc' } }); }
   reasons() { return this.prisma.ticketCloseReason.findMany({ orderBy: { position: 'asc' } }); }
+  departments() { return this.prisma.ticketDepartment.findMany({ orderBy: [{ position: 'asc' }, { name: 'asc' }] }); }
+  department(id: string | null | undefined) { return id ? this.prisma.ticketDepartment.findUnique({ where: { id } }) : Promise.resolve(null); }
   async settings(): Promise<TicketSettings> {
     const v = (await this.prisma.systemSetting.findUnique({ where: { key: SETTINGS_KEY } }))?.value;
     const p = v ? settingsSchema.safeParse(v) : null;
@@ -56,13 +58,52 @@ export class TicketConfigService {
   }
 
   // ---- Kategorien ----
-  async saveCategory(actor: Actor, id: string | null, d: CategoryInput) {
+  async saveCategory(actor: Actor & { name?: string }, id: string | null, d: CategoryInput) {
     await this.checkRefs(d.defaultPriorityId, d.escalationPriorityId);
+    if (d.departmentId && !(await this.prisma.ticketDepartment.count({ where: { id: d.departmentId } }))) throw new AppError('VALIDATION_FAILED', 'Unbekannte Abteilung.');
     const data = { ...d, questions: json(d.questions), buttons: json(d.buttons.length ? d.buttons : defaultTicketButtons()) };
-    const c = id ? await this.prisma.ticketCategory.update({ where: { id }, data }).catch(() => { throw new AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); })
-      : await this.prisma.ticketCategory.create({ data });
-    await this.record(actor, id ? 'category.update' : 'category.create', 'TicketCategory', c.id, { name: c.name });
+    // Formular versionieren: geänderte Fragen = neue Version; eingereichte Tickets behalten ihre Antworten samt Bezeichnungen
+    const c = await this.prisma.$transaction(async (tx) => {
+      if (!id) {
+        const created = await tx.ticketCategory.create({ data: { ...data, formVersion: 1 } });
+        await tx.ticketFormVersion.create({ data: { categoryId: created.id, version: 1, fields: json(d.questions), createdById: actor.userId, createdByName: actor.name ?? null } });
+        return created;
+      }
+      const before = await tx.ticketCategory.findUnique({ where: { id } });
+      if (!before) throw new AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.');
+      const changed = JSON.stringify(before.questions) !== JSON.stringify(d.questions);
+      const version = changed ? before.formVersion + 1 : before.formVersion;
+      if (changed) await tx.ticketFormVersion.create({ data: { categoryId: id, version, fields: json(d.questions), createdById: actor.userId, createdByName: actor.name ?? null } });
+      return tx.ticketCategory.update({ where: { id }, data: { ...data, formVersion: version } });
+    });
+    await this.record(actor, id ? 'category.update' : 'category.create', 'TicketCategory', c.id, { name: c.name, formVersion: c.formVersion, active: c.active, confidential: c.confidential, departmentId: c.departmentId });
     return this.categoryOut(c);
+  }
+  formVersions(categoryId: string) {
+    return this.prisma.ticketFormVersion.findMany({ where: { categoryId }, orderBy: { version: 'desc' }, take: 50 });
+  }
+  /** Archivieren = ausblenden und nicht mehr öffnen lassen; Tickets und Formular-Versionen bleiben vollständig erhalten. */
+  async archiveCategory(actor: Actor, id: string, archived: boolean) {
+    const c = await this.prisma.ticketCategory.update({ where: { id }, data: archived ? { archivedAt: new Date(), active: false } : { archivedAt: null } }).catch(() => { throw new AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); });
+    await this.record(actor, archived ? 'category.archive' : 'category.unarchive', 'TicketCategory', id, { name: c.name });
+    return this.categoryOut(c);
+  }
+
+  // ---- Abteilungen ----
+  async saveDepartment(actor: Actor, id: string | null, d: DepartmentInput) {
+    const dup = await this.prisma.ticketDepartment.findFirst({ where: { name: { equals: d.name, mode: 'insensitive' }, ...(id ? { id: { not: id } } : {}) } });
+    if (dup) throw new AppError('CONFLICT', 'Eine Abteilung mit diesem Namen gibt es bereits.');
+    const x = id ? await this.prisma.ticketDepartment.update({ where: { id }, data: d }).catch(() => { throw new AppError('NOT_FOUND', 'Abteilung nicht gefunden.'); })
+      : await this.prisma.ticketDepartment.create({ data: d });
+    await this.record(actor, id ? 'department.update' : 'department.create', 'TicketDepartment', x.id, { name: x.name, staffRoleIds: x.staffRoleIds, leadRoleIds: x.leadRoleIds, accessRoleNames: x.accessRoleNames, active: x.active });
+    return x;
+  }
+  /** Löschen nur ohne Kategorien und Tickets – sonst deaktivieren (Zuständigkeiten bleiben nachvollziehbar). */
+  async deleteDepartment(actor: Actor, id: string) {
+    if ((await this.prisma.ticketCategory.count({ where: { departmentId: id } })) || (await this.prisma.supportTicket.count({ where: { departmentId: id } })))
+      throw new AppError('CONFLICT', 'Diese Abteilung ist Kategorien oder Tickets zugeordnet. Deaktiviere sie stattdessen.');
+    await this.prisma.ticketDepartment.delete({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Abteilung nicht gefunden.'); });
+    await this.record(actor, 'department.delete', 'TicketDepartment', id);
   }
   async duplicateCategory(actor: Actor, id: string) {
     const rest = omit(await this.prisma.ticketCategory.findUniqueOrThrow({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); }), ['id', 'createdAt', 'updatedAt']);
@@ -72,6 +113,8 @@ export class TicketConfigService {
   }
   async deleteCategory(actor: Actor, id: string) {
     if (await this.prisma.supportTicket.count({ where: { categoryId: id, deletedAt: null, closedAt: null } })) throw new AppError('CONFLICT', 'Diese Ticket-Art hat noch offene Tickets. Schließe sie zuerst oder deaktiviere die Ticket-Art stattdessen.');
+    // Historie bewahren: Kategorien mit (auch geschlossenen) Tickets werden archiviert statt gelöscht
+    if (await this.prisma.supportTicket.count({ where: { categoryId: id } })) throw new AppError('CONFLICT', 'Diese Ticket-Art hat Tickets im Verlauf. Archiviere sie stattdessen – so bleiben Tickets und Transkripte zugeordnet.');
     await this.prisma.ticketCategory.delete({ where: { id } }).catch(() => { throw new AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); });
     const panels = await this.prisma.ticketPanel.findMany({ where: { categoryIds: { has: id } } });
     for (const p of panels) await this.prisma.ticketPanel.update({ where: { id: p.id }, data: { categoryIds: p.categoryIds.filter((c) => c !== id) } });
@@ -104,6 +147,7 @@ export class TicketConfigService {
       for (const flag of ['isDefault', 'isClaimed', 'isEscalation', 'isClose'] as const) if (d[flag]) await tx.ticketStatus.updateMany({ where: { [flag]: true, ...(id ? { id: { not: id } } : {}) }, data: { [flag]: false } });
       if (d.isDefault && d.kind !== 'OPEN') throw new AppError('VALIDATION_FAILED', 'Der Standardstatus muss ein offener Status sein.');
       if (d.isClose && d.kind !== 'CLOSED') throw new AppError('VALIDATION_FAILED', 'Der Schließen-Status muss ein geschlossener Status sein.');
+      if (d.key) await tx.ticketStatus.updateMany({ where: { key: d.key, ...(id ? { id: { not: id } } : {}) }, data: { key: null } });
       return id ? tx.ticketStatus.update({ where: { id }, data: d }) : tx.ticketStatus.create({ data: d });
     });
     await this.record(actor, id ? 'status.update' : 'status.create', 'TicketStatus', s.id, { name: s.name });
@@ -145,7 +189,7 @@ export class TicketConfigService {
   }
   async saveSettings(actor: Actor, s: TicketSettings) {
     await this.prisma.systemSetting.upsert({ where: { key: SETTINGS_KEY }, create: { key: SETTINGS_KEY, value: json(s) }, update: { value: json(s) } });
-    await this.record(actor, 'settings.update', 'SystemSetting', SETTINGS_KEY);
+    await this.record(actor, 'settings.update', 'SystemSetting', SETTINGS_KEY, { maxOpenPerUser: s.maxOpenPerUser, guildId: s.guildId, refPrefix: s.refPrefix, notifications: s.notifications });
     return s;
   }
 
