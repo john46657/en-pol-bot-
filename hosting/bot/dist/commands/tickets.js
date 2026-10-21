@@ -47,6 +47,21 @@ async function answer(c, id, questionId, values) {
         return fail(e);
     }
 }
+/** Formular vom System → Discord-Formular des Bots. */
+const toModal = (m) => ({ modal: { id: m.id, title: m.title, fields: m.fields.map((f) => ({
+            id: f.id, label: f.label, required: f.required, ...(f.description ? { description: f.description } : {}), ...(f.placeholder ? { placeholder: f.placeholder } : {}),
+            ...(f.kind === 'select' || f.kind === 'file' ? { kind: f.kind, options: f.options, minValues: f.minValues, maxValues: f.maxValues } : { kind: 'text', paragraph: f.kind === 'paragraph', minLength: f.minLength, maxLength: f.maxLength, value: f.value }),
+        })) } });
+/** Kategorie mit Formular: Voraussetzungen prüfen lassen und Schritt 1 als Discord-Formular zeigen (erste Antwort, kein Aufschub möglich). */
+async function startForm(c, panel, categoryId) {
+    if (!c.guildId)
+        return (0, format_1.errorReply)('Tickets gehen nur auf einem Server.');
+    const r = await c.api.service('POST', '/bot/support-tickets/form/start', { categoryId, ...(UUID.test(panel) ? { panelId: panel } : {}), guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
+    // Kategorie braucht (inzwischen) kein Formular: Erstellen über einen normalen Button (dort darf die Antwort warten)
+    if ('open' in r)
+        return { ephemeral: true, embeds: [{ title: '🎫 Ticket öffnen', description: 'Für diese Kategorie ist kein Formular nötig.', color: format_1.COLORS.info }], buttons: [{ id: `tk:open:${panel}:${categoryId}`, label: 'Ticket erstellen', emoji: '🎫', style: 'primary' }] };
+    return toModal(r.modal);
+}
 const durationButtons = (id, minutes) => [
     { id: `tk:addt:${id}:0`, label: 'Dauerhaft', style: minutes === 0 ? 'primary' : 'secondary' },
     { id: `tk:addt:${id}:60`, label: '⏱️ 1 Stunde', style: minutes === 60 ? 'primary' : 'secondary' },
@@ -60,7 +75,9 @@ const addPicker = (id, minutes) => ({
 /** Alle Ticket-Interaktionen: `tk:<aktion>:<ticketId|panelId>:…` */
 exports.TICKET_INTERACTION = {
     prefix: 'tk',
-    opensModal: (a) => ['ans', 'rename', 'note', 'ratec', 'closem'].includes(a[0] ?? '') || (a[0] === 'close' && a[2] === 'm'),
+    opensModal: (a, values) => ['ans', 'rename', 'note', 'ratec', 'closem', 'formopen', 'formstep'].includes(a[0] ?? '') || (a[0] === 'close' && a[2] === 'm')
+        // Panel: Kategorie mit Formular („:f“) → das Formular ist die erste Antwort
+        || (a[0] === 'open' && (a[3] === 'f' || (!UUID.test(a[2] ?? '') && !!values?.[0]?.endsWith(':f')))),
     async run(c) {
         const [action, id = '', ...rest] = c.args;
         const f = c.fields ?? {};
@@ -68,14 +85,46 @@ exports.TICKET_INTERACTION = {
             switch (action) {
                 // ---- Ticket öffnen (Panel: Button oder Dropdown) ----
                 case 'open': {
-                    const categoryId = rest[0] ?? c.values?.[0];
+                    // Button: tk:open:<panel>:<kategorie>[:f] · Menü: Wert <kategorie>[:f] (weitere Menüs: tk:open:<panel>:~1 …)
+                    const [categoryId, flag] = UUID.test(rest[0] ?? '') ? [rest[0], rest[1]] : (c.values?.[0] ?? '').split(':');
                     if (!categoryId || !UUID.test(categoryId) || !c.guildId)
                         return (0, format_1.errorReply)('Bitte eine Ticket-Art auswählen.');
-                    const r = await c.api.service('POST', '/bot/support-tickets/open', { categoryId, panelId: UUID.test(id) ? id : undefined, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
+                    if (flag === 'f')
+                        return await startForm(c, id, categoryId);
+                    const r = await c.api.service('POST', '/bot/support-tickets/open', { categoryId, panelId: UUID.test(id) ? id : undefined, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [], ...(c.interactionId ? { interactionId: c.interactionId } : {}) });
+                    if (r.form)
+                        return { ephemeral: true, embeds: [{ title: '📝 Formular', description: 'Für diese Kategorie gibt es ein kurzes Formular. Danach wird dein Ticket erstellt.', color: format_1.COLORS.info }], buttons: [{ id: `tk:formopen:${id || 'cmd'}:${categoryId}`, label: 'Formular ausfüllen', emoji: '📝', style: 'primary' }] };
+                    if (r.existing)
+                        return (0, format_1.okReply)(`Dein Ticket ${r.ticket?.ref ?? ''} wurde bereits erstellt.`);
                     if (!c.applyEffects)
                         return (0, format_1.errorReply)('Tickets sind hier nicht verfügbar.');
                     const done = await c.applyEffects(r.effects ?? []);
-                    return (0, format_1.okReply)(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : 'Dein Ticket wird erstellt …');
+                    return (0, format_1.okReply)(done.channelId ? `Dein Ticket${r.ticket?.ref ? ` **${r.ticket.ref}**` : ''} wurde erstellt: <#${done.channelId}>` : 'Dein Ticket wird erstellt …');
+                }
+                // ---- Formular vor dem Erstellen (mehrstufig) ----
+                case 'formopen': {
+                    const categoryId = rest[0] ?? '';
+                    if (!UUID.test(categoryId))
+                        return (0, format_1.errorReply)('Bitte eine Ticket-Art auswählen.');
+                    return await startForm(c, id, categoryId);
+                }
+                case 'formstep': {
+                    const r = await c.api.service('GET', `/bot/support-tickets/form/${id}/modal?discordId=${c.discordId}&step=${Number(rest[0]) || 0}`);
+                    return toModal(r.modal);
+                }
+                case 'formsub': {
+                    const step = Number(rest[0]) || 0;
+                    const r = await c.api.service('POST', `/bot/support-tickets/form/${id}/submit`, { discordId: c.discordId, step, values: c.modal?.values ?? {}, files: c.modal?.files ?? {} });
+                    if ('errors' in r)
+                        return { ephemeral: true, embeds: [{ title: '⚠️ Bitte prüfe deine Angaben', description: (0, format_1.clip)(r.errors.map((e) => `• **${(0, format_1.plain)(e.field)}:** ${(0, format_1.plain)(e.message)}`).join('\n'), 3500), color: format_1.COLORS.warning }], buttons: [{ id: `tk:formstep:${id}:${r.step}`, label: 'Erneut ausfüllen', emoji: '✏️', style: 'primary' }] };
+                    if ('next' in r)
+                        return { ephemeral: true, embeds: [{ title: `✅ Schritt ${r.next}/${r.steps} gespeichert`, description: 'Weiter geht es mit dem nächsten Teil des Formulars.', color: format_1.COLORS.success }], buttons: [{ id: `tk:formstep:${id}:${r.next}`, label: `Weiter (Schritt ${r.next + 1}/${r.steps})`, emoji: '➡️', style: 'primary' }] };
+                    if (r.existing)
+                        return (0, format_1.okReply)(`Dein Ticket **${r.ticket.ref}** wurde bereits erstellt.`);
+                    if (!c.applyEffects)
+                        return (0, format_1.errorReply)('Tickets sind hier nicht verfügbar.');
+                    const done = await c.applyEffects(r.effects ?? []);
+                    return (0, format_1.okReply)(`Dein Ticket **${r.ticket.ref}** wurde erstellt${done.channelId ? `: <#${done.channelId}>` : '.'}`);
                 }
                 // ---- Ticket für ein anderes Mitglied öffnen (Team, Recht ticket.create): /support mitglied:… ----
                 case 'for': {

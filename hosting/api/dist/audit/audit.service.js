@@ -36,7 +36,7 @@ let AuditService = class AuditService {
             data: {
                 actorUserId: actor.userId,
                 actorRobloxUserId: actor.robloxUserId ?? null,
-                requestId: actor.requestId,
+                requestId: actor.requestId ?? (0, guild_context_1.currentRequestId)(), // Korrelations-ID der Anfrage, auch wenn der Aufrufer sie nicht mitgibt
                 action: entry.action,
                 module: entry.module,
                 entityType: entry.entityType,

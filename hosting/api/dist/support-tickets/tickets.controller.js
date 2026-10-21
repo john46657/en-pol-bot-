@@ -17,6 +17,7 @@ const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
+const throttler_1 = require("@nestjs/throttler");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const tickets_service_1 = require("./tickets.service");
@@ -34,9 +35,13 @@ const actionSchema = zod_1.z.discriminatedUnion('action', [
     zod_1.z.object({ action: zod_1.z.literal('lock') }), zod_1.z.object({ action: zod_1.z.literal('unlock') }), zod_1.z.object({ action: zod_1.z.literal('escalate') }),
     zod_1.z.object({ action: zod_1.z.literal('note'), text: zod_1.z.string().trim().min(1).max(4000) }), zod_1.z.object({ action: zod_1.z.literal('rating') }), zod_1.z.object({ action: zod_1.z.literal('delete') }),
     zod_1.z.object({ action: zod_1.z.literal('reply'), text: zod_1.z.string().trim().min(1).max(4000) }),
+    zod_1.z.object({ action: zod_1.z.literal('assign'), targetId: snowflake }), zod_1.z.object({ action: zod_1.z.literal('department'), departmentId: zod_1.z.string().uuid() }),
+    zod_1.z.object({ action: zod_1.z.literal('request_info'), text: zod_1.z.string().trim().min(3).max(2000) }), zod_1.z.object({ action: zod_1.z.literal('archive') }),
+    zod_1.z.object({ action: zod_1.z.literal('transcript_retry'), transcriptId: zod_1.z.string().uuid() }),
 ]);
 const listQ = zod_1.z.object({
     kind: zod_1.z.enum(['open', 'closed', 'archived', 'escalated', 'deleted', 'all']).optional(), statusId: zod_1.z.string().uuid().optional(), priorityId: zod_1.z.string().uuid().optional(), categoryId: zod_1.z.string().uuid().optional(),
+    queue: zod_1.z.enum(['unassigned', 'in_progress', 'waiting', 'overdue']).optional(), departmentId: zod_1.z.string().uuid().optional(), closedFrom: zod_1.z.coerce.date().optional(), closedTo: zod_1.z.coerce.date().optional(),
     claimer: zod_1.z.union([snowflake, zod_1.z.literal('me')]).optional(), creator: zod_1.z.string().trim().max(100).optional(), from: zod_1.z.coerce.date().optional(), to: zod_1.z.coerce.date().optional(),
     q: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25),
 });
@@ -47,7 +52,18 @@ const transcriptQ = zod_1.z.object({
 });
 const ratingQ = zod_1.z.object({ stars: zod_1.z.coerce.number().int().min(1).max(5).optional(), categoryId: zod_1.z.string().uuid().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25) });
 const openQ = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), discordId: snowflake, discordName: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional() });
-const actor = (u) => ({ userId: u.id, robloxUserId: u.robloxUserId });
+const actor = (u) => ({ userId: u.id, robloxUserId: u.robloxUserId, name: u.displayName });
+const auditQ = zod_1.z.object({ ticketId: zod_1.z.string().uuid().optional(), action: zod_1.z.string().max(80).optional(), result: zod_1.z.enum(['SUCCESS', 'DENIED', 'FAILED']).optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(200).default(50) });
+const previewQ = zod_1.z.object({ fields: zod_1.z.array(config_schemas_1.questionSchema).max(25), values: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.union([zod_1.z.string().max(4000), zod_1.z.array(zod_1.z.string().max(100)).max(25), zod_1.z.boolean(), zod_1.z.null()])).default({}) });
+/** Private Inhalte: nie zwischenspeichern, nie indexieren, keinen Referrer weitergeben. */
+const privateHeaders = (res) => {
+    res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+};
+/** Abruf von Transkripten begrenzen (automatisches Auslesen). */
+const TRANSCRIPT_RATE = { default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 60, ttl: 60_000 } };
 /** Support-Tickets im Dashboard (Pfad `support-tickets`, weil `tickets` die Strafzettel sind). */
 let SupportTicketsController = class SupportTicketsController {
     s;
@@ -78,18 +94,46 @@ let SupportTicketsController = class SupportTicketsController {
     createReason(u, b) { return this.cfg.saveReason(actor(u), null, b); }
     updateReason(u, id, b) { return this.cfg.saveReason(actor(u), id, b); }
     delReason(u, id) { return this.cfg.deleteReason(actor(u), id); }
+    // ---- Abteilungen, Formulare, Archiv ----
+    createDepartment(u, b) { return this.cfg.saveDepartment(actor(u), null, b); }
+    updateDepartment(u, id, b) { return this.cfg.saveDepartment(actor(u), id, b); }
+    delDepartment(u, id) { return this.cfg.deleteDepartment(actor(u), id); }
+    archiveCategory(u, id, b) { return this.cfg.archiveCategory(actor(u), id, b.archived); }
+    formVersions(id) { return this.cfg.formVersions(id); }
+    /** Formular testen: serverseitige Prüfung wie beim Einreichen, es entsteht KEIN Ticket. */
+    previewForm(b) { return this.s.previewForm(b.fields, b.values); }
     // ---- Tickets ----
     list(u, q) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
     async create(u, b) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
     stats(u) { return this.s.stats(u.id); }
+    overview(u, q) { return this.s.overview(u.id, q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined); }
+    auditLog(q) { return this.s.auditLog(q); }
+    /** Transkript-Seite /transcript/EMD-000123: Versionen (Mitarbeiter mit Zugriff oder der Ersteller selbst – Prüfung im Service). */
+    async byRef(u, ref, res) { privateHeaders(res); return this.s.transcriptsByRef(u.id, ref.slice(0, 20)); }
     ratings(u, q) { return this.s.ratings(u.id, q); }
     transcripts(u, q) { return this.s.transcripts(u.id, q); }
-    async transcript(u, id, download, res) {
-        const tr = await this.s.transcript(u.id, id);
+    /** Transkript abrufen: HTML (Ansicht/Download), TXT oder JSON. Zugriff wird bei jedem Abruf im Service geprüft und protokolliert. */
+    async transcript(u, id, download, format, res) {
+        const fmt = format === 'txt' || format === 'json' ? format : 'html';
+        const tr = await this.s.transcript(u.id, id, fmt === 'json' ? 'json' : download || fmt === 'txt' ? 'export' : 'view');
+        privateHeaders(res);
+        const name = `transkript-${tr.ticketNumber}-v${tr.version}`;
+        if (fmt === 'txt') {
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${name}.txt"`);
+            res.send(tr.text);
+            return;
+        }
+        if (fmt === 'json') {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${name}.json"`);
+            res.send(JSON.stringify(tr.data ?? {}, null, 2));
+            return;
+        }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        // Transcript-HTML in einer Sandbox anzeigen: keine Skripte, kein Zugriff auf das Dashboard
+        // Transkript-HTML in einer Sandbox anzeigen: keine Skripte, kein Zugriff auf das Dashboard
         res.setHeader('Content-Security-Policy', "default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; sandbox");
-        res.setHeader('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="transcript-${String(tr.ticketNumber).padStart(4, '0')}.html"`);
+        res.setHeader('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="${name}.html"`);
         res.send(tr.html);
     }
     async delTranscript(u, id) { return this.s.deleteTranscript(await this.s.actorFromUser(u), id); }
@@ -306,6 +350,63 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SupportTicketsController.prototype, "delReason", null);
 __decorate([
+    (0, common_1.Post)('departments'),
+    (0, decorators_1.RequirePermission)('ticket.departments'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(config_schemas_1.departmentSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "createDepartment", null);
+__decorate([
+    (0, common_1.Put)('departments/:id'),
+    (0, decorators_1.RequirePermission)('ticket.departments'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(config_schemas_1.departmentSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "updateDepartment", null);
+__decorate([
+    (0, common_1.Delete)('departments/:id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('ticket.departments'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "delDepartment", null);
+__decorate([
+    (0, common_1.Post)('categories/:id/archive'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('ticket.settings'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ archived: zod_1.z.boolean() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "archiveCategory", null);
+__decorate([
+    (0, common_1.Get)('categories/:id/form-versions'),
+    (0, decorators_1.RequirePermission)('ticket.settings'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "formVersions", null);
+__decorate([
+    (0, common_1.Post)('forms/preview'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('ticket.settings'),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(previewQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "previewForm", null);
+__decorate([
     (0, common_1.Get)(),
     (0, decorators_1.RequirePermission)('ticket.view'),
     __param(0, (0, decorators_1.CurrentUser)()),
@@ -332,6 +433,34 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SupportTicketsController.prototype, "stats", null);
 __decorate([
+    (0, common_1.Get)('overview'),
+    (0, decorators_1.RequirePermission)('ticket.view'),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ guildId: snowflake.optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "overview", null);
+__decorate([
+    (0, common_1.Get)('audit'),
+    (0, decorators_1.RequirePermission)('ticket.audit'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(auditQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], SupportTicketsController.prototype, "auditLog", null);
+__decorate([
+    (0, common_1.Get)('transcripts/ref/:ref'),
+    (0, decorators_1.ServiceAuthorized)(),
+    (0, throttler_1.Throttle)(TRANSCRIPT_RATE),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('ref')),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], SupportTicketsController.prototype, "byRef", null);
+__decorate([
     (0, common_1.Get)('ratings'),
     (0, decorators_1.RequirePermission)('ticket.view'),
     __param(0, (0, decorators_1.CurrentUser)()),
@@ -351,13 +480,15 @@ __decorate([
 ], SupportTicketsController.prototype, "transcripts", null);
 __decorate([
     (0, common_1.Get)('transcripts/:id'),
-    (0, decorators_1.RequirePermission)('ticket.transcript'),
+    (0, decorators_1.ServiceAuthorized)(),
+    (0, throttler_1.Throttle)(TRANSCRIPT_RATE),
     __param(0, (0, decorators_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(2, (0, common_1.Query)('download')),
-    __param(3, (0, common_1.Res)()),
+    __param(3, (0, common_1.Query)('format')),
+    __param(4, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object, Object]),
+    __metadata("design:paramtypes", [Object, String, Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], SupportTicketsController.prototype, "transcript", null);
 __decorate([
@@ -413,7 +544,13 @@ exports.SupportTicketsController = SupportTicketsController = __decorate([
     (0, common_1.Controller)('support-tickets'),
     __metadata("design:paramtypes", [tickets_service_1.SupportTicketsService, config_service_1.TicketConfigService])
 ], SupportTicketsController);
-const botOpen = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), panelId: zod_1.z.string().uuid().optional(), guildId: snowflake, discordId: snowflake, discordName: zod_1.z.string().trim().min(1).max(100), memberRoleIds: zod_1.z.array(snowflake).max(250).default([]) });
+const botOpen = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), panelId: zod_1.z.string().uuid().optional(), guildId: snowflake, discordId: snowflake, discordName: zod_1.z.string().trim().min(1).max(100), memberRoleIds: zod_1.z.array(snowflake).max(250).default([]), interactionId: snowflake.optional() });
+const formFile = zod_1.z.object({ name: zod_1.z.string().max(200), url: zod_1.z.string().url().max(1000).regex(/^https:\/\/(cdn|media)\.discordapp\.(com|net)\//, 'Nur Discord-Anhänge'), size: zod_1.z.number().int().min(0), contentType: zod_1.z.string().max(100).nullable().optional() });
+const formSubmit = zod_1.z.object({
+    discordId: snowflake, step: zod_1.z.number().int().min(0).max(24),
+    values: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.union([zod_1.z.string().max(4000), zod_1.z.array(zod_1.z.string().max(100)).max(25), zod_1.z.boolean(), zod_1.z.null()])).default({}),
+    files: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.array(formFile).max(10)).default({}),
+});
 const botMessage = zod_1.z.object({
     channelId: snowflake, discordMessageId: snowflake, authorId: snowflake, authorName: zod_1.z.string().max(100), authorAvatar: zod_1.z.string().url().max(500).nullable().optional(), isBot: zod_1.z.boolean(),
     content: zod_1.z.string().max(8000), attachments: zod_1.z.array(zod_1.z.object({ name: zod_1.z.string().max(200), url: zod_1.z.string().url().max(1000), size: zod_1.z.number().int().min(0), contentType: zod_1.z.string().max(100).nullable().optional() })).max(10).default([]),
@@ -425,7 +562,14 @@ let BotSupportTicketsController = class BotSupportTicketsController {
     constructor(s) {
         this.s = s;
     }
-    open(b) { return this.s.open(b, { userId: null, discordId: b.discordId, name: b.discordName, viaBot: true }); }
+    open(b) {
+        const { interactionId, ...d } = b;
+        return this.s.open({ ...d, ...(interactionId ? { openKey: `ia:${interactionId}` } : {}) }, { userId: null, discordId: b.discordId, name: b.discordName, viaBot: true });
+    }
+    formStart(b) { const { interactionId: _i, ...d } = b; void _i; return this.s.formStart(d); }
+    formModal(id, q) { return this.s.formModalFor(id, q.discordId, q.step); }
+    formSubmitStep(id, b) { return this.s.formSubmit(id, b.discordId, b.step, b.values, b.files); }
+    panelFailed(id, b) { return this.s.panelFailed(id, b.error); }
     attach(id, b) { return this.s.attachChannel(id, b.channelId, b.controlMessageId); }
     abort(id, b) { return this.s.abort(id, b.reason); }
     answer(id, b) { return this.s.answer(id, b.discordId, b.questionId, b.values); }
@@ -450,6 +594,44 @@ __decorate([
     __metadata("design:paramtypes", [void 0]),
     __metadata("design:returntype", void 0)
 ], BotSupportTicketsController.prototype, "open", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)('form/start'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Body)((0, zod_pipe_1.zodBody)(botOpen))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "formStart", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('form/:id/modal'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, step: zod_1.z.coerce.number().int().min(0).max(24) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "formModal", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)('form/:id/submit'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(formSubmit))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, void 0]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "formSubmitStep", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)('panels/:id/failed'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ error: zod_1.z.string().max(500) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "panelFailed", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Post)(':id/channel'),

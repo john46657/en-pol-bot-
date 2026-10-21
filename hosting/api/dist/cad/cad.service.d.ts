@@ -893,12 +893,12 @@ export declare class CadService {
         active: boolean;
         name: string;
         roleIds: string[];
+        notify: boolean;
         sourceGuildId: string;
         targetGuildId: string;
         sendTypes: string[];
         allowActions: string[];
         channels: Prisma.JsonValue | null;
-        notify: boolean;
     }[]>;
     saveLink(actor: CadActor, id: string | null, d: Partial<LinkInput>): Promise<{
         id: string;
@@ -907,12 +907,12 @@ export declare class CadService {
         active: boolean;
         name: string;
         roleIds: string[];
+        notify: boolean;
         sourceGuildId: string;
         targetGuildId: string;
         sendTypes: string[];
         allowActions: string[];
         channels: Prisma.JsonValue | null;
-        notify: boolean;
     }>;
     deleteLink(actor: CadActor, id: string): Promise<void>;
     logs(take?: number): Promise<{

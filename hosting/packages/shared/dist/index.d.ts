@@ -36,7 +36,7 @@ declare const PERMISSION_CATALOG: {
     readonly academy: readonly ["view", "manage"];
     readonly sek: readonly ["view", "report", "manage"];
     readonly qualifications: readonly ["view", "decide", "delete", "manage"];
-    readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"];
+    readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits"];
     /**
      * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
      * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
@@ -321,6 +321,10 @@ declare const QUESTION_TYPES: {
     readonly YESNO: "Ja/Nein";
     readonly SELECT: "Auswahl";
     readonly MULTI: "Mehrere Optionen";
+    readonly CHECKBOX: "Kontrollkästchen (Bestätigung)";
+    readonly NUMBER: "Zahl";
+    readonly DATE: "Datum";
+    readonly FILE: "Anhang / Screenshot";
 };
 type QuestionType = keyof typeof QUESTION_TYPES;
 interface TicketQuestion {
@@ -334,6 +338,11 @@ interface TicketQuestion {
     description?: string;
     minLength?: number;
     maxLength?: number;
+    /** Zahlenfeld: kleinster/größter Wert; Anhang: höchstens so viele Dateien (`max`). */
+    min?: number;
+    max?: number;
+    /** false = Feld deaktiviert (wird nicht abgefragt, bleibt aber in der Formular-Version erhalten). */
+    enabled?: boolean;
 }
 declare const CLAIM_MODES: {
     readonly SINGLE: "Nur ein Bearbeiter";
@@ -365,6 +374,7 @@ declare const TICKET_PLACEHOLDERS: {
     readonly '{username}': "Discord-Name des Erstellers";
     readonly '{user_id}': "Discord-ID des Erstellers";
     readonly '{ticket_id}': "Ticket-Nummer, z. B. 0042";
+    readonly '{ticket_ref}': "Dauerhafte Ticket-ID, z. B. EMD-000042";
     readonly '{category}': "Name der Ticket-Kategorie";
     readonly '{staff}': "Bearbeiter (Erwähnungen) bzw. „niemand“";
     readonly '{status}': "Aktueller Status";
@@ -426,7 +436,8 @@ interface MessageSpec {
     content?: string;
     embeds?: EmbedSpec[];
     buttons?: ComponentButton[];
-    select?: ComponentSelect;
+    select?: ComponentSelect; /** weitere Auswahlmenüs (je eine Reihe, z. B. Panels mit mehr als 25 Kategorien) */
+    selects?: ComponentSelect[];
     mentionUsers?: string[];
     mentionRoles?: string[];
     reactions?: string[]; /** beim ersten Senden einen Thread mit diesem Namen starten */
@@ -2288,6 +2299,14 @@ declare const hrConfigSchema: z.ZodObject<{
         signature?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
+    departments: {
+        id: string;
+        name: string;
+        color: string;
+        description: string;
+        discordRoleIds: string[];
+        dashboardRoleIds: string[];
+    }[];
     promotion: {
         stages: {
             roleIds: string[];
@@ -2359,14 +2378,6 @@ declare const hrConfigSchema: z.ZodObject<{
         active: boolean;
         emoji: string;
     }[];
-    departments: {
-        id: string;
-        name: string;
-        color: string;
-        description: string;
-        discordRoleIds: string[];
-        dashboardRoleIds: string[];
-    }[];
     absenceTypes: {
         key: string;
         label: string;
@@ -2394,6 +2405,14 @@ declare const hrConfigSchema: z.ZodObject<{
         signature: string;
     };
 }, {
+    departments?: {
+        id: string;
+        name: string;
+        color?: string | undefined;
+        description?: string | undefined;
+        discordRoleIds?: string[] | undefined;
+        dashboardRoleIds?: string[] | undefined;
+    }[] | undefined;
     promotion?: {
         stages?: {
             id: string;
@@ -2464,14 +2483,6 @@ declare const hrConfigSchema: z.ZodObject<{
         color?: string | undefined;
         active?: boolean | undefined;
         emoji?: string | undefined;
-    }[] | undefined;
-    departments?: {
-        id: string;
-        name: string;
-        color?: string | undefined;
-        description?: string | undefined;
-        discordRoleIds?: string[] | undefined;
-        dashboardRoleIds?: string[] | undefined;
     }[] | undefined;
     absenceTypes?: {
         key: string;
@@ -2894,7 +2905,7 @@ declare const questionSchema: z.ZodObject<{
     image: z.ZodDefault<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     options: string[];
-    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+    type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
     text: string;
     id: string;
     image: string | null;
@@ -2905,7 +2916,7 @@ declare const questionSchema: z.ZodObject<{
     tolerance: number;
     explanation: string | null;
 }, {
-    type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+    type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
     text: string;
     id: string;
     options?: string[] | undefined;
@@ -2973,7 +2984,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
         image: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
         options: string[];
-        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
         text: string;
         id: string;
         image: string | null;
@@ -2984,7 +2995,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
         tolerance: number;
         explanation: string | null;
     }, {
-        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
         text: string;
         id: string;
         options?: string[] | undefined;
@@ -3027,7 +3038,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     instructions: string | null;
     questions: {
         options: string[];
-        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
         text: string;
         id: string;
         image: string | null;
@@ -3063,7 +3074,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     layout?: "LIST" | "PAGED" | undefined;
     instructions?: string | null | undefined;
     questions?: {
-        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
         text: string;
         id: string;
         options?: string[] | undefined;
@@ -3101,7 +3112,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     instructions: string | null;
     questions: {
         options: string[];
-        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
         text: string;
         id: string;
         image: string | null;
@@ -3137,7 +3148,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     layout?: "LIST" | "PAGED" | undefined;
     instructions?: string | null | undefined;
     questions?: {
-        type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
         text: string;
         id: string;
         options?: string[] | undefined;
@@ -5377,4 +5388,131 @@ declare const AI_CHECK_HINT = "Nur ein Hinweis, kein Beweis \u2013 im Zweifel im
 /** Prüft alle Antworten einer Bewerbung. `durationSec` = Zeit zum Ausfüllen (Discord-Chat / Webformular), wenn bekannt. */
 declare function aiCheck(answers: AiCheckAnswer[], durationSec?: number | null): AiCheckResult;
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormField, type FormOption, type FormPanel, type FormQuestionType, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type StaffList, type StaffMember, type StatusKind, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, absenceTypeSchema, accountAge, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parsePlayer, parseQuestions, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, ticketButtonsOf, ticketChannelName, ticketNumber, toDiscordPayload, toPartialEmoji, triggerMatches, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+/**
+ * Ticket-System (Erweiterung): dauerhafte Ticket-IDs, Formular-Prüfung (Discord-Formular und Dashboard-Vorschau nutzen
+ * dieselbe Funktion), Aufteilung in Discord-Formulare, Statusübergänge und SLA-Berechnung. Keine Abhängigkeiten zu Discord/DB.
+ */
+
+declare const DEFAULT_TICKET_REF_PREFIX = "EMD";
+/** Dauerhafte, lesbare Ticket-ID aus der fortlaufenden Nummer, z. B. `EMD-000123` (Nummern werden nie wiederverwendet). */
+declare const ticketRef: (n: number, prefix?: string, digits?: number) => string;
+/** `EMD-000123`, `#123` oder `123` → 123; alles andere → null. */
+declare function parseTicketRef(s: string): number | null;
+/** Rohwert aus Discord-Formular oder Dashboard-Vorschau. */
+type FormRawValue = string | string[] | boolean | null | undefined;
+interface FormFile {
+    name: string;
+    size: number;
+    contentType?: string | null;
+    url: string;
+}
+/** Gespeicherte Antwort – Bezeichnung und Typ werden mitgespeichert, damit spätere Formularänderungen alte Tickets nicht verändern. */
+interface FormAnswer {
+    questionId: string;
+    label: string;
+    type: QuestionType;
+    value: string;
+    files?: FormFile[];
+}
+interface FormOptions {
+    maxFileBytes?: number;
+    allowedFileTypes?: readonly string[];
+}
+declare const FORM_FILE_TYPES: readonly ["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf", "text/plain"];
+declare const FORM_MAX_FILE_BYTES: number;
+declare const YES_NO: readonly ["Ja", "Nein"];
+declare const activeFields: (fields: TicketQuestion[]) => TicketQuestion[];
+/** Auswahloptionen eines Felds (Ja/Nein und Kontrollkästchen haben feste Werte). */
+declare const fieldOptions: (q: TicketQuestion) => string[];
+/** Datum `TT.MM.JJJJ` oder `JJJJ-MM-TT` → `TT.MM.JJJJ`, sonst null (auch ungültige Tage wie 31.02.). */
+declare function parseFormDate(s: string): string | null;
+/** Prüft ein einzelnes Feld. `value`: Anzeige-/Speicherwert; `skipped`: optional und leer. */
+declare function validateField(q: TicketQuestion, raw: FormRawValue, files?: FormFile[], o?: FormOptions): {
+    error?: string;
+    value?: string;
+    skipped?: boolean;
+    files?: FormFile[];
+};
+/**
+ * Prüft ein Formular (oder einen Schritt davon, `only`). Unbekannte Werte werden ignoriert, deaktivierte Felder nicht abgefragt.
+ * Ergebnis in Formular-Reihenfolge – genau das wird am Ticket gespeichert.
+ */
+declare function validateForm(fields: TicketQuestion[], raw: Record<string, FormRawValue>, files?: Record<string, FormFile[]>, o?: FormOptions & {
+    only?: string[];
+}): {
+    ok: boolean;
+    errors: Record<string, string>;
+    answers: FormAnswer[];
+};
+/** Discord erlaubt höchstens 5 Eingaben je Formular → Felder in Schritte zu je 5 aufteilen (Reihenfolge bleibt). */
+declare const FORM_FIELDS_PER_MODAL = 5;
+declare function planFormSteps(fields: TicketQuestion[], perStep?: number): string[][];
+/** Ein Feld im Discord-Formular (der Bot baut daraus die Komponenten). */
+interface FormModalField {
+    id: string;
+    label: string;
+    description?: string;
+    kind: 'text' | 'paragraph' | 'select' | 'file';
+    required: boolean;
+    placeholder?: string;
+    minLength?: number;
+    maxLength?: number;
+    value?: string;
+    options?: {
+        label: string;
+        value: string;
+        default?: boolean;
+    }[];
+    minValues?: number;
+    maxValues?: number;
+}
+interface FormModalSpec {
+    id: string;
+    title: string;
+    fields: FormModalField[];
+}
+/** Discord-Formular für einen Schritt; `prefill`: zuletzt eingegebene Werte (nach einem Prüffehler erneut anzeigen). */
+declare function formModal(customId: string, title: string, fields: TicketQuestion[], prefill?: Record<string, FormRawValue>): FormModalSpec;
+/** Feste Bedeutung eines Status (unabhängig vom änderbaren Namen). */
+declare const TICKET_STATUS_KEYS: {
+    readonly OPEN: "Offen";
+    readonly CLAIMED: "Übernommen";
+    readonly IN_PROGRESS: "In Bearbeitung";
+    readonly WAITING_USER: "Wartet auf Nutzer";
+    readonly WAITING_INTERNAL: "Wartet auf interne Rückmeldung";
+    readonly RESOLVED: "Gelöst";
+    readonly ESCALATED: "Eskaliert";
+    readonly CLOSED: "Geschlossen";
+    readonly ARCHIVED: "Archiviert";
+};
+type TicketStatusKey = keyof typeof TICKET_STATUS_KEYS;
+interface StatusRef {
+    kind: string;
+    key?: string | null;
+}
+type StatusChangeVia = 'status' | 'close' | 'reopen' | 'archive';
+/** Zentrale Prüfung eines Statuswechsels; liefert den Grund, warum er nicht erlaubt ist (oder null). Rechte prüft der Aufrufer (`statusPermission`). */
+declare function checkStatusChange(from: StatusRef, to: StatusRef, via: StatusChangeVia): string | null;
+/** Recht, das ein Wechsel auf diesen Status braucht. */
+declare const statusPermission: (to: StatusRef) => "ticket.change_status" | "ticket.archive";
+interface SlaInput {
+    createdAt: Date;
+    firstResponseAt: Date | null;
+    closedAt: Date | null;
+    waitingSince: Date | null;
+    waitingSeconds: number;
+    firstResponseMinutes: number | null;
+    resolutionMinutes: number | null;
+}
+/**
+ * SLA nur mit eingestellten Zielzeiten (keine erfundenen Fristen). Die Lösungszeit ruht, solange auf den Nutzer gewartet wird.
+ */
+declare function slaState(t: SlaInput, now?: Date): {
+    firstDueAt: Date | null;
+    resolveDueAt: Date | null;
+    paused: boolean;
+    firstOverdue: boolean;
+    resolveOverdue: boolean;
+};
+
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseTicketRef, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketNumber, ticketRef, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

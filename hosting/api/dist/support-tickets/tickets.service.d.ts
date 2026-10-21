@@ -1,10 +1,12 @@
 import { NotifyService } from '../notifications/notify.service';
-import { Prisma, type SupportTicket, type TicketPriority, type TicketStatus } from '@prisma/client';
-import { type MessageSpec, type TicketEffect } from '@enrp/shared';
+import { Prisma, type SupportTicket, type TicketDepartment, type TicketPriority, type TicketStatus } from '@prisma/client';
+import { type FormAnswer, type FormFile, type FormRawValue, type MessageSpec, type TicketEffect, type TicketQuestion } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionService } from '../authz/permission.service';
 import { DiscordService } from '../discord/discord.service';
+import { AuditService } from '../audit/audit.service';
 import { TicketConfigService } from './config.service';
+import { TicketTranscriptService } from './transcript.service';
 import type { TicketSettings } from './config.schemas';
 /** Wer handelt: Mitarbeiter (System-Benutzer), Ticket-Ersteller über den Bot oder die Automatik. */
 export interface TicketActor {
@@ -12,7 +14,8 @@ export interface TicketActor {
     discordId: string | null;
     name: string;
     viaBot: boolean;
-    system?: boolean;
+    system?: boolean; /** Korrelations-ID (Automatik) */
+    requestId?: string;
 }
 type Category = Awaited<ReturnType<TicketConfigService['category']>>;
 interface Loaded {
@@ -22,6 +25,7 @@ interface Loaded {
     priority: TicketPriority | null;
     settings: TicketSettings;
     tz: string;
+    dept: TicketDepartment | null;
 }
 export type ActionInput = {
     action: 'close';
@@ -76,7 +80,38 @@ export type ActionInput = {
 } | {
     action: 'reply';
     text: string;
+} | {
+    action: 'assign';
+    targetId: string;
+} | {
+    action: 'department';
+    departmentId: string;
+} | {
+    action: 'request_info';
+    text: string;
+} | {
+    action: 'archive';
+} | {
+    action: 'transcript_retry';
+    transcriptId: string;
 };
+export interface OpenInput {
+    categoryId: string;
+    panelId?: string | null;
+    guildId: string;
+    discordId: string;
+    discordName: string;
+    memberRoleIds: string[];
+    /** Idempotenz-Schlüssel (Discord-Interaktion bzw. Formular-Entwurf) */
+    openKey?: string;
+    /** geprüfte Formular-Antworten (Formular vor dem Erstellen) */
+    form?: {
+        version: number;
+        answers: FormAnswer[];
+        subject?: string | null;
+    };
+}
+export declare const permissionFor: (a: ActionInput["action"]) => string;
 /**
  * Support-Ticket-System. Das System entscheidet (Rechte, Regeln, Daten, Protokoll), der Bot führt die Discord-Seite aus (Effekte).
  * Aktionen aus Discord bekommen ihre Effekte direkt zurück; Aktionen aus dem Web und der Automatik laufen über die Outbox.
@@ -87,9 +122,14 @@ export declare class SupportTicketsService {
     private readonly discord;
     private readonly config;
     private readonly notify;
+    private readonly audit;
+    private readonly transcriptsSvc;
     private readonly log;
     private readonly dir;
-    constructor(prisma: PrismaService, perms: PermissionService, discord: DiscordService, config: TicketConfigService, notify: NotifyService);
+    constructor(prisma: PrismaService, perms: PermissionService, discord: DiscordService, config: TicketConfigService, notify: NotifyService, audit: AuditService, transcriptsSvc: TicketTranscriptService);
+    /** Einstellungen des Servers, zu dem das Ticket gehört (Ticket-Einstellungen können je Server gelten). */
+    private settingsFor;
+    ref(n: number, settings?: Pick<TicketSettings, 'refPrefix'>): string;
     actorFromUser(u: {
         id: string;
         displayName: string;
@@ -106,63 +146,44 @@ export declare class SupportTicketsService {
     private closeMode;
     private questionMessage;
     private logAction;
+    /** Nur unkritische Metadaten ins Audit (keine Notiztexte, Gründe oder Nachrichten – das Audit kann in Discord-Logkanäle gespiegelt werden). */
+    private auditDetail;
+    private auditTicket;
     private dispatch;
-    /** Darf der Mitarbeiter diese Kategorie sehen / dieses Recht ausüben? (ticket.manage darf alles) */
+    /**
+     * Darf der Mitarbeiter dieses Ticket sehen / dieses Recht ausüben? Standard: verweigern. ticket.manage darf alles.
+     * Abgelehnte Versuche landen im Audit-Protokoll (ohne Inhalte).
+     */
     private assertCan;
+    private roleNames;
+    /**
+     * Sichtbarkeit eines Tickets: Systemrollen der Kategorie und der Abteilung des Tickets. Ohne eingestellte Rollen sehen alle mit
+     * ticket.view das Ticket – außer bei vertraulichen Kategorien (dann nur ticket.manage).
+     */
     private categoryVisible;
-    /** IDs der Kategorien, deren Tickets der Benutzer sehen darf (null = alle). */
+    /** IDs der Kategorien, deren Tickets der Benutzer grundsätzlich sehen darf (null = alle) – für Bewertungen/Statistiken je Kategorie. */
     visibleCategoryIds(userId: string): Promise<string[] | null>;
+    /** Filter für alle Tickets, die der Benutzer sehen darf (null = alle). Gleiche Regel wie `categoryVisible`, aber als Datenbank-Abfrage. */
+    visibleWhere(userId: string): Promise<Prisma.SupportTicketWhereInput | null>;
+    /** Zuständige Discord-Rollen eines Tickets (Kategorie + Abteilung) mit sicherem Ersatz, falls keine eingerichtet sind. */
+    private routing;
     /** Prüft alle Voraussetzungen, legt das Ticket an und liefert den „create“-Effekt (Channel, Rechte, Ticket-Embed, erste Frage). */
     /** `byStaff`: vom Team für ein Mitglied geöffnet (Recht ticket.create) – ohne Rollen-, Limit- und Cooldown-Prüfung. */
-    open(d: {
-        categoryId: string;
-        panelId?: string | null;
-        guildId: string;
-        discordId: string;
-        discordName: string;
-        memberRoleIds: string[];
-    }, actor: TicketActor, byStaff?: boolean): Promise<{
-        ticket: {
-            id: string;
-            number: string;
-            name: string;
-            channelId: string | null;
-            category: {
-                id: string;
-                name: string;
-                emoji: string | null;
-            };
-            status: {
-                id: string;
-                color: number;
-                name: string;
-                kind: string;
-                position: number;
-                emoji: string;
-                isDefault: boolean;
-                isClaimed: boolean;
-                isEscalation: boolean;
-                isClose: boolean;
-            };
-            priority: {
-                id: string;
-                color: number;
-                name: string;
-                position: number;
-                emoji: string;
-                isDefault: boolean;
-                allowedRoleNames: string[];
-                notifyRoleIds: string[];
-            } | null;
-            claimers: string[];
-            creatorId: string;
-            creatorName: string;
-            locked: boolean;
-            closedAt: Date | null;
-            createdAt: Date;
-        };
+    open(d: OpenInput, actor: TicketActor, byStaff?: boolean): Promise<{
+        ticket: ReturnType<SupportTicketsService['summary']>;
         effects: TicketEffect[];
+        existing?: boolean;
+    } | {
+        form: {
+            categoryId: string;
+            panelId: string | null;
+        };
     }>;
+    /** Nach dem Speichern: Protokoll, Hinweis auf fehlende Zuständigkeit, Formular-Anhänge, Panel-Auslastung, Benachrichtigungen. */
+    private finishCreate;
+    /** Formular-Anhänge sicher ablegen und als Nachricht im Verlauf speichern (Dashboard, Transkript). */
+    private storeFormFiles;
+    private checkOpenable;
     private checkCanOpen;
     private create;
     /** Ticket aus dem Dashboard für einen Discord-Benutzer öffnen (Recht ticket.create). */
@@ -172,46 +193,14 @@ export declare class SupportTicketsService {
         discordName?: string;
         guildId?: string;
     }): Promise<{
-        ticket: {
-            id: string;
-            number: string;
-            name: string;
-            channelId: string | null;
-            category: {
-                id: string;
-                name: string;
-                emoji: string | null;
-            };
-            status: {
-                id: string;
-                color: number;
-                name: string;
-                kind: string;
-                position: number;
-                emoji: string;
-                isDefault: boolean;
-                isClaimed: boolean;
-                isEscalation: boolean;
-                isClose: boolean;
-            };
-            priority: {
-                id: string;
-                color: number;
-                name: string;
-                position: number;
-                emoji: string;
-                isDefault: boolean;
-                allowedRoleNames: string[];
-                notifyRoleIds: string[];
-            } | null;
-            claimers: string[];
-            creatorId: string;
-            creatorName: string;
-            locked: boolean;
-            closedAt: Date | null;
-            createdAt: Date;
-        };
+        ticket: ReturnType<SupportTicketsService["summary"]>;
         effects: TicketEffect[];
+        existing?: boolean;
+    } | {
+        form: {
+            categoryId: string;
+            panelId: string | null;
+        };
     }>;
     /** Für /ticket im Discord: aktive Ticket-Arten (Voraussetzungen prüft der Bot vorab, das System beim Öffnen erneut). */
     openableCategories(guildId?: string): Promise<{
@@ -241,6 +230,8 @@ export declare class SupportTicketsService {
         ticket: {
             id: string;
             number: string;
+            ref: string;
+            subject: string | null;
             name: string;
             channelId: string | null;
             category: {
@@ -248,12 +239,17 @@ export declare class SupportTicketsService {
                 name: string;
                 emoji: string | null;
             };
+            department: {
+                id: string;
+                name: string;
+            } | null;
             status: {
                 id: string;
                 color: number;
                 name: string;
                 kind: string;
                 position: number;
+                key: string | null;
                 emoji: string;
                 isDefault: boolean;
                 isClaimed: boolean;
@@ -269,6 +265,8 @@ export declare class SupportTicketsService {
                 isDefault: boolean;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
+                firstResponseMinutes: number | null;
+                resolutionMinutes: number | null;
             } | null;
             claimers: string[];
             creatorId: string;
@@ -300,6 +298,18 @@ export declare class SupportTicketsService {
     /** Ticketauslastung: Panels mit „Auslastung anzeigen“, die diese Kategorie enthalten, neu zeichnen. */
     private panelLoad;
     private requireOpen;
+    private statusPerm;
+    /**
+     * Datenänderung bei jedem Statuswechsel (zentral): Wartezeit auf den Nutzer (SLA ruht), Zeitpunkt „gelöst“, neue Lösungsfrist.
+     */
+    private statusData;
+    private statusByKey;
+    /** Ist das Discord-Konto ein Mitarbeiter mit Zugriff auf dieses Ticket? (Zuweisen, Bearbeiter-Prüfung nach Wechseln) */
+    private staffWithAccess;
+    /** Nach Kategorie-/Abteilungswechsel: Bearbeiter ohne Zugriff entfernen (vertrauliche Inhalte nicht versehentlich offenlegen). */
+    private revalidateClaimers;
+    /** Rollen-Zugriff im Kanal von alter auf neue Zuständigkeit umstellen (nur Differenzen). */
+    private moveRoleAccess;
     private actorTag;
     private perform;
     /** Schließen (auch für Ersteller und Automatik): Status, Rechte, CLOSED-Anzeige, Transcript, Bewertung, Löschplanung. */
@@ -336,6 +346,18 @@ export declare class SupportTicketsService {
     }): Promise<{
         ok: boolean;
     }>;
+    /** Ersteller schreibt: „Wartet auf Nutzer“ endet (SLA läuft weiter), Bearbeiter werden höchstens alle X Minuten benachrichtigt. */
+    private onCreatorMessage;
+    /** Kategoriewechsel aus vertraulich heraus: nur die Leitung (ticket.manage) – sonst würde der bisherige Verlauf für ein größeres Team sichtbar. */
+    private assertConfidentialMove;
+    /**
+     * Benachrichtigung nach den Regeln unter Allgemein → Benachrichtigungen. Empfänger sind nur Berechtigte: der interne Kanal der
+     * Abteilung, die Bearbeiter (DM) und deren verknüpfte Dashboard-Konten. Vertrauliche Tickets: nur Ticket-ID, keine Details.
+     * `to`: Discord-IDs statt der Bearbeiter (z. B. die zugewiesene Person); `leads`: zusätzlich die Leitung im Kanal erwähnen.
+     */
+    private queueNotify;
+    /** Transkript fertig bzw. endgültig fehlgeschlagen → Benachrichtigung (fehlgeschlagen zusätzlich im Log-Kanal). */
+    private transcriptFinished;
     private storeAttachment;
     /** Anhang ausliefern (nur mit Zugriff auf das Ticket). Nur Bilder inline, alles andere als Download. */
     attachment(userId: string, key: string): Promise<{
@@ -344,26 +366,13 @@ export declare class SupportTicketsService {
         contentType: string;
         inline: boolean;
     }>;
-    createTranscript(id: string, actor: TicketActor): Promise<{
-        id: string;
-        createdById: string | null;
-        createdAt: Date;
-        createdByName: string | null;
-        creatorId: string;
-        creatorName: string;
-        claimers: string[];
-        ticketId: string;
-        ticketNumber: number;
-        categoryName: string;
-        statusName: string;
-        html: string;
-        sizeBytes: number;
-    }>;
     /** Anzeigenamen zu Discord-IDs (verknüpfte Konten, sonst zuletzt gesehener Name in Tickets). */
     private discordNames;
     summary(l: Loaded): {
         id: string;
         number: string;
+        ref: string;
+        subject: string | null;
         name: string;
         channelId: string | null;
         category: {
@@ -371,12 +380,17 @@ export declare class SupportTicketsService {
             name: string;
             emoji: string | null;
         };
+        department: {
+            id: string;
+            name: string;
+        } | null;
         status: {
             id: string;
             color: number;
             name: string;
             kind: string;
             position: number;
+            key: string | null;
             emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
@@ -392,6 +406,8 @@ export declare class SupportTicketsService {
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
+            firstResponseMinutes: number | null;
+            resolutionMinutes: number | null;
         } | null;
         claimers: string[];
         creatorId: string;
@@ -400,15 +416,21 @@ export declare class SupportTicketsService {
         closedAt: Date | null;
         createdAt: Date;
     };
+    /** Warteschlangen (offen, unzugewiesen, …) als Abfrage; Status-IDs nach Art bzw. fester Bedeutung. */
+    private queueWhere;
     list(userId: string, f: {
         kind?: string;
+        queue?: string;
         statusId?: string;
         priorityId?: string;
         categoryId?: string;
+        departmentId?: string;
         claimer?: string;
         creator?: string;
         from?: Date;
         to?: Date;
+        closedFrom?: Date;
+        closedTo?: Date;
         q?: string;
         guildId?: string;
         page: number;
@@ -420,6 +442,8 @@ export declare class SupportTicketsService {
         items: {
             id: string;
             number: string;
+            ref: string;
+            subject: string | null;
             name: string;
             guildId: string;
             creatorId: string;
@@ -430,7 +454,14 @@ export declare class SupportTicketsService {
             closedAt: Date | null;
             deletedAt: Date | null;
             escalatedAt: Date | null;
+            waitingSince: Date | null;
             category: {
+                id: string;
+                name: string;
+                emoji: string | null;
+                confidential: boolean;
+            } | null;
+            department: {
                 id: string;
                 name: string;
                 emoji: string | null;
@@ -441,6 +472,7 @@ export declare class SupportTicketsService {
                 name: string;
                 kind: string;
                 position: number;
+                key: string | null;
                 emoji: string;
                 isDefault: boolean;
                 isClaimed: boolean;
@@ -456,11 +488,31 @@ export declare class SupportTicketsService {
                 isDefault: boolean;
                 allowedRoleNames: string[];
                 notifyRoleIds: string[];
+                firstResponseMinutes: number | null;
+                resolutionMinutes: number | null;
             } | null;
+            sla: {
+                firstDueAt: Date | null;
+                resolveDueAt: Date | null;
+                overdue: boolean;
+                paused: boolean;
+            };
         }[];
+    }>;
+    /** Zahlen für die Übersicht im Ticket-Center (nur sichtbare Tickets). */
+    overview(userId: string, guildId?: string): Promise<{
+        open: number;
+        unassigned: number;
+        inProgress: number;
+        waiting: number;
+        overdue: number;
+        closed: number;
+        archived: number;
     }>;
     detail(userId: string, id: string): Promise<{
         number: string;
+        ref: string;
+        transcriptUrl: string;
         category: {
             id: string;
             name: string;
@@ -469,6 +521,24 @@ export declare class SupportTicketsService {
             closeReasonMode: string;
             closeReasonSource: string;
             allowReopen: boolean;
+            confidential: boolean;
+            active: boolean;
+        };
+        department: {
+            id: string;
+            name: string;
+            emoji: string | null;
+        } | null;
+        formVersion: {
+            createdAt: Date;
+            version: number;
+        } | null;
+        sla: {
+            firstDueAt: Date | null;
+            resolveDueAt: Date | null;
+            paused: boolean;
+            firstOverdue: boolean;
+            resolveOverdue: boolean;
         };
         status: {
             id: string;
@@ -476,6 +546,7 @@ export declare class SupportTicketsService {
             name: string;
             kind: string;
             position: number;
+            key: string | null;
             emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
@@ -491,6 +562,8 @@ export declare class SupportTicketsService {
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
+            firstResponseMinutes: number | null;
+            resolutionMinutes: number | null;
         } | null;
         access: {
             id: string;
@@ -535,17 +608,24 @@ export declare class SupportTicketsService {
         }[];
         transcripts: {
             id: string;
+            status: string;
             createdAt: Date;
+            version: number;
+            trigger: string;
+            lastError: string | null;
             createdByName: string | null;
+            attempts: number;
             sizeBytes: number;
+            completedAt: Date | null;
+            sha256: string | null;
         }[] | null;
         rating: {
             id: string;
             createdAt: Date;
             categoryId: string;
             comment: string | null;
-            creatorId: string;
             ticketId: string;
+            creatorId: string;
             staffIds: string[];
             stars: number;
         } | null;
@@ -559,9 +639,11 @@ export declare class SupportTicketsService {
         name: string;
         categoryId: string;
         channelId: string | null;
+        archivedAt: Date | null;
         deletedAt: Date | null;
         answers: Prisma.JsonValue;
         panelId: string | null;
+        departmentId: string | null;
         controlMessageId: string | null;
         creatorId: string;
         creatorName: string;
@@ -580,6 +662,18 @@ export declare class SupportTicketsService {
         closeRequestedAt: Date | null;
         deleteAt: Date | null;
         escalatedAt: Date | null;
+        subject: string | null;
+        openKey: string | null;
+        waitingSince: Date | null;
+        waitingSeconds: number;
+        firstResponseDueAt: Date | null;
+        resolveDueAt: Date | null;
+        slaFirstWarnedAt: Date | null;
+        slaResolveWarnedAt: Date | null;
+        slaEscalatedAt: Date | null;
+        unassignedEscalatedAt: Date | null;
+        resolvedAt: Date | null;
+        userMessageNotifiedAt: Date | null;
     }>;
     /** Auswahllisten für Discord-Menüs (Priorität, Status, Kategorie, Gründe, Zugriff). */
     options(actor: TicketActor, id: string): Promise<{
@@ -590,6 +684,7 @@ export declare class SupportTicketsService {
             name: string;
             kind: string;
             position: number;
+            key: string | null;
             emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
@@ -605,6 +700,8 @@ export declare class SupportTicketsService {
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
+            firstResponseMinutes: number | null;
+            resolutionMinutes: number | null;
         }[];
         categories: {
             id: string;
@@ -624,6 +721,11 @@ export declare class SupportTicketsService {
             addedById: string | null;
             ticketId: string;
             targetId: string;
+        }[];
+        departments: {
+            id: string;
+            name: string;
+            emoji: string | null;
         }[];
         close: {
             mode: string;
@@ -653,33 +755,111 @@ export declare class SupportTicketsService {
         page: number;
         pageSize: number;
         items: {
+            ref: string;
             ticketNumber: string;
             id: string;
+            status: string;
             createdAt: Date;
+            version: number;
+            lastError: string | null;
             createdByName: string | null;
+            attempts: number;
+            ticketId: string;
             creatorId: string;
             creatorName: string;
             claimers: string[];
-            ticketId: string;
             categoryName: string;
             statusName: string;
             sizeBytes: number;
+            completedAt: Date | null;
         }[];
     }>;
-    transcript(userId: string | null, id: string): Promise<{
+    /**
+     * Zugriff auf ein Transkript – bei JEDEM Abruf serverseitig geprüft (ein Link allein reicht nie):
+     * Mitarbeiter mit ticket.transcript (Export: ticket.transcript_export) und Zugriff auf das Ticket, oder der Ersteller selbst
+     * (verknüpftes Discord-Konto; nur Ansicht/Text, kein JSON). Alles andere: einheitlich „nicht gefunden“ (keine Rückschlüsse) + Audit.
+     */
+    transcriptAccess(userId: string, ticketId: string, need: 'view' | 'export' | 'json'): Promise<'staff' | 'creator'>;
+    /** Ein Transkript (Version) für Ansicht/Download; `userId` null = Bot-Dienst (Zustellung in Discord). */
+    transcript(userId: string | null, id: string, need?: 'view' | 'export' | 'json'): Promise<{
         id: string;
+        status: string;
         createdById: string | null;
         createdAt: Date;
+        version: number;
+        trigger: string;
+        lastError: string | null;
+        text: string;
+        data: Prisma.JsonValue | null;
         createdByName: string | null;
+        attempts: number;
+        ticketId: string;
         creatorId: string;
         creatorName: string;
         claimers: string[];
-        ticketId: string;
         ticketNumber: number;
         categoryName: string;
         statusName: string;
         html: string;
         sizeBytes: number;
+        jobKey: string | null;
+        nextAttemptAt: Date | null;
+        completedAt: Date | null;
+        sha256: string | null;
+        notify: Prisma.JsonValue;
+    }>;
+    /** Versionen eines Tickets für die Transkript-Seite `/transcript/EMD-000123`. */
+    transcriptsByRef(userId: string, ref: string): Promise<{
+        ticketId: string | null;
+        ref: string;
+        subject: string | null;
+        category: {
+            name: string;
+            emoji: string | null;
+        } | null;
+        createdAt: Date;
+        closedAt: Date | null;
+        as: "staff" | "creator";
+        canExport: boolean;
+        canJson: boolean;
+        canManage: boolean;
+        versions: {
+            lastError: string | null;
+            createdByName: string | null;
+            id: string;
+            status: string;
+            createdAt: Date;
+            version: number;
+            trigger: string;
+            attempts: number;
+            sizeBytes: number;
+            completedAt: Date | null;
+            sha256: string | null;
+        }[];
+    }>;
+    /** Audit-Protokoll des Ticket-Systems (nur Metadaten; Recht ticket.audit). */
+    auditLog(f: {
+        ticketId?: string;
+        action?: string;
+        result?: string;
+        page: number;
+        pageSize: number;
+    }): Promise<{
+        total: number;
+        page: number;
+        pageSize: number;
+        items: {
+            actorName: string | null;
+            result: string;
+            id: string;
+            createdAt: Date;
+            entityId: string | null;
+            entityType: string | null;
+            action: string;
+            actorUserId: string | null;
+            after: Prisma.JsonValue;
+            requestId: string | null;
+        }[];
     }>;
     deleteTranscript(actor: TicketActor, id: string): Promise<{
         ok: boolean;
@@ -761,8 +941,8 @@ export declare class SupportTicketsService {
             createdAt: Date;
             categoryId: string;
             comment: string | null;
-            creatorId: string;
             ticketId: string;
+            creatorId: string;
             staffIds: string[];
             stars: number;
         }[];
@@ -778,11 +958,68 @@ export declare class SupportTicketsService {
     panelPosted(id: string, channelId: string, messageId: string): Promise<{
         ok: boolean;
     }>;
+    /** Bot meldet: Panel konnte nicht gesendet/aktualisiert werden (Kanal fehlt, Rechte fehlen …) – im Dashboard sichtbar. */
+    panelFailed(id: string, error: string): Promise<{
+        ok: boolean;
+    }>;
+    private formFields;
+    private formTitle;
+    /**
+     * Klick auf eine Kategorie mit Formular: Voraussetzungen prüfen (bevor jemand umsonst ausfüllt), Entwurf anlegen und Schritt 1 liefern.
+     * `open: true`: die Kategorie braucht (inzwischen) kein Formular – direkt öffnen.
+     */
+    formStart(d: Omit<OpenInput, 'form' | 'openKey'>): Promise<{
+        open: true;
+        draftId?: undefined;
+        steps?: undefined;
+        modal?: undefined;
+    } | {
+        draftId: string;
+        steps: number;
+        modal: import("@enrp/shared").FormModalSpec;
+        open?: undefined;
+    }>;
+    private draftOf;
+    /** Formular (erneut) für einen Schritt – z. B. nach „Weiter“ oder nach einem Prüffehler mit den zuletzt eingegebenen Werten. */
+    formModalFor(draftId: string, discordId: string, step: number): Promise<{
+        modal: import("@enrp/shared").FormModalSpec;
+    }>;
+    /**
+     * Schritt absenden: serverseitig prüfen (dieselbe Prüfung wie im Dashboard), Werte am Entwurf speichern; im letzten Schritt
+     * das Ticket anlegen. Ein Entwurf erzeugt höchstens ein Ticket (erneutes Absenden liefert dasselbe Ticket).
+     */
+    formSubmit(draftId: string, discordId: string, step: number, values: Record<string, FormRawValue>, files: Record<string, FormFile[]>): Promise<{
+        ticket: ReturnType<SupportTicketsService["summary"]>;
+        effects: TicketEffect[];
+        existing?: boolean;
+    } | {
+        errors: {
+            field: string;
+            message: string;
+        }[];
+        step: number;
+        next?: undefined;
+        steps?: undefined;
+    } | {
+        next: number;
+        steps: number;
+        errors?: undefined;
+        step?: undefined;
+    }>;
+    /** Dashboard-Vorschau: Formular prüfen, ohne ein Ticket anzulegen. */
+    previewForm(fields: TicketQuestion[], values: Record<string, FormRawValue>): {
+        steps: string[][];
+        ok: boolean;
+        errors: Record<string, string>;
+        answers: FormAnswer[];
+    };
     /** Ersteller hat den Discord-Server verlassen: offene Tickets dort schließen (Einstellung unter Tickets → General). */
     memberLeft(guildId: string, discordId: string): Promise<{
         closed: number;
     }>;
     runAutomation(now?: Date): Promise<{
+        reminded: number;
+        escalated: number;
         closed: number;
         warned: number;
         deleted: number;
@@ -790,5 +1027,13 @@ export declare class SupportTicketsService {
         alerted: number;
         unclaimed: number;
     }>;
+    /**
+     * SLA und Eskalation (nur mit eingestellten Zielzeiten): Erinnerung an die Zuständigen (wiederholt nach Einstellung),
+     * danach einmalige Meldung an die Leitung; unzugewiesene Tickets nach der Wartezeit der Kategorie. Eskalationen geben
+     * NIEMANDEM zusätzlichen Zugriff – die Leitung wird nur benachrichtigt.
+     */
+    private runSla;
+    /** Meldung an die Leitung im internen Kanal der Abteilung (sonst Log-Kanal) + Benachrichtigungsregel „Eskalation“. */
+    private leadAlert;
 }
 export {};

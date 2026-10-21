@@ -14,27 +14,36 @@ const common_1 = require("@nestjs/common");
 const tickets_controller_1 = require("./tickets.controller");
 const tickets_service_1 = require("./tickets.service");
 const config_service_1 = require("./config.service");
+const transcript_service_1 = require("./transcript.service");
 let SupportTicketsModule = class SupportTicketsModule {
     s;
-    timer;
-    constructor(s) {
+    transcripts;
+    timers = [];
+    constructor(s, transcripts) {
         this.s = s;
+        this.transcripts = transcripts;
     }
-    /** Automatik (Auto-Schließen, Löschen, befristeter Zugriff) jede Minute – nicht in Tests. */
+    /**
+     * Automatik (Auto-Schließen, Löschen, befristeter Zugriff, SLA, Eskalation) jede Minute; Transkript-Aufträge alle 15 Sekunden
+     * (nach einem Neustart werden offene und abgebrochene Aufträge dabei automatisch fortgesetzt) – nicht in Tests.
+     */
     onApplicationBootstrap() {
         if (process.env.NODE_ENV === 'test')
             return;
         const log = new common_1.Logger('TicketAutomation');
-        this.timer = setInterval(() => void this.s.runAutomation().then((r) => { if (r.closed || r.deleted || r.warned || r.expired)
-            log.log(JSON.stringify(r)); }).catch((e) => log.error(e.message)), 60_000);
-        this.timer.unref();
+        this.timers.push(setInterval(() => void this.s.runAutomation().then((r) => { if (r.closed || r.deleted || r.warned || r.expired || r.reminded || r.escalated)
+            log.log(JSON.stringify(r)); }).catch((e) => log.error(e.message)), 60_000));
+        this.timers.push(setInterval(() => void this.transcripts.processDue().then((r) => { if (r.done || r.failed)
+            log.log(`transcripts ${JSON.stringify(r)}`); }).catch((e) => log.error(`transcripts: ${e.message}`)), 15_000));
+        for (const t of this.timers)
+            t.unref();
     }
-    onModuleDestroy() { if (this.timer)
-        clearInterval(this.timer); }
+    onModuleDestroy() { for (const t of this.timers)
+        clearInterval(t); }
 };
 exports.SupportTicketsModule = SupportTicketsModule;
 exports.SupportTicketsModule = SupportTicketsModule = __decorate([
-    (0, common_1.Module)({ controllers: [tickets_controller_1.SupportTicketsController, tickets_controller_1.BotSupportTicketsController], providers: [tickets_service_1.SupportTicketsService, config_service_1.TicketConfigService], exports: [tickets_service_1.SupportTicketsService] }),
-    __metadata("design:paramtypes", [tickets_service_1.SupportTicketsService])
+    (0, common_1.Module)({ controllers: [tickets_controller_1.SupportTicketsController, tickets_controller_1.BotSupportTicketsController], providers: [tickets_service_1.SupportTicketsService, config_service_1.TicketConfigService, transcript_service_1.TicketTranscriptService], exports: [tickets_service_1.SupportTicketsService] }),
+    __metadata("design:paramtypes", [tickets_service_1.SupportTicketsService, transcript_service_1.TicketTranscriptService])
 ], SupportTicketsModule);
 //# sourceMappingURL=tickets.module.js.map

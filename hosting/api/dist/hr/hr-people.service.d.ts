@@ -235,10 +235,10 @@ export declare class HrPeopleService {
             personnelId: string;
             trainingId: string;
             note: string | null;
+            completedAt: Date | null;
             progress: number;
             doneModules: string[];
             examinerId: string | null;
-            completedAt: Date | null;
             certificateNo: string | null;
         })[] | null;
         exams: {

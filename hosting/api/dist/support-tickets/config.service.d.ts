@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { type TicketButtonConfig, type TicketQuestion } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
-import { type CategoryInput, type PanelInput, type TicketSettings } from './config.schemas';
+import { type CategoryInput, type DepartmentInput, type PanelInput, type TicketSettings } from './config.schemas';
 import type { z } from 'zod';
 import type { prioritySchema, reasonSchema, statusSchema } from './config.schemas';
 /** Alles, was das Ticket-System konfigurierbar macht – ausschließlich Datenbank-Einträge. */
@@ -24,13 +24,15 @@ export declare class TicketConfigService {
             name: string;
             position: number;
             questions: Prisma.JsonValue;
+            archivedAt: Date | null;
             emoji: string | null;
+            staffRoleIds: string[];
+            accessRoleNames: string[];
+            formVersion: number;
             buttonStyle: string;
             discordCategoryId: string | null;
             channelNameFormat: string;
-            staffRoleIds: string[];
             extraRoleIds: string[];
-            accessRoleNames: string[];
             requiredRoleIds: string[];
             allowedUserIds: string[];
             maxOpen: number;
@@ -70,6 +72,10 @@ export declare class TicketConfigService {
             autoUnclaimMinutes: number;
             staffAlertMinutes: number;
             closeRequestCloses: boolean;
+            departmentId: string | null;
+            confidential: boolean;
+            formMode: string;
+            escalateUnassignedMinutes: number;
         } & {
             buttons: TicketButtonConfig[];
             questions: TicketQuestion[];
@@ -100,6 +106,8 @@ export declare class TicketConfigService {
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
+            publishedAt: Date | null;
+            publishError: string | null;
         }[];
         statuses: {
             id: string;
@@ -107,6 +115,7 @@ export declare class TicketConfigService {
             name: string;
             kind: string;
             position: number;
+            key: string | null;
             emoji: string;
             isDefault: boolean;
             isClaimed: boolean;
@@ -122,6 +131,8 @@ export declare class TicketConfigService {
             isDefault: boolean;
             allowedRoleNames: string[];
             notifyRoleIds: string[];
+            firstResponseMinutes: number | null;
+            resolutionMinutes: number | null;
         }[];
         reasons: {
             id: string;
@@ -129,6 +140,65 @@ export declare class TicketConfigService {
             text: string;
         }[];
         settings: {
+            guildId: string | null;
+            notifications: {
+                priority: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                created: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                closed: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                claimed: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                assigned: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                user_message: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                info_requested: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                escalated: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                reopened: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                transcript_ready: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+                transcript_failed: {
+                    channel: boolean;
+                    dashboard: boolean;
+                    dm: boolean;
+                };
+            };
+            leadRoleIds: string[];
             transcriptChannelId: string | null;
             logChannelId: string | null;
             closedTitle: string;
@@ -143,7 +213,27 @@ export declare class TicketConfigService {
             ratingPublicFields: ("category" | "duration" | "comment" | "staff" | "creator")[];
             memberLeaveAction: "NONE" | "CLOSE";
             memberLeaveReason: string;
+            refPrefix: string;
+            maxOpenPerUser: number;
+            confidentialFallbackRoleIds: string[];
+            slaReminderMinutes: number;
+            slaEscalateAfterMinutes: number;
+            userMessageNotifyMinutes: number;
         };
+        departments: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string;
+            active: boolean;
+            name: string;
+            position: number;
+            emoji: string | null;
+            staffRoleIds: string[];
+            leadRoleIds: string[];
+            accessRoleNames: string[];
+            notifyChannelId: string | null;
+        }[];
     }>;
     categoryOut<T extends {
         buttons: Prisma.JsonValue;
@@ -158,6 +248,7 @@ export declare class TicketConfigService {
         name: string;
         kind: string;
         position: number;
+        key: string | null;
         emoji: string;
         isDefault: boolean;
         isClaimed: boolean;
@@ -173,12 +264,42 @@ export declare class TicketConfigService {
         isDefault: boolean;
         allowedRoleNames: string[];
         notifyRoleIds: string[];
+        firstResponseMinutes: number | null;
+        resolutionMinutes: number | null;
     }[]>;
     reasons(): Prisma.PrismaPromise<{
         id: string;
         position: number;
         text: string;
     }[]>;
+    departments(): Prisma.PrismaPromise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        active: boolean;
+        name: string;
+        position: number;
+        emoji: string | null;
+        staffRoleIds: string[];
+        leadRoleIds: string[];
+        accessRoleNames: string[];
+        notifyChannelId: string | null;
+    }[]>;
+    department(id: string | null | undefined): Promise<null> | Prisma.Prisma__TicketDepartmentClient<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        active: boolean;
+        name: string;
+        position: number;
+        emoji: string | null;
+        staffRoleIds: string[];
+        leadRoleIds: string[];
+        accessRoleNames: string[];
+        notifyChannelId: string | null;
+    } | null, null, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
     settings(): Promise<TicketSettings>;
     category(id: string): Promise<{
         id: string;
@@ -191,13 +312,15 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        archivedAt: Date | null;
         emoji: string | null;
+        staffRoleIds: string[];
+        accessRoleNames: string[];
+        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
-        staffRoleIds: string[];
         extraRoleIds: string[];
-        accessRoleNames: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
         maxOpen: number;
@@ -237,11 +360,17 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
+        departmentId: string | null;
+        confidential: boolean;
+        formMode: string;
+        escalateUnassignedMinutes: number;
     } & {
         buttons: TicketButtonConfig[];
         questions: TicketQuestion[];
     }>;
-    saveCategory(actor: Actor, id: string | null, d: CategoryInput): Promise<{
+    saveCategory(actor: Actor & {
+        name?: string;
+    }, id: string | null, d: CategoryInput): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -252,13 +381,15 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        archivedAt: Date | null;
         emoji: string | null;
+        staffRoleIds: string[];
+        accessRoleNames: string[];
+        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
-        staffRoleIds: string[];
         extraRoleIds: string[];
-        accessRoleNames: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
         maxOpen: number;
@@ -298,10 +429,107 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
+        departmentId: string | null;
+        confidential: boolean;
+        formMode: string;
+        escalateUnassignedMinutes: number;
     } & {
         buttons: TicketButtonConfig[];
         questions: TicketQuestion[];
     }>;
+    formVersions(categoryId: string): Prisma.PrismaPromise<{
+        id: string;
+        createdById: string | null;
+        createdAt: Date;
+        version: number;
+        categoryId: string;
+        createdByName: string | null;
+        fields: Prisma.JsonValue;
+    }[]>;
+    /** Archivieren = ausblenden und nicht mehr öffnen lassen; Tickets und Formular-Versionen bleiben vollständig erhalten. */
+    archiveCategory(actor: Actor, id: string, archived: boolean): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        color: number;
+        description: string;
+        active: boolean;
+        guildId: string | null;
+        name: string;
+        position: number;
+        questions: Prisma.JsonValue;
+        archivedAt: Date | null;
+        emoji: string | null;
+        staffRoleIds: string[];
+        accessRoleNames: string[];
+        formVersion: number;
+        buttonStyle: string;
+        discordCategoryId: string | null;
+        channelNameFormat: string;
+        extraRoleIds: string[];
+        requiredRoleIds: string[];
+        allowedUserIds: string[];
+        maxOpen: number;
+        cooldownMinutes: number;
+        defaultPriorityId: string | null;
+        welcomeTitle: string;
+        welcomeMessage: string;
+        mentionStaff: boolean;
+        mentionText: string;
+        buttons: Prisma.JsonValue;
+        claimMode: string;
+        claimMessage: string;
+        claimNotifyStaff: boolean;
+        creatorCanClose: boolean;
+        closeReasonMode: string;
+        closeReasonSource: string;
+        closeRemovesAccess: boolean;
+        allowReopen: boolean;
+        transcriptOnClose: boolean;
+        transcriptChannelId: string | null;
+        transcriptToUser: boolean;
+        ratingEnabled: boolean;
+        ratingQuestion: string;
+        autoCloseMinutes: number;
+        autoCloseWarnMinutes: number;
+        autoCloseMessage: string;
+        deleteAfterMinutes: number;
+        escalationRoleIds: string[];
+        escalationPriorityId: string | null;
+        escalationMessage: string;
+        welcomeImageUrl: string | null;
+        capacity: number;
+        creatorCanAddUsers: boolean;
+        claimDiscordCategoryId: string | null;
+        claimLocksChat: boolean;
+        autoClaimOnMessage: boolean;
+        autoUnclaimMinutes: number;
+        staffAlertMinutes: number;
+        closeRequestCloses: boolean;
+        departmentId: string | null;
+        confidential: boolean;
+        formMode: string;
+        escalateUnassignedMinutes: number;
+    } & {
+        buttons: TicketButtonConfig[];
+        questions: TicketQuestion[];
+    }>;
+    saveDepartment(actor: Actor, id: string | null, d: DepartmentInput): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        active: boolean;
+        name: string;
+        position: number;
+        emoji: string | null;
+        staffRoleIds: string[];
+        leadRoleIds: string[];
+        accessRoleNames: string[];
+        notifyChannelId: string | null;
+    }>;
+    /** Löschen nur ohne Kategorien und Tickets – sonst deaktivieren (Zuständigkeiten bleiben nachvollziehbar). */
+    deleteDepartment(actor: Actor, id: string): Promise<void>;
     duplicateCategory(actor: Actor, id: string): Promise<{
         id: string;
         createdAt: Date;
@@ -313,13 +541,15 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        archivedAt: Date | null;
         emoji: string | null;
+        staffRoleIds: string[];
+        accessRoleNames: string[];
+        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
-        staffRoleIds: string[];
         extraRoleIds: string[];
-        accessRoleNames: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
         maxOpen: number;
@@ -359,6 +589,10 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
+        departmentId: string | null;
+        confidential: boolean;
+        formMode: string;
+        escalateUnassignedMinutes: number;
     } & {
         buttons: TicketButtonConfig[];
         questions: TicketQuestion[];
@@ -390,6 +624,8 @@ export declare class TicketConfigService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
+        publishedAt: Date | null;
+        publishError: string | null;
     }>;
     duplicatePanel(actor: Actor, id: string): Promise<{
         id: string;
@@ -417,6 +653,8 @@ export declare class TicketConfigService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
+        publishedAt: Date | null;
+        publishError: string | null;
     }>;
     deletePanel(actor: Actor, id: string): Promise<void>;
     saveStatus(actor: Actor, id: string | null, d: z.infer<typeof statusSchema>): Promise<{
@@ -425,6 +663,7 @@ export declare class TicketConfigService {
         name: string;
         kind: string;
         position: number;
+        key: string | null;
         emoji: string;
         isDefault: boolean;
         isClaimed: boolean;
@@ -441,6 +680,8 @@ export declare class TicketConfigService {
         isDefault: boolean;
         allowedRoleNames: string[];
         notifyRoleIds: string[];
+        firstResponseMinutes: number | null;
+        resolutionMinutes: number | null;
     }>;
     deletePriority(actor: Actor, id: string): Promise<void>;
     saveReason(actor: Actor, id: string | null, d: z.infer<typeof reasonSchema>): Promise<{
@@ -450,6 +691,65 @@ export declare class TicketConfigService {
     }>;
     deleteReason(actor: Actor, id: string): Promise<void>;
     saveSettings(actor: Actor, s: TicketSettings): Promise<{
+        guildId: string | null;
+        notifications: {
+            priority: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            created: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            closed: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            claimed: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            assigned: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            user_message: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            info_requested: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            escalated: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            reopened: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            transcript_ready: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+            transcript_failed: {
+                channel: boolean;
+                dashboard: boolean;
+                dm: boolean;
+            };
+        };
+        leadRoleIds: string[];
         transcriptChannelId: string | null;
         logChannelId: string | null;
         closedTitle: string;
@@ -464,6 +764,12 @@ export declare class TicketConfigService {
         ratingPublicFields: ("category" | "duration" | "comment" | "staff" | "creator")[];
         memberLeaveAction: "NONE" | "CLOSE";
         memberLeaveReason: string;
+        refPrefix: string;
+        maxOpenPerUser: number;
+        confidentialFallbackRoleIds: string[];
+        slaReminderMinutes: number;
+        slaEscalateAfterMinutes: number;
+        userMessageNotifyMinutes: number;
     }>;
     private checkRefs;
 }

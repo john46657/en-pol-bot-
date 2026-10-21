@@ -112,10 +112,10 @@ export declare class HrTrainingService {
         personnelId: string;
         trainingId: string;
         note: string | null;
+        completedAt: Date | null;
         progress: number;
         doneModules: string[];
         examinerId: string | null;
-        completedAt: Date | null;
         certificateNo: string | null;
     })[]>;
     /** Fortschritt setzen (Ausbilder oder training.manage); bei „bestanden“ ggf. Zertifikat und Ablaufdatum. */
@@ -135,10 +135,10 @@ export declare class HrTrainingService {
         personnelId: string;
         trainingId: string;
         note: string | null;
+        completedAt: Date | null;
         progress: number;
         doneModules: string[];
         examinerId: string | null;
-        completedAt: Date | null;
         certificateNo: string | null;
     }>;
     /** Abgelaufene Ausbildungen markieren (beim Lesen). */

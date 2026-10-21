@@ -67,6 +67,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     channelId: string | null;
     content: string;
     footer: string;
+    fields: {
+        name: string;
+        value: string;
+        inline: boolean;
+    }[];
     author: string;
     url: string;
     image: string;
@@ -76,11 +81,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null;
     reactions: string[];
-    fields: {
-        name: string;
-        value: string;
-        inline: boolean;
-    }[];
     authorIcon: string;
     thumbnail: string;
     images: string[];
@@ -98,6 +98,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     channelId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
+    fields?: {
+        name: string;
+        value: string;
+        inline?: boolean | undefined;
+    }[] | undefined;
     author?: string | undefined;
     url?: string | undefined;
     image?: string | undefined;
@@ -107,11 +112,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null | undefined;
     reactions?: string[] | undefined;
-    fields?: {
-        name: string;
-        value: string;
-        inline?: boolean | undefined;
-    }[] | undefined;
     authorIcon?: string | undefined;
     thumbnail?: string | undefined;
     images?: (string | undefined)[] | undefined;
@@ -129,6 +129,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     channelId: string | null;
     content: string;
     footer: string;
+    fields: {
+        name: string;
+        value: string;
+        inline: boolean;
+    }[];
     author: string;
     url: string;
     image: string;
@@ -138,11 +143,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null;
     reactions: string[];
-    fields: {
-        name: string;
-        value: string;
-        inline: boolean;
-    }[];
     authorIcon: string;
     thumbnail: string;
     images: string[];
@@ -160,6 +160,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     channelId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
+    fields?: {
+        name: string;
+        value: string;
+        inline?: boolean | undefined;
+    }[] | undefined;
     author?: string | undefined;
     url?: string | undefined;
     image?: string | undefined;
@@ -169,11 +174,6 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     } | null | undefined;
     reactions?: string[] | undefined;
-    fields?: {
-        name: string;
-        value: string;
-        inline?: boolean | undefined;
-    }[] | undefined;
     authorIcon?: string | undefined;
     thumbnail?: string | undefined;
     images?: (string | undefined)[] | undefined;
@@ -202,6 +202,11 @@ export declare class EmbedsService {
         channelId: string | null;
         content: string;
         footer: string;
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         author: string;
         url: string;
         image: string;
@@ -211,11 +216,6 @@ export declare class EmbedsService {
             messageId: string;
         } | null;
         reactions: string[];
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -234,6 +234,11 @@ export declare class EmbedsService {
         channelId: string | null;
         content: string;
         footer: string;
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         author: string;
         url: string;
         image: string;
@@ -243,11 +248,6 @@ export declare class EmbedsService {
             messageId: string;
         } | null;
         reactions: string[];
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];

@@ -184,7 +184,7 @@ export class SupportTicketsService {
     // vertrauliche Tickets: im Log-Kanal nur Ticket-ID und Art der Aktion (keine Gründe, Namen, Inhalte)
     const shown = l.cat?.confidential && text ? `🔒 vertraulich · ${text.split(/ von | – |: |\(/)[0]!.trim()}` : text;
     if (l.settings.logChannelId && shown) effects.push({ type: 'post', channelId: l.settings.logChannelId, message: { embeds: [{ description: `**${ref}**${l.cat?.confidential ? '' : ` (${l.t.name})`} · ${shown}`, color: 0x64748b, footer: actor.name }] } });
-    if (AUDITED.has(action)) await this.auditTicket(actor, action, l.t, { ref, ...this.auditDetail(detail) });
+    if (AUDITED.has(action)) await this.auditTicket(actor, action, l.t, { ref, ...this.auditDetail(detail) }, action === 'routing_warning' ? 'FAILED' : 'SUCCESS');
   }
   /** Nur unkritische Metadaten ins Audit (keine Notiztexte, Gründe oder Nachrichten – das Audit kann in Discord-Logkanäle gespiegelt werden). */
   private auditDetail(d: Record<string, unknown>) {
@@ -1242,7 +1242,7 @@ export class SupportTicketsService {
       if (staff) return 'staff';
       const link = await this.prisma.discordLink.findUnique({ where: { userId } });
       if (link?.discordId === t.creatorId && need !== 'json') return 'creator';
-      await this.auditTicket(actor, 'transcript_denied', t, { need }, 'DENIED');
+      await this.auditTicket(actor, 'transcript_denied', t, { ref: this.ref(t.number, await this.settingsFor(t.guildId)), need }, 'DENIED');
     }
     throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
   }
@@ -1254,7 +1254,7 @@ export class SupportTicketsService {
     if (userId) {
       const who = await this.transcriptAccess(userId, tr.ticketId, need);
       const t = await this.prisma.supportTicket.findUnique({ where: { id: tr.ticketId }, select: { id: true, guildId: true, number: true } });
-      if (t) await this.auditTicket({ userId, discordId: null, name: '', viaBot: false }, need === 'view' ? 'transcript_viewed' : 'transcript_exported', t, { transcriptId: tr.id, version: tr.version, as: who, format: need });
+      if (t) await this.auditTicket({ userId, discordId: null, name: '', viaBot: false }, need === 'view' ? 'transcript_viewed' : 'transcript_exported', t, { ref: this.ref(t.number, await this.settingsFor(t.guildId)), transcriptId: tr.id, version: tr.version, as: who, format: need });
     }
     if (tr.status !== 'DONE') throw new AppError('CONFLICT', tr.status === 'FAILED' ? 'Die Erstellung dieses Transkripts ist fehlgeschlagen – bitte erneut versuchen.' : 'Das Transkript wird noch erstellt. Bitte in einem Moment erneut versuchen.');
     return tr;

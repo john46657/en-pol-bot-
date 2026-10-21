@@ -16,6 +16,14 @@ export declare class HrCoreService {
     constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, live: DiscordLiveService);
     config(): Promise<HrConfig>;
     saveConfig(actor: Actor, input: HrConfig): Promise<{
+        departments: {
+            id: string;
+            name: string;
+            color: string;
+            description: string;
+            discordRoleIds: string[];
+            dashboardRoleIds: string[];
+        }[];
         promotion: {
             stages: {
                 roleIds: string[];
@@ -86,14 +94,6 @@ export declare class HrCoreService {
             color: string;
             active: boolean;
             emoji: string;
-        }[];
-        departments: {
-            id: string;
-            name: string;
-            color: string;
-            description: string;
-            discordRoleIds: string[];
-            dashboardRoleIds: string[];
         }[];
         absenceTypes: {
             key: string;

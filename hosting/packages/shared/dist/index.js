@@ -52,6 +52,7 @@ __export(index_exports, {
   DEFAULT_HR_CONFIG: () => DEFAULT_HR_CONFIG,
   DEFAULT_MDT_CONFIG: () => DEFAULT_MDT_CONFIG,
   DEFAULT_RADIO_ROLE_RULES: () => DEFAULT_RADIO_ROLE_RULES,
+  DEFAULT_TICKET_REF_PREFIX: () => DEFAULT_TICKET_REF_PREFIX,
   DEFAULT_VERIFY_CONFIG: () => DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG: () => DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS: () => DISCORD_LIMITS,
@@ -84,6 +85,9 @@ __export(index_exports, {
   EXAM_REVIEW_LABEL: () => EXAM_REVIEW_LABEL,
   EXAM_REVIEW_MODES: () => EXAM_REVIEW_MODES,
   EXAM_SHUFFLE_TYPES: () => EXAM_SHUFFLE_TYPES,
+  FORM_FIELDS_PER_MODAL: () => FORM_FIELDS_PER_MODAL,
+  FORM_FILE_TYPES: () => FORM_FILE_TYPES,
+  FORM_MAX_FILE_BYTES: () => FORM_MAX_FILE_BYTES,
   FORM_PANEL_VARIABLES: () => FORM_PANEL_VARIABLES,
   FORM_QUESTION_TYPES: () => FORM_QUESTION_TYPES,
   HR_EVENTS: () => HR_EVENTS,
@@ -136,6 +140,7 @@ __export(index_exports, {
   TICKET_ACTION_KEYS: () => TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS: () => TICKET_PLACEHOLDERS,
   TICKET_STATUSES: () => TICKET_STATUSES,
+  TICKET_STATUS_KEYS: () => TICKET_STATUS_KEYS,
   TICKET_TRANSITIONS: () => TICKET_TRANSITIONS,
   UNIT_STATUSES: () => UNIT_STATUSES,
   VERIFY_NICK_VARS: () => VERIFY_NICK_VARS,
@@ -156,8 +161,10 @@ __export(index_exports, {
   WORKFLOW_OPS: () => WORKFLOW_OPS,
   WORKFLOW_OP_LABELS: () => WORKFLOW_OP_LABELS,
   WORKFLOW_TRIGGERS: () => WORKFLOW_TRIGGERS,
+  YES_NO: () => YES_NO,
   absenceTypeSchema: () => absenceTypeSchema,
   accountAge: () => accountAge,
+  activeFields: () => activeFields,
   ageOf: () => ageOf,
   aiCheck: () => aiCheck,
   applyCallCalibration: () => applyCallCalibration,
@@ -170,6 +177,7 @@ __export(index_exports, {
   canDelegate: () => canDelegate,
   canTransition: () => canTransition,
   checkAnswer: () => checkAnswer,
+  checkStatusChange: () => checkStatusChange,
   cleanReportValues: () => cleanReportValues,
   cloneWithNewIds: () => cloneWithNewIds,
   commandsForServer: () => commandsForServer,
@@ -191,6 +199,7 @@ __export(index_exports, {
   examExportSchema: () => examExportSchema,
   examProblems: () => examProblems,
   examSchema: () => examSchema,
+  fieldOptions: () => fieldOptions,
   fieldValue: () => fieldValue,
   fillTemplate: () => fillTemplate,
   fitCallCalibration: () => fitCallCalibration,
@@ -198,6 +207,7 @@ __export(index_exports, {
   fleetConfigSchema: () => fleetConfigSchema,
   fleetInternalSchema: () => fleetInternalSchema,
   fleetModelSchema: () => fleetModelSchema,
+  formModal: () => formModal,
   formPanelMessage: () => formPanelMessage,
   formPanelResult: () => formPanelResult,
   formPanelSchema: () => formPanelSchema,
@@ -262,13 +272,16 @@ __export(index_exports, {
   panelFieldSchema: () => panelFieldSchema,
   panelUnits: () => panelUnits,
   parseCsv: () => parseCsv,
+  parseFormDate: () => parseFormDate,
   parsePlayer: () => parsePlayer,
   parseQuestions: () => parseQuestions,
+  parseTicketRef: () => parseTicketRef,
   periodEnd: () => periodEnd,
   periodLabel: () => periodLabel,
   periodStart: () => periodStart,
   personDetailsSchema: () => personDetailsSchema,
   pixelToGame: () => pixelToGame,
+  planFormSteps: () => planFormSteps,
   playerKey: () => playerKey,
   poiForPlace: () => poiForPlace,
   policeReportFields: () => policeReportFields,
@@ -295,17 +308,22 @@ __export(index_exports, {
   resolvePermission: () => resolvePermission,
   rolesMatch: () => rolesMatch,
   severitySchema: () => severitySchema,
+  slaState: () => slaState,
   splitGaps: () => splitGaps,
   staffListSchema: () => staffListSchema,
   staffSectionSchema: () => staffSectionSchema,
   stageSchema: () => stageSchema,
   statusLabel: () => statusLabel,
+  statusPermission: () => statusPermission,
   ticketButtonsOf: () => ticketButtonsOf,
   ticketChannelName: () => ticketChannelName,
   ticketNumber: () => ticketNumber,
+  ticketRef: () => ticketRef,
   toDiscordPayload: () => toDiscordPayload,
   toPartialEmoji: () => toPartialEmoji,
   triggerMatches: () => triggerMatches,
+  validateField: () => validateField,
+  validateForm: () => validateForm,
   validateMbDocument: () => validateMbDocument,
   validateMbMessage: () => validateMbMessage,
   verifyActions: () => verifyActions,
@@ -354,7 +372,7 @@ var PERMISSION_CATALOG = {
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
   qualifications: ["view", "decide", "delete", "manage"],
-  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits"],
   /**
    * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
    * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
@@ -534,7 +552,17 @@ var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
 var NO_TICKET_BUTTON = ["reopen", "priority", "escalate"];
 var ticketButtonsOf = (buttons) => buttons.filter((b) => !NO_TICKET_BUTTON.includes(b.action));
 var defaultTicketButtons = () => ["close", "close_request", "claim", "unclaim", "add_user", "remove_user", "transcript", "note", "delete"].map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style, enabled: true }));
-var QUESTION_TYPES = { SHORT: "Kurze Antwort", LONG: "Lange Antwort", YESNO: "Ja/Nein", SELECT: "Auswahl", MULTI: "Mehrere Optionen" };
+var QUESTION_TYPES = {
+  SHORT: "Kurze Antwort",
+  LONG: "Lange Antwort",
+  YESNO: "Ja/Nein",
+  SELECT: "Auswahl",
+  MULTI: "Mehrere Optionen",
+  CHECKBOX: "Kontrollk\xE4stchen (Best\xE4tigung)",
+  NUMBER: "Zahl",
+  DATE: "Datum",
+  FILE: "Anhang / Screenshot"
+};
 var CLAIM_MODES = { SINGLE: "Nur ein Bearbeiter", MULTI: "Mehrere Bearbeiter", PRIMARY: "Hauptbearbeiter + Helfer" };
 var CLOSE_REASON_MODES = { NONE: "Kein Grund", OPTIONAL: "Grund optional", REQUIRED: "Grund erforderlich" };
 var CLOSE_REASON_SOURCES = { PRESET: "Feste Gr\xFCnde", CUSTOM: "Eigener Grund", BOTH: "Beides" };
@@ -544,6 +572,7 @@ var TICKET_PLACEHOLDERS = {
   "{username}": "Discord-Name des Erstellers",
   "{user_id}": "Discord-ID des Erstellers",
   "{ticket_id}": "Ticket-Nummer, z. B. 0042",
+  "{ticket_ref}": "Dauerhafte Ticket-ID, z. B. EMD-000042",
   "{category}": "Name der Ticket-Kategorie",
   "{staff}": "Bearbeiter (Erw\xE4hnungen) bzw. \u201Eniemand\u201C",
   "{status}": "Aktueller Status",
@@ -3379,6 +3408,183 @@ function aiCheck(answers, durationSec) {
     flagged: [...flagged].sort((a, b) => a - b)
   };
 }
+
+// src/ticket-premium.ts
+var DEFAULT_TICKET_REF_PREFIX = "EMD";
+var ticketRef = (n, prefix = DEFAULT_TICKET_REF_PREFIX, digits = 6) => `${prefix}-${String(n).padStart(digits, "0")}`;
+function parseTicketRef(s) {
+  const m = s.trim().match(/^(?:[A-Za-z]{2,8}-|#)?0*(\d{1,9})$/);
+  const n = m ? Number(m[1]) : 0;
+  return n > 0 ? n : null;
+}
+var FORM_FILE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf", "text/plain"];
+var FORM_MAX_FILE_BYTES = 8 * 1024 * 1024;
+var YES_NO = ["Ja", "Nein"];
+var TEXT_MAX = 4e3;
+var asText = (v) => (Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? v ? "Ja" : "" : v ?? "").trim();
+var asList = (v) => [...new Set((Array.isArray(v) ? v : typeof v === "string" && v ? [v] : []).map((x) => x.trim()).filter(Boolean))];
+var activeFields = (fields) => fields.filter((f) => f.enabled !== false);
+var fieldOptions = (q) => q.type === "YESNO" ? [...YES_NO] : q.type === "CHECKBOX" ? ["Ja"] : q.options;
+function parseFormDate(s) {
+  const de = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/), iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!de && !iso) return null;
+  const [d, mo, y] = de ? [Number(de[1]), Number(de[2]), Number(de[3])] : [Number(iso[3]), Number(iso[2]), Number(iso[1])];
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d || y < 1900 || y > 2200) return null;
+  return `${String(d).padStart(2, "0")}.${String(mo).padStart(2, "0")}.${y}`;
+}
+function validateField(q, raw, files = [], o = {}) {
+  const req = (empty) => empty ? q.required ? { error: "Pflichtfeld \u2013 bitte ausf\xFCllen." } : { skipped: true, value: "\u2014" } : null;
+  switch (q.type) {
+    case "SHORT":
+    case "LONG": {
+      const v = asText(raw);
+      const r = req(!v);
+      if (r) return r;
+      if (q.minLength && v.length < q.minLength) return { error: `Die Antwort ist zu kurz (mindestens ${q.minLength} Zeichen, aktuell ${v.length}).` };
+      const max = q.maxLength ?? TEXT_MAX;
+      if (v.length > max) return { error: `Die Antwort ist zu lang (h\xF6chstens ${max} Zeichen, aktuell ${v.length}).` };
+      return { value: v };
+    }
+    case "SELECT":
+    case "YESNO": {
+      const vs = asList(raw);
+      const r = req(!vs.length);
+      if (r) return r;
+      if (vs.length > 1 || !fieldOptions(q).includes(vs[0])) return { error: "Ung\xFCltige Auswahl." };
+      return { value: vs[0] };
+    }
+    case "MULTI": {
+      const vs = asList(raw);
+      const r = req(!vs.length);
+      if (r) return r;
+      if (vs.some((v) => !q.options.includes(v))) return { error: "Ung\xFCltige Auswahl." };
+      return { value: vs.join(", ") };
+    }
+    case "CHECKBOX": {
+      const on = raw === true || asList(raw).some((v) => ["ja", "true", "1", "on"].includes(v.toLowerCase()));
+      if (!on && q.required) return { error: "Bitte best\xE4tigen." };
+      return { value: on ? "Ja" : "Nein" };
+    }
+    case "NUMBER": {
+      const v = asText(raw);
+      const r = req(!v);
+      if (r) return r;
+      if (!/^-?\d{1,12}([.,]\d{1,6})?$/.test(v)) return { error: "Bitte eine Zahl eingeben (z. B. 12 oder 3,5)." };
+      const n = Number(v.replace(",", "."));
+      if (q.min !== void 0 && n < q.min) return { error: `Mindestens ${q.min}.` };
+      if (q.max !== void 0 && n > q.max) return { error: `H\xF6chstens ${q.max}.` };
+      return { value: String(n).replace(".", ",") };
+    }
+    case "DATE": {
+      const v = asText(raw);
+      const r = req(!v);
+      if (r) return r;
+      const d = parseFormDate(v);
+      return d ? { value: d } : { error: "Bitte ein g\xFCltiges Datum im Format TT.MM.JJJJ eingeben." };
+    }
+    case "FILE": {
+      const r = req(!files.length);
+      if (r) return r;
+      const max = Math.min(10, q.max ?? 1);
+      if (files.length > max) return { error: `H\xF6chstens ${max} Datei(en).` };
+      const limit = o.maxFileBytes ?? FORM_MAX_FILE_BYTES, types = o.allowedFileTypes ?? FORM_FILE_TYPES;
+      for (const f of files) {
+        if (f.size > limit) return { error: `\u201E${f.name}\u201C ist zu gro\xDF (h\xF6chstens ${Math.floor(limit / 1048576)} MB).` };
+        if (!f.contentType || !types.includes(f.contentType.split(";")[0].trim())) return { error: `\u201E${f.name}\u201C: Dateityp nicht erlaubt (erlaubt: Bilder, PDF, Text).` };
+      }
+      return { value: files.map((f) => f.name).join(", "), files };
+    }
+  }
+  return { error: "Unbekannter Feldtyp." };
+}
+function validateForm(fields, raw, files = {}, o = {}) {
+  const errors = {};
+  const answers = [];
+  for (const q of activeFields(fields)) {
+    if (o.only && !o.only.includes(q.id)) continue;
+    const r = validateField(q, raw[q.id], files[q.id] ?? [], o);
+    if (r.error) errors[q.id] = r.error;
+    else answers.push({ questionId: q.id, label: q.label, type: q.type, value: r.value ?? "\u2014", ...r.files?.length ? { files: r.files } : {} });
+  }
+  return { ok: !Object.keys(errors).length, errors, answers };
+}
+var FORM_FIELDS_PER_MODAL = 5;
+function planFormSteps(fields, perStep = FORM_FIELDS_PER_MODAL) {
+  const ids = activeFields(fields).map((f) => f.id);
+  const steps = [];
+  for (let i = 0; i < ids.length; i += perStep) steps.push(ids.slice(i, i + perStep));
+  return steps;
+}
+var clip2 = (s, n) => s.length > n ? `${s.slice(0, n - 1)}\u2026` : s;
+function formModal(customId, title, fields, prefill = {}) {
+  return { id: customId, title: clip2(title, 45), fields: fields.slice(0, FORM_FIELDS_PER_MODAL).map((q) => {
+    const base = { id: q.id, label: clip2(q.label, 45), required: q.required, ...q.description ? { description: clip2(q.description, 100) } : {} };
+    const pre = prefill[q.id];
+    switch (q.type) {
+      case "SHORT":
+      case "LONG":
+      case "NUMBER":
+      case "DATE": {
+        const placeholder = q.placeholder ?? (q.type === "NUMBER" ? "Zahl, z. B. 12" : q.type === "DATE" ? "TT.MM.JJJJ" : void 0);
+        return {
+          ...base,
+          kind: q.type === "LONG" ? "paragraph" : "text",
+          ...placeholder ? { placeholder: clip2(placeholder, 100) } : {},
+          ...q.type === "DATE" ? { maxLength: 10 } : q.type === "NUMBER" ? { maxLength: 20 } : { maxLength: Math.min(TEXT_MAX, q.maxLength ?? TEXT_MAX), ...q.minLength ? { minLength: q.minLength } : {} },
+          ...typeof pre === "string" && pre ? { value: pre } : {}
+        };
+      }
+      case "FILE":
+        return { ...base, kind: "file", minValues: q.required ? 1 : 0, maxValues: Math.min(10, q.max ?? 1) };
+      default: {
+        const chosen = new Set(Array.isArray(pre) ? pre : typeof pre === "string" ? [pre] : pre === true ? ["Ja"] : []);
+        const options = fieldOptions(q).slice(0, 25).map((v) => ({ label: clip2(v, 100), value: clip2(v, 100), ...chosen.has(v) ? { default: true } : {} }));
+        return { ...base, kind: "select", options, minValues: q.required ? 1 : 0, maxValues: q.type === "MULTI" ? options.length : 1, ...q.placeholder ? { placeholder: clip2(q.placeholder, 100) } : {} };
+      }
+    }
+  }) };
+}
+var TICKET_STATUS_KEYS = {
+  OPEN: "Offen",
+  CLAIMED: "\xDCbernommen",
+  IN_PROGRESS: "In Bearbeitung",
+  WAITING_USER: "Wartet auf Nutzer",
+  WAITING_INTERNAL: "Wartet auf interne R\xFCckmeldung",
+  RESOLVED: "Gel\xF6st",
+  ESCALATED: "Eskaliert",
+  CLOSED: "Geschlossen",
+  ARCHIVED: "Archiviert"
+};
+function checkStatusChange(from, to, via) {
+  const f = from.kind, t2 = to.kind;
+  switch (via) {
+    case "close":
+      return f === "OPEN" ? null : "Das Ticket ist bereits geschlossen.";
+    case "reopen":
+      return f !== "OPEN" ? t2 === "OPEN" ? null : "Wieder \xF6ffnen braucht einen offenen Status." : "Das Ticket ist bereits offen.";
+    case "archive":
+      return f === "ARCHIVED" ? "Das Ticket ist bereits archiviert." : f !== "CLOSED" ? "Nur geschlossene Tickets k\xF6nnen archiviert werden." : t2 === "ARCHIVED" ? null : "Kein Archiv-Status eingerichtet.";
+    case "status":
+      if (f === "OPEN") return t2 === "OPEN" ? null : t2 === "CLOSED" ? "Zum Schlie\xDFen bitte \u201ESchlie\xDFen\u201C benutzen (Grund, Transkript, Benachrichtigungen)." : "Nur geschlossene Tickets k\xF6nnen archiviert werden.";
+      if (f === "CLOSED") return t2 === "OPEN" ? "Geschlossene Tickets bitte \xFCber \u201EWieder \xF6ffnen\u201C \xF6ffnen." : null;
+      return "Archivierte Tickets k\xF6nnen nur \xFCber \u201EWieder \xF6ffnen\u201C (mit Archiv-Recht) ge\xE4ndert werden.";
+  }
+}
+var statusPermission = (to) => to.kind === "ARCHIVED" ? "ticket.archive" : "ticket.change_status";
+function slaState(t2, now = /* @__PURE__ */ new Date()) {
+  const firstDueAt = t2.firstResponseMinutes ? new Date(t2.createdAt.getTime() + t2.firstResponseMinutes * 6e4) : null;
+  const resolveDueAt = t2.resolutionMinutes ? new Date(t2.createdAt.getTime() + t2.resolutionMinutes * 6e4 + t2.waitingSeconds * 1e3) : null;
+  const paused = !!t2.waitingSince;
+  const open = !t2.closedAt;
+  return {
+    firstDueAt,
+    resolveDueAt,
+    paused,
+    firstOverdue: !!firstDueAt && open && !t2.firstResponseAt && now > firstDueAt,
+    resolveOverdue: !!resolveDueAt && open && !paused && now > resolveDueAt
+  };
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AI_CHECK_HINT,
@@ -3413,6 +3619,7 @@ function aiCheck(answers, durationSec) {
   DEFAULT_HR_CONFIG,
   DEFAULT_MDT_CONFIG,
   DEFAULT_RADIO_ROLE_RULES,
+  DEFAULT_TICKET_REF_PREFIX,
   DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS,
@@ -3445,6 +3652,9 @@ function aiCheck(answers, durationSec) {
   EXAM_REVIEW_LABEL,
   EXAM_REVIEW_MODES,
   EXAM_SHUFFLE_TYPES,
+  FORM_FIELDS_PER_MODAL,
+  FORM_FILE_TYPES,
+  FORM_MAX_FILE_BYTES,
   FORM_PANEL_VARIABLES,
   FORM_QUESTION_TYPES,
   HR_EVENTS,
@@ -3497,6 +3707,7 @@ function aiCheck(answers, durationSec) {
   TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS,
   TICKET_STATUSES,
+  TICKET_STATUS_KEYS,
   TICKET_TRANSITIONS,
   UNIT_STATUSES,
   VERIFY_NICK_VARS,
@@ -3517,8 +3728,10 @@ function aiCheck(answers, durationSec) {
   WORKFLOW_OPS,
   WORKFLOW_OP_LABELS,
   WORKFLOW_TRIGGERS,
+  YES_NO,
   absenceTypeSchema,
   accountAge,
+  activeFields,
   ageOf,
   aiCheck,
   applyCallCalibration,
@@ -3531,6 +3744,7 @@ function aiCheck(answers, durationSec) {
   canDelegate,
   canTransition,
   checkAnswer,
+  checkStatusChange,
   cleanReportValues,
   cloneWithNewIds,
   commandsForServer,
@@ -3552,6 +3766,7 @@ function aiCheck(answers, durationSec) {
   examExportSchema,
   examProblems,
   examSchema,
+  fieldOptions,
   fieldValue,
   fillTemplate,
   fitCallCalibration,
@@ -3559,6 +3774,7 @@ function aiCheck(answers, durationSec) {
   fleetConfigSchema,
   fleetInternalSchema,
   fleetModelSchema,
+  formModal,
   formPanelMessage,
   formPanelResult,
   formPanelSchema,
@@ -3623,13 +3839,16 @@ function aiCheck(answers, durationSec) {
   panelFieldSchema,
   panelUnits,
   parseCsv,
+  parseFormDate,
   parsePlayer,
   parseQuestions,
+  parseTicketRef,
   periodEnd,
   periodLabel,
   periodStart,
   personDetailsSchema,
   pixelToGame,
+  planFormSteps,
   playerKey,
   poiForPlace,
   policeReportFields,
@@ -3656,17 +3875,22 @@ function aiCheck(answers, durationSec) {
   resolvePermission,
   rolesMatch,
   severitySchema,
+  slaState,
   splitGaps,
   staffListSchema,
   staffSectionSchema,
   stageSchema,
   statusLabel,
+  statusPermission,
   ticketButtonsOf,
   ticketChannelName,
   ticketNumber,
+  ticketRef,
   toDiscordPayload,
   toPartialEmoji,
   triggerMatches,
+  validateField,
+  validateForm,
   validateMbDocument,
   validateMbMessage,
   verifyActions,

@@ -364,6 +364,7 @@ export declare class VoiceSupportService {
         guildId: string;
         channelId: string | null;
         claimedById: string | null;
+        notifyChannelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -373,7 +374,6 @@ export declare class VoiceSupportService {
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
-        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
         messages: number;
@@ -573,6 +573,7 @@ export declare class VoiceSupportService {
         guildId: string;
         channelId: string | null;
         claimedById: string | null;
+        notifyChannelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -582,7 +583,6 @@ export declare class VoiceSupportService {
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
-        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
         messages: number;

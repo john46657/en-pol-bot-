@@ -15,6 +15,11 @@ export declare class EmbedsController {
         channelId: string | null;
         content: string;
         footer: string;
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         author: string;
         url: string;
         image: string;
@@ -24,11 +29,6 @@ export declare class EmbedsController {
             messageId: string;
         } | null;
         reactions: string[];
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -47,6 +47,11 @@ export declare class EmbedsController {
         channelId: string | null;
         content: string;
         footer: string;
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         author: string;
         url: string;
         image: string;
@@ -56,11 +61,6 @@ export declare class EmbedsController {
             messageId: string;
         } | null;
         reactions: string[];
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];
@@ -79,6 +79,11 @@ export declare class EmbedsController {
         channelId: string | null;
         content: string;
         footer: string;
+        fields: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[];
         author: string;
         url: string;
         image: string;
@@ -88,11 +93,6 @@ export declare class EmbedsController {
             messageId: string;
         } | null;
         reactions: string[];
-        fields: {
-            name: string;
-            value: string;
-            inline: boolean;
-        }[];
         authorIcon: string;
         thumbnail: string;
         images: string[];

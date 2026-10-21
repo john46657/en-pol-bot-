@@ -78,7 +78,7 @@ export declare class HrExamService {
     detail(actor: Actor, id: string): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             id: string;
             image: string | null;
@@ -121,7 +121,7 @@ export declare class HrExamService {
     save(actor: Actor, d: ExamInput, id?: string): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             id: string;
             image: string | null;
@@ -231,7 +231,7 @@ export declare class HrExamService {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -297,7 +297,7 @@ export declare class HrExamService {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -363,7 +363,7 @@ export declare class HrExamService {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -431,7 +431,7 @@ export declare class HrExamService {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -500,7 +500,7 @@ export declare class HrExamService {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -566,7 +566,7 @@ export declare class HrExamService {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;

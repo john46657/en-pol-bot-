@@ -20908,31 +20908,31 @@ var require_message = __commonJS({
       AllowedMentionsTypes2["Role"] = "roles";
       AllowedMentionsTypes2["User"] = "users";
     })(AllowedMentionsTypes || (exports2.AllowedMentionsTypes = AllowedMentionsTypes = {}));
-    var ComponentType2;
-    (function(ComponentType3) {
-      ComponentType3[ComponentType3["ActionRow"] = 1] = "ActionRow";
-      ComponentType3[ComponentType3["Button"] = 2] = "Button";
-      ComponentType3[ComponentType3["StringSelect"] = 3] = "StringSelect";
-      ComponentType3[ComponentType3["TextInput"] = 4] = "TextInput";
-      ComponentType3[ComponentType3["UserSelect"] = 5] = "UserSelect";
-      ComponentType3[ComponentType3["RoleSelect"] = 6] = "RoleSelect";
-      ComponentType3[ComponentType3["MentionableSelect"] = 7] = "MentionableSelect";
-      ComponentType3[ComponentType3["ChannelSelect"] = 8] = "ChannelSelect";
-      ComponentType3[ComponentType3["Section"] = 9] = "Section";
-      ComponentType3[ComponentType3["TextDisplay"] = 10] = "TextDisplay";
-      ComponentType3[ComponentType3["Thumbnail"] = 11] = "Thumbnail";
-      ComponentType3[ComponentType3["MediaGallery"] = 12] = "MediaGallery";
-      ComponentType3[ComponentType3["File"] = 13] = "File";
-      ComponentType3[ComponentType3["Separator"] = 14] = "Separator";
-      ComponentType3[ComponentType3["ContentInventoryEntry"] = 16] = "ContentInventoryEntry";
-      ComponentType3[ComponentType3["Container"] = 17] = "Container";
-      ComponentType3[ComponentType3["Label"] = 18] = "Label";
-      ComponentType3[ComponentType3["FileUpload"] = 19] = "FileUpload";
-      ComponentType3[ComponentType3["RadioGroup"] = 21] = "RadioGroup";
-      ComponentType3[ComponentType3["CheckboxGroup"] = 22] = "CheckboxGroup";
-      ComponentType3[ComponentType3["Checkbox"] = 23] = "Checkbox";
-      ComponentType3[ComponentType3["SelectMenu"] = 3] = "SelectMenu";
-    })(ComponentType2 || (exports2.ComponentType = ComponentType2 = {}));
+    var ComponentType3;
+    (function(ComponentType4) {
+      ComponentType4[ComponentType4["ActionRow"] = 1] = "ActionRow";
+      ComponentType4[ComponentType4["Button"] = 2] = "Button";
+      ComponentType4[ComponentType4["StringSelect"] = 3] = "StringSelect";
+      ComponentType4[ComponentType4["TextInput"] = 4] = "TextInput";
+      ComponentType4[ComponentType4["UserSelect"] = 5] = "UserSelect";
+      ComponentType4[ComponentType4["RoleSelect"] = 6] = "RoleSelect";
+      ComponentType4[ComponentType4["MentionableSelect"] = 7] = "MentionableSelect";
+      ComponentType4[ComponentType4["ChannelSelect"] = 8] = "ChannelSelect";
+      ComponentType4[ComponentType4["Section"] = 9] = "Section";
+      ComponentType4[ComponentType4["TextDisplay"] = 10] = "TextDisplay";
+      ComponentType4[ComponentType4["Thumbnail"] = 11] = "Thumbnail";
+      ComponentType4[ComponentType4["MediaGallery"] = 12] = "MediaGallery";
+      ComponentType4[ComponentType4["File"] = 13] = "File";
+      ComponentType4[ComponentType4["Separator"] = 14] = "Separator";
+      ComponentType4[ComponentType4["ContentInventoryEntry"] = 16] = "ContentInventoryEntry";
+      ComponentType4[ComponentType4["Container"] = 17] = "Container";
+      ComponentType4[ComponentType4["Label"] = 18] = "Label";
+      ComponentType4[ComponentType4["FileUpload"] = 19] = "FileUpload";
+      ComponentType4[ComponentType4["RadioGroup"] = 21] = "RadioGroup";
+      ComponentType4[ComponentType4["CheckboxGroup"] = 22] = "CheckboxGroup";
+      ComponentType4[ComponentType4["Checkbox"] = 23] = "Checkbox";
+      ComponentType4[ComponentType4["SelectMenu"] = 3] = "SelectMenu";
+    })(ComponentType3 || (exports2.ComponentType = ComponentType3 = {}));
     var ButtonStyle3;
     (function(ButtonStyle4) {
       ButtonStyle4[ButtonStyle4["Primary"] = 1] = "Primary";
@@ -31880,7 +31880,7 @@ var require_ChannelFlagsBitField = __commonJS({
 var require_Constants = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Constants.js"(exports2) {
     "use strict";
-    var { ChannelType: ChannelType6, MessageType, ComponentType: ComponentType2, ImageFormat, StickerFormatType } = require_v106();
+    var { ChannelType: ChannelType6, MessageType, ComponentType: ComponentType3, ImageFormat, StickerFormatType } = require_v106();
     exports2.MaxBulkDeletableMessageAge = 12096e5;
     exports2.SweeperKeys = [
       "autoModerationRules",
@@ -31920,11 +31920,11 @@ var require_Constants = __commonJS({
     exports2.ThreadChannelTypes = [ChannelType6.AnnouncementThread, ChannelType6.PublicThread, ChannelType6.PrivateThread];
     exports2.VoiceBasedChannelTypes = [ChannelType6.GuildVoice, ChannelType6.GuildStageVoice];
     exports2.SelectMenuTypes = [
-      ComponentType2.StringSelect,
-      ComponentType2.UserSelect,
-      ComponentType2.RoleSelect,
-      ComponentType2.MentionableSelect,
-      ComponentType2.ChannelSelect
+      ComponentType3.StringSelect,
+      ComponentType3.UserSelect,
+      ComponentType3.RoleSelect,
+      ComponentType3.MentionableSelect,
+      ComponentType3.ChannelSelect
     ];
     exports2.UndeletableMessageTypes = [
       MessageType.RecipientAdd,
@@ -36165,7 +36165,7 @@ var require_BaseInteraction = __commonJS({
     var { deprecate } = require("node:util");
     var { Collection: Collection2 } = require_dist6();
     var { DiscordSnowflake } = require_cjs();
-    var { InteractionType, ApplicationCommandType, ComponentType: ComponentType2 } = require_v106();
+    var { InteractionType, ApplicationCommandType, ComponentType: ComponentType3 } = require_v106();
     var AuthorizingIntegrationOwners = require_AuthorizingIntegrationOwners();
     var Base = require_Base();
     var { SelectMenuTypes } = require_Constants();
@@ -36318,7 +36318,7 @@ var require_BaseInteraction = __commonJS({
        * @returns {boolean}
        */
       isButton() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.Button;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType3.Button;
       }
       /**
        * Indicates whether this interaction is a {@link StringSelectMenuInteraction}.
@@ -36340,35 +36340,35 @@ var require_BaseInteraction = __commonJS({
        * @returns {boolean}
        */
       isStringSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.StringSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType3.StringSelect;
       }
       /**
        * Indicates whether this interaction is a {@link UserSelectMenuInteraction}
        * @returns {boolean}
        */
       isUserSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.UserSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType3.UserSelect;
       }
       /**
        * Indicates whether this interaction is a {@link RoleSelectMenuInteraction}
        * @returns {boolean}
        */
       isRoleSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.RoleSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType3.RoleSelect;
       }
       /**
        * Indicates whether this interaction is a {@link ChannelSelectMenuInteraction}
        * @returns {boolean}
        */
       isChannelSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.ChannelSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType3.ChannelSelect;
       }
       /**
        * Indicates whether this interaction is a {@link MentionableSelectMenuInteraction}
        * @returns {boolean}
        */
       isMentionableSelectMenu() {
-        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType2.MentionableSelect;
+        return this.type === InteractionType.MessageComponent && this.componentType === ComponentType3.MentionableSelect;
       }
       /**
        * Indicates whether this interaction can be replied to.
@@ -43227,9 +43227,9 @@ var require_dist8 = __commonJS({
       EmbedBuilder: () => EmbedBuilder3,
       FileBuilder: () => FileBuilder,
       FileUploadAssertions: () => Assertions_exports4,
-      FileUploadBuilder: () => FileUploadBuilder,
+      FileUploadBuilder: () => FileUploadBuilder2,
       LabelAssertions: () => Assertions_exports7,
-      LabelBuilder: () => LabelBuilder,
+      LabelBuilder: () => LabelBuilder2,
       MediaGalleryBuilder: () => MediaGalleryBuilder,
       MediaGalleryItemBuilder: () => MediaGalleryItemBuilder,
       MentionableSelectMenuBuilder: () => MentionableSelectMenuBuilder,
@@ -44452,7 +44452,7 @@ var require_dist8 = __commonJS({
       max_values: import_shapeshift4.s.number().greaterThanOrEqual(1).lessThanOrEqual(10).optional(),
       required: import_shapeshift4.s.boolean().optional()
     });
-    var FileUploadBuilder = class extends ComponentBuilder {
+    var FileUploadBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "FileUploadBuilder");
       }
@@ -45282,7 +45282,7 @@ var require_dist8 = __commonJS({
         radioGroupPredicate
       ])
     }).setValidationEnabled(isValidationEnabled);
-    var LabelBuilder = class extends ComponentBuilder {
+    var LabelBuilder2 = class extends ComponentBuilder {
       static {
         __name(this, "LabelBuilder");
       }
@@ -45405,7 +45405,7 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a component builder or an already built builder
        */
       setFileUploadComponent(input) {
-        this.data.component = resolveBuilder(input, FileUploadBuilder);
+        this.data.component = resolveBuilder(input, FileUploadBuilder2);
         return this;
       }
       /**
@@ -46228,9 +46228,9 @@ var require_dist8 = __commonJS({
         case import_v1027.ComponentType.MediaGallery:
           return new MediaGalleryBuilder(data);
         case import_v1027.ComponentType.Label:
-          return new LabelBuilder(data);
+          return new LabelBuilder2(data);
         case import_v1027.ComponentType.FileUpload:
-          return new FileUploadBuilder(data);
+          return new FileUploadBuilder2(data);
         case import_v1027.ComponentType.Checkbox:
           return new CheckboxBuilder(data);
         case import_v1027.ComponentType.CheckboxGroup:
@@ -46339,7 +46339,7 @@ var require_dist8 = __commonJS({
     });
     var import_shapeshift9 = require_cjs3();
     var titleValidator = import_shapeshift9.s.string().lengthGreaterThanOrEqual(1).lengthLessThanOrEqual(45).setValidationEnabled(isValidationEnabled);
-    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder), import_shapeshift9.s.instance(TextDisplayBuilder2)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
+    var componentsValidator = import_shapeshift9.s.union([import_shapeshift9.s.instance(ActionRowBuilder3), import_shapeshift9.s.instance(LabelBuilder2), import_shapeshift9.s.instance(TextDisplayBuilder2)]).array().lengthGreaterThanOrEqual(1).setValidationEnabled(isValidationEnabled);
     function validateRequiredParameters2(customId, title, components) {
       customIdValidator.parse(customId);
       titleValidator.parse(title);
@@ -46394,7 +46394,7 @@ var require_dist8 = __commonJS({
       addComponents(...components) {
         this.components.push(
           ...normalizeArray(components).map((component, idx) => {
-            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder || component instanceof TextDisplayBuilder2) {
+            if (component instanceof ActionRowBuilder3 || component instanceof LabelBuilder2 || component instanceof TextDisplayBuilder2) {
               return component;
             }
             if (component instanceof TextInputBuilder2) {
@@ -46405,7 +46405,7 @@ var require_dist8 = __commonJS({
                 return new ActionRowBuilder3(component);
               }
               if (component.type === import_v1029.ComponentType.Label) {
-                return new LabelBuilder(component);
+                return new LabelBuilder2(component);
               }
               if (component.type === import_v1029.ComponentType.TextDisplay) {
                 return new TextDisplayBuilder2(component);
@@ -46428,7 +46428,7 @@ var require_dist8 = __commonJS({
        */
       addLabelComponents(...components) {
         const normalized = normalizeArray(components);
-        const resolved = normalized.map((label2) => resolveBuilder(label2, LabelBuilder));
+        const resolved = normalized.map((label2) => resolveBuilder(label2, LabelBuilder2));
         this.components.push(...resolved);
         return this;
       }
@@ -46495,7 +46495,7 @@ var require_dist8 = __commonJS({
        * @param labels - The replacing label objects
        */
       spliceLabelComponents(index, deleteCount, ...labels) {
-        const resolved = labels.map((label2) => resolveBuilder(label2, LabelBuilder));
+        const resolved = labels.map((label2) => resolveBuilder(label2, LabelBuilder2));
         this.components.splice(index, deleteCount, ...resolved);
         return this;
       }
@@ -49890,7 +49890,7 @@ var require_Components = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Components.js"(exports2, module2) {
     "use strict";
     var { ComponentBuilder } = require_dist8();
-    var { ComponentType: ComponentType2 } = require_v106();
+    var { ComponentType: ComponentType3 } = require_v106();
     function createComponent(data) {
       return data instanceof Component ? data : new (ComponentTypeToComponent[data.type] ?? Component)(data);
     }
@@ -49899,11 +49899,11 @@ var require_Components = __commonJS({
     }
     function extractInteractiveComponents(component) {
       switch (component.type) {
-        case ComponentType2.ActionRow:
+        case ComponentType3.ActionRow:
           return component.components;
-        case ComponentType2.Section:
+        case ComponentType3.Section:
           return [...component.components, component.accessory];
-        case ComponentType2.Container:
+        case ComponentType3.Container:
           return component.components.flatMap(extractInteractiveComponents);
         default:
           return [component];
@@ -49939,32 +49939,32 @@ var require_Components = __commonJS({
     var UserSelectMenuBuilder2 = require_UserSelectMenuBuilder();
     var UserSelectMenuComponent = require_UserSelectMenuComponent();
     var ComponentTypeToComponent = {
-      [ComponentType2.ActionRow]: ActionRow,
-      [ComponentType2.Button]: ButtonComponent,
-      [ComponentType2.StringSelect]: StringSelectMenuComponent,
-      [ComponentType2.TextInput]: TextInputComponent,
-      [ComponentType2.UserSelect]: UserSelectMenuComponent,
-      [ComponentType2.RoleSelect]: RoleSelectMenuComponent,
-      [ComponentType2.MentionableSelect]: MentionableSelectMenuComponent,
-      [ComponentType2.ChannelSelect]: ChannelSelectMenuComponent,
-      [ComponentType2.Container]: ContainerComponent,
-      [ComponentType2.TextDisplay]: TextDisplayComponent,
-      [ComponentType2.File]: FileComponent,
-      [ComponentType2.MediaGallery]: MediaGalleryComponent,
-      [ComponentType2.Section]: SectionComponent,
-      [ComponentType2.Separator]: SeparatorComponent,
-      [ComponentType2.Thumbnail]: ThumbnailComponent,
-      [ComponentType2.Label]: LabelComponent
+      [ComponentType3.ActionRow]: ActionRow,
+      [ComponentType3.Button]: ButtonComponent,
+      [ComponentType3.StringSelect]: StringSelectMenuComponent,
+      [ComponentType3.TextInput]: TextInputComponent,
+      [ComponentType3.UserSelect]: UserSelectMenuComponent,
+      [ComponentType3.RoleSelect]: RoleSelectMenuComponent,
+      [ComponentType3.MentionableSelect]: MentionableSelectMenuComponent,
+      [ComponentType3.ChannelSelect]: ChannelSelectMenuComponent,
+      [ComponentType3.Container]: ContainerComponent,
+      [ComponentType3.TextDisplay]: TextDisplayComponent,
+      [ComponentType3.File]: FileComponent,
+      [ComponentType3.MediaGallery]: MediaGalleryComponent,
+      [ComponentType3.Section]: SectionComponent,
+      [ComponentType3.Separator]: SeparatorComponent,
+      [ComponentType3.Thumbnail]: ThumbnailComponent,
+      [ComponentType3.Label]: LabelComponent
     };
     var ComponentTypeToBuilder = {
-      [ComponentType2.ActionRow]: ActionRowBuilder3,
-      [ComponentType2.Button]: ButtonBuilder3,
-      [ComponentType2.StringSelect]: StringSelectMenuBuilder2,
-      [ComponentType2.TextInput]: TextInputBuilder2,
-      [ComponentType2.UserSelect]: UserSelectMenuBuilder2,
-      [ComponentType2.RoleSelect]: RoleSelectMenuBuilder2,
-      [ComponentType2.MentionableSelect]: MentionableSelectMenuBuilder,
-      [ComponentType2.ChannelSelect]: ChannelSelectMenuBuilder
+      [ComponentType3.ActionRow]: ActionRowBuilder3,
+      [ComponentType3.Button]: ButtonBuilder3,
+      [ComponentType3.StringSelect]: StringSelectMenuBuilder2,
+      [ComponentType3.TextInput]: TextInputBuilder2,
+      [ComponentType3.UserSelect]: UserSelectMenuBuilder2,
+      [ComponentType3.RoleSelect]: RoleSelectMenuBuilder2,
+      [ComponentType3.MentionableSelect]: MentionableSelectMenuBuilder,
+      [ComponentType3.ChannelSelect]: ChannelSelectMenuBuilder
     };
   }
 });
@@ -59189,7 +59189,7 @@ var require_ModalSubmitFields = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/ModalSubmitFields.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { ComponentType: ComponentType2 } = require_v106();
+    var { ComponentType: ComponentType3 } = require_v106();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var ModalSubmitFields = class {
       constructor(components, resolved) {
@@ -59249,7 +59249,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {string}
        */
       getTextInputValue(customId) {
-        return this._getTypedComponent(customId, [ComponentType2.TextInput]).value;
+        return this._getTypedComponent(customId, [ComponentType3.TextInput]).value;
       }
       /**
        * Gets the values of a string select component given a custom id
@@ -59258,7 +59258,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {string[]}
        */
       getStringSelectValues(customId) {
-        return this._getTypedComponent(customId, [ComponentType2.StringSelect]).values;
+        return this._getTypedComponent(customId, [ComponentType3.StringSelect]).values;
       }
       /**
        * Gets users component
@@ -59270,7 +59270,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedUsers(customId, required = false) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType2.UserSelect, ComponentType2.MentionableSelect],
+          [ComponentType3.UserSelect, ComponentType3.MentionableSelect],
           ["users"],
           required
         );
@@ -59286,7 +59286,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedRoles(customId, required = false) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType2.RoleSelect, ComponentType2.MentionableSelect],
+          [ComponentType3.RoleSelect, ComponentType3.MentionableSelect],
           ["roles"],
           required
         );
@@ -59302,7 +59302,7 @@ var require_ModalSubmitFields = __commonJS({
        * or null if none were selected and not required
        */
       getSelectedChannels(customId, required = false, channelTypes = []) {
-        const component = this._getTypedComponent(customId, [ComponentType2.ChannelSelect], ["channels"], required);
+        const component = this._getTypedComponent(customId, [ComponentType3.ChannelSelect], ["channels"], required);
         const channels = component.channels;
         if (channels && channelTypes.length > 0) {
           for (const channel of channels.values()) {
@@ -59328,7 +59328,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedMembers(customId) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType2.UserSelect, ComponentType2.MentionableSelect],
+          [ComponentType3.UserSelect, ComponentType3.MentionableSelect],
           ["members"],
           false
         );
@@ -59344,7 +59344,7 @@ var require_ModalSubmitFields = __commonJS({
       getSelectedMentionables(customId, required = false) {
         const component = this._getTypedComponent(
           customId,
-          [ComponentType2.MentionableSelect],
+          [ComponentType3.MentionableSelect],
           ["users", "members", "roles"],
           required
         );
@@ -59365,7 +59365,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {?Collection<Snowflake, Attachment>} The uploaded files, or null if none were uploaded and not required
        */
       getUploadedFiles(customId, required = false) {
-        return this._getTypedComponent(customId, [ComponentType2.FileUpload], ["attachments"], required).attachments ?? null;
+        return this._getTypedComponent(customId, [ComponentType3.FileUpload], ["attachments"], required).attachments ?? null;
       }
       /**
        * Get radio group component
@@ -59375,7 +59375,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {?string} The selected radio group option value, or null if none were selected and not required
        */
       getRadioGroup(customId, required = false) {
-        return this._getTypedComponent(customId, [ComponentType2.RadioGroup], ["value"], required).value;
+        return this._getTypedComponent(customId, [ComponentType3.RadioGroup], ["value"], required).value;
       }
       /**
        * Get checkbox group component
@@ -59384,7 +59384,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {string[]} The selected checkbox group option values
        */
       getCheckboxGroup(customId) {
-        return this._getTypedComponent(customId, [ComponentType2.CheckboxGroup]).values;
+        return this._getTypedComponent(customId, [ComponentType3.CheckboxGroup]).values;
       }
       /**
        * Get checkbox component
@@ -59393,7 +59393,7 @@ var require_ModalSubmitFields = __commonJS({
        * @returns {boolean} Whether this checkbox was selected
        */
       getCheckbox(customId) {
-        return this._getTypedComponent(customId, [ComponentType2.Checkbox]).value;
+        return this._getTypedComponent(customId, [ComponentType3.Checkbox]).value;
       }
     };
     module2.exports = ModalSubmitFields;
@@ -59661,7 +59661,7 @@ var require_UserSelectMenuInteraction = __commonJS({
 var require_InteractionCreate = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/client/actions/InteractionCreate.js"(exports2, module2) {
     "use strict";
-    var { InteractionType, ComponentType: ComponentType2, ApplicationCommandType } = require_v106();
+    var { InteractionType, ComponentType: ComponentType3, ApplicationCommandType } = require_v106();
     var Action = require_Action();
     var AutocompleteInteraction = require_AutocompleteInteraction();
     var ButtonInteraction = require_ButtonInteraction();
@@ -59708,22 +59708,22 @@ var require_InteractionCreate = __commonJS({
           case InteractionType.MessageComponent:
             if (channel && !channel.isTextBased()) return;
             switch (data.data.component_type) {
-              case ComponentType2.Button:
+              case ComponentType3.Button:
                 InteractionClass = ButtonInteraction;
                 break;
-              case ComponentType2.StringSelect:
+              case ComponentType3.StringSelect:
                 InteractionClass = StringSelectMenuInteraction;
                 break;
-              case ComponentType2.UserSelect:
+              case ComponentType3.UserSelect:
                 InteractionClass = UserSelectMenuInteraction;
                 break;
-              case ComponentType2.RoleSelect:
+              case ComponentType3.RoleSelect:
                 InteractionClass = RoleSelectMenuInteraction;
                 break;
-              case ComponentType2.MentionableSelect:
+              case ComponentType3.MentionableSelect:
                 InteractionClass = MentionableSelectMenuInteraction;
                 break;
-              case ComponentType2.ChannelSelect:
+              case ComponentType3.ChannelSelect:
                 InteractionClass = ChannelSelectMenuInteraction;
                 break;
               default:
@@ -75813,10 +75813,69 @@ function payloadOf(m, stamp = true) {
   return {
     ...m.content ? { content: m.content.slice(0, 2e3) } : {},
     embeds: (m.embeds ?? []).slice(0, 10).map((e) => embedOf(e, stamp)),
-    components: componentsOf(m.buttons, m.select ? [m.select] : []),
+    components: componentsOf(m.buttons, [...m.select ? [m.select] : [], ...m.selects ?? []]),
     // Nur ausdrücklich gewünschte Erwähnungen pingen – niemals @everyone/@here
     allowedMentions: { parse: [], users: m.mentionUsers ?? [], roles: m.mentionRoles ?? [] }
   };
+}
+function modalOf(m) {
+  const modal2 = new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45));
+  const text = (f2, withLabel) => {
+    const input = new import_discord.TextInputBuilder().setCustomId(f2.id).setStyle(f2.paragraph ? import_discord.TextInputStyle.Paragraph : import_discord.TextInputStyle.Short).setRequired(!!f2.required);
+    if (withLabel) input.setLabel(f2.label.slice(0, 45));
+    if (f2.maxLength) input.setMaxLength(f2.maxLength);
+    if (f2.minLength) input.setMinLength(Math.min(f2.minLength, f2.maxLength ?? 4e3));
+    if (f2.placeholder) input.setPlaceholder(f2.placeholder.slice(0, 100));
+    if (f2.value) input.setValue(f2.value.slice(0, f2.maxLength ?? 4e3));
+    return input;
+  };
+  const fields = m.fields.slice(0, 5);
+  if (!fields.some((f2) => f2.kind && f2.kind !== "text" || f2.description)) return modal2.addComponents(fields.map((f2) => new import_discord.ActionRowBuilder().addComponents(text(f2, true))));
+  return modal2.addLabelComponents(fields.map((f2) => {
+    const label2 = new import_discord.LabelBuilder().setLabel(f2.label.slice(0, 45));
+    if (f2.description) label2.setDescription(f2.description.slice(0, 100));
+    if (f2.kind === "select") {
+      const opts = (f2.options ?? []).slice(0, 25);
+      const max = Math.max(1, Math.min(f2.maxValues ?? 1, opts.length));
+      const sel = new import_discord.StringSelectMenuBuilder().setCustomId(f2.id).setRequired(!!f2.required).setMinValues(Math.min(f2.minValues ?? (f2.required ? 1 : 0), max)).setMaxValues(max).addOptions(opts.map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...o.default ? { default: true } : {} })));
+      if (f2.placeholder) sel.setPlaceholder(f2.placeholder.slice(0, 150));
+      return label2.setStringSelectMenuComponent(sel);
+    }
+    if (f2.kind === "file") {
+      const max = Math.max(1, Math.min(f2.maxValues ?? 1, 10));
+      return label2.setFileUploadComponent(new import_discord.FileUploadBuilder().setCustomId(f2.id).setRequired(!!f2.required).setMinValues(Math.min(f2.minValues ?? 0, max)).setMaxValues(max));
+    }
+    return label2.setTextInputComponent(text(f2, false));
+  }));
+}
+function modalValuesOf(i) {
+  const values = {};
+  const files = {};
+  for (const [id3, f2] of i.fields.fields) {
+    switch (f2.type) {
+      case import_discord.ComponentType.TextInput:
+        values[id3] = f2.value;
+        break;
+      case import_discord.ComponentType.StringSelect:
+        values[id3] = [...f2.values ?? []];
+        break;
+      case import_discord.ComponentType.Checkbox:
+        values[id3] = f2.value;
+        break;
+      case import_discord.ComponentType.CheckboxGroup:
+        values[id3] = [...f2.values];
+        break;
+      case import_discord.ComponentType.RadioGroup:
+        if (f2.value) values[id3] = f2.value;
+        break;
+      case import_discord.ComponentType.FileUpload:
+        files[id3] = [...f2.attachments.values()].slice(0, 10).map((a) => ({ name: a.name.slice(0, 200), url: a.url, size: a.size, contentType: a.contentType ?? null }));
+        break;
+      default:
+        break;
+    }
+  }
+  return { values, files };
 }
 function createTicketRuntime(client2, api2, log = console.log) {
   const channels = /* @__PURE__ */ new Set();
@@ -75922,12 +75981,19 @@ function createTicketRuntime(client2, api2, log = console.log) {
         return;
       }
       case "panel": {
-        const ch = await text(e.channelId);
-        if (!ch) throw new Error(`panel channel ${e.channelId} not found or not a text channel`);
-        const old = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
-        const p = payloadOf(e.message);
-        const msg = old ? await old.edit(p) : await ch.send(p);
-        await api2.service("POST", `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch.id, messageId: msg.id });
+        try {
+          const ch = await text(e.channelId);
+          if (!ch) throw new Error("Der Kanal wurde nicht gefunden oder ist kein Textkanal (Kanal gel\xF6scht oder Bot sieht ihn nicht).");
+          const old = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
+          const p = payloadOf(e.message);
+          const msg = old ? await old.edit(p) : await ch.send(p);
+          await api2.service("POST", `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch.id, messageId: msg.id });
+        } catch (err) {
+          const raw = err instanceof Error ? err.message : String(err);
+          const why = /Missing Permissions/i.test(raw) ? "Dem Bot fehlen im Kanal Rechte (Nachrichten senden, Links einbetten)." : /Missing Access/i.test(raw) ? "Der Bot hat keinen Zugriff auf den Kanal." : /Unknown Channel/i.test(raw) ? "Den Kanal gibt es nicht mehr." : raw;
+          await api2.service("POST", `/bot/support-tickets/panels/${e.panelId}/failed`, { error: why.slice(0, 500) }).catch(() => void 0);
+          throw err;
+        }
         return;
       }
     }
@@ -80129,7 +80195,7 @@ var PERMISSION_CATALOG = {
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
   qualifications: ["view", "decide", "delete", "manage"],
-  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings"],
+  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits"],
   /**
    * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
    * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
@@ -81111,6 +81177,7 @@ function aiCheck(answers, durationSec) {
     flagged: [...flagged].sort((a, b) => a - b)
   };
 }
+var FORM_MAX_FILE_BYTES = 8 * 1024 * 1024;
 
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
@@ -82315,6 +82382,20 @@ async function answer(c, id3, questionId, values) {
     return fail(e);
   }
 }
+var toModal = (m) => ({ modal: { id: m.id, title: m.title, fields: m.fields.map((f2) => ({
+  id: f2.id,
+  label: f2.label,
+  required: f2.required,
+  ...f2.description ? { description: f2.description } : {},
+  ...f2.placeholder ? { placeholder: f2.placeholder } : {},
+  ...f2.kind === "select" || f2.kind === "file" ? { kind: f2.kind, options: f2.options, minValues: f2.minValues, maxValues: f2.maxValues } : { kind: "text", paragraph: f2.kind === "paragraph", minLength: f2.minLength, maxLength: f2.maxLength, value: f2.value }
+})) } });
+async function startForm(c, panel, categoryId) {
+  if (!c.guildId) return errorReply("Tickets gehen nur auf einem Server.");
+  const r = await c.api.service("POST", "/bot/support-tickets/form/start", { categoryId, ...UUID.test(panel) ? { panelId: panel } : {}, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
+  if ("open" in r) return { ephemeral: true, embeds: [{ title: "\u{1F3AB} Ticket \xF6ffnen", description: "F\xFCr diese Kategorie ist kein Formular n\xF6tig.", color: COLORS.info }], buttons: [{ id: `tk:open:${panel}:${categoryId}`, label: "Ticket erstellen", emoji: "\u{1F3AB}", style: "primary" }] };
+  return toModal(r.modal);
+}
 var durationButtons = (id3, minutes) => [
   { id: `tk:addt:${id3}:0`, label: "Dauerhaft", style: minutes === 0 ? "primary" : "secondary" },
   { id: `tk:addt:${id3}:60`, label: "\u23F1\uFE0F 1 Stunde", style: minutes === 60 ? "primary" : "secondary" },
@@ -82328,7 +82409,7 @@ var addPicker = (id3, minutes) => ({
 });
 var TICKET_INTERACTION = {
   prefix: "tk",
-  opensModal: (a) => ["ans", "rename", "note", "ratec", "closem"].includes(a[0] ?? "") || a[0] === "close" && a[2] === "m",
+  opensModal: (a, values) => ["ans", "rename", "note", "ratec", "closem", "formopen", "formstep"].includes(a[0] ?? "") || a[0] === "close" && a[2] === "m" || a[0] === "open" && (a[3] === "f" || !UUID.test(a[2] ?? "") && !!values?.[0]?.endsWith(":f")),
   async run(c) {
     const [action, id3 = "", ...rest] = c.args;
     const f2 = c.fields ?? {};
@@ -82336,12 +82417,35 @@ var TICKET_INTERACTION = {
       switch (action) {
         // ---- Ticket öffnen (Panel: Button oder Dropdown) ----
         case "open": {
-          const categoryId = rest[0] ?? c.values?.[0];
+          const [categoryId, flag] = UUID.test(rest[0] ?? "") ? [rest[0], rest[1]] : (c.values?.[0] ?? "").split(":");
           if (!categoryId || !UUID.test(categoryId) || !c.guildId) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
-          const r = await c.api.service("POST", "/bot/support-tickets/open", { categoryId, panelId: UUID.test(id3) ? id3 : void 0, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [] });
+          if (flag === "f") return await startForm(c, id3, categoryId);
+          const r = await c.api.service("POST", "/bot/support-tickets/open", { categoryId, panelId: UUID.test(id3) ? id3 : void 0, guildId: c.guildId, discordId: c.discordId, discordName: c.userName ?? c.discordId, memberRoleIds: c.memberRoleIds ?? [], ...c.interactionId ? { interactionId: c.interactionId } : {} });
+          if (r.form) return { ephemeral: true, embeds: [{ title: "\u{1F4DD} Formular", description: "F\xFCr diese Kategorie gibt es ein kurzes Formular. Danach wird dein Ticket erstellt.", color: COLORS.info }], buttons: [{ id: `tk:formopen:${id3 || "cmd"}:${categoryId}`, label: "Formular ausf\xFCllen", emoji: "\u{1F4DD}", style: "primary" }] };
+          if (r.existing) return okReply(`Dein Ticket ${r.ticket?.ref ?? ""} wurde bereits erstellt.`);
           if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
           const done = await c.applyEffects(r.effects ?? []);
-          return okReply(done.channelId ? `Dein Ticket wurde erstellt: <#${done.channelId}>` : "Dein Ticket wird erstellt \u2026");
+          return okReply(done.channelId ? `Dein Ticket${r.ticket?.ref ? ` **${r.ticket.ref}**` : ""} wurde erstellt: <#${done.channelId}>` : "Dein Ticket wird erstellt \u2026");
+        }
+        // ---- Formular vor dem Erstellen (mehrstufig) ----
+        case "formopen": {
+          const categoryId = rest[0] ?? "";
+          if (!UUID.test(categoryId)) return errorReply("Bitte eine Ticket-Art ausw\xE4hlen.");
+          return await startForm(c, id3, categoryId);
+        }
+        case "formstep": {
+          const r = await c.api.service("GET", `/bot/support-tickets/form/${id3}/modal?discordId=${c.discordId}&step=${Number(rest[0]) || 0}`);
+          return toModal(r.modal);
+        }
+        case "formsub": {
+          const step = Number(rest[0]) || 0;
+          const r = await c.api.service("POST", `/bot/support-tickets/form/${id3}/submit`, { discordId: c.discordId, step, values: c.modal?.values ?? {}, files: c.modal?.files ?? {} });
+          if ("errors" in r) return { ephemeral: true, embeds: [{ title: "\u26A0\uFE0F Bitte pr\xFCfe deine Angaben", description: clip2(r.errors.map((e) => `\u2022 **${plain2(e.field)}:** ${plain2(e.message)}`).join("\n"), 3500), color: COLORS.warning }], buttons: [{ id: `tk:formstep:${id3}:${r.step}`, label: "Erneut ausf\xFCllen", emoji: "\u270F\uFE0F", style: "primary" }] };
+          if ("next" in r) return { ephemeral: true, embeds: [{ title: `\u2705 Schritt ${r.next}/${r.steps} gespeichert`, description: "Weiter geht es mit dem n\xE4chsten Teil des Formulars.", color: COLORS.success }], buttons: [{ id: `tk:formstep:${id3}:${r.next}`, label: `Weiter (Schritt ${r.next + 1}/${r.steps})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
+          if (r.existing) return okReply(`Dein Ticket **${r.ticket.ref}** wurde bereits erstellt.`);
+          if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
+          const done = await c.applyEffects(r.effects ?? []);
+          return okReply(`Dein Ticket **${r.ticket.ref}** wurde erstellt${done.channelId ? `: <#${done.channelId}>` : "."}`);
         }
         // ---- Ticket für ein anderes Mitglied öffnen (Team, Recht ticket.create): /support mitglied:… ----
         case "for": {
@@ -85286,14 +85390,7 @@ ${f2.value}`));
   })
 ];
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
-var toModal = (m) => new import_discord6.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f2) => {
-  const input = new import_discord6.TextInputBuilder().setCustomId(f2.id).setLabel(f2.label.slice(0, 45)).setStyle(f2.paragraph ? import_discord6.TextInputStyle.Paragraph : import_discord6.TextInputStyle.Short).setRequired(!!f2.required);
-  if (f2.maxLength) input.setMaxLength(f2.maxLength);
-  if (f2.minLength) input.setMinLength(Math.min(f2.minLength, f2.maxLength ?? 4e3));
-  if (f2.placeholder) input.setPlaceholder(f2.placeholder.slice(0, 100));
-  if (f2.value) input.setValue(f2.value.slice(0, f2.maxLength ?? 4e3));
-  return new import_discord6.ActionRowBuilder().addComponents(input);
-}));
+var toModal2 = (m) => modalOf(m);
 var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } };
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
@@ -85580,6 +85677,7 @@ function baseCtx(i) {
   const perms = i.memberPermissions;
   return {
     discordId: i.user.id,
+    interactionId: i.id,
     api,
     platform,
     userName: i.user.username,
@@ -85654,7 +85752,7 @@ async function handleCommand(i) {
   }
   if (def.opensModal) {
     const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
-    if (reply2.modal) await i.showModal(toModal(reply2.modal));
+    if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
       await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
@@ -85686,9 +85784,9 @@ async function resetSelect(i) {
 async function handleComponent(i) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
-  if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
+  if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : void 0)) {
     const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
-    if (reply2.modal) await i.showModal(toModal(reply2.modal));
+    if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
       await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
@@ -85706,8 +85804,9 @@ async function handleComponent(i) {
   }
   await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
+  const modal2 = i.isModalSubmit() ? modalValuesOf(i) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
-  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
+  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal: modal2 }));
   await i.editReply(replyPayload(reply));
   const source = i.isModalSubmit() ? i.isFromMessage() ? i.message : null : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error("could not update the application message:", e instanceof Error ? e.message : e));

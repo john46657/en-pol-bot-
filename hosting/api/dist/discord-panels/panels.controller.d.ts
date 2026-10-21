@@ -235,8 +235,8 @@ export declare class PanelsController {
         channelId: string | null;
         messageId: string | null;
         panelId: string;
-        userName: string;
         values: import("@prisma/client/runtime/library").JsonValue;
+        userName: string;
     }[]>;
     removeSub(a: Actor, id: string): Promise<void>;
 }
@@ -249,14 +249,14 @@ declare const submit: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     guildId: string | null;
     discordId: string;
-    userName: string;
     values: Record<string, string>;
+    userName: string;
     avatar?: string | undefined;
 }, {
     guildId: string | null;
     discordId: string;
-    userName: string;
     values: Record<string, string>;
+    userName: string;
     avatar?: string | undefined;
 }>;
 export declare class BotPanelsController {

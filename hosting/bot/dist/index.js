@@ -103,18 +103,7 @@ const toBox = (list, buttons, ping) => [
 ];
 /** Auswahlmenüs als eigene Reihen über den Buttons. */
 const toComponents = (buttons, select, selects = []) => (0, discord_tickets_1.componentsOf)(buttons, [...(select ? [select] : []), ...selects]);
-const toModal = (m) => new discord_js_1.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45)).addComponents(m.fields.map((f) => {
-    const input = new discord_js_1.TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(f.paragraph ? discord_js_1.TextInputStyle.Paragraph : discord_js_1.TextInputStyle.Short).setRequired(!!f.required);
-    if (f.maxLength)
-        input.setMaxLength(f.maxLength);
-    if (f.minLength)
-        input.setMinLength(Math.min(f.minLength, f.maxLength ?? 4000));
-    if (f.placeholder)
-        input.setPlaceholder(f.placeholder.slice(0, 100));
-    if (f.value)
-        input.setValue(f.value.slice(0, f.maxLength ?? 4000));
-    return new discord_js_1.ActionRowBuilder().addComponents(input);
-}));
+const toModal = (m) => (0, discord_tickets_1.modalOf)(m);
 const replyPayload = (r) => (r.embeds?.[0]?.box
     // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
     ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: discord_js_1.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } }
@@ -427,7 +416,7 @@ async function markDecided(message, d) {
 function baseCtx(i) {
     const perms = i.memberPermissions;
     return {
-        discordId: i.user.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
+        discordId: i.user.id, interactionId: i.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
         guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
         isGuildAdmin: !!perms && (perms.has(discord_js_1.PermissionFlagsBits.ManageGuild) || perms.has(discord_js_1.PermissionFlagsBits.Administrator)),
         config: () => api.service('GET', '/bot/config'),
@@ -549,7 +538,7 @@ async function handleComponent(i) {
     const hit = (0, features_1.interactionFor)(i.customId);
     if (!hit)
         return;
-    if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args)) {
+    if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : undefined)) {
         // Formulare müssen die erste Antwort sein – kein deferReply vorher.
         const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
         if (reply.modal)
@@ -575,8 +564,9 @@ async function handleComponent(i) {
     }
     await i.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
     const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
+    const modal = i.isModalSubmit() ? (0, discord_tickets_1.modalValuesOf)(i) : undefined;
     const values = i.isAnySelectMenu() ? i.values : undefined;
-    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values }));
+    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal }));
     await i.editReply(replyPayload(reply));
     const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
     if (reply.decided && source)

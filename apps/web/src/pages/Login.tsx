@@ -58,7 +58,7 @@ export function Login() {
           : <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{DISCORD_ERRORS[discordError] ?? DISCORD_ERRORS.failed}</p>)}
         {providers.data?.discord && (
           <>
-            <a href="/api/v1/auth/discord" className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-2.5 font-medium text-white hover:bg-[#4752c4]"><DiscordIcon />Mit Discord anmelden</a>
+            <a href="/api/v1/auth/discord" onClick={() => { const from = (loc.state as { from?: string } | null)?.from; try { if (from) sessionStorage.setItem('login.next', from); } catch { /* privat-Modus */ } }} className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-2.5 font-medium text-white hover:bg-[#4752c4]"><DiscordIcon />Mit Discord anmelden</a>
             {passwordForm && <div className="flex items-center gap-2 text-xs text-muted"><span className="h-px flex-1 bg-line" />oder mit Benutzername (Notfall-Zugang)<span className="h-px flex-1 bg-line" /></div>}
           </>
         )}

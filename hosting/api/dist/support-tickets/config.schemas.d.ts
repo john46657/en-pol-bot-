@@ -1,74 +1,173 @@
 import { z } from 'zod';
-export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
+export declare const questionSchema: z.ZodEffects<z.ZodEffects<z.ZodEffects<z.ZodEffects<z.ZodEffects<z.ZodObject<{
     id: z.ZodString;
     label: z.ZodString;
-    type: z.ZodEnum<["SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI", ...("SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI")[]]>;
+    type: z.ZodEnum<["SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE", ...("SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE")[]]>;
     required: z.ZodBoolean;
     options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     placeholder: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     minLength: z.ZodOptional<z.ZodNumber>;
     maxLength: z.ZodOptional<z.ZodNumber>;
+    min: z.ZodOptional<z.ZodNumber>;
+    max: z.ZodOptional<z.ZodNumber>;
+    enabled: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     id: string;
-    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
     label: string;
     options: string[];
     required: boolean;
     description?: string | undefined;
+    enabled?: boolean | undefined;
     placeholder?: string | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }, {
     id: string;
-    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
     label: string;
     required: boolean;
     description?: string | undefined;
+    enabled?: boolean | undefined;
     placeholder?: string | undefined;
     options?: string[] | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }>, {
     id: string;
-    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
     label: string;
     options: string[];
     required: boolean;
     description?: string | undefined;
+    enabled?: boolean | undefined;
     placeholder?: string | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }, {
     id: string;
-    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
     label: string;
     required: boolean;
     description?: string | undefined;
+    enabled?: boolean | undefined;
     placeholder?: string | undefined;
     options?: string[] | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }>, {
     id: string;
-    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
     label: string;
     options: string[];
     required: boolean;
     description?: string | undefined;
+    enabled?: boolean | undefined;
     placeholder?: string | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }, {
     id: string;
-    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
     label: string;
     required: boolean;
     description?: string | undefined;
+    enabled?: boolean | undefined;
     placeholder?: string | undefined;
     options?: string[] | undefined;
     minLength?: number | undefined;
     maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+}>, {
+    id: string;
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+    label: string;
+    options: string[];
+    required: boolean;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
+    placeholder?: string | undefined;
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+}, {
+    id: string;
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+    label: string;
+    required: boolean;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
+    placeholder?: string | undefined;
+    options?: string[] | undefined;
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+}>, {
+    id: string;
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+    label: string;
+    options: string[];
+    required: boolean;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
+    placeholder?: string | undefined;
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+}, {
+    id: string;
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+    label: string;
+    required: boolean;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
+    placeholder?: string | undefined;
+    options?: string[] | undefined;
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+}>, {
+    id: string;
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+    label: string;
+    options: string[];
+    required: boolean;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
+    placeholder?: string | undefined;
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+}, {
+    id: string;
+    type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+    label: string;
+    required: boolean;
+    description?: string | undefined;
+    enabled?: boolean | undefined;
+    placeholder?: string | undefined;
+    options?: string[] | undefined;
+    minLength?: number | undefined;
+    maxLength?: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }>;
 export declare const buttonSchema: z.ZodObject<{
     action: z.ZodEnum<[string, ...string[]]>;
@@ -109,96 +208,201 @@ export declare const categorySchema: z.ZodObject<{
     maxOpen: z.ZodDefault<z.ZodNumber>;
     cooldownMinutes: z.ZodDefault<z.ZodNumber>;
     defaultPriorityId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    questions: z.ZodEffects<z.ZodDefault<z.ZodArray<z.ZodEffects<z.ZodEffects<z.ZodObject<{
+    questions: z.ZodEffects<z.ZodDefault<z.ZodArray<z.ZodEffects<z.ZodEffects<z.ZodEffects<z.ZodEffects<z.ZodEffects<z.ZodObject<{
         id: z.ZodString;
         label: z.ZodString;
-        type: z.ZodEnum<["SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI", ...("SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI")[]]>;
+        type: z.ZodEnum<["SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE", ...("SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE")[]]>;
         required: z.ZodBoolean;
         options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         placeholder: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
         minLength: z.ZodOptional<z.ZodNumber>;
         maxLength: z.ZodOptional<z.ZodNumber>;
+        min: z.ZodOptional<z.ZodNumber>;
+        max: z.ZodOptional<z.ZodNumber>;
+        enabled: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         options: string[];
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }>, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         options: string[];
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }>, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         options: string[];
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
+    }>, {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+        label: string;
+        options: string[];
+        required: boolean;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        placeholder?: string | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
+    }, {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+        label: string;
+        required: boolean;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        placeholder?: string | undefined;
+        options?: string[] | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
+    }>, {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+        label: string;
+        options: string[];
+        required: boolean;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        placeholder?: string | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
+    }, {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+        label: string;
+        required: boolean;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        placeholder?: string | undefined;
+        options?: string[] | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
+    }>, {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+        label: string;
+        options: string[];
+        required: boolean;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        placeholder?: string | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
+    }, {
+        id: string;
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
+        label: string;
+        required: boolean;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        placeholder?: string | undefined;
+        options?: string[] | undefined;
+        minLength?: number | undefined;
+        maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }>, "many">>, {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         options: string[];
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }[], {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }[] | undefined>;
     welcomeTitle: z.ZodDefault<z.ZodString>;
     welcomeMessage: z.ZodDefault<z.ZodString>;
@@ -252,6 +456,10 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes: z.ZodDefault<z.ZodNumber>;
     staffAlertMinutes: z.ZodDefault<z.ZodNumber>;
     closeRequestCloses: z.ZodDefault<z.ZodBoolean>;
+    departmentId: z.ZodEffects<z.ZodOptional<z.ZodNullable<z.ZodString>>, string | null, string | null | undefined>;
+    confidential: z.ZodDefault<z.ZodBoolean>;
+    formMode: z.ZodDefault<z.ZodEnum<["CHANNEL", "MODAL"]>>;
+    escalateUnassignedMinutes: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     color: number;
     description: string;
@@ -261,22 +469,25 @@ export declare const categorySchema: z.ZodObject<{
     position: number;
     questions: {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         options: string[];
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }[];
     emoji: string | null;
+    staffRoleIds: string[];
+    accessRoleNames: string[];
     buttonStyle: "success" | "danger" | "secondary" | "primary";
     discordCategoryId: string | null;
     channelNameFormat: string;
-    staffRoleIds: string[];
     extraRoleIds: string[];
-    accessRoleNames: string[];
     requiredRoleIds: string[];
     allowedUserIds: string[];
     maxOpen: number;
@@ -320,6 +531,10 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes: number;
     staffAlertMinutes: number;
     closeRequestCloses: boolean;
+    departmentId: string | null;
+    confidential: boolean;
+    formMode: "CHANNEL" | "MODAL";
+    escalateUnassignedMinutes: number;
     defaultPriorityId?: string | null | undefined;
     escalationPriorityId?: string | null | undefined;
 }, {
@@ -331,22 +546,25 @@ export declare const categorySchema: z.ZodObject<{
     position?: number | undefined;
     questions?: {
         id: string;
-        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI";
+        type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
         label: string;
         required: boolean;
         description?: string | undefined;
+        enabled?: boolean | undefined;
         placeholder?: string | undefined;
         options?: string[] | undefined;
         minLength?: number | undefined;
         maxLength?: number | undefined;
+        min?: number | undefined;
+        max?: number | undefined;
     }[] | undefined;
     emoji?: string | null | undefined;
+    staffRoleIds?: string[] | undefined;
+    accessRoleNames?: string[] | undefined;
     buttonStyle?: "success" | "danger" | "secondary" | "primary" | undefined;
     discordCategoryId?: string | null | undefined;
     channelNameFormat?: string | undefined;
-    staffRoleIds?: string[] | undefined;
     extraRoleIds?: string[] | undefined;
-    accessRoleNames?: string[] | undefined;
     requiredRoleIds?: string[] | undefined;
     allowedUserIds?: string[] | undefined;
     maxOpen?: number | undefined;
@@ -392,9 +610,13 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes?: number | undefined;
     staffAlertMinutes?: number | undefined;
     closeRequestCloses?: boolean | undefined;
+    departmentId?: string | null | undefined;
+    confidential?: boolean | undefined;
+    formMode?: "CHANNEL" | "MODAL" | undefined;
+    escalateUnassignedMinutes?: number | undefined;
 }>;
 export type CategoryInput = z.infer<typeof categorySchema>;
-export declare const panelSchema: z.ZodObject<{
+export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     guildId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">, z.ZodNull]>>, string | null, string | null | undefined>;
     name: z.ZodString;
     title: z.ZodDefault<z.ZodString>;
@@ -457,9 +679,51 @@ export declare const panelSchema: z.ZodObject<{
     categoryIds?: string[] | undefined;
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
+}>, {
+    color: number;
+    title: string;
+    description: string;
+    guildId: string | null;
+    name: string;
+    position: number;
+    channelId: string | null;
+    emoji: string | null;
+    thumbnailUrl: string | null;
+    imageUrl: string | null;
+    bannerUrl: string | null;
+    footer: string | null;
+    footerIconUrl: string | null;
+    authorName: string | null;
+    authorIconUrl: string | null;
+    style: "BUTTONS" | "DROPDOWN";
+    placeholder: string;
+    categoryIds: string[];
+    allowedRoleIds: string[];
+    showLoad: boolean;
+}, {
+    name: string;
+    color?: number | undefined;
+    title?: string | undefined;
+    description?: string | undefined;
+    guildId?: string | null | undefined;
+    position?: number | undefined;
+    channelId?: string | null | undefined;
+    emoji?: string | null | undefined;
+    thumbnailUrl?: string | null | undefined;
+    imageUrl?: string | null | undefined;
+    bannerUrl?: string | null | undefined;
+    footer?: string | null | undefined;
+    footerIconUrl?: string | null | undefined;
+    authorName?: string | null | undefined;
+    authorIconUrl?: string | null | undefined;
+    style?: "BUTTONS" | "DROPDOWN" | undefined;
+    placeholder?: string | undefined;
+    categoryIds?: string[] | undefined;
+    allowedRoleIds?: string[] | undefined;
+    showLoad?: boolean | undefined;
 }>;
 export type PanelInput = z.infer<typeof panelSchema>;
-export declare const statusSchema: z.ZodObject<{
+export declare const statusSchema: z.ZodEffects<z.ZodObject<{
     name: z.ZodString;
     emoji: z.ZodDefault<z.ZodString>;
     color: z.ZodDefault<z.ZodNumber>;
@@ -469,11 +733,14 @@ export declare const statusSchema: z.ZodObject<{
     isClaimed: z.ZodDefault<z.ZodBoolean>;
     isEscalation: z.ZodDefault<z.ZodBoolean>;
     isClose: z.ZodDefault<z.ZodBoolean>;
+    /** feste Bedeutung im Lebenszyklus (je Bedeutung höchstens ein Status) */
+    key: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodEnum<["OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED", ...("OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED")[]]>, z.ZodNull]>>, "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null, "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined>;
 }, "strip", z.ZodTypeAny, {
     color: number;
     name: string;
     kind: "OPEN" | "CLOSED" | "ARCHIVED";
     position: number;
+    key: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null;
     emoji: string;
     isDefault: boolean;
     isClaimed: boolean;
@@ -484,6 +751,29 @@ export declare const statusSchema: z.ZodObject<{
     color?: number | undefined;
     kind?: "OPEN" | "CLOSED" | "ARCHIVED" | undefined;
     position?: number | undefined;
+    key?: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined;
+    emoji?: string | undefined;
+    isDefault?: boolean | undefined;
+    isClaimed?: boolean | undefined;
+    isEscalation?: boolean | undefined;
+    isClose?: boolean | undefined;
+}>, {
+    color: number;
+    name: string;
+    kind: "OPEN" | "CLOSED" | "ARCHIVED";
+    position: number;
+    key: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null;
+    emoji: string;
+    isDefault: boolean;
+    isClaimed: boolean;
+    isEscalation: boolean;
+    isClose: boolean;
+}, {
+    name: string;
+    color?: number | undefined;
+    kind?: "OPEN" | "CLOSED" | "ARCHIVED" | undefined;
+    position?: number | undefined;
+    key?: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined;
     emoji?: string | undefined;
     isDefault?: boolean | undefined;
     isClaimed?: boolean | undefined;
@@ -498,6 +788,9 @@ export declare const prioritySchema: z.ZodObject<{
     isDefault: z.ZodDefault<z.ZodBoolean>;
     allowedRoleNames: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     notifyRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** SLA-Zielzeiten (Minuten); leer = keine Frist */
+    firstResponseMinutes: z.ZodEffects<z.ZodOptional<z.ZodNullable<z.ZodNumber>>, number | null, number | null | undefined>;
+    resolutionMinutes: z.ZodEffects<z.ZodOptional<z.ZodNullable<z.ZodNumber>>, number | null, number | null | undefined>;
 }, "strip", z.ZodTypeAny, {
     color: number;
     name: string;
@@ -506,6 +799,8 @@ export declare const prioritySchema: z.ZodObject<{
     isDefault: boolean;
     allowedRoleNames: string[];
     notifyRoleIds: string[];
+    firstResponseMinutes: number | null;
+    resolutionMinutes: number | null;
 }, {
     name: string;
     color?: number | undefined;
@@ -514,7 +809,313 @@ export declare const prioritySchema: z.ZodObject<{
     isDefault?: boolean | undefined;
     allowedRoleNames?: string[] | undefined;
     notifyRoleIds?: string[] | undefined;
+    firstResponseMinutes?: number | null | undefined;
+    resolutionMinutes?: number | null | undefined;
 }>;
+export declare const departmentSchema: z.ZodObject<{
+    name: z.ZodString;
+    description: z.ZodDefault<z.ZodString>;
+    emoji: z.ZodEffects<z.ZodOptional<z.ZodNullable<z.ZodString>>, string | null, string | null | undefined>;
+    staffRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    leadRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    accessRoleNames: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    notifyChannelId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">, z.ZodNull]>>, string | null, string | null | undefined>;
+    active: z.ZodDefault<z.ZodBoolean>;
+    position: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    description: string;
+    active: boolean;
+    name: string;
+    position: number;
+    emoji: string | null;
+    staffRoleIds: string[];
+    leadRoleIds: string[];
+    accessRoleNames: string[];
+    notifyChannelId: string | null;
+}, {
+    name: string;
+    description?: string | undefined;
+    active?: boolean | undefined;
+    position?: number | undefined;
+    emoji?: string | null | undefined;
+    staffRoleIds?: string[] | undefined;
+    leadRoleIds?: string[] | undefined;
+    accessRoleNames?: string[] | undefined;
+    notifyChannelId?: string | null | undefined;
+}>;
+export type DepartmentInput = z.infer<typeof departmentSchema>;
+/** Ereignisse mit einstellbaren Benachrichtigungen. */
+export declare const NOTIFY_EVENTS: {
+    readonly created: "Neues Ticket";
+    readonly claimed: "Ticket übernommen";
+    readonly assigned: "Zuständigkeit geändert";
+    readonly user_message: "Neue Nachricht des Nutzers";
+    readonly info_requested: "Rückfrage an den Nutzer";
+    readonly priority: "Priorität geändert";
+    readonly escalated: "Eskalation (auch SLA / unzugewiesen)";
+    readonly closed: "Ticket geschlossen";
+    readonly reopened: "Ticket wieder geöffnet";
+    readonly transcript_ready: "Transkript erstellt";
+    readonly transcript_failed: "Transkript fehlgeschlagen";
+};
+export type NotifyEvent = keyof typeof NOTIFY_EVENTS;
+export declare const notifySchema: z.ZodDefault<z.ZodObject<{
+    created: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    claimed: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    assigned: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    user_message: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    info_requested: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    priority: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    escalated: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    closed: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    reopened: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    transcript_ready: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+    transcript_failed: z.ZodDefault<z.ZodObject<{
+        channel: z.ZodDefault<z.ZodBoolean>;
+        dm: z.ZodDefault<z.ZodBoolean>;
+        dashboard: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    }, {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    priority: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    created: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    closed: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    claimed: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    assigned: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    user_message: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    info_requested: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    escalated: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    reopened: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    transcript_ready: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+    transcript_failed: {
+        channel: boolean;
+        dashboard: boolean;
+        dm: boolean;
+    };
+}, {
+    priority?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    created?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    closed?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    claimed?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    assigned?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    user_message?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    info_requested?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    escalated?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    reopened?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    transcript_ready?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+    transcript_failed?: {
+        channel?: boolean | undefined;
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+    } | undefined;
+}>>;
 export declare const reasonSchema: z.ZodObject<{
     text: z.ZodString;
     position: z.ZodDefault<z.ZodNumber>;
@@ -543,7 +1144,338 @@ export declare const settingsSchema: z.ZodObject<{
     /** Ersteller verlässt den Discord-Server: offene Tickets schließen (braucht den Server Members Intent). */
     memberLeaveAction: z.ZodDefault<z.ZodEnum<["NONE", "CLOSE"]>>;
     memberLeaveReason: z.ZodDefault<z.ZodString>;
+    /** Präfix der dauerhaften Ticket-ID (EMD-000123) */
+    refPrefix: z.ZodDefault<z.ZodString>;
+    /** offene Tickets je Nutzer über alle Kategorien (0 = unbegrenzt); Recht ticket.bypass_limits hebt es auf */
+    maxOpenPerUser: z.ZodDefault<z.ZodNumber>;
+    /** Discord-Server, auf dem Tickets geöffnet werden dürfen (leer = keine Einschränkung) */
+    guildId: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">, z.ZodNull]>>, string | null, string | null | undefined>;
+    /** vertrauliche Tickets ohne eingerichtete Abteilung: nur diese Rollen (z. B. Leitung) – nie die allgemeine Staff-Rolle */
+    confidentialFallbackRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Leitung für Eskalationen, wenn die Abteilung keine eigene hat (bekommt dadurch keinen Zugriff) */
+    leadRoleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Erinnerungen bei SLA-Überschreitung wiederholen (Minuten, 0 = nur einmal) und Eskalation an die Leitung nach … Minuten Überschreitung (0 = sofort) */
+    slaReminderMinutes: z.ZodDefault<z.ZodNumber>;
+    slaEscalateAfterMinutes: z.ZodDefault<z.ZodNumber>;
+    /** Benachrichtigung „neue Nachricht des Nutzers“ höchstens alle … Minuten je Ticket */
+    userMessageNotifyMinutes: z.ZodDefault<z.ZodNumber>;
+    notifications: z.ZodDefault<z.ZodObject<{
+        created: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        claimed: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        assigned: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        user_message: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        info_requested: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        priority: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        escalated: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        closed: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        reopened: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        transcript_ready: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+        transcript_failed: z.ZodDefault<z.ZodObject<{
+            channel: z.ZodDefault<z.ZodBoolean>;
+            dm: z.ZodDefault<z.ZodBoolean>;
+            dashboard: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        }, {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        priority: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        created: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        closed: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        claimed: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        assigned: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        user_message: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        info_requested: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        escalated: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        reopened: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        transcript_ready: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        transcript_failed: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+    }, {
+        priority?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        created?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        closed?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        claimed?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        assigned?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        user_message?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        info_requested?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        escalated?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        reopened?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        transcript_ready?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        transcript_failed?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
+    guildId: string | null;
+    notifications: {
+        priority: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        created: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        closed: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        claimed: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        assigned: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        user_message: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        info_requested: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        escalated: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        reopened: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        transcript_ready: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+        transcript_failed: {
+            channel: boolean;
+            dashboard: boolean;
+            dm: boolean;
+        };
+    };
+    leadRoleIds: string[];
     transcriptChannelId: string | null;
     logChannelId: string | null;
     closedTitle: string;
@@ -558,7 +1490,72 @@ export declare const settingsSchema: z.ZodObject<{
     ratingPublicFields: ("category" | "duration" | "comment" | "staff" | "creator")[];
     memberLeaveAction: "NONE" | "CLOSE";
     memberLeaveReason: string;
+    refPrefix: string;
+    maxOpenPerUser: number;
+    confidentialFallbackRoleIds: string[];
+    slaReminderMinutes: number;
+    slaEscalateAfterMinutes: number;
+    userMessageNotifyMinutes: number;
 }, {
+    guildId?: string | null | undefined;
+    notifications?: {
+        priority?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        created?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        closed?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        claimed?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        assigned?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        user_message?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        info_requested?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        escalated?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        reopened?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        transcript_ready?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+        transcript_failed?: {
+            channel?: boolean | undefined;
+            dashboard?: boolean | undefined;
+            dm?: boolean | undefined;
+        } | undefined;
+    } | undefined;
+    leadRoleIds?: string[] | undefined;
     transcriptChannelId?: string | null | undefined;
     logChannelId?: string | null | undefined;
     closedTitle?: string | undefined;
@@ -573,6 +1570,12 @@ export declare const settingsSchema: z.ZodObject<{
     ratingPublicFields?: ("category" | "duration" | "comment" | "staff" | "creator")[] | undefined;
     memberLeaveAction?: "NONE" | "CLOSE" | undefined;
     memberLeaveReason?: string | undefined;
+    refPrefix?: string | undefined;
+    maxOpenPerUser?: number | undefined;
+    confidentialFallbackRoleIds?: string[] | undefined;
+    slaReminderMinutes?: number | undefined;
+    slaEscalateAfterMinutes?: number | undefined;
+    userMessageNotifyMinutes?: number | undefined;
 }>;
 export type TicketSettings = z.infer<typeof settingsSchema>;
 export declare const DEFAULT_SETTINGS: TicketSettings;

@@ -19,6 +19,7 @@ const Applications = lazy(() => import('./pages/Applications').then((m) => ({ de
 const Qualifications = lazy(() => import('./pages/Qualifications').then((m) => ({ default: m.Qualifications })));
 const SupportTickets = lazy(() => import('./pages/tickets/SupportTickets').then((m) => ({ default: m.SupportTickets })));
 const TicketDetail = lazy(() => import('./pages/tickets/TicketDetail').then((m) => ({ default: m.TicketDetail })));
+const TranscriptView = lazy(() => import('./pages/tickets/TranscriptView').then((m) => ({ default: m.TranscriptView })));
 const Academy = lazy(() => import('./pages/Academy').then((m) => ({ default: m.Academy })));
 import { PersonDetail } from './pages/PersonDetail';
 import { ReportDetail } from './pages/ReportDetail';
@@ -117,11 +118,23 @@ function NotFound() {
   );
 }
 
+/** Gemerktes Ziel nach dem Discord-Login (nur interne Pfade); gelöscht, sobald es erreicht ist. */
+function loginNext(here: string) {
+  try {
+    const v = sessionStorage.getItem('login.next');
+    if (!v || v === here || !/^\/(?!\/)[\w\-./%~]*$/.test(v)) { if (v) sessionStorage.removeItem('login.next'); return null; }
+    return v;
+  } catch { return null; }
+}
+
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
   const { user, loading, can } = useAuth();
   const loc = useLocation();
   if (loading) return <div className="p-6"><SkeletonRows /></div>;
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
+  // nach „Mit Discord anmelden“: zur ursprünglich aufgerufenen Seite zurück (z. B. Transkript-Link aus Discord)
+  const next = loginNext(loc.pathname);
+  if (next) return <Navigate to={next} replace />;
   if ((perm && !can(perm)) || (area && !can(area))) return <Forbidden />;
   return <ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<SkeletonRows />}>{children}</Suspense></ErrorBoundary>;
 }
@@ -139,6 +152,8 @@ export function App() {
         <Route path="/bewerbung/:token" element={<WebApply />} />
         <Route path="/datenschutz" element={<Privacy />} />
         <Route path="/nutzungsbedingungen" element={<Terms />} />
+        {/* Online-Transkript: eigene Seite (auch für Ticket-Ersteller ohne Team-Rechte); Zugriff prüft das System bei jedem Abruf */}
+        <Route path="/transcript/:ref" element={<Guard><TranscriptView /></Guard>} />
         {/* Polizei-MDT: eigene Vollbild-Oberfläche, gleiche Anmeldung wie das Dashboard */}
         <Route path="mdt" element={<Guard perm="dashboard.view"><MdtShell /></Guard>}>
           <Route index element={<Mdt />} />

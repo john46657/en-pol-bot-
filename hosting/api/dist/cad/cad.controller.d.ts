@@ -207,20 +207,20 @@ declare const linkBody: z.ZodObject<{
     targetGuildId: string;
     active?: boolean | undefined;
     roleIds?: string[] | undefined;
+    notify?: boolean | undefined;
     sendTypes?: ("incidents" | "calls" | "announcements" | "radio" | "incident_status" | "unit_requests")[] | undefined;
     allowActions?: ("dispatch" | "radio" | "status_report" | "view_incidents")[] | undefined;
     channels?: Partial<Record<"incidents" | "calls" | "announcements" | "radio" | "incident_status" | "unit_requests", string[]>> | undefined;
-    notify?: boolean | undefined;
 }, {
     name: string;
     sourceGuildId: string;
     targetGuildId: string;
     active?: boolean | undefined;
     roleIds?: string[] | undefined;
+    notify?: boolean | undefined;
     sendTypes?: ("incidents" | "calls" | "announcements" | "radio" | "incident_status" | "unit_requests")[] | undefined;
     allowActions?: ("dispatch" | "radio" | "status_report" | "view_incidents")[] | undefined;
     channels?: Partial<Record<"incidents" | "calls" | "announcements" | "radio" | "incident_status" | "unit_requests", string[]>> | undefined;
-    notify?: boolean | undefined;
 }>;
 declare const listQ: z.ZodObject<{
     active: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
@@ -1626,12 +1626,12 @@ export declare class CadController {
         active: boolean;
         name: string;
         roleIds: string[];
+        notify: boolean;
         sourceGuildId: string;
         targetGuildId: string;
         sendTypes: string[];
         allowActions: string[];
         channels: import("@prisma/client/runtime/library").JsonValue | null;
-        notify: boolean;
     }[]>;
     createLink(a: CadActor, b: z.infer<typeof linkBody>): Promise<{
         id: string;
@@ -1640,12 +1640,12 @@ export declare class CadController {
         active: boolean;
         name: string;
         roleIds: string[];
+        notify: boolean;
         sourceGuildId: string;
         targetGuildId: string;
         sendTypes: string[];
         allowActions: string[];
         channels: import("@prisma/client/runtime/library").JsonValue | null;
-        notify: boolean;
     }>;
     updateLink(a: CadActor, id: string, b: Partial<z.infer<typeof linkBody>>): Promise<{
         id: string;
@@ -1654,12 +1654,12 @@ export declare class CadController {
         active: boolean;
         name: string;
         roleIds: string[];
+        notify: boolean;
         sourceGuildId: string;
         targetGuildId: string;
         sendTypes: string[];
         allowActions: string[];
         channels: import("@prisma/client/runtime/library").JsonValue | null;
-        notify: boolean;
     }>;
     deleteLink(a: CadActor, id: string): Promise<void>;
     logs(): Promise<{

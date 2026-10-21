@@ -6,29 +6,30 @@ import { useAuth } from '../../lib/auth';
 import { DataTable, useDebounced, useTablePageSize } from '../../components/DataTable';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
-import { duration, errText, hex, label, useTicketConfig, type RatingSummary, type TicketRow, type TicketStats } from '../../lib/tickets';
+import { duration, errText, hex, label, TRANSCRIPT_STATUS, useTicketConfig, type RatingSummary, type TicketOverview, type TicketRow, type TicketStats, type TranscriptVersion } from '../../lib/tickets';
 const TicketSetup = lazy(() => import('./TicketSetup').then((m) => ({ default: m.TicketSetup })));
 
-const TAB = { list: 'Tickets', transcripts: 'Transkripte', stats: 'Statistik', panels: 'Panels', categories: 'Kategorien', settings: 'Allgemein' } as const;
+const TAB = { list: 'Tickets', transcripts: 'Transkripte', stats: 'Statistik', audit: 'Audit', panels: 'Panels', categories: 'Kategorien & Formulare', departments: 'Abteilungen', lifecycle: 'Status & SLA', settings: 'Allgemein' } as const;
 type TabKey = keyof typeof TAB;
-const SETUP: TabKey[] = ['panels', 'categories', 'settings'];
+const SETUP: TabKey[] = ['panels', 'categories', 'lifecycle', 'settings'];
 
 /** Support-Tickets: Übersicht, Transkripte, Statistik und die komplette Einrichtung des Ticket-Systems. */
 export function SupportTickets() {
   const { can } = useAuth();
   const [search, setSearch] = useSearchParams();
-  const keys = (Object.keys(TAB) as TabKey[]).filter((k) => (k === 'transcripts' ? can('ticket.transcript') : SETUP.includes(k) ? can('ticket.settings') : true));
+  const keys = (Object.keys(TAB) as TabKey[]).filter((k) => (k === 'transcripts' ? can('ticket.transcript') : k === 'audit' ? can('ticket.audit') : k === 'departments' ? can('ticket.departments') : SETUP.includes(k) ? can('ticket.settings') : true));
   const tab = (keys.find((k) => k === search.get('tab')) ?? 'list') as TabKey;
   const go = (k: TabKey) => setSearch(k === 'list' ? {} : { tab: k });
   return (
     <>
-      <PageHeader title="Support-Tickets" subtitle="Discord-Ticketsystem – hier wird alles eingerichtet (Panels, Kategorien, Fragen, Buttons, Texte, Rollen)." />
+      <PageHeader title="Ticket-Center" subtitle="Discord-Ticketsystem – Tickets bearbeiten, Transkripte, Statistik und die komplette Einrichtung (Panels, Kategorien, Formulare, Abteilungen, SLA)." />
       <Tabs tabs={keys.map((k) => TAB[k])} active={TAB[tab]} onChange={(t) => go(keys.find((k) => TAB[k] === t)!)} />
       <div className="mt-4">
         {tab === 'list' && <TicketList />}
         {tab === 'transcripts' && <Transcripts />}
         {tab === 'stats' && <Statistics />}
-        {SETUP.includes(tab) && <TicketSetup section={tab as 'panels' | 'categories' | 'settings'} />}
+        {tab === 'audit' && <AuditLog />}
+        {(SETUP.includes(tab) || tab === 'departments') && <TicketSetup section={tab as 'panels' | 'categories' | 'settings' | 'departments' | 'lifecycle'} />}
       </div>
     </>
   );
@@ -47,22 +48,39 @@ function TicketList() {
   const guilds = useGuilds();
   const [server] = useServer();
   const multi = (guilds.data?.length ?? 0) > 1;
-  const [f, setF] = useState({ kind: 'open', statusId: '', priorityId: '', categoryId: '', claimer: '', creator: '', from: '', to: '', guildId: '' });
+  const [f, setF] = useState({ kind: 'open', queue: '', statusId: '', priorityId: '', categoryId: '', departmentId: '', claimer: '', creator: '', from: '', to: '', closedFrom: '', closedTo: '', guildId: '' });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useTablePageSize();
   const [open, setOpen] = useState(false);
   const dq = useDebounced(q), dCreator = useDebounced(f.creator);
-  const query = { ...f, guildId: server || f.guildId, creator: dCreator, q: dq, page, pageSize, from: f.from ? new Date(f.from).toISOString() : undefined, to: f.to ? new Date(`${f.to}T23:59:59`).toISOString() : undefined };
+  const day = (v: string, end = false) => (v ? new Date(end ? `${v}T23:59:59` : v).toISOString() : undefined);
+  const query = { ...f, guildId: server || f.guildId, creator: dCreator, q: dq, page, pageSize, from: day(f.from), to: day(f.to, true), closedFrom: day(f.closedFrom), closedTo: day(f.closedTo, true) };
   const list = useQuery({ queryKey: ['support-tickets', query], queryFn: () => api<Page<TicketRow>>('/support-tickets', { query }) });
+  const ov = useQuery({ queryKey: ['support-tickets-overview', server], queryFn: () => api<TicketOverview>('/support-tickets/overview', { query: { guildId: server || undefined } }), refetchInterval: 30_000 });
+  const QUEUES: [string, string, keyof TicketOverview, Partial<typeof f>][] = [
+    ['Offen', '🟢', 'open', { kind: 'open', queue: '' }], ['Nicht zugewiesen', '🫥', 'unassigned', { kind: 'all', queue: 'unassigned' }], ['In Bearbeitung', '🔵', 'inProgress', { kind: 'all', queue: 'in_progress' }],
+    ['Wartend', '🟡', 'waiting', { kind: 'all', queue: 'waiting' }], ['Überfällig', '⏰', 'overdue', { kind: 'all', queue: 'overdue' }], ['Geschlossen', '⚫', 'closed', { kind: 'closed', queue: '' }], ['Archiviert', '📦', 'archived', { kind: 'archived', queue: '' }],
+  ];
   const set = (p: Partial<typeof f>) => { setF({ ...f, ...p }); setPage(1); };
   const c = cfg.data;
   return (
     <>
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7" role="group" aria-label="Warteschlangen">
+        {QUEUES.map(([l, icon, k, filter]) => {
+          const active = (filter.queue ?? '') === f.queue && (filter.queue ? true : filter.kind === f.kind);
+          return (
+            <button key={k} type="button" aria-pressed={active} onClick={() => set(filter)} className={`rounded-md border p-2 text-left transition ${active ? 'border-primary bg-primary/10' : 'border-line bg-panel hover:bg-panel-2'} ${k === 'overdue' && (ov.data?.overdue ?? 0) > 0 ? 'border-danger/50' : ''}`}>
+              <span className="block text-xs text-muted">{icon} {l}</span><span className={`text-xl font-semibold ${k === 'overdue' && (ov.data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`}>{ov.data ? ov.data[k] : '…'}</span>
+            </button>
+          );
+        })}
+      </div>
       <DataTable<TicketRow>
         columns={[
-          { key: 'number', label: '#', render: (t) => <span className="font-mono">#{t.number}</span> },
-          { key: 'name', label: 'Kanal', render: (t) => <span>{t.name}{t.locked && <span className="ml-1" title="Gesperrt">⛔</span>}{t.escalatedAt && !t.closedAt && <span className="ml-1" title="Eskaliert">🟠</span>}</span> },
+          { key: 'ref', label: 'Ticket-ID', render: (t) => <span className="font-mono">{t.ref}{t.category?.confidential && <span className="ml-1" title="Vertraulich">🔒</span>}</span> },
+          { key: 'name', label: 'Betreff / Kanal', render: (t) => <span>{t.subject ?? t.name}{t.locked && <span className="ml-1" title="Gesperrt">⛔</span>}{t.escalatedAt && !t.closedAt && <span className="ml-1" title="Eskaliert">🟠</span>}{t.sla?.overdue && <span className="ml-1"><Badge tone="danger">überfällig</Badge></span>}{t.sla?.paused && !t.closedAt && <span className="ml-1"><Badge tone="warning">wartet auf Nutzer</Badge></span>}</span> },
+          { key: 'department', label: 'Abteilung', render: (t) => (t.department ? label(t.department) : <span className="text-muted">—</span>) },
           ...(multi ? [{ key: 'guild', label: 'Server', render: (t: TicketRow) => <GuildTag id={t.guildId} /> }] : []),
           { key: 'category', label: 'Kategorie', render: (t) => label(t.category) },
           { key: 'status', label: 'Status', render: (t) => <StatusChip s={t.status} /> },
@@ -73,12 +91,13 @@ function TicketList() {
         ]}
         rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
         loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} onRowClick={(t) => void nav(`/support-tickets/${t.id}`)}
-        empty={{ text: 'Keine Tickets.', hint: 'Tickets werden über ein Ticket-Panel in Discord geöffnet.' }}
+        empty={{ text: 'Keine Tickets.', hint: 'Tickets werden über ein Ticket-Panel in Discord geöffnet. Suche auch nach Ticket-ID (z. B. EMD-000123).' }}
         search={q} onSearch={(v) => { setQ(v); setPage(1); }}
         toolbar={(
           <div className="flex flex-wrap gap-2">
             {multi && !server && <div className="w-40"><Select aria-label="Server" value={f.guildId} onChange={(e) => set({ guildId: e.target.value })}><option value="">Alle Server</option>{guilds.data!.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select></div>}
-            <div className="w-36"><Select aria-label="Typ" value={f.kind} onChange={(e) => set({ kind: e.target.value })}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
+            <div className="w-36"><Select aria-label="Typ" value={f.kind} onChange={(e) => set({ kind: e.target.value, queue: '' })}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select></div>
+            <div className="w-40"><Select aria-label="Abteilung" value={f.departmentId} onChange={(e) => set({ departmentId: e.target.value })}><option value="">Alle Abteilungen</option>{c?.departments.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-40"><Select aria-label="Kategorie" value={f.categoryId} onChange={(e) => set({ categoryId: e.target.value })}><option value="">Alle Kategorien</option>{c?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-36"><Select aria-label="Status" value={f.statusId} onChange={(e) => set({ statusId: e.target.value })}><option value="">Alle Status</option>{c?.statuses.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-36"><Select aria-label="Priorität" value={f.priorityId} onChange={(e) => set({ priorityId: e.target.value })}><option value="">Alle Prioritäten</option>{c?.priorities.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
@@ -86,6 +105,8 @@ function TicketList() {
             <div className="w-36"><Input aria-label="Ersteller" placeholder="Ersteller" value={f.creator} onChange={(e) => set({ creator: e.target.value })} /></div>
             <div className="w-36"><Input aria-label="Von" type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></div>
             <div className="w-36"><Input aria-label="Bis" type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></div>
+            <div className="w-36"><Input aria-label="Geschlossen ab" title="Geschlossen ab" type="date" value={f.closedFrom} onChange={(e) => set({ closedFrom: e.target.value })} /></div>
+            <div className="w-36"><Input aria-label="Geschlossen bis" title="Geschlossen bis" type="date" value={f.closedTo} onChange={(e) => set({ closedTo: e.target.value })} /></div>
             {can('ticket.create') && <Button variant="secondary" onClick={() => setOpen(true)}>Ticket öffnen</Button>}
           </div>
         )}
@@ -114,7 +135,7 @@ function OpenTicket({ onClose }: { onClose: () => void }) {
   );
 }
 
-interface TranscriptRow { id: string; ticketId: string; ticketNumber: string; categoryName: string; creatorId: string; creatorName: string; claimers: string[]; statusName: string; sizeBytes: number; createdAt: string; createdByName: string | null }
+interface TranscriptRow { id: string; ticketId: string; ticketNumber: string; ref: string; categoryName: string; creatorId: string; creatorName: string; claimers: string[]; statusName: string; sizeBytes: number; createdAt: string; createdByName: string | null; version: number; status: TranscriptVersion['status']; lastError: string | null }
 
 function Transcripts() {
   const { can } = useAuth();
@@ -135,14 +156,15 @@ function Transcripts() {
     <>
       <DataTable<TranscriptRow>
         columns={[
-          { key: 'ticketNumber', label: 'Ticket', render: (t) => <span className="font-mono">#{t.ticketNumber}</span> },
+          { key: 'ticketNumber', label: 'Ticket', render: (t) => <a className="font-mono text-primary underline" href={`/transcript/${t.ref}`} onClick={(e) => e.stopPropagation()}>{t.ref}</a> },
+          { key: 'version', label: 'Version', render: (t) => <span>v{t.version} <Badge tone={TRANSCRIPT_STATUS[t.status].tone}>{TRANSCRIPT_STATUS[t.status].label}</Badge></span> },
           { key: 'categoryName', label: 'Kategorie' }, { key: 'creatorName', label: 'Ersteller' }, { key: 'statusName', label: 'Status' },
           { key: 'createdAt', label: 'Erstellt', render: (t) => `${fmt(t.createdAt)}${t.createdByName ? ` · ${t.createdByName}` : ''}` },
           { key: 'size', label: 'Größe', render: (t) => `${Math.max(1, Math.round(t.sizeBytes / 1024))} KB` },
           { key: 'actions', label: 'Aktionen', render: (t) => (
             <span className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-              <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id)} target="_blank" rel="noreferrer">Öffnen</a>
-              <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id, true)}>Herunterladen</a>
+              {t.status === 'DONE' && <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id)} target="_blank" rel="noreferrer">Öffnen</a>}
+              {t.status === 'DONE' && can('ticket.transcript_export') && <a className="rounded border border-line px-2 py-0.5 text-xs hover:bg-panel-2" href={href(t.id, true)}>Herunterladen</a>}
               {can('ticket.transcript_delete') && <Button size="sm" variant="ghost" onClick={() => setDel(t)}>Löschen</Button>}
             </span>
           ) },
@@ -162,7 +184,7 @@ function Transcripts() {
           </div>
         )}
       />
-      <ConfirmDialog open={!!del} danger title="Transkript löschen?" message={`Das Transkript von Ticket #${del?.ticketNumber ?? ''} wird endgültig gelöscht.`} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
+      <ConfirmDialog open={!!del} danger title="Transkript löschen?" message={`Version ${del?.version ?? ''} des Transkripts von Ticket ${del?.ref ?? ''} wird endgültig gelöscht.`} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
     </>
   );
 }
@@ -206,5 +228,39 @@ function Statistics() {
       </div>
       <RatingCards s={d.ratings} names={d.names} />
     </div>
+  );
+}
+
+interface AuditRow { id: string; action: string; actorName: string | null; entityType: string | null; entityId: string | null; after: Record<string, unknown> | null; result: string; requestId: string | null; createdAt: string }
+/** Unveränderliches Audit-Protokoll des Ticket-Systems (nur Metadaten, keine Inhalte). */
+function AuditLog() {
+  const [f, setF] = useState({ action: '', result: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useTablePageSize();
+  const da = useDebounced(f.action);
+  const query = { action: da || undefined, result: f.result || undefined, page, pageSize };
+  const list = useQuery({ queryKey: ['ticket-audit', query], queryFn: () => api<Page<AuditRow>>('/support-tickets/audit', { query }) });
+  const nav = useNavigate();
+  return (
+    <DataTable<AuditRow>
+      columns={[
+        { key: 'createdAt', label: 'Zeit', render: (r) => fmt(r.createdAt) },
+        { key: 'action', label: 'Aktion', render: (r) => <span className="font-mono text-xs">{r.action}</span> },
+        { key: 'ref', label: 'Ticket', render: (r) => (typeof r.after?.ref === 'string' ? <span className="font-mono">{r.after.ref}</span> : <span className="text-muted">—</span>) },
+        { key: 'actorName', label: 'Akteur', render: (r) => r.actorName ?? '—' },
+        { key: 'result', label: 'Ergebnis', render: (r) => <Badge tone={r.result === 'SUCCESS' ? 'success' : r.result === 'DENIED' ? 'danger' : 'warning'}>{r.result === 'SUCCESS' ? 'ok' : r.result === 'DENIED' ? 'verweigert' : 'fehlgeschlagen'}</Badge> },
+        { key: 'details', label: 'Details', render: (r) => <span className="text-xs text-muted">{Object.entries(r.after ?? {}).filter(([k]) => k !== 'ref').map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join(' · ').slice(0, 160)}</span> },
+        { key: 'requestId', label: 'Korrelations-ID', render: (r) => <span className="font-mono text-[10px] text-muted">{r.requestId?.slice(0, 18) ?? '—'}</span> },
+      ]}
+      rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
+      loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} onRowClick={(r) => r.entityType === 'SupportTicket' && r.entityId && void nav(`/support-tickets/${r.entityId}`)}
+      empty={{ text: 'Keine Einträge.' }}
+      toolbar={(
+        <div className="flex flex-wrap gap-2">
+          <div className="w-56"><Input aria-label="Aktion" placeholder="Aktion, z. B. transcript" value={f.action} onChange={(e) => { setF({ ...f, action: e.target.value }); setPage(1); }} /></div>
+          <div className="w-40"><Select aria-label="Ergebnis" value={f.result} onChange={(e) => { setF({ ...f, result: e.target.value }); setPage(1); }}><option value="">Alle Ergebnisse</option><option value="SUCCESS">ok</option><option value="DENIED">verweigert</option><option value="FAILED">fehlgeschlagen</option></Select></div>
+        </div>
+      )}
+    />
   );
 }

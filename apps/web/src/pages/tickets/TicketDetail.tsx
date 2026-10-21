@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { Badge, Button, Card, ConfirmDialog, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
-import { errText, label, type TicketDetail as Detail, type TicketOptions } from '../../lib/tickets';
+import { duration, errText, label, TRANSCRIPT_STATUS, type TicketDetail as Detail, type TicketOptions } from '../../lib/tickets';
 import { StatusChip } from './SupportTickets';
 import { GuildTag, useGuilds } from '../../lib/guilds';
 
@@ -13,8 +13,13 @@ const LOG: Record<string, string> = {
   role_added: 'Rolle hinzugefügt', role_removed: 'Rolle entfernt', priority_changed: 'Priorität geändert', status_changed: 'Status geändert', category_changed: 'Kategorie geändert', renamed: 'Umbenannt', moved: 'Verschoben',
   locked: 'Gesperrt', unlocked: 'Entsperrt', escalated: 'Eskaliert', closed: 'Geschlossen', reopened: 'Wieder geöffnet', transcript_created: 'Transkript erstellt', transcript_deleted: 'Transkript gelöscht', note_added: 'Interne Notiz hinzugefügt', replied: 'Über das Dashboard geantwortet',
   rating_requested: 'Bewertung angefragt', rated: 'Bewertet', access_expired: 'Temporärer Zugriff abgelaufen', auto_warning: 'Inaktivitätswarnung', deleted: 'Gelöscht',
+  assigned: 'Zugewiesen', department_changed: 'Abteilung geändert', info_requested: 'Rückfrage an den Nutzer', archived: 'Archiviert', transcript_requested: 'Transkript angefordert',
+  transcript_failed: 'Transkript fehlgeschlagen', transcript_retry: 'Transkript erneut angestoßen', sla_reminder: 'SLA-Erinnerung', sla_escalated: 'SLA-Eskalation an die Leitung',
+  unassigned_escalated: 'Unzugewiesen – an die Leitung gemeldet', routing_warning: 'Zuständigkeit fehlt (Hinweis)', staff_alert: 'Bearbeiter erinnert', close_requested: 'Schließen angefragt',
+  close_request_accepted: 'Schließen bestätigt', close_request_declined: 'Schließen abgelehnt',
 };
-type Dialog = null | 'close' | 'rename' | 'access' | 'move' | 'delete';
+type Dialog = null | 'close' | 'rename' | 'access' | 'move' | 'delete' | 'assign' | 'info';
+const TRIGGER: Record<string, string> = { close: 'beim Schließen', manual: 'manuell', delete: 'vor dem Löschen', regenerate: 'neu erzeugt' };
 
 /** Ein Support-Ticket: Verlauf, Antworten, interne Notizen, Protokoll, Transkripte und alle Aktionen (jede mit eigenem Recht). */
 export function TicketDetail() {
@@ -49,7 +54,8 @@ export function TicketDetail() {
 
   return (
     <>
-      <PageHeader title={`Ticket #${d.number}`} subtitle={`${label(d.category)} · ${d.name}`} actions={<Link to="/support-tickets" className="text-sm text-primary underline">Alle Tickets</Link>} />
+      <PageHeader title={`Ticket ${d.ref}`} subtitle={`${d.subject ? `${d.subject} · ` : ''}${label(d.category)}${d.department ? ` · ${d.department.name}` : ''}`} actions={<Link to="/support-tickets" className="text-sm text-primary underline">Alle Tickets</Link>} />
+      {(d.sla.firstOverdue || d.sla.resolveOverdue) && !closed && <p role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">⏰ SLA überschritten: {d.sla.firstOverdue ? 'erste Antwort' : 'Lösung'} war fällig am {fmt(d.sla.firstOverdue ? d.sla.firstDueAt : d.sla.resolveDueAt)}.</p>}
       {act.error && <p role="alert" className="mb-3 text-sm text-danger">{errText(act.error)}</p>}
       {msg && <p role="status" className="mb-3 text-sm text-success">{msg}</p>}
       {!deleted && (
@@ -57,6 +63,8 @@ export function TicketDetail() {
           <div className="flex flex-wrap items-center gap-2">
             <B show={!closed && can('ticket.claim')} onClick={() => run({ action: 'claim' })}>👤 Übernehmen</B>
             <B show={!closed && can('ticket.claim') && d.claimers.length > 0} onClick={() => run({ action: 'unclaim' })}>↩️ Freigeben</B>
+            <B show={!closed && can('ticket.assign')} onClick={() => setDialog('assign')}>🧭 Zuweisen</B>
+            <B show={!closed && can('ticket.claim') && !!d.channelId} onClick={() => setDialog('info')}>❔ Rückfrage an Nutzer</B>
             <B show={!closed && can('ticket.close')} onClick={() => setDialog('close')} danger>🔒 Schließen</B>
             <B show={closed && can('ticket.reopen') && d.category.allowReopen} onClick={() => run({ action: 'reopen' })}>🔓 Wieder öffnen</B>
             <B show={!closed && can('ticket.lock')} onClick={() => run({ action: d.locked ? 'unlock' : 'lock' })}>{d.locked ? '✅ Entsperren' : '⛔ Sperren'}</B>
@@ -66,17 +74,19 @@ export function TicketDetail() {
             <B show={can('ticket.move')} onClick={() => setDialog('move')}>📁 Verschieben</B>
             <B show={!closed && (can('ticket.add_user') || can('ticket.remove_user'))} onClick={() => setDialog('access')}>➕ Zugriff</B>
             <B show={closed && can('ticket.rate')} onClick={() => run({ action: 'rating' })}>⭐ Bewertung anfragen</B>
+            <B show={closed && d.status?.kind === 'CLOSED' && can('ticket.archive')} onClick={() => run({ action: 'archive' })}>📦 Archivieren</B>
             <B show={closed && can('ticket.delete')} onClick={() => setDialog('delete')} danger>🗑️ Löschen</B>
             {!closed && can('ticket.change_priority') && o && pick('Priorität', d.priority?.name ?? '', o.priorities, (v) => run({ action: 'priority', priorityId: v }))}
             {can('ticket.change_status') && o && pick('Status', d.status?.name ?? '', o.statuses, (v) => run({ action: 'status', statusId: v }))}
             {!closed && can('ticket.change_category') && o && pick('Kategorie', d.category.name, o.categories, (v) => run({ action: 'category', categoryId: v }))}
+            {!closed && can('ticket.change_department') && o && pick('Abteilung', d.department?.name ?? '', o.departments, (v) => run({ action: 'department', departmentId: v }))}
           </div>
         </Card>
       )}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="grid min-w-0 content-start gap-4 lg:col-span-2">
           {d.answers.length > 0 && (
-            <Card title="Antworten">
+            <Card title={`Formularangaben${d.formVersion ? ` (Formular-Version ${d.formVersion.version})` : ''}`}>
               <dl className="grid gap-2 text-sm">{d.answers.map((a, i) => <div key={i}><dt className="text-xs text-muted">{a.label}</dt><dd className="whitespace-pre-wrap">{a.value}</dd></div>)}</dl>
             </Card>
           )}
@@ -122,15 +132,20 @@ export function TicketDetail() {
         <div className="grid min-w-0 content-start gap-4">
           <Card title="Details">
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
+              <dt className="text-muted">Ticket-ID</dt><dd className="font-mono">{d.ref}{d.category.confidential && <span className="ml-1"><Badge tone="warning">vertraulich</Badge></span>}</dd>
+              {d.subject && <><dt className="text-muted">Betreff</dt><dd>{d.subject}</dd></>}
               <dt className="text-muted">Status</dt><dd><StatusChip s={d.status} />{d.locked && <span className="ml-1"><Badge tone="danger">gesperrt</Badge></span>}{deleted && <span className="ml-1"><Badge tone="neutral">gelöscht</Badge></span>}</dd>
               <dt className="text-muted">Priorität</dt><dd><StatusChip s={d.priority} /></dd>
-              <dt className="text-muted">Kategorie</dt><dd>{label(d.category)}</dd>
+              <dt className="text-muted">Kategorie</dt><dd>{label(d.category)}{!d.category.active && <span className="ml-1"><Badge>deaktiviert</Badge></span>}</dd>
+              <dt className="text-muted">Abteilung</dt><dd>{d.department ? label(d.department) : <span className="text-muted">—</span>}</dd>
               {multiServer && <><dt className="text-muted">Server</dt><dd><GuildTag id={d.guildId} /></dd></>}
               <dt className="text-muted">Ersteller</dt><dd>{d.creatorName} <span className="font-mono text-xs text-muted">{d.creatorId}</span></dd>
               <dt className="text-muted">Bearbeiter</dt><dd>{d.claimers.length ? d.claimers.map((c, i) => <span key={c} className="mr-2 inline-block">{d.names[c] ?? <span className="font-mono text-xs">{c}</span>}{i === 0 && d.category.claimMode === 'PRIMARY' && d.claimers.length > 1 ? ' (Haupt)' : ''}</span>) : <span className="text-muted">nicht übernommen</span>}</dd>
               <dt className="text-muted">Kanal</dt><dd>{d.channelId ? <a className="text-primary underline" href={`https://discord.com/channels/${d.guildId}/${d.channelId}`} target="_blank" rel="noreferrer">In Discord öffnen</a> : '—'}</dd>
               <dt className="text-muted">Geöffnet</dt><dd>{fmt(d.createdAt)}</dd>
-              <dt className="text-muted">Erste Antwort</dt><dd>{fmt(d.firstResponseAt)}</dd>
+              <dt className="text-muted">Erste Antwort</dt><dd>{fmt(d.firstResponseAt)}{d.sla.firstDueAt && !d.firstResponseAt && <span className={`block text-xs ${d.sla.firstOverdue ? 'text-danger' : 'text-muted'}`}>Ziel: {fmt(d.sla.firstDueAt)}</span>}</dd>
+              {d.sla.resolveDueAt && !d.closedAt && <><dt className="text-muted">Lösungsziel</dt><dd className={d.sla.resolveOverdue ? 'text-danger' : ''}>{fmt(d.sla.resolveDueAt)}{d.sla.paused && <span className="block text-xs text-muted">ruht – wartet auf den Nutzer</span>}</dd></>}
+              {d.waitingSeconds >= 60 && <><dt className="text-muted">Wartezeit Nutzer</dt><dd>{duration(Math.round(d.waitingSeconds / 60))}</dd></>}
               <dt className="text-muted">Letzte Aktivität</dt><dd>{fmt(d.lastActivityAt)}</dd>
               {d.closedAt && <><dt className="text-muted">Geschlossen</dt><dd>{fmt(d.closedAt)}{d.closedByName ? ` · ${d.closedByName}` : ''}</dd><dt className="text-muted">Grund</dt><dd className="whitespace-pre-wrap">{d.closeReason ?? '—'}</dd></>}
               {d.deleteAt && !deleted && <><dt className="text-muted">Löschung</dt><dd>{fmt(d.deleteAt)}</dd></>}
@@ -146,10 +161,14 @@ export function TicketDetail() {
           </Card>
           {d.rating && <Card title="Bewertung"><p className="text-lg">{'★'.repeat(d.rating.stars)}{'☆'.repeat(5 - d.rating.stars)}</p>{d.rating.comment && <p className="whitespace-pre-wrap text-sm">{d.rating.comment}</p>}<p className="text-xs text-muted">{fmt(d.rating.createdAt)}</p></Card>}
           {d.transcripts && (
-            <Card title="Transkripte">
-              {d.transcripts.length ? <ul className="grid gap-1 text-sm">{d.transcripts.map((x) => (
-                <li key={x.id} className="flex flex-wrap items-center justify-between gap-2"><span>{fmt(x.createdAt)}</span>
-                  <span className="flex gap-2"><a className="text-primary underline" href={`/api/v1/support-tickets/transcripts/${x.id}`} target="_blank" rel="noreferrer">Öffnen</a><a className="text-primary underline" href={`/api/v1/support-tickets/transcripts/${x.id}?download=1`}>Herunterladen</a></span></li>
+            <Card title="Transkripte" actions={d.transcripts.some((x) => x.status === 'DONE') ? <Link to={`/transcript/${d.ref}`} className="text-sm text-primary underline">Online-Ansicht</Link> : undefined}>
+              {d.transcripts.length ? <ul className="grid gap-2 text-sm">{d.transcripts.map((x) => (
+                <li key={x.id} className="grid gap-1 rounded border border-line p-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2"><span>Version {x.version} <Badge tone={TRANSCRIPT_STATUS[x.status].tone}>{TRANSCRIPT_STATUS[x.status].label}</Badge></span><span className="text-xs text-muted">{TRIGGER[x.trigger] ?? x.trigger} · {fmt(x.completedAt ?? x.createdAt)}</span></div>
+                  {x.status === 'DONE' && <span className="flex flex-wrap gap-2"><a className="text-primary underline" href={`/api/v1/support-tickets/transcripts/${x.id}`} target="_blank" rel="noreferrer">Öffnen</a>{can('ticket.transcript_export') && <><a className="text-primary underline" href={`/api/v1/support-tickets/transcripts/${x.id}?download=1`}>HTML</a><a className="text-primary underline" href={`/api/v1/support-tickets/transcripts/${x.id}?format=txt`}>TXT</a><a className="text-primary underline" href={`/api/v1/support-tickets/transcripts/${x.id}?format=json`}>JSON</a></>}</span>}
+                  {x.status === 'FAILED' && <span className="text-xs text-danger">{x.lastError ?? 'Fehlgeschlagen'} ({x.attempts} Versuche){can('ticket.transcript_manage') && <Button size="sm" variant="ghost" disabled={act.isPending} onClick={() => run({ action: 'transcript_retry', transcriptId: x.id })}>Erneut versuchen</Button>}</span>}
+                  {(x.status === 'PENDING' || x.status === 'RUNNING') && x.attempts > 0 && <span className="text-xs text-muted">Versuch {x.attempts}{x.lastError ? ` – zuletzt: ${x.lastError}` : ''}</span>}
+                </li>
               ))}</ul> : <p className="text-sm text-muted">Noch keine.</p>}
             </Card>
           )}
@@ -164,6 +183,8 @@ export function TicketDetail() {
       {dialog === 'close' && <CloseDialog o={o} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(reason) => run({ action: 'close', ...(reason ? { reason } : {}) })} />}
       {dialog === 'rename' && <InputDialog title="Kanal umbenennen" field="Neuer Name (Platzhalter erlaubt, z. B. support-{username})" initial={d.name} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(name) => run({ action: 'rename', name })} />}
       {dialog === 'move' && <InputDialog title="In Discord-Kategorie verschieben" field="Discord-Kategorie-ID (leer = keine Kategorie)" initial="" numeric busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(v) => run({ action: 'move', parentId: v || null })} allowEmpty />}
+      {dialog === 'assign' && <InputDialog title="Ticket zuweisen" field="Discord-ID des Teammitglieds (muss ein verknüpftes Konto mit Zugriff haben)" initial="" numeric busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(v) => run({ action: 'assign', targetId: v })} />}
+      {dialog === 'info' && <TextDialog title="Rückfrage an den Nutzer" field="Frage (erscheint im Discord-Ticket, der Status wechselt auf „Wartet auf Nutzer“)" busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(text) => run({ action: 'request_info', text })} />}
       {dialog === 'access' && <AccessDialog busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(b) => run(b)} />}
       <ConfirmDialog open={dialog === 'delete'} danger title="Ticket löschen?" message="Der Discord-Kanal wird gelöscht. Vorher wird ein Transkript gespeichert, falls die Kategorie dafür eingerichtet ist." confirmLabel="Löschen" busy={act.isPending} onConfirm={() => run({ action: 'delete' })} onClose={() => setDialog(null)} />
     </>
@@ -202,6 +223,19 @@ function InputDialog({ title, field, initial, numeric, allowEmpty, busy, error, 
         <Field label={field}>{(id) => <Input id={id} value={v} inputMode={numeric ? 'numeric' : undefined} maxLength={90} onChange={(e) => setV(e.target.value)} />}</Field>
         <Err error={error} />
         <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={busy || (!allowEmpty && !v.trim())} onClick={() => onConfirm(v.trim())}>Speichern</Button></div>
+      </div>
+    </Modal>
+  );
+}
+
+function TextDialog({ title, field, busy, error, onClose, onConfirm }: { title: string; field: string; busy: boolean; error: unknown; onClose: () => void; onConfirm: (v: string) => void }) {
+  const [v, setV] = useState('');
+  return (
+    <Modal open title={title} onClose={onClose}>
+      <div className="grid gap-3">
+        <Field label={field}>{(id) => <Textarea id={id} rows={4} maxLength={2000} value={v} onChange={(e) => setV(e.target.value)} />}</Field>
+        <Err error={error} />
+        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={busy || v.trim().length < 3} onClick={() => onConfirm(v.trim())}>Senden</Button></div>
       </div>
     </Modal>
   );

@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inRequest = exports.runInGuild = exports.currentGuild = void 0;
+exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inRequest = exports.runInGuild = exports.currentRequestId = exports.currentGuild = void 0;
 exports.setServerLinkResolvers = setServerLinkResolvers;
 const node_async_hooks_1 = require("node:async_hooks");
 const common_1 = require("@nestjs/common");
@@ -18,6 +18,9 @@ const common_1 = require("@nestjs/common");
 const store = new node_async_hooks_1.AsyncLocalStorage();
 const currentGuild = () => store.getStore()?.guildId ?? null;
 exports.currentGuild = currentGuild;
+/** Request-ID der laufenden Anfrage (Korrelations-ID für Audit/Fehlersuche), außerhalb von Anfragen undefiniert. */
+const currentRequestId = () => store.getStore()?.requestId;
+exports.currentRequestId = currentRequestId;
 const runInGuild = (guildId, fn) => store.run({ guildId }, fn);
 exports.runInGuild = runInGuild;
 /** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
@@ -27,7 +30,7 @@ let GuildContextMiddleware = class GuildContextMiddleware {
     use(req, _res, next) {
         const h = req.headers['x-guild-id'];
         const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
-        store.run({ guildId, request: true }, next);
+        store.run({ guildId, request: true, requestId: req.requestId }, next);
     }
 };
 exports.GuildContextMiddleware = GuildContextMiddleware;

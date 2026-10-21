@@ -144,3 +144,81 @@ Pro Kategorie lässt sich mit *Dashboard access: system roles* festlegen, welche
   - Dashboard: `GET /support-tickets` (Filter), `GET /support-tickets/:id`, `POST /support-tickets/:id/actions`, `GET /support-tickets/stats|ratings|transcripts`.
   - Konfiguration: `GET /support-tickets/config`, CRUD unter `/support-tickets/{categories,panels,statuses,priorities,reasons}`, `PUT /support-tickets/settings`, `POST /support-tickets/panels/:id/publish`.
   - Bot-Dienst unter `/bot/support-tickets/*`.
+
+## Premium-Erweiterung (Ticket-Center)
+
+Erweitert das bestehende System – keine zweite Anwendung, kein zweiter Bot. Alle bisherigen Kategorien, Tickets, Transkripte und Einstellungen bleiben unverändert erhalten (Migration `20261117100000_ticket_premium` ist rein additiv).
+
+### Standardkonfiguration (einmalig, nichts wird überschrieben)
+Beim Start (`seed`) werden – nur falls noch nicht vorhanden (gleicher Name) – angelegt:
+- **8 Kategorien:** Beschwerden · Support und technische Probleme · Allgemeine Fragen · Bewerbungen und Personalangelegenheiten · Leitung und vertrauliche Anliegen · Vorschläge und Verbesserungen · Partnerschaften und externe Anfragen · **Sonstiges** (verbindliches Formular: Betreff max. 100, „Worum geht es?“ 7 Optionen, Beschreibung 10–2000 mit Hilfetext, optional Betroffener Bereich, Zusätzliche Informationen max. 2000, Anhang/Screenshot).
+- **Abteilungen:** Allgemeiner Support, Technik, Personalabteilung, Beschwerdestelle, Leitung, Öffentlichkeitsarbeit – **ohne Discord-Rollen** (siehe „Noch zu konfigurieren“).
+- **Panel „Ticket-Center“** (Dropdown mit allen 8 Kategorien) – noch nicht gesendet.
+- Fehlende **Lebenszyklus-Status** (Offen, Übernommen, In Bearbeitung, Wartet auf Nutzer, Wartet auf interne Rückmeldung, Gelöst, Geschlossen, Archiviert) und Prioritäten (Niedrig, Normal, Hoch, Dringend). Vorhandene Status behalten Name und Schalter und bekommen nur eine feste Bedeutung.
+Gelöschte Standard-Einträge kommen nicht zurück (Merker `tickets.premiumSeeded`).
+
+### Ticket-IDs
+Jedes Ticket hat die dauerhafte ID **`EMD-000123`** (fortlaufende Nummer, nie wiederverwendet; Präfix unter *Allgemein*). Platzhalter `{ticket_ref}`. Suche im Ticket-Center nach `EMD-000123`, `#123` oder `123`.
+
+### Formulare vor dem Erstellen
+Kategorie → *Formular* → „Discord-Formular vor dem Erstellen“ (neue Kategorien) oder „Nacheinander im Ticket-Kanal“ (bisheriges Verhalten, Standard für bestehende Kategorien).
+- Feldtypen: kurzer/mehrzeiliger Text, Auswahl, Mehrfachauswahl, Ja/Nein, Bestätigung (Kontrollkästchen – in Discord als Auswahlmenü), Zahl (min/max), Datum (TT.MM.JJJJ), Anhang (Discord-Datei-Upload im Formular; Bilder/PDF/Text, je max. 8 MB, höchstens 1–10 Dateien).
+- Je Feld: ID, Bezeichnung, Hilfetext, Pflicht, Platzhalter, Reihenfolge, Zeichen-/Wertgrenzen, Optionen, aktiv/deaktiviert.
+- Discord erlaubt **höchstens 5 Eingaben je Formular** → das System teilt automatisch in Schritte (Button „Weiter (Schritt 2/2)“). Ungültige Eingaben: Hinweis mit „Erneut ausfüllen“ (Werte bleiben vorausgefüllt). Entwürfe verfallen nach 30 Minuten.
+- Gleiche Prüfung im Browser (Vorschau) und auf dem Server (`packages/shared/src/ticket-premium.ts`). **Formular testen** in der Kategorie prüft ohne Ticket.
+- **Versionen:** jede gespeicherte Änderung der Felder = neue Version (*Formular-Versionen anzeigen*). Tickets speichern Antworten mit Bezeichnung und Version – spätere Änderungen verändern alte Tickets nicht.
+- Panels: Kategorien mit Formular öffnen das Discord-Formular direkt nach der Auswahl. Dropdown-Panels mit mehr als 25 Kategorien werden auf mehrere Menüs verteilt (bis 100); Buttons höchstens 25 (Discord-Limit). Schlägt das Senden fehl (Kanal weg, Rechte fehlen), steht der Grund am Panel.
+
+### Schutz vor Doppelungen und Limits
+- Dieselbe Discord-Interaktion bzw. derselbe Formular-Entwurf erzeugt nie zwei Tickets (eindeutiger Schlüssel + Sperre je Nutzer); Doppelklick-Schutz 10 s.
+- *Allgemein → Offene Tickets je Nutzer insgesamt* zusätzlich zum Limit je Kategorie. Recht `ticket.bypass_limits` (bzw. `ticket.manage`) hebt Limits und Cooldown auf.
+
+### Abteilungen, Zuständigkeit, Vertraulichkeit
+- Kategorie → Abteilung; die Discord-Rollen von Kategorie **und** Abteilung sehen/bearbeiten das Ticket. *Dashboard-Zugriff: Systemrollen* von Kategorie und Abteilung bestimmen, wer es im Dashboard sieht.
+- **Vertraulich:** ohne Zugriffsrollen nur `ticket.manage`; nie ersatzweise die allgemeine Staff-Rolle. Fehlt die Zuständigkeit, sieht den Discord-Kanal nur der Ersteller plus die *Ersatz-Rollen für vertrauliche Tickets* – mit sichtbarem Hinweis im Log-Kanal und Audit. Log- und Benachrichtigungskanäle zeigen nur Ticket-ID und Art des Ereignisses. In eine nicht vertrauliche Kategorie verschieben darf nur `ticket.manage`.
+- **Zuweisen** (`ticket.assign`): nur an Teammitglieder mit verknüpftem Konto, `ticket.claim` und Zugriff auf die Kategorie. **Abteilung wechseln** (`ticket.change_department`): Kanalrechte werden umgestellt, Bearbeiter ohne Zugriff entfernt.
+
+### Lebenszyklus und Aktionen
+Statuswechsel prüft das System zentral: Schließen nur über „Schließen“, Archivieren nur geschlossener Tickets (`ticket.archive`), archivierte Tickets öffnen nur mit Archiv-Recht. **Rückfrage an Nutzer** (Dashboard) setzt „Wartet auf Nutzer“; schreibt der Ersteller, geht es automatisch auf „In Bearbeitung“ zurück (Bearbeiter werden höchstens alle X Minuten benachrichtigt). Archivieren löscht nichts.
+
+### SLA, Erinnerungen, Eskalation
+*Status & SLA*: Zielzeiten je Priorität (erste Antwort, Lösung) – **ohne Eintrag keine Frist**. Die Lösungsfrist ruht, solange auf den Nutzer gewartet wird. Überfällige Tickets: Warteschlange „Überfällig“, Erinnerung an die Bearbeiter (DM) bzw. den Abteilungskanal, wiederholt nach Einstellung; danach einmalig Meldung an die Leitung (Abteilung → Leitung, sonst *Allgemein → Leitung*). Unzugewiesene Tickets: *Kategorie → Unzugewiesen an die Leitung melden nach …*. Eskalationen geben **niemandem** zusätzlichen Zugriff.
+
+### Benachrichtigungen
+*Allgemein → Benachrichtigungen*: je Ereignis (neues Ticket, Übernahme, Zuständigkeit, Nutzernachricht, Rückfrage, Priorität, Eskalation, Schließen, Wiedereröffnung, Transkript fertig/fehlgeschlagen) Kanal (interner Kanal der Abteilung) / DM an Bearbeiter / Dashboard-Glocke. Empfänger sind nur Berechtigte.
+
+### Online-Transkripte
+- Beim Schließen entsteht ein **Hintergrund-Auftrag** (alle 15 s abgearbeitet, auch nach Neustarts; max. 5 Versuche mit Wartezeit, danach „fehlgeschlagen“ + Hinweis, „Erneut versuchen“ mit `ticket.transcript_manage`). Der Verlauf liegt bereits in der Datenbank – fehlschlagende Erstellung verliert keine Nachrichten. Jede Erstellung ist eine neue **Version**; derselbe Abschluss erzeugt nie zwei Aufträge.
+- Formate: sichere HTML-Ansicht (Sandbox, keine Skripte, escaped), **TXT**, **JSON** (nur Mitarbeiter mit `ticket.transcript_export`), mit **SHA-256** der Transkriptdaten.
+- **Adresse:** `https://<deine-domain>/transcript/EMD-000123` (z. B. `https://tnnyq4svmz.apps.bot-hosting.cloud/transcript/EMD-000123`). Die Seite gehört zum Dashboard (gleicher Port, keine Hosting-Änderung nötig). **Der Link allein gewährt keinen Zugriff:** bei jedem Abruf prüft das System Anmeldung, Recht und Zugriff auf genau dieses Ticket (Mitarbeiter) bzw. ob es das eigene Ticket ist (Ersteller mit verknüpftem Discord-Konto – nur Ansicht/TXT). Unberechtigte erhalten dieselbe Antwort wie bei nicht vorhandenen IDs; Versuche landen im Audit. Antworten: `Cache-Control: private, no-store`, `X-Robots-Tag: noindex`, Rate-Limit 60/min. Interne Notizen und interne Ereignisse erscheinen nie im Transkript.
+- In Discord wird das Transkript (falls eingestellt) als Datei mit Button „Online ansehen“ gesendet. Nach „Mit Discord anmelden“ landet man direkt wieder auf dem Transkript.
+
+### Audit
+Ticket-Aktionen, Konfigurationsänderungen, Transkript-Abrufe/-Exporte und abgelehnte Zugriffe stehen im unveränderlichen Audit-Protokoll (Tab *Audit*, Recht `ticket.audit`) mit Korrelations-ID – nur Metadaten, keine Notiztexte, Gründe oder Nachrichten.
+
+### Rechte (neu)
+| Vorschlag | Umsetzung | bestehende Rollen bekommen es, wenn sie … hatten |
+|---|---|---|
+| tickets.view / view_assigned / create | `ticket.view` (+ Sichtbarkeitsregeln) / `ticket.create` | – |
+| tickets.claim / assign | `ticket.claim` / **`ticket.assign`** | `ticket.manage` |
+| tickets.change_status / priority / category | `ticket.change_status` / `ticket.change_priority` / `ticket.change_category`, **`ticket.change_department`** | `ticket.change_category` |
+| tickets.add_internal_note / close / reopen | `ticket.internal_notes` / `ticket.close` / `ticket.reopen` | – |
+| tickets.archive | **`ticket.archive`** | `ticket.change_status` (Archivieren ging bisher darüber) |
+| tickets.transcript.view / export / manage | `ticket.transcript` / **`ticket.transcript_export`** / **`ticket.transcript_manage`** | `ticket.transcript` |
+| tickets.categories/forms/panels/settings.manage | `ticket.settings` | – |
+| tickets.departments.manage | **`ticket.departments`** | `ticket.settings` |
+| tickets.audit.view | **`ticket.audit`** | `ticket.manage` |
+| (Limits umgehen) | **`ticket.bypass_limits`** | `ticket.manage` |
+
+### Noch zu konfigurieren (manuell)
+1. *Abteilungen*: Discord-Rollen (zuständig, Leitung), interner Benachrichtigungs-Kanal, ggf. Dashboard-Zugriffsrollen – besonders für Beschwerdestelle, Personalabteilung und Leitung (vertraulich).
+2. *Allgemein*: Ersatz-Rollen für vertrauliche Tickets, Leitung, Log-/Transkript-Kanal, optional „Tickets nur auf diesem Discord-Server“.
+3. *Status & SLA*: Zielzeiten je Priorität (bewusst leer – keine erfundenen Fristen).
+4. *Panels*: „Ticket-Center“ einen Kanal geben und **An Discord senden**.
+5. Discord Developer Portal: *Message Content Intent* (Verlauf/Transkript), Bot-Rechte *Kanäle verwalten*, *Rollen verwalten*; Discord-Login (`DISCORD_CLIENT_SECRET`), damit Ersteller ihr Transkript online öffnen können.
+
+### Bekannte Einschränkungen
+- Nachrichten, die geschrieben werden, während der Bot offline ist, fehlen im Verlauf (der Bot schneidet live mit; kein nachträgliches Einlesen).
+- „Kontrollkästchen“ erscheint im Discord-Formular als Auswahlmenü mit einer Option.
+- Ticket-Einstellungen gelten – wie bisher – je Discord-Server (gewählter Server im Dashboard bzw. Server der Bot-Anfrage).
+- Echte Discord- und Hosting-Tests wurden nicht durchgeführt; geprüft mit automatisierten Tests (gemockte Discord-Aufrufe) und einem lokalen Durchlauf (API + Web wie im Hosting, Browser).

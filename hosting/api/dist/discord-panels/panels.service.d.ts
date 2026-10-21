@@ -261,8 +261,8 @@ export declare class PanelsService {
         channelId: string | null;
         messageId: string | null;
         panelId: string;
-        userName: string;
         values: import("@prisma/client/runtime/library").JsonValue;
+        userName: string;
     }[]>;
     removeSubmission(actor: Actor, id: string): Promise<void>;
     botStaffLists(): Promise<{

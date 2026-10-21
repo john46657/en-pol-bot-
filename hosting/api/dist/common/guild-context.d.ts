@@ -1,6 +1,8 @@
 import { NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 export declare const currentGuild: () => string | null;
+/** Request-ID der laufenden Anfrage (Korrelations-ID für Audit/Fehlersuche), außerhalb von Anfragen undefiniert. */
+export declare const currentRequestId: () => string | undefined;
 export declare const runInGuild: <T>(guildId: string | null, fn: () => T) => T;
 /** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
 export declare const inRequest: () => boolean;

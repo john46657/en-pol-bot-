@@ -7,11 +7,11 @@ declare const q: z.ZodObject<{
     format: z.ZodDefault<z.ZodEnum<["csv", "json", "pdf"]>>;
     q: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    format: "pdf" | "csv" | "json";
+    format: "pdf" | "json" | "csv";
     q?: string | undefined;
 }, {
     q?: string | undefined;
-    format?: "pdf" | "csv" | "json" | undefined;
+    format?: "pdf" | "json" | "csv" | undefined;
 }>;
 type Row = Record<string, string | number | boolean | null>;
 export declare const toCsv: (rows: Row[]) => string;

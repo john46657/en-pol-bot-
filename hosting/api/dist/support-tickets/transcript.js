@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renderTranscript = renderTranscript;
+exports.renderTranscriptText = renderTranscriptText;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /** Minimales, sicheres Markdown (fett, kursiv, Code, Zeilenumbrüche) – Eingabe ist vorher escaped. */
 const md = (s) => esc(s)
@@ -12,7 +13,8 @@ const size = (b) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.ma
 function renderTranscript(d) {
     const fmt = (x) => (x ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short', timeZone: d.timezone }).format(x) : '—');
     const info = [
-        ['Ticket', `#${d.number} · ${d.name}`], ['Kategorie', d.category], ['Status', d.status], ['Priorität', d.priority],
+        ['Ticket', `${d.ref ?? `#${d.number}`} · ${d.name}`], ...(d.subject ? [['Betreff', d.subject]] : []), ['Kategorie', d.category],
+        ...(d.department ? [['Abteilung', d.department]] : []), ['Status', d.status], ['Priorität', d.priority],
         ['Ersteller', `${d.creator.name} (${d.creator.id})`], ['Bearbeiter', d.claimers.map((c) => c.name).join(', ') || '—'],
         ['Beteiligte', d.participants.join(', ') || '—'], ['Erstellt', fmt(d.createdAt)], ['Geschlossen', fmt(d.closedAt)],
         ['Geschlossen von', d.closedBy ?? '—'], ['Grund', d.closeReason ?? '—'],
@@ -30,7 +32,7 @@ function renderTranscript(d) {
     }).join('\n');
     return `<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
-<title>Transcript #${esc(d.number)} – ${esc(d.name)}</title>
+<title>Transkript ${esc(d.ref ?? `#${d.number}`)} – ${esc(d.name)}</title>
 <style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#1e1f22;color:#dbdee1;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{background:#2b2d31;border-bottom:1px solid #3f4147;padding:24px}header h1{margin:0 0 4px;font-size:20px;color:#fff}header p{margin:0;color:#949ba4;font-size:13px}
@@ -46,11 +48,29 @@ code,pre{background:#2b2d31;border-radius:4px;padding:1px 4px;font-family:ui-mon
 footer{color:#6d6f78;font-size:12px;text-align:center;padding:16px}
 @media print{body{background:#fff;color:#000}header,.answers,.embed,.file,code,pre{background:#f3f3f3}.head b,.head b.staff{color:#000}}
 </style></head><body>
-<header><h1>Ticket #${esc(d.number)} – ${esc(d.name)}</h1><p>Transcript erstellt am ${esc(fmt(d.generatedAt))}</p>
+<header><h1>Ticket ${esc(d.ref ?? `#${d.number}`)} – ${esc(d.subject || d.name)}</h1><p>Transkript${d.version ? ` · Version ${d.version}` : ''} · erstellt am ${esc(fmt(d.generatedAt))}</p>
 <div class="info">${info.map(([k, v]) => `<div><span>${esc(k)}</span>${esc(v)}</div>`).join('')}</div></header>
 ${d.answers.length ? `<section class="answers"><h2>📝 Angaben beim Öffnen</h2><dl>${d.answers.map((a) => `<dt>${esc(a.label)}</dt><dd>${md(a.value)}</dd>`).join('')}</dl></section>` : ''}
 <main>${entries || '<p>Keine Nachrichten.</p>'}</main>
-<footer>EN Polizei · Ticket-System · ${d.entries.filter((e) => e.kind === 'message').length} Nachrichten</footer>
+<footer>EN Polizei · Ticket-System · ${d.entries.filter((e) => e.kind === 'message').length} Nachrichten${d.sha256 ? `<br>Integrität (SHA-256 der Transkriptdaten): <code>${esc(d.sha256)}</code>` : ''}</footer>
 </body></html>`;
+}
+/** Reiner Text-Export (gleicher Inhalt wie die HTML-Ansicht, ohne eingebettete Bilder). */
+function renderTranscriptText(d) {
+    const fmt = (x) => (x ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'medium', timeZone: d.timezone }).format(x) : '—');
+    const head = [
+        `Transkript ${d.ref ?? `#${d.number}`}${d.version ? ` (Version ${d.version})` : ''}`, '='.repeat(60),
+        `Betreff:        ${d.subject || d.name}`, `Kategorie:      ${d.category}`, ...(d.department ? [`Abteilung:      ${d.department}`] : []),
+        `Status:         ${d.status}`, `Priorität:      ${d.priority}`, `Ersteller:      ${d.creator.name} (${d.creator.id})`,
+        `Bearbeiter:     ${d.claimers.map((c) => c.name).join(', ') || '—'}`, `Erstellt:       ${fmt(d.createdAt)}`, `Geschlossen:    ${fmt(d.closedAt)}`,
+        `Geschlossen von:${d.closedBy ? ` ${d.closedBy}` : ' —'}`, `Grund:          ${d.closeReason ?? '—'}`, `Transkript vom: ${fmt(d.generatedAt)}`,
+    ];
+    const answers = d.answers.length ? ['', 'Angaben beim Öffnen', '-'.repeat(60), ...d.answers.flatMap((a) => [`${a.label}:`, `  ${a.value.replace(/\n/g, '\n  ')}`])] : [];
+    const lines = d.entries.map((e) => (e.kind === 'event'
+        ? `[${fmt(e.at)}] -- ${e.text}`
+        : [`[${fmt(e.at)}] ${e.author}${e.bot ? ' [BOT]' : e.staff ? ' [TEAM]' : ''}:`, ...(e.content ? [`  ${e.content.replace(/\n/g, '\n  ')}`] : []),
+            ...e.embeds.filter((x) => x.title || x.description).map((x) => `  [Embed] ${[x.title, x.description].filter(Boolean).join(' – ')}`),
+            ...e.attachments.map((a) => `  [Anhang] ${a.name} (${size(a.size)})`)].join('\n')));
+    return [...head, ...answers, '', 'Verlauf', '-'.repeat(60), ...(lines.length ? lines : ['Keine Nachrichten.']), '', ...(d.sha256 ? [`Integrität (SHA-256 der Transkriptdaten): ${d.sha256}`] : [])].join('\n') + '\n';
 }
 //# sourceMappingURL=transcript.js.map

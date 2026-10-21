@@ -139,6 +139,14 @@ export declare class HrController {
     private readonly people;
     constructor(core: HrCoreService, people: HrPeopleService);
     config(): Promise<{
+        departments: {
+            id: string;
+            name: string;
+            color: string;
+            description: string;
+            discordRoleIds: string[];
+            dashboardRoleIds: string[];
+        }[];
         promotion: {
             stages: {
                 roleIds: string[];
@@ -209,14 +217,6 @@ export declare class HrController {
             color: string;
             active: boolean;
             emoji: string;
-        }[];
-        departments: {
-            id: string;
-            name: string;
-            color: string;
-            description: string;
-            discordRoleIds: string[];
-            dashboardRoleIds: string[];
         }[];
         absenceTypes: {
             key: string;
@@ -252,6 +252,14 @@ export declare class HrController {
         emoji: string;
     }[]>;
     saveConfig(a: Actor, b: HrConfig): Promise<{
+        departments: {
+            id: string;
+            name: string;
+            color: string;
+            description: string;
+            discordRoleIds: string[];
+            dashboardRoleIds: string[];
+        }[];
         promotion: {
             stages: {
                 roleIds: string[];
@@ -322,14 +330,6 @@ export declare class HrController {
             color: string;
             active: boolean;
             emoji: string;
-        }[];
-        departments: {
-            id: string;
-            name: string;
-            color: string;
-            description: string;
-            discordRoleIds: string[];
-            dashboardRoleIds: string[];
         }[];
         absenceTypes: {
             key: string;
@@ -586,10 +586,10 @@ export declare class HrController {
             personnelId: string;
             trainingId: string;
             note: string | null;
+            completedAt: Date | null;
             progress: number;
             doneModules: string[];
             examinerId: string | null;
-            completedAt: Date | null;
             certificateNo: string | null;
         })[] | null;
         exams: {
@@ -1108,14 +1108,14 @@ declare const progress: z.ZodObject<{
     doneModules: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    status: "FAILED" | "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
+    status: "FAILED" | "EXPIRED" | "IN_PROGRESS" | "PASSED" | "NOT_STARTED" | "ABORTED";
     personnelId: string;
     trainingId: string;
     note?: string | null | undefined;
     progress?: number | undefined;
     doneModules?: string[] | undefined;
 }, {
-    status: "FAILED" | "EXPIRED" | "PASSED" | "NOT_STARTED" | "IN_PROGRESS" | "ABORTED";
+    status: "FAILED" | "EXPIRED" | "IN_PROGRESS" | "PASSED" | "NOT_STARTED" | "ABORTED";
     personnelId: string;
     trainingId: string;
     note?: string | null | undefined;
@@ -1204,10 +1204,10 @@ export declare class HrTrainingController {
         personnelId: string;
         trainingId: string;
         note: string | null;
+        completedAt: Date | null;
         progress: number;
         doneModules: string[];
         examinerId: string | null;
-        completedAt: Date | null;
         certificateNo: string | null;
     })[]>;
     setProgress(a: Actor, b: z.infer<typeof progress>): Promise<{
@@ -1219,10 +1219,10 @@ export declare class HrTrainingController {
         personnelId: string;
         trainingId: string;
         note: string | null;
+        completedAt: Date | null;
         progress: number;
         doneModules: string[];
         examinerId: string | null;
-        completedAt: Date | null;
         certificateNo: string | null;
     }>;
     certificate(a: Actor, no: string): Promise<{
@@ -1278,10 +1278,10 @@ declare const attemptsQ: z.ZodObject<{
     examId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["IN_PROGRESS", "SUBMITTED", "GRADED", "VOIDED"]>>;
 }, "strip", z.ZodTypeAny, {
-    status?: "SUBMITTED" | "GRADED" | "IN_PROGRESS" | "VOIDED" | undefined;
+    status?: "SUBMITTED" | "IN_PROGRESS" | "GRADED" | "VOIDED" | undefined;
     examId?: string | undefined;
 }, {
-    status?: "SUBMITTED" | "GRADED" | "IN_PROGRESS" | "VOIDED" | undefined;
+    status?: "SUBMITTED" | "IN_PROGRESS" | "GRADED" | "VOIDED" | undefined;
     examId?: string | undefined;
 }>;
 export declare class HrExamController {
@@ -1340,7 +1340,7 @@ export declare class HrExamController {
     detail(a: Actor, id: string): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             id: string;
             image: string | null;
@@ -1383,7 +1383,7 @@ export declare class HrExamController {
     create(a: Actor, b: ExamInput): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             id: string;
             image: string | null;
@@ -1425,7 +1425,7 @@ export declare class HrExamController {
     save(a: Actor, id: string, b: ExamInput): Promise<{
         questions: {
             options: string[];
-            type: "YESNO" | "MULTI" | "TEXT" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             id: string;
             image: string | null;
@@ -1588,7 +1588,7 @@ export declare class HrExamController {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -1679,7 +1679,7 @@ export declare class HrExamController {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -1744,7 +1744,7 @@ export declare class HrExamController {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -1811,7 +1811,7 @@ export declare class HrExamController {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -1876,7 +1876,7 @@ export declare class HrExamController {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
@@ -1943,7 +1943,7 @@ export declare class HrExamController {
             correctAnswer?: boolean | undefined;
             earned?: number | null | undefined;
             id: string;
-            type: "TEXT" | "YESNO" | "MULTI" | "SINGLE" | "NUMBER" | "ORDER" | "MATCH" | "GAP";
+            type: "TEXT" | "YESNO" | "MULTI" | "NUMBER" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
             text: string;
             image: string | null;
             points: number;
