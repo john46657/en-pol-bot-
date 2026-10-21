@@ -55,6 +55,7 @@ exports.POLICIES = {
     'exam:g': { level: 'instructor' }, 'exam:gin': { level: 'instructor' }, 'exam:gm': { level: 'instructor' },
     'exam:void': { level: 'instructor' }, 'exam:vm': { level: 'instructor', sensitive: true },
     'exam:pend': { level: 'instructor' },
+    botprofil: { level: 'admin' },
 };
 /** Richtlinie für einen Befehl/eine Interaktion (genau → Wildcard `prefix:*`). */
 function policyFor(key) {
