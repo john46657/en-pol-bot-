@@ -28,8 +28,6 @@ export interface DiscordGuildInfo {
         color: number;
         position: number;
     }[];
-    /** Server-weite Rechte des Bots (von neueren Bot-Versionen gemeldet) */
-    botPermissions?: Partial<Record<'administrator' | 'viewChannel' | 'sendMessages' | 'embedLinks' | 'attachFiles' | 'readMessageHistory' | 'manageChannels' | 'manageRoles', boolean>>;
 }
 export interface DiscordChannels {
     guildId?: string;

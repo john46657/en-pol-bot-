@@ -5,7 +5,6 @@ import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
 import { accentHex, useStudio } from '../lib/studio';
-import { useApplyBranding, useBranding } from '../lib/branding';
 import { useApplyPrefs, usePrefs } from '../lib/prefs';
 import { flush } from '../lib/autosave';
 import { badgeFor, useNavBadges } from '../lib/badges';
@@ -25,12 +24,8 @@ export function AppShell() {
   const { prefs, update } = usePrefs();
   const loc = useLocation();
   const nav = useNavigate();
-  const brand = useBranding().data;
-  const branded = brand?.configured ? brand : undefined;
-  const orgName = branded?.displayName ?? studio.data?.org?.name ?? 'EN Polizei';
-  // Akzentfarbe: persönliche Wahl > Server-Konfiguration > Studio
-  useApplyPrefs(prefs, branded?.design.accent ?? accentHex(studio.data?.theme?.accent));
-  useApplyBranding(branded, prefs);
+  const orgName = studio.data?.org?.name ?? 'EN Polizei';
+  useApplyPrefs(prefs, accentHex(studio.data?.theme?.accent));
   useEffect(() => { document.title = orgName; }, [orgName]);
   // Seitenwechsel: offene Änderungen sofort senden (sie liegen ohnehin schon lokal vor)
   useEffect(() => { void flush(); }, [loc.pathname]);
@@ -157,13 +152,13 @@ export function AppShell() {
         <button type="button" onClick={() => setOpen(true)} aria-label="Menü mit Beschriftungen öffnen" className="mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted hover:bg-panel-2 hover:text-fg"><Menu size={20} aria-hidden /></button>
       </nav>}
       <aside className={`hidden shrink-0 flex-col border-r border-line bg-panel lg:flex ${collapsed ? 'w-16' : 'sidebar'}`}>
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-2 font-semibold">{collapsed ? (branded?.images.logo ? <img src={branded.images.logo} alt="" className="mx-auto h-7 w-7 rounded object-contain" /> : <Shield size={20} className="mx-auto text-primary" aria-hidden />) : <ServerSwitcher orgName={orgName} brand={branded ? { name: branded.shortName || branded.displayName, logo: branded.images.logo ?? branded.images.avatar } : undefined} />}</div>
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-2 font-semibold">{collapsed ? <Shield size={20} className="mx-auto text-primary" aria-hidden /> : <ServerSwitcher orgName={orgName} />}</div>
         <div className="min-h-0 flex-1">{menu(collapsed)}</div>
         <button type="button" onClick={() => update({ sidebarCollapsed: !collapsed })} aria-label={collapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'} className="flex items-center gap-2 border-t border-line px-4 py-2 text-xs text-muted hover:text-fg">
           {collapsed ? <ChevronsRight size={16} aria-hidden /> : <><ChevronsLeft size={16} aria-hidden />Einklappen</>}
         </button>
       </aside>
-      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}><div className="flex h-14 shrink-0 items-center border-b border-line px-2 font-semibold"><ServerSwitcher orgName={orgName} onPicked={() => setOpen(false)} brand={branded ? { name: branded.shortName || branded.displayName, logo: branded.images.logo ?? branded.images.avatar } : undefined} /></div><div className="min-h-0 flex-1 overflow-y-auto">{menu(false)}</div></aside></div>}
+      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)}><aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}><div className="flex h-14 shrink-0 items-center border-b border-line px-2 font-semibold"><ServerSwitcher orgName={orgName} onPicked={() => setOpen(false)} /></div><div className="min-h-0 flex-1 overflow-y-auto">{menu(false)}</div></aside></div>}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center gap-2 border-b border-line bg-panel px-2 sm:gap-3 sm:px-4">
           <Button variant="ghost" className="lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></Button>

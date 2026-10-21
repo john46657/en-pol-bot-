@@ -101,10 +101,6 @@ let ServersService = class ServersService {
         }
         return s;
     }
-    /** Darf der Benutzer das auf diesem Server? (nur Anzeige, z. B. Bearbeiten-Schalter; erzwungen wird es in `access`) */
-    async allowed(actor, guildId, permission) {
-        return (await this.authz.authorize(actor.userId, guildId, permission)).allowed;
-    }
     /** Nur Mitgliedschaft (bzw. globaler Systemadministrator) – für Auskünfte über sich selbst. */
     async accessAsMember(actor, serverId) {
         const s = await this.load(serverId);

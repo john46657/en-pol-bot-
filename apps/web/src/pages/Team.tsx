@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { AreaBanner } from '../components/AreaBanner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { DUTY_STATUSES } from '@enrp/shared';
@@ -73,7 +72,6 @@ export function Team() {
 
   return (
     <>
-      <AreaBanner area="team" />
       <PageHeader title="Team-Übersicht" subtitle="Der Dienststatus wird immer ausdrücklich gesetzt – online sein zählt nie als im Dienst." />
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
         {/* Kacheln filtern die Liste (nochmals klicken = alle) */}

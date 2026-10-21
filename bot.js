@@ -22936,8 +22936,8 @@ var require_v103 = __commonJS({
        *
        * This route supports the extensions: PNG, JPEG, WebP
        */
-      storePageAsset(applicationId, assetId2, format = ImageFormat.PNG) {
-        return `/app-assets/${applicationId}/store/${assetId2}.${format}`;
+      storePageAsset(applicationId, assetId, format = ImageFormat.PNG) {
+        return `/app-assets/${applicationId}/store/${assetId}.${format}`;
       },
       /**
        * Route for:
@@ -26930,10 +26930,10 @@ var require_toHex = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fromHex = exports2.toHex = void 0;
-    var hex4 = (num) => new Number(num).toString(16).toLowerCase();
-    var toHex = (num) => `0x${hex4(num).length === 1 ? "0" + hex4(num) : hex4(num)}`;
+    var hex3 = (num) => new Number(num).toString(16).toLowerCase();
+    var toHex = (num) => `0x${hex3(num).length === 1 ? "0" + hex3(num) : hex3(num)}`;
     exports2.toHex = toHex;
-    var fromHex = (hex5) => new Number(hex5);
+    var fromHex = (hex4) => new Number(hex4);
     exports2.fromHex = fromHex;
   }
 });
@@ -31432,7 +31432,7 @@ var require_dist7 = __commonJS({
       version: () => version
     });
     module2.exports = __toCommonJS2(index_exports);
-    function escapeMarkdown(text2, options2 = {}) {
+    function escapeMarkdown(text, options2 = {}) {
       const {
         codeBlock: codeBlock2 = true,
         inlineCode: inlineCode2 = true,
@@ -31450,7 +31450,7 @@ var require_dist7 = __commonJS({
         maskedLink = false
       } = options2;
       if (!codeBlockContent) {
-        return text2.split("```").map((subString, index, array) => {
+        return text.split("```").map((subString, index, array) => {
           if (index % 2 && index !== array.length - 1) return subString;
           return escapeMarkdown(subString, {
             inlineCode: inlineCode2,
@@ -31469,7 +31469,7 @@ var require_dist7 = __commonJS({
         }).join(codeBlock2 ? "\\`\\`\\`" : "```");
       }
       if (!inlineCodeContent) {
-        return text2.split(/(?<=^|[^`])`(?=[^`]|$)/g).map((subString, index, array) => {
+        return text.split(/(?<=^|[^`])`(?=[^`]|$)/g).map((subString, index, array) => {
           if (index % 2 && index !== array.length - 1) return subString;
           return escapeMarkdown(subString, {
             codeBlock: codeBlock2,
@@ -31486,7 +31486,7 @@ var require_dist7 = __commonJS({
           });
         }).join(inlineCode2 ? "\\`" : "`");
       }
-      let res = text2;
+      let res = text;
       if (escape2) res = escapeEscape(res);
       if (inlineCode2) res = escapeInlineCode(res);
       if (codeBlock2) res = escapeCodeBlock(res);
@@ -31502,17 +31502,17 @@ var require_dist7 = __commonJS({
       return res;
     }
     __name(escapeMarkdown, "escapeMarkdown");
-    function escapeCodeBlock(text2) {
-      return text2.replaceAll("```", "\\`\\`\\`");
+    function escapeCodeBlock(text) {
+      return text.replaceAll("```", "\\`\\`\\`");
     }
     __name(escapeCodeBlock, "escapeCodeBlock");
-    function escapeInlineCode(text2) {
-      return text2.replaceAll(/(?<=^|[^`])``?(?=[^`]|$)/g, (match) => match.length === 2 ? "\\`\\`" : "\\`");
+    function escapeInlineCode(text) {
+      return text.replaceAll(/(?<=^|[^`])``?(?=[^`]|$)/g, (match) => match.length === 2 ? "\\`\\`" : "\\`");
     }
     __name(escapeInlineCode, "escapeInlineCode");
-    function escapeItalic(text2) {
+    function escapeItalic(text) {
       let idx = 0;
-      const newText = text2.replaceAll(
+      const newText = text.replaceAll(
         /(?<=^|[^*])(?<!(?<!<)https?:\/\/\S*|<[^\s:]+:\/[^\s>]*)\*([^*]|\*\*|$)/g,
         (_, match) => {
           if (match === "**") return ++idx % 2 ? `\\*${match}` : `${match}\\*`;
@@ -31529,48 +31529,48 @@ var require_dist7 = __commonJS({
       );
     }
     __name(escapeItalic, "escapeItalic");
-    function escapeBold(text2) {
+    function escapeBold(text) {
       let idx = 0;
-      return text2.replaceAll(/\*\*(\*)?/g, (_, match) => {
+      return text.replaceAll(/\*\*(\*)?/g, (_, match) => {
         if (match) return ++idx % 2 ? `${match}\\*\\*` : `\\*\\*${match}`;
         return "\\*\\*";
       });
     }
     __name(escapeBold, "escapeBold");
-    function escapeUnderline(text2) {
+    function escapeUnderline(text) {
       let idx = 0;
-      return text2.replaceAll(/(?<!<a?:.+|https?:\/\/\S+)__(_)?(?!:\d+>)/g, (_, match) => {
+      return text.replaceAll(/(?<!<a?:.+|https?:\/\/\S+)__(_)?(?!:\d+>)/g, (_, match) => {
         if (match) return ++idx % 2 ? `${match}\\_\\_` : `\\_\\_${match}`;
         return "\\_\\_";
       });
     }
     __name(escapeUnderline, "escapeUnderline");
-    function escapeStrikethrough(text2) {
-      return text2.replaceAll("~~", "\\~\\~");
+    function escapeStrikethrough(text) {
+      return text.replaceAll("~~", "\\~\\~");
     }
     __name(escapeStrikethrough, "escapeStrikethrough");
-    function escapeSpoiler(text2) {
-      return text2.replaceAll("||", "\\|\\|");
+    function escapeSpoiler(text) {
+      return text.replaceAll("||", "\\|\\|");
     }
     __name(escapeSpoiler, "escapeSpoiler");
-    function escapeEscape(text2) {
-      return text2.replaceAll("\\", "\\\\");
+    function escapeEscape(text) {
+      return text.replaceAll("\\", "\\\\");
     }
     __name(escapeEscape, "escapeEscape");
-    function escapeHeading(text2) {
-      return text2.replaceAll(/^( {0,2})([*-] )?( *)(#{1,3} )/gm, "$1$2$3\\$4");
+    function escapeHeading(text) {
+      return text.replaceAll(/^( {0,2})([*-] )?( *)(#{1,3} )/gm, "$1$2$3\\$4");
     }
     __name(escapeHeading, "escapeHeading");
-    function escapeBulletedList(text2) {
-      return text2.replaceAll(/^( *)([*-])( +)/gm, "$1\\$2$3");
+    function escapeBulletedList(text) {
+      return text.replaceAll(/^( *)([*-])( +)/gm, "$1\\$2$3");
     }
     __name(escapeBulletedList, "escapeBulletedList");
-    function escapeNumberedList(text2) {
-      return text2.replaceAll(/^( *\d+)\./gm, "$1\\.");
+    function escapeNumberedList(text) {
+      return text.replaceAll(/^( *\d+)\./gm, "$1\\.");
     }
     __name(escapeNumberedList, "escapeNumberedList");
-    function escapeMaskedLink(text2) {
-      return text2.replaceAll(/\[.+]\(.+\)/gm, "\\$&");
+    function escapeMaskedLink(text) {
+      return text.replaceAll(/\[.+]\(.+\)/gm, "\\$&");
     }
     __name(escapeMaskedLink, "escapeMaskedLink");
     function codeBlock(language, content) {
@@ -33463,10 +33463,10 @@ var require_Util = __commonJS({
       const { shards } = await response.json();
       return Math.ceil(shards * (1e3 / guildsPerShard) / multipleOf) * multipleOf;
     }
-    function parseEmoji(text2) {
-      if (text2.includes("%")) text2 = decodeURIComponent(text2);
-      if (!text2.includes(":")) return { animated: false, name: text2, id: void 0 };
-      const match = text2.match(/<?(?:(a):)?(\w{2,32}):(\d{17,19})?>?/);
+    function parseEmoji(text) {
+      if (text.includes("%")) text = decodeURIComponent(text);
+      if (!text.includes(":")) return { animated: false, name: text, id: void 0 };
+      const match = text.match(/<?(?:(a):)?(\w{2,32}):(\d{17,19})?>?/);
       return match && { animated: Boolean(match[1]), name: match[2], id: match[3] };
     }
     function resolvePartialEmoji(emoji2) {
@@ -33597,8 +33597,8 @@ var require_Util = __commonJS({
         }
       );
     }
-    function cleanCodeBlockContent(text2) {
-      return text2.replaceAll("```", "`\u200B``");
+    function cleanCodeBlockContent(text) {
+      return text.replaceAll("```", "`\u200B``");
     }
     function parseWebhookURL(url) {
       const matches = url.match(
@@ -75831,7 +75831,7 @@ function payloadOf(m, stamp = true) {
 }
 function modalOf(m) {
   const modal3 = new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45));
-  const text2 = (f2, withLabel) => {
+  const text = (f2, withLabel) => {
     const input = new import_discord.TextInputBuilder().setCustomId(f2.id).setStyle(f2.paragraph ? import_discord.TextInputStyle.Paragraph : import_discord.TextInputStyle.Short).setRequired(!!f2.required);
     if (withLabel) input.setLabel(f2.label.slice(0, 45));
     if (f2.maxLength) input.setMaxLength(f2.maxLength);
@@ -75841,7 +75841,7 @@ function modalOf(m) {
     return input;
   };
   const fields = m.fields.slice(0, 5);
-  if (!fields.some((f2) => f2.kind && f2.kind !== "text" || f2.description)) return modal3.addComponents(fields.map((f2) => new import_discord.ActionRowBuilder().addComponents(text2(f2, true))));
+  if (!fields.some((f2) => f2.kind && f2.kind !== "text" || f2.description)) return modal3.addComponents(fields.map((f2) => new import_discord.ActionRowBuilder().addComponents(text(f2, true))));
   return modal3.addLabelComponents(fields.map((f2) => {
     const label2 = new import_discord.LabelBuilder().setLabel(f2.label.slice(0, 45));
     if (f2.description) label2.setDescription(f2.description.slice(0, 100));
@@ -75856,7 +75856,7 @@ function modalOf(m) {
       const max = Math.max(1, Math.min(f2.maxValues ?? 1, 10));
       return label2.setFileUploadComponent(new import_discord.FileUploadBuilder().setCustomId(f2.id).setRequired(!!f2.required).setMinValues(Math.min(f2.minValues ?? 0, max)).setMaxValues(max));
     }
-    return label2.setTextInputComponent(text2(f2, false));
+    return label2.setTextInputComponent(text(f2, false));
   }));
 }
 function modalValuesOf(i) {
@@ -75890,7 +75890,7 @@ function modalValuesOf(i) {
 }
 function createTicketRuntime(client2, api2, log = console.log) {
   const channels = /* @__PURE__ */ new Set();
-  const text2 = async (id3) => {
+  const text = async (id3) => {
     const ch2 = await client2().channels.fetch(id3).catch(() => null);
     return ch2 && ch2.type === import_discord.ChannelType.GuildText ? ch2 : null;
   };
@@ -75926,7 +75926,7 @@ function createTicketRuntime(client2, api2, log = console.log) {
     const file = () => new import_discord.AttachmentBuilder(Buffer.from(html, "utf8"), { name: e.filename });
     const extra = e.message ? payloadOf(e.message) : { allowedMentions: { parse: [] } };
     for (const id3 of e.channelIds) {
-      const ch2 = await text2(id3);
+      const ch2 = await text(id3);
       if (ch2) await ch2.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id3} failed: ${err instanceof Error ? err.message : err}`));
     }
     if (e.userId) await (await client2().users.fetch(e.userId)).send({ ...extra, files: [file()] }).catch(() => log(`transcript DM to ${e.userId} failed (DMs closed?)`));
@@ -75937,7 +75937,7 @@ function createTicketRuntime(client2, api2, log = console.log) {
         result.channelId = await create2(e);
         return;
       case "access": {
-        const ch2 = await text2(e.channelId);
+        const ch2 = await text(e.channelId);
         if (!ch2) return;
         const type = e.kind === "user" ? import_discord.OverwriteType.Member : import_discord.OverwriteType.Role;
         if (e.view === null) {
@@ -75948,22 +75948,22 @@ function createTicketRuntime(client2, api2, log = console.log) {
         return;
       }
       case "rename": {
-        const ch2 = await text2(e.channelId);
+        const ch2 = await text(e.channelId);
         if (ch2) await ch2.setName(e.name, "EN Polizei: Ticket umbenannt");
         return;
       }
       case "move": {
-        const ch2 = await text2(e.channelId);
+        const ch2 = await text(e.channelId);
         if (ch2) await ch2.setParent(e.parentId, { lockPermissions: false });
         return;
       }
       case "post": {
-        const ch2 = await text2(e.channelId);
+        const ch2 = await text(e.channelId);
         if (ch2) await ch2.send(payloadOf(e.message));
         return;
       }
       case "control": {
-        const ch2 = await text2(e.channelId);
+        const ch2 = await text(e.channelId);
         if (!ch2) return;
         const msg = e.messageId ? await ch2.messages.fetch(e.messageId).catch(() => null) : null;
         const edit = { ...payloadOf(e.message), content: void 0 };
@@ -75986,14 +75986,14 @@ function createTicketRuntime(client2, api2, log = console.log) {
           log(`refusing to delete ${e.channelId}: not a ticket channel`);
           return;
         }
-        const ch2 = await text2(e.channelId);
+        const ch2 = await text(e.channelId);
         if (!ch2) return;
         setTimeout(() => void ch2.delete("EN Polizei: Ticket gel\xF6scht").then(() => channels.delete(e.channelId)).catch((err) => log(`ticket delete failed: ${err instanceof Error ? err.message : err}`)), e.delayMs);
         return;
       }
       case "panel": {
         try {
-          const ch2 = await text2(e.channelId);
+          const ch2 = await text(e.channelId);
           if (!ch2) throw new Error("Der Kanal wurde nicht gefunden oder ist kein Textkanal (Kanal gel\xF6scht oder Bot sieht ihn nicht).");
           const old = e.messageId ? await ch2.messages.fetch(e.messageId).catch(() => null) : null;
           const p = payloadOf(e.message);
@@ -80309,9 +80309,9 @@ var DEFAULT_APPLICATION_MESSAGES = {
   confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit, indem du **abbrechen** schreibst.",
   completion: "\u2705 Deine Bewerbung **{number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht."
 };
-function renderApplicationText(text2, vars, appendReason = false) {
-  const out = text2.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
-  return appendReason && vars["{reason}"] && !text2.includes("{reason}") ? `${out}
+function renderApplicationText(text, vars, appendReason = false) {
+  const out = text.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
+  return appendReason && vars["{reason}"] && !text.includes("{reason}") ? `${out}
 
 **Grund:** ${vars["{reason}"]}` : out;
 }
@@ -80406,7 +80406,7 @@ function accountAge(created, now = Date.now()) {
   if (days2 < 730) return `${Math.floor(days2 / 30)} Monate`;
   return `${Math.floor(days2 / 365)} Jahre`;
 }
-function renderWelcomeText(text2, m, now = Date.now()) {
+function renderWelcomeText(text, m, now = Date.now()) {
   const vars = {
     "{user}": `<@${m.id}>`,
     "{username}": m.username,
@@ -80415,14 +80415,14 @@ function renderWelcomeText(text2, m, now = Date.now()) {
     "{memberCount}": String(m.memberCount),
     "{accountAge}": accountAge(m.createdAt, now)
   };
-  return text2.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
+  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
 }
 var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
 var sf = external_exports.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var color = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/);
 var emoji = external_exports.string().trim().max(64);
 var imageRef = external_exports.union([external_exports.string().trim().max(500).regex(/^(https:\/\/\S+|media:[0-9a-f-]{36})$/, "Bild: https://-Link oder hochgeladene Datei"), external_exports.literal("")]).default("");
-var toInt = (hex22) => parseInt(hex22.slice(1), 16);
+var toInt = (hex3) => parseInt(hex3.slice(1), 16);
 var staffSectionSchema = external_exports.object({
   roleId: sf,
   /** eigene Überschrift statt der Rollen-Erwähnung (leer = @Rolle) */
@@ -80899,16 +80899,16 @@ var questionSchema = external_exports.object({
   image: external_exports.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null)
 });
 var GAP = /\{\{([^{}]*)\}\}/g;
-function splitGaps(text2) {
+function splitGaps(text) {
   const out = [];
   let last = 0;
   let n = 0;
-  for (const m of text2.matchAll(GAP)) {
-    if (m.index > last) out.push(text2.slice(last, m.index));
+  for (const m of text.matchAll(GAP)) {
+    if (m.index > last) out.push(text.slice(last, m.index));
     out.push(n++);
     last = m.index + m[0].length;
   }
-  if (last < text2.length) out.push(text2.slice(last));
+  if (last < text.length) out.push(text.slice(last));
   return out;
 }
 var list = (a) => Array.isArray(a) ? a.map((x) => String(x ?? "")) : a == null || a === "" ? [] : [String(a)];
@@ -81233,38 +81233,6 @@ function aiCheck(answers, durationSec) {
   };
 }
 var FORM_MAX_FILE_BYTES = 8 * 1024 * 1024;
-var BRANDING_IMAGES = {
-  logo: { label: "Serverlogo", maxBytes: 2 * 1024 * 1024, minW: 64, minH: 64, maxW: 4096, maxH: 4096, ratio: [0.5, 2] },
-  avatar: { label: "Profilbild (rund)", maxBytes: 2 * 1024 * 1024, minW: 64, minH: 64, maxW: 4096, maxH: 4096, ratio: [0.8, 1.25] },
-  banner: { label: "Dashboard-Banner", maxBytes: 5 * 1024 * 1024, minW: 600, minH: 100, maxW: 8192, maxH: 4096, ratio: [2, 12] },
-  background: { label: "Hintergrundbild", maxBytes: 5 * 1024 * 1024, minW: 800, minH: 450, maxW: 8192, maxH: 8192, ratio: [0.4, 4] },
-  area: { label: "Bereichsbild", maxBytes: 5 * 1024 * 1024, minW: 600, minH: 100, maxW: 8192, maxH: 4096, ratio: [2, 12] }
-};
-var hex = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/, "Farbe als #rrggbb");
-var assetId = external_exports.string().uuid().nullable().default(null);
-var text = (max) => external_exports.string().trim().max(max).default("");
-var serverConfigSchema = external_exports.object({
-  general: external_exports.object({
-    displayName: external_exports.string().trim().min(1, "Bitte einen Namen angeben.").max(80),
-    shortName: external_exports.string().trim().max(16).default(""),
-    dashboardTitle: text(80),
-    welcomeText: text(1e3)
-  }).strict(),
-  branding: external_exports.object({
-    logo: assetId,
-    avatar: assetId,
-    banner: assetId,
-    background: assetId,
-    areas: external_exports.object({ dashboard: assetId, tickets: assetId, team: assetId }).strict().default({})
-  }).strict().default({}),
-  design: external_exports.object({
-    primary: hex.default("#1e3a8a"),
-    accent: hex.default("#3b82f6"),
-    /** user = persönliche Einstellung jedes Benutzers; dark/light = Standard dieses Servers (wenn der Benutzer „System“ gewählt hat) */
-    mode: external_exports.enum(["user", "dark", "light"]).default("user"),
-    useBackground: external_exports.boolean().default(false)
-  }).strict().default({})
-}).strict();
 
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
@@ -81389,12 +81357,6 @@ function botPerms(g, c) {
   if (!p) return void 0;
   return { view: p.has(import_discord3.PermissionFlagsBits.ViewChannel), send: p.has(import_discord3.PermissionFlagsBits.SendMessages), embed: p.has(import_discord3.PermissionFlagsBits.EmbedLinks), mentionEveryone: p.has(import_discord3.PermissionFlagsBits.MentionEveryone) };
 }
-function guildPerms(g) {
-  const p = g.members?.me?.permissions;
-  if (!p) return void 0;
-  const F = import_discord3.PermissionFlagsBits;
-  return { administrator: p.has(F.Administrator), viewChannel: p.has(F.ViewChannel), sendMessages: p.has(F.SendMessages), embedLinks: p.has(F.EmbedLinks), attachFiles: p.has(F.AttachFiles), readMessageHistory: p.has(F.ReadMessageHistory), manageChannels: p.has(F.ManageChannels), manageRoles: p.has(F.ManageRoles) };
-}
 function guildInfo(g) {
   return {
     id: g.id,
@@ -81405,8 +81367,7 @@ function guildInfo(g) {
       return { id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: "parentId" in c ? c.parentId ?? null : null, position: "rawPosition" in c ? c.rawPosition : 0, ...bot ? { bot } : {} };
     }),
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
-    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position })),
-    ...guildPerms(g) ? { botPermissions: guildPerms(g) } : {}
+    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position }))
   };
 }
 function startGuildDirectory(client2, api2, log = console.log) {
@@ -81577,10 +81538,10 @@ var HttpApi = class {
         headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body ? { "content-type": "application/json" } : {} },
         body: body ? JSON.stringify(body) : void 0
       });
-      const text2 = await res.text();
+      const text = await res.text();
       let json;
       try {
-        json = text2 ? JSON.parse(text2) : void 0;
+        json = text ? JSON.parse(text) : void 0;
       } catch {
         json = void 0;
       }
@@ -81613,8 +81574,8 @@ var clip2 = (s, max) => {
 };
 var label = (s) => String(s ?? "\u2014").replace(/_/g, " ");
 var plain2 = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
-var errorReply = (text2) => ({ content: `\u274C ${text2}`, ephemeral: true });
-var okReply = (text2) => ({ content: `\u2705 ${text2}`, ephemeral: true });
+var errorReply = (text) => ({ content: `\u274C ${text}`, ephemeral: true });
+var okReply = (text) => ({ content: `\u2705 ${text}`, ephemeral: true });
 function personEmbed(p, extra = {}) {
   return {
     title: clip2(`\u{1F464} ${p.robloxUsername}`, 256),
@@ -82220,14 +82181,14 @@ async function handleDirectMessage(a) {
     await a.sendDm(a.userId, questionMessage(s));
     return;
   }
-  const text2 = a.content.trim();
-  if (!text2) {
+  const text = a.content.trim();
+  if (!text) {
     await say("Bitte antworte mit Text.", COLORS.warning);
     return;
   }
-  if (!q2.field.required && text2 === SKIP) s.answers.push(null);
+  if (!q2.field.required && text === SKIP) s.answers.push(null);
   else {
-    const r = checkAnswer(q2.field, text2);
+    const r = checkAnswer(q2.field, text);
     if (!r.ok) {
       await say(r.error, COLORS.warning);
       return;
@@ -82253,7 +82214,7 @@ _Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Nam
         return;
       }
       s.answers.push(r.text);
-    } else s.answers.push(text2);
+    } else s.answers.push(text);
   }
   await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
 }
@@ -82449,9 +82410,9 @@ function fail(e) {
   if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip2(e.message, 500));
   return mapError(e);
 }
-async function run(c, r, text2) {
+async function run(c, r, text) {
   if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-  return okReply(text2 ?? r.message ?? "Erledigt.");
+  return okReply(text ?? r.message ?? "Erledigt.");
 }
 var staff = (c, id3, body) => c.api.asUser(c.discordId, "POST", `/support-tickets/${id3}/actions`, body);
 var options = (c, id3) => c.api.asUser(c.discordId, "GET", `/support-tickets/${id3}/options`);
@@ -82722,7 +82683,7 @@ var TICKET_COMMAND = {
 
 // apps/bot/src/voice-support.ts
 var ROOMS_MS = 6e4;
-var note = (text2) => ({ content: text2, ephemeral: true });
+var note = (text) => ({ content: text, ephemeral: true });
 var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip2(e.message, 500)) : mapError(e);
 function createVoiceSupport(api2, ops, log = console.error) {
   const rooms = /* @__PURE__ */ new Map();
@@ -82814,9 +82775,9 @@ function createVoiceSupport(api2, ops, log = console.error) {
         case "msg":
           return { modal: { id: `vs:msgsubmit:${id3}`, title: "Nachricht an die Person", fields: [{ id: "text", label: "Nachricht (per DM)", paragraph: true, required: true, maxLength: 2e3 }] } };
         case "msgsubmit": {
-          const text2 = (c.fields?.text ?? "").trim();
-          if (!text2) return errorReply("Bitte eine Nachricht eingeben.");
-          const r = await api2.service("POST", `/bot/voice-support/cases/${id3}/message`, { ...s, text: text2 });
+          const text = (c.fields?.text ?? "").trim();
+          if (!text) return errorReply("Bitte eine Nachricht eingeben.");
+          const r = await api2.service("POST", `/bot/voice-support/cases/${id3}/message`, { ...s, text });
           const sent = await ops.dm(r.userId, r.dm).then(() => true, () => false);
           if (!sent) return errorReply("Die Nachricht kam nicht an \u2013 die Person hat Direktnachrichten ausgeschaltet.");
           await applyEdit(r.edit);
@@ -83321,19 +83282,19 @@ var CAD_INTERACTION = {
     }
   }
 };
-var hex2 = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
+var hex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
 var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip2(plain2(value), 1024), inline }];
 function renderCadOutbox(type, p) {
   const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip2(plain2(p.title ?? ""), 180)}`;
   const base = [...f("Stichwort", p.keyword), ...f("Einsatzart", p.type), ...f("Priorit\xE4t", p.priority), ...f("Status", p.status), ...f("Ort", p.location)];
   switch (type) {
     case "cad.incident.created":
-      return { title: clip2(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex2(p.priorityColor) ?? COLORS.danger, description: p.description ? clip2(plain2(p.description), 1500) : void 0, fields: base };
+      return { title: clip2(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip2(plain2(p.description), 1500) : void 0, fields: base };
     case "cad.incident.status":
-      return { title: clip2(`\u{1F504} ${head}`, 256), color: hex2(p.priorityColor) ?? COLORS.info, description: `Status: **${plain2(p.previous ?? "\u2014")}** \u2192 **${plain2(p.status)}**${p.note ? `
+      return { title: clip2(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain2(p.previous ?? "\u2014")}** \u2192 **${plain2(p.status)}**${p.note ? `
 ${clip2(plain2(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
     case "cad.incident.assigned":
-      return { title: clip2(`\u{1F4FB} ${plain2(p.callsign)} \u2192 ${head}`, 256), color: hex2(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
+      return { title: clip2(`\u{1F4FB} ${plain2(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
     case "cad.incident.closed":
       return { title: clip2(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
     case "cad.incident.feedback":
@@ -83524,8 +83485,8 @@ var MB_INTERACTION = {
       if (!c.guildId || !c.discord?.setRole) return errorReply("Das geht nur auf dem Discord-Server.");
       try {
         const r = await c.discord.setRole(c.guildId, c.discordId, a.roleId, a.mode);
-        const text2 = { added: `\u2705 Du hast jetzt die Rolle <@&${a.roleId}>.`, removed: `\u2705 Die Rolle <@&${a.roleId}> wurde dir entfernt.`, unchanged: `\u2139\uFE0F Keine \xC4nderung an <@&${a.roleId}>.` }[r];
-        return { ephemeral: true, content: text2 };
+        const text = { added: `\u2705 Du hast jetzt die Rolle <@&${a.roleId}>.`, removed: `\u2705 Die Rolle <@&${a.roleId}> wurde dir entfernt.`, unchanged: `\u2139\uFE0F Keine \xC4nderung an <@&${a.roleId}>.` }[r];
+        return { ephemeral: true, content: text };
       } catch (e) {
         return errorReply(`Die Rolle konnte nicht ge\xE4ndert werden: ${discordErrorText(e)} (Die Bot-Rolle muss \xFCber dieser Rolle stehen und \u201ERollen verwalten\u201C haben.)`);
       }
@@ -83713,8 +83674,8 @@ var DUTY_REPORT_INTERACTION = {
 };
 
 // apps/bot/src/commands/trainings.ts
-function parseGermanDate(text2, now = /* @__PURE__ */ new Date()) {
-  const m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*(?:,?\s*(?:um\s*)?(\d{1,2})[:.](\d{2}))?\s*(?:uhr)?\s*$/i.exec(text2);
+function parseGermanDate(text, now = /* @__PURE__ */ new Date()) {
+  const m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*(?:,?\s*(?:um\s*)?(\d{1,2})[:.](\d{2}))?\s*(?:uhr)?\s*$/i.exec(text);
   if (!m) return null;
   const year = m[3] ? m[3].length === 2 ? 2e3 + Number(m[3]) : Number(m[3]) : now.getFullYear();
   const [d, mo, h, mi] = [Number(m[1]), Number(m[2]), Number(m[4] ?? 18), Number(m[5] ?? 0)];
@@ -84117,8 +84078,8 @@ var known = /* @__PURE__ */ new Set();
 function registerSecrets(values) {
   for (const v of values) if (v && v.length >= 8) known.add(v);
 }
-function redact(text2) {
-  let out = text2;
+function redact(text) {
+  let out = text;
   for (const v of known) out = out.split(v).join("[geschw\xE4rzt]");
   return out.replace(DISCORD_TOKEN, "[geschw\xE4rzt]").replace(AUTH_HEADER, "$1 [geschw\xE4rzt]").replace(ASSIGNMENT, "$1=[geschw\xE4rzt]");
 }
@@ -84146,7 +84107,7 @@ function installLogRedaction(c = console) {
 // apps/bot/src/guild-config.ts
 var GUILD_CONFIG_VERSION = 1;
 var sf5 = external_exports.string().regex(/^\d{15,25}$/);
-var hex3 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/, "Farbe bitte als #RRGGBB");
+var hex2 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/, "Farbe bitte als #RRGGBB");
 var httpsUrl = external_exports.string().trim().max(500).url().regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen");
 var roleList = external_exports.array(sf5).max(10).default([]);
 var ACCESS_LEVELS = ["admin", "leadership", "instructor", "officer", "readonly"];
@@ -84165,7 +84126,7 @@ var SECTION_SCHEMAS = {
     /** Farben auch auf die Antworten der übrigen Bot-Befehle anwenden */
     applyToAll: external_exports.boolean().default(false)
   }).passthrough(),
-  colors: external_exports.object({ primary: hex3.default("#3b82f6"), success: hex3.default("#22c55e"), warning: hex3.default("#f59e0b"), danger: hex3.default("#ef4444") }).passthrough(),
+  colors: external_exports.object({ primary: hex2.default("#3b82f6"), success: hex2.default("#22c55e"), warning: hex2.default("#f59e0b"), danger: hex2.default("#ef4444") }).passthrough(),
   welcome: external_exports.object({
     enabled: external_exports.boolean().default(false),
     title: external_exports.string().max(256).default("Willkommen auf {server}!"),
@@ -84349,7 +84310,7 @@ function policyFor(key4) {
   if (key4.includes(":")) return POLICIES[`${name}:*`];
   return POLICIES[name];
 }
-var deny = (text2) => ({ content: `\u26D4 ${text2}`, ephemeral: true });
+var deny = (text) => ({ content: `\u26D4 ${text}`, ephemeral: true });
 async function authorize(deps, a, key4) {
   const p = policyFor(key4);
   if (!p) return null;
@@ -84725,17 +84686,17 @@ async function chooser(c) {
   const rt = c.runtime;
   const list3 = (await rt.backups.list(c.guildId)).filter((b2) => b2.locations.length).slice(0, 25);
   const cfg2 = await rt.guildConfig.get(c.guildId).catch(() => null);
-  const text2 = [
+  const text = [
     "W\xE4hle eine Sicherung. Danach wird sie **gepr\xFCft** (Format, Server, Pr\xFCfsumme, keine Geheimnisse), in einer **abgeschotteten Testumgebung** eingespielt und ein **Wiederherstellungsplan** mit allen \xC4nderungen angezeigt. Erst nach deiner ausdr\xFCcklichen Best\xE4tigung wird etwas ver\xE4ndert \u2013 und vorher wird der aktuelle Stand automatisch gesichert.",
     "",
     "**Datenbank (Ausbildungen, Pr\xFCfungen, Personal \u2026):** stellt der Bot bewusst nicht wieder her \u2013 das ersetzt den gesamten Datenbestand aller Server. Bitte zuerst in einer Testumgebung pr\xFCfen (siehe `docs/bot-erweiterung.md`) und dann im System einspielen; das System sichert dabei vorher automatisch."
   ].join("\n");
-  if (!list3.length) return { ephemeral: true, embeds: [brand(cfg2, { title: "\u267B\uFE0F Wiederherstellen", description: `${text2}
+  if (!list3.length) return { ephemeral: true, embeds: [brand(cfg2, { title: "\u267B\uFE0F Wiederherstellen", description: `${text}
 
 Es gibt noch keine Bot-Sicherung f\xFCr diesen Server \u2013 \`/backup erstellen\`.` })] };
   return {
     ephemeral: true,
-    embeds: [brand(cfg2, { title: "\u267B\uFE0F Wiederherstellen", description: text2 })],
+    embeds: [brand(cfg2, { title: "\u267B\uFE0F Wiederherstellen", description: text })],
     select: { id: "bak:plan", placeholder: "Sicherung w\xE4hlen \u2026", options: list3.map((b2) => ({ label: b2.name.slice(0, 100), value: b2.name, description: `${new Date(b2.createdAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} \xB7 ${b2.locations.join(" + ")}`.slice(0, 100) })) }
   };
 }
@@ -84840,10 +84801,10 @@ var STATE_LABEL = { AVAILABLE: "verf\xFCgbar", IN_PROGRESS: "l\xE4uft", PASSED: 
 var pts = (n) => n === null || n === void 0 ? "\u2014" : String(Math.round(n * 100) / 100).replace(".", ",");
 var t = (iso, f2 = "R") => iso && !Number.isNaN(Date.parse(iso)) ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:${f2}>` : "\u2014";
 var list2 = (a) => Array.isArray(a) ? a.map((x) => String(x ?? "")) : a == null || a === "" ? [] : [String(a)];
-var gapCount = (text2) => (text2.match(/\{\{[^{}]*\}\}/g) ?? []).length;
-var gapText = (text2) => {
+var gapCount = (text) => (text.match(/\{\{[^{}]*\}\}/g) ?? []).length;
+var gapText = (text) => {
   let n = 0;
-  return text2.replace(/\{\{[^{}]*\}\}/g, () => `\uFF3BL\xFCcke ${++n}\uFF3D`);
+  return text.replace(/\{\{[^{}]*\}\}/g, () => `\uFF3BL\xFCcke ${++n}\uFF3D`);
 };
 async function cfgOf2(c) {
   return c.guildId && c.runtime ? c.runtime.guildConfig.get(c.guildId).catch(() => null) : null;
@@ -85843,13 +85804,13 @@ function checkPresence(o) {
   const activity = o.activity || (o.text?.trim() ? "benutzerdefiniert" : "keine");
   if (!(status3 in STATUSES)) return { error: "Unbekannter Status." };
   if (!(activity in ACTIVITIES)) return { error: "Unbekannte Aktivit\xE4tsart." };
-  const text2 = o.text?.trim() || null;
-  if (activity !== "keine" && !text2) return { error: "F\xFCr eine Aktivit\xE4t bitte einen Text angeben." };
-  if (text2 && text2.length > ACTIVITY_MAX) return { error: `Der Aktivit\xE4tstext ist zu lang (h\xF6chstens ${ACTIVITY_MAX} Zeichen).` };
+  const text = o.text?.trim() || null;
+  if (activity !== "keine" && !text) return { error: "F\xFCr eine Aktivit\xE4t bitte einen Text angeben." };
+  if (text && text.length > ACTIVITY_MAX) return { error: `Der Aktivit\xE4tstext ist zu lang (h\xF6chstens ${ACTIVITY_MAX} Zeichen).` };
   const url = o.url?.trim() || null;
   if (activity === "streamt" && !(url && /^https:\/\/(www\.)?(twitch\.tv|youtube\.com)\/\S+$/i.test(url))) return { error: "F\xFCr \u201EStreamt\u201C verlangt Discord einen Twitch- oder YouTube-Link (https://twitch.tv/\u2026 oder https://youtube.com/\u2026)." };
   if (url && activity !== "streamt") return { error: "Ein Link ist nur bei \u201EStreamt\u201C m\xF6glich." };
-  return { presence: { status: status3, activity, text: activity === "keine" ? null : text2, url } };
+  return { presence: { status: status3, activity, text: activity === "keine" ? null : text, url } };
 }
 function toPresenceData(p) {
   if (p.activity === "keine" || !p.text) return { status: p.status, activities: [] };
@@ -86476,9 +86437,9 @@ var schema = external_exports.object({
   BOT_BACKUP_DIR: external_exports.string().min(1).optional()
 });
 var guildIds = (cfg2) => [...new Set((cfg2.DISCORD_GUILD_ID ?? "").split(/[\s,;]+/).filter(Boolean))];
-function parseDotEnv(text2) {
+function parseDotEnv(text) {
   const out = {};
-  for (const line2 of text2.split(/\r?\n/)) {
+  for (const line2 of text.split(/\r?\n/)) {
     const m = line2.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
     if (m && !line2.trim().startsWith("#")) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
@@ -87117,11 +87078,11 @@ function fsBackupFiles(dir) {
     async read(g, n) {
       return (0, import_promises.readFile)(import_node_path2.default.join(gdir(g), safeName(n)), "utf8").catch(() => null);
     },
-    async write(g, n, text2) {
+    async write(g, n, text) {
       await (0, import_promises.mkdir)(gdir(g), { recursive: true, mode: 448 });
       await (0, import_promises.chmod)(dir, 448).catch(() => void 0);
       const f2 = import_node_path2.default.join(gdir(g), safeName(n));
-      await (0, import_promises.writeFile)(f2, text2, { mode: 384, flag: "wx" });
+      await (0, import_promises.writeFile)(f2, text, { mode: 384, flag: "wx" });
     }
   };
 }
@@ -87209,10 +87170,10 @@ var BotBackupService = class {
     for (const [n, b2] of byName2) if (!names.includes(n) && !m.snapshots[n]) byName2.set(n, { ...b2, locations: [] });
     return [...byName2.values()].sort((a, b2) => b2.createdAt.localeCompare(a.createdAt));
   }
-  parse(text2) {
-    if (!text2) return null;
+  parse(text) {
+    if (!text) return null;
     try {
-      return JSON.parse(text2);
+      return JSON.parse(text);
     } catch {
       return null;
     }
@@ -87400,8 +87361,8 @@ var platform = {
     if (!ch2 || ch2.type !== import_discord8.ChannelType.GuildText || !ch2.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
     setTimeout(() => void ch2.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
   },
-  async sendDirectMessage(userId, text2) {
-    await (await client.users.fetch(userId)).send({ content: text2, allowedMentions: { parse: [] } });
+  async sendDirectMessage(userId, text) {
+    await (await client.users.fetch(userId)).send({ content: text, allowedMentions: { parse: [] } });
   },
   async sendDm(userId, { embed, buttons, select }) {
     const m = await (await client.users.fetch(userId)).send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
@@ -87455,8 +87416,8 @@ var welcome = createWelcome(api, {
     if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
     await ch2.send({ ...m.content ? { content: m.content } : {}, embeds: [toEmbed(m.embed)], ...m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}, allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
   },
-  async dm(userId, text2) {
-    await platform.sendDirectMessage(userId, text2);
+  async dm(userId, text) {
+    await platform.sendDirectMessage(userId, text);
   },
   async addRoles(guildId, userId, roleIds) {
     const guild = await client.guilds.fetch(guildId);
@@ -87567,9 +87528,9 @@ var voiceSupport = createVoiceSupport(api, {
     const msg = await ch2.messages.fetch(messageId);
     return (await msg.startThread({ name: name.slice(0, 100), autoArchiveDuration: 1440 })).id;
   },
-  async threadPost(threadId, text2) {
+  async threadPost(threadId, text) {
     const ch2 = await client.channels.fetch(threadId);
-    if (ch2?.isSendable()) await ch2.send({ content: text2.slice(0, 2e3), allowedMentions: { parse: [] } });
+    if (ch2?.isSendable()) await ch2.send({ content: text.slice(0, 2e3), allowedMentions: { parse: [] } });
   }
 });
 var memberMemo = /* @__PURE__ */ new Map();

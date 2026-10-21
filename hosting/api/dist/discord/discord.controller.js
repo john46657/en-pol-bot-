@@ -35,8 +35,6 @@ const guildsBody = zod_1.z.object({ guilds: zod_1.z.array(zod_1.z.object({
             /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
             bot: zod_1.z.object({ view: zod_1.z.boolean(), send: zod_1.z.boolean(), embed: zod_1.z.boolean(), mentionEveryone: zod_1.z.boolean().optional() }).optional().catch(undefined) }), 500),
         roles: lenient(zod_1.z.object({ id: sf, name: zod_1.z.string().max(100), color: zod_1.z.number().int().min(0).catch(0), position: zod_1.z.number().int().catch(0) }), 250),
-        /** Server-weite Rechte des Bots (Einrichtungsassistent); fehlt bei älteren Bot-Versionen */
-        botPermissions: zod_1.z.record(zod_1.z.enum(['administrator', 'viewChannel', 'sendMessages', 'embedLinks', 'attachFiles', 'readMessageHistory', 'manageChannels', 'manageRoles']), zod_1.z.boolean()).optional().catch(undefined),
     })).max(50) });
 const redeem = zod_1.z.object({ code: zod_1.z.string().trim().min(8).max(12), discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
 const ack = zod_1.z.object({ ok: zod_1.z.boolean(), error: zod_1.z.string().max(300).optional() });
