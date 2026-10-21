@@ -7,7 +7,7 @@ export interface EmbedData { title: string; description?: string; color?: number
 /** `url`: Link-Button (öffnet die Adresse, löst keine Interaktion aus). */
 export interface ButtonSpec { id: string; label: string; style: 'primary' | 'secondary' | 'success' | 'danger'; emoji?: string; url?: string; /** ausgegraut (nicht klickbar) */ disabled?: boolean }
 /** Auswahlmenü; `id` wie bei Buttons `prefix:arg`. `kind`: Text-Optionen (Standard), Discord-Benutzer oder -Rollen. */
-export interface SelectSpec { id: string; placeholder: string; options: { label: string; value: string; description?: string; emoji?: string }[]; kind?: 'string' | 'user' | 'role'; min?: number; max?: number }
+export interface SelectSpec { id: string; placeholder: string; options: { label: string; value: string; description?: string; emoji?: string }[]; kind?: 'string' | 'user' | 'role' | 'channel'; min?: number; max?: number; /** vorausgewählt (Werte bzw. Rollen-/Kanal-IDs) */ defaults?: string[] }
 export interface ModalField {
   id: string; label: string; paragraph?: boolean; required?: boolean; minLength?: number; maxLength?: number; placeholder?: string; /** vorausgefüllt (Bearbeiten) */ value?: string;
   /** Ticket-Formulare: Auswahlmenü bzw. Datei-Upload (Discord-Formular mit Beschriftungen); Standard: Textfeld */
@@ -21,6 +21,8 @@ export interface Reply {
   decided?: { text: string; color: number; badge?: { label: string; style: ButtonSpec['style']; emoji?: string }; note?: string };
   /** Nachricht mit dem geklickten Button/Menü ersetzen (z. B. beantwortete Frage); ohne Buttons = Komponenten entfernen. */
   update?: { embeds?: EmbedData[]; buttons?: ButtonSpec[] };
+  /** Bei Interaktionen mit `panel`: die Nachricht mit dem Button/Menü/Formular durch diese Antwort ersetzen (Assistenten, Prüfungsseiten). */
+  panel?: boolean;
 }
 
 export const COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b } as const;

@@ -19,6 +19,8 @@ const schema = zod_1.z.object({
     OUTBOX_POLL_SECONDS: zod_1.z.coerce.number().int().min(2).max(60).default(5),
     /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
     LIVE_REFRESH_SECONDS: zod_1.z.coerce.number().int().min(5).max(3600).default(5),
+    /** Ordner für Bot-Sicherungen – absolut und AUSSERHALB des Bot-/Produktionsordners (Standard: ~/.en-polizei-bot/backups). */
+    BOT_BACKUP_DIR: zod_1.z.string().min(1).optional(),
 });
 /** "111, 222" -> ["111","222"] (Duplikate entfernt). */
 const guildIds = (cfg) => [...new Set((cfg.DISCORD_GUILD_ID ?? '').split(/[\s,;]+/).filter(Boolean))];

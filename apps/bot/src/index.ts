@@ -16,7 +16,7 @@ import { interactionFor } from './commands/features';
 import { handleDirectMessage, openApplicantTicket, sweepSessions } from './commands/qualifications';
 import type { CommandDef, Ctx } from './commands/types';
 import { guildIds, loadConfig, loadDotEnv } from './config';
-import type { ButtonSpec, EmbedData, ModalSpec, Reply, SelectSpec } from './format';
+import { errorReply, type ButtonSpec, type EmbedData, type ModalSpec, type Reply, type SelectSpec } from './format';
 import { createLive } from './live';
 import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
@@ -29,10 +29,26 @@ import { createVerify, type VerifyActions } from './verify';
 import { runMbSend, type MbPayload } from './message-builder';
 import { dutyReminderDm } from './format';
 import { commandsForServer, hexColor, type VerifyPanel } from '@enrp/shared';
+import { GuildConfigStore, TOGGLE_MODULES, apiKeyValue, setupWelcome } from './guild-config';
+import { BotBackupService, defaultBackupDir, fsBackupFiles, insideProduction } from './bot-backup';
+import { authorize, type AccessDeps, type MemberAccess } from './access';
+import { brandReply, moduleOfCommand, visibleCommands } from './branding';
+import type { GuildSnapshot } from './diagnostics';
+import { installLogRedaction, registerSecrets } from './safety';
+import type { BotRuntime } from './commands/types';
 
 loadDotEnv();
 const cfg = loadConfig();
+// Tokens nie in Logs: bekannte Geheimnisse + typische Token-Muster werden geschwärzt
+registerSecrets([cfg.DISCORD_TOKEN, cfg.BOT_API_TOKEN]);
+installLogRedaction();
 const api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
+/** Einstellungen je Server (/setup) und Bot-Sicherungen (Datei außerhalb des Bot-Ordners + Kopie in der Datenbank). */
+const guildConfig = new GuildConfigStore(apiKeyValue(api));
+const backupDir = cfg.BOT_BACKUP_DIR ? defaultBackupDir({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : defaultBackupDir({});
+const backupDirWarning = insideProduction(backupDir, [process.cwd(), ...(typeof __dirname === 'string' ? [__dirname] : [])])
+  ? `Der Sicherungsordner ${backupDir} liegt im Bot-/Produktionsordner. Bitte BOT_BACKUP_DIR auf einen Ordner außerhalb setzen (die Kopie in der Datenbank besteht trotzdem).` : null;
+const botBackups = new BotBackupService(guildConfig, fsBackupFiles(backupDir), apiKeyValue(api));
 /**
  * Guilds: Slash-Commands, Buttons, Channels, Rollen. DirectMessages: Antworten auf Bewerbungsfragen per DM.
  * GuildMessages + MessageContent: Verlauf/Transcript der Support-Tickets. GuildVoiceStates: Voice-Widget im Dashboard.
@@ -201,7 +217,7 @@ const welcome = createWelcome(api, {
     const ids = roleIds.filter((r) => guild.roles.cache.has(r));
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
   },
-});
+}, console.error, async (guildId, kind) => setupWelcome(await guildConfig.get(guildId), kind));
 /** Ghost-Ping: gelöschte Nachricht mit @Erwähnung → Hinweis im selben Kanal (nur die Erwähnten werden benachrichtigt). */
 const ghostPing = createGhostPing(api, {
   async post(channelId, m) {
@@ -303,6 +319,80 @@ const voiceSupport = createVoiceSupport(api, {
   },
 });
 
+/** Rollen/Rechte frisch von Discord (nicht aus der Interaktion) – kurz gemerkt, damit eine Interaktion nur einmal lädt. */
+const memberMemo = new Map<string, { at: number; m: MemberAccess | null }>();
+const access: AccessDeps = {
+  async member(guildId, userId) {
+    const key = `${guildId}:${userId}`;
+    const hit = memberMemo.get(key);
+    if (hit && Date.now() - hit.at < 3_000) return hit.m;
+    const guild = await client.guilds.fetch(guildId);
+    const m = await guild.members.fetch({ user: userId, force: true }).catch((e: { code?: number }) => { if (e?.code === 10007 || e?.code === 10013) return null; throw e; });
+    const out: MemberAccess | null = m ? { userId, roleIds: [...m.roles.cache.keys()].filter((r) => r !== guild.id), isOwner: guild.ownerId === userId, administrator: m.permissions.has(PermissionFlagsBits.Administrator), manageGuild: m.permissions.has(PermissionFlagsBits.ManageGuild) } : null;
+    if (memberMemo.size > 500) memberMemo.clear();
+    memberMemo.set(key, { at: Date.now(), m: out });
+    return out;
+  },
+  config: (guildId) => guildConfig.get(guildId),
+};
+/** Rechte des Bots, Kanäle und Rollen eines Servers (Diagnose, Wiederherstellungsplan). */
+async function guildSnapshot(guildId: string): Promise<GuildSnapshot | null> {
+  const g = await client.guilds.fetch(guildId).catch(() => null);
+  if (!g) return null;
+  const me = g.members.me ?? await g.members.fetchMe().catch(() => null);
+  if (!me) return null;
+  await g.channels.fetch().catch(() => undefined);
+  const kindOf = (t: ChannelType) => (t === ChannelType.GuildText || t === ChannelType.GuildAnnouncement ? 'text' : t === ChannelType.GuildVoice || t === ChannelType.GuildStageVoice ? 'voice' : t === ChannelType.GuildCategory ? 'category' : 'other') as GuildSnapshot['channels'][number]['kind'];
+  return {
+    id: g.id, name: g.name, botPermissions: me.permissions.bitfield, botTopRolePosition: me.roles.highest.position,
+    channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500).map((c) => ({ id: c.id, name: c.name, kind: kindOf(c.type), perms: ('permissionsFor' in c ? c.permissionsFor(me)?.bitfield : undefined) ?? 0n })),
+    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id).map((r) => ({ id: r.id, name: r.name, position: r.position, managed: r.managed })),
+  };
+}
+/** Slash-Befehle eines Servers neu registrieren (gesetzt, sobald der Bot bereit ist). */
+let registerGuild: ((guildId: string) => Promise<void>) | null = null;
+const runtime: BotRuntime = {
+  guildConfig, backups: botBackups, access, backupDirWarning,
+  status: () => ({ ready: client.isReady(), wsPing: Math.round(client.ws.ping), uptimeSec: Math.round(process.uptime()), guilds: client.guilds.cache.size, intents: { ...intents } }),
+  snapshot: guildSnapshot,
+  async apiHealth() {
+    const t0 = Date.now();
+    const res = await fetch(`${cfg.API_URL}/health`, { signal: AbortSignal.timeout(5000) }).catch(() => null);
+    const ms = Date.now() - t0;
+    if (!res) return { reachable: false, status: 0, ms, authOk: null };
+    // Bot-Zugang prüfen, ohne ihn anzuzeigen: eine harmlose Dienst-Route lesen
+    const authOk = await api.service('GET', '/bot/config').then(() => true, (e: { status?: number }) => (e?.status === 401 || e?.status === 403 ? false : null));
+    return { reachable: res.ok, status: res.status, ms, authOk };
+  },
+  async robloxReachable() {
+    // dokumentierte öffentliche Roblox-API (dieselbe wie bei der Namenssuche)
+    const res = await fetch('https://users.roblox.com/v1/usernames/users', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usernames: ['Roblox'], excludeBannedUsers: false }), signal: AbortSignal.timeout(6000) }).catch(() => null);
+    return !!res?.ok;
+  },
+  async setNickname(guildId, nick) {
+    const g = await client.guilds.fetch(guildId).catch(() => null);
+    const me = g ? g.members.me ?? await g.members.fetchMe().catch(() => null) : null;
+    if (!me) return 'Server nicht gefunden.';
+    return me.setNickname(nick, 'EN Polizei: Anzeigename aus /setup').then(() => null, () => 'dem Bot fehlt das Recht „Nickname ändern“.');
+  },
+  async reregister(guildId) { await registerGuild?.(guildId); },
+};
+
+const DENIED = errorReply('Die Rechteprüfung ist fehlgeschlagen – Aktion aus Sicherheitsgründen abgelehnt. Bitte erneut versuchen.');
+/** Modul eines Buttons/Menüs (Präfix) – für ausgeblendete Module im Bot. */
+const INTERACTION_MODULES: Record<string, string> = { duty: 'shift_logs', shift: 'shift_logs', leave: 'personnel', trn: 'personnel', exam: 'personnel', quali: 'applications', support: 'support', tk: 'support', cad: 'cad', rwreq: 'communication', drep: 'reports' };
+/**
+ * Zentrale Vorprüfung jeder Interaktion: im Bot ausgeblendetes Modul → Hinweis (Daten bleiben), dann Stufen-Richtlinie
+ * (frische Discord-Rollen). Die Rechte im System prüft die API zusätzlich bei jedem Aufruf.
+ */
+async function preflight(guildId: string | null, userId: string, key: string, module: string): Promise<Reply | null> {
+  if (guildId && module !== 'core') {
+    const gc = await guildConfig.get(guildId).catch(() => null);
+    if (gc?.modules.disabled.includes(module)) return errorReply(`Das Modul „${TOGGLE_MODULES.find((m) => m.key === module)?.name ?? module}“ ist auf diesem Server im Bot ausgeblendet. Die Daten bleiben erhalten – ein Serveradministrator kann es unter \`/setup\` → Module wieder einschalten.`);
+  }
+  return authorize(access, { guildId: guildId ?? undefined, userId }, key);
+}
+
 /** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
 function memberEvent(m: { id: string; user: { username: string; bot: boolean; createdAt: Date; displayAvatarURL(o: { size: number }): string } | null; displayName?: string | null; guild: { id: string; name: string; memberCount: number } }): MemberEvent | null {
   if (!m.user) return null;
@@ -369,6 +459,7 @@ function baseCtx(i: ChatInputCommandInteraction | AutocompleteInteraction | Butt
     listCategories: (guildId) => tickets.listCategories(guildId),
     userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
     voiceSupport,
+    runtime,
     verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
     userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
     discord: {
@@ -409,10 +500,14 @@ function rolesOf(m: unknown): string[] {
 }
 
 async function safeRun(label: string, fn: () => Promise<Reply>): Promise<Reply> {
-  try { return await fn(); } catch (e) {
+  let r: Reply;
+  try { r = await fn(); } catch (e) {
     console.error(`${label} failed:`, e instanceof Error ? e.message : e);
     return mapError(e);
   }
+  // „Farben auf alle Bot-Antworten anwenden“ (/setup)
+  const g = guildScope.getStore();
+  return g ? brandReply(r, await guildConfig.get(g).catch(() => null)) : r;
 }
 
 async function handleCommand(i: ChatInputCommandInteraction) {
@@ -422,9 +517,10 @@ async function handleCommand(i: ChatInputCommandInteraction) {
   const sub = def.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
   if (sub) opts._sub = sub;
   for (const o of (sub ? def.subcommands?.find((x) => x.name === sub)?.options : def.options) ?? []) { const v = i.options.get(o.name)?.value; opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined; }
+  const policyKey = sub ? `${def.name} ${sub}` : def.name;
   if (def.opensModal) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
-    const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    const reply = (await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
     else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
     return;
@@ -432,7 +528,7 @@ async function handleCommand(i: ChatInputCommandInteraction) {
   // Antworten sind nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels) – außer bei ausdrücklich öffentlichen Befehlen
   const pub = !!def.publicReply?.(opts);
   await i.deferReply(pub ? {} : { flags: MessageFlags.Ephemeral });
-  const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+  const reply = (await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
   if (pub && reply.ephemeral) {
     // Fehler o. Ä. eines öffentlichen Befehls: öffentliche „denkt nach“-Antwort weg, Hinweis nur für den Aufrufer
     await i.deleteReply().catch(() => undefined);
@@ -464,18 +560,29 @@ async function resetSelect(i: AnySelectMenuInteraction) {
 async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
+  const check = () => preflight(i.guildId, i.user.id, `${hit.def.prefix}:${hit.args[0] ?? ''}`, INTERACTION_MODULES[hit.def.prefix] ?? 'core').catch(() => DENIED);
   if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : undefined)) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
-    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
+    const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     if (reply.modal) await i.showModal(toModal(reply.modal));
     else { const p = replyPayload(reply); await i.reply({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral }); }
     if (i.isAnySelectMenu()) await resetSelect(i);
     return;
   }
+  if (hit.def.panel?.(hit.args) && (i.isButton() || i.isAnySelectMenu() || (i.isModalSubmit() && i.isFromMessage()))) {
+    // Assistent/Prüfungsseite an Ort und Stelle neu zeichnen; Fehler o. Ä. als eigene, private Antwort
+    await i.deferUpdate();
+    const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
+    const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(fields ? { fields } : {}), ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
+    const p = replyPayload(reply);
+    if (reply.panel) await i.editReply(p);
+    else await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral });
+    return;
+  }
   if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
     // Panel an Ort und Stelle neu zeichnen (wie bei Trident); Fehler o. Ä. ohne Kasten als eigene Antwort
     await i.deferUpdate();
-    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
     const p = replyPayload(reply);
     if (reply.embeds?.[0]?.box) await i.editReply(p);
     else await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral });
@@ -485,7 +592,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
   const modal = i.isModalSubmit() ? modalValuesOf(i) : undefined;
   const values = i.isAnySelectMenu() ? i.values : undefined;
-  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal }));
+  const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal }));
   await i.editReply(replyPayload(reply));
   const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error('could not update the application message:', e instanceof Error ? e.message : e));
@@ -585,6 +692,7 @@ async function checkApi() {
 function wireReady(client0: Client) {
   client0.once('clientReady', async (c) => {
   console.log(`Logged in as ${c.user.tag}`);
+  console.log(`Bot-Sicherungen: ${backupDir}`);
   // Einladungs-Link (Administrator-Rechte, wie im Dashboard)
   console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
   console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(', ') || 'keiner – Bot mit dem Link oben einladen'}`);
@@ -597,12 +705,16 @@ function wireReady(client0: Client) {
   const registered = new Map<string, string>();
   const register = async (g: string, name?: string, quiet = false) => {
     const mods = await api.service<{ disabled: string[] }>('GET', `/bot/servers/${g}/modules`).catch(() => null);
-    const list = mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json;
+    // zusätzlich im Bot ausgeblendete Module (/setup → Module); nur ausgeblendet, Daten bleiben
+    const botOff = (await guildConfig.get(g).catch(() => null))?.modules.disabled ?? [];
+    const list = visibleCommands(mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json, botOff);
     const sig = list.map((j) => j.name).sort().join(',');
     if (quiet && registered.get(g) === sig) return;
     try { await c.application.commands.set(list, g); registered.set(g, sig); console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(', ')})` : ''}`); }
     catch (e) { console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`); }
   };
+  registerGuild = (g) => { guildConfig.forget(g); return register(g, c.guilds.cache.get(g)?.name, true); };
+  if (backupDirWarning) console.warn(backupDirWarning);
   // Moduländerungen im Dashboard: Befehlsliste alle 2 Minuten abgleichen (nur bei Änderung neu registrieren)
   setInterval(() => { for (const [id, gname] of c.guilds.cache.map((x) => [x.id, x.name] as const)) void register(id, gname, true); }, 120_000).unref();
   const all = new Map([...c.guilds.cache.values()].map((g) => [g.id, g.name]));

@@ -10,6 +10,10 @@ import { WARNING_COMMANDS } from './warnings';
 import { RADIO_WHITELIST_COMMANDS } from './radio-whitelist';
 import { TRAINING_COMMANDS } from './trainings';
 import { SHIFT_COMMANDS } from './shifts';
+import { SETUP_COMMANDS } from './setup';
+import { SYSTEM_COMMANDS } from './system';
+import { BACKUP_COMMANDS } from './backup';
+import { EXAM_COMMANDS } from './exams';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -99,6 +103,8 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`' },
         { name: 'Erfassen', value: '`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`' },
         { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
+        { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
+        { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen`' },
         { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
         { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
@@ -401,6 +407,10 @@ export const COMMANDS: CommandDef[] = [
   ...TRAINING_COMMANDS,
   ...SHIFT_COMMANDS,
   TICKET_COMMAND,
+  ...SETUP_COMMANDS,
+  ...SYSTEM_COMMANDS,
+  ...BACKUP_COMMANDS,
+  ...EXAM_COMMANDS,
 ];
 
 export { mapError };

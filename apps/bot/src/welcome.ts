@@ -24,7 +24,11 @@ export function welcomeEmbed(def: WelcomeMessageDef, m: MemberEvent, now = Date.
  * Beitritt: Willkommensnachricht, DM, automatische Rollen. Austritt: Abschiedsnachricht und Meldung an das System
  * (offene Bewerbungen/Tickets nach Einstellung). Braucht den privilegierten „Server Members“-Intent.
  */
-export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string) => void = console.error) {
+/**
+ * `local`: Begrüßung/Abschied aus `/setup` – nur als Rückfall, wenn im System (Dashboard) für diesen Server KEINE
+ * Nachricht aktiv ist (so gibt es nie zwei Begrüßungen).
+ */
+export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string) => void = console.error, local?: (guildId: string, kind: 'welcome' | 'goodbye') => Promise<WelcomeMessageDef | null>) {
   const cache = new Map<string, { at: number; cfg: WelcomeConfig }>();
   const config = async (guildId: string) => {
     const hit = cache.get(guildId);
@@ -44,8 +48,12 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
     }
     return banners.get(id)!;
   };
-  const say = async (def: WelcomeMessageDef, m: MemberEvent) => {
-    if (!def.enabled || !def.channelId) return;
+  const say = async (def: WelcomeMessageDef, m: MemberEvent, kind?: 'welcome' | 'goodbye') => {
+    if (!def.enabled || !def.channelId) {
+      const fallback = kind && local ? await local(m.guildId, kind).catch((e) => { log(`setup ${kind} not loaded: ${e instanceof Error ? e.message : e}`); return null; }) : null;
+      if (fallback?.enabled && fallback.channelId) await actions.post(fallback.channelId, { ...(fallback.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(fallback, m) });
+      return;
+    }
     const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => { log(`banner not loaded: ${e instanceof Error ? e.message : e}`); return undefined; }) : undefined;
     await actions.post(def.channelId, { ...(def.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}), embed: welcomeEmbed(def, m, Date.now(), file?.name), ...(file ? { file } : {}) });
   };
@@ -56,7 +64,7 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
       const cfg = await config(m.guildId).catch((e) => { log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`); return null; });
       if (!cfg) return;
       await Promise.all([
-        step('welcome message', say(cfg.welcome, m)),
+        step('welcome message', say(cfg.welcome, m, 'welcome')),
         cfg.dm.enabled && cfg.dm.message.trim() ? step('welcome DM', actions.dm(m.id, renderWelcomeText(cfg.dm.message, m).slice(0, 2000))) : undefined,
         cfg.autoRoleIds.length ? step('auto roles', actions.addRoles(m.guildId, m.id, cfg.autoRoleIds)) : undefined,
       ]);
@@ -65,7 +73,7 @@ export function createWelcome(api: Api, actions: WelcomeActions, log: (m: string
       if (m.bot) return;
       const cfg = await config(m.guildId).catch((e) => { log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`); return null; });
       await Promise.all([
-        cfg ? step('goodbye message', say(cfg.goodbye, m)) : undefined,
+        cfg ? step('goodbye message', say(cfg.goodbye, m, 'goodbye')) : undefined,
         step('member-left actions', api.service('POST', '/bot/member-left', { guildId: m.guildId, discordId: m.id })),
       ]);
     },

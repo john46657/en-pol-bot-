@@ -50,6 +50,19 @@ Bewusst **nicht** über Discord möglich: Berichte freigeben/ablehnen, Fahndunge
 
 Alle Antworten sind **nur für den Aufrufer sichtbar** (ephemeral). Fehlt ein Recht, sagt der Bot „Dazu hast du keine Berechtigung“.
 
+## Einrichtung, Prüfungszentrum, Diagnose und Sicherungen (direkt in Discord)
+Ausführlich: [bot-erweiterung.md](bot-erweiterung.md).
+
+| Befehl | Wer | Was |
+|---|---|---|
+| `/setup` | Serveradministrator | Geführte Einrichtung je Server: Servername, Anzeigename (Bot-Spitzname), Logo/Banner (https-Links), Farben, Begrüßung/Abschied, Kanäle, Discord-Rollen je Stufe, Module ein/aus (nur ausgeblendet), Vorschau. Sofort dauerhaft gespeichert. |
+| `/system status` · `diagnose` · `integrations` | Polizeiführung (status) / Serveradministrator | Verbindung Discord/API, fehlende Bot-Rechte, nicht konfigurierte Kanäle/Rollen, Rollen über der Bot-Rolle, Intents – mit Lösungsweg; keine Tokens. |
+| `/backup status` · `erstellen` · `wiederherstellen` | Serveradministrator | Bot-Einstellungen sichern (Datei außerhalb des Bot-Ordners + Kopie in der Datenbank) und Datenbank-Sicherung des Systems anstoßen; Wiederherstellung nur nach Prüfung, Testlauf, Plan und Bestätigung „WIEDERHERSTELLEN“. |
+| `/pruefung liste` · `ergebnisse` · `ausbildungen` | ab „Nur lesend“ (Ablegen ab Beamter) | Prüfungen mit offenen Kriterien direkt in Discord ablegen, eigene Ergebnisse und Qualifikationen, Ausbildungen. |
+| `/pruefung verwalten` · `bewerten` | ab Ausbilder | Auswertung, Freigabe an/aus, Ankündigung im Prüfungskanal, abgegebene Versuche bewerten oder annullieren. |
+
+Stufen: **Serveradministrator > Polizeiführung > Ausbilder > Beamter > Nur lesend**. Geprüft werden die tatsächlichen Discord-Rollen (frisch von Discord geladen); „Server verwalten“/„Administrator“/Inhaber gelten immer als Serveradministrator. Die Rechte im System (verknüpftes Konto) gelten zusätzlich.
+
 ## Panels, Teamliste und Support-Tickets
 - **Gefahrenstatus-Panel** (`/gefahrenstatus aktion:panel hier posten`): Embed mit Buttons Grün/Gelb/Rot. Wer klickt, ändert den Status **mit seinen eigenen Rechten** (verknüpft + `dispatch.manage`). Das Panel zieht sich selbst nach – auch wenn der Status per Befehl geändert wird. Es gibt immer nur ein aktives Panel; wird es in einen anderen Kanal gesetzt, löscht der Bot das alte. **Auch aus dem Dashboard:** Discord-Nachrichten → Gefahrenstatus → „Panel in Discord senden“ – Kanal wählen, „Panel senden“ (Recht `settings.manage`, wird protokolliert).
 - **Teamliste** (`/teamliste`): steht im Channel aus *Settings → Team list channel ID* (sonst im aktuellen Channel), gruppiert nach Rang (Reihenfolge: *Settings → Team list rank order*), mit Dienststatus. Abgleich alle `LIVE_REFRESH_SECONDS` (Standard 5 s); bearbeitet wird nur bei Änderungen. Gelöschte Nachricht → wird neu gepostet.
@@ -83,6 +96,7 @@ Gleiches Geheimnis in API **und** Bot (`openssl rand -hex 32`):
 BOT_API_TOKEN=<64 Hex-Zeichen>      # API + Bot
 DISCORD_TOKEN=<Token aus Schritt 1> # nur Bot
 DISCORD_GUILD_ID=<Server-ID>        # optional – Commands kommen automatisch auf jeden Server des Bots
+BOT_BACKUP_DIR=/var/backups/en-polizei-bot  # optional – Bot-Sicherungen, AUSSERHALB des Bot-Ordners (Standard: ~/.en-polizei-bot/backups)
 ```
 - **Lokal testen:** `DISCORD_TOKEN=… DISCORD_GUILD_ID=… pnpm dev:all` startet den Bot automatisch mit (mit einem festen Entwicklungs-Geheimnis; nur lokal verwenden).
 - **Auf dem VPS:** Werte in `.env` eintragen (`BOT_API_TOKEN` erzeugt `setup-server.sh` schon), dann

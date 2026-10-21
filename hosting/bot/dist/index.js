@@ -12,6 +12,7 @@ const commands_1 = require("./commands");
 const features_1 = require("./commands/features");
 const qualifications_1 = require("./commands/qualifications");
 const config_1 = require("./config");
+const format_1 = require("./format");
 const live_1 = require("./live");
 const outbox_1 = require("./outbox");
 const roblox_1 = require("./roblox");
@@ -21,11 +22,25 @@ const backup_1 = require("./backup");
 const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
 const message_builder_1 = require("./message-builder");
-const format_1 = require("./format");
+const format_2 = require("./format");
 const shared_1 = require("@enrp/shared");
+const guild_config_1 = require("./guild-config");
+const bot_backup_1 = require("./bot-backup");
+const access_1 = require("./access");
+const branding_1 = require("./branding");
+const safety_1 = require("./safety");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
+// Tokens nie in Logs: bekannte Geheimnisse + typische Token-Muster werden geschwärzt
+(0, safety_1.registerSecrets)([cfg.DISCORD_TOKEN, cfg.BOT_API_TOKEN]);
+(0, safety_1.installLogRedaction)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
+/** Einstellungen je Server (/setup) und Bot-Sicherungen (Datei außerhalb des Bot-Ordners + Kopie in der Datenbank). */
+const guildConfig = new guild_config_1.GuildConfigStore((0, guild_config_1.apiKeyValue)(api));
+const backupDir = cfg.BOT_BACKUP_DIR ? (0, bot_backup_1.defaultBackupDir)({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : (0, bot_backup_1.defaultBackupDir)({});
+const backupDirWarning = (0, bot_backup_1.insideProduction)(backupDir, [process.cwd(), ...(typeof __dirname === 'string' ? [__dirname] : [])])
+    ? `Der Sicherungsordner ${backupDir} liegt im Bot-/Produktionsordner. Bitte BOT_BACKUP_DIR auf einen Ordner außerhalb setzen (die Kopie in der Datenbank besteht trotzdem).` : null;
+const botBackups = new bot_backup_1.BotBackupService(guildConfig, (0, bot_backup_1.fsBackupFiles)(backupDir), (0, guild_config_1.apiKeyValue)(api));
 const makeClient = (i) => new discord_js_1.Client({
     intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.DirectMessages, discord_js_1.GatewayIntentBits.GuildMessages, discord_js_1.GatewayIntentBits.GuildVoiceStates,
         ...(i.content ? [discord_js_1.GatewayIntentBits.MessageContent] : []), ...(i.members ? [discord_js_1.GatewayIntentBits.GuildMembers] : []), ...(i.presences ? [discord_js_1.GatewayIntentBits.GuildPresences] : [])],
@@ -218,7 +233,7 @@ const welcome = (0, welcome_1.createWelcome)(api, {
         if (ids.length)
             await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
     },
-});
+}, console.error, async (guildId, kind) => (0, guild_config_1.setupWelcome)(await guildConfig.get(guildId), kind));
 /** Ghost-Ping: gelöschte Nachricht mit @Erwähnung → Hinweis im selben Kanal (nur die Erwähnten werden benachrichtigt). */
 const ghostPing = (0, ghost_ping_1.createGhostPing)(api, {
     async post(channelId, m) {
@@ -340,6 +355,86 @@ const voiceSupport = (0, voice_support_1.createVoiceSupport)(api, {
             await ch.send({ content: text.slice(0, 2000), allowedMentions: { parse: [] } });
     },
 });
+/** Rollen/Rechte frisch von Discord (nicht aus der Interaktion) – kurz gemerkt, damit eine Interaktion nur einmal lädt. */
+const memberMemo = new Map();
+const access = {
+    async member(guildId, userId) {
+        const key = `${guildId}:${userId}`;
+        const hit = memberMemo.get(key);
+        if (hit && Date.now() - hit.at < 3_000)
+            return hit.m;
+        const guild = await client.guilds.fetch(guildId);
+        const m = await guild.members.fetch({ user: userId, force: true }).catch((e) => { if (e?.code === 10007 || e?.code === 10013)
+            return null; throw e; });
+        const out = m ? { userId, roleIds: [...m.roles.cache.keys()].filter((r) => r !== guild.id), isOwner: guild.ownerId === userId, administrator: m.permissions.has(discord_js_1.PermissionFlagsBits.Administrator), manageGuild: m.permissions.has(discord_js_1.PermissionFlagsBits.ManageGuild) } : null;
+        if (memberMemo.size > 500)
+            memberMemo.clear();
+        memberMemo.set(key, { at: Date.now(), m: out });
+        return out;
+    },
+    config: (guildId) => guildConfig.get(guildId),
+};
+/** Rechte des Bots, Kanäle und Rollen eines Servers (Diagnose, Wiederherstellungsplan). */
+async function guildSnapshot(guildId) {
+    const g = await client.guilds.fetch(guildId).catch(() => null);
+    if (!g)
+        return null;
+    const me = g.members.me ?? await g.members.fetchMe().catch(() => null);
+    if (!me)
+        return null;
+    await g.channels.fetch().catch(() => undefined);
+    const kindOf = (t) => (t === discord_js_1.ChannelType.GuildText || t === discord_js_1.ChannelType.GuildAnnouncement ? 'text' : t === discord_js_1.ChannelType.GuildVoice || t === discord_js_1.ChannelType.GuildStageVoice ? 'voice' : t === discord_js_1.ChannelType.GuildCategory ? 'category' : 'other');
+    return {
+        id: g.id, name: g.name, botPermissions: me.permissions.bitfield, botTopRolePosition: me.roles.highest.position,
+        channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500).map((c) => ({ id: c.id, name: c.name, kind: kindOf(c.type), perms: ('permissionsFor' in c ? c.permissionsFor(me)?.bitfield : undefined) ?? 0n })),
+        roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id).map((r) => ({ id: r.id, name: r.name, position: r.position, managed: r.managed })),
+    };
+}
+/** Slash-Befehle eines Servers neu registrieren (gesetzt, sobald der Bot bereit ist). */
+let registerGuild = null;
+const runtime = {
+    guildConfig, backups: botBackups, access, backupDirWarning,
+    status: () => ({ ready: client.isReady(), wsPing: Math.round(client.ws.ping), uptimeSec: Math.round(process.uptime()), guilds: client.guilds.cache.size, intents: { ...intents } }),
+    snapshot: guildSnapshot,
+    async apiHealth() {
+        const t0 = Date.now();
+        const res = await fetch(`${cfg.API_URL}/health`, { signal: AbortSignal.timeout(5000) }).catch(() => null);
+        const ms = Date.now() - t0;
+        if (!res)
+            return { reachable: false, status: 0, ms, authOk: null };
+        // Bot-Zugang prüfen, ohne ihn anzuzeigen: eine harmlose Dienst-Route lesen
+        const authOk = await api.service('GET', '/bot/config').then(() => true, (e) => (e?.status === 401 || e?.status === 403 ? false : null));
+        return { reachable: res.ok, status: res.status, ms, authOk };
+    },
+    async robloxReachable() {
+        // dokumentierte öffentliche Roblox-API (dieselbe wie bei der Namenssuche)
+        const res = await fetch('https://users.roblox.com/v1/usernames/users', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usernames: ['Roblox'], excludeBannedUsers: false }), signal: AbortSignal.timeout(6000) }).catch(() => null);
+        return !!res?.ok;
+    },
+    async setNickname(guildId, nick) {
+        const g = await client.guilds.fetch(guildId).catch(() => null);
+        const me = g ? g.members.me ?? await g.members.fetchMe().catch(() => null) : null;
+        if (!me)
+            return 'Server nicht gefunden.';
+        return me.setNickname(nick, 'EN Polizei: Anzeigename aus /setup').then(() => null, () => 'dem Bot fehlt das Recht „Nickname ändern“.');
+    },
+    async reregister(guildId) { await registerGuild?.(guildId); },
+};
+const DENIED = (0, format_1.errorReply)('Die Rechteprüfung ist fehlgeschlagen – Aktion aus Sicherheitsgründen abgelehnt. Bitte erneut versuchen.');
+/** Modul eines Buttons/Menüs (Präfix) – für ausgeblendete Module im Bot. */
+const INTERACTION_MODULES = { duty: 'shift_logs', shift: 'shift_logs', leave: 'personnel', trn: 'personnel', exam: 'personnel', quali: 'applications', support: 'support', tk: 'support', cad: 'cad', rwreq: 'communication', drep: 'reports' };
+/**
+ * Zentrale Vorprüfung jeder Interaktion: im Bot ausgeblendetes Modul → Hinweis (Daten bleiben), dann Stufen-Richtlinie
+ * (frische Discord-Rollen). Die Rechte im System prüft die API zusätzlich bei jedem Aufruf.
+ */
+async function preflight(guildId, userId, key, module) {
+    if (guildId && module !== 'core') {
+        const gc = await guildConfig.get(guildId).catch(() => null);
+        if (gc?.modules.disabled.includes(module))
+            return (0, format_1.errorReply)(`Das Modul „${guild_config_1.TOGGLE_MODULES.find((m) => m.key === module)?.name ?? module}“ ist auf diesem Server im Bot ausgeblendet. Die Daten bleiben erhalten – ein Serveradministrator kann es unter \`/setup\` → Module wieder einschalten.`);
+    }
+    return (0, access_1.authorize)(access, { guildId: guildId ?? undefined, userId }, key);
+}
 /** Mitglied (auch teilweise geladen) → Daten für Platzhalter. */
 function memberEvent(m) {
     if (!m.user)
@@ -427,6 +522,7 @@ function baseCtx(i) {
         listCategories: (guildId) => tickets.listCategories(guildId),
         userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
         voiceSupport,
+        runtime,
         verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
         userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
         discord: {
@@ -473,13 +569,17 @@ function rolesOf(m) {
     return Array.isArray(x.roles) ? x.roles : [...(x.roles.cache?.keys() ?? [])];
 }
 async function safeRun(label, fn) {
+    let r;
     try {
-        return await fn();
+        r = await fn();
     }
     catch (e) {
         console.error(`${label} failed:`, e instanceof Error ? e.message : e);
         return (0, commands_1.mapError)(e);
     }
+    // „Farben auf alle Bot-Antworten anwenden“ (/setup)
+    const g = api_1.guildScope.getStore();
+    return g ? (0, branding_1.brandReply)(r, await guildConfig.get(g).catch(() => null)) : r;
 }
 async function handleCommand(i) {
     const def = (0, commands_1.byName)(i.commandName);
@@ -493,9 +593,10 @@ async function handleCommand(i) {
         const v = i.options.get(o.name)?.value;
         opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
     }
+    const policyKey = sub ? `${def.name} ${sub}` : def.name;
     if (def.opensModal) {
         // Formulare müssen die erste Antwort sein – kein deferReply vorher.
-        const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+        const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
         if (reply.modal)
             await i.showModal(toModal(reply.modal));
         else {
@@ -507,7 +608,7 @@ async function handleCommand(i) {
     // Antworten sind nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels) – außer bei ausdrücklich öffentlichen Befehlen
     const pub = !!def.publicReply?.(opts);
     await i.deferReply(pub ? {} : { flags: discord_js_1.MessageFlags.Ephemeral });
-    const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (pub && reply.ephemeral) {
         // Fehler o. Ä. eines öffentlichen Befehls: öffentliche „denkt nach“-Antwort weg, Hinweis nur für den Aufrufer
         await i.deleteReply().catch(() => undefined);
@@ -538,9 +639,10 @@ async function handleComponent(i) {
     const hit = (0, features_1.interactionFor)(i.customId);
     if (!hit)
         return;
+    const check = () => preflight(i.guildId, i.user.id, `${hit.def.prefix}:${hit.args[0] ?? ''}`, INTERACTION_MODULES[hit.def.prefix] ?? 'core').catch(() => DENIED);
     if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : undefined)) {
         // Formulare müssen die erste Antwort sein – kein deferReply vorher.
-        const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
+        const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
         if (reply.modal)
             await i.showModal(toModal(reply.modal));
         else {
@@ -551,10 +653,22 @@ async function handleComponent(i) {
             await resetSelect(i);
         return;
     }
+    if (hit.def.panel?.(hit.args) && (i.isButton() || i.isAnySelectMenu() || (i.isModalSubmit() && i.isFromMessage()))) {
+        // Assistent/Prüfungsseite an Ort und Stelle neu zeichnen; Fehler o. Ä. als eigene, private Antwort
+        await i.deferUpdate();
+        const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
+        const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(fields ? { fields } : {}), ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
+        const p = replyPayload(reply);
+        if (reply.panel)
+            await i.editReply(p);
+        else
+            await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
+        return;
+    }
     if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
         // Panel an Ort und Stelle neu zeichnen (wie bei Trident); Fehler o. Ä. ohne Kasten als eigene Antwort
         await i.deferUpdate();
-        const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+        const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
         const p = replyPayload(reply);
         if (reply.embeds?.[0]?.box)
             await i.editReply(p);
@@ -566,7 +680,7 @@ async function handleComponent(i) {
     const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
     const modal = i.isModalSubmit() ? (0, discord_tickets_1.modalValuesOf)(i) : undefined;
     const values = i.isAnySelectMenu() ? i.values : undefined;
-    const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal }));
+    const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal }));
     await i.editReply(replyPayload(reply));
     const source = i.isModalSubmit() ? (i.isFromMessage() ? i.message : null) : i.message;
     if (reply.decided && source)
@@ -678,6 +792,7 @@ async function checkApi() {
 function wireReady(client0) {
     client0.once('clientReady', async (c) => {
         console.log(`Logged in as ${c.user.tag}`);
+        console.log(`Bot-Sicherungen: ${backupDir}`);
         // Einladungs-Link (Administrator-Rechte, wie im Dashboard)
         console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
         console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(', ') || 'keiner – Bot mit dem Link oben einladen'}`);
@@ -695,7 +810,9 @@ function wireReady(client0) {
         const registered = new Map();
         const register = async (g, name, quiet = false) => {
             const mods = await api.service('GET', `/bot/servers/${g}/modules`).catch(() => null);
-            const list = mods ? json.filter((j) => (0, shared_1.commandsForServer)([{ name: j.name }], mods.disabled).length) : json;
+            // zusätzlich im Bot ausgeblendete Module (/setup → Module); nur ausgeblendet, Daten bleiben
+            const botOff = (await guildConfig.get(g).catch(() => null))?.modules.disabled ?? [];
+            const list = (0, branding_1.visibleCommands)(mods ? json.filter((j) => (0, shared_1.commandsForServer)([{ name: j.name }], mods.disabled).length) : json, botOff);
             const sig = list.map((j) => j.name).sort().join(',');
             if (quiet && registered.get(g) === sig)
                 return;
@@ -708,6 +825,9 @@ function wireReady(client0) {
                 console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
             }
         };
+        registerGuild = (g) => { guildConfig.forget(g); return register(g, c.guilds.cache.get(g)?.name, true); };
+        if (backupDirWarning)
+            console.warn(backupDirWarning);
         // Moduländerungen im Dashboard: Befehlsliste alle 2 Minuten abgleichen (nur bei Änderung neu registrieren)
         setInterval(() => { for (const [id, gname] of c.guilds.cache.map((x) => [x.id, x.name]))
             void register(id, gname, true); }, 120_000).unref();
@@ -778,7 +898,7 @@ function wireReady(client0) {
                 const userId = String(p.discordId ?? '');
                 if (!/^\d{15,25}$/.test(userId))
                     throw new Error('no Discord user id');
-                await platform.sendDm(userId, (0, format_1.dutyReminderDm)(p));
+                await platform.sendDm(userId, (0, format_2.dutyReminderDm)(p));
                 return true;
             }
             if (type === 'verify.member') {

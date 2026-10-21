@@ -4,6 +4,31 @@ import type { LiveKind } from '../live';
 import type { DiscordConfig, Platform } from '../platform';
 import type { TicketEffect } from '@enrp/shared';
 import type { VoiceSupportRuntime } from '../voice-support';
+import type { AccessDeps } from '../access';
+import type { BotBackupService } from '../bot-backup';
+import type { GuildSnapshot, RuntimeStatus } from '../diagnostics';
+import type { GuildConfigStore } from '../guild-config';
+
+/** Laufzeit für Einrichtung (/setup), Diagnose (/system), Sicherungen (/backup) und Stufen-Rechte. Echte Umsetzung in index.ts, in Tests ein Fake. */
+export interface BotRuntime {
+  guildConfig: GuildConfigStore;
+  backups: BotBackupService;
+  /** Rollen/Rechte des Aufrufers frisch von Discord + Serverkonfiguration */
+  access: AccessDeps;
+  status(): RuntimeStatus;
+  /** Rechte des Bots, Kanäle und Rollen eines Servers (Diagnose, Wiederherstellungsplan) */
+  snapshot(guildId: string): Promise<GuildSnapshot | null>;
+  /** Erreichbarkeit der System-API (`/health`) und ob der Bot-Zugang angenommen wird – ohne Geheimnisse */
+  apiHealth(): Promise<{ reachable: boolean; status: number; ms: number; authOk: boolean | null }>;
+  /** Öffentliche Roblox-API (dokumentierte Namenssuche) erreichbar? */
+  robloxReachable(): Promise<boolean>;
+  /** Spitzname des Bots auf dem Server setzen (`null` = zurücksetzen); liefert einen Hinweis, falls es nicht ging */
+  setNickname(guildId: string, nick: string | null): Promise<string | null>;
+  /** Slash-Befehle des Servers neu registrieren (nach Moduländerungen) */
+  reregister(guildId: string): Promise<void>;
+  /** Hinweis, falls der Sicherungsordner im Produktionsordner liegt */
+  backupDirWarning: string | null;
+}
 
 export type Opts = Record<string, string | number | boolean | undefined>;
 export interface Ctx {
@@ -51,6 +76,8 @@ export interface Ctx {
   interactionId?: string;
   /** Sprach-Support (Buttons „Übernehmen“, „Ablehnen“, „Nachricht“ …). */
   voiceSupport?: VoiceSupportRuntime;
+  /** Einrichtung, Diagnose, Sicherungen, Stufen-Rechte */
+  runtime?: BotRuntime;
 }
 export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number; /** Vorschläge beim Tippen über `CommandDef.complete` (nur Text-Optionen). */ autocomplete?: boolean }
 /** Unterbefehl (`/leave manage`): Name landet in `opts._sub`, seine Optionen wie gewohnt in `opts`. */
@@ -67,4 +94,5 @@ export interface CommandDef {
 }
 /** Buttons/Formulare/Auswahlmenüs: customId = `prefix:arg:arg`. `fields` nur bei Formular-Absendungen, `values` nur bei Auswahlmenüs. */
 export interface InteractionDef { prefix: string; /** true: Antwort ist ein Formular (kein deferReply vorher); `values`: Auswahl bei Menüs. */ opensModal?: (args: string[], values?: string[]) => boolean;
-  /** true: Antwort ersetzt die Nachricht mit dem Button (z. B. Panel von `/shift manage`) statt einer neuen Antwort. */ updatesMessage?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[]; /** alle Formular-Eingaben (Auswahl, Dateien) */ modal?: { values: Record<string, string | string[] | boolean>; files: Record<string, import('@enrp/shared').FormFile[]> } }): Promise<Reply> }
+  /** true: Antwort ersetzt die Nachricht mit dem Button (z. B. Panel von `/shift manage`) statt einer neuen Antwort. */ updatesMessage?: (args: string[]) => boolean;
+  /** true: Button, Auswahlmenü oder Formular (aus einer Nachricht) bearbeitet die Nachricht an Ort und Stelle, wenn die Antwort `panel` setzt (sonst eigene private Antwort). */ panel?: (args: string[]) => boolean; run(ctx: Ctx & { args: string[]; fields?: Record<string, string>; values?: string[]; /** alle Formular-Eingaben (Auswahl, Dateien) */ modal?: { values: Record<string, string | string[] | boolean>; files: Record<string, import('@enrp/shared').FormFile[]> } }): Promise<Reply> }

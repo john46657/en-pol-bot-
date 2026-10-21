@@ -208,25 +208,25 @@ __export(tslib_es6_exports, {
   __values: () => __values,
   default: () => tslib_es6_default
 });
-function __extends(d, b) {
-  if (typeof b !== "function" && b !== null)
-    throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-  extendStatics(d, b);
+function __extends(d, b2) {
+  if (typeof b2 !== "function" && b2 !== null)
+    throw new TypeError("Class extends value " + String(b2) + " is not a constructor or null");
+  extendStatics(d, b2);
   function __() {
     this.constructor = d;
   }
-  d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  d.prototype = b2 === null ? Object.create(b2) : (__.prototype = b2.prototype, new __());
 }
 function __rest(s, e) {
-  var t = {};
+  var t2 = {};
   for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-    t[p] = s[p];
+    t2[p] = s[p];
   if (s != null && typeof Object.getOwnPropertySymbols === "function")
     for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
       if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-        t[p[i]] = s[p[i]];
+        t2[p[i]] = s[p[i]];
     }
-  return t;
+  return t2;
 }
 function __decorate(decorators, target, key4, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key4) : desc, d;
@@ -288,13 +288,13 @@ function __setFunctionName(f2, name, prefix) {
 function __metadata(metadataKey, metadataValue) {
   if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
 }
-function __awaiter(thisArg, _arguments, P, generator) {
+function __awaiter(thisArg, _arguments, P2, generator) {
   function adopt(value) {
-    return value instanceof P ? value : new P(function(resolve) {
+    return value instanceof P2 ? value : new P2(function(resolve) {
       resolve(value);
     });
   }
-  return new (P || (P = Promise))(function(resolve, reject) {
+  return new (P2 || (P2 = Promise))(function(resolve, reject) {
     function fulfilled(value) {
       try {
         step(generator.next(value));
@@ -317,9 +317,9 @@ function __awaiter(thisArg, _arguments, P, generator) {
 }
 function __generator(thisArg, body) {
   var _ = { label: 0, sent: function() {
-    if (t[0] & 1) throw t[1];
-    return t[1];
-  }, trys: [], ops: [] }, f2, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    if (t2[0] & 1) throw t2[1];
+    return t2[1];
+  }, trys: [], ops: [] }, f2, y, t2, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
   return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() {
     return this;
   }), g;
@@ -331,12 +331,12 @@ function __generator(thisArg, body) {
   function step(op) {
     if (f2) throw new TypeError("Generator is already executing.");
     while (g && (g = 0, op[0] && (_ = 0)), _) try {
-      if (f2 = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-      if (y = 0, t) op = [op[0] & 2, t.value];
+      if (f2 = 1, y && (t2 = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t2 = y["return"]) && t2.call(y), 0) : y.next) && !(t2 = t2.call(y, op[1])).done) return t2;
+      if (y = 0, t2) op = [op[0] & 2, t2.value];
       switch (op[0]) {
         case 0:
         case 1:
-          t = op;
+          t2 = op;
           break;
         case 4:
           _.label++;
@@ -351,25 +351,25 @@ function __generator(thisArg, body) {
           _.trys.pop();
           continue;
         default:
-          if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+          if (!(t2 = _.trys, t2 = t2.length > 0 && t2[t2.length - 1]) && (op[0] === 6 || op[0] === 2)) {
             _ = 0;
             continue;
           }
-          if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
+          if (op[0] === 3 && (!t2 || op[1] > t2[0] && op[1] < t2[3])) {
             _.label = op[1];
             break;
           }
-          if (op[0] === 6 && _.label < t[1]) {
-            _.label = t[1];
-            t = op;
+          if (op[0] === 6 && _.label < t2[1]) {
+            _.label = t2[1];
+            t2 = op;
             break;
           }
-          if (t && _.label < t[2]) {
-            _.label = t[2];
+          if (t2 && _.label < t2[2]) {
+            _.label = t2[2];
             _.ops.push(op);
             break;
           }
-          if (t[2]) _.ops.pop();
+          if (t2[2]) _.ops.pop();
           _.trys.pop();
           continue;
       }
@@ -378,7 +378,7 @@ function __generator(thisArg, body) {
       op = [6, e];
       y = 0;
     } finally {
-      f2 = t = 0;
+      f2 = t2 = 0;
     }
     if (op[0] & 5) throw op[1];
     return { value: op[0] ? op[1] : void 0, done: true };
@@ -453,8 +453,8 @@ function __asyncGenerator(thisArg, _arguments, generator) {
   function verb(n, f2) {
     if (g[n]) {
       i[n] = function(v) {
-        return new Promise(function(a, b) {
-          q2.push([n, v, a, b]) > 1 || resume(n, v);
+        return new Promise(function(a, b2) {
+          q2.push([n, v, a, b2]) > 1 || resume(n, v);
         });
       };
       if (f2) i[n] = f2(i[n]);
@@ -600,32 +600,32 @@ function __disposeResources(env) {
   }
   return next();
 }
-function __rewriteRelativeImportExtension(path2, preserveJsx) {
-  if (typeof path2 === "string" && /^\.\.?\//.test(path2)) {
-    return path2.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
+function __rewriteRelativeImportExtension(path3, preserveJsx) {
+  if (typeof path3 === "string" && /^\.\.?\//.test(path3)) {
+    return path3.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
       return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : d + ext + "." + cm.toLowerCase() + "js";
     });
   }
-  return path2;
+  return path3;
 }
 var extendStatics, __assign, __createBinding, __setModuleDefault, ownKeys, _SuppressedError, tslib_es6_default;
 var init_tslib_es6 = __esm({
   "node_modules/.pnpm/tslib@2.8.1/node_modules/tslib/tslib.es6.mjs"() {
-    extendStatics = function(d, b) {
-      extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
-        d2.__proto__ = b2;
-      } || function(d2, b2) {
-        for (var p in b2) if (Object.prototype.hasOwnProperty.call(b2, p)) d2[p] = b2[p];
+    extendStatics = function(d, b2) {
+      extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b3) {
+        d2.__proto__ = b3;
+      } || function(d2, b3) {
+        for (var p in b3) if (Object.prototype.hasOwnProperty.call(b3, p)) d2[p] = b3[p];
       };
-      return extendStatics(d, b);
+      return extendStatics(d, b2);
     };
     __assign = function() {
-      __assign = Object.assign || function __assign2(t) {
+      __assign = Object.assign || function __assign2(t2) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
           s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t2[p] = s[p];
         }
-        return t;
+        return t2;
       };
       return __assign.apply(this, arguments);
     };
@@ -1498,14 +1498,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol || ""}//${url.hostname || ""}:${port}`;
-        let path2 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path3 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path2 && path2[0] !== "/") {
-          path2 = `/${path2}`;
+        if (path3 && path3[0] !== "/") {
+          path3 = `/${path3}`;
         }
-        return new URL(`${origin}${path2}`);
+        return new URL(`${origin}${path3}`);
       }
       if (!isHttpOrHttpsPrefixed(url.origin || url.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -1956,39 +1956,39 @@ var require_diagnostics = __commonJS({
       });
       diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin }
+          request: { method, path: path3, origin }
         } = evt;
-        debuglog("sending request to %s %s/%s", method, origin, path2);
+        debuglog("sending request to %s %s/%s", method, origin, path3);
       });
       diagnosticsChannel.channel("undici:request:headers").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin },
+          request: { method, path: path3, origin },
           response: { statusCode }
         } = evt;
         debuglog(
           "received response to %s %s/%s - HTTP %d",
           method,
           origin,
-          path2,
+          path3,
           statusCode
         );
       });
       diagnosticsChannel.channel("undici:request:trailers").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin }
+          request: { method, path: path3, origin }
         } = evt;
-        debuglog("trailers received from %s %s/%s", method, origin, path2);
+        debuglog("trailers received from %s %s/%s", method, origin, path3);
       });
       diagnosticsChannel.channel("undici:request:error").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin },
+          request: { method, path: path3, origin },
           error
         } = evt;
         debuglog(
           "request to %s %s/%s errored - %s",
           method,
           origin,
-          path2,
+          path3,
           error.message
         );
       });
@@ -2037,9 +2037,9 @@ var require_diagnostics = __commonJS({
         });
         diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
           const {
-            request: { method, path: path2, origin }
+            request: { method, path: path3, origin }
           } = evt;
-          debuglog("sending request to %s %s/%s", method, origin, path2);
+          debuglog("sending request to %s %s/%s", method, origin, path3);
         });
       }
       diagnosticsChannel.channel("undici:websocket:open").subscribe((evt) => {
@@ -2102,7 +2102,7 @@ var require_request = __commonJS({
     var kHandler = /* @__PURE__ */ Symbol("handler");
     var Request = class {
       constructor(origin, {
-        path: path2,
+        path: path3,
         method,
         body,
         headers,
@@ -2117,11 +2117,11 @@ var require_request = __commonJS({
         expectContinue,
         servername
       }, handler) {
-        if (typeof path2 !== "string") {
+        if (typeof path3 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path2[0] !== "/" && !(path2.startsWith("http://") || path2.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path3[0] !== "/" && !(path3.startsWith("http://") || path3.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path2)) {
+        } else if (invalidPathRegex.test(path3)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -2187,7 +2187,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? buildURL(path2, query) : path2;
+        this.path = query ? buildURL(path3, query) : path3;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -5271,8 +5271,8 @@ var require_util2 = __commonJS({
       }
       return values;
     }
-    function getDecodeSplit(name, list) {
-      const value = list.get(name, true);
+    function getDecodeSplit(name, list3) {
+      const value = list3.get(name, true);
       if (value === null) {
         return null;
       }
@@ -5382,12 +5382,12 @@ var require_file = __commonJS({
     var FileLike = class _FileLike {
       constructor(blobLike, fileName, options2 = {}) {
         const n = fileName;
-        const t = options2.type;
+        const t2 = options2.type;
         const d = options2.lastModified ?? Date.now();
         this[kState] = {
           blobLike,
           name: n,
-          type: t,
+          type: t2,
           lastModified: d
         };
       }
@@ -5531,15 +5531,15 @@ var require_formdata = __commonJS({
         }
       }
       [nodeUtil.inspect.custom](depth, options2) {
-        const state = this[kState].reduce((a, b) => {
-          if (a[b.name]) {
-            if (Array.isArray(a[b.name])) {
-              a[b.name].push(b.value);
+        const state = this[kState].reduce((a, b2) => {
+          if (a[b2.name]) {
+            if (Array.isArray(a[b2.name])) {
+              a[b2.name].push(b2.value);
             } else {
-              a[b.name] = [a[b.name], b.value];
+              a[b2.name] = [a[b2.name], b2.value];
             }
           } else {
-            a[b.name] = b.value;
+            a[b2.name] = b2.value;
           }
           return a;
         }, { __proto__: null });
@@ -6873,7 +6873,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client2, request) {
-      const { method, path: path2, host, upgrade, blocking, reset } = request;
+      const { method, path: path3, host, upgrade, blocking, reset } = request;
       let { body, headers, contentLength } = request;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util2.isFormDataLike(body)) {
@@ -6954,7 +6954,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path2} HTTP/1.1\r
+      let header = `${method} ${path3} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -7485,7 +7485,7 @@ var require_client_h2 = __commonJS({
     }
     function writeH2(client2, request) {
       const session = client2[kHTTP2Session];
-      const { method, path: path2, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
+      const { method, path: path3, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
       let { body } = request;
       if (upgrade) {
         util2.errorRequest(client2, request, new Error("Upgrade not supported for H2"));
@@ -7582,7 +7582,7 @@ var require_client_h2 = __commonJS({
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path2;
+      headers[HTTP2_HEADER_PATH] = path3;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -7935,9 +7935,9 @@ var require_redirect_handler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util2.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path2 = search ? `${pathname}${search}` : pathname;
+        const path3 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path2;
+        this.opts.path = path3;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -8898,12 +8898,12 @@ var require_balanced_pool = __commonJS({
     var kWeight = /* @__PURE__ */ Symbol("kWeight");
     var kMaxWeightPerServer = /* @__PURE__ */ Symbol("kMaxWeightPerServer");
     var kErrorPenalty = /* @__PURE__ */ Symbol("kErrorPenalty");
-    function getGreatestCommonDivisor(a, b) {
-      if (a === 0) return b;
-      while (b !== 0) {
-        const t = b;
-        b = a % b;
-        a = t;
+    function getGreatestCommonDivisor(a, b2) {
+      if (a === 0) return b2;
+      while (b2 !== 0) {
+        const t2 = b2;
+        b2 = a % b2;
+        a = t2;
       }
       return a;
     }
@@ -8984,7 +8984,7 @@ var require_balanced_pool = __commonJS({
         if (!dispatcher) {
           return;
         }
-        const allClientsBusy = this[kClients].map((pool) => pool[kNeedDrain]).reduce((a, b) => a && b, true);
+        const allClientsBusy = this[kClients].map((pool) => pool[kNeedDrain]).reduce((a, b2) => a && b2, true);
         if (allClientsBusy) {
           return;
         }
@@ -9172,10 +9172,10 @@ var require_proxy_agent = __commonJS({
         };
         const {
           origin,
-          path: path2 = "/",
+          path: path3 = "/",
           headers = {}
         } = opts;
-        opts.path = origin + path2;
+        opts.path = origin + path3;
         if (!("host" in headers) && !("Host" in headers)) {
           const { host } = new URL2(origin);
           headers.host = host;
@@ -11147,20 +11147,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path2) {
-      if (typeof path2 !== "string") {
-        return path2;
+    function safeUrl(path3) {
+      if (typeof path3 !== "string") {
+        return path3;
       }
-      const pathSegments = path2.split("?");
+      const pathSegments = path3.split("?");
       if (pathSegments.length !== 2) {
-        return path2;
+        return path3;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path2, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path2);
+    function matchKey(mockDispatch2, { path: path3, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path3);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -11182,7 +11182,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key4) {
       const basePath = key4.query ? buildURL(key4.path, key4.query) : key4.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path2 }) => matchValue(safeUrl(path2), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path3 }) => matchValue(safeUrl(path3), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -11220,9 +11220,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path2, method, body, headers, query } = opts;
+      const { path: path3, method, body, headers, query } = opts;
       return {
-        path: path2,
+        path: path3,
         method,
         body,
         headers,
@@ -11685,10 +11685,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path2, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path3, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path2,
+            Path: path3,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -12411,8 +12411,8 @@ var require_headers = __commonJS({
       }
       return getHeadersList(headers).append(name, value, false);
     }
-    function compareHeaderName(a, b) {
-      return a[0] < b[0] ? -1 : 1;
+    function compareHeaderName(a, b2) {
+      return a[0] < b2[0] ? -1 : 1;
     }
     var HeadersList = class _HeadersList {
       /** @type {[string, string][]|null} */
@@ -12683,9 +12683,9 @@ var require_headers = __commonJS({
       // https://fetch.spec.whatwg.org/#dom-headers-getsetcookie
       getSetCookie() {
         webidl.brandCheck(this, _Headers);
-        const list = this.#headersList.cookies;
-        if (list) {
-          return [...list];
+        const list3 = this.#headersList.cookies;
+        if (list3) {
+          return [...list3];
         }
         return [];
       }
@@ -12719,14 +12719,14 @@ var require_headers = __commonJS({
       static getHeadersGuard(o) {
         return o.#guard;
       }
-      static setHeadersGuard(o, guard) {
-        o.#guard = guard;
+      static setHeadersGuard(o, guard2) {
+        o.#guard = guard2;
       }
       static getHeadersList(o) {
         return o.#headersList;
       }
-      static setHeadersList(o, list) {
-        o.#headersList = list;
+      static setHeadersList(o, list3) {
+        o.#headersList = list3;
       }
     };
     var { getHeadersGuard, setHeadersGuard, getHeadersList, setHeadersList } = Headers;
@@ -12836,21 +12836,21 @@ var require_response = __commonJS({
         return responseObject;
       }
       // Creates a redirect Response that redirects to url with status status.
-      static redirect(url, status = 302) {
+      static redirect(url, status3 = 302) {
         webidl.argumentLengthCheck(arguments, 1, "Response.redirect");
         url = webidl.converters.USVString(url);
-        status = webidl.converters["unsigned short"](status);
+        status3 = webidl.converters["unsigned short"](status3);
         let parsedURL;
         try {
           parsedURL = new URL(url, relevantRealm.settingsObject.baseUrl);
         } catch (err) {
           throw new TypeError(`Failed to parse URL from ${url}`, { cause: err });
         }
-        if (!redirectStatusSet.has(status)) {
-          throw new RangeError(`Invalid status code ${status}`);
+        if (!redirectStatusSet.has(status3)) {
+          throw new RangeError(`Invalid status code ${status3}`);
         }
         const responseObject = fromInnerResponse(makeResponse({}), "immutable");
-        responseObject[kState].status = status;
+        responseObject[kState].status = status3;
         const value = isomorphicEncode(URLSerializer(parsedURL));
         responseObject[kState].headersList.append("location", value, true);
         return responseObject;
@@ -13107,12 +13107,12 @@ var require_response = __commonJS({
         }
       }
     }
-    function fromInnerResponse(innerResponse, guard) {
+    function fromInnerResponse(innerResponse, guard2) {
       const response = new Response2(kConstruct);
       response[kState] = innerResponse;
       response[kHeaders] = new Headers(kConstruct);
       setHeadersList(response[kHeaders], innerResponse.headersList);
-      setHeadersGuard(response[kHeaders], guard);
+      setHeadersGuard(response[kHeaders], guard2);
       if (hasFinalizationRegistry && innerResponse.body?.stream) {
         streamRegistry.register(response, new WeakRef(innerResponse.body.stream));
       }
@@ -13694,13 +13694,13 @@ var require_request2 = __commonJS({
         if (this.signal.aborted) {
           ac.abort(this.signal.reason);
         } else {
-          let list = dependentControllerMap.get(this.signal);
-          if (list === void 0) {
-            list = /* @__PURE__ */ new Set();
-            dependentControllerMap.set(this.signal, list);
+          let list3 = dependentControllerMap.get(this.signal);
+          if (list3 === void 0) {
+            list3 = /* @__PURE__ */ new Set();
+            dependentControllerMap.set(this.signal, list3);
           }
           const acRef = new WeakRef(ac);
-          list.add(acRef);
+          list3.add(acRef);
           util2.addAbortListener(
             ac.signal,
             buildAbort(acRef)
@@ -13783,13 +13783,13 @@ var require_request2 = __commonJS({
       }
       return newRequest;
     }
-    function fromInnerRequest(innerRequest, signal, guard) {
+    function fromInnerRequest(innerRequest, signal, guard2) {
       const request = new Request(kConstruct);
       request[kState] = innerRequest;
       request[kSignal] = signal;
       request[kHeaders] = new Headers(kConstruct);
       setHeadersList(request[kHeaders], innerRequest.headersList);
-      setHeadersGuard(request[kHeaders], guard);
+      setHeadersGuard(request[kHeaders], guard2);
       return request;
     }
     Object.defineProperties(Request.prototype, {
@@ -14742,13 +14742,13 @@ var require_fetch = __commonJS({
         })();
       }
       try {
-        const { body, status, statusText, headersList, socket } = await dispatch({ body: requestBody });
+        const { body, status: status3, statusText, headersList, socket } = await dispatch({ body: requestBody });
         if (socket) {
-          response = makeResponse({ status, statusText, headersList, socket });
+          response = makeResponse({ status: status3, statusText, headersList, socket });
         } else {
           const iterator = body[Symbol.asyncIterator]();
           fetchParams.controller.next = () => iterator.next();
-          response = makeResponse({ status, statusText, headersList });
+          response = makeResponse({ status: status3, statusText, headersList });
         }
       } catch (err) {
         if (err.name === "AbortError") {
@@ -14871,8 +14871,8 @@ var require_fetch = __commonJS({
             onResponseStarted() {
               timingInfo.finalNetworkResponseStartTime = coarsenedSharedCurrentTime(fetchParams.crossOriginIsolatedCapability);
             },
-            onHeaders(status, rawHeaders, resume, statusText) {
-              if (status < 200) {
+            onHeaders(status3, rawHeaders, resume, statusText) {
+              if (status3 < 200) {
                 return;
               }
               let location = "";
@@ -14883,8 +14883,8 @@ var require_fetch = __commonJS({
               location = headersList.get("location", true);
               this.body = new Readable({ read: resume });
               const decoders = [];
-              const willFollow = location && request.redirect === "follow" && redirectStatusSet.has(status);
-              if (request.method !== "HEAD" && request.method !== "CONNECT" && !nullBodyStatus.includes(status) && !willFollow) {
+              const willFollow = location && request.redirect === "follow" && redirectStatusSet.has(status3);
+              if (request.method !== "HEAD" && request.method !== "CONNECT" && !nullBodyStatus.includes(status3) && !willFollow) {
                 const contentEncoding = headersList.get("content-encoding", true);
                 const codings = contentEncoding ? contentEncoding.toLowerCase().split(",") : [];
                 const maxContentEncodings = 5;
@@ -14921,7 +14921,7 @@ var require_fetch = __commonJS({
               }
               const onError = this.onError.bind(this);
               resolve({
-                status,
+                status: status3,
                 statusText,
                 headersList,
                 body: decoders.length ? pipeline(this.body, ...decoders, (err) => {
@@ -14958,8 +14958,8 @@ var require_fetch = __commonJS({
               fetchParams.controller.terminate(error);
               reject(error);
             },
-            onUpgrade(status, rawHeaders, socket) {
-              if (status !== 101) {
+            onUpgrade(status3, rawHeaders, socket) {
+              if (status3 !== 101) {
                 return;
               }
               const headersList = new HeadersList();
@@ -14967,8 +14967,8 @@ var require_fetch = __commonJS({
                 headersList.append(bufferToLowerCasedHeaderName(rawHeaders[i]), rawHeaders[i + 1].toString("latin1"), true);
               }
               resolve({
-                status,
-                statusText: STATUS_CODES[status],
+                status: status3,
+                statusText: STATUS_CODES[status3],
                 headersList,
                 socket
               });
@@ -15512,24 +15512,24 @@ var require_util4 = __commonJS({
       return new TextDecoder(encoding).decode(sliced);
     }
     function BOMSniffing(ioQueue) {
-      const [a, b, c] = ioQueue;
-      if (a === 239 && b === 187 && c === 191) {
+      const [a, b2, c] = ioQueue;
+      if (a === 239 && b2 === 187 && c === 191) {
         return "UTF-8";
-      } else if (a === 254 && b === 255) {
+      } else if (a === 254 && b2 === 255) {
         return "UTF-16BE";
-      } else if (a === 255 && b === 254) {
+      } else if (a === 255 && b2 === 254) {
         return "UTF-16LE";
       }
       return null;
     }
     function combineByteSequences(sequences) {
-      const size = sequences.reduce((a, b) => {
-        return a + b.byteLength;
+      const size = sequences.reduce((a, b2) => {
+        return a + b2.byteLength;
       }, 0);
       let offset = 0;
-      return sequences.reduce((a, b) => {
-        a.set(b, offset);
-        offset += b.byteLength;
+      return sequences.reduce((a, b2) => {
+        a.set(b2, offset);
+        offset += b2.byteLength;
         return a;
       }, new Uint8Array(size));
     }
@@ -16569,9 +16569,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path2) {
-      for (let i = 0; i < path2.length; ++i) {
-        const code = path2.charCodeAt(i);
+    function validateCookiePath(path3) {
+      for (let i = 0; i < path3.length; ++i) {
+        const code = path3.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code > 126 || // exclude DEL and non-ascii
         code === 59) {
@@ -19413,11 +19413,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path2 = opts.path;
+          let path3 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path2 = `/${path2}`;
+            path3 = `/${path3}`;
           }
-          url = new URL(util2.parseOrigin(url).origin + path2);
+          url = new URL(util2.parseOrigin(url).origin + path3);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -23733,7 +23733,7 @@ var require_dist2 = __commonJS({
        */
       sort(compareFunction = _Collection.defaultSort) {
         const entries = [...this.entries()];
-        entries.sort((a, b) => compareFunction(a[1], b[1], a[0], b[0]));
+        entries.sort((a, b2) => compareFunction(a[1], b2[1], a[0], b2[0]));
         super.clear();
         for (const [key4, value] of entries) {
           super.set(key4, value);
@@ -24083,19 +24083,19 @@ var require_cjs = __commonJS({
        * // → ['1056191128120082432', '737141877803057244', '254360814063058944'];
        * ```
        */
-      static compare(a, b) {
+      static compare(a, b2) {
         const typeA = typeof a;
-        return typeA === typeof b ? typeA === "string" ? cmpString(a, b) : cmpBigInt(a, b) : cmpBigInt(BigInt(a), BigInt(b));
+        return typeA === typeof b2 ? typeA === "string" ? cmpString(a, b2) : cmpBigInt(a, b2) : cmpBigInt(BigInt(a), BigInt(b2));
       }
     };
     __name(_Snowflake, "Snowflake");
     var Snowflake = _Snowflake;
-    function cmpBigInt(a, b) {
-      return a === b ? 0 : a < b ? -1 : 1;
+    function cmpBigInt(a, b2) {
+      return a === b2 ? 0 : a < b2 ? -1 : 1;
     }
     __name(cmpBigInt, "cmpBigInt");
-    function cmpString(a, b) {
-      return a === b ? 0 : a.length < b.length ? -1 : a.length > b.length ? 1 : a < b ? -1 : 1;
+    function cmpString(a, b2) {
+      return a === b2 ? 0 : a.length < b2.length ? -1 : a.length > b2.length ? 1 : a < b2 ? -1 : 1;
     }
     __name(cmpString, "cmpString");
     var DiscordSnowflake = new Snowflake(1420070400000n);
@@ -24154,15 +24154,15 @@ var require_dist3 = __commonJS({
     var require_inspect = __commonJS2({
       "node_modules/node-inspect-extracted/dist/inspect.js"(exports3, module22) {
         init_cjs_shims();
-        !(function(t, e) {
-          "object" == typeof exports3 && "object" == typeof module22 ? module22.exports = e() : "function" == typeof define && define.amd ? define([], e) : "object" == typeof exports3 ? exports3.util = e() : t.util = e();
+        !(function(t2, e) {
+          "object" == typeof exports3 && "object" == typeof module22 ? module22.exports = e() : "function" == typeof define && define.amd ? define([], e) : "object" == typeof exports3 ? exports3.util = e() : t2.util = e();
         })(exports3, () => (() => {
           "use strict";
-          var t = { 22: (t2) => {
-            t2.exports = { CHAR_DOT: 46, CHAR_FORWARD_SLASH: 47, CHAR_BACKWARD_SLASH: 92 };
-          }, 24: (t2) => {
-            t2.exports = URL;
-          }, 33: (t2, e2, r) => {
+          var t2 = { 22: (t22) => {
+            t22.exports = { CHAR_DOT: 46, CHAR_FORWARD_SLASH: 47, CHAR_BACKWARD_SLASH: 92 };
+          }, 24: (t22) => {
+            t22.exports = URL;
+          }, 33: (t22, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
                 return typeof t4;
@@ -24254,7 +24254,7 @@ var require_dist3 = __commonJS({
               })(e3)) in t3 ? Object.defineProperty(t3, e3, { value: r2, enumerable: true, configurable: true, writable: true }) : t3[e3] = r2, t3;
             }
             __name(u, "u");
-            var l, f2, s, y = r(425), p = y.AggregateError, g = y.AggregateErrorPrototype, v = y.Array, h = y.ArrayBuffer, d = y.ArrayBufferPrototype, b = y.ArrayIsArray, m = y.ArrayPrototype, S = y.ArrayPrototypeFilter, P = y.ArrayPrototypeForEach, x = y.ArrayPrototypeIncludes, w = y.ArrayPrototypeIndexOf, A = y.ArrayPrototypeJoin, O = y.ArrayPrototypeMap, _ = y.ArrayPrototypePop, j = y.ArrayPrototypePush, E = y.ArrayPrototypePushApply, k = y.ArrayPrototypeSlice, I = y.ArrayPrototypeSort, R = y.ArrayPrototypeSplice, L = y.ArrayPrototypeUnshift, T = y.BigIntPrototypeValueOf, B = y.Boolean, z = y.BooleanPrototype, M = y.BooleanPrototypeValueOf, C = y.DataView, D = y.DataViewPrototype, N = y.Date, F = y.DatePrototype, W = y.DatePrototypeGetTime, H = y.DatePrototypeToISOString, U = y.DatePrototypeToString, G = y.Error, V = y.ErrorPrototype, Z = y.ErrorPrototypeToString, $ = y.Function, Y = y.FunctionPrototype, q2 = y.FunctionPrototypeBind, J = y.FunctionPrototypeCall, K = y.FunctionPrototypeSymbolHasInstance, Q = y.FunctionPrototypeToString, X = y.JSONStringify, tt = y.Map, et = y.MapPrototype, rt = y.MapPrototypeEntries, nt = y.MapPrototypeGetSize, ot = y.MathFloor, at = y.MathMax, it = y.MathMin, ct = y.MathRound, ut = y.MathSqrt, lt = y.MathTrunc, ft = y.Number, st = y.NumberIsFinite, yt = y.NumberIsNaN, pt = y.NumberParseFloat, gt = y.NumberParseInt, vt = y.NumberPrototype, ht = y.NumberPrototypeToString, dt = y.NumberPrototypeValueOf, bt = y.Object, mt = y.ObjectAssign, St = y.ObjectDefineProperty, Pt = y.ObjectGetOwnPropertyDescriptor, xt = y.ObjectGetOwnPropertyNames, wt = y.ObjectGetOwnPropertySymbols, At = y.ObjectGetPrototypeOf, Ot = y.ObjectIs, _t = y.ObjectKeys, jt = y.ObjectPrototype, Et = y.ObjectPrototypeHasOwnProperty, kt = y.ObjectPrototypePropertyIsEnumerable, It = y.ObjectSeal, Rt = y.ObjectSetPrototypeOf, Lt = y.Promise, Tt = y.PromisePrototype, Bt = y.RangeError, zt = y.RangeErrorPrototype, Mt = y.ReflectApply, Ct = y.ReflectOwnKeys, Dt = y.RegExp, Nt = y.RegExpPrototype, Ft = y.RegExpPrototypeExec, Wt = y.RegExpPrototypeSymbolReplace, Ht = y.RegExpPrototypeSymbolSplit, Ut = y.RegExpPrototypeToString, Gt = y.SafeMap, Vt = y.SafeSet, Zt = y.SafeStringIterator, $t = y.Set, Yt = y.SetPrototype, qt = y.SetPrototypeGetSize, Jt = y.SetPrototypeValues, Kt = y.String, Qt = y.StringPrototype, Xt = y.StringPrototypeCharCodeAt, te = y.StringPrototypeCodePointAt, ee = y.StringPrototypeEndsWith, re = y.StringPrototypeIncludes, ne = y.StringPrototypeIndexOf, oe = y.StringPrototypeLastIndexOf, ae = y.StringPrototypeNormalize, ie = y.StringPrototypePadEnd, ce = y.StringPrototypePadStart, ue = y.StringPrototypeRepeat, le = y.StringPrototypeReplace, fe = y.StringPrototypeReplaceAll, se = y.StringPrototypeSlice, ye = y.StringPrototypeSplit, pe = y.StringPrototypeStartsWith, ge = y.StringPrototypeToLowerCase, ve = y.StringPrototypeTrim, he = y.StringPrototypeValueOf, de = y.SymbolIterator, be = y.SymbolPrototypeToString, me = y.SymbolPrototypeValueOf, Se = y.SymbolToPrimitive, Pe = y.SymbolToStringTag, xe = y.TypeError, we = y.TypeErrorPrototype, Ae = y.TypedArray, Oe = y.TypedArrayPrototype, _e = y.TypedArrayPrototypeGetLength, je = y.TypedArrayPrototypeGetSymbolToStringTag, Ee = y.Uint8Array, ke = y.WeakMap, Ie = y.WeakMapPrototype, Re = y.WeakSet, Le = y.WeakSetPrototype, Te = y.globalThis, Be = y.internalBinding, ze = y.uncurryThis, Me = r(153), Ce = Me.constants, De = Ce.ALL_PROPERTIES, Ne = Ce.ONLY_ENUMERABLE, Fe = Ce.kPending, We = Ce.kRejected, He = Me.getOwnNonIndexProperties, Ue = Me.getPromiseDetails, Ge = Me.getProxyDetails, Ve = Me.previewEntries, Ze = Me.getConstructorName, $e = Me.getExternalValue, Ye = Me.Proxy, qe = r(923), Je = qe.customInspectSymbol, Ke = qe.isError, Qe = qe.join, Xe = qe.removeColors, tr = r(924).isStackOverflowError, er = r(617), rr = er.isAsyncFunction, nr = er.isGeneratorFunction, or = er.isAnyArrayBuffer, ar = er.isArrayBuffer, ir = er.isArgumentsObject, cr = er.isBoxedPrimitive, ur = er.isDataView, lr = er.isExternal, fr = er.isMap, sr = er.isMapIterator, yr = er.isModuleNamespaceObject, pr = er.isNativeError, gr = er.isPromise, vr = er.isSet, hr = er.isSetIterator, dr = er.isWeakMap, br = er.isWeakSet, mr = er.isRegExp, Sr = er.isDate, Pr = er.isTypedArray, xr = er.isStringObject, wr = er.isNumberObject, Ar = er.isBooleanObject, Or = er.isBigIntObject, _r = r(229), jr = r(705).BuiltinModule, Er = r(116), kr = Er.validateObject, Ir = Er.validateString, Rr = Er.kValidateObjectAllowArray;
+            var l, f2, s, y = r(425), p = y.AggregateError, g = y.AggregateErrorPrototype, v = y.Array, h = y.ArrayBuffer, d = y.ArrayBufferPrototype, b2 = y.ArrayIsArray, m = y.ArrayPrototype, S = y.ArrayPrototypeFilter, P2 = y.ArrayPrototypeForEach, x = y.ArrayPrototypeIncludes, w = y.ArrayPrototypeIndexOf, A = y.ArrayPrototypeJoin, O = y.ArrayPrototypeMap, _ = y.ArrayPrototypePop, j = y.ArrayPrototypePush, E = y.ArrayPrototypePushApply, k = y.ArrayPrototypeSlice, I = y.ArrayPrototypeSort, R = y.ArrayPrototypeSplice, L = y.ArrayPrototypeUnshift, T = y.BigIntPrototypeValueOf, B = y.Boolean, z = y.BooleanPrototype, M = y.BooleanPrototypeValueOf, C = y.DataView, D = y.DataViewPrototype, N = y.Date, F = y.DatePrototype, W = y.DatePrototypeGetTime, H = y.DatePrototypeToISOString, U = y.DatePrototypeToString, G = y.Error, V = y.ErrorPrototype, Z = y.ErrorPrototypeToString, $ = y.Function, Y = y.FunctionPrototype, q2 = y.FunctionPrototypeBind, J = y.FunctionPrototypeCall, K = y.FunctionPrototypeSymbolHasInstance, Q = y.FunctionPrototypeToString, X = y.JSONStringify, tt = y.Map, et = y.MapPrototype, rt = y.MapPrototypeEntries, nt = y.MapPrototypeGetSize, ot = y.MathFloor, at = y.MathMax, it = y.MathMin, ct = y.MathRound, ut = y.MathSqrt, lt = y.MathTrunc, ft = y.Number, st = y.NumberIsFinite, yt = y.NumberIsNaN, pt = y.NumberParseFloat, gt = y.NumberParseInt, vt = y.NumberPrototype, ht = y.NumberPrototypeToString, dt = y.NumberPrototypeValueOf, bt = y.Object, mt = y.ObjectAssign, St = y.ObjectDefineProperty, Pt = y.ObjectGetOwnPropertyDescriptor, xt = y.ObjectGetOwnPropertyNames, wt = y.ObjectGetOwnPropertySymbols, At = y.ObjectGetPrototypeOf, Ot = y.ObjectIs, _t = y.ObjectKeys, jt = y.ObjectPrototype, Et = y.ObjectPrototypeHasOwnProperty, kt = y.ObjectPrototypePropertyIsEnumerable, It = y.ObjectSeal, Rt = y.ObjectSetPrototypeOf, Lt = y.Promise, Tt = y.PromisePrototype, Bt = y.RangeError, zt = y.RangeErrorPrototype, Mt = y.ReflectApply, Ct = y.ReflectOwnKeys, Dt = y.RegExp, Nt = y.RegExpPrototype, Ft = y.RegExpPrototypeExec, Wt = y.RegExpPrototypeSymbolReplace, Ht = y.RegExpPrototypeSymbolSplit, Ut = y.RegExpPrototypeToString, Gt = y.SafeMap, Vt = y.SafeSet, Zt = y.SafeStringIterator, $t = y.Set, Yt = y.SetPrototype, qt = y.SetPrototypeGetSize, Jt = y.SetPrototypeValues, Kt = y.String, Qt = y.StringPrototype, Xt = y.StringPrototypeCharCodeAt, te = y.StringPrototypeCodePointAt, ee = y.StringPrototypeEndsWith, re = y.StringPrototypeIncludes, ne = y.StringPrototypeIndexOf, oe = y.StringPrototypeLastIndexOf, ae = y.StringPrototypeNormalize, ie = y.StringPrototypePadEnd, ce = y.StringPrototypePadStart, ue = y.StringPrototypeRepeat, le = y.StringPrototypeReplace, fe = y.StringPrototypeReplaceAll, se = y.StringPrototypeSlice, ye = y.StringPrototypeSplit, pe = y.StringPrototypeStartsWith, ge = y.StringPrototypeToLowerCase, ve = y.StringPrototypeTrim, he = y.StringPrototypeValueOf, de = y.SymbolIterator, be = y.SymbolPrototypeToString, me = y.SymbolPrototypeValueOf, Se = y.SymbolToPrimitive, Pe = y.SymbolToStringTag, xe = y.TypeError, we = y.TypeErrorPrototype, Ae = y.TypedArray, Oe = y.TypedArrayPrototype, _e = y.TypedArrayPrototypeGetLength, je = y.TypedArrayPrototypeGetSymbolToStringTag, Ee = y.Uint8Array, ke = y.WeakMap, Ie = y.WeakMapPrototype, Re = y.WeakSet, Le = y.WeakSetPrototype, Te = y.globalThis, Be = y.internalBinding, ze = y.uncurryThis, Me = r(153), Ce = Me.constants, De = Ce.ALL_PROPERTIES, Ne = Ce.ONLY_ENUMERABLE, Fe = Ce.kPending, We = Ce.kRejected, He = Me.getOwnNonIndexProperties, Ue = Me.getPromiseDetails, Ge = Me.getProxyDetails, Ve = Me.previewEntries, Ze = Me.getConstructorName, $e = Me.getExternalValue, Ye = Me.Proxy, qe = r(923), Je = qe.customInspectSymbol, Ke = qe.isError, Qe = qe.join, Xe = qe.removeColors, tr = r(924).isStackOverflowError, er = r(617), rr = er.isAsyncFunction, nr = er.isGeneratorFunction, or = er.isAnyArrayBuffer, ar = er.isArrayBuffer, ir = er.isArgumentsObject, cr = er.isBoxedPrimitive, ur = er.isDataView, lr = er.isExternal, fr = er.isMap, sr = er.isMapIterator, yr = er.isModuleNamespaceObject, pr = er.isNativeError, gr = er.isPromise, vr = er.isSet, hr = er.isSetIterator, dr = er.isWeakMap, br = er.isWeakSet, mr = er.isRegExp, Sr = er.isDate, Pr = er.isTypedArray, xr = er.isStringObject, wr = er.isNumberObject, Ar = er.isBooleanObject, Or = er.isBigIntObject, _r = r(229), jr = r(705).BuiltinModule, Er = r(116), kr = Er.validateObject, Ir = Er.validateString, Rr = Er.kValidateObjectAllowArray;
             function Lr(t3) {
               return (f2 = f2 || r(802)).pathToFileURL(t3).href;
             }
@@ -24280,7 +24280,7 @@ var require_dist3 = __commonJS({
             }
             var Hr, Ur = /^[a-zA-Z_][a-zA-Z_0-9]*$/, Gr = /^(0|[1-9][0-9]*)$/, Vr = /^ {4}at (?:[^/\\(]+ \(|)node:(.+):\d+:\d+\)?$/, Zr = /^(\s+[^(]*?)\s*{/, $r = /(\/\/.*?\n)|(\/\*(.|\n)*?\*\/)/g, Yr = ["\\x00", "\\x01", "\\x02", "\\x03", "\\x04", "\\x05", "\\x06", "\\x07", "\\b", "\\t", "\\n", "\\x0B", "\\f", "\\r", "\\x0E", "\\x0F", "\\x10", "\\x11", "\\x12", "\\x13", "\\x14", "\\x15", "\\x16", "\\x17", "\\x18", "\\x19", "\\x1A", "\\x1B", "\\x1C", "\\x1D", "\\x1E", "\\x1F", "", "", "", "", "", "", "", "\\'", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\\\\", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\\x7F", "\\x80", "\\x81", "\\x82", "\\x83", "\\x84", "\\x85", "\\x86", "\\x87", "\\x88", "\\x89", "\\x8A", "\\x8B", "\\x8C", "\\x8D", "\\x8E", "\\x8F", "\\x90", "\\x91", "\\x92", "\\x93", "\\x94", "\\x95", "\\x96", "\\x97", "\\x98", "\\x99", "\\x9A", "\\x9B", "\\x9C", "\\x9D", "\\x9E", "\\x9F"], qr = new Dt("[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/\\#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/\\#&.:=?%@~_]*)*)?(?:\\u0007|\\u001B\\u005C|\\u009C))|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))", "g");
             function Jr(t3, e3) {
-              var r2 = { budget: {}, indentationLvl: 0, seen: [], currentDepth: 0, stylize: on, showHidden: Fr.showHidden, depth: Fr.depth, colors: Fr.colors, customInspect: Fr.customInspect, showProxy: Fr.showProxy, maxArrayLength: Fr.maxArrayLength, maxStringLength: Fr.maxStringLength, breakLength: Fr.breakLength, compact: Fr.compact, sorted: Fr.sorted, getters: Fr.getters, numericSeparator: Fr.numericSeparator };
+              var r2 = { budget: {}, indentationLvl: 0, seen: [], currentDepth: 0, stylize: on2, showHidden: Fr.showHidden, depth: Fr.depth, colors: Fr.colors, customInspect: Fr.customInspect, showProxy: Fr.showProxy, maxArrayLength: Fr.maxArrayLength, maxStringLength: Fr.maxStringLength, breakLength: Fr.breakLength, compact: Fr.compact, sorted: Fr.sorted, getters: Fr.getters, numericSeparator: Fr.numericSeparator };
               if (arguments.length > 1) {
                 if (arguments.length > 2 && (void 0 !== arguments[2] && (r2.depth = arguments[2]), arguments.length > 3 && void 0 !== arguments[3] && (r2.colors = arguments[3])), "boolean" == typeof e3) r2.showHidden = e3;
                 else if (e3) for (var n2 = _t(e3), o2 = 0; o2 < n2.length; ++o2) {
@@ -24344,10 +24344,10 @@ var require_dist3 = __commonJS({
               return t3;
             }
             __name(nn, "nn");
-            function on(t3) {
+            function on2(t3) {
               return t3;
             }
-            __name(on, "on");
+            __name(on2, "on");
             function an() {
               return [];
             }
@@ -24388,7 +24388,7 @@ var require_dist3 = __commonJS({
                   var l2 = Pt(r2, "constructor");
                   if (void 0 !== l2 && "function" == typeof l2.value && Dr.has(l2.value.name)) return;
                 }
-                0 === u2 ? c2 = new Vt() : P(i2, function(t4) {
+                0 === u2 ? c2 = new Vt() : P2(i2, function(t4) {
                   return c2.add(t4);
                 }), i2 = Ct(r2), j(t3.seen, e3);
                 var f22, s2 = o(i2);
@@ -24495,11 +24495,11 @@ var require_dist3 = __commonJS({
                 void 0 !== c2 && 0 === c2.length && (c2 = void 0);
                 var l3 = e4[Pe];
                 ("string" != typeof l3 || "" !== l3 && (t4.showHidden ? Et : kt)(e4, Pe)) && (l3 = "");
-                var p3, g3, v3 = "", h3 = an, d3 = true, m3 = 0, S2 = t4.showHidden ? De : Ne, P2 = 0;
-                if (de in e4 || null === u3) if (d3 = false, b(e4)) {
+                var p3, g3, v3 = "", h3 = an, d3 = true, m3 = 0, S2 = t4.showHidden ? De : Ne, P22 = 0;
+                if (de in e4 || null === u3) if (d3 = false, b2(e4)) {
                   var O2 = "Array" !== u3 || "" !== l3 ? sn(u3, l3, "Array", "(".concat(e4.length, ")")) : "";
                   if (i3 = He(e4, S2), p3 = ["".concat(O2, "["), "]"], 0 === e4.length && 0 === i3.length && void 0 === c2) return "".concat(p3[0], "]");
-                  P2 = 2, h3 = En;
+                  P22 = 2, h3 = En;
                 } else if (vr(e4)) {
                   var _2 = qt(e4), B2 = sn(u3, l3, "Set", "(".concat(_2, ")"));
                   if (i3 = yn(e4, t4.showHidden), h3 = q2(In, null, null !== u3 ? e4 : Jt(e4)), 0 === _2 && 0 === i3.length && void 0 === c2) return "".concat(B2, "{}");
@@ -24514,7 +24514,7 @@ var require_dist3 = __commonJS({
                   null === u3 && (N2 = je(e4), D2 = new y[N2](e4));
                   var F2 = _e(e4), G2 = sn(u3, l3, N2, "(".concat(F2, ")"));
                   if (p3 = ["".concat(G2, "["), "]"], 0 === e4.length && 0 === i3.length && !t4.showHidden) return "".concat(p3[0], "]");
-                  h3 = q2(kn, null, D2, F2), P2 = 2;
+                  h3 = q2(kn, null, D2, F2), P22 = 2;
                 } else sr(e4) ? (i3 = yn(e4, t4.showHidden), p3 = vn("Map", l3), h3 = q2(Cn, null, p3)) : hr(e4) ? (i3 = yn(e4, t4.showHidden), p3 = vn("Set", l3), h3 = q2(Cn, null, p3)) : d3 = true;
                 if (d3) {
                   if (i3 = yn(e4, t4.showHidden), p3 = ["{", "}"], "function" == typeof e4) {
@@ -24554,7 +24554,7 @@ var require_dist3 = __commonJS({
                           var i5 = a5[o2], c4 = w(e6, i5);
                           -1 === c4 || "string" == typeof r3[i5] && !re(n4, r3[i5]) || R(e6, c4, 1);
                         }
-                      })(n3, a4, t5, c3), !("cause" in t5) || 0 !== a4.length && x(a4, "cause") || j(a4, "cause"), !b(t5.errors) || 0 !== a4.length && x(a4, "errors") || j(a4, "errors"), c3 = (function(t6, e6, r3, n4) {
+                      })(n3, a4, t5, c3), !("cause" in t5) || 0 !== a4.length && x(a4, "cause") || j(a4, "cause"), !b2(t5.errors) || 0 !== a4.length && x(a4, "errors") || j(a4, "errors"), c3 = (function(t6, e6, r3, n4) {
                         var o2 = r3.length;
                         if ("string" != typeof r3 && (t6 = le(t6, "".concat(r3), "".concat(r3, " [").concat(se(sn(e6, n4, "Error"), 0, -1), "]"))), null === e6 || ee(r3, "Error") && pe(t6, r3) && (t6.length === o2 || ":" === t6[o2] || "\n" === t6[o2])) {
                           var a5 = "Error";
@@ -24641,7 +24641,7 @@ var require_dist3 = __commonJS({
                       var a4, i4;
                       wr(t5) ? (a4 = dt, i4 = "Number") : xr(t5) ? (a4 = he, i4 = "String", r2.splice(0, t5.length)) : Ar(t5) ? (a4 = M, i4 = "Boolean") : Or(t5) ? (a4 = T, i4 = "BigInt") : (a4 = me, i4 = "Symbol");
                       var c3 = "[".concat(i4);
-                      return i4 !== n3 && (c3 += null === n3 ? " (null prototype)" : " (".concat(n3, ")")), c3 += ": ".concat(An(on, a4(t5), e5), "]"), "" !== o2 && o2 !== n3 && (c3 += " [".concat(o2, "]")), 0 !== r2.length || e5.stylize === on ? c3 : e5.stylize(c3, ge(i4));
+                      return i4 !== n3 && (c3 += null === n3 ? " (null prototype)" : " (".concat(n3, ")")), c3 += ": ".concat(An(on2, a4(t5), e5), "]"), "" !== o2 && o2 !== n3 && (c3 += " [".concat(o2, "]")), 0 !== r2.length || e5.stylize === on2 ? c3 : e5.stylize(c3, ge(i4));
                     })(e4, t4, i3, u3, l3), 0 === i3.length && void 0 === c2) return v3;
                   } else if (!(function(t5) {
                     return f2 = f2 || r(802), "string" == typeof t5.href && t5 instanceof f2.URL;
@@ -24667,7 +24667,7 @@ var require_dist3 = __commonJS({
                 n2 += 1, t4.seen.push(e4), t4.currentDepth = n2;
                 var K2 = t4.indentationLvl;
                 try {
-                  for (g3 = h3(t4, e4, n2), m3 = 0; m3 < i3.length; m3++) j(g3, Nn(t4, e4, n2, i3[m3], P2));
+                  for (g3 = h3(t4, e4, n2), m3 = 0; m3 < i3.length; m3++) j(g3, Nn(t4, e4, n2, i3[m3], P22));
                   void 0 !== c2 && E(g3, c2);
                 } catch (r2) {
                   if (!tr(r2)) throw r2;
@@ -24684,13 +24684,13 @@ var require_dist3 = __commonJS({
                 }
                 if (t4.seen.pop(), t4.sorted) {
                   var et2 = true === t4.sorted ? void 0 : t4.sorted;
-                  if (0 === P2) I(g3, et2);
+                  if (0 === P22) I(g3, et2);
                   else if (i3.length > 1) {
                     var ot2 = I(k(g3, g3.length - i3.length), et2);
                     L(ot2, g3, g3.length - i3.length, i3.length), Mt(R, null, ot2);
                   }
                 }
-                var at2 = Wn(t4, g3, v3, p3, P2, n2, e4), it2 = (t4.budget[t4.indentationLvl] || 0) + at2.length;
+                var at2 = Wn(t4, g3, v3, p3, P22, n2, e4), it2 = (t4.budget[t4.indentationLvl] || 0) + at2.length;
                 return t4.budget[t4.indentationLvl] = it2, it2 > Math.pow(2, 27) && (t4.depth = -1), at2;
               })(t3, e3, a2, i2);
             }
@@ -24968,8 +24968,8 @@ var require_dist3 = __commonJS({
               } else u2 = void 0 !== i2.set ? t3.stylize("[Setter]", "special") : t3.stylize("undefined", "undefined");
               if (1 === a2) return u2;
               if ("symbol" === n(o2)) {
-                var b2 = Wt(Br, be(o2), en);
-                c2 = t3.stylize(b2, "symbol");
+                var b22 = Wt(Br, be(o2), en);
+                c2 = t3.stylize(b22, "symbol");
               } else c2 = null !== Ft(Ur, o2) ? "__proto__" === o2 ? "['__proto__']" : t3.stylize(o2, "name") : t3.stylize(rn(o2), "string");
               return false === i2.enumerable && (c2 = "[".concat(c2, "]")), "".concat(c2, ":").concat(f22).concat(u2);
             }
@@ -24997,7 +24997,7 @@ var require_dist3 = __commonJS({
                       var f3 = ut(l3 - n3 / e4.length), s3 = at(l3 - 3 - f3, 1), y2 = it(ct(ut(2.5 * s3 * i3) / s3), ot((t4.breakLength - t4.indentationLvl) / l3), 4 * t4.compact, 15);
                       if (y2 <= 1) return e4;
                       for (var p2 = [], g2 = [], h2 = 0; h2 < y2; h2++) {
-                        for (var d2 = 0, b2 = h2; b2 < e4.length; b2 += y2) c3[b2] > d2 && (d2 = c3[b2]);
+                        for (var d2 = 0, b22 = h2; b22 < e4.length; b22 += y2) c3[b22] > d2 && (d2 = c3[b22]);
                         d2 += 2, g2[h2] = d2;
                       }
                       var m2 = ce;
@@ -25007,13 +25007,13 @@ var require_dist3 = __commonJS({
                           break;
                         }
                       }
-                      for (var P2 = 0; P2 < i3; P2 += y2) {
-                        for (var x2 = it(P2 + y2, i3), w2 = "", A2 = P2; A2 < x2 - 1; A2++) {
-                          var O2 = g2[A2 - P2] + e4[A2].length - c3[A2];
+                      for (var P22 = 0; P22 < i3; P22 += y2) {
+                        for (var x2 = it(P22 + y2, i3), w2 = "", A2 = P22; A2 < x2 - 1; A2++) {
+                          var O2 = g2[A2 - P22] + e4[A2].length - c3[A2];
                           w2 += m2("".concat(e4[A2], ", "), O2, " ");
                         }
                         if (m2 === ce) {
-                          var _2 = g2[A2 - P2] + e4[A2].length - c3[A2] - 2;
+                          var _2 = g2[A2 - P22] + e4[A2].length - c3[A2] - 2;
                           w2 += ce(e4[A2], _2, " ");
                         } else w2 += e4[A2];
                         j(p2, w2);
@@ -25082,12 +25082,12 @@ var require_dist3 = __commonJS({
             __name(Zn, "Zn");
             function $n(t3, e3) {
               var r2;
-              return xn(on, t3, null !== (r2 = null == e3 ? void 0 : e3.numericSeparator) && void 0 !== r2 ? r2 : Fr.numericSeparator);
+              return xn(on2, t3, null !== (r2 = null == e3 ? void 0 : e3.numericSeparator) && void 0 !== r2 ? r2 : Fr.numericSeparator);
             }
             __name($n, "$n");
             function Yn(t3, e3) {
               var r2;
-              return wn(on, t3, null !== (r2 = null == e3 ? void 0 : e3.numericSeparator) && void 0 !== r2 ? r2 : Fr.numericSeparator);
+              return wn(on2, t3, null !== (r2 = null == e3 ? void 0 : e3.numericSeparator) && void 0 !== r2 ? r2 : Fr.numericSeparator);
             }
             __name(Yn, "Yn");
             function qn(t3, e3) {
@@ -25182,7 +25182,7 @@ var require_dist3 = __commonJS({
               });
             }
             __name(to, "to");
-            t2.exports = { identicalSequenceRange: hn, inspect: Jr, inspectDefaultOptions: Fr, format: /* @__PURE__ */ __name(function() {
+            t22.exports = { identicalSequenceRange: hn, inspect: Jr, inspectDefaultOptions: Fr, format: /* @__PURE__ */ __name(function() {
               for (var t3 = arguments.length, e3 = new Array(t3), r2 = 0; r2 < t3; r2++) e3[r2] = arguments[r2];
               return qn(void 0, e3);
             }, "format"), formatWithOptions: /* @__PURE__ */ __name(function(t3) {
@@ -25193,7 +25193,7 @@ var require_dist3 = __commonJS({
               var r2 = Jr.styles[e3];
               return void 0 !== r2 ? '<span style="color:'.concat(r2, ';">').concat(to(t3), "</span>") : to(t3);
             }, "stylizeWithHTML"), Proxy: Ye };
-          }, 116: (t2, e2, r) => {
+          }, 116: (t22, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
                 return typeof t4;
@@ -25214,10 +25214,10 @@ var require_dist3 = __commonJS({
                 if ("object" !== i2 && (a2 || "function" !== i2)) throw new c(e3, "Object", t3);
               }
             });
-            t2.exports = { kValidateObjectNone: 0, kValidateObjectAllowNullable: 1, kValidateObjectAllowArray: 2, kValidateObjectAllowFunction: 4, validateObject: u, validateString: /* @__PURE__ */ __name(function(t3, e3) {
+            t22.exports = { kValidateObjectNone: 0, kValidateObjectAllowNullable: 1, kValidateObjectAllowArray: 2, kValidateObjectAllowFunction: 4, validateObject: u, validateString: /* @__PURE__ */ __name(function(t3, e3) {
               if ("string" != typeof t3) throw new c(e3, "string", t3);
             }, "validateString") };
-          }, 153: (t2, e2, r) => {
+          }, 153: (t22, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
                 return typeof t4;
@@ -25300,8 +25300,8 @@ var require_dist3 = __commonJS({
               return n2;
             }
             __name(c, "c");
-            var u = r(425), l = u.BigInt, f2 = u.Error, s = u.NumberParseInt, y = u.ObjectEntries, p = u.ObjectGetOwnPropertyDescriptor, g = u.ObjectGetOwnPropertyDescriptors, v = u.ObjectGetOwnPropertySymbols, h = u.ObjectPrototypeToString, d = u.Symbol, b = r(569), m = d("kPending"), S = d("kRejected");
-            t2.exports = { constants: { kPending: m, kRejected: S, ALL_PROPERTIES: 0, ONLY_ENUMERABLE: 2 }, getOwnNonIndexProperties: /* @__PURE__ */ __name(function(t3) {
+            var u = r(425), l = u.BigInt, f2 = u.Error, s = u.NumberParseInt, y = u.ObjectEntries, p = u.ObjectGetOwnPropertyDescriptor, g = u.ObjectGetOwnPropertyDescriptors, v = u.ObjectGetOwnPropertySymbols, h = u.ObjectPrototypeToString, d = u.Symbol, b2 = r(569), m = d("kPending"), S = d("kRejected");
+            t22.exports = { constants: { kPending: m, kRejected: S, ALL_PROPERTIES: 0, ONLY_ENUMERABLE: 2 }, getOwnNonIndexProperties: /* @__PURE__ */ __name(function(t3) {
               var e3, r2 = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 2, n2 = g(t3), i2 = [], c2 = a(y(n2));
               try {
                 for (c2.s(); !(e3 = c2.n()).done; ) {
@@ -25319,8 +25319,8 @@ var require_dist3 = __commonJS({
               var h2, d2 = a(v(t3));
               try {
                 for (d2.s(); !(h2 = d2.n()).done; ) {
-                  var b2 = h2.value, m2 = p(t3, b2);
-                  (2 !== r2 || m2.enumerable) && i2.push(b2);
+                  var b22 = h2.value, m2 = p(t3, b22);
+                  (2 !== r2 || m2.enumerable) && i2.push(b22);
                 }
               } catch (t4) {
                 d2.e(t4);
@@ -25330,7 +25330,7 @@ var require_dist3 = __commonJS({
               return i2;
             }, "getOwnNonIndexProperties"), getPromiseDetails: /* @__PURE__ */ __name(function() {
               return [m, void 0];
-            }, "getPromiseDetails"), getProxyDetails: b.getProxyDetails, Proxy: b.Proxy, previewEntries: /* @__PURE__ */ __name(function(t3) {
+            }, "getPromiseDetails"), getProxyDetails: b2.getProxyDetails, Proxy: b2.Proxy, previewEntries: /* @__PURE__ */ __name(function(t3) {
               return [[], false];
             }, "previewEntries"), getConstructorName: /* @__PURE__ */ __name(function(t3) {
               var e3;
@@ -25341,7 +25341,7 @@ var require_dist3 = __commonJS({
             }, "getConstructorName"), getExternalValue: /* @__PURE__ */ __name(function() {
               return l(0);
             }, "getExternalValue") };
-          }, 229: (t2, e2, r) => {
+          }, 229: (t22, e2, r) => {
             var n;
             function o() {
               return n = null != n ? n : r(924).codes.ERR_INTERNAL_ASSERTION;
@@ -25353,8 +25353,8 @@ var require_dist3 = __commonJS({
             __name(a, "a");
             a.fail = function(t3) {
               throw new (o())(t3);
-            }, t2.exports = a;
-          }, 370: (t2, e2, r) => {
+            }, t22.exports = a;
+          }, 370: (t22, e2, r) => {
             var n = r(425), o = n.StringPrototypeCharCodeAt, a = n.StringPrototypeLastIndexOf, i = n.StringPrototypeSlice, c = r(22), u = c.CHAR_DOT, l = c.CHAR_FORWARD_SLASH, f2 = r(116).validateString;
             function s(t3) {
               return t3 === l;
@@ -25389,7 +25389,7 @@ var require_dist3 = __commonJS({
               return c2;
             }
             __name(y, "y");
-            t2.exports = { isPosixPathSeparator: s, normalizeString: y, resolve: /* @__PURE__ */ __name(function() {
+            t22.exports = { isPosixPathSeparator: s, normalizeString: y, resolve: /* @__PURE__ */ __name(function() {
               if ((0 === arguments.length || 1 === arguments.length && ("" === (arguments.length <= 0 ? void 0 : arguments[0]) || "." === (arguments.length <= 0 ? void 0 : arguments[0]))) && o("/", 0) === l) return "/";
               for (var t3 = "", e3 = false, r2 = arguments.length - 1; r2 >= 0 && !e3; r2--) {
                 var n2 = r2 < 0 || arguments.length <= r2 ? void 0 : arguments[r2];
@@ -25397,7 +25397,7 @@ var require_dist3 = __commonJS({
               }
               return e3 || (t3 = "".concat("/", "/").concat(t3), e3 = o("/", 0) === l), t3 = y(t3, !e3, "/", s), e3 ? "/".concat(t3) : t3.length > 0 ? t3 : ".";
             }, "resolve") };
-          }, 425: (t2) => {
+          }, 425: (t22) => {
             function e2() {
               var t3, n2, o2 = "function" == typeof Symbol ? Symbol : {}, a2 = o2.iterator || "@@iterator", i2 = o2.toStringTag || "@@toStringTag";
               function c2(e3, o3, a3, i3) {
@@ -25631,12 +25631,12 @@ var require_dist3 = __commonJS({
               }, d(t3);
             }
             __name(d, "d");
-            function b(t3) {
+            function b2(t3) {
               return function() {
                 return new m(t3.apply(this, arguments));
               };
             }
-            __name(b, "b");
+            __name(b2, "b");
             function m(t3) {
               var e3, r2;
               function n2(e4, r3) {
@@ -25692,10 +25692,10 @@ var require_dist3 = __commonJS({
             }, m.prototype.return = function(t3) {
               return this._invoke("return", t3);
             };
-            var P = { __proto__: null }, x = Reflect.defineProperty, w = Reflect.getOwnPropertyDescriptor, A = Reflect.ownKeys, O = Function.prototype, _ = O.apply, j = O.bind, E = O.call, k = j.bind(E);
-            P.uncurryThis = k;
+            var P2 = { __proto__: null }, x = Reflect.defineProperty, w = Reflect.getOwnPropertyDescriptor, A = Reflect.ownKeys, O = Function.prototype, _ = O.apply, j = O.bind, E = O.call, k = j.bind(E);
+            P2.uncurryThis = k;
             var I = j.bind(_);
-            P.applyBind = I;
+            P2.applyBind = I;
             var R = ["ArrayOf", "ArrayPrototypePush", "ArrayPrototypeUnshift", "MathHypot", "MathMax", "MathMin", "StringFromCharCode", "StringFromCodePoint", "StringPrototypeConcat", "TypedArrayOf"];
             function L(t3) {
               return "symbol" === d(t3) ? "Symbol".concat(t3.description[7].toUpperCase()).concat(t3.description.slice(8)) : "".concat(t3[0].toUpperCase()).concat(t3.slice(1));
@@ -25745,19 +25745,19 @@ var require_dist3 = __commonJS({
             }
             __name(z, "z");
             ["Proxy", "globalThis"].forEach(function(t3) {
-              P[t3] = globalThis[t3];
+              P2[t3] = globalThis[t3];
             }), [decodeURI, decodeURIComponent, encodeURI, encodeURIComponent].forEach(function(t3) {
-              P[t3.name] = t3;
+              P2[t3.name] = t3;
             }), [escape, eval, unescape].forEach(function(t3) {
-              P[t3.name] = t3;
+              P2[t3.name] = t3;
             }), ["Atomics", "JSON", "Math", "Proxy", "Reflect"].forEach(function(t3) {
-              B(globalThis[t3], P, t3);
+              B(globalThis[t3], P2, t3);
             }), ["AggregateError", "Array", "ArrayBuffer", "BigInt", "BigInt64Array", "BigUint64Array", "Boolean", "DataView", "Date", "Error", "EvalError", "FinalizationRegistry", "Float32Array", "Float64Array", "Function", "Int16Array", "Int32Array", "Int8Array", "Map", "Number", "Object", "RangeError", "ReferenceError", "RegExp", "Set", "String", "Symbol", "SyntaxError", "TypeError", "URIError", "Uint16Array", "Uint32Array", "Uint8Array", "Uint8ClampedArray", "WeakMap", "WeakRef", "WeakSet"].forEach(function(t3) {
               var e3 = globalThis[t3];
-              e3 && (P[t3] = e3, B(e3, P, t3), z(e3.prototype, P, "".concat(t3, "Prototype")));
+              e3 && (P2[t3] = e3, B(e3, P2, t3), z(e3.prototype, P2, "".concat(t3, "Prototype")));
             }), ["Promise"].forEach(function(t3) {
               var e3 = globalThis[t3];
-              P[t3] = e3, (function(t4, e4, r2) {
+              P2[t3] = e3, (function(t4, e4, r2) {
                 var n2, o2 = v(A(t4));
                 try {
                   for (o2.s(); !(n2 = o2.n()).done; ) {
@@ -25775,12 +25775,12 @@ var require_dist3 = __commonJS({
                 } finally {
                   o2.f();
                 }
-              })(e3, P, t3), z(e3.prototype, P, "".concat(t3, "Prototype"));
+              })(e3, P2, t3), z(e3.prototype, P2, "".concat(t3, "Prototype"));
             }), [{ name: "TypedArray", original: Reflect.getPrototypeOf(Uint8Array) }, { name: "ArrayIterator", original: { prototype: Reflect.getPrototypeOf(Array.prototype[Symbol.iterator]()) } }, { name: "StringIterator", original: { prototype: Reflect.getPrototypeOf(String.prototype[Symbol.iterator]()) } }].forEach(function(t3) {
               var e3 = t3.name, r2 = t3.original;
-              P[e3] = r2, z(r2, P, e3), z(r2.prototype, P, "".concat(e3, "Prototype"));
-            }), P.IteratorPrototype = Reflect.getPrototypeOf(P.ArrayIteratorPrototype);
-            var M = P.ArrayPrototypeForEach, C = P.FinalizationRegistry, D = P.FunctionPrototypeCall, N = P.Map, F = P.ObjectFreeze, W = P.ObjectSetPrototypeOf, H = P.RegExp, U = P.Set, G = P.SymbolIterator, V = P.WeakMap, Z = P.WeakRef, $ = P.WeakSet, Y = /* @__PURE__ */ __name(function(t3, e3) {
+              P2[e3] = r2, z(r2, P2, e3), z(r2.prototype, P2, "".concat(e3, "Prototype"));
+            }), P2.IteratorPrototype = Reflect.getPrototypeOf(P2.ArrayIteratorPrototype);
+            var M = P2.ArrayPrototypeForEach, C = P2.FinalizationRegistry, D = P2.FunctionPrototypeCall, N = P2.Map, F = P2.ObjectFreeze, W = P2.ObjectSetPrototypeOf, H = P2.RegExp, U = P2.Set, G = P2.SymbolIterator, V = P2.WeakMap, Z = P2.WeakRef, $ = P2.WeakSet, Y = /* @__PURE__ */ __name(function(t3, e3) {
               var r2 = (function() {
                 return f2(/* @__PURE__ */ __name(function e4(r3) {
                   u(this, e4), this._iterator = t3(r3);
@@ -25792,7 +25792,7 @@ var require_dist3 = __commonJS({
               })();
               return W(r2.prototype, null), F(r2.prototype), F(r2), r2;
             }, "Y");
-            P.SafeArrayIterator = Y(P.ArrayPrototypeSymbolIterator, P.ArrayIteratorPrototypeNext), P.SafeStringIterator = Y(P.StringPrototypeSymbolIterator, P.StringIteratorPrototypeNext);
+            P2.SafeArrayIterator = Y(P2.ArrayPrototypeSymbolIterator, P2.ArrayIteratorPrototypeNext), P2.SafeStringIterator = Y(P2.StringPrototypeSymbolIterator, P2.StringIteratorPrototypeNext);
             var q2 = /* @__PURE__ */ __name(function(t3, e3) {
               M(A(t3), function(r2) {
                 w(e3, r2) || x(e3, r2, y({ __proto__: null }, w(t3, r2)));
@@ -25817,53 +25817,53 @@ var require_dist3 = __commonJS({
               } else q2(t3.prototype, e3.prototype);
               return q2(t3, e3), W(e3.prototype, null), F(e3.prototype), F(e3), e3;
             }, "J");
-            P.makeSafe = J, P.SafeMap = J(N, (function(t3) {
+            P2.makeSafe = J, P2.SafeMap = J(N, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
               return i(e3, t3), f2(e3);
-            })(N)), P.SafeWeakMap = J(V, (function(t3) {
+            })(N)), P2.SafeWeakMap = J(V, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
               return i(e3, t3), f2(e3);
-            })(V)), P.SafeSet = J(U, (function(t3) {
+            })(V)), P2.SafeSet = J(U, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
               return i(e3, t3), f2(e3);
-            })(U)), P.SafeWeakSet = J($, (function(t3) {
+            })(U)), P2.SafeWeakSet = J($, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
               return i(e3, t3), f2(e3);
-            })($)), P.SafeFinalizationRegistry = J(C, (function(t3) {
+            })($)), P2.SafeFinalizationRegistry = J(C, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
               return i(e3, t3), f2(e3);
-            })(C)), P.SafeWeakRef = J(Z, (function(t3) {
+            })(C)), P2.SafeWeakRef = J(Z, (function(t3) {
               function e3(t4) {
                 return u(this, e3), n(this, e3, [t4]);
               }
               __name(e3, "e");
               return i(e3, t3), f2(e3);
-            })(Z)), P.AsyncIteratorPrototype = P.ReflectGetPrototypeOf(b(e2().m(/* @__PURE__ */ __name(function t3() {
+            })(Z)), P2.AsyncIteratorPrototype = P2.ReflectGetPrototypeOf(b2(e2().m(/* @__PURE__ */ __name(function t3() {
               return e2().w(function(t4) {
                 for (; ; ) if (0 === t4.n) return t4.a(2);
               }, t3);
-            }, "t")))).prototype, P.internalBinding = function(t3) {
+            }, "t")))).prototype, P2.internalBinding = function(t3) {
               if ("config" === t3) return { hasIntl: false };
               throw new Error('unknown module: "'.concat(t3, '"'));
-            }, P._stringPrototypeReplaceAll = function(t3, e3, r2) {
+            }, P2._stringPrototypeReplaceAll = function(t3, e3, r2) {
               return "[object regexp]" === Object.prototype.toString.call(e3).toLowerCase() ? t3.replace(e3, r2) : t3.replace(new H(e3, "g"), r2);
-            }, P.StringPrototypeReplaceAll = P.StringPrototypeReplaceAll || P._stringPrototypeReplaceAll, W(P, null), F(P), t2.exports = P;
-          }, 569: (t2, e2, r) => {
+            }, P2.StringPrototypeReplaceAll = P2.StringPrototypeReplaceAll || P2._stringPrototypeReplaceAll, W(P2, null), F(P2), t22.exports = P2;
+          }, 569: (t22, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
                 return typeof t4;
@@ -25913,8 +25913,8 @@ var require_dist3 = __commonJS({
               }, "value") }], null, e3 && o(t3, e3), Object.defineProperty(t3, "prototype", { writable: false }), t3;
               var t3, e3;
             })();
-            t2.exports = { getProxyDetails: f2.getProxyDetails.bind(f2), Proxy: f2 };
-          }, 617: (t2, e2, r) => {
+            t22.exports = { getProxyDetails: f2.getProxyDetails.bind(f2), Proxy: f2 };
+          }, 617: (t22, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
                 return typeof t4;
@@ -25923,7 +25923,7 @@ var require_dist3 = __commonJS({
               }, n(t3);
             }
             __name(n, "n");
-            var o = r(425), a = o.ArrayIsArray, i = o.BigInt, c = o.Boolean, u = o.DatePrototype, l = o.Error, f2 = o.FunctionPrototype, s = o.MapPrototypeHas, y = o.Number, p = o.ObjectDefineProperty, g = o.ObjectGetOwnPropertyDescriptor, v = o.ObjectGetPrototypeOf, h = o.ObjectIsFrozen, d = o.ObjectPrototype, b = o.SetPrototypeHas, m = o.String, S = o.Symbol, P = o.SymbolToStringTag, x = o.globalThis, w = r(153).getConstructorName;
+            var o = r(425), a = o.ArrayIsArray, i = o.BigInt, c = o.Boolean, u = o.DatePrototype, l = o.Error, f2 = o.FunctionPrototype, s = o.MapPrototypeHas, y = o.Number, p = o.ObjectDefineProperty, g = o.ObjectGetOwnPropertyDescriptor, v = o.ObjectGetPrototypeOf, h = o.ObjectIsFrozen, d = o.ObjectPrototype, b2 = o.SetPrototypeHas, m = o.String, S = o.Symbol, P2 = o.SymbolToStringTag, x = o.globalThis, w = r(153).getConstructorName;
             function A(t3) {
               for (var e3 = arguments.length, r2 = new Array(e3 > 1 ? e3 - 1 : 0), o2 = 1; o2 < e3; o2++) r2[o2 - 1] = arguments[o2];
               for (var a2 = 0, i2 = r2; a2 < i2.length; a2++) {
@@ -25954,7 +25954,7 @@ var require_dist3 = __commonJS({
               return this;
             }, "get"), configurable: true }), __magic__.globalThis = __magic__, delete d.__magic__);
             var _ = O(m), j = O(y), E = O(c), k = O(i), I = O(S);
-            t2.exports = { isAsyncFunction: /* @__PURE__ */ __name(function(t3) {
+            t22.exports = { isAsyncFunction: /* @__PURE__ */ __name(function(t3) {
               return "function" == typeof t3 && f2.toString.call(t3).startsWith("async");
             }, "isAsyncFunction"), isGeneratorFunction: /* @__PURE__ */ __name(function(t3) {
               return "function" == typeof t3 && f2.toString.call(t3).match(/^(async\s+)?function *\*/);
@@ -25985,7 +25985,7 @@ var require_dist3 = __commonJS({
             }, "isMap"), isMapIterator: /* @__PURE__ */ __name(function(t3) {
               return "[object Map Iterator]" === d.toString.call(v(t3));
             }, "isMapIterator"), isModuleNamespaceObject: /* @__PURE__ */ __name(function(t3) {
-              return t3 && "object" === n(t3) && "Module" === t3[P];
+              return t3 && "object" === n(t3) && "Module" === t3[P2];
             }, "isModuleNamespaceObject"), isNativeError: /* @__PURE__ */ __name(function(t3) {
               return t3 instanceof l && A(t3, "Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError", "AggregateError");
             }, "isNativeError"), isPromise: /* @__PURE__ */ __name(function(t3) {
@@ -25993,7 +25993,7 @@ var require_dist3 = __commonJS({
             }, "isPromise"), isSet: /* @__PURE__ */ __name(function(t3) {
               if (!A(t3, "Set")) return false;
               try {
-                b(t3);
+                b2(t3);
               } catch (t4) {
                 return false;
               }
@@ -26015,20 +26015,20 @@ var require_dist3 = __commonJS({
             }, "isDate"), isTypedArray: /* @__PURE__ */ __name(function(t3) {
               return A(t3, "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array");
             }, "isTypedArray"), isStringObject: _, isNumberObject: j, isBooleanObject: E, isBigIntObject: k, isSymbolObject: I };
-          }, 705: (t2) => {
+          }, 705: (t22) => {
             var e2 = ["_http_agent", "_http_client", "_http_common", "_http_incoming", "_http_outgoing", "_http_server", "_stream_duplex", "_stream_passthrough", "_stream_readable", "_stream_transform", "_stream_wrap", "_stream_writable", "_tls_common", "_tls_wrap", "assert", "assert/strict", "async_hooks", "buffer", "child_process", "cluster", "console", "constants", "crypto", "dgram", "diagnostics_channel", "dns", "dns/promises", "domain", "events", "fs", "fs/promises", "http", "http2", "https", "inspector", "module", "Module", "net", "os", "path", "path/posix", "path/win32", "perf_hooks", "process", "punycode", "querystring", "readline", "readline/promises", "repl", "stream", "stream/consumers", "stream/promises", "stream/web", "string_decoder", "sys", "timers", "timers/promises", "tls", "trace_events", "tty", "url", "util", "util/types", "v8", "vm", "wasi", "worker_threads", "zlib"];
-            t2.exports.BuiltinModule = { exists: /* @__PURE__ */ __name(function(t3) {
+            t22.exports.BuiltinModule = { exists: /* @__PURE__ */ __name(function(t3) {
               return t3.startsWith("internal/") || -1 !== e2.indexOf(t3);
             }, "exists") };
-          }, 802: (t2, e2, r) => {
+          }, 802: (t22, e2, r) => {
             var n = r(425), o = n.StringPrototypeCharCodeAt, a = n.StringPrototypeIncludes, i = n.StringPrototypeReplace, c = r(24), u = r(22).CHAR_FORWARD_SLASH, l = r(370), f2 = /%/g, s = /\\/g, y = /\n/g, p = /\r/g, g = /\t/g;
-            t2.exports = { pathToFileURL: /* @__PURE__ */ __name(function(t3) {
+            t22.exports = { pathToFileURL: /* @__PURE__ */ __name(function(t3) {
               var e3 = new c("file://"), r2 = l.resolve(t3);
               return o(t3, t3.length - 1) === u && r2[r2.length - 1] !== l.sep && (r2 += "/"), e3.pathname = (function(t4) {
                 return a(t4, "%") && (t4 = i(t4, f2, "%25")), a(t4, "\\") && (t4 = i(t4, s, "%5C")), a(t4, "\n") && (t4 = i(t4, y, "%0A")), a(t4, "\r") && (t4 = i(t4, p, "%0D")), a(t4, "	") && (t4 = i(t4, g, "%09")), t4;
               })(r2), e3;
             }, "pathToFileURL"), URL: c };
-          }, 883: (t2, e2, r) => {
+          }, 883: (t22, e2, r) => {
             function n(t3) {
               return n = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t4) {
                 return typeof t4;
@@ -26072,14 +26072,14 @@ var require_dist3 = __commonJS({
               var t3, e3;
             })();
             e2.h = c;
-          }, 923: (t2, e2, r) => {
+          }, 923: (t22, e2, r) => {
             var n = r(425), o = n.ArrayPrototypeJoin, a = n.Error, i = n.StringPrototypeReplace, c = n.SymbolFor, u = /\u001b\[\d\d?m/g;
-            t2.exports = { customInspectSymbol: c("nodejs.util.inspect.custom"), isError: /* @__PURE__ */ __name(function(t3) {
+            t22.exports = { customInspectSymbol: c("nodejs.util.inspect.custom"), isError: /* @__PURE__ */ __name(function(t3) {
               return t3 instanceof a;
             }, "isError"), join: o, removeColors: /* @__PURE__ */ __name(function(t3) {
               return i(t3, u, "");
             }, "removeColors") };
-          }, 924: (t2, e2, r) => {
+          }, 924: (t22, e2, r) => {
             function n(t3, e3) {
               (null == e3 || e3 > t3.length) && (e3 = t3.length);
               for (var r2 = 0, n2 = Array(e3); r2 < e3; r2++) n2[r2] = t3[r2];
@@ -26138,7 +26138,7 @@ var require_dist3 = __commonJS({
               }, l(t3, e3);
             }
             __name(l, "l");
-            var f2, s, y = r(425), p = y.ArrayIsArray, g = y.ArrayPrototypeIncludes, v = y.ArrayPrototypeIndexOf, h = y.ArrayPrototypeJoin, d = y.ArrayPrototypePush, b = y.ArrayPrototypeSlice, m = y.ArrayPrototypeSplice, S = y.Error, P = y.ErrorCaptureStackTrace, x = y.JSONStringify, w = y.ObjectDefineProperty, A = y.ReflectApply, O = y.RegExpPrototypeExec, _ = y.SafeMap, j = y.SafeWeakMap, E = y.String, k = y.StringPrototypeEndsWith, I = y.StringPrototypeIncludes, R = y.StringPrototypeIndexOf, L = y.StringPrototypeSlice, T = y.StringPrototypeToLowerCase, B = y.Symbol, z = y.TypeError, M = B("kIsNodeError"), C = new _(), D = {}, N = /^[A-Z][a-zA-Z0-9]*$/, F = ["string", "function", "number", "object", "Function", "Object", "boolean", "bigint", "symbol"], W = new j(), H = r(229), U = null;
+            var f2, s, y = r(425), p = y.ArrayIsArray, g = y.ArrayPrototypeIncludes, v = y.ArrayPrototypeIndexOf, h = y.ArrayPrototypeJoin, d = y.ArrayPrototypePush, b2 = y.ArrayPrototypeSlice, m = y.ArrayPrototypeSplice, S = y.Error, P2 = y.ErrorCaptureStackTrace, x = y.JSONStringify, w = y.ObjectDefineProperty, A = y.ReflectApply, O = y.RegExpPrototypeExec, _ = y.SafeMap, j = y.SafeWeakMap, E = y.String, k = y.StringPrototypeEndsWith, I = y.StringPrototypeIncludes, R = y.StringPrototypeIndexOf, L = y.StringPrototypeSlice, T = y.StringPrototypeToLowerCase, B = y.Symbol, z = y.TypeError, M = B("kIsNodeError"), C = new _(), D = {}, N = /^[A-Z][a-zA-Z0-9]*$/, F = ["string", "function", "number", "object", "Function", "Object", "boolean", "bigint", "symbol"], W = new j(), H = r(229), U = null;
             function G(t3, e3) {
               var r2 = (function(t4) {
                 function r3() {
@@ -26215,17 +26215,17 @@ var require_dist3 = __commonJS({
                 case 3:
                   return "".concat(t3[0], ", ").concat(t3[1], ", ").concat(e3, " ").concat(t3[2]);
                 default:
-                  return "".concat(h(b(t3, 0, -1), ", "), ", ").concat(e3, " ").concat(t3[t3.length - 1]);
+                  return "".concat(h(b2(t3, 0, -1), ", "), ", ").concat(e3, " ").concat(t3[t3.length - 1]);
               }
             }
             __name(q2, "q");
-            t2.exports = { codes: D, determineSpecificType: Y, E: V, formatList: q2, getMessage: Z, hideStackFrames: /* @__PURE__ */ __name(function(t3) {
+            t22.exports = { codes: D, determineSpecificType: Y, E: V, formatList: q2, getMessage: Z, hideStackFrames: /* @__PURE__ */ __name(function(t3) {
               function e3() {
                 try {
                   for (var r2 = arguments.length, n2 = new Array(r2), o2 = 0; o2 < r2; o2++) n2[o2] = arguments[o2];
                   return A(t3, this, n2);
                 } catch (t4) {
-                  throw S.stackTraceLimit && P(t4, e3), t4;
+                  throw S.stackTraceLimit && P2(t4, e3), t4;
                 }
               }
               __name(e3, "e");
@@ -26310,7 +26310,7 @@ var require_dist3 = __commonJS({
             var o = e[n];
             if (void 0 !== o) return o.exports;
             var a = e[n] = { exports: {} };
-            return t[n](a, a.exports, r), a.exports;
+            return t2[n](a, a.exports, r), a.exports;
           }, "r"))(33);
         })());
       }
@@ -26350,11 +26350,11 @@ var require_dist3 = __commonJS({
       }
     }
     __name(validateAbortSignal, "validateAbortSignal");
-    function spliceOne(list, index) {
-      for (; index + 1 < list.length; index++) {
-        list[index] = list[index + 1];
+    function spliceOne(list3, index) {
+      for (; index + 1 < list3.length; index++) {
+        list3[index] = list3[index + 1];
       }
-      list.pop();
+      list3.pop();
     }
     __name(spliceOne, "spliceOne");
     function arrayClone(arr) {
@@ -26373,15 +26373,15 @@ var require_dist3 = __commonJS({
       return arr.slice();
     }
     __name(arrayClone, "arrayClone");
-    function identicalSequenceRange(a, b) {
+    function identicalSequenceRange(a, b2) {
       for (let i = 0; i < a.length - 3; i++) {
-        const pos = b.indexOf(a[i]);
+        const pos = b2.indexOf(a[i]);
         if (pos !== -1) {
-          const rest = b.length - pos;
+          const rest = b2.length - pos;
           if (rest > 3) {
             let len = 1;
             const maxLen = Math.min(a.length - i, rest);
-            while (maxLen > len && a[i + len] === b[pos + len]) {
+            while (maxLen > len && a[i + len] === b2[pos + len]) {
               len++;
             }
             if (len > 3) {
@@ -26930,10 +26930,10 @@ var require_toHex = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fromHex = exports2.toHex = void 0;
-    var hex3 = (num) => new Number(num).toString(16).toLowerCase();
-    var toHex = (num) => `0x${hex3(num).length === 1 ? "0" + hex3(num) : hex3(num)}`;
+    var hex4 = (num) => new Number(num).toString(16).toLowerCase();
+    var toHex = (num) => `0x${hex4(num).length === 1 ? "0" + hex4(num) : hex4(num)}`;
     exports2.toHex = toHex;
-    var fromHex = (hex4) => new Number(hex4);
+    var fromHex = (hex5) => new Number(hex5);
     exports2.fromHex = fromHex;
   }
 });
@@ -26949,13 +26949,13 @@ var require_tree2 = __commonJS({
       mime: leaf.info.mime,
       extension: leaf.info.extension
     });
-    var isLeafNode = (tree, path2) => tree && path2.length === 0;
-    var merge = (node, tree) => {
+    var isLeafNode = (tree, path3) => tree && path3.length === 0;
+    var merge2 = (node, tree) => {
       if (node.bytes.length === 0)
         return tree;
-      const [currentByte, ...path2] = node.bytes;
+      const [currentByte, ...path3] = node.bytes;
       const currentTree = tree.bytes[currentByte];
-      if (isLeafNode(currentTree, path2)) {
+      if (isLeafNode(currentTree, path3)) {
         const matchingNode = tree.bytes[currentByte];
         tree.bytes[currentByte] = {
           ...matchingNode,
@@ -26967,13 +26967,13 @@ var require_tree2 = __commonJS({
         return tree;
       }
       if (tree.bytes[currentByte]) {
-        tree.bytes[currentByte] = exports2.merge(exports2.createNode(node.typename, path2, node.info), tree.bytes[currentByte]);
+        tree.bytes[currentByte] = exports2.merge(exports2.createNode(node.typename, path3, node.info), tree.bytes[currentByte]);
       } else {
-        tree.bytes[currentByte] = exports2.createComplexNode(node.typename, path2, node.info);
+        tree.bytes[currentByte] = exports2.createComplexNode(node.typename, path3, node.info);
       }
       return tree;
     };
-    exports2.merge = merge;
+    exports2.merge = merge2;
     var createNode = (typename, bytes, info) => {
       return { typename, bytes, info: info ? info : {} };
     };
@@ -26983,7 +26983,7 @@ var require_tree2 = __commonJS({
         bytes: {},
         matches: void 0
       };
-      const [currentKey, ...path2] = bytes;
+      const [currentKey, ...path3] = bytes;
       if (bytes.length === 0) {
         return {
           matches: [
@@ -26995,7 +26995,7 @@ var require_tree2 = __commonJS({
           bytes: {}
         };
       }
-      obj.bytes[currentKey] = exports2.createComplexNode(typename, path2, info);
+      obj.bytes[currentKey] = exports2.createComplexNode(typename, path3, info);
       return obj;
     };
     exports2.createComplexNode = createComplexNode;
@@ -28995,11 +28995,11 @@ Must be one of: ${ALLOWED_SIZES.join(", ")}`);
        * @param url - The url of the request that erred
        * @param bodyData - The unparsed data for the request that errored
        */
-      constructor(rawError, code, status, method, url, bodyData) {
+      constructor(rawError, code, status3, method, url, bodyData) {
         super(_DiscordAPIError.getMessage(rawError));
         this.rawError = rawError;
         this.code = code;
-        this.status = status;
+        this.status = status3;
         this.method = method;
         this.url = url;
         this.requestBody = { files: bodyData.files, json: bodyData.body };
@@ -29056,9 +29056,9 @@ ${flattened}` : error.message || flattened || "Unknown Error";
        * @param url - The url of the request that erred
        * @param bodyData - The unparsed data for the request that errored
        */
-      constructor(status, statusText, method, url, bodyData) {
+      constructor(status3, statusText, method, url, bodyData) {
         super(statusText);
-        this.status = status;
+        this.status = status3;
         this.method = method;
         this.url = url;
         this.requestBody = { files: bodyData.files, json: bodyData.body };
@@ -29133,19 +29133,19 @@ ${flattened}` : error.message || flattened || "Unknown Error";
     }
     __name(makeNetworkRequest, "makeNetworkRequest");
     async function handleErrors(manager, res, method, url, requestData, retries) {
-      const status = res.status;
-      if (status >= 500 && status < 600) {
+      const status3 = res.status;
+      if (status3 >= 500 && status3 < 600) {
         if (retries !== manager.options.retries) {
           return null;
         }
-        throw new HTTPError(status, res.statusText, method, url, requestData);
+        throw new HTTPError(status3, res.statusText, method, url, requestData);
       } else {
-        if (status >= 400 && status < 500) {
-          if (status === 401 && requestData.auth) {
+        if (status3 >= 400 && status3 < 500) {
+          if (status3 === 401 && requestData.auth) {
             manager.setToken(null);
           }
           const data = await parseResponse(res);
-          throw new DiscordAPIError(data, "code" in data ? data.code : data.error, status, method, url, requestData);
+          throw new DiscordAPIError(data, "code" in data ? data.code : data.error, status3, method, url, requestData);
         }
         return res;
       }
@@ -29206,17 +29206,17 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         if (res === null) {
           return this.runRequest(routeId, url, options2, requestData, ++retries);
         }
-        const status = res.status;
+        const status3 = res.status;
         let retryAfter = 0;
         const retry = res.headers.get("Retry-After");
         const offset = normalizeRateLimitOffset(this.manager.options.offset, routeId.bucketRoute);
         if (retry) retryAfter = Number(retry) * 1e3 + offset;
-        if (status === 401 || status === 403 || status === 429) {
+        if (status3 === 401 || status3 === 403 || status3 === 429) {
           incrementInvalidCount(this.manager);
         }
-        if (status >= 200 && status < 300) {
+        if (status3 >= 200 && status3 < 300) {
           return res;
-        } else if (status === 429) {
+        } else if (status3 === 429) {
           const isGlobal = res.headers.has("X-RateLimit-Global");
           const scope = res.headers.get("X-RateLimit-Scope") ?? "user";
           await onRateLimit(this.manager, {
@@ -29452,7 +29452,7 @@ ${flattened}` : error.message || flattened || "Unknown Error";
         if (res === null) {
           return this.runRequest(routeId, url, options2, requestData, ++retries);
         }
-        const status = res.status;
+        const status3 = res.status;
         let retryAfter = 0;
         const limit = res.headers.get("X-RateLimit-Limit");
         const remaining = res.headers.get("X-RateLimit-Remaining");
@@ -29483,12 +29483,12 @@ ${flattened}` : error.message || flattened || "Unknown Error";
             sublimitTimeout = retryAfter;
           }
         }
-        if (status === 401 || status === 403 || status === 429) {
+        if (status3 === 401 || status3 === 403 || status3 === 429) {
           incrementInvalidCount(this.manager);
         }
         if (res.ok) {
           return res;
-        } else if (status === 429) {
+        } else if (status3 === 429) {
           const isGlobal = this.globalLimited;
           let limit2;
           let timeout;
@@ -30514,9 +30514,9 @@ var require_lodash = __commonJS({
     var snakeCase = createCompounder(function(result, word, index) {
       return result + (index ? "_" : "") + word.toLowerCase();
     });
-    function words(string, pattern, guard) {
+    function words(string, pattern, guard2) {
       string = toString(string);
-      pattern = guard ? void 0 : pattern;
+      pattern = guard2 ? void 0 : pattern;
       if (pattern === void 0) {
         return hasUnicodeWord(string) ? unicodeWords(string) : asciiWords(string);
       }
@@ -30912,7 +30912,7 @@ var require_dist6 = __commonJS({
        */
       sort(compareFunction = _Collection.defaultSort) {
         const entries = [...this.entries()];
-        entries.sort((a, b) => compareFunction(a[1], b[1], a[0], b[0]));
+        entries.sort((a, b2) => compareFunction(a[1], b2[1], a[0], b2[0]));
         super.clear();
         for (const [key4, value] of entries) {
           super.set(key4, value);
@@ -31692,12 +31692,12 @@ ${content}
       return `${"  ".repeat(depth - 1)}${startNumber ? `${startNumber}.` : "-"} ${element}`;
     }
     __name(listCallback, "listCallback");
-    function orderedList(list, startNumber = 1) {
-      return listCallback(list, Math.max(startNumber, 1));
+    function orderedList(list3, startNumber = 1) {
+      return listCallback(list3, Math.max(startNumber, 1));
     }
     __name(orderedList, "orderedList");
-    function unorderedList(list) {
-      return listCallback(list);
+    function unorderedList(list3) {
+      return listCallback(list3);
     }
     __name(unorderedList, "unorderedList");
     function subtext(content) {
@@ -32231,7 +32231,7 @@ var require_CachedManager = __commonJS({
 var require_PermissionsBitField = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/PermissionsBitField.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var BitField = require_BitField();
     var PermissionsBitField3 = class extends BitField {
       /**
@@ -32240,13 +32240,13 @@ var require_PermissionsBitField = __commonJS({
        * @memberof PermissionsBitField
        * @see {@link https://discord.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags}
        */
-      static Flags = PermissionFlagsBits4;
+      static Flags = PermissionFlagsBits6;
       /**
        * Bitfield representing every permission combined
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static All = Object.values(PermissionFlagsBits4).reduce((all, p) => all | p, 0n);
+      static All = Object.values(PermissionFlagsBits6).reduce((all, p) => all | p, 0n);
       /**
        * Bitfield representing the default permissions for users
        * @type {bigint}
@@ -32258,7 +32258,7 @@ var require_PermissionsBitField = __commonJS({
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static StageModerator = PermissionFlagsBits4.ManageChannels | PermissionFlagsBits4.MuteMembers | PermissionFlagsBits4.MoveMembers;
+      static StageModerator = PermissionFlagsBits6.ManageChannels | PermissionFlagsBits6.MuteMembers | PermissionFlagsBits6.MoveMembers;
       /**
        * @type {bigint}
        * @memberof PermissionsBitField
@@ -32285,7 +32285,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {string[]}
        */
       missing(bits, checkAdmin = true) {
-        return checkAdmin && this.has(PermissionFlagsBits4.Administrator) ? [] : super.missing(bits);
+        return checkAdmin && this.has(PermissionFlagsBits6.Administrator) ? [] : super.missing(bits);
       }
       /**
        * Checks whether the bitfield has a permission, or any of multiple permissions.
@@ -32294,7 +32294,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       any(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits4.Administrator) || super.any(permission);
+        return checkAdmin && super.has(PermissionFlagsBits6.Administrator) || super.any(permission);
       }
       /**
        * Checks whether the bitfield has a permission, or multiple permissions.
@@ -32303,7 +32303,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       has(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits4.Administrator) || super.has(permission);
+        return checkAdmin && super.has(PermissionFlagsBits6.Administrator) || super.has(permission);
       }
       /**
        * Gets an {@link Array} of bitfield names based on the permissions available.
@@ -32341,7 +32341,7 @@ var require_Role = __commonJS({
     "use strict";
     var { roleMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionsBitField3 = require_PermissionsBitField();
@@ -32453,7 +32453,7 @@ var require_Role = __commonJS({
       get editable() {
         if (this.managed) return false;
         const clientMember = this.guild.members.resolve(this.client.user);
-        if (!clientMember.permissions.has(PermissionFlagsBits4.ManageRoles)) return false;
+        if (!clientMember.permissions.has(PermissionFlagsBits6.ManageRoles)) return false;
         return clientMember.roles.highest.comparePositionTo(this) > 0;
       }
       /**
@@ -32799,22 +32799,22 @@ var require_PermissionOverwrites = __commonJS({
        * @param {ResolvedOverwriteOptions} initialPermissions The initial permissions
        * @returns {ResolvedOverwriteOptions}
        */
-      static resolveOverwriteOptions(options2, { allow, deny } = {}) {
+      static resolveOverwriteOptions(options2, { allow, deny: deny2 } = {}) {
         allow = new PermissionsBitField3(allow);
-        deny = new PermissionsBitField3(deny);
+        deny2 = new PermissionsBitField3(deny2);
         for (const [perm, value] of Object.entries(options2)) {
           if (value === true) {
             allow.add(perm);
-            deny.remove(perm);
+            deny2.remove(perm);
           } else if (value === false) {
             allow.remove(perm);
-            deny.add(perm);
+            deny2.add(perm);
           } else if (value === null) {
             allow.remove(perm);
-            deny.remove(perm);
+            deny2.remove(perm);
           }
         }
-        return { allow, deny };
+        return { allow, deny: deny2 };
       }
       /**
        * The raw data for a permission overwrite
@@ -32957,9 +32957,9 @@ var require_PermissionOverwriteManager = __commonJS({
           if (!userOrRole) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "parameter", "User nor a Role");
           type = userOrRole instanceof Role ? OverwriteType4.Role : OverwriteType4.Member;
         }
-        const { allow, deny } = PermissionOverwrites.resolveOverwriteOptions(options2, existing);
+        const { allow, deny: deny2 } = PermissionOverwrites.resolveOverwriteOptions(options2, existing);
         await this.client.rest.put(Routes2.channelPermission(this.channel.id, userOrRoleId), {
-          body: { id: userOrRoleId, type, allow, deny },
+          body: { id: userOrRoleId, type, allow, deny: deny2 },
           reason
         });
         return this.channel;
@@ -33023,7 +33023,7 @@ var require_GuildChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildChannel.js"(exports2, module2) {
     "use strict";
     var { Snowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits4, ChannelType: ChannelType6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6, ChannelType: ChannelType6 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwriteManager = require_PermissionOverwriteManager();
@@ -33128,17 +33128,17 @@ var require_GuildChannel = __commonJS({
         const role = this.guild.roles.resolve(memberOrRole);
         return role && this.rolePermissions(role, checkAdmin);
       }
-      overwritesFor(member, verified = false, roles = null) {
+      overwritesFor(member, verified = false, roles2 = null) {
         if (!verified) member = this.guild.members.resolve(member);
         if (!member) return [];
-        roles ??= member.roles.cache;
+        roles2 ??= member.roles.cache;
         const roleOverwrites = [];
         let memberOverwrites;
         let everyoneOverwrites;
         for (const overwrite of this.permissionOverwrites.cache.values()) {
           if (overwrite.id === this.guild.id) {
             everyoneOverwrites = overwrite;
-          } else if (roles.has(overwrite.id)) {
+          } else if (roles2.has(overwrite.id)) {
             roleOverwrites.push(overwrite);
           } else if (overwrite.id === member.id) {
             memberOverwrites = overwrite;
@@ -33162,12 +33162,12 @@ var require_GuildChannel = __commonJS({
         if (checkAdmin && member.id === this.guild.ownerId) {
           return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
-        const roles = member.roles.cache;
-        const permissions = new PermissionsBitField3(roles.map((role) => role.permissions));
-        if (checkAdmin && permissions.has(PermissionFlagsBits4.Administrator)) {
+        const roles2 = member.roles.cache;
+        const permissions = new PermissionsBitField3(roles2.map((role) => role.permissions));
+        if (checkAdmin && permissions.has(PermissionFlagsBits6.Administrator)) {
           return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
-        const overwrites = this.overwritesFor(member, true, roles);
+        const overwrites = this.overwritesFor(member, true, roles2);
         return permissions.remove(overwrites.everyone?.deny ?? PermissionsBitField3.DefaultBit).add(overwrites.everyone?.allow ?? PermissionsBitField3.DefaultBit).remove(overwrites.roles.length > 0 ? overwrites.roles.map((role) => role.deny) : PermissionsBitField3.DefaultBit).add(overwrites.roles.length > 0 ? overwrites.roles.map((role) => role.allow) : PermissionsBitField3.DefaultBit).remove(overwrites.member?.deny ?? PermissionsBitField3.DefaultBit).add(overwrites.member?.allow ?? PermissionsBitField3.DefaultBit).freeze();
       }
       /**
@@ -33179,7 +33179,7 @@ var require_GuildChannel = __commonJS({
        * @private
        */
       rolePermissions(role, checkAdmin) {
-        if (checkAdmin && role.permissions.has(PermissionFlagsBits4.Administrator)) {
+        if (checkAdmin && role.permissions.has(PermissionFlagsBits6.Administrator)) {
           return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
         const basePermissions = new PermissionsBitField3([role.permissions, role.guild.roles.everyone.permissions]);
@@ -33205,7 +33205,7 @@ var require_GuildChannel = __commonJS({
        */
       get members() {
         return this.guild.members.cache.filter(
-          (member) => this.permissionsFor(member).has(PermissionFlagsBits4.ViewChannel, false)
+          (member) => this.permissionsFor(member).has(PermissionFlagsBits6.ViewChannel, false)
         );
       }
       /**
@@ -33339,10 +33339,10 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits4.Administrator, false)) return true;
+        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
         if (this.guild.members.me.communicationDisabledUntilTimestamp > Date.now()) return false;
-        const baseBitfield = PermissionFlagsBits4.ViewChannel | PermissionFlagsBits4.ManageChannels;
-        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits4.Connect : baseBitfield;
+        const baseBitfield = PermissionFlagsBits6.ViewChannel | PermissionFlagsBits6.ManageChannels;
+        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits6.Connect : baseBitfield;
         return permissions.has(bitfield, false);
       }
       /**
@@ -33354,7 +33354,7 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits4.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits6.ViewChannel, false);
       }
       /**
        * Deletes this channel.
@@ -33550,7 +33550,7 @@ var require_Util = __commonJS({
     function discordSort(collection) {
       const isGuildChannel = collection.first() instanceof GuildChannel;
       return collection.sorted(
-        isGuildChannel ? (a, b) => a.rawPosition - b.rawPosition || Number(BigInt(a.id) - BigInt(b.id)) : (a, b) => a.rawPosition - b.rawPosition || Number(BigInt(b.id) - BigInt(a.id))
+        isGuildChannel ? (a, b2) => a.rawPosition - b2.rawPosition || Number(BigInt(a.id) - BigInt(b2.id)) : (a, b2) => a.rawPosition - b2.rawPosition || Number(BigInt(b2.id) - BigInt(a.id))
       );
     }
     async function setPosition(item, position, relative, sorted, client2, route, reason) {
@@ -33560,8 +33560,8 @@ var require_Util = __commonJS({
       await client2.rest.patch(route, { body: updatedItems, reason });
       return updatedItems;
     }
-    function basename(path2, ext) {
-      const res = parse(path2);
+    function basename(path3, ext) {
+      const res = parse(path3);
       return ext && res.ext.startsWith(ext) ? res.name : res.base.split("?")[0];
     }
     function cleanContent(str4, channel) {
@@ -33611,7 +33611,7 @@ var require_Util = __commonJS({
         token
       };
     }
-    function transformResolved({ client: client2, guild, channel }, { members, users, channels, roles, messages, attachments } = {}) {
+    function transformResolved({ client: client2, guild, channel }, { members, users, channels, roles: roles2, messages, attachments } = {}) {
       const result = {};
       if (members) {
         result.members = new Collection2();
@@ -33626,9 +33626,9 @@ var require_Util = __commonJS({
           result.users.set(user.id, client2.users._add(user));
         }
       }
-      if (roles) {
+      if (roles2) {
         result.roles = new Collection2();
-        for (const role of Object.values(roles)) {
+        for (const role of Object.values(roles2)) {
           result.roles.set(role.id, guild?.roles._add(role) ?? role);
         }
       }
@@ -35186,8 +35186,8 @@ var require_GuildScheduledEvent = __commonJS({
        *  .then(guildScheduledEvent => console.log(`Set the status to: ${guildScheduledEvent.status}`))
        *  .catch(console.error);
        */
-      setStatus(status, reason) {
-        return this.edit({ status, reason });
+      setStatus(status3, reason) {
+        return this.edit({ status: status3, reason });
       }
       /**
        * Sets the new location of the guild scheduled event.
@@ -35708,7 +35708,7 @@ var require_InviteGuild = __commonJS({
 var require_Invite = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/Invite.js"(exports2, module2) {
     "use strict";
-    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var Base = require_Base();
     var { GuildScheduledEvent } = require_GuildScheduledEvent();
     var IntegrationApplication = require_IntegrationApplication();
@@ -35842,7 +35842,7 @@ var require_Invite = __commonJS({
         if (!guild || !this.client.guilds.cache.has(guild.id)) return false;
         if (!guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
         return Boolean(
-          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits4.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits4.ManageGuild)
+          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits6.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits6.ManageGuild)
         );
       }
       /**
@@ -36091,7 +36091,7 @@ var require_DataResolver = __commonJS({
     "use strict";
     var { Buffer: Buffer2 } = require("node:buffer");
     var fs = require("node:fs/promises");
-    var path2 = require("node:path");
+    var path3 = require("node:path");
     var { fetch: fetch2 } = require_undici();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var Invite2 = require_Invite();
@@ -36117,7 +36117,7 @@ var require_DataResolver = __commonJS({
           const res = await fetch2(resource);
           return { data: Buffer2.from(await res.arrayBuffer()), contentType: res.headers.get("content-type") };
         }
-        const file = path2.resolve(resource);
+        const file = path3.resolve(resource);
         const stats = await fs.stat(file);
         if (!stats.isFile()) throw new DiscordjsError2(ErrorCodes2.FileNotFound, file);
         return { data: await fs.readFile(file) };
@@ -36827,7 +36827,7 @@ var require_ApplicationCommandPermissionsManager = __commonJS({
        *    .then(console.log)
        *    .catch(console.error);
        */
-      async remove({ guild, command, users, roles, channels, token } = {}) {
+      async remove({ guild, command, users, roles: roles2, channels, token } = {}) {
         if (!token) {
           throw new DiscordjsError2(ErrorCodes2.ApplicationCommandPermissionsTokenMissing);
         }
@@ -36835,7 +36835,7 @@ var require_ApplicationCommandPermissionsManager = __commonJS({
         if (!commandId) {
           commandId = this.client.user.id;
         }
-        if (!users && !roles && !channels) {
+        if (!users && !roles2 && !channels) {
           throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "users OR roles OR channels", "Array or Resolvable", true);
         }
         let resolvedUserIds = [];
@@ -36847,8 +36847,8 @@ var require_ApplicationCommandPermissionsManager = __commonJS({
           }
         }
         let resolvedRoleIds = [];
-        if (Array.isArray(roles)) {
-          for (const role of roles) {
+        if (Array.isArray(roles2)) {
+          for (const role of roles2) {
             if (typeof role === "string") {
               resolvedRoleIds.push(role);
               continue;
@@ -36969,33 +36969,33 @@ var require_ApplicationCommandPermissionsManager = __commonJS({
 var require_fast_deep_equal = __commonJS({
   "node_modules/.pnpm/fast-deep-equal@3.1.3/node_modules/fast-deep-equal/index.js"(exports2, module2) {
     "use strict";
-    module2.exports = function equal(a, b) {
-      if (a === b) return true;
-      if (a && b && typeof a == "object" && typeof b == "object") {
-        if (a.constructor !== b.constructor) return false;
+    module2.exports = function equal(a, b2) {
+      if (a === b2) return true;
+      if (a && b2 && typeof a == "object" && typeof b2 == "object") {
+        if (a.constructor !== b2.constructor) return false;
         var length, i, keys;
         if (Array.isArray(a)) {
           length = a.length;
-          if (length != b.length) return false;
+          if (length != b2.length) return false;
           for (i = length; i-- !== 0; )
-            if (!equal(a[i], b[i])) return false;
+            if (!equal(a[i], b2[i])) return false;
           return true;
         }
-        if (a.constructor === RegExp) return a.source === b.source && a.flags === b.flags;
-        if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b.valueOf();
-        if (a.toString !== Object.prototype.toString) return a.toString() === b.toString();
+        if (a.constructor === RegExp) return a.source === b2.source && a.flags === b2.flags;
+        if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b2.valueOf();
+        if (a.toString !== Object.prototype.toString) return a.toString() === b2.toString();
         keys = Object.keys(a);
         length = keys.length;
-        if (length !== Object.keys(b).length) return false;
+        if (length !== Object.keys(b2).length) return false;
         for (i = length; i-- !== 0; )
-          if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
+          if (!Object.prototype.hasOwnProperty.call(b2, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
           var key4 = keys[i];
-          if (!equal(a[key4], b[key4])) return false;
+          if (!equal(a[key4], b2[key4])) return false;
         }
         return true;
       }
-      return a !== a && b !== b;
+      return a !== a && b2 !== b2;
     };
   }
 });
@@ -39345,11 +39345,11 @@ var require_baseGet = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_baseGet.js"(exports2, module2) {
     var castPath = require_castPath();
     var toKey = require_toKey();
-    function baseGet(object, path2) {
-      path2 = castPath(path2, object);
-      var index = 0, length = path2.length;
+    function baseGet(object, path3) {
+      path3 = castPath(path3, object);
+      var index = 0, length = path3.length;
       while (object != null && index < length) {
-        object = object[toKey(path2[index++])];
+        object = object[toKey(path3[index++])];
       }
       return index && index == length ? object : void 0;
     }
@@ -39361,8 +39361,8 @@ var require_baseGet = __commonJS({
 var require_get = __commonJS({
   "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/get.js"(exports2, module2) {
     var baseGet = require_baseGet();
-    function get(object, path2, defaultValue) {
-      var result = object == null ? void 0 : baseGet(object, path2);
+    function get(object, path3, defaultValue) {
+      var result = object == null ? void 0 : baseGet(object, path3);
       return result === void 0 ? defaultValue : result;
     }
     module2.exports = get;
@@ -39373,54 +39373,54 @@ var require_get = __commonJS({
 var require_es6 = __commonJS({
   "node_modules/.pnpm/fast-deep-equal@3.1.3/node_modules/fast-deep-equal/es6/index.js"(exports2, module2) {
     "use strict";
-    module2.exports = function equal(a, b) {
-      if (a === b) return true;
-      if (a && b && typeof a == "object" && typeof b == "object") {
-        if (a.constructor !== b.constructor) return false;
+    module2.exports = function equal(a, b2) {
+      if (a === b2) return true;
+      if (a && b2 && typeof a == "object" && typeof b2 == "object") {
+        if (a.constructor !== b2.constructor) return false;
         var length, i, keys;
         if (Array.isArray(a)) {
           length = a.length;
-          if (length != b.length) return false;
+          if (length != b2.length) return false;
           for (i = length; i-- !== 0; )
-            if (!equal(a[i], b[i])) return false;
+            if (!equal(a[i], b2[i])) return false;
           return true;
         }
-        if (a instanceof Map && b instanceof Map) {
-          if (a.size !== b.size) return false;
+        if (a instanceof Map && b2 instanceof Map) {
+          if (a.size !== b2.size) return false;
           for (i of a.entries())
-            if (!b.has(i[0])) return false;
+            if (!b2.has(i[0])) return false;
           for (i of a.entries())
-            if (!equal(i[1], b.get(i[0]))) return false;
+            if (!equal(i[1], b2.get(i[0]))) return false;
           return true;
         }
-        if (a instanceof Set && b instanceof Set) {
-          if (a.size !== b.size) return false;
+        if (a instanceof Set && b2 instanceof Set) {
+          if (a.size !== b2.size) return false;
           for (i of a.entries())
-            if (!b.has(i[0])) return false;
+            if (!b2.has(i[0])) return false;
           return true;
         }
-        if (ArrayBuffer.isView(a) && ArrayBuffer.isView(b)) {
+        if (ArrayBuffer.isView(a) && ArrayBuffer.isView(b2)) {
           length = a.length;
-          if (length != b.length) return false;
+          if (length != b2.length) return false;
           for (i = length; i-- !== 0; )
-            if (a[i] !== b[i]) return false;
+            if (a[i] !== b2[i]) return false;
           return true;
         }
-        if (a.constructor === RegExp) return a.source === b.source && a.flags === b.flags;
-        if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b.valueOf();
-        if (a.toString !== Object.prototype.toString) return a.toString() === b.toString();
+        if (a.constructor === RegExp) return a.source === b2.source && a.flags === b2.flags;
+        if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b2.valueOf();
+        if (a.toString !== Object.prototype.toString) return a.toString() === b2.toString();
         keys = Object.keys(a);
         length = keys.length;
-        if (length !== Object.keys(b).length) return false;
+        if (length !== Object.keys(b2).length) return false;
         for (i = length; i-- !== 0; )
-          if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
+          if (!Object.prototype.hasOwnProperty.call(b2, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
           var key4 = keys[i];
-          if (!equal(a[key4], b[key4])) return false;
+          if (!equal(a[key4], b2[key4])) return false;
         }
         return true;
       }
-      return a !== a && b !== b;
+      return a !== a && b2 !== b2;
     };
   }
 });
@@ -39688,7 +39688,7 @@ var require_cjs3 = __commonJS({
     var __defProp2 = Object.defineProperty;
     var __name = (target, value) => __defProp2(target, "name", { value, configurable: true });
     var e;
-    var t;
+    var t2;
     var n;
     var r = "undefined" != typeof globalThis ? globalThis : "undefined" != typeof self ? self : globalThis;
     var o = e = {};
@@ -39701,26 +39701,26 @@ var require_cjs3 = __commonJS({
     }
     __name(u, "u");
     function c(e3) {
-      if (t === setTimeout)
+      if (t2 === setTimeout)
         return setTimeout(e3, 0);
-      if ((t === i || !t) && setTimeout)
-        return t = setTimeout, setTimeout(e3, 0);
+      if ((t2 === i || !t2) && setTimeout)
+        return t2 = setTimeout, setTimeout(e3, 0);
       try {
-        return t(e3, 0);
+        return t2(e3, 0);
       } catch (n3) {
         try {
-          return t.call(null, e3, 0);
+          return t2.call(null, e3, 0);
         } catch (n4) {
-          return t.call(this || r, e3, 0);
+          return t2.call(this || r, e3, 0);
         }
       }
     }
     __name(c, "c");
     !(function() {
       try {
-        t = "function" == typeof setTimeout ? setTimeout : i;
+        t2 = "function" == typeof setTimeout ? setTimeout : i;
       } catch (e3) {
-        t = i;
+        t2 = i;
       }
       try {
         n = "function" == typeof clearTimeout ? clearTimeout : u;
@@ -39811,10 +39811,10 @@ var require_cjs3 = __commonJS({
     T.umask;
     T.version;
     T.versions;
-    var t2 = "function" == typeof Symbol && "symbol" == typeof Symbol.toStringTag;
+    var t22 = "function" == typeof Symbol && "symbol" == typeof Symbol.toStringTag;
     var e2 = Object.prototype.toString;
     var o2 = /* @__PURE__ */ __name(function(o3) {
-      return !(t2 && o3 && "object" == typeof o3 && Symbol.toStringTag in o3) && "[object Arguments]" === e2.call(o3);
+      return !(t22 && o3 && "object" == typeof o3 && Symbol.toStringTag in o3) && "[object Arguments]" === e2.call(o3);
     }, "o");
     var n2 = /* @__PURE__ */ __name(function(t3) {
       return !!o2(t3) || null !== t3 && "object" == typeof t3 && "number" == typeof t3.length && t3.length >= 0 && "[object Array]" !== e2.call(t3) && "[object Function]" === e2.call(t3.callee);
@@ -39868,9 +39868,9 @@ var require_cjs3 = __commonJS({
     var l$1 = "undefined" != typeof Uint8Array;
     var d2 = "undefined" != typeof ArrayBuffer;
     if (l$1 && y)
-      g = Object.getPrototypeOf(Uint8Array.prototype), b = c$1(Object.getOwnPropertyDescriptor(g, Symbol.toStringTag).get);
+      g = Object.getPrototypeOf(Uint8Array.prototype), b2 = c$1(Object.getOwnPropertyDescriptor(g, Symbol.toStringTag).get);
     var g;
-    var b;
+    var b2;
     var m2 = c$1(Object.prototype.toString);
     var h2 = c$1(Number.prototype.valueOf);
     var j = c$1(String.prototype.valueOf);
@@ -39892,51 +39892,51 @@ var require_cjs3 = __commonJS({
     }
     __name(O, "O");
     function S(e3) {
-      return l$1 && y ? void 0 !== b(e3) : B(e3) || k(e3) || E(e3) || D(e3) || U(e3) || P(e3) || x(e3) || I(e3) || M(e3) || z(e3) || F(e3);
+      return l$1 && y ? void 0 !== b2(e3) : B(e3) || k(e3) || E(e3) || D(e3) || U(e3) || P2(e3) || x(e3) || I(e3) || M(e3) || z(e3) || F(e3);
     }
     __name(S, "S");
     function B(e3) {
-      return l$1 && y ? "Uint8Array" === b(e3) : "[object Uint8Array]" === m2(e3) || u$1(e3) && void 0 !== e3.buffer;
+      return l$1 && y ? "Uint8Array" === b2(e3) : "[object Uint8Array]" === m2(e3) || u$1(e3) && void 0 !== e3.buffer;
     }
     __name(B, "B");
     function k(e3) {
-      return l$1 && y ? "Uint8ClampedArray" === b(e3) : "[object Uint8ClampedArray]" === m2(e3);
+      return l$1 && y ? "Uint8ClampedArray" === b2(e3) : "[object Uint8ClampedArray]" === m2(e3);
     }
     __name(k, "k");
     function E(e3) {
-      return l$1 && y ? "Uint16Array" === b(e3) : "[object Uint16Array]" === m2(e3);
+      return l$1 && y ? "Uint16Array" === b2(e3) : "[object Uint16Array]" === m2(e3);
     }
     __name(E, "E");
     function D(e3) {
-      return l$1 && y ? "Uint32Array" === b(e3) : "[object Uint32Array]" === m2(e3);
+      return l$1 && y ? "Uint32Array" === b2(e3) : "[object Uint32Array]" === m2(e3);
     }
     __name(D, "D");
     function U(e3) {
-      return l$1 && y ? "Int8Array" === b(e3) : "[object Int8Array]" === m2(e3);
+      return l$1 && y ? "Int8Array" === b2(e3) : "[object Int8Array]" === m2(e3);
     }
     __name(U, "U");
-    function P(e3) {
-      return l$1 && y ? "Int16Array" === b(e3) : "[object Int16Array]" === m2(e3);
+    function P2(e3) {
+      return l$1 && y ? "Int16Array" === b2(e3) : "[object Int16Array]" === m2(e3);
     }
-    __name(P, "P");
+    __name(P2, "P");
     function x(e3) {
-      return l$1 && y ? "Int32Array" === b(e3) : "[object Int32Array]" === m2(e3);
+      return l$1 && y ? "Int32Array" === b2(e3) : "[object Int32Array]" === m2(e3);
     }
     __name(x, "x");
     function I(e3) {
-      return l$1 && y ? "Float32Array" === b(e3) : "[object Float32Array]" === m2(e3);
+      return l$1 && y ? "Float32Array" === b2(e3) : "[object Float32Array]" === m2(e3);
     }
     __name(I, "I");
     function M(e3) {
-      return l$1 && y ? "Float64Array" === b(e3) : "[object Float64Array]" === m2(e3);
+      return l$1 && y ? "Float64Array" === b2(e3) : "[object Float64Array]" === m2(e3);
     }
     __name(M, "M");
     function z(e3) {
-      return l$1 && y ? "BigInt64Array" === b(e3) : "[object BigInt64Array]" === m2(e3);
+      return l$1 && y ? "BigInt64Array" === b2(e3) : "[object BigInt64Array]" === m2(e3);
     }
     __name(z, "z");
     function F(e3) {
-      return l$1 && y ? "BigUint64Array" === b(e3) : "[object BigUint64Array]" === m2(e3);
+      return l$1 && y ? "BigUint64Array" === b2(e3) : "[object BigUint64Array]" === m2(e3);
     }
     __name(F, "F");
     function T2(e3) {
@@ -40003,7 +40003,7 @@ var require_cjs3 = __commonJS({
       return "undefined" != typeof Promise && e3 instanceof Promise || null !== e3 && "object" == typeof e3 && "function" == typeof e3.then && "function" == typeof e3.catch;
     }, o$2.isArrayBufferView = function(e3) {
       return d2 && ArrayBuffer.isView ? ArrayBuffer.isView(e3) : S(e3) || R(e3);
-    }, o$2.isTypedArray = S, o$2.isUint8Array = B, o$2.isUint8ClampedArray = k, o$2.isUint16Array = E, o$2.isUint32Array = D, o$2.isInt8Array = U, o$2.isInt16Array = P, o$2.isInt32Array = x, o$2.isFloat32Array = I, o$2.isFloat64Array = M, o$2.isBigInt64Array = z, o$2.isBigUint64Array = F, T2.working = "undefined" != typeof Map && T2(/* @__PURE__ */ new Map()), o$2.isMap = function(e3) {
+    }, o$2.isTypedArray = S, o$2.isUint8Array = B, o$2.isUint8ClampedArray = k, o$2.isUint16Array = E, o$2.isUint32Array = D, o$2.isInt8Array = U, o$2.isInt16Array = P2, o$2.isInt32Array = x, o$2.isFloat32Array = I, o$2.isFloat64Array = M, o$2.isBigInt64Array = z, o$2.isBigUint64Array = F, T2.working = "undefined" != typeof Map && T2(/* @__PURE__ */ new Map()), o$2.isMap = function(e3) {
       return "undefined" != typeof Map && (T2.working ? T2(e3) : e3 instanceof Map);
     }, N.working = "undefined" != typeof Set && N(/* @__PURE__ */ new Set()), o$2.isSet = function(e3) {
       return "undefined" != typeof Set && (N.working ? N(e3) : e3 instanceof Set);
@@ -40666,28 +40666,28 @@ ${givenBlock}`;
       return uniqueArray2.length === input.length;
     }
     __name(isUnique, "isUnique");
-    function lessThan(a3, b2) {
-      return a3 < b2;
+    function lessThan(a3, b22) {
+      return a3 < b22;
     }
     __name(lessThan, "lessThan");
-    function lessThanOrEqual(a3, b2) {
-      return a3 <= b2;
+    function lessThanOrEqual(a3, b22) {
+      return a3 <= b22;
     }
     __name(lessThanOrEqual, "lessThanOrEqual");
-    function greaterThan(a3, b2) {
-      return a3 > b2;
+    function greaterThan(a3, b22) {
+      return a3 > b22;
     }
     __name(greaterThan, "greaterThan");
-    function greaterThanOrEqual(a3, b2) {
-      return a3 >= b2;
+    function greaterThanOrEqual(a3, b22) {
+      return a3 >= b22;
     }
     __name(greaterThanOrEqual, "greaterThanOrEqual");
-    function equal(a3, b2) {
-      return a3 === b2;
+    function equal(a3, b22) {
+      return a3 === b22;
     }
     __name(equal, "equal");
-    function notEqual(a3, b2) {
-      return a3 !== b2;
+    function notEqual(a3, b22) {
+      return a3 !== b22;
     }
     __name(notEqual, "notEqual");
     function arrayLengthComparator(comparator, name, expected, length, options2) {
@@ -43212,7 +43212,7 @@ var require_dist8 = __commonJS({
       ApplicationCommandOptionWithChoicesMixin: () => ApplicationCommandOptionWithChoicesMixin,
       BaseSelectMenuBuilder: () => BaseSelectMenuBuilder,
       ButtonBuilder: () => ButtonBuilder3,
-      ChannelSelectMenuBuilder: () => ChannelSelectMenuBuilder,
+      ChannelSelectMenuBuilder: () => ChannelSelectMenuBuilder2,
       CheckboxAssertions: () => Assertions_exports3,
       CheckboxBuilder: () => CheckboxBuilder,
       CheckboxGroupBuilder: () => CheckboxGroupBuilder,
@@ -44648,7 +44648,7 @@ var require_dist8 = __commonJS({
         };
       }
     };
-    var ChannelSelectMenuBuilder = class extends BaseSelectMenuBuilder {
+    var ChannelSelectMenuBuilder2 = class extends BaseSelectMenuBuilder {
       static {
         __name(this, "ChannelSelectMenuBuilder");
       }
@@ -44776,8 +44776,8 @@ var require_dist8 = __commonJS({
        *
        * @param roles - The roles to add
        */
-      addDefaultRoles(...roles) {
-        const normalizedValues = normalizeArray(roles);
+      addDefaultRoles(...roles2) {
+        const normalizedValues = normalizeArray(roles2);
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
@@ -44864,8 +44864,8 @@ var require_dist8 = __commonJS({
        *
        * @param roles - The roles to add
        */
-      addDefaultRoles(...roles) {
-        const normalizedValues = normalizeArray(roles);
+      addDefaultRoles(...roles2) {
+        const normalizedValues = normalizeArray(roles2);
         optionsLengthValidator.parse((this.data.default_values?.length ?? 0) + normalizedValues.length);
         this.data.default_values ??= [];
         this.data.default_values.push(
@@ -44881,8 +44881,8 @@ var require_dist8 = __commonJS({
        *
        * @param roles - The roles to set
        */
-      setDefaultRoles(...roles) {
-        const normalizedValues = normalizeArray(roles);
+      setDefaultRoles(...roles2) {
+        const normalizedValues = normalizeArray(roles2);
         optionsLengthValidator.parse(normalizedValues.length);
         this.data.default_values = normalizedValues.map((id3) => ({
           id: id3,
@@ -45387,7 +45387,7 @@ var require_dist8 = __commonJS({
        * @param input - A function that returns a component builder or an already built builder
        */
       setChannelSelectMenuComponent(input) {
-        this.data.component = resolveBuilder(input, ChannelSelectMenuBuilder);
+        this.data.component = resolveBuilder(input, ChannelSelectMenuBuilder2);
         return this;
       }
       /**
@@ -46212,7 +46212,7 @@ var require_dist8 = __commonJS({
         case import_v1027.ComponentType.MentionableSelect:
           return new MentionableSelectMenuBuilder(data);
         case import_v1027.ComponentType.ChannelSelect:
-          return new ChannelSelectMenuBuilder(data);
+          return new ChannelSelectMenuBuilder2(data);
         case import_v1027.ComponentType.File:
           return new FileBuilder(data);
         case import_v1027.ComponentType.Container:
@@ -47997,7 +47997,7 @@ var require_MessageMentions = __commonJS({
        * @private
        */
       static GlobalUsersPattern = new RegExp(this.UsersPattern.source, "g");
-      constructor(message, users, roles, everyone, crosspostedChannels, repliedUser) {
+      constructor(message, users, roles2, everyone, crosspostedChannels, repliedUser) {
         Object.defineProperty(this, "client", { value: message.client });
         Object.defineProperty(this, "guild", { value: message.guild });
         Object.defineProperty(this, "_content", { value: message.content });
@@ -48018,13 +48018,13 @@ var require_MessageMentions = __commonJS({
         } else {
           this.users = new Collection2();
         }
-        if (roles instanceof Collection2) {
-          this.roles = new Collection2(roles);
-        } else if (roles) {
+        if (roles2 instanceof Collection2) {
+          this.roles = new Collection2(roles2);
+        } else if (roles2) {
           this.roles = new Collection2();
           const guild = message.guild;
           if (guild) {
-            for (const mention of roles) {
+            for (const mention of roles2) {
               const role = guild.roles.cache.get(mention);
               if (role) this.roles.set(role.id, role);
             }
@@ -48601,8 +48601,8 @@ var require_GuildEmojiRoleManager = __commonJS({
        *    .then(console.log)
        *    .catch(console.error);
        */
-      set(roles) {
-        return this.emoji.edit({ roles });
+      set(roles2) {
+        return this.emoji.edit({ roles: roles2 });
       }
       clone() {
         const clone = new this.constructor(this.emoji);
@@ -48614,8 +48614,8 @@ var require_GuildEmojiRoleManager = __commonJS({
        * @param {Snowflake[]} roles The new roles
        * @private
        */
-      _patch(roles) {
-        this.emoji._roles = roles;
+      _patch(roles2) {
+        this.emoji._roles = roles2;
       }
       valueOf() {
         return this.cache;
@@ -48629,7 +48629,7 @@ var require_GuildEmojiRoleManager = __commonJS({
 var require_GuildEmoji = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildEmoji.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var BaseGuildEmoji = require_BaseGuildEmoji();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildEmojiRoleManager = require_GuildEmojiRoleManager();
@@ -48662,7 +48662,7 @@ var require_GuildEmoji = __commonJS({
        */
       get deletable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits4.ManageGuildExpressions);
+        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits6.ManageGuildExpressions);
       }
       /**
        * A manager for roles this emoji is active for.
@@ -49231,7 +49231,7 @@ var require_ChannelSelectMenuBuilder = __commonJS({
     var { ChannelSelectMenuBuilder: BuildersChannelSelectMenu } = require_dist8();
     var { isJSONEncodable } = require_dist();
     var { toSnakeCase } = require_Transformers();
-    var ChannelSelectMenuBuilder = class extends BuildersChannelSelectMenu {
+    var ChannelSelectMenuBuilder2 = class extends BuildersChannelSelectMenu {
       constructor(data = {}) {
         super(toSnakeCase(data));
       }
@@ -49244,7 +49244,7 @@ var require_ChannelSelectMenuBuilder = __commonJS({
         return new this(isJSONEncodable(other) ? other.toJSON() : other);
       }
     };
-    module2.exports = ChannelSelectMenuBuilder;
+    module2.exports = ChannelSelectMenuBuilder2;
   }
 });
 
@@ -49917,7 +49917,7 @@ var require_Components = __commonJS({
     var ActionRowBuilder3 = require_ActionRowBuilder();
     var ButtonBuilder3 = require_ButtonBuilder();
     var ButtonComponent = require_ButtonComponent();
-    var ChannelSelectMenuBuilder = require_ChannelSelectMenuBuilder();
+    var ChannelSelectMenuBuilder2 = require_ChannelSelectMenuBuilder();
     var ChannelSelectMenuComponent = require_ChannelSelectMenuComponent();
     var Component = require_Component();
     var ContainerComponent = require_ContainerComponent();
@@ -49964,7 +49964,7 @@ var require_Components = __commonJS({
       [ComponentType3.UserSelect]: UserSelectMenuBuilder2,
       [ComponentType3.RoleSelect]: RoleSelectMenuBuilder2,
       [ComponentType3.MentionableSelect]: MentionableSelectMenuBuilder,
-      [ComponentType3.ChannelSelect]: ChannelSelectMenuBuilder
+      [ComponentType3.ChannelSelect]: ChannelSelectMenuBuilder2
     };
   }
 });
@@ -49981,7 +49981,7 @@ var require_Message = __commonJS({
       ChannelType: ChannelType6,
       MessageType,
       MessageFlags: MessageFlags2,
-      PermissionFlagsBits: PermissionFlagsBits4,
+      PermissionFlagsBits: PermissionFlagsBits6,
       MessageReferenceType
     } = require_v106();
     var Attachment = require_Attachment();
@@ -50437,7 +50437,7 @@ var require_Message = __commonJS({
           if (this.channel.archived) return false;
           if (this.channel.locked) {
             const permissions = this.channel.permissionsFor(this.client.user);
-            if (!permissions?.has(PermissionFlagsBits4.ManageThreads, true)) return false;
+            if (!permissions?.has(PermissionFlagsBits6.ManageThreads, true)) return false;
           }
         }
         return precheck;
@@ -50457,8 +50457,8 @@ var require_Message = __commonJS({
         }
         const permissions = this.channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits4.Administrator, false)) return true;
-        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits4.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
+        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
+        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits6.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
       }
       /**
        * Whether the message is bulk deletable by the client user
@@ -50469,7 +50469,7 @@ var require_Message = __commonJS({
        * channel.bulkDelete(messages.filter(message => message.bulkDeletable));
        */
       get bulkDeletable() {
-        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits4.ManageMessages, false)) ?? false;
+        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits6.ManageMessages, false)) ?? false;
       }
       /**
        * Whether the message is pinnable by the client user
@@ -50483,7 +50483,7 @@ var require_Message = __commonJS({
         if (!channel || channel.isVoiceBased() || !channel.viewable) return false;
         const permissions = channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits4.ReadMessageHistory | PermissionFlagsBits4.PinMessages);
+        return permissions.has(PermissionFlagsBits6.ReadMessageHistory | PermissionFlagsBits6.PinMessages);
       }
       /**
        * Fetches the Message this crosspost/reply/pin-add references, if available to the client
@@ -50504,7 +50504,7 @@ var require_Message = __commonJS({
        * @readonly
        */
       get crosspostable() {
-        const bitfield = PermissionFlagsBits4.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField3.DefaultBit : PermissionFlagsBits4.ManageMessages);
+        const bitfield = PermissionFlagsBits6.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField3.DefaultBit : PermissionFlagsBits6.ManageMessages);
         const { channel } = this;
         return Boolean(
           channel?.type === ChannelType6.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
@@ -51661,8 +51661,8 @@ var require_GuildMemberRoleManager = __commonJS({
        *   .then(member => console.log(`Member roles is now of ${member.roles.cache.size} size`))
        *   .catch(console.error);
        */
-      set(roles, reason) {
-        return this.member.edit({ roles, reason });
+      set(roles2, reason) {
+        return this.member.edit({ roles: roles2, reason });
       }
       clone() {
         const clone = new this.constructor(this.member);
@@ -51697,7 +51697,7 @@ var require_GuildMemberFlagsBitField = __commonJS({
 var require_GuildMember = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildMember.js"(exports2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var Base = require_Base();
     var VoiceState = require_VoiceState();
     var TextBasedChannel = require_TextBasedChannel();
@@ -51949,7 +51949,7 @@ var require_GuildMember = __commonJS({
        */
       get kickable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits4.KickMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits6.KickMembers);
       }
       /**
        * Whether this member is bannable by the client user
@@ -51958,7 +51958,7 @@ var require_GuildMember = __commonJS({
        */
       get bannable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits4.BanMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits6.BanMembers);
       }
       /**
        * Whether this member is moderatable by the client user
@@ -51966,7 +51966,7 @@ var require_GuildMember = __commonJS({
        * @readonly
        */
       get moderatable() {
-        return !this.permissions.has(PermissionFlagsBits4.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits4.ModerateMembers) ?? false);
+        return !this.permissions.has(PermissionFlagsBits6.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits6.ModerateMembers) ?? false);
       }
       /**
        * Whether this member is currently timed out
@@ -54843,7 +54843,7 @@ var require_ThreadChannel = __commonJS({
     "use strict";
     var { DiscordAPIError } = require_dist5();
     var { lazy } = require_dist();
-    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType6, PermissionFlagsBits: PermissionFlagsBits4, Routes: Routes2 } = require_v106();
+    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType6, PermissionFlagsBits: PermissionFlagsBits6, Routes: Routes2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var getThreadOnlyChannel = lazy(() => require_ThreadOnlyChannel());
     var TextBasedChannel = require_TextBasedChannel();
@@ -55203,7 +55203,7 @@ var require_ThreadChannel = __commonJS({
        */
       get joinable() {
         return !this.archived && !this.joined && this.permissionsFor(this.client.user)?.has(
-          this.type === ChannelType6.PrivateThread ? PermissionFlagsBits4.ManageThreads : PermissionFlagsBits4.ViewChannel,
+          this.type === ChannelType6.PrivateThread ? PermissionFlagsBits6.ManageThreads : PermissionFlagsBits6.ViewChannel,
           false
         );
       }
@@ -55215,8 +55215,8 @@ var require_ThreadChannel = __commonJS({
       get manageable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits4.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits4.ManageThreads, false);
+        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits6.ManageThreads, false);
       }
       /**
        * Whether the thread is viewable by the client user
@@ -55227,7 +55227,7 @@ var require_ThreadChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits4.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits6.ViewChannel, false);
       }
       /**
        * Whether the client user can send messages in this thread
@@ -55237,8 +55237,8 @@ var require_ThreadChannel = __commonJS({
       get sendable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits4.Administrator, false)) return true;
-        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType6.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits4.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
+        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
+        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType6.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits6.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
       }
       /**
        * Whether the thread is unarchivable by the client user
@@ -55400,9 +55400,9 @@ var require_ThreadManager = __commonJS({
        * @returns {Promise<FetchedThreadsMore>}
        */
       async fetchArchived({ type = "public", fetchAll = false, before, limit } = {}, cache = true) {
-        let path2 = Routes2.channelThreads(this.channel.id, type);
+        let path3 = Routes2.channelThreads(this.channel.id, type);
         if (type === "private" && !fetchAll) {
-          path2 = Routes2.channelJoinedArchivedThreads(this.channel.id);
+          path3 = Routes2.channelJoinedArchivedThreads(this.channel.id);
         }
         let timestamp;
         let id3;
@@ -55426,7 +55426,7 @@ var require_ThreadManager = __commonJS({
             }
           }
         }
-        const raw = await this.client.rest.get(path2, { query });
+        const raw = await this.client.rest.get(path3, { query });
         return this.constructor._mapThreads(raw, this.client, { parent: this.channel, cache });
       }
       /**
@@ -55732,7 +55732,7 @@ var require_BaseGuildVoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/BaseGuildVoiceChannel.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var GuildChannel = require_GuildChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var GuildMessageManager = require_GuildMessageManager();
@@ -55803,8 +55803,8 @@ var require_BaseGuildVoiceChannel = __commonJS({
         if (!this.viewable) return false;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits4.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits4.Connect, false);
+        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits6.Connect, false);
       }
       /**
        * Creates an invite to this guild channel.
@@ -55988,7 +55988,7 @@ var require_TextChannel = __commonJS({
 var require_VoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceChannel.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits4, Routes: Routes2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits6, Routes: Routes2 } = require_v106();
     var BaseGuildVoiceChannel = require_BaseGuildVoiceChannel();
     var VoiceChannel = class extends BaseGuildVoiceChannel {
       /**
@@ -55998,7 +55998,7 @@ var require_VoiceChannel = __commonJS({
        */
       get joinable() {
         if (!super.joinable) return false;
-        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits4.MoveMembers, false)) return false;
+        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits6.MoveMembers, false)) return false;
         return true;
       }
       /**
@@ -56009,8 +56009,8 @@ var require_VoiceChannel = __commonJS({
       get speakable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits4.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits4.Speak, false);
+        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits6.Speak, false);
       }
       /**
        * @typedef {Object} SendSoundboardSoundOptions
@@ -56600,7 +56600,7 @@ var require_GuildOnboardingPromptOption = __commonJS({
           new Collection2()
         );
         this.roles = data.role_ids.reduce(
-          (roles, roleId) => roles.set(roleId, guild.roles.cache.get(roleId)),
+          (roles2, roleId) => roles2.set(roleId, guild.roles.cache.get(roleId)),
           new Collection2()
         );
         this._emoji = data.emoji;
@@ -56726,8 +56726,8 @@ var require_Integration = __commonJS({
        * @readonly
        */
       get roles() {
-        const roles = this.guild.roles.cache;
-        return roles.filter((role) => role.tags?.integrationId === this.id);
+        const roles2 = this.guild.roles.cache;
+        return roles2.filter((role) => role.tags?.integrationId === this.id);
       }
       _patch(data) {
         if ("expire_behavior" in data) {
@@ -58725,12 +58725,12 @@ var require_InteractionResponses = __commonJS({
        * @param {ShowModalOptions} [options={}] The options for sending this interaction response
        * @returns {Promise<InteractionCallbackResponse|undefined>}
        */
-      async showModal(modal2, options2 = {}) {
+      async showModal(modal3, options2 = {}) {
         if (this.deferred || this.replied) throw new DiscordjsError2(ErrorCodes2.InteractionAlreadyReplied);
         const response = await this.client.rest.post(Routes2.interactionCallback(this.id, this.token), {
           body: {
             type: InteractionResponseType.Modal,
-            data: isJSONEncodable(modal2) ? modal2.toJSON() : this.client.options.jsonTransformer(modal2)
+            data: isJSONEncodable(modal3) ? modal3.toJSON() : this.client.options.jsonTransformer(modal3)
           },
           auth: false,
           query: makeURLSearchParams2({ with_response: options2.withResponse ?? false })
@@ -59083,7 +59083,7 @@ var require_MentionableSelectMenuInteraction = __commonJS({
       constructor(client2, data) {
         super(client2, data);
         const { resolved, values } = data.data;
-        const { members, users, roles } = resolved ?? {};
+        const { members, users, roles: roles2 } = resolved ?? {};
         this.values = values ?? [];
         this.users = new Collection2();
         this.members = new Collection2();
@@ -59106,8 +59106,8 @@ var require_MentionableSelectMenuInteraction = __commonJS({
             this.users.set(user.id, this.client.users._add(user));
           }
         }
-        if (roles) {
-          for (const role of Object.values(roles)) {
+        if (roles2) {
+          for (const role of Object.values(roles2)) {
             this.roles.set(role.id, this.guild?.roles._add(role) ?? role);
           }
         }
@@ -59470,7 +59470,7 @@ var require_ModalSubmitInteraction = __commonJS({
         if (rawComponent.values) {
           data.values = rawComponent.values;
           if (resolved) {
-            const { members, users, channels, roles, attachments } = resolved;
+            const { members, users, channels, roles: roles2, attachments } = resolved;
             const valueSet = new Set(rawComponent.values);
             if (users) {
               data.users = new Collection2();
@@ -59497,9 +59497,9 @@ var require_ModalSubmitInteraction = __commonJS({
                 }
               }
             }
-            if (roles) {
+            if (roles2) {
               data.roles = new Collection2();
-              for (const [id3, role] of Object.entries(roles)) {
+              for (const [id3, role] of Object.entries(roles2)) {
                 if (valueSet.has(id3)) {
                   data.roles.set(id3, guild?.roles._add(role) ?? role);
                 }
@@ -60668,13 +60668,13 @@ var require_buffer_util = __commonJS({
     "use strict";
     var { EMPTY_BUFFER } = require_constants6();
     var FastBuffer = Buffer[Symbol.species];
-    function concat(list, totalLength) {
-      if (list.length === 0) return EMPTY_BUFFER;
-      if (list.length === 1) return list[0];
+    function concat(list3, totalLength) {
+      if (list3.length === 0) return EMPTY_BUFFER;
+      if (list3.length === 1) return list3[0];
       const target = Buffer.allocUnsafe(totalLength);
       let offset = 0;
-      for (let i = 0; i < list.length; i++) {
-        const buf = list[i];
+      for (let i = 0; i < list3.length; i++) {
+        const buf = list3[i];
         target.set(buf, offset);
         offset += buf.length;
       }
@@ -62062,7 +62062,7 @@ var require_sender2 = __commonJS({
        */
       static frame(data, options2) {
         let mask;
-        let merge = false;
+        let merge2 = false;
         let offset = 2;
         let skipMasking = false;
         if (options2.mask) {
@@ -62095,7 +62095,7 @@ var require_sender2 = __commonJS({
           }
         } else {
           dataLength = data.length;
-          merge = options2.mask && options2.readOnly && !skipMasking;
+          merge2 = options2.mask && options2.readOnly && !skipMasking;
         }
         let payloadLength = dataLength;
         if (dataLength >= 65536) {
@@ -62105,7 +62105,7 @@ var require_sender2 = __commonJS({
           offset += 2;
           payloadLength = 126;
         }
-        const target = Buffer.allocUnsafe(merge ? dataLength + offset : offset);
+        const target = Buffer.allocUnsafe(merge2 ? dataLength + offset : offset);
         target[0] = options2.fin ? options2.opcode | 128 : options2.opcode;
         if (options2.rsv1) target[0] |= 64;
         target[1] = payloadLength;
@@ -62122,7 +62122,7 @@ var require_sender2 = __commonJS({
         target[offset - 2] = mask[2];
         target[offset - 1] = mask[3];
         if (skipMasking) return [target, data];
-        if (merge) {
+        if (merge2) {
           applyMask(data, mask, target, offset, dataLength);
           return [target];
         }
@@ -62460,14 +62460,14 @@ var require_sender2 = __commonJS({
        * @param {Function} [cb] Callback
        * @private
        */
-      sendFrame(list, cb) {
-        if (list.length === 2) {
+      sendFrame(list3, cb) {
+        if (list3.length === 2) {
           this._socket.cork();
-          this._socket.write(list[0]);
-          this._socket.write(list[1], cb);
+          this._socket.write(list3[0]);
+          this._socket.write(list3[1], cb);
           this._socket.uncork();
         } else {
-          this._socket.write(list[0], cb);
+          this._socket.write(list3[0], cb);
         }
       }
     };
@@ -62878,7 +62878,7 @@ var require_websocket2 = __commonJS({
     var http = require("http");
     var net = require("net");
     var tls = require("tls");
-    var { randomBytes, createHash } = require("crypto");
+    var { randomBytes: randomBytes2, createHash: createHash2 } = require("crypto");
     var { Duplex, Readable } = require("stream");
     var { URL: URL2 } = require("url");
     var PerMessageDeflate = require_permessage_deflate2();
@@ -63416,7 +63416,7 @@ var require_websocket2 = __commonJS({
         }
       }
       const defaultPort = isSecure ? 443 : 80;
-      const key4 = randomBytes(16).toString("base64");
+      const key4 = randomBytes2(16).toString("base64");
       const request = isSecure ? https2.request : http.request;
       const protocolSet = /* @__PURE__ */ new Set();
       let perMessageDeflate;
@@ -63546,7 +63546,7 @@ var require_websocket2 = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1").update(key4 + GUID).digest("base64");
+        const digest = createHash2("sha1").update(key4 + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
           abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
@@ -63915,7 +63915,7 @@ var require_websocket_server = __commonJS({
     var EventEmitter = require("events");
     var http = require("http");
     var { Duplex } = require("stream");
-    var { createHash } = require("crypto");
+    var { createHash: createHash2 } = require("crypto");
     var extension = require_extension();
     var PerMessageDeflate = require_permessage_deflate2();
     var subprotocol = require_subprotocol();
@@ -64222,7 +64222,7 @@ var require_websocket_server = __commonJS({
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1").update(key4 + GUID).digest("base64");
+        const digest = createHash2("sha1").update(key4 + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
@@ -64445,7 +64445,7 @@ var require_dist9 = __commonJS({
     var import_node_worker_threads2 = require("worker_threads");
     var import_collection2 = require_dist2();
     var import_node_events = require("events");
-    var import_node_path2 = require("path");
+    var import_node_path3 = require("path");
     var import_node_worker_threads = require("worker_threads");
     var import_collection = require_dist2();
     var WorkerSendPayloadOp = /* @__PURE__ */ ((WorkerSendPayloadOp2) => {
@@ -64570,8 +64570,8 @@ var require_dist9 = __commonJS({
           };
           const promise = new Promise((resolve2) => this.fetchStatusPromises.set(nonce, resolve2));
           worker.postMessage(payload);
-          const status = await promise;
-          statuses.set(shardId, status);
+          const status3 = await promise;
+          statuses.set(shardId, status3);
         }
         return statuses;
       }
@@ -64596,20 +64596,20 @@ var require_dist9 = __commonJS({
         }
       }
       resolveWorkerPath() {
-        const path2 = this.options.workerPath;
-        if (!path2) {
-          return (0, import_node_path2.join)(__dirname, "defaultWorker.js");
+        const path3 = this.options.workerPath;
+        if (!path3) {
+          return (0, import_node_path3.join)(__dirname, "defaultWorker.js");
         }
-        if ((0, import_node_path2.isAbsolute)(path2)) {
-          return path2;
+        if ((0, import_node_path3.isAbsolute)(path3)) {
+          return path3;
         }
-        if (/^\.\.?[/\\]/.test(path2)) {
-          return (0, import_node_path2.resolve)(path2);
+        if (/^\.\.?[/\\]/.test(path3)) {
+          return (0, import_node_path3.resolve)(path3);
         }
         try {
-          return require.resolve(path2);
+          return require.resolve(path3);
         } catch {
-          return (0, import_node_path2.resolve)(path2);
+          return (0, import_node_path3.resolve)(path3);
         }
       }
       async waitForWorkerReady(worker) {
@@ -64793,7 +64793,7 @@ var require_dist9 = __commonJS({
     var import_collection4 = require_dist2();
     var import_util4 = require_dist();
     var import_v10 = require_v106();
-    var import_promises = require("timers/promises");
+    var import_promises3 = require("timers/promises");
     var import_collection3 = require_dist2();
     var import_async_queue = require_cjs2();
     var SimpleIdentifyThrottler = class {
@@ -64820,7 +64820,7 @@ var require_dist9 = __commonJS({
           const diff = state.resetsAt - Date.now();
           if (diff > 0 && diff <= 5e3) {
             const time = diff + Math.random() * 1500;
-            await (0, import_promises.setTimeout)(time);
+            await (0, import_promises3.setTimeout)(time);
           }
           state.resetsAt = Date.now() + 5e3;
         } finally {
@@ -66728,8 +66728,8 @@ var require_ClientUser = __commonJS({
        * // Set the client user's status
        * client.user.setStatus('idle');
        */
-      setStatus(status, shardId) {
-        return this.setPresence({ status, shardId });
+      setStatus(status3, shardId) {
+        return this.setPresence({ status: status3, shardId });
       }
       /**
        * Options for setting an activity.
@@ -67217,7 +67217,7 @@ var require_WebSocketManager = __commonJS({
        * @readonly
        */
       get ping() {
-        const sum = this.shards.reduce((a, b) => a + b.ping, 0);
+        const sum = this.shards.reduce((a, b2) => a + b2.ping, 0);
         return sum / this.shards.size;
       }
       /**
@@ -69087,7 +69087,7 @@ var require_GuildEmojiManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildEmojiManager.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits4 } = require_v106();
+    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
     var BaseGuildEmojiManager2 = require_BaseGuildEmojiManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { resolveImage } = require_DataResolver();
@@ -69122,12 +69122,12 @@ var require_GuildEmojiManager = __commonJS({
        *   .then(emoji => console.log(`Created new emoji with name ${emoji.name}!`))
        *   .catch(console.error);
        */
-      async create({ attachment, name, roles, reason }) {
+      async create({ attachment, name, roles: roles2, reason }) {
         attachment = await resolveImage(attachment);
         if (!attachment) throw new DiscordjsTypeError2(ErrorCodes2.ReqResourceType);
         const body = { image: attachment, name };
-        if (roles) {
-          if (!Array.isArray(roles) && !(roles instanceof Collection2)) {
+        if (roles2) {
+          if (!Array.isArray(roles2) && !(roles2 instanceof Collection2)) {
             throw new DiscordjsTypeError2(
               ErrorCodes2.InvalidType,
               "options.roles",
@@ -69136,7 +69136,7 @@ var require_GuildEmojiManager = __commonJS({
             );
           }
           body.roles = [];
-          for (const role of roles.values()) {
+          for (const role of roles2.values()) {
             const resolvedRole = this.guild.roles.resolveId(role);
             if (!resolvedRole) {
               throw new DiscordjsTypeError2(ErrorCodes2.InvalidElement, "Array or Collection", "options.roles", role);
@@ -69197,11 +69197,11 @@ var require_GuildEmojiManager = __commonJS({
       async edit(emoji2, options2) {
         const id3 = this.resolveId(emoji2);
         if (!id3) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "emoji", "EmojiResolvable", true);
-        const roles = options2.roles?.map((role) => this.guild.roles.resolveId(role));
+        const roles2 = options2.roles?.map((role) => this.guild.roles.resolveId(role));
         const newData = await this.client.rest.patch(Routes2.guildEmoji(this.guild.id, id3), {
           body: {
             name: options2.name,
-            roles
+            roles: roles2
           },
           reason: options2.reason
         });
@@ -69226,7 +69226,7 @@ var require_GuildEmojiManager = __commonJS({
         }
         const { me } = this.guild.members;
         if (!me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        if (!me.permissions.any(PermissionFlagsBits4.CreateGuildExpressions | PermissionFlagsBits4.ManageGuildExpressions)) {
+        if (!me.permissions.any(PermissionFlagsBits6.CreateGuildExpressions | PermissionFlagsBits6.ManageGuildExpressions)) {
           throw new DiscordjsError2(ErrorCodes2.MissingManageGuildExpressionsPermission, this.guild);
         }
         const data = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, emoji2.id));
@@ -69849,11 +69849,11 @@ var require_GuildMemberManager = __commonJS({
        *    .then(pruned => console.log(`I just pruned ${pruned} people!`))
        *    .catch(console.error);
        */
-      async prune({ days: days2, dry = false, count: compute_prune_count, roles = [], reason } = {}) {
+      async prune({ days: days2, dry = false, count: compute_prune_count, roles: roles2 = [], reason } = {}) {
         if (typeof days2 !== "number") throw new DiscordjsTypeError2(ErrorCodes2.PruneDaysType);
         const query = { days: days2 };
         const resolvedRoles = [];
-        for (const role of roles) {
+        for (const role of roles2) {
           const resolvedRole = this.guild.roles.resolveId(role);
           if (!resolvedRole) {
             throw new DiscordjsTypeError2(ErrorCodes2.InvalidElement, "Array", "options.roles", role);
@@ -70157,7 +70157,7 @@ var require_GuildScheduledEventManager = __commonJS({
           privacyLevel,
           entityType,
           channel,
-          status,
+          status: status3,
           name,
           scheduledStartTime,
           description,
@@ -70182,7 +70182,7 @@ var require_GuildScheduledEventManager = __commonJS({
             scheduled_end_time: scheduledEndTime ? new Date(scheduledEndTime).toISOString() : scheduledEndTime,
             description,
             entity_type: entityType,
-            status,
+            status: status3,
             image: image && await resolveImage(image),
             entity_metadata,
             recurrence_rule: recurrenceRule && _transformGuildScheduledEventRecurrenceRule(recurrenceRule)
@@ -71015,9 +71015,9 @@ var require_RoleManager = __commonJS({
       async fetch(id3, { cache = true, force = false } = {}) {
         if (!id3) {
           const data = await this.client.rest.get(Routes2.guildRoles(this.guild.id));
-          const roles = new Collection2();
-          for (const role of data) roles.set(role.id, this._add(role, cache));
-          return roles;
+          const roles2 = new Collection2();
+          for (const role of data) roles2.set(role.id, this._add(role, cache));
+          return roles2;
         }
         if (!force) {
           const existing = this.cache.get(id3);
@@ -72896,7 +72896,7 @@ var require_GuildManager = __commonJS({
         verificationLevel,
         defaultMessageNotifications,
         explicitContentFilter,
-        roles = [],
+        roles: roles2 = [],
         channels = [],
         afkChannelId,
         afkTimeout,
@@ -72910,7 +72910,7 @@ var require_GuildManager = __commonJS({
             verification_level: verificationLevel,
             default_message_notifications: defaultMessageNotifications,
             explicit_content_filter: explicitContentFilter,
-            roles: roles.map(({ color: color3, permissions, ...options2 }) => ({
+            roles: roles2.map(({ color: color3, permissions, ...options2 }) => ({
               ...options2,
               color: color3 && resolveColor(color3),
               permissions: permissions === void 0 ? void 0 : PermissionsBitField3.resolve(permissions).toString()
@@ -72930,10 +72930,10 @@ var require_GuildManager = __commonJS({
                 user_limit: userLimit,
                 rtc_region: rtcRegion,
                 video_quality_mode: videoQualityMode,
-                permission_overwrites: permissionOverwrites?.map(({ allow, deny, ...permissionOverwriteOptions }) => ({
+                permission_overwrites: permissionOverwrites?.map(({ allow, deny: deny2, ...permissionOverwriteOptions }) => ({
                   ...permissionOverwriteOptions,
                   allow: allow === void 0 ? void 0 : PermissionsBitField3.resolve(allow).toString(),
-                  deny: deny === void 0 ? void 0 : PermissionsBitField3.resolve(deny).toString()
+                  deny: deny2 === void 0 ? void 0 : PermissionsBitField3.resolve(deny2).toString()
                 })),
                 rate_limit_per_user: rateLimitPerUser
               })
@@ -73263,12 +73263,12 @@ var require_ClientPresence = __commonJS({
        * @returns {GatewayPresenceUpdateData}
        * @private
        */
-      _parse({ status, since, afk, activities }) {
+      _parse({ status: status3, since, afk, activities }) {
         const data = {
           activities: [],
           afk: typeof afk === "boolean" ? afk : false,
           since: typeof since === "number" && !Number.isNaN(since) ? since : null,
-          status: status ?? this.status
+          status: status3 ?? this.status
         };
         if (activities?.length) {
           for (const [i, activity] of activities.entries()) {
@@ -73287,7 +73287,7 @@ var require_ClientPresence = __commonJS({
               url: activity.url
             });
           }
-        } else if (!activities && (status || afk || since) && this.activities.length) {
+        } else if (!activities && (status3 || afk || since) && this.activities.length) {
           data.activities.push(
             ...this.activities.map((activity) => ({
               name: activity.name,
@@ -74390,7 +74390,7 @@ var require_Shard = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/sharding/Shard.js"(exports2, module2) {
     "use strict";
     var EventEmitter = require("node:events");
-    var path2 = require("node:path");
+    var path3 = require("node:path");
     var process2 = require("node:process");
     var { setTimeout: setTimeout2, clearTimeout: clearTimeout2 } = require("node:timers");
     var { setTimeout: sleep } = require("node:timers/promises");
@@ -74442,14 +74442,14 @@ var require_Shard = __commonJS({
         this._exitListener = this._handleExit.bind(this, void 0, timeout);
         switch (this.manager.mode) {
           case "process":
-            this.process = childProcess.fork(path2.resolve(this.manager.file), this.args, {
+            this.process = childProcess.fork(path3.resolve(this.manager.file), this.args, {
               env: this.env,
               execArgv: this.execArgv,
               silent: this.silent
             }).on("message", this._handleMessage.bind(this)).on("exit", this._exitListener);
             break;
           case "worker":
-            this.worker = new Worker(path2.resolve(this.manager.file), {
+            this.worker = new Worker(path3.resolve(this.manager.file), {
               workerData: this.env,
               env: SHARE_ENV,
               execArgv: this.execArgv,
@@ -74711,7 +74711,7 @@ var require_ShardingManager = __commonJS({
     "use strict";
     var EventEmitter = require("node:events");
     var fs = require("node:fs");
-    var path2 = require("node:path");
+    var path3 = require("node:path");
     var process2 = require("node:process");
     var { setTimeout: sleep } = require("node:timers/promises");
     var { Collection: Collection2 } = require_dist6();
@@ -74756,7 +74756,7 @@ var require_ShardingManager = __commonJS({
         };
         this.file = file;
         if (!file) throw new DiscordjsError2(ErrorCodes2.ClientInvalidOption, "File", "specified.");
-        if (!path2.isAbsolute(file)) this.file = path2.resolve(process2.cwd(), file);
+        if (!path3.isAbsolute(file)) this.file = path3.resolve(process2.cwd(), file);
         const stats = fs.statSync(this.file);
         if (!stats.isFile()) throw new DiscordjsError2(ErrorCodes2.ClientInvalidOption, "File", "a file");
         this.shardList = _options.shardList ?? "auto";
@@ -75758,7 +75758,7 @@ var require_src = __commonJS({
 });
 
 // apps/bot/src/index.ts
-var import_discord6 = __toESM(require_src());
+var import_discord8 = __toESM(require_src());
 
 // apps/bot/src/discord-tickets.ts
 var import_discord = __toESM(require_src());
@@ -75767,43 +75767,54 @@ var VIEW = [import_discord.PermissionFlagsBits.ViewChannel, import_discord.Permi
 var TALK = [import_discord.PermissionFlagsBits.SendMessages, import_discord.PermissionFlagsBits.AttachFiles, import_discord.PermissionFlagsBits.EmbedLinks];
 var https = (u) => u && /^(https:\/\/|attachment:\/\/)/.test(u) ? u : void 0;
 function embedOf(e, stamp = true) {
-  const b = new import_discord.EmbedBuilder();
-  if (e.title) b.setTitle(e.title.slice(0, 256));
-  if (e.description) b.setDescription(e.description.slice(0, 4096));
-  if (e.color !== void 0) b.setColor(e.color);
-  if (https(e.thumbnail)) b.setThumbnail(e.thumbnail);
-  if (https(e.image)) b.setImage(e.image);
-  if (e.url && /^https?:\/\//.test(e.url)) b.setURL(e.url);
-  if (e.author) b.setAuthor({ name: e.author.slice(0, 256), ...https(e.authorIcon) ? { iconURL: e.authorIcon } : {} });
-  if (e.footer) b.setFooter({ text: e.footer.slice(0, 2048), ...https(e.footerIcon) ? { iconURL: e.footerIcon } : {} });
-  if (e.fields?.length) b.addFields(e.fields.slice(0, 25).map((f2) => ({ name: f2.name.slice(0, 256) || "\u200B", value: f2.value.slice(0, 1024) || "\u200B", inline: f2.inline ?? false })));
-  if (e.timestamp) b.setTimestamp(new Date(e.timestamp));
-  else if (stamp) b.setTimestamp(/* @__PURE__ */ new Date());
-  if (!e.title && !e.description && !e.fields?.length && !https(e.image)) b.setDescription("\u200B");
-  return b;
+  const b2 = new import_discord.EmbedBuilder();
+  if (e.title) b2.setTitle(e.title.slice(0, 256));
+  if (e.description) b2.setDescription(e.description.slice(0, 4096));
+  if (e.color !== void 0) b2.setColor(e.color);
+  if (https(e.thumbnail)) b2.setThumbnail(e.thumbnail);
+  if (https(e.image)) b2.setImage(e.image);
+  if (e.url && /^https?:\/\//.test(e.url)) b2.setURL(e.url);
+  if (e.author) b2.setAuthor({ name: e.author.slice(0, 256), ...https(e.authorIcon) ? { iconURL: e.authorIcon } : {} });
+  if (e.footer) b2.setFooter({ text: e.footer.slice(0, 2048), ...https(e.footerIcon) ? { iconURL: e.footerIcon } : {} });
+  if (e.fields?.length) b2.addFields(e.fields.slice(0, 25).map((f2) => ({ name: f2.name.slice(0, 256) || "\u200B", value: f2.value.slice(0, 1024) || "\u200B", inline: f2.inline ?? false })));
+  if (e.timestamp) b2.setTimestamp(new Date(e.timestamp));
+  else if (stamp) b2.setTimestamp(/* @__PURE__ */ new Date());
+  if (!e.title && !e.description && !e.fields?.length && !https(e.image)) b2.setDescription("\u200B");
+  return b2;
 }
 function componentsOf(buttons = [], selects = []) {
   const rows = [];
   for (const s of selects.slice(0, 5)) {
     let menu;
-    if (s.kind === "user") menu = new import_discord.UserSelectMenuBuilder();
-    else if (s.kind === "role") menu = new import_discord.RoleSelectMenuBuilder();
-    else {
+    const defaults = (s.defaults ?? []).filter((d) => /^\d{15,25}$/.test(d)).slice(0, 25);
+    if (s.kind === "user") {
+      const m = new import_discord.UserSelectMenuBuilder();
+      if (defaults.length) m.setDefaultUsers(defaults);
+      menu = m;
+    } else if (s.kind === "role") {
+      const m = new import_discord.RoleSelectMenuBuilder();
+      if (defaults.length) m.setDefaultRoles(defaults);
+      menu = m;
+    } else if (s.kind === "channel") {
+      const m = new import_discord.ChannelSelectMenuBuilder().setChannelTypes(import_discord.ChannelType.GuildText, import_discord.ChannelType.GuildAnnouncement);
+      if (defaults.length) m.setDefaultChannels(defaults);
+      menu = m;
+    } else {
       const sm = new import_discord.StringSelectMenuBuilder();
-      sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...o.description ? { description: o.description.slice(0, 100) } : {}, ...o.emoji ? { emoji: o.emoji } : {} })));
+      sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...o.description ? { description: o.description.slice(0, 100) } : {}, ...o.emoji ? { emoji: o.emoji } : {}, ...s.defaults?.includes(o.value) ? { default: true } : {} })));
       menu = sm;
     }
     menu.setCustomId(s.id).setPlaceholder(s.placeholder.slice(0, 150));
-    const max = Math.max(1, Math.min(s.max ?? 1, s.kind === "user" || s.kind === "role" ? 25 : s.options?.length ?? 1));
+    const max = Math.max(1, Math.min(s.max ?? 1, s.kind === "user" || s.kind === "role" || s.kind === "channel" ? 25 : s.options?.length ?? 1));
     menu.setMinValues(Math.min(s.min ?? 1, max)).setMaxValues(max);
     rows.push(new import_discord.ActionRowBuilder().addComponents(menu));
   }
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
-    rows.push(new import_discord.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-      const x = b.url ? new import_discord.ButtonBuilder().setURL(b.url).setStyle(import_discord.ButtonStyle.Link) : new import_discord.ButtonBuilder().setCustomId(b.id).setStyle(STYLE[b.style] ?? import_discord.ButtonStyle.Secondary);
-      x.setLabel(b.label.slice(0, 80));
-      if (b.emoji) x.setEmoji(b.emoji);
-      if (b.disabled) x.setDisabled(true);
+    rows.push(new import_discord.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b2) => {
+      const x = b2.url ? new import_discord.ButtonBuilder().setURL(b2.url).setStyle(import_discord.ButtonStyle.Link) : new import_discord.ButtonBuilder().setCustomId(b2.id).setStyle(STYLE[b2.style] ?? import_discord.ButtonStyle.Secondary);
+      x.setLabel(b2.label.slice(0, 80));
+      if (b2.emoji) x.setEmoji(b2.emoji);
+      if (b2.disabled) x.setDisabled(true);
       return x;
     })));
   }
@@ -75819,7 +75830,7 @@ function payloadOf(m, stamp = true) {
   };
 }
 function modalOf(m) {
-  const modal2 = new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45));
+  const modal3 = new import_discord.ModalBuilder().setCustomId(m.id).setTitle(m.title.slice(0, 45));
   const text2 = (f2, withLabel) => {
     const input = new import_discord.TextInputBuilder().setCustomId(f2.id).setStyle(f2.paragraph ? import_discord.TextInputStyle.Paragraph : import_discord.TextInputStyle.Short).setRequired(!!f2.required);
     if (withLabel) input.setLabel(f2.label.slice(0, 45));
@@ -75830,8 +75841,8 @@ function modalOf(m) {
     return input;
   };
   const fields = m.fields.slice(0, 5);
-  if (!fields.some((f2) => f2.kind && f2.kind !== "text" || f2.description)) return modal2.addComponents(fields.map((f2) => new import_discord.ActionRowBuilder().addComponents(text2(f2, true))));
-  return modal2.addLabelComponents(fields.map((f2) => {
+  if (!fields.some((f2) => f2.kind && f2.kind !== "text" || f2.description)) return modal3.addComponents(fields.map((f2) => new import_discord.ActionRowBuilder().addComponents(text2(f2, true))));
+  return modal3.addLabelComponents(fields.map((f2) => {
     const label2 = new import_discord.LabelBuilder().setLabel(f2.label.slice(0, 45));
     if (f2.description) label2.setDescription(f2.description.slice(0, 100));
     if (f2.kind === "select") {
@@ -75880,10 +75891,10 @@ function modalValuesOf(i) {
 function createTicketRuntime(client2, api2, log = console.log) {
   const channels = /* @__PURE__ */ new Set();
   const text2 = async (id3) => {
-    const ch = await client2().channels.fetch(id3).catch(() => null);
-    return ch && ch.type === import_discord.ChannelType.GuildText ? ch : null;
+    const ch2 = await client2().channels.fetch(id3).catch(() => null);
+    return ch2 && ch2.type === import_discord.ChannelType.GuildText ? ch2 : null;
   };
-  async function create(e) {
+  async function create2(e) {
     const guild = await client2().guilds.fetch(e.guildId);
     const me = client2().user.id;
     const overwrites = [
@@ -75893,73 +75904,73 @@ function createTicketRuntime(client2, api2, log = console.log) {
     ];
     const parent = e.parentId ? await guild.channels.fetch(e.parentId).catch(() => null) : null;
     const base = { name: e.name, type: import_discord.ChannelType.GuildText, topic: e.topic.slice(0, 1024), permissionOverwrites: overwrites };
-    let ch;
+    let ch2;
     try {
-      ch = await guild.channels.create(parent?.type === import_discord.ChannelType.GuildCategory ? { ...base, parent: parent.id } : base);
+      ch2 = await guild.channels.create(parent?.type === import_discord.ChannelType.GuildCategory ? { ...base, parent: parent.id } : base);
     } catch (err) {
       if (!parent) throw err;
-      ch = await guild.channels.create(base);
+      ch2 = await guild.channels.create(base);
     }
-    channels.add(ch.id);
+    channels.add(ch2.id);
     let control = null;
     try {
-      control = await ch.send(payloadOf(e.control));
-      for (const m of e.messages) await ch.send(payloadOf(m));
+      control = await ch2.send(payloadOf(e.control));
+      for (const m of e.messages) await ch2.send(payloadOf(m));
     } finally {
-      await api2.service("POST", `/bot/support-tickets/${e.ticketId}/channel`, { channelId: ch.id, controlMessageId: control?.id ?? null });
+      await api2.service("POST", `/bot/support-tickets/${e.ticketId}/channel`, { channelId: ch2.id, controlMessageId: control?.id ?? null });
     }
-    return ch.id;
+    return ch2.id;
   }
   async function transcript(e) {
     const { html } = await api2.service("GET", `/bot/support-tickets/transcripts/${e.transcriptId}`);
     const file = () => new import_discord.AttachmentBuilder(Buffer.from(html, "utf8"), { name: e.filename });
     const extra = e.message ? payloadOf(e.message) : { allowedMentions: { parse: [] } };
     for (const id3 of e.channelIds) {
-      const ch = await text2(id3);
-      if (ch) await ch.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id3} failed: ${err instanceof Error ? err.message : err}`));
+      const ch2 = await text2(id3);
+      if (ch2) await ch2.send({ ...extra, files: [file()] }).catch((err) => log(`transcript to ${id3} failed: ${err instanceof Error ? err.message : err}`));
     }
     if (e.userId) await (await client2().users.fetch(e.userId)).send({ ...extra, files: [file()] }).catch(() => log(`transcript DM to ${e.userId} failed (DMs closed?)`));
   }
   async function applyOne(e, result) {
     switch (e.type) {
       case "create":
-        result.channelId = await create(e);
+        result.channelId = await create2(e);
         return;
       case "access": {
-        const ch = await text2(e.channelId);
-        if (!ch) return;
+        const ch2 = await text2(e.channelId);
+        if (!ch2) return;
         const type = e.kind === "user" ? import_discord.OverwriteType.Member : import_discord.OverwriteType.Role;
         if (e.view === null) {
-          await ch.permissionOverwrites.delete(e.targetId, "EN Polizei: Ticket-Zugriff entfernt").catch(() => void 0);
+          await ch2.permissionOverwrites.delete(e.targetId, "EN Polizei: Ticket-Zugriff entfernt").catch(() => void 0);
           return;
         }
-        await ch.permissionOverwrites.edit(e.targetId, { ViewChannel: e.view, ReadMessageHistory: e.view, ...e.send === void 0 ? {} : { SendMessages: e.send, AttachFiles: e.send } }, { type, reason: "EN Polizei: Ticket-Zugriff" });
+        await ch2.permissionOverwrites.edit(e.targetId, { ViewChannel: e.view, ReadMessageHistory: e.view, ...e.send === void 0 ? {} : { SendMessages: e.send, AttachFiles: e.send } }, { type, reason: "EN Polizei: Ticket-Zugriff" });
         return;
       }
       case "rename": {
-        const ch = await text2(e.channelId);
-        if (ch) await ch.setName(e.name, "EN Polizei: Ticket umbenannt");
+        const ch2 = await text2(e.channelId);
+        if (ch2) await ch2.setName(e.name, "EN Polizei: Ticket umbenannt");
         return;
       }
       case "move": {
-        const ch = await text2(e.channelId);
-        if (ch) await ch.setParent(e.parentId, { lockPermissions: false });
+        const ch2 = await text2(e.channelId);
+        if (ch2) await ch2.setParent(e.parentId, { lockPermissions: false });
         return;
       }
       case "post": {
-        const ch = await text2(e.channelId);
-        if (ch) await ch.send(payloadOf(e.message));
+        const ch2 = await text2(e.channelId);
+        if (ch2) await ch2.send(payloadOf(e.message));
         return;
       }
       case "control": {
-        const ch = await text2(e.channelId);
-        if (!ch) return;
-        const msg = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
+        const ch2 = await text2(e.channelId);
+        if (!ch2) return;
+        const msg = e.messageId ? await ch2.messages.fetch(e.messageId).catch(() => null) : null;
         const edit = { ...payloadOf(e.message), content: void 0 };
         if (msg) await msg.edit(edit);
         else {
-          const sent = await ch.send(edit);
-          await api2.service("POST", `/bot/support-tickets/${e.ticketId}/channel`, { channelId: ch.id, controlMessageId: sent.id }).catch(() => void 0);
+          const sent = await ch2.send(edit);
+          await api2.service("POST", `/bot/support-tickets/${e.ticketId}/channel`, { channelId: ch2.id, controlMessageId: sent.id }).catch(() => void 0);
         }
         return;
       }
@@ -75975,19 +75986,19 @@ function createTicketRuntime(client2, api2, log = console.log) {
           log(`refusing to delete ${e.channelId}: not a ticket channel`);
           return;
         }
-        const ch = await text2(e.channelId);
-        if (!ch) return;
-        setTimeout(() => void ch.delete("EN Polizei: Ticket gel\xF6scht").then(() => channels.delete(e.channelId)).catch((err) => log(`ticket delete failed: ${err instanceof Error ? err.message : err}`)), e.delayMs);
+        const ch2 = await text2(e.channelId);
+        if (!ch2) return;
+        setTimeout(() => void ch2.delete("EN Polizei: Ticket gel\xF6scht").then(() => channels.delete(e.channelId)).catch((err) => log(`ticket delete failed: ${err instanceof Error ? err.message : err}`)), e.delayMs);
         return;
       }
       case "panel": {
         try {
-          const ch = await text2(e.channelId);
-          if (!ch) throw new Error("Der Kanal wurde nicht gefunden oder ist kein Textkanal (Kanal gel\xF6scht oder Bot sieht ihn nicht).");
-          const old = e.messageId ? await ch.messages.fetch(e.messageId).catch(() => null) : null;
+          const ch2 = await text2(e.channelId);
+          if (!ch2) throw new Error("Der Kanal wurde nicht gefunden oder ist kein Textkanal (Kanal gel\xF6scht oder Bot sieht ihn nicht).");
+          const old = e.messageId ? await ch2.messages.fetch(e.messageId).catch(() => null) : null;
           const p = payloadOf(e.message);
-          const msg = old ? await old.edit(p) : await ch.send(p);
-          await api2.service("POST", `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch.id, messageId: msg.id });
+          const msg = old ? await old.edit(p) : await ch2.send(p);
+          await api2.service("POST", `/bot/support-tickets/panels/${e.panelId}/posted`, { channelId: ch2.id, messageId: msg.id });
         } catch (err) {
           const raw = err instanceof Error ? err.message : String(err);
           const why = /Missing Permissions/i.test(raw) ? "Dem Bot fehlen im Kanal Rechte (Nachrichten senden, Links einbetten)." : /Missing Access/i.test(raw) ? "Der Bot hat keinen Zugriff auf den Kanal." : /Unknown Channel/i.test(raw) ? "Den Kanal gibt es nicht mehr." : raw;
@@ -76038,7 +76049,7 @@ function createTicketRuntime(client2, api2, log = console.log) {
   }
   async function listCategories(guildId) {
     const guild = await client2().guilds.fetch(guildId);
-    return [...(await guild.channels.fetch()).values()].filter((c) => c?.type === import_discord.ChannelType.GuildCategory).map((c) => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name));
+    return [...(await guild.channels.fetch()).values()].filter((c) => c?.type === import_discord.ChannelType.GuildCategory).map((c) => ({ id: c.id, name: c.name })).sort((a, b2) => a.name.localeCompare(b2.name));
   }
   return { apply, refresh, onMessage, listCategories, isTicketChannel: (id3) => channels.has(id3) };
 }
@@ -76076,8 +76087,8 @@ async function react(msg, emojis = []) {
   }
 }
 async function postOrUpdate(client2, api2, o) {
-  const ch = await client2.channels.fetch(o.channelId);
-  if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${o.channelId} is not a text channel the bot can post in`);
+  const ch2 = await client2.channels.fetch(o.channelId);
+  if (!ch2?.isSendable() || !("messages" in ch2)) throw new Error(`channel ${o.channelId} is not a text channel the bot can post in`);
   let messageId = o.messageId ?? null;
   if (o.stateKey && !messageId && !o.forceNew) {
     const prev = await api2.service("GET", `/bot/state/${o.stateKey}`).then((r) => r.value, () => null);
@@ -76085,37 +76096,37 @@ async function postOrUpdate(client2, api2, o) {
   }
   const { message, files } = await resolveAssets(api2, o.message);
   const payload = { ...payloadOf(message, false), ...files.length ? { files } : {} };
-  const old = messageId && !o.forceNew ? await ch.messages.fetch(messageId).catch(() => null) : null;
-  const msg = old ? await old.edit({ ...payload, content: payload.content ?? "", attachments: [] }) : await ch.send(payload);
+  const old = messageId && !o.forceNew ? await ch2.messages.fetch(messageId).catch(() => null) : null;
+  const msg = old ? await old.edit({ ...payload, content: payload.content ?? "", attachments: [] }) : await ch2.send(payload);
   await react(msg, message.reactions);
   if (!old && message.thread && "startThread" in msg) await msg.startThread({ name: message.thread.slice(0, 100), autoArchiveDuration: 10080 }).catch((e) => console.error("could not start thread:", e instanceof Error ? e.message : e));
   if (o.stateKey) await api2.service("PUT", `/bot/state/${o.stateKey}`, { value: { channelId: o.channelId, messageId: msg.id } }).catch(() => void 0);
   return { channelId: o.channelId, messageId: msg.id };
 }
 async function postAsUser(client2, api2, channelId, m, as) {
-  const ch = await client2.channels.fetch(channelId);
-  if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+  const ch2 = await client2.channels.fetch(channelId);
+  if (!ch2?.isSendable() || !("messages" in ch2)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
   const { message, files } = await resolveAssets(api2, m);
   const payload = { ...payloadOf(message, false), ...files.length ? { files } : {} };
   let msg = null;
-  if ("fetchWebhooks" in ch && "createWebhook" in ch) {
+  if ("fetchWebhooks" in ch2 && "createWebhook" in ch2) {
     try {
-      const hooks = await ch.fetchWebhooks();
-      const hook = hooks.find((h) => h.owner?.id === client2.user?.id && h.name === "EN Polizei Panels") ?? await ch.createWebhook({ name: "EN Polizei Panels" });
+      const hooks = await ch2.fetchWebhooks();
+      const hook = hooks.find((h) => h.owner?.id === client2.user?.id && h.name === "EN Polizei Panels") ?? await ch2.createWebhook({ name: "EN Polizei Panels" });
       msg = await hook.send({ ...payload, components: [], username: as.username.slice(0, 80), ...as.avatarURL ? { avatarURL: as.avatarURL } : {} });
     } catch {
       msg = null;
     }
   }
-  if (!msg) msg = await ch.send(payload);
-  const real = await ch.messages.fetch(msg.id).catch(() => msg);
+  if (!msg) msg = await ch2.send(payload);
+  const real = await ch2.messages.fetch(msg.id).catch(() => msg);
   await react(real, message.reactions);
   return { channelId, messageId: msg.id };
 }
 async function deleteMessage(client2, channelId, messageId) {
-  const ch = await client2.channels.fetch(channelId).catch(() => null);
-  if (!ch?.isTextBased() || !("messages" in ch)) return;
-  await ch.messages.delete(messageId).catch(() => void 0);
+  const ch2 = await client2.channels.fetch(channelId).catch(() => null);
+  if (!ch2?.isTextBased() || !("messages" in ch2)) return;
+  await ch2.messages.delete(messageId).catch(() => void 0);
 }
 
 // node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/external.js
@@ -76323,8 +76334,8 @@ var ZodParsedType = util.arrayToEnum([
   "set"
 ]);
 var getParsedType = (data) => {
-  const t = typeof data;
-  switch (t) {
+  const t2 = typeof data;
+  switch (t2) {
     case "undefined":
       return ZodParsedType.undefined;
     case "string":
@@ -76596,8 +76607,8 @@ function getErrorMap() {
 
 // node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path2, errorMaps, issueData } = params;
-  const fullPath = [...path2, ...issueData.path || []];
+  const { data, path: path3, errorMaps, issueData } = params;
+  const fullPath = [...path3, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -76652,18 +76663,18 @@ var ParseStatus = class _ParseStatus {
     if (this.value !== "aborted")
       this.value = "aborted";
   }
-  static mergeArray(status, results) {
+  static mergeArray(status3, results) {
     const arrayValue = [];
     for (const s of results) {
       if (s.status === "aborted")
         return INVALID;
       if (s.status === "dirty")
-        status.dirty();
+        status3.dirty();
       arrayValue.push(s.value);
     }
-    return { status: status.value, value: arrayValue };
+    return { status: status3.value, value: arrayValue };
   }
-  static async mergeObjectAsync(status, pairs) {
+  static async mergeObjectAsync(status3, pairs) {
     const syncPairs = [];
     for (const pair of pairs) {
       const key4 = await pair.key;
@@ -76673,9 +76684,9 @@ var ParseStatus = class _ParseStatus {
         value
       });
     }
-    return _ParseStatus.mergeObjectSync(status, syncPairs);
+    return _ParseStatus.mergeObjectSync(status3, syncPairs);
   }
-  static mergeObjectSync(status, pairs) {
+  static mergeObjectSync(status3, pairs) {
     const finalObject = {};
     for (const pair of pairs) {
       const { key: key4, value } = pair;
@@ -76684,14 +76695,14 @@ var ParseStatus = class _ParseStatus {
       if (value.status === "aborted")
         return INVALID;
       if (key4.status === "dirty")
-        status.dirty();
+        status3.dirty();
       if (value.status === "dirty")
-        status.dirty();
+        status3.dirty();
       if (key4.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
         finalObject[key4.value] = value.value;
       }
     }
-    return { status: status.value, value: finalObject };
+    return { status: status3.value, value: finalObject };
   }
 };
 var INVALID = Object.freeze({
@@ -76713,11 +76724,11 @@ var errorUtil;
 
 // node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path2, key4) {
+  constructor(parent, value, path3, key4) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path2;
+    this._path = path3;
     this._key = key4;
   }
   get path() {
@@ -77151,7 +77162,7 @@ var ZodString = class _ZodString extends ZodType {
       });
       return INVALID;
     }
-    const status = new ParseStatus();
+    const status3 = new ParseStatus();
     let ctx = void 0;
     for (const check of this._def.checks) {
       if (check.kind === "min") {
@@ -77165,7 +77176,7 @@ var ZodString = class _ZodString extends ZodType {
             exact: false,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "max") {
         if (input.data.length > check.value) {
@@ -77178,7 +77189,7 @@ var ZodString = class _ZodString extends ZodType {
             exact: false,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "length") {
         const tooBig = input.data.length > check.value;
@@ -77204,7 +77215,7 @@ var ZodString = class _ZodString extends ZodType {
               message: check.message
             });
           }
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "email") {
         if (!emailRegex.test(input.data)) {
@@ -77214,7 +77225,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "emoji") {
         if (!emojiRegex) {
@@ -77227,7 +77238,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "uuid") {
         if (!uuidRegex.test(input.data)) {
@@ -77237,7 +77248,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "nanoid") {
         if (!nanoidRegex.test(input.data)) {
@@ -77247,7 +77258,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "cuid") {
         if (!cuidRegex.test(input.data)) {
@@ -77257,7 +77268,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "cuid2") {
         if (!cuid2Regex.test(input.data)) {
@@ -77267,7 +77278,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "ulid") {
         if (!ulidRegex.test(input.data)) {
@@ -77277,7 +77288,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "url") {
         try {
@@ -77289,7 +77300,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "regex") {
         check.regex.lastIndex = 0;
@@ -77301,7 +77312,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "trim") {
         input.data = input.data.trim();
@@ -77313,7 +77324,7 @@ var ZodString = class _ZodString extends ZodType {
             validation: { includes: check.value, position: check.position },
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "toLowerCase") {
         input.data = input.data.toLowerCase();
@@ -77327,7 +77338,7 @@ var ZodString = class _ZodString extends ZodType {
             validation: { startsWith: check.value },
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "endsWith") {
         if (!input.data.endsWith(check.value)) {
@@ -77337,7 +77348,7 @@ var ZodString = class _ZodString extends ZodType {
             validation: { endsWith: check.value },
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "datetime") {
         const regex = datetimeRegex(check);
@@ -77348,7 +77359,7 @@ var ZodString = class _ZodString extends ZodType {
             validation: "datetime",
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "date") {
         const regex = dateRegex;
@@ -77359,7 +77370,7 @@ var ZodString = class _ZodString extends ZodType {
             validation: "date",
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "time") {
         const regex = timeRegex(check);
@@ -77370,7 +77381,7 @@ var ZodString = class _ZodString extends ZodType {
             validation: "time",
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "duration") {
         if (!durationRegex.test(input.data)) {
@@ -77380,7 +77391,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "ip") {
         if (!isValidIP(input.data, check.version)) {
@@ -77390,7 +77401,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "jwt") {
         if (!isValidJWT(input.data, check.alg)) {
@@ -77400,7 +77411,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "cidr") {
         if (!isValidCidr(input.data, check.version)) {
@@ -77410,7 +77421,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "base64") {
         if (!base64Regex.test(input.data)) {
@@ -77420,7 +77431,7 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "base64url") {
         if (!base64urlRegex.test(input.data)) {
@@ -77430,13 +77441,13 @@ var ZodString = class _ZodString extends ZodType {
             code: ZodIssueCode.invalid_string,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else {
         util.assertNever(check);
       }
     }
-    return { status: status.value, value: input.data };
+    return { status: status3.value, value: input.data };
   }
   _regex(regex, validation, message) {
     return this.refinement((data) => regex.test(data), {
@@ -77606,69 +77617,69 @@ var ZodString = class _ZodString extends ZodType {
     });
   }
   get isDatetime() {
-    return !!this._def.checks.find((ch) => ch.kind === "datetime");
+    return !!this._def.checks.find((ch2) => ch2.kind === "datetime");
   }
   get isDate() {
-    return !!this._def.checks.find((ch) => ch.kind === "date");
+    return !!this._def.checks.find((ch2) => ch2.kind === "date");
   }
   get isTime() {
-    return !!this._def.checks.find((ch) => ch.kind === "time");
+    return !!this._def.checks.find((ch2) => ch2.kind === "time");
   }
   get isDuration() {
-    return !!this._def.checks.find((ch) => ch.kind === "duration");
+    return !!this._def.checks.find((ch2) => ch2.kind === "duration");
   }
   get isEmail() {
-    return !!this._def.checks.find((ch) => ch.kind === "email");
+    return !!this._def.checks.find((ch2) => ch2.kind === "email");
   }
   get isURL() {
-    return !!this._def.checks.find((ch) => ch.kind === "url");
+    return !!this._def.checks.find((ch2) => ch2.kind === "url");
   }
   get isEmoji() {
-    return !!this._def.checks.find((ch) => ch.kind === "emoji");
+    return !!this._def.checks.find((ch2) => ch2.kind === "emoji");
   }
   get isUUID() {
-    return !!this._def.checks.find((ch) => ch.kind === "uuid");
+    return !!this._def.checks.find((ch2) => ch2.kind === "uuid");
   }
   get isNANOID() {
-    return !!this._def.checks.find((ch) => ch.kind === "nanoid");
+    return !!this._def.checks.find((ch2) => ch2.kind === "nanoid");
   }
   get isCUID() {
-    return !!this._def.checks.find((ch) => ch.kind === "cuid");
+    return !!this._def.checks.find((ch2) => ch2.kind === "cuid");
   }
   get isCUID2() {
-    return !!this._def.checks.find((ch) => ch.kind === "cuid2");
+    return !!this._def.checks.find((ch2) => ch2.kind === "cuid2");
   }
   get isULID() {
-    return !!this._def.checks.find((ch) => ch.kind === "ulid");
+    return !!this._def.checks.find((ch2) => ch2.kind === "ulid");
   }
   get isIP() {
-    return !!this._def.checks.find((ch) => ch.kind === "ip");
+    return !!this._def.checks.find((ch2) => ch2.kind === "ip");
   }
   get isCIDR() {
-    return !!this._def.checks.find((ch) => ch.kind === "cidr");
+    return !!this._def.checks.find((ch2) => ch2.kind === "cidr");
   }
   get isBase64() {
-    return !!this._def.checks.find((ch) => ch.kind === "base64");
+    return !!this._def.checks.find((ch2) => ch2.kind === "base64");
   }
   get isBase64url() {
-    return !!this._def.checks.find((ch) => ch.kind === "base64url");
+    return !!this._def.checks.find((ch2) => ch2.kind === "base64url");
   }
   get minLength() {
     let min = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "min") {
-        if (min === null || ch.value > min)
-          min = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "min") {
+        if (min === null || ch2.value > min)
+          min = ch2.value;
       }
     }
     return min;
   }
   get maxLength() {
     let max = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "max") {
+        if (max === null || ch2.value < max)
+          max = ch2.value;
       }
     }
     return max;
@@ -77712,7 +77723,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
       return INVALID;
     }
     let ctx = void 0;
-    const status = new ParseStatus();
+    const status3 = new ParseStatus();
     for (const check of this._def.checks) {
       if (check.kind === "int") {
         if (!util.isInteger(input.data)) {
@@ -77723,7 +77734,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
             received: "float",
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "min") {
         const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
@@ -77737,7 +77748,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
             exact: false,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "max") {
         const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
@@ -77751,7 +77762,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
             exact: false,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "multipleOf") {
         if (floatSafeRemainder(input.data, check.value) !== 0) {
@@ -77761,7 +77772,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
             multipleOf: check.value,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "finite") {
         if (!Number.isFinite(input.data)) {
@@ -77770,13 +77781,13 @@ var ZodNumber = class _ZodNumber extends ZodType {
             code: ZodIssueCode.not_finite,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else {
         util.assertNever(check);
       }
     }
-    return { status: status.value, value: input.data };
+    return { status: status3.value, value: input.data };
   }
   gte(value, message) {
     return this.setLimit("min", value, true, errorUtil.toString(message));
@@ -77876,39 +77887,39 @@ var ZodNumber = class _ZodNumber extends ZodType {
   }
   get minValue() {
     let min = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "min") {
-        if (min === null || ch.value > min)
-          min = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "min") {
+        if (min === null || ch2.value > min)
+          min = ch2.value;
       }
     }
     return min;
   }
   get maxValue() {
     let max = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "max") {
+        if (max === null || ch2.value < max)
+          max = ch2.value;
       }
     }
     return max;
   }
   get isInt() {
-    return !!this._def.checks.find((ch) => ch.kind === "int" || ch.kind === "multipleOf" && util.isInteger(ch.value));
+    return !!this._def.checks.find((ch2) => ch2.kind === "int" || ch2.kind === "multipleOf" && util.isInteger(ch2.value));
   }
   get isFinite() {
     let max = null;
     let min = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "finite" || ch.kind === "int" || ch.kind === "multipleOf") {
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "finite" || ch2.kind === "int" || ch2.kind === "multipleOf") {
         return true;
-      } else if (ch.kind === "min") {
-        if (min === null || ch.value > min)
-          min = ch.value;
-      } else if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+      } else if (ch2.kind === "min") {
+        if (min === null || ch2.value > min)
+          min = ch2.value;
+      } else if (ch2.kind === "max") {
+        if (max === null || ch2.value < max)
+          max = ch2.value;
       }
     }
     return Number.isFinite(min) && Number.isFinite(max);
@@ -77941,7 +77952,7 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
       return this._getInvalidInput(input);
     }
     let ctx = void 0;
-    const status = new ParseStatus();
+    const status3 = new ParseStatus();
     for (const check of this._def.checks) {
       if (check.kind === "min") {
         const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
@@ -77954,7 +77965,7 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
             inclusive: check.inclusive,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "max") {
         const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
@@ -77967,7 +77978,7 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
             inclusive: check.inclusive,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "multipleOf") {
         if (input.data % check.value !== BigInt(0)) {
@@ -77977,13 +77988,13 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
             multipleOf: check.value,
             message: check.message
           });
-          status.dirty();
+          status3.dirty();
         }
       } else {
         util.assertNever(check);
       }
     }
-    return { status: status.value, value: input.data };
+    return { status: status3.value, value: input.data };
   }
   _getInvalidInput(input) {
     const ctx = this._getOrReturnCtx(input);
@@ -78067,20 +78078,20 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
   }
   get minValue() {
     let min = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "min") {
-        if (min === null || ch.value > min)
-          min = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "min") {
+        if (min === null || ch2.value > min)
+          min = ch2.value;
       }
     }
     return min;
   }
   get maxValue() {
     let max = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "max") {
+        if (max === null || ch2.value < max)
+          max = ch2.value;
       }
     }
     return max;
@@ -78141,7 +78152,7 @@ var ZodDate = class _ZodDate extends ZodType {
       });
       return INVALID;
     }
-    const status = new ParseStatus();
+    const status3 = new ParseStatus();
     let ctx = void 0;
     for (const check of this._def.checks) {
       if (check.kind === "min") {
@@ -78155,7 +78166,7 @@ var ZodDate = class _ZodDate extends ZodType {
             minimum: check.value,
             type: "date"
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (check.kind === "max") {
         if (input.data.getTime() > check.value) {
@@ -78168,14 +78179,14 @@ var ZodDate = class _ZodDate extends ZodType {
             maximum: check.value,
             type: "date"
           });
-          status.dirty();
+          status3.dirty();
         }
       } else {
         util.assertNever(check);
       }
     }
     return {
-      status: status.value,
+      status: status3.value,
       value: new Date(input.data.getTime())
     };
   }
@@ -78201,20 +78212,20 @@ var ZodDate = class _ZodDate extends ZodType {
   }
   get minDate() {
     let min = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "min") {
-        if (min === null || ch.value > min)
-          min = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "min") {
+        if (min === null || ch2.value > min)
+          min = ch2.value;
       }
     }
     return min != null ? new Date(min) : null;
   }
   get maxDate() {
     let max = null;
-    for (const ch of this._def.checks) {
-      if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+    for (const ch2 of this._def.checks) {
+      if (ch2.kind === "max") {
+        if (max === null || ch2.value < max)
+          max = ch2.value;
       }
     }
     return max != null ? new Date(max) : null;
@@ -78361,7 +78372,7 @@ ZodVoid.create = (params) => {
 };
 var ZodArray = class _ZodArray extends ZodType {
   _parse(input) {
-    const { ctx, status } = this._processInputParams(input);
+    const { ctx, status: status3 } = this._processInputParams(input);
     const def = this._def;
     if (ctx.parsedType !== ZodParsedType.array) {
       addIssueToContext(ctx, {
@@ -78384,7 +78395,7 @@ var ZodArray = class _ZodArray extends ZodType {
           exact: true,
           message: def.exactLength.message
         });
-        status.dirty();
+        status3.dirty();
       }
     }
     if (def.minLength !== null) {
@@ -78397,7 +78408,7 @@ var ZodArray = class _ZodArray extends ZodType {
           exact: false,
           message: def.minLength.message
         });
-        status.dirty();
+        status3.dirty();
       }
     }
     if (def.maxLength !== null) {
@@ -78410,20 +78421,20 @@ var ZodArray = class _ZodArray extends ZodType {
           exact: false,
           message: def.maxLength.message
         });
-        status.dirty();
+        status3.dirty();
       }
     }
     if (ctx.common.async) {
       return Promise.all([...ctx.data].map((item, i) => {
         return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
       })).then((result2) => {
-        return ParseStatus.mergeArray(status, result2);
+        return ParseStatus.mergeArray(status3, result2);
       });
     }
     const result = [...ctx.data].map((item, i) => {
       return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
     });
-    return ParseStatus.mergeArray(status, result);
+    return ParseStatus.mergeArray(status3, result);
   }
   get element() {
     return this._def.type;
@@ -78512,7 +78523,7 @@ var ZodObject = class _ZodObject extends ZodType {
       });
       return INVALID;
     }
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     const { shape, keys: shapeKeys } = this._getCached();
     const extraKeys = [];
     if (!(this._def.catchall instanceof ZodNever && this._def.unknownKeys === "strip")) {
@@ -78547,7 +78558,7 @@ var ZodObject = class _ZodObject extends ZodType {
             code: ZodIssueCode.unrecognized_keys,
             keys: extraKeys
           });
-          status.dirty();
+          status3.dirty();
         }
       } else if (unknownKeys === "strip") {
       } else {
@@ -78581,10 +78592,10 @@ var ZodObject = class _ZodObject extends ZodType {
         }
         return syncPairs;
       }).then((syncPairs) => {
-        return ParseStatus.mergeObjectSync(status, syncPairs);
+        return ParseStatus.mergeObjectSync(status3, syncPairs);
       });
     } else {
-      return ParseStatus.mergeObjectSync(status, pairs);
+      return ParseStatus.mergeObjectSync(status3, pairs);
     }
   }
   get shape() {
@@ -79022,17 +79033,17 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
     });
   }
 };
-function mergeValues(a, b) {
+function mergeValues(a, b2) {
   const aType = getParsedType(a);
-  const bType = getParsedType(b);
-  if (a === b) {
+  const bType = getParsedType(b2);
+  if (a === b2) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
-    const bKeys = util.objectKeys(b);
+    const bKeys = util.objectKeys(b2);
     const sharedKeys = util.objectKeys(a).filter((key4) => bKeys.indexOf(key4) !== -1);
-    const newObj = { ...a, ...b };
+    const newObj = { ...a, ...b2 };
     for (const key4 of sharedKeys) {
-      const sharedValue = mergeValues(a[key4], b[key4]);
+      const sharedValue = mergeValues(a[key4], b2[key4]);
       if (!sharedValue.valid) {
         return { valid: false };
       }
@@ -79040,13 +79051,13 @@ function mergeValues(a, b) {
     }
     return { valid: true, data: newObj };
   } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
-    if (a.length !== b.length) {
+    if (a.length !== b2.length) {
       return { valid: false };
     }
     const newArray = [];
     for (let index = 0; index < a.length; index++) {
       const itemA = a[index];
-      const itemB = b[index];
+      const itemB = b2[index];
       const sharedValue = mergeValues(itemA, itemB);
       if (!sharedValue.valid) {
         return { valid: false };
@@ -79054,7 +79065,7 @@ function mergeValues(a, b) {
       newArray.push(sharedValue.data);
     }
     return { valid: true, data: newArray };
-  } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b) {
+  } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b2) {
     return { valid: true, data: a };
   } else {
     return { valid: false };
@@ -79062,7 +79073,7 @@ function mergeValues(a, b) {
 }
 var ZodIntersection = class extends ZodType {
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     const handleParsed = (parsedLeft, parsedRight) => {
       if (isAborted(parsedLeft) || isAborted(parsedRight)) {
         return INVALID;
@@ -79075,9 +79086,9 @@ var ZodIntersection = class extends ZodType {
         return INVALID;
       }
       if (isDirty(parsedLeft) || isDirty(parsedRight)) {
-        status.dirty();
+        status3.dirty();
       }
-      return { status: status.value, value: merged.data };
+      return { status: status3.value, value: merged.data };
     };
     if (ctx.common.async) {
       return Promise.all([
@@ -79115,7 +79126,7 @@ ZodIntersection.create = (left, right, params) => {
 };
 var ZodTuple = class _ZodTuple extends ZodType {
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.array) {
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -79143,7 +79154,7 @@ var ZodTuple = class _ZodTuple extends ZodType {
         exact: false,
         type: "array"
       });
-      status.dirty();
+      status3.dirty();
     }
     const items = [...ctx.data].map((item, itemIndex) => {
       const schema2 = this._def.items[itemIndex] || this._def.rest;
@@ -79153,10 +79164,10 @@ var ZodTuple = class _ZodTuple extends ZodType {
     }).filter((x) => !!x);
     if (ctx.common.async) {
       return Promise.all(items).then((results) => {
-        return ParseStatus.mergeArray(status, results);
+        return ParseStatus.mergeArray(status3, results);
       });
     } else {
-      return ParseStatus.mergeArray(status, items);
+      return ParseStatus.mergeArray(status3, items);
     }
   }
   get items() {
@@ -79188,7 +79199,7 @@ var ZodRecord = class _ZodRecord extends ZodType {
     return this._def.valueType;
   }
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.object) {
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -79208,9 +79219,9 @@ var ZodRecord = class _ZodRecord extends ZodType {
       });
     }
     if (ctx.common.async) {
-      return ParseStatus.mergeObjectAsync(status, pairs);
+      return ParseStatus.mergeObjectAsync(status3, pairs);
     } else {
-      return ParseStatus.mergeObjectSync(status, pairs);
+      return ParseStatus.mergeObjectSync(status3, pairs);
     }
   }
   get element() {
@@ -79241,7 +79252,7 @@ var ZodMap = class extends ZodType {
     return this._def.valueType;
   }
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.map) {
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -79268,11 +79279,11 @@ var ZodMap = class extends ZodType {
             return INVALID;
           }
           if (key4.status === "dirty" || value.status === "dirty") {
-            status.dirty();
+            status3.dirty();
           }
           finalMap.set(key4.value, value.value);
         }
-        return { status: status.value, value: finalMap };
+        return { status: status3.value, value: finalMap };
       });
     } else {
       const finalMap = /* @__PURE__ */ new Map();
@@ -79283,11 +79294,11 @@ var ZodMap = class extends ZodType {
           return INVALID;
         }
         if (key4.status === "dirty" || value.status === "dirty") {
-          status.dirty();
+          status3.dirty();
         }
         finalMap.set(key4.value, value.value);
       }
-      return { status: status.value, value: finalMap };
+      return { status: status3.value, value: finalMap };
     }
   }
 };
@@ -79301,7 +79312,7 @@ ZodMap.create = (keyType, valueType, params) => {
 };
 var ZodSet = class _ZodSet extends ZodType {
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.set) {
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -79321,7 +79332,7 @@ var ZodSet = class _ZodSet extends ZodType {
           exact: false,
           message: def.minSize.message
         });
-        status.dirty();
+        status3.dirty();
       }
     }
     if (def.maxSize !== null) {
@@ -79334,7 +79345,7 @@ var ZodSet = class _ZodSet extends ZodType {
           exact: false,
           message: def.maxSize.message
         });
-        status.dirty();
+        status3.dirty();
       }
     }
     const valueType = this._def.valueType;
@@ -79344,10 +79355,10 @@ var ZodSet = class _ZodSet extends ZodType {
         if (element.status === "aborted")
           return INVALID;
         if (element.status === "dirty")
-          status.dirty();
+          status3.dirty();
         parsedSet.add(element.value);
       }
-      return { status: status.value, value: parsedSet };
+      return { status: status3.value, value: parsedSet };
     }
     const elements = [...ctx.data.values()].map((item, i) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, i)));
     if (ctx.common.async) {
@@ -79678,15 +79689,15 @@ var ZodEffects = class extends ZodType {
     return this._def.schema._def.typeName === ZodFirstPartyTypeKind.ZodEffects ? this._def.schema.sourceType() : this._def.schema;
   }
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     const effect = this._def.effect || null;
     const checkCtx = {
       addIssue: (arg) => {
         addIssueToContext(ctx, arg);
         if (arg.fatal) {
-          status.abort();
+          status3.abort();
         } else {
-          status.dirty();
+          status3.dirty();
         }
       },
       get path() {
@@ -79698,7 +79709,7 @@ var ZodEffects = class extends ZodType {
       const processed = effect.transform(ctx.data, checkCtx);
       if (ctx.common.async) {
         return Promise.resolve(processed).then(async (processed2) => {
-          if (status.value === "aborted")
+          if (status3.value === "aborted")
             return INVALID;
           const result = await this._def.schema._parseAsync({
             data: processed2,
@@ -79709,12 +79720,12 @@ var ZodEffects = class extends ZodType {
             return INVALID;
           if (result.status === "dirty")
             return DIRTY(result.value);
-          if (status.value === "dirty")
+          if (status3.value === "dirty")
             return DIRTY(result.value);
           return result;
         });
       } else {
-        if (status.value === "aborted")
+        if (status3.value === "aborted")
           return INVALID;
         const result = this._def.schema._parseSync({
           data: processed,
@@ -79725,7 +79736,7 @@ var ZodEffects = class extends ZodType {
           return INVALID;
         if (result.status === "dirty")
           return DIRTY(result.value);
-        if (status.value === "dirty")
+        if (status3.value === "dirty")
           return DIRTY(result.value);
         return result;
       }
@@ -79750,17 +79761,17 @@ var ZodEffects = class extends ZodType {
         if (inner.status === "aborted")
           return INVALID;
         if (inner.status === "dirty")
-          status.dirty();
+          status3.dirty();
         executeRefinement(inner.value);
-        return { status: status.value, value: inner.value };
+        return { status: status3.value, value: inner.value };
       } else {
         return this._def.schema._parseAsync({ data: ctx.data, path: ctx.path, parent: ctx }).then((inner) => {
           if (inner.status === "aborted")
             return INVALID;
           if (inner.status === "dirty")
-            status.dirty();
+            status3.dirty();
           return executeRefinement(inner.value).then(() => {
-            return { status: status.value, value: inner.value };
+            return { status: status3.value, value: inner.value };
           });
         });
       }
@@ -79778,13 +79789,13 @@ var ZodEffects = class extends ZodType {
         if (result instanceof Promise) {
           throw new Error(`Asynchronous transform encountered during synchronous parse operation. Use .parseAsync instead.`);
         }
-        return { status: status.value, value: result };
+        return { status: status3.value, value: result };
       } else {
         return this._def.schema._parseAsync({ data: ctx.data, path: ctx.path, parent: ctx }).then((base) => {
           if (!isValid(base))
             return INVALID;
           return Promise.resolve(effect.transform(base.value, checkCtx)).then((result) => ({
-            status: status.value,
+            status: status3.value,
             value: result
           }));
         });
@@ -79963,7 +79974,7 @@ var ZodBranded = class extends ZodType {
 };
 var ZodPipeline = class _ZodPipeline extends ZodType {
   _parse(input) {
-    const { status, ctx } = this._processInputParams(input);
+    const { status: status3, ctx } = this._processInputParams(input);
     if (ctx.common.async) {
       const handleAsync = async () => {
         const inResult = await this._def.in._parseAsync({
@@ -79974,7 +79985,7 @@ var ZodPipeline = class _ZodPipeline extends ZodType {
         if (inResult.status === "aborted")
           return INVALID;
         if (inResult.status === "dirty") {
-          status.dirty();
+          status3.dirty();
           return DIRTY(inResult.value);
         } else {
           return this._def.out._parseAsync({
@@ -79994,7 +80005,7 @@ var ZodPipeline = class _ZodPipeline extends ZodType {
       if (inResult.status === "aborted")
         return INVALID;
       if (inResult.status === "dirty") {
-        status.dirty();
+        status3.dirty();
         return {
           status: "dirty",
           value: inResult.value
@@ -80008,10 +80019,10 @@ var ZodPipeline = class _ZodPipeline extends ZodType {
       }
     }
   }
-  static create(a, b) {
+  static create(a, b2) {
     return new _ZodPipeline({
       in: a,
-      out: b,
+      out: b2,
       typeName: ZodFirstPartyTypeKind.ZodPipeline
     });
   }
@@ -80446,14 +80457,14 @@ function renderStaffList(l, members, roleName = (id3) => `<@&${id3}>`, now = /* 
   const used = /* @__PURE__ */ new Set();
   const blocks = [];
   l.sections.forEach((s, i) => {
-    let list2 = members.filter((m) => m.roleIds.includes(s.roleId));
+    let list22 = members.filter((m) => m.roleIds.includes(s.roleId));
     if (l.onlyHighest) {
-      list2 = list2.filter((m) => !used.has(m.id));
-      list2.forEach((m) => used.add(m.id));
+      list22 = list22.filter((m) => !used.has(m.id));
+      list22.forEach((m) => used.add(m.id));
     }
-    list2.sort((a, b) => a.name.localeCompare(b.name, "de"));
+    list22.sort((a, b2) => a.name.localeCompare(b2.name, "de"));
     const head = s.label ? `**${s.label}**` : roleName(s.roleId);
-    const lines = list2.length ? list2.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
+    const lines = list22.length ? list22.map((m) => `${l.bullet} ${l.mention ? `<@${m.id}>` : m.name}`) : [`${l.bullet} ${l.emptyText || "/"}`];
     blocks.push(`${head}
 ${lines.join("\n")}${s.divider && i < l.sections.length - 1 ? `
 
@@ -80465,12 +80476,12 @@ ${l.dividerText}` : ""}`);
 ${l.dividerText}
 
 ` : "";
-  for (const b of blocks) {
-    if ((cur + b).length > 3900 && cur) {
+  for (const b2 of blocks) {
+    if ((cur + b2).length > 3900 && cur) {
       texts.push(cur);
       cur = "";
     }
-    cur += `${b}
+    cur += `${b2}
 
 `;
   }
@@ -80847,6 +80858,26 @@ var dnSettingsSchema = external_exports.object({
   changeNeedsApprover: external_exports.boolean().default(false)
 });
 var EXAM_QUESTION_TYPES = ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+var EXAM_QUESTION_TYPE_LABEL = {
+  SINGLE: "Single Choice",
+  MULTI: "Multiple Choice",
+  YESNO: "Ja/Nein",
+  TEXT: "Freitext",
+  NUMBER: "Zahl",
+  ORDER: "Reihenfolge",
+  MATCH: "Zuordnung",
+  GAP: "L\xFCckentext"
+};
+var EXAM_QUESTION_TYPE_HINT = {
+  SINGLE: "Genau eine Antwort ist richtig.",
+  MULTI: "Mehrere Antworten k\xF6nnen richtig sein.",
+  YESNO: "Ja oder Nein.",
+  TEXT: "Freie Antwort \u2013 automatisch \xFCber Stichworte oder durch einen Pr\xFCfer.",
+  NUMBER: "Zahl, optional mit Toleranz.",
+  ORDER: "Eintr\xE4ge in die richtige Reihenfolge bringen. Im Editor in der richtigen Reihenfolge eintragen \u2013 sie werden beim Versuch gemischt.",
+  MATCH: "Jedem Begriff links das passende Gegenst\xFCck rechts zuordnen. Im Editor jeweils als richtiges Paar eintragen.",
+  GAP: "L\xFCcken im Text mit {{Antwort}} markieren, Alternativen mit | trennen, z. B. \u201EInnerorts gilt {{50|f\xFCnfzig}} km/h\u201C."
+};
 var questionSchema = external_exports.object({
   id: external_exports.string().min(1).max(40),
   type: external_exports.enum(EXAM_QUESTION_TYPES),
@@ -80867,7 +80898,31 @@ var questionSchema = external_exports.object({
   /** optionales Bild (nur https) */
   image: external_exports.string().max(500).regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen").nullable().default(null)
 });
+var GAP = /\{\{([^{}]*)\}\}/g;
+function splitGaps(text2) {
+  const out = [];
+  let last = 0;
+  let n = 0;
+  for (const m of text2.matchAll(GAP)) {
+    if (m.index > last) out.push(text2.slice(last, m.index));
+    out.push(n++);
+    last = m.index + m[0].length;
+  }
+  if (last < text2.length) out.push(text2.slice(last));
+  return out;
+}
+var list = (a) => Array.isArray(a) ? a.map((x) => String(x ?? "")) : a == null || a === "" ? [] : [String(a)];
+function isAnswered(q2, a) {
+  const l = list(a);
+  if (q2.type === "ORDER" || q2.type === "MATCH") return l.length === q2.options.length && l.every((x) => x !== "");
+  if (q2.type === "GAP") {
+    const n = splitGaps(q2.text).filter((s) => typeof s === "number").length;
+    return l.filter((x) => x.trim()).length >= n && n > 0;
+  }
+  return l.some((x) => x.trim() !== "");
+}
 var EXAM_REVIEW_MODES = ["NONE", "ANSWERS", "SOLUTIONS"];
+var EXAM_REVIEW_LABEL = { NONE: "Keine Einsicht", ANSWERS: "Eigene Antworten (richtig/falsch)", SOLUTIONS: "Antworten mit L\xF6sungen und Erkl\xE4rungen" };
 var EXAM_LAYOUTS = ["PAGED", "LIST"];
 var isoDate = external_exports.string().datetime({ offset: true });
 var examSchema = external_exports.object({
@@ -81039,10 +81094,10 @@ var DISCORD_ERRORS = {
   50109: "Ung\xFCltiges JSON."
 };
 function describeDiscordError(e) {
-  const known = e.code !== void 0 ? DISCORD_ERRORS[e.code] : void 0;
+  const known2 = e.code !== void 0 ? DISCORD_ERRORS[e.code] : void 0;
   const detail = (e.message ?? "").replace(/https?:\/\/\S+/g, "[URL]").replace(/\s+/g, " ").trim().slice(0, 200);
   if (e.status === 429) return "Discord-Anfragelimit erreicht \u2013 bitte kurz warten und erneut senden.";
-  if (known) return e.code === 50035 && detail ? `${known.slice(0, -1)} (${detail.replace(/\.$/, "")}).` : known;
+  if (known2) return e.code === 50035 && detail ? `${known2.slice(0, -1)} (${detail.replace(/\.$/, "")}).` : known2;
   if (e.status === 401 || e.status === 403) return `Discord verweigert den Zugriff${detail ? ` (${detail})` : ""}.`;
   if (e.status && e.status >= 500) return "Discord ist gerade nicht erreichbar (Serverfehler) \u2013 sp\xE4ter erneut versuchen.";
   return detail || "Unbekannter Discord-Fehler.";
@@ -81161,8 +81216,8 @@ function aiCheck(answers, durationSec) {
   const s = sentences(all);
   if (s.length >= 8) {
     const lens = s.map((x) => x.split(/\s+/).length);
-    const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
-    const cv = Math.sqrt(lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length) / mean;
+    const mean = lens.reduce((a, b2) => a + b2, 0) / lens.length;
+    const cv = Math.sqrt(lens.reduce((a, b2) => a + (b2 - mean) ** 2, 0) / lens.length) / mean;
     if (cv < 0.35 && mean >= 12) hits.push({ points: 10, reason: "Sehr gleichf\xF6rmige, lange S\xE4tze" });
   }
   const long2 = filled.filter((t2) => t2.length >= 100);
@@ -81173,8 +81228,8 @@ function aiCheck(answers, durationSec) {
   return {
     score,
     level: score >= 60 ? "HIGH" : score >= 30 ? "MEDIUM" : "LOW",
-    reasons: hits.sort((a, b) => b.points - a.points).map((h) => h.reason),
-    flagged: [...flagged].sort((a, b) => a - b)
+    reasons: hits.sort((a, b2) => b2.points - a.points).map((h) => h.reason),
+    flagged: [...flagged].sort((a, b2) => a - b2)
   };
 }
 var FORM_MAX_FILE_BYTES = 8 * 1024 * 1024;
@@ -81272,43 +81327,43 @@ function createRadioRoleSync(api2, source, log = console.log) {
   let cache = null;
   async function targets(force = false) {
     if (!force && cache && Date.now() - cache.at < TARGET_TTL_MS) return cache.t;
-    const t = await api2.service("GET", "/bot/radio-whitelist/sync-targets");
-    cache = { at: Date.now(), t };
-    return t;
+    const t2 = await api2.service("GET", "/bot/radio-whitelist/sync-targets");
+    cache = { at: Date.now(), t: t2 };
+    return t2;
   }
   const post = (guildId, members, full2) => api2.service("POST", "/bot/radio-whitelist/roles", { guildId, full: full2, members });
   async function memberChanged(guildId, discordId, name, roleIds, before) {
-    const t = await targets();
-    if (!t.enabled || t.guildId && t.guildId !== guildId) return false;
-    const listed = t.discordIds.includes(discordId);
-    const touched = (r) => (r ?? []).some((x) => t.roleIds.includes(x));
+    const t2 = await targets();
+    if (!t2.enabled || t2.guildId && t2.guildId !== guildId) return false;
+    const listed = t2.discordIds.includes(discordId);
+    const touched = (r) => (r ?? []).some((x) => t2.roleIds.includes(x));
     const relevant = listed || touched(roleIds) || touched(before);
     if (!relevant) return false;
-    if (before && roleIds && t.roleIds.every((r) => before.includes(r) === roleIds.includes(r)) && listed) return false;
+    if (before && roleIds && t2.roleIds.every((r) => before.includes(r) === roleIds.includes(r)) && listed) return false;
     await post(guildId, [{ discordId, name, roleIds }], false);
     cache = null;
     return true;
   }
   async function full(guildIdHint) {
-    const t = await targets(true);
-    const guildId = t.guildId ?? guildIdHint;
-    if (!t.enabled || !guildId) return { checked: 0, changed: 0, failed: 0 };
+    const t2 = await targets(true);
+    const guildId = t2.guildId ?? guildIdHint;
+    if (!t2.enabled || !guildId) return { checked: 0, changed: 0, failed: 0 };
     const all = await source.members(guildId);
     const byId = new Map(all.map((m) => [m.id, m]));
-    const relevant = all.filter((m) => m.roleIds.some((r) => t.roleIds.includes(r)) || t.discordIds.includes(m.id));
-    const list = relevant.map((m) => ({ discordId: m.id, name: m.name ?? null, roleIds: m.roleIds }));
-    for (const id3 of t.discordIds) if (!byId.has(id3)) list.push({ discordId: id3, roleIds: null });
+    const relevant = all.filter((m) => m.roleIds.some((r) => t2.roleIds.includes(r)) || t2.discordIds.includes(m.id));
+    const list3 = relevant.map((m) => ({ discordId: m.id, name: m.name ?? null, roleIds: m.roleIds }));
+    for (const id3 of t2.discordIds) if (!byId.has(id3)) list3.push({ discordId: id3, roleIds: null });
     let changed = 0, failed = 0;
-    for (let i = 0; i < list.length || i === 0; i += CHUNK) {
-      const part = list.slice(i, i + CHUNK);
-      const r = await post(guildId, part, i + CHUNK >= list.length);
+    for (let i = 0; i < list3.length || i === 0; i += CHUNK) {
+      const part = list3.slice(i, i + CHUNK);
+      const r = await post(guildId, part, i + CHUNK >= list3.length);
       changed += r.changed ?? 0;
       failed += r.failed ?? 0;
-      if (!list.length) break;
+      if (!list3.length) break;
     }
     cache = null;
-    if (changed || failed) log(`radio whitelist role sync: ${list.length} checked, ${changed} changed, ${failed} failed`);
-    return { checked: list.length, changed, failed };
+    if (changed || failed) log(`radio whitelist role sync: ${list3.length} checked, ${changed} changed, ${failed} failed`);
+    return { checked: list3.length, changed, failed };
   }
   function start2(minutes = 30) {
     const run2 = () => void full().catch((e) => log(`radio whitelist role sync failed: ${e instanceof Error ? e.message : e}`));
@@ -81326,7 +81381,7 @@ function createRadioRoleSync(api2, source, log = console.log) {
 
 // apps/bot/src/guilds.ts
 var import_discord3 = __toESM(require_src());
-var kind = (t) => t === import_discord3.ChannelType.GuildText || t === import_discord3.ChannelType.GuildAnnouncement ? "text" : t === import_discord3.ChannelType.GuildCategory ? "category" : t === import_discord3.ChannelType.GuildVoice || t === import_discord3.ChannelType.GuildStageVoice ? "voice" : "other";
+var kind = (t2) => t2 === import_discord3.ChannelType.GuildText || t2 === import_discord3.ChannelType.GuildAnnouncement ? "text" : t2 === import_discord3.ChannelType.GuildCategory ? "category" : t2 === import_discord3.ChannelType.GuildVoice || t2 === import_discord3.ChannelType.GuildStageVoice ? "voice" : "other";
 function botPerms(g, c) {
   const me = g.members?.me;
   if (!me || !("permissionsFor" in c)) return void 0;
@@ -81417,8 +81472,8 @@ function voiceReport(guilds, since) {
         position: c.rawPosition,
         members: [...c.members.values()].slice(0, 500).map((m) => {
           const v = m.voice;
-          const t = since.get(`${g.id}:${m.id}`);
-          return { id: m.id, displayName: m.displayName.slice(0, 100), avatar: m.displayAvatarURL({ size: 64 }) ?? null, selfMute: !!v.selfMute, selfDeaf: !!v.selfDeaf, serverMute: !!v.serverMute, serverDeaf: !!v.serverDeaf, video: !!v.selfVideo, streaming: !!v.streaming, since: t ? new Date(t).toISOString() : null };
+          const t2 = since.get(`${g.id}:${m.id}`);
+          return { id: m.id, displayName: m.displayName.slice(0, 100), avatar: m.displayAvatarURL({ size: 64 }) ?? null, selfMute: !!v.selfMute, selfDeaf: !!v.selfDeaf, serverMute: !!v.serverMute, serverDeaf: !!v.serverDeaf, video: !!v.selfVideo, streaming: !!v.streaming, since: t2 ? new Date(t2).toISOString() : null };
         })
       });
     }
@@ -81489,9 +81544,9 @@ var import_node_async_hooks = require("node:async_hooks");
 var guildScope = new import_node_async_hooks.AsyncLocalStorage();
 var rolesScope = new import_node_async_hooks.AsyncLocalStorage();
 var BotApiError = class extends Error {
-  constructor(status, code, message, requestId, reason, permission) {
+  constructor(status3, code, message, requestId, reason, permission) {
     super(message);
-    this.status = status;
+    this.status = status3;
     this.code = code;
     this.requestId = requestId;
     this.reason = reason;
@@ -81512,11 +81567,11 @@ var HttpApi = class {
   baseUrl;
   token;
   doFetch;
-  async call(method, path2, discordId, body) {
+  async call(method, path3, discordId, body) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 1e4);
     try {
-      const res = await this.doFetch(`${this.baseUrl}/api/v1${path2}`, {
+      const res = await this.doFetch(`${this.baseUrl}/api/v1${path3}`, {
         method,
         signal: ctl.signal,
         headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body ? { "content-type": "application/json" } : {} },
@@ -81541,11 +81596,11 @@ var HttpApi = class {
       clearTimeout(timer);
     }
   }
-  asUser(discordId, method, path2, body) {
-    return this.call(method, path2, discordId, body);
+  asUser(discordId, method, path3, body) {
+    return this.call(method, path3, discordId, body);
   }
-  service(method, path2, body) {
-    return this.call(method, path2, null, body);
+  service(method, path3, body) {
+    return this.call(method, path3, null, body);
   }
 };
 
@@ -81553,8 +81608,8 @@ var HttpApi = class {
 var COLORS = { info: 3900150, success: 2278750, warning: 16096779, danger: 15680580, neutral: 6583435 };
 var PRIORITY_COLOR = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
 var clip2 = (s, max) => {
-  const t = String(s ?? "\u2014");
-  return t.length > max ? `${t.slice(0, max - 1)}\u2026` : t;
+  const t2 = String(s ?? "\u2014");
+  return t2.length > max ? `${t2.slice(0, max - 1)}\u2026` : t2;
 };
 var label = (s) => String(s ?? "\u2014").replace(/_/g, " ");
 var plain2 = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
@@ -81667,7 +81722,7 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
     case "leave.log": {
       const ev = LEAVE_EVENTS[String(p.event)] ?? { text: String(p.event), color: COLORS.neutral };
       const by = p.event === "approved" ? "Angenommen von" : p.event === "denied" ? "Abgelehnt von" : p.event === "extended" ? "Verl\xE4ngert von" : "Entschieden von";
-      const t = (v, style = "f") => `<t:${unixOf(v)}:${style}>`;
+      const t2 = (v, style = "f") => `<t:${unixOf(v)}:${style}>`;
       return {
         author: { name: clip2(`@${String(p.name ?? "\u2014")}`, 200) },
         title: ev.text,
@@ -81675,8 +81730,8 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
         footer: `ID: ${String(p.number)}`,
         description: clip2([
           p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null,
-          `**Beginn**: ${t(p.startsAt)}`,
-          `**Ende**: ${t(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t(p.previousEndsAt)})` : ""}`,
+          `**Beginn**: ${t2(p.startsAt)}`,
+          `**Ende**: ${t2(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t2(p.previousEndsAt)})` : ""}`,
           `**Dauer**: ${leaveSpan(p)}`,
           `**Grund**: ${plain2(p.reason)}`,
           p.extendReason ? `**Grund der Verl\xE4ngerung**: ${plain2(p.extendReason)}` : null,
@@ -81696,8 +81751,8 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
   }
 }
 var unix = (iso) => {
-  const t = Date.parse(String(iso ?? ""));
-  return Number.isFinite(t) ? Math.floor(t / 1e3) : null;
+  const t2 = Date.parse(String(iso ?? ""));
+  return Number.isFinite(t2) ? Math.floor(t2 / 1e3) : null;
 };
 var fmtDuration = (sec) => sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.floor(sec / 60)} min ${sec % 60}s` : `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min`;
 var BUDGET = 4800;
@@ -81720,20 +81775,20 @@ function applicationEmbeds(p, kind2) {
     ...submitted ? [`Eingereicht: <t:${submitted}:R>`] : [],
     ...p.guildName ? [`Server: \`${plain2(p.guildName)}\``] : []
   ].join("\n");
-  const section2 = (q2, i, max) => {
+  const section3 = (q2, i, max) => {
     const a = plain2(q2.answer) || "\u2014";
     return `**${i + 1}. ${clip2(plain2(q2.question), 200)}**
 ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
-  let sections = qa.map((q2, i) => section2(q2, i));
+  let sections = qa.map((q2, i) => section3(q2, i));
   const who2 = p.discordName ? `${plain2(p.discordName)}s ` : "";
   const title = clip2(kind2 === "p" ? `\u{1F4CB} ${who2}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who2}Bewerbung \u201E${plain2(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
   if (size(sections) > room) {
-    const questions = qa.reduce((n, q2, i) => n + section2({ question: q2.question, answer: "" }, i).length + 15, 0);
+    const questions = qa.reduce((n, q2, i) => n + section3({ question: q2.question, answer: "" }, i).length + 15, 0);
     const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
-    sections = qa.map((q2, i) => section2(q2, i, per));
+    sections = qa.map((q2, i) => section3(q2, i, per));
   }
   if (size(sections) > room) {
     const kept = [];
@@ -81929,11 +81984,11 @@ var DUTY_DE = {
 };
 function teamlistEmbed(members, rankOrder) {
   const rankOf = (m) => m.rank ?? "Ohne Rang";
-  const known = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
-  const rest = [...new Set(members.map(rankOf))].filter((r) => !rankOrder.includes(r)).sort((a, b) => a.localeCompare(b));
+  const known2 = rankOrder.filter((r) => members.some((m) => rankOf(m) === r));
+  const rest = [...new Set(members.map(rankOf))].filter((r) => !rankOrder.includes(r)).sort((a, b2) => a.localeCompare(b2));
   const fields = [];
-  for (const rank of [...known, ...rest]) {
-    const people = members.filter((m) => rankOf(m) === rank).sort((a, b) => (a.callsign ?? "~").localeCompare(b.callsign ?? "~"));
+  for (const rank of [...known2, ...rest]) {
+    const people = members.filter((m) => rankOf(m) === rank).sort((a, b2) => (a.callsign ?? "~").localeCompare(b2.callsign ?? "~"));
     const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain2(m.callsign)}** ` : ""}${plain2(m.name)}${m.unit ? ` \xB7 ${plain2(m.unit)}` : ""}`);
     let chunk = "";
     let part = 0;
@@ -81985,11 +82040,11 @@ var ROBLOX_KEY = "@roblox";
 var SKIP = "-";
 var APPLICATION_MS = 3 * 60 * 6e4;
 var limitMs = (st) => (st.timeLimitMinutes ?? 180) * 6e4;
-function roleBlock(st, roles) {
-  if (!roles) return null;
+function roleBlock(st, roles2) {
+  if (!roles2) return null;
   const req = st.roles?.required, res = st.roles?.restricted;
-  if (req?.ids.length && !rolesMatch(roles, req.ids, req.mode)) return `Dir fehlt ${req.mode === "ALL" ? "eine der n\xF6tigen Rollen" : "die n\xF6tige Rolle"} f\xFCr diese Bewerbung.`;
-  if (res?.ids.length && rolesMatch(roles, res.ids, res.mode)) return "Mit deinen Rollen kannst du dich hierf\xFCr nicht bewerben.";
+  if (req?.ids.length && !rolesMatch(roles2, req.ids, req.mode)) return `Dir fehlt ${req.mode === "ALL" ? "eine der n\xF6tigen Rollen" : "die n\xF6tige Rolle"} f\xFCr diese Bewerbung.`;
+  if (res?.ids.length && rolesMatch(roles2, res.ids, res.mode)) return "Mit deinen Rollen kannst du dich hierf\xFCr nicht bewerben.";
   return null;
 }
 var MAX_ANSWER = 1e3;
@@ -82132,8 +82187,8 @@ var QUALI_COMMANDS = [
       try {
         const cfg2 = await getConfig(c.api, c.guildId);
         await c.platform.postPanel({ channelId: c.channelId, ...panelPost(qualiPanelParts(cfg2)) });
-        const ch = await c.config?.().catch(() => void 0);
-        return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
+        const ch2 = await c.config?.().catch(() => void 0);
+        return okReply(`Qualifikations-Panel gepostet.${ch2?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
       } catch (e) {
         if (e instanceof BotApiError) return mapError(e);
         return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
@@ -82229,8 +82284,8 @@ async function proceed(o, s) {
 }
 var STATUS2 = /* @__PURE__ */ new Set(["ACCEPTED", "REJECTED"]);
 var parseDecision = (rest) => {
-  const [kind2, id3, status] = rest.length === 2 ? ["q", rest[0], rest[1]] : rest;
-  return (kind2 === "q" || kind2 === "p") && id3 && status && STATUS2.has(status) ? { kind: kind2, id: id3, status } : null;
+  const [kind2, id3, status3] = rest.length === 2 ? ["q", rest[0], rest[1]] : rest;
+  return (kind2 === "q" || kind2 === "p") && id3 && status3 && STATUS2.has(status3) ? { kind: kind2, id: id3, status: status3 } : null;
 };
 async function decide(c, d, reason) {
   const cfg2 = await getConfig(c.api, c.guildId).catch(() => void 0);
@@ -82240,8 +82295,8 @@ async function decide(c, d, reason) {
     managers = cfg2.units.find((u) => u.key === app.unit)?.settings?.roles?.managers;
   }
   if (managers?.length && !managers.some((r2) => (c.memberRoleIds ?? []).includes(r2))) return errorReply("\xDCber diese Bewerbung d\xFCrfen nur die eingestellten Manager-Rollen entscheiden.");
-  const path2 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
-  const r = await c.api.asUser(c.discordId, "POST", path2, { status: d.status, ...reason ? { reason } : {} });
+  const path3 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
+  const r = await c.api.asUser(c.discordId, "POST", path3, { status: d.status, ...reason ? { reason } : {} });
   const accepted = d.status === "ACCEPTED";
   const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain2(r.unitName)})` : ""}`;
   return {
@@ -82271,10 +82326,10 @@ var QUALI_INTERACTION = {
       if (action === "history") {
         const id3 = rest[0] ?? "";
         if (!/^\d{15,25}$/.test(id3)) return errorReply("Unbekannte Person.");
-        const get = (path2) => c.api.asUser(c.discordId, "GET", path2).then((x) => x, (e) => e instanceof BotApiError && e.status === 403 ? null : Promise.reject(e));
+        const get = (path3) => c.api.asUser(c.discordId, "GET", path3).then((x) => x, (e) => e instanceof BotApiError && e.status === 403 ? null : Promise.reject(e));
         const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id3}`), get(`/applications/history?discordId=${id3}`)]);
         if (!quali && !police) return errorReply("Du hast keine Berechtigung, Bewerbungen anzusehen.");
-        const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+        const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b2) => Date.parse(b2.createdAt) - Date.parse(a.createdAt));
         const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain2(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
   \u21B3 ${clip2(plain2(r.decisionReason), 150)}` : ""}`);
         return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip2(`<@${id3}>
@@ -82288,13 +82343,13 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         const a = await c.api.asUser(c.discordId, "GET", kind2 === "p" ? `/applications/${id3}` : `/qualifications/applications/${id3}`);
         if (!a.discordId) return errorReply("Diese Bewerbung kam nicht \xFCber Discord \u2013 es gibt keinen Discord-Benutzer f\xFCr ein Ticket.");
         const cfg2 = await c.config?.().catch(() => void 0);
-        let t;
+        let t2;
         try {
-          t = await openApplicantTicket(c.platform, cfg2, { guildId: c.guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName, requesterId: c.discordId });
+          t2 = await openApplicantTicket(c.platform, cfg2, { guildId: c.guildId, discordId: a.discordId, userName: a.discordName ?? a.robloxUsername ?? a.discordId, number: a.number, unitName: a.unitName, requesterId: c.discordId });
         } catch {
           return errorReply("Ticket konnte nicht angelegt werden (fehlen dem Bot die Rechte \u201EKan\xE4le verwalten\u201C, oder ist die Person nicht mehr auf dem Server?).");
         }
-        return okReply(t.existing ? `Mit dieser Person gibt es schon ein offenes Ticket: <#${t.channelId}>` : `Ticket ge\xF6ffnet: <#${t.channelId}>`);
+        return okReply(t2.existing ? `Mit dieser Person gibt es schon ein offenes Ticket: <#${t2.channelId}>` : `Ticket ge\xF6ffnet: <#${t2.channelId}>`);
       }
       if (action === "rb") {
         const s2 = sessions.get(c.discordId);
@@ -82380,11 +82435,11 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
   }
 };
 async function openApplicantTicket(platform2, cfg2, a) {
-  const t = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
-  if (!t.existing) {
-    await platform2.postPanel({ channelId: t.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain2(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
+  const t2 = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
+  if (!t2.existing) {
+    await platform2.postPanel({ channelId: t2.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain2(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
   }
-  return t;
+  return t2;
 }
 
 // apps/bot/src/commands/tickets.ts
@@ -82649,8 +82704,8 @@ var TICKET_COMMAND = {
     const member = typeof c.opts.mitglied === "string" && c.opts.mitglied !== c.discordId ? c.opts.mitglied : null;
     try {
       const all = await c.api.service("GET", `/bot/support-tickets/categories?guildId=${c.guildId}`);
-      const roles = c.memberRoleIds ?? [];
-      const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
+      const roles2 = c.memberRoleIds ?? [];
+      const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles2.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
       if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
       const options2 = cats.slice(0, 25).map((x) => ({ label: clip2(x.name, 100), value: x.id, ...x.description ? { description: clip2(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
       if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ["open", "cmd", cats[0].id] });
@@ -82674,9 +82729,9 @@ function createVoiceSupport(api2, ops, log = console.error) {
   const roomsOf = async (guildId) => {
     const hit = rooms.get(guildId);
     if (hit && Date.now() - hit.at < ROOMS_MS) return hit.list;
-    const list = await api2.service("GET", `/bot/voice-support/rooms?guildId=${guildId}`).catch(() => hit?.list ?? []);
-    rooms.set(guildId, { at: Date.now(), list });
-    return list;
+    const list3 = await api2.service("GET", `/bot/voice-support/rooms?guildId=${guildId}`).catch(() => hit?.list ?? []);
+    rooms.set(guildId, { at: Date.now(), list: list3 });
+    return list3;
   };
   const safe = (label2, p) => p.catch((e) => log(`voice support: ${label2} failed: ${e instanceof Error ? e.message : e}`));
   const applyEdit = (e) => e ? safe("update message", ops.edit(e.channelId, e.messageId, e.message)) : Promise.resolve();
@@ -82687,10 +82742,10 @@ function createVoiceSupport(api2, ops, log = console.error) {
   }
   async function onVoiceState(e) {
     if (e.bot || e.from === e.to) return;
-    const list = await roomsOf(e.guildId);
-    if (!list.length) return;
+    const list3 = await roomsOf(e.guildId);
+    if (!list3.length) return;
     if (e.from) {
-      if (list.some((r) => r.waitingChannelId === e.from)) {
+      if (list3.some((r) => r.waitingChannelId === e.from)) {
         const r = await api2.service("POST", "/bot/voice-support/left", { guildId: e.guildId, channelId: e.from, discordId: e.userId, userName: e.userName });
         for (const x of r.edits) await applyEdit(x);
       } else if (!ops.members(e.from).length) {
@@ -82698,7 +82753,7 @@ function createVoiceSupport(api2, ops, log = console.error) {
         if (r.closed) await finished(r);
       }
     }
-    if (e.to && list.some((r) => r.enabled && r.waitingChannelId === e.to)) {
+    if (e.to && list3.some((r) => r.enabled && r.waitingChannelId === e.to)) {
       const r = await api2.service("POST", "/bot/voice-support/join", { guildId: e.guildId, channelId: e.to, discordId: e.userId, userName: e.userName });
       if (r.action === "closed" && r.dm) await safe("closed DM", ops.dm(e.userId, r.dm));
       if (r.action === "notify" && r.caseId && r.channelId && r.message) {
@@ -82731,7 +82786,7 @@ function createVoiceSupport(api2, ops, log = console.error) {
   }
   async function claim(id3, s) {
     const r = await api2.service("POST", `/bot/voice-support/cases/${id3}/claim`, s);
-    return provision(r, s.discordId).then((t) => okReply(t), (e) => note(e.message));
+    return provision(r, s.discordId).then((t2) => okReply(t2), (e) => note(e.message));
   }
   async function applyEffects(p) {
     if (p.provision) await provision(p.provision, p.staffDiscordId ?? null).catch((e) => log(`voice support: ${e.message}`));
@@ -82804,17 +82859,17 @@ function berlinTime(y, m, d, h, min) {
   return new Date(guess - (shown - guess));
 }
 function parseLeaveDate(input, end, now = /* @__PURE__ */ new Date()) {
-  const t = input.trim().toLowerCase();
+  const t2 = input.trim().toLowerCase();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(now).split("-").map(Number);
   let y, m, d, rest = "";
-  const rel = t.match(/^(heute|morgen|übermorgen)(.*)$/);
+  const rel = t2.match(/^(heute|morgen|übermorgen)(.*)$/);
   if (rel) {
     const add = rel[1] === "heute" ? 0 : rel[1] === "morgen" ? 1 : 2;
     const base = new Date(Date.UTC(today[0], today[1] - 1, today[2] + add));
     [y, m, d] = [base.getUTCFullYear(), base.getUTCMonth() + 1, base.getUTCDate()];
     rest = rel[2] ?? "";
   } else {
-    const x = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(.*)$/);
+    const x = t2.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(.*)$/);
     if (!x) return null;
     d = Number(x[1]);
     m = Number(x[2]);
@@ -82840,18 +82895,18 @@ var fmt = (iso) => new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Ber
 var HOUR = 36e5;
 var UNIT_MS = { m: 6e4, min: 6e4, h: HOUR, std: HOUR, d: 24 * HOUR, t: 24 * HOUR, w: 168 * HOUR };
 function parseDuration(input) {
-  const t = input.trim().toLowerCase().replace(/\s+/g, "");
-  if (!t || !/^(\d+(?:[.,]\d+)?(?:min|std|m|h|d|t|w))+$/.test(t)) return null;
+  const t2 = input.trim().toLowerCase().replace(/\s+/g, "");
+  if (!t2 || !/^(\d+(?:[.,]\d+)?(?:min|std|m|h|d|t|w))+$/.test(t2)) return null;
   let ms = 0;
-  for (const [, n, u] of t.matchAll(/(\d+(?:[.,]\d+)?)(min|std|m|h|d|t|w)/g)) ms += Number(n.replace(",", ".")) * UNIT_MS[u];
+  for (const [, n, u] of t2.matchAll(/(\d+(?:[.,]\d+)?)(min|std|m|h|d|t|w)/g)) ms += Number(n.replace(",", ".")) * UNIT_MS[u];
   return ms >= HOUR && Number.isFinite(ms) ? Math.round(ms) : null;
 }
 var ts = (iso, style = "F") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
 function currentBlock(r) {
-  const status = r.active ? "\u{1F7E2} Aktiv" : r.status === "PENDING" ? "\u{1F7E1} Wartet auf Freigabe" : "\u{1F4C5} Geplant";
+  const status3 = r.active ? "\u{1F7E2} Aktiv" : r.status === "PENDING" ? "\u{1F7E1} Wartet auf Freigabe" : "\u{1F4C5} Geplant";
   return [
     `### Aktuelle Abmeldung`,
-    `**Status**: ${status}`,
+    `**Status**: ${status3}`,
     `**Beginn**: ${ts(r.startsAt, "f")}`,
     `**Ende**: ${ts(r.endsAt, "f")} (${ts(r.endsAt, "R")})`,
     `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`,
@@ -82890,13 +82945,13 @@ async function adminReply(c, discordId) {
   if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
   const { items } = await c.api.asUser(c.discordId, "GET", `/leave?discordId=${discordId}&status=ALL`);
   const current = currentOf(items);
-  const list = items.slice(0, 10).map((r, i) => {
+  const list3 = items.slice(0, 10).map((r, i) => {
     const end = r.endedAt && r.status === "ENDED" ? r.endedAt : r.endsAt;
     const st = leaveState(r);
     return `\`${i + 1}.\` ${ts(r.startsAt, "f")} [${span(new Date(end).getTime() - new Date(r.startsAt).getTime())}]${st ? ` ${st}` : ""}`;
   });
   const description = current ? currentBlock(current) : `**Verlauf**
-${list.length ? list.join("\n") : "Noch keine Abmeldungen."}${items.length > 10 ? `
+${list3.length ? list3.join("\n") : "Noch keine Abmeldungen."}${items.length > 10 ? `
 \u2026 und ${items.length - 10} \xE4ltere` : ""}`;
   const buttons = [
     ...current ? currentButtons(current) : [{ id: `leave:astart:${discordId}`, label: "Start", style: "primary", emoji: "\u{1F552}" }],
@@ -82922,18 +82977,18 @@ async function adminHistory(c, discordId) {
 var LIST_VIEWS = { offen: ["PENDING", "Offene Antr\xE4ge"], aktiv: ["ACTIVE", "Gerade abgemeldet"], geplant: ["UPCOMING", "Bevorstehend"], kalender: ["CALENDAR", "N\xE4chste 4 Wochen"], alle: ["ALL", "Alle Abmeldungen"] };
 var who = (r) => r.discordId ? `<@${r.discordId}>` : `**${plain2(r.name)}**`;
 async function listReply(c, view) {
-  const [status, title] = LIST_VIEWS[view] ?? LIST_VIEWS.offen;
-  const { all, items } = await c.api.asUser(c.discordId, "GET", `/leave?status=${status}`);
-  const rows = status === "PENDING" ? [...items].reverse() : status === "CALENDAR" || status === "UPCOMING" ? [...items].sort((a, b) => a.startsAt.localeCompare(b.startsAt)) : items;
-  const lines = rows.slice(0, 20).map((r) => `\`${r.number}\` ${all ? `${who(r)} \xB7 ` : ""}${ts(r.startsAt, "d")} \u2013 ${ts(r.endsAt, "d")} [${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}]${status === "ACTIVE" ? ` \xB7 bis ${ts(r.endsAt, "R")}` : ""}${status === "ALL" || status === "CALENDAR" ? ` ${leaveState(r)}` : ""}
+  const [status3, title] = LIST_VIEWS[view] ?? LIST_VIEWS.offen;
+  const { all, items } = await c.api.asUser(c.discordId, "GET", `/leave?status=${status3}`);
+  const rows = status3 === "PENDING" ? [...items].reverse() : status3 === "CALENDAR" || status3 === "UPCOMING" ? [...items].sort((a, b2) => a.startsAt.localeCompare(b2.startsAt)) : items;
+  const lines = rows.slice(0, 20).map((r) => `\`${r.number}\` ${all ? `${who(r)} \xB7 ` : ""}${ts(r.startsAt, "d")} \u2013 ${ts(r.endsAt, "d")} [${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}]${status3 === "ACTIVE" ? ` \xB7 bis ${ts(r.endsAt, "R")}` : ""}${status3 === "ALL" || status3 === "CALENDAR" ? ` ${leaveState(r)}` : ""}
 > ${clip2(plain2(r.reason), 120)}`);
   const embed = {
     title: `\u{1F4C5} ${all ? title : `Deine Abmeldungen \u2013 ${title}`} (${items.length})`,
-    color: status === "PENDING" && items.length ? COLORS.warning : COLORS.info,
+    color: status3 === "PENDING" && items.length ? COLORS.warning : COLORS.info,
     description: clip2(lines.length ? `${lines.join("\n")}${rows.length > 20 ? `
 \u2026 und ${rows.length - 20} weitere (im Dashboard)` : ""}` : "Keine Eintr\xE4ge.", 4e3)
   };
-  if (status !== "PENDING" || !all || !rows.length) return { ephemeral: true, embeds: [embed] };
+  if (status3 !== "PENDING" || !all || !rows.length) return { ephemeral: true, embeds: [embed] };
   return { ephemeral: true, embeds: [embed], select: { id: "leave:pick", placeholder: "Antrag zum Entscheiden w\xE4hlen \u2026", options: rows.slice(0, 25).map((r) => ({ label: clip2(`${r.number} \xB7 ${r.name}`, 100), value: r.id, description: clip2(`${fmt(r.startsAt)} \u2013 ${fmt(r.endsAt)} \xB7 ${r.reason}`, 100) })) } };
 }
 async function pickReply(c, id3) {
@@ -82999,10 +83054,10 @@ Die Leitung entscheidet \u2013 du bekommst eine Direktnachricht.`
     }
   }
 ];
-async function decide2(c, id3, status, reason) {
+async function decide2(c, id3, status3, reason) {
   try {
-    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/decision`, { status, ...reason ? { reason } : {} });
-    const ok = status === "APPROVED";
+    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/decision`, { status: status3, ...reason ? { reason } : {} });
+    const ok = status3 === "APPROVED";
     const now = `<t:${Math.floor(Date.now() / 1e3)}:f>`;
     return {
       ephemeral: true,
@@ -83021,10 +83076,10 @@ Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.n
     return mapError(e);
   }
 }
-async function decideExtension(c, id3, status, reason) {
+async function decideExtension(c, id3, status3, reason) {
   try {
-    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/extension-decision`, { status, ...reason ? { reason } : {} });
-    const ok = status === "APPROVED";
+    const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/extension-decision`, { status: status3, ...reason ? { reason } : {} });
+    const ok = status3 === "APPROVED";
     return {
       ephemeral: true,
       embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain2(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
@@ -83127,11 +83182,11 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
       }
     }
     if (action === "xdecide" || action === "xreasonsubmit") {
-      const status2 = st === "APPROVED" || st === "DENIED" ? st : null;
-      if (!status2) return errorReply("Unbekannte Aktion.");
+      const status4 = st === "APPROVED" || st === "DENIED" ? st : null;
+      if (!status4) return errorReply("Unbekannte Aktion.");
       const reason = action === "xreasonsubmit" ? (c.fields?.reason ?? "").trim() : void 0;
       if (action === "xreasonsubmit" && !reason) return errorReply("Bitte einen Grund angeben.");
-      return decideExtension(c, id3, status2, reason);
+      return decideExtension(c, id3, status4, reason);
     }
     if (action === "xreason") return { modal: { id: `leave:xreasonsubmit:${id3}:DENIED`, title: "Verl\xE4ngerung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
     if (action === "cancel") {
@@ -83143,21 +83198,21 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
         return mapError(e);
       }
     }
-    const status = st === "APPROVED" || st === "DENIED" ? st : null;
-    if (!status) return errorReply("Unbekannte Aktion.");
-    if (action === "decide") return decide2(c, id3, status);
-    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id3}:${status}`, title: status === "APPROVED" ? "Abmeldung annehmen" : "Abmeldung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
+    const status3 = st === "APPROVED" || st === "DENIED" ? st : null;
+    if (!status3) return errorReply("Unbekannte Aktion.");
+    if (action === "decide") return decide2(c, id3, status3);
+    if (action === "reason") return { modal: { id: `leave:reasonsubmit:${id3}:${status3}`, title: status3 === "APPROVED" ? "Abmeldung annehmen" : "Abmeldung ablehnen", fields: [{ id: "reason", label: "Grund", paragraph: true, required: true, maxLength: 1e3 }] } };
     if (action === "reasonsubmit") {
       const reason = (c.fields?.reason ?? "").trim();
-      return reason ? decide2(c, id3, status, reason) : errorReply("Bitte einen Grund angeben.");
+      return reason ? decide2(c, id3, status3, reason) : errorReply("Bitte einen Grund angeben.");
     }
     return errorReply("Unbekannte Aktion.");
   }
 };
 
 // apps/bot/src/commands/cad.ts
-var lbl = (list, key4) => {
-  const o = list.find((x) => x.key === key4);
+var lbl = (list3, key4) => {
+  const o = list3.find((x) => x.key === key4);
   return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key4;
 };
 var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
@@ -83212,10 +83267,10 @@ var CAD_COMMANDS = [{
         return okReply(`\u{1F4FB} ${r.callsign ? `**${plain2(r.callsign)}**: ` : ""}\u201E${plain2(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain2(r.incidentNumber)}**` : ""}.`);
       }
       if (sub === "einsaetze") {
-        const [cfg2, list] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
-        const lines = list.map((i) => `**${plain2(i.number)}** \xB7 ${clip2(plain2(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip2(plain2(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
+        const [cfg2, list3] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
+        const lines = list3.map((i) => `**${plain2(i.number)}** \xB7 ${clip2(plain2(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip2(plain2(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
    \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain2(u.unit.callsign)).join(", ")}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list.length})`, description: clip2(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
+        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list3.length})`, description: clip2(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
       }
       if (sub === "fahrzeuge") {
         const r = await c.api.asUser(c.discordId, "GET", "/fleet/vehicles");
@@ -83288,14 +83343,14 @@ ${clip2(plain2(p.note), 500)}` : ""}`, 1500), fields: [...f("Ort", p.location)] 
       return { title: clip2(`\u{1F198} Unterst\xFCtzung ben\xF6tigt: ${plain2(p.callsign)}`, 256), color: COLORS.danger, description: clip2(`**${head}**${p.note ? `
 ${clip2(plain2(p.note), 500)}` : ""}`, 1500), fields: [...f("Priorit\xE4t", p.priority), ...f("Ort", p.location)] };
     case "cad.handover": {
-      const list = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain2(x)}`).join("\n") : "";
+      const list3 = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain2(x)}`).join("\n") : "";
       return {
         title: "\u{1F501} Schicht\xFCbergabe der Leitstelle",
         color: COLORS.info,
         description: clip2(`${p.notes ? `${plain2(p.notes)}
 
-` : ""}${list ? `**Offene Eins\xE4tze**
-${list}` : "Keine offenen Eins\xE4tze."}`, 4e3),
+` : ""}${list3 ? `**Offene Eins\xE4tze**
+${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         fields: [...f("Offene Eins\xE4tze", p.openIncidents), ...f("Einheiten im Einsatz", p.activeUnits), ...f("Offene Notrufe", p.openCalls)],
         ...p.by ? { footer: `von ${clip2(String(p.by), 100)}` } : {}
       };
@@ -83414,13 +83469,13 @@ function discordErrorText(e) {
   if (x?.name === "RateLimitError") return describeDiscordError({ status: 429 });
   return describeDiscordError({ status: typeof x?.status === "number" ? x.status : void 0, code: typeof x?.code === "number" ? x.code : void 0, message: typeof x?.message === "string" ? x.message : String(e) });
 }
-async function report(api2, path2, body, log) {
+async function report(api2, path3, body, log) {
   for (let i = 1; i <= 3; i++) {
     try {
-      await api2.service("POST", path2, body);
+      await api2.service("POST", path3, body);
       return;
     } catch (e) {
-      if (i === 3) log(`message builder: could not report ${path2}: ${e instanceof Error ? e.message : e}`);
+      if (i === 3) log(`message builder: could not report ${path3}: ${e instanceof Error ? e.message : e}`);
       else await new Promise((r) => setTimeout(r, 500 * i));
     }
   }
@@ -83489,19 +83544,19 @@ var sweep = () => {
   for (const [k, v] of drafts) if (Date.now() - v.at > 30 * 6e4) drafts.delete(k);
 };
 var PAGE = 5;
-var pages = (t) => Math.max(1, Math.ceil(t.fields.length / PAGE));
+var pages = (t2) => Math.max(1, Math.ceil(t2.fields.length / PAGE));
 var hint = (f2) => (f2.type === "select" && f2.options.length ? `z. B. ${f2.options.join(" / ")}` : f2.type === "number" ? "Zahl" : f2.placeholder).slice(0, 100);
-function modal(t, mode, id3, page, values) {
-  const n = pages(t);
+function modal(t2, mode, id3, page, values) {
+  const n = pages(t2);
   return {
     id: `drep:sub:${mode}:${id3}:${page}`,
-    title: `${t.name}${n > 1 ? ` (${page + 1}/${n})` : ""}`.slice(0, 45),
-    fields: t.fields.slice(page * PAGE, page * PAGE + PAGE).map((f2) => ({ id: f2.id, label: f2.label, paragraph: f2.type === "long", required: f2.required, maxLength: Math.min(f2.maxLength, 4e3), ...hint(f2) ? { placeholder: hint(f2) } : {}, ...values[f2.id] ? { value: values[f2.id].slice(0, 4e3) } : {} }))
+    title: `${t2.name}${n > 1 ? ` (${page + 1}/${n})` : ""}`.slice(0, 45),
+    fields: t2.fields.slice(page * PAGE, page * PAGE + PAGE).map((f2) => ({ id: f2.id, label: f2.label, paragraph: f2.type === "long", required: f2.required, maxLength: Math.min(f2.maxLength, 4e3), ...hint(f2) ? { placeholder: hint(f2) } : {}, ...values[f2.id] ? { value: values[f2.id].slice(0, 4e3) } : {} }))
   };
 }
 async function showReport(c, idOrNumber) {
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${encodeURIComponent(idOrNumber.trim())}`);
-  const t = r.template;
+  const t2 = r.template;
   const head = [`**${r.number}** \xB7 ${STATUS_DE2[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain2(r.author.displayName)}` : null, r.reviewerName ? `**Gepr\xFCft von:** ${plain2(r.reviewerName)}` : null, r.status === "RETURNED" && r.reviewNote ? `**Nachbessern:** ${plain2(r.reviewNote)}` : null].filter(Boolean).join("\n");
   const buttons = [
     ...r.canEdit ? [{ id: `drep:edit:${r.id}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
@@ -83511,32 +83566,32 @@ async function showReport(c, idOrNumber) {
   return {
     ephemeral: true,
     embeds: [{
-      title: `${t?.emoji ?? "\u{1F4DD}"} ${r.templateName} \u2013 ${periodLabel(r.period, r.periodStart)}`.slice(0, 256),
+      title: `${t2?.emoji ?? "\u{1F4DD}"} ${r.templateName} \u2013 ${periodLabel(r.period, r.periodStart)}`.slice(0, 256),
       color: r.status === "REVIEWED" ? COLORS.success : r.status === "RETURNED" ? COLORS.warning : COLORS.info,
       description: head.slice(0, 4e3),
-      fields: (t?.fields ?? Object.keys(r.values).map((id3) => ({ id: id3, label: id3 }))).filter((f2) => r.values[f2.id]).slice(0, 25).map((f2) => ({ name: f2.label.slice(0, 256), value: r.values[f2.id].slice(0, 1024) }))
+      fields: (t2?.fields ?? Object.keys(r.values).map((id3) => ({ id: id3, label: id3 }))).filter((f2) => r.values[f2.id]).slice(0, 25).map((f2) => ({ name: f2.label.slice(0, 256), value: r.values[f2.id].slice(0, 1024) }))
     }],
     ...buttons.length ? { buttons } : {}
   };
 }
 async function listReply2(c) {
   const statusKey = String(c.opts.status ?? "offen");
-  const status = LIST_STATUS[statusKey] ?? "SUBMITTED";
+  const status3 = LIST_STATUS[statusKey] ?? "SUBMITTED";
   const params = new URLSearchParams({ pageSize: "25" });
-  if (status) params.set("status", status);
+  if (status3) params.set("status", status3);
   if (c.opts.mitglied) params.set("discordId", String(c.opts.mitglied));
   const days2 = Number(c.opts.tage ?? 0);
   if (days2 > 0) params.set("from", new Date(Date.now() - days2 * 864e5).toISOString().slice(0, 10));
   const name = String(c.opts.vorlage ?? "").trim().toLowerCase();
   if (name) {
     const all = await templates(c, false);
-    const t = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
-    if (!t) return errorReply(`Keine Vorlage \u201E${plain2(name)}\u201C gefunden.`);
-    params.set("templateId", t.id);
+    const t2 = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
+    if (!t2) return errorReply(`Keine Vorlage \u201E${plain2(name)}\u201C gefunden.`);
+    params.set("templateId", t2.id);
   }
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports?${params}`);
   const label2 = statusKey in LIST_STATUS ? { offen: "Offen", zurueckgegeben: "Zur Nachbesserung", geprueft: "Gepr\xFCft", alle: "Alle" }[statusKey] : "Offen";
-  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain2(x.author.displayName)} \xB7 ` : ""}${plain2(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
+  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain2(x.author.displayName)} \xB7 ` : ""}${plain2(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status3 ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
   const embed = listEmbed(`\u{1F5D3}\uFE0F ${r.seeAll ? "Berichte" : "Deine Berichte"} \u2013 ${label2} (${r.total})`, lines, "Keine Berichte gefunden.");
   if (r.total > r.items.length) embed.footer = `${r.total - r.items.length} weitere \u2013 Filter eingrenzen oder im Dashboard ansehen`;
   if (!r.items.length) return { ephemeral: true, embeds: [embed] };
@@ -83547,22 +83602,22 @@ async function templates(c, onlyActive = true) {
 }
 async function load(c, mode, id3) {
   if (mode === "n") {
-    const t = (await templates(c)).find((x) => x.id === id3);
-    if (!t) throw new Error("Vorlage nicht gefunden oder deaktiviert.");
-    return { t, values: {} };
+    const t2 = (await templates(c)).find((x) => x.id === id3);
+    if (!t2) throw new Error("Vorlage nicht gefunden oder deaktiviert.");
+    return { t: t2, values: {} };
   }
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${id3}`);
   if (!r.template) throw new Error("Die Vorlage dieses Berichts gibt es nicht mehr \u2013 bitte im Dashboard bearbeiten.");
   if (!r.canEdit) throw new Error("Diesen Bericht darfst du nicht bearbeiten.");
   return { t: r.template, values: r.values, report: r };
 }
-function openModal(c, t, mode, id3, page, base) {
+function openModal(c, t2, mode, id3, page, base) {
   const k = key3(c, mode, id3);
   if (page === 0) drafts.set(k, { values: { ...base }, at: Date.now() });
-  return { modal: modal(t, mode, id3, page, drafts.get(k)?.values ?? base) };
+  return { modal: modal(t2, mode, id3, page, drafts.get(k)?.values ?? base) };
 }
-async function prefill(c, t) {
-  return c.api.asUser(c.discordId, "GET", `/duty-reports/templates/${t.id}/prefill`).then((r) => r.values ?? {}, () => ({}));
+async function prefill(c, t2) {
+  return c.api.asUser(c.discordId, "GET", `/duty-reports/templates/${t2.id}/prefill`).then((r) => r.values ?? {}, () => ({}));
 }
 var DUTY_REPORT_COMMANDS = [{
   name: "dienstbericht",
@@ -83589,10 +83644,10 @@ var DUTY_REPORT_COMMANDS = [{
       }
       if (sub === "anzeigen") return await showReport(c, String(c.opts.nummer ?? ""));
       if (sub === "liste") return await listReply2(c);
-      const list = await templates(c);
-      if (!list.length) return errorReply("Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter \u201ETages-/Wochenberichte\u201C an.");
-      if (list.length === 1) return openModal(c, list[0], "n", list[0].id, 0, await prefill(c, list[0]));
-      return { ephemeral: true, content: "Welchen Bericht m\xF6chtest du ausf\xFCllen?", select: { id: "drep:pick", placeholder: "Vorlage w\xE4hlen \u2026", options: list.slice(0, 25).map((t) => ({ label: t.name.slice(0, 100), value: t.id, ...t.emoji ? { emoji: t.emoji } : {}, ...t.description ? { description: t.description.slice(0, 100) } : {} })) } };
+      const list3 = await templates(c);
+      if (!list3.length) return errorReply("Es gibt noch keine aktive Berichtsvorlage. Vorlagen legt man im Dashboard unter \u201ETages-/Wochenberichte\u201C an.");
+      if (list3.length === 1) return openModal(c, list3[0], "n", list3[0].id, 0, await prefill(c, list3[0]));
+      return { ephemeral: true, content: "Welchen Bericht m\xF6chtest du ausf\xFCllen?", select: { id: "drep:pick", placeholder: "Vorlage w\xE4hlen \u2026", options: list3.slice(0, 25).map((t2) => ({ label: t2.name.slice(0, 100), value: t2.id, ...t2.emoji ? { emoji: t2.emoji } : {}, ...t2.description ? { description: t2.description.slice(0, 100) } : {} })) } };
     } catch (e) {
       return mapError(e);
     }
@@ -83611,8 +83666,8 @@ var DUTY_REPORT_INTERACTION = {
       }
       if (action === "pick") {
         const id4 = c.values?.[0] ?? "";
-        const { t: t2 } = await load(c, "n", id4);
-        return openModal(c, t2, "n", id4, 0, await prefill(c, t2));
+        const { t: t3 } = await load(c, "n", id4);
+        return openModal(c, t3, "n", id4, 0, await prefill(c, t3));
       }
       if (action === "rev" || action === "retsub") {
         if (!/^[0-9a-f-]{36}$/.test(a1 ?? "")) return errorReply("Ung\xFCltige Anfrage.");
@@ -83625,8 +83680,8 @@ var DUTY_REPORT_INTERACTION = {
         return { modal: { id: `drep:retsub:${a1}`, title: "Zur Nachbesserung", fields: [{ id: "note", label: "Was soll nachgebessert werden?", paragraph: true, required: true, maxLength: 1e3 }] } };
       }
       if (action === "edit") {
-        const { t: t2, values } = await load(c, "e", a1 ?? "");
-        return openModal(c, t2, "e", a1 ?? "", 0, values);
+        const { t: t3, values } = await load(c, "e", a1 ?? "");
+        return openModal(c, t3, "e", a1 ?? "", 0, values);
       }
       const mode = a1 === "e" ? "e" : "n", id3 = a2 ?? "", page = Number(a3 ?? 0);
       if (!/^[0-9a-f-]{36}$/.test(id3) || !Number.isInteger(page) || page < 0) return errorReply("Ung\xFCltige Anfrage.");
@@ -83634,16 +83689,16 @@ var DUTY_REPORT_INTERACTION = {
       if (action === "next") {
         const d2 = drafts.get(k);
         if (!d2) return errorReply("Die Eingabe ist abgelaufen \u2013 bitte neu beginnen.");
-        const { t: t2 } = await load(c, mode, id3);
-        return openModal(c, t2, mode, id3, page, d2.values);
+        const { t: t3 } = await load(c, mode, id3);
+        return openModal(c, t3, mode, id3, page, d2.values);
       }
       if (action !== "sub") return errorReply("Unbekannte Aktion.");
-      const { t, report: report2 } = await load(c, mode, id3);
+      const { t: t2, report: report2 } = await load(c, mode, id3);
       const d = drafts.get(k) ?? { values: { ...report2?.values ?? {} }, at: Date.now() };
       d.values = { ...d.values, ...c.fields ?? {} };
       d.at = Date.now();
       drafts.set(k, d);
-      if (page + 1 < pages(t)) return { ephemeral: true, content: `Seite ${page + 1} von ${pages(t)} gespeichert.`, buttons: [{ id: `drep:next:${mode}:${id3}:${page + 1}`, label: `Weiter (${page + 2}/${pages(t)})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
+      if (page + 1 < pages(t2)) return { ephemeral: true, content: `Seite ${page + 1} von ${pages(t2)} gespeichert.`, buttons: [{ id: `drep:next:${mode}:${id3}:${page + 1}`, label: `Weiter (${page + 2}/${pages(t2)})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
       drafts.delete(k);
       if (mode === "e") {
         const r2 = await c.api.asUser(c.discordId, "PATCH", `/duty-reports/${id3}`, { values: d.values });
@@ -83677,9 +83732,9 @@ var TRAINING_COMMANDS = [{
   async run(c) {
     try {
       if (c.opts._sub === "termine") {
-        const list = await c.api.asUser(c.discordId, "GET", "/hr/training-sessions?scope=upcoming");
-        if (!list.length) return okReply("Gerade sind keine Ausbildungstermine angesetzt.");
-        return { ephemeral: true, embeds: [{ title: "\u{1F4DA} Anstehende Ausbildungen", color: COLORS.info, description: list.slice(0, 15).map((s) => `**${s.title}** \u2013 <t:${Math.floor(new Date(s.startsAt).getTime() / 1e3)}:F>${s.forRank ? ` \xB7 ${s.forRank}` : ""} \xB7 ${s.signups.length}${s.maxSignups ? `/${s.maxSignups}` : ""} angemeldet`).join("\n") }] };
+        const list3 = await c.api.asUser(c.discordId, "GET", "/hr/training-sessions?scope=upcoming");
+        if (!list3.length) return okReply("Gerade sind keine Ausbildungstermine angesetzt.");
+        return { ephemeral: true, embeds: [{ title: "\u{1F4DA} Anstehende Ausbildungen", color: COLORS.info, description: list3.slice(0, 15).map((s) => `**${s.title}** \u2013 <t:${Math.floor(new Date(s.startsAt).getTime() / 1e3)}:F>${s.forRank ? ` \xB7 ${s.forRank}` : ""} \xB7 ${s.signups.length}${s.maxSignups ? `/${s.maxSignups}` : ""} angemeldet`).join("\n") }] };
       }
       return { modal: { id: "trn:new", title: "Ausbildung ansetzen", fields: [
         { id: "title", label: "Titel", required: true, maxLength: 120, value: "Grundausbildung" },
@@ -83834,7 +83889,7 @@ async function shiftTypes(c) {
   const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
   return cfg2?.enabled ? cfg2.types : [];
 }
-var permittedFor = (c, t) => !t.permittedRoleIds?.length || !c.memberRoleIds || t.permittedRoleIds.some((r) => c.memberRoleIds.includes(r));
+var permittedFor = (c, t2) => !t2.permittedRoleIds?.length || !c.memberRoleIds || t2.permittedRoleIds.some((r) => c.memberRoleIds.includes(r));
 var line = (s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \xB7 **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` \xB7 ${plain2(s.shiftType)}` : ""}${s.breaks ? ` \xB7 ${s.breaks}\xD7 Pause (${hm(s.breakMinutes)})` : ""}${s.active ? ` \xB7 ${DUTY_DE[s.status]?.emoji ?? "\u{1F7E2}"} l\xE4uft` : ""}`;
 function logEmbed(title, log, emptyText) {
   const items = log.items;
@@ -83863,8 +83918,8 @@ var long = (min) => {
 };
 var pickType = (c, types, wanted) => {
   if (wanted) return findType(types, wanted);
-  const usable = types.filter((t) => permittedFor(c, t));
-  return usable.find((t) => t.isDefault) ?? usable[0];
+  const usable = types.filter((t2) => permittedFor(c, t2));
+  return usable.find((t2) => t2.isDefault) ?? usable[0];
 };
 async function manageReply2(c, type, notice) {
   const [log, stats] = await Promise.all([
@@ -83900,27 +83955,27 @@ async function manageReply2(c, type, notice) {
   ];
   return { ephemeral: false, buttons, embeds: [{ box: true, heading: "small", title: "Schichtverwaltung", description: clip2(description, 3900) }] };
 }
-async function switchTo(c, status, type) {
+async function switchTo(c, status3, type) {
   let notice;
   try {
-    await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...type ? { shiftType: type.id } : {} });
-    notice = status === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain2(type.name)}** gestartet.` : `${DUTY_DE[status].emoji} Jetzt **${DUTY_DE[status].label}**.`;
+    await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...type ? { shiftType: type.id } : {} });
+    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain2(type.name)}** gestartet.` : `${DUTY_DE[status3].emoji} Jetzt **${DUTY_DE[status3].label}**.`;
   } catch (e) {
-    notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
+    notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status3].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
   return manageReply2(c, type, notice);
 }
 async function active(c) {
   try {
     const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
-    const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY").sort((a, b) => (a.onDutySince ?? "").localeCompare(b.onDutySince ?? ""));
-    const lines = on.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? "\u2022"} **${plain2(r.callsign ?? r.name)}**${r.callsign ? ` (${plain2(r.name)})` : ""}${r.shiftType ? ` \xB7 ${plain2(r.shiftType)}` : ""}${r.onDutySince ? ` \xB7 seit ${ts3(r.onDutySince, "R")}` : ""}`);
-    const onBreak = on.filter((r) => r.dutyStatus === "BREAK").length;
+    const on2 = rows.filter((r) => r.dutyStatus !== "OFF_DUTY").sort((a, b2) => (a.onDutySince ?? "").localeCompare(b2.onDutySince ?? ""));
+    const lines = on2.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? "\u2022"} **${plain2(r.callsign ?? r.name)}**${r.callsign ? ` (${plain2(r.name)})` : ""}${r.shiftType ? ` \xB7 ${plain2(r.shiftType)}` : ""}${r.onDutySince ? ` \xB7 seit ${ts3(r.onDutySince, "R")}` : ""}`);
+    const onBreak = on2.filter((r) => r.dutyStatus === "BREAK").length;
     return { ephemeral: false, embeds: [{
-      title: `\u{1F46E} Laufende Schichten (${on.length})`,
-      color: on.length ? COLORS.success : COLORS.neutral,
-      description: clip2(lines.length ? `${lines.join("\n")}${on.length > 30 ? `
-\u2026 und ${on.length - 30} weitere` : ""}` : "Gerade ist niemand im Dienst.", 4e3),
+      title: `\u{1F46E} Laufende Schichten (${on2.length})`,
+      color: on2.length ? COLORS.success : COLORS.neutral,
+      description: clip2(lines.length ? `${lines.join("\n")}${on2.length > 30 ? `
+\u2026 und ${on2.length - 30} weitere` : ""}` : "Gerade ist niemand im Dienst.", 4e3),
       ...onBreak ? { footer: `${onBreak} davon in der Pause` } : {}
     }] };
   } catch (e) {
@@ -83971,7 +84026,7 @@ var SHIFT_COMMANDS = [
     async complete(c, option2, value) {
       if (option2 !== "type") return [];
       const v = value.trim().toLowerCase();
-      return (await shiftTypes(c)).filter((t) => permittedFor(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
+      return (await shiftTypes(c)).filter((t2) => permittedFor(c, t2)).filter((t2) => !v || t2.name.toLowerCase().includes(v) || t2.id.includes(v)).map((t2) => ({ name: t2.name, value: t2.id }));
     },
     async run(c) {
       switch (c.opts._sub) {
@@ -83989,10 +84044,10 @@ var SHIFT_COMMANDS = [
           const wanted = String(c.opts.type ?? "").trim();
           try {
             const types = await shiftTypes(c);
-            const t = pickType(c, types, wanted || void 0);
-            if (t && !permittedFor(c, t)) return errorReply(`F\xFCr die Schichtart **${plain2(t.name)}** fehlt dir die passende Rolle.`);
-            if (wanted && !t) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain2(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
-            return await manageReply2(c, t);
+            const t2 = pickType(c, types, wanted || void 0);
+            if (t2 && !permittedFor(c, t2)) return errorReply(`F\xFCr die Schichtart **${plain2(t2.name)}** fehlt dir die passende Rolle.`);
+            if (wanted && !t2) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain2(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
+            return await manageReply2(c, t2);
           } catch (e) {
             return mapError(e);
           }
@@ -84013,8 +84068,8 @@ var SHIFT_INTERACTION = {
     try {
       if (action === "on") {
         const types = await shiftTypes(c);
-        const t = userId ? findType(types, userId) : void 0;
-        return await switchTo(c, "ON_DUTY", t);
+        const t2 = userId ? findType(types, userId) : void 0;
+        return await switchTo(c, "ON_DUTY", t2);
       }
       if (action === "break") {
         const me = await c.api.asUser(c.discordId, "GET", "/team/me");
@@ -84034,6 +84089,1292 @@ var SHIFT_INTERACTION = {
       return discordId ? { ...okReply("Schicht beendet."), update: await adminReply2(c, discordId) } : okReply("Schicht beendet.");
     } catch {
       return okReply("Schicht beendet.");
+    }
+  }
+};
+
+// apps/bot/src/commands/setup.ts
+var import_discord5 = __toESM(require_src());
+
+// apps/bot/src/safety.ts
+var isTransient = (e) => e instanceof BotApiError && (e.status === 0 || e.status === 429 || e.status === 502 || e.status === 503 || e.status === 504);
+async function withRetry(fn, o = {}) {
+  const attempts = Math.max(1, o.attempts ?? 3);
+  const sleep = o.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+  for (let n = 1; ; n++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (n >= attempts || !isTransient(e)) throw e;
+      await sleep((o.baseMs ?? 400) * 2 ** (n - 1));
+    }
+  }
+}
+var DISCORD_TOKEN = /[\w-]{23,28}\.[\w-]{6,7}\.[\w-]{27,}/g;
+var AUTH_HEADER = /\b(Bot|Bearer)\s+(?=[\w.-]*\d)[\w.-]{24,}/g;
+var ASSIGNMENT = /\b([A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|API_KEY|APIKEY)[A-Z0-9_]*)\s*[=:]\s*\S+/gi;
+var known = /* @__PURE__ */ new Set();
+function registerSecrets(values) {
+  for (const v of values) if (v && v.length >= 8) known.add(v);
+}
+function redact(text2) {
+  let out = text2;
+  for (const v of known) out = out.split(v).join("[geschw\xE4rzt]");
+  return out.replace(DISCORD_TOKEN, "[geschw\xE4rzt]").replace(AUTH_HEADER, "$1 [geschw\xE4rzt]").replace(ASSIGNMENT, "$1=[geschw\xE4rzt]");
+}
+var SECRET_KEY = /token|secret|password|passwort|apikey|api_key|authorization|webhook|credential/i;
+function scrubSecrets(value) {
+  const walk = (v) => {
+    if (typeof v === "string") return redact(v);
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).filter(([k]) => !SECRET_KEY.test(k)).map(([k, x]) => [k, walk(x)]));
+    return v;
+  };
+  return walk(value);
+}
+function containsSecret(value) {
+  const json = JSON.stringify(value ?? null);
+  return redact(json) !== json || /"[^"]*(token|secret|password|apikey|api_key|authorization|credential)[^"]*"\s*:/i.test(json);
+}
+function installLogRedaction(c = console) {
+  for (const k of ["log", "warn", "error"]) {
+    const orig = c[k].bind(c);
+    c[k] = (...args) => orig(...args.map((a) => typeof a === "string" ? redact(a) : a instanceof Error ? redact(a.stack ?? a.message) : a));
+  }
+}
+
+// apps/bot/src/guild-config.ts
+var GUILD_CONFIG_VERSION = 1;
+var sf5 = external_exports.string().regex(/^\d{15,25}$/);
+var hex3 = external_exports.string().regex(/^#[0-9a-fA-F]{6}$/, "Farbe bitte als #RRGGBB");
+var httpsUrl = external_exports.string().trim().max(500).url().regex(/^https:\/\//i, "Bild-Link muss mit https:// beginnen");
+var roleList = external_exports.array(sf5).max(10).default([]);
+var ACCESS_LEVELS = ["admin", "leadership", "instructor", "officer", "readonly"];
+var LEVEL_LABEL = { admin: "Serveradministrator", leadership: "Polizeif\xFChrung", instructor: "Ausbilder", officer: "Beamter", readonly: "Nur lesender Zugriff" };
+var SETUP_CHANNELS = ["welcome", "log", "exams"];
+var CHANNEL_LABEL = { welcome: "Begr\xFC\xDFung", log: "Bot-Meldungen (Admins)", exams: "Pr\xFCfungs-Ank\xFCndigungen" };
+var TOGGLE_MODULES = MODULES.filter((m) => !("system" in m && m.system)).map((m) => ({ key: m.key, name: m.name }));
+var section2 = (s) => s.default({}).catch(() => s.parse({}));
+var SECTION_SCHEMAS = {
+  branding: external_exports.object({
+    serverName: external_exports.string().trim().max(100).nullable().default(null),
+    /** Anzeigename = Spitzname des Bots auf diesem Server */
+    displayName: external_exports.string().trim().max(32).nullable().default(null),
+    logoUrl: httpsUrl.nullable().default(null),
+    bannerUrl: httpsUrl.nullable().default(null),
+    /** Farben auch auf die Antworten der übrigen Bot-Befehle anwenden */
+    applyToAll: external_exports.boolean().default(false)
+  }).passthrough(),
+  colors: external_exports.object({ primary: hex3.default("#3b82f6"), success: hex3.default("#22c55e"), warning: hex3.default("#f59e0b"), danger: hex3.default("#ef4444") }).passthrough(),
+  welcome: external_exports.object({
+    enabled: external_exports.boolean().default(false),
+    title: external_exports.string().max(256).default("Willkommen auf {server}!"),
+    text: external_exports.string().max(2e3).default("Hallo {user}, sch\xF6n dass du da bist! Du bist Mitglied Nr. {memberCount}."),
+    goodbyeEnabled: external_exports.boolean().default(false),
+    goodbyeText: external_exports.string().max(2e3).default("{displayName} hat den Server verlassen.")
+  }).passthrough(),
+  channels: external_exports.object(Object.fromEntries(SETUP_CHANNELS.map((k) => [k, sf5.nullable().default(null)]))).passthrough(),
+  roles: external_exports.object(Object.fromEntries(ACCESS_LEVELS.map((k) => [k, roleList]))).passthrough(),
+  modules: external_exports.object({ disabled: external_exports.array(external_exports.string().max(40)).max(50).default([]) }).passthrough()
+};
+var guildConfigSchema = external_exports.object({
+  version: external_exports.number().int().min(1).default(GUILD_CONFIG_VERSION),
+  /** Zählt bei jedem Speichern hoch (erkennt gleichzeitige Änderungen, z. B. während einer geplanten Wiederherstellung). */
+  revision: external_exports.number().int().min(0).default(0),
+  setupDone: external_exports.boolean().default(false),
+  branding: section2(SECTION_SCHEMAS.branding),
+  colors: section2(SECTION_SCHEMAS.colors),
+  welcome: section2(SECTION_SCHEMAS.welcome),
+  channels: section2(SECTION_SCHEMAS.channels),
+  roles: section2(SECTION_SCHEMAS.roles),
+  modules: section2(SECTION_SCHEMAS.modules),
+  updatedAt: external_exports.string().nullable().default(null),
+  updatedBy: sf5.nullable().default(null)
+}).passthrough();
+function parseGuildConfig(raw) {
+  const r = guildConfigSchema.safeParse(raw && typeof raw === "object" ? raw : {});
+  if (r.success) return r.data;
+  const ok = Object.fromEntries(Object.entries(raw).filter(([k, v]) => {
+    const field2 = guildConfigSchema.shape[k];
+    return !field2 || field2.safeParse(v).success;
+  }));
+  return guildConfigSchema.parse(ok);
+}
+function merge(base, patch) {
+  const out = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === void 0) continue;
+    const b2 = out[k];
+    out[k] = v && typeof v === "object" && !Array.isArray(v) && b2 && typeof b2 === "object" && !Array.isArray(b2) ? merge(b2, v) : v;
+  }
+  return out;
+}
+var ConfigValidationError = class extends Error {
+};
+var ConfigConflictError = class extends Error {
+  constructor() {
+    super("Die Einstellungen wurden inzwischen ge\xE4ndert. Bitte erneut versuchen.");
+  }
+};
+var apiKeyValue = (api2) => ({
+  get: (key4) => withRetry(() => api2.service("GET", `/bot/state/${key4}`)).then((r) => r?.value ?? null),
+  put: (key4, value) => withRetry(() => api2.service("PUT", `/bot/state/${key4}`, { value })).then(() => void 0)
+});
+var memoryKeyValue = (seed = {}) => {
+  const data = new Map(Object.entries(seed).map(([k, v]) => [k, structuredClone(v)]));
+  return { data, async get(k) {
+    return data.has(k) ? structuredClone(data.get(k)) : null;
+  }, async put(k, v) {
+    data.set(k, structuredClone(v));
+  } };
+};
+var configKey = (guildId) => {
+  if (!/^\d{15,25}$/.test(guildId)) throw new Error("invalid guild id");
+  return `guildcfg:${guildId}`;
+};
+var GuildConfigStore = class {
+  constructor(kv, ttlMs = 15e3, now = () => Date.now()) {
+    this.kv = kv;
+    this.ttlMs = ttlMs;
+    this.now = now;
+  }
+  kv;
+  ttlMs;
+  now;
+  cache = /* @__PURE__ */ new Map();
+  async load(guildId, fresh = false) {
+    const hit = this.cache.get(guildId);
+    if (!fresh && hit && this.now() - hit.at < this.ttlMs) return hit;
+    const stored = await this.kv.get(configKey(guildId));
+    const raw = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+    const entry = { at: this.now(), cfg: parseGuildConfig(raw), raw };
+    this.cache.set(guildId, entry);
+    return entry;
+  }
+  async get(guildId, o = {}) {
+    return structuredClone((await this.load(guildId, o.fresh)).cfg);
+  }
+  /** Gibt es schon gespeicherte Einstellungen für den Server? */
+  async exists(guildId) {
+    return Object.keys((await this.load(guildId, true)).raw).length > 0;
+  }
+  /**
+   * Änderung speichern: frisch lesen, zusammenführen (unbekannte/ältere Felder bleiben), prüfen, Revision erhöhen.
+   * `expectRevision`: nur speichern, wenn sich seitdem nichts geändert hat.
+   */
+  async update(guildId, patch, o = {}) {
+    const cur = await this.load(guildId, true);
+    if (o.expectRevision !== void 0 && cur.cfg.revision !== o.expectRevision) throw new ConfigConflictError();
+    const merged = merge(merge(cur.raw, cur.cfg), patch);
+    for (const k of Object.keys(patch)) {
+      if (!(k in SECTION_SCHEMAS)) continue;
+      const r = SECTION_SCHEMAS[k].safeParse(merged[k]);
+      if (!r.success) throw new ConfigValidationError(`${k}.${r.error.issues[0]?.path.join(".") ?? ""}: ${r.error.issues[0]?.message ?? "ung\xFCltig"}`);
+    }
+    const next = guildConfigSchema.parse({ ...merged, version: Math.max(cur.cfg.version, GUILD_CONFIG_VERSION), revision: cur.cfg.revision + 1, updatedAt: new Date(this.now()).toISOString(), updatedBy: o.by ?? null });
+    await this.kv.put(configKey(guildId), next);
+    this.cache.set(guildId, { at: this.now(), cfg: next, raw: next });
+    return structuredClone(next);
+  }
+  /** Vollständigen Stand setzen (nur Wiederherstellung – vorher wird gesichert). */
+  async replace(guildId, cfg2, o = {}) {
+    const cur = await this.load(guildId, true);
+    if (o.expectRevision !== void 0 && cur.cfg.revision !== o.expectRevision) throw new ConfigConflictError();
+    const next = guildConfigSchema.parse({ ...cfg2, revision: cur.cfg.revision + 1, updatedAt: new Date(this.now()).toISOString(), updatedBy: o.by ?? null });
+    await this.kv.put(configKey(guildId), next);
+    this.cache.set(guildId, { at: this.now(), cfg: next, raw: next });
+    return structuredClone(next);
+  }
+  forget(guildId) {
+    if (guildId) this.cache.delete(guildId);
+    else this.cache.clear();
+  }
+};
+var colorOf = (c, fallback) => c && /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
+function setupWelcome(cfg2, kind2) {
+  const w = cfg2.welcome;
+  const on2 = kind2 === "welcome" ? w.enabled : w.goodbyeEnabled;
+  if (!on2 || !cfg2.channels.welcome || cfg2.modules.disabled.includes("welcome")) return null;
+  return kind2 === "welcome" ? { enabled: true, channelId: cfg2.channels.welcome, title: w.title, message: w.text, color: cfg2.colors.primary, showAvatar: true, pingUser: true, image: cfg2.branding.bannerUrl ?? "", imageMediaId: "" } : { enabled: true, channelId: cfg2.channels.welcome, title: "Auf Wiedersehen", message: w.goodbyeText, color: cfg2.colors.warning, showAvatar: true, pingUser: false, image: "", imageMediaId: "" };
+}
+
+// apps/bot/src/access.ts
+var RANK = { admin: 5, leadership: 4, instructor: 3, officer: 2, readonly: 1, none: 0 };
+var levelsConfigured = (cfg2) => ACCESS_LEVELS.some((l) => cfg2.roles[l].length > 0);
+function levelOf(m, cfg2) {
+  if (m.isOwner || m.administrator || m.manageGuild) return "admin";
+  for (const l of ACCESS_LEVELS) if (cfg2.roles[l].some((r) => m.roleIds.includes(r))) return l;
+  return "none";
+}
+function allowed(m, cfg2, need) {
+  const have = levelOf(m, cfg2);
+  if (RANK[have] >= RANK[need]) return true;
+  return !levelsConfigured(cfg2) && RANK[need] <= RANK.officer;
+}
+var POLICIES = {
+  setup: { level: "admin" },
+  "setup:*": { level: "admin" },
+  "system status": { level: "leadership" },
+  "system diagnose": { level: "admin" },
+  "system integrations": { level: "admin" },
+  "sys:*": { level: "admin" },
+  backup: { level: "admin" },
+  "bak:*": { level: "admin" },
+  "bak:confirm": { level: "admin", sensitive: true },
+  "bak:apply": { level: "admin", sensitive: true },
+  "pruefung liste": { level: "readonly" },
+  "pruefung ergebnisse": { level: "readonly" },
+  "pruefung ausbildungen": { level: "readonly" },
+  "pruefung verwalten": { level: "instructor" },
+  "pruefung bewerten": { level: "instructor" },
+  "exam:open": { level: "readonly" },
+  "exam:*": { level: "officer" },
+  "exam:adm": { level: "instructor" },
+  "exam:admv": { level: "instructor" },
+  "exam:res": { level: "instructor" },
+  "exam:post": { level: "instructor" },
+  "exam:toggle": { level: "instructor" },
+  "exam:togglec": { level: "instructor", sensitive: true },
+  "exam:g": { level: "instructor" },
+  "exam:gin": { level: "instructor" },
+  "exam:gm": { level: "instructor" },
+  "exam:void": { level: "instructor" },
+  "exam:vm": { level: "instructor", sensitive: true },
+  "exam:pend": { level: "instructor" }
+};
+function policyFor(key4) {
+  if (POLICIES[key4]) return POLICIES[key4];
+  const [name] = key4.split(/[ :]/);
+  if (key4.includes(":")) return POLICIES[`${name}:*`];
+  return POLICIES[name];
+}
+var deny = (text2) => ({ content: `\u26D4 ${text2}`, ephemeral: true });
+async function authorize(deps, a, key4) {
+  const p = policyFor(key4);
+  if (!p) return null;
+  if (!a.guildId) return deny("Das geht nur auf einem Discord-Server, nicht per Direktnachricht.");
+  if (!deps) return deny("Die Rechtepr\xFCfung ist gerade nicht verf\xFCgbar \u2013 Aktion aus Sicherheitsgr\xFCnden abgelehnt.");
+  let member;
+  let cfg2;
+  try {
+    [member, cfg2] = await Promise.all([deps.member(a.guildId, a.userId), deps.config(a.guildId)]);
+  } catch {
+    return deny("Deine Rollen konnten gerade nicht gepr\xFCft werden \u2013 Aktion aus Sicherheitsgr\xFCnden abgelehnt. Bitte gleich noch einmal versuchen.");
+  }
+  if (!member) return deny("Du bist auf diesem Server nicht (mehr) Mitglied.");
+  if (allowed(member, cfg2, p.level)) return null;
+  const have = levelOf(member, cfg2);
+  return deny(`Daf\xFCr brauchst du mindestens die Stufe **${LEVEL_LABEL[p.level]}**. Deine Stufe: **${have === "none" ? "keine" : LEVEL_LABEL[have]}**.
+Die Stufen ordnet ein Serveradministrator unter \`/setup\` \u2192 **Rollen** Discord-Rollen zu.`);
+}
+var guard = (c, key4) => authorize(c.runtime?.access, { guildId: c.guildId, userId: c.discordId }, key4);
+
+// apps/bot/src/branding.ts
+var FALLBACK = { primary: COLORS.info, success: COLORS.success, warning: COLORS.warning, danger: COLORS.danger };
+var toneColor = (cfg2, tone) => colorOf(cfg2?.colors[tone], FALLBACK[tone]);
+function brand(cfg2, e, tone = "primary") {
+  const b2 = cfg2?.branding;
+  const head = b2?.displayName || b2?.serverName;
+  return {
+    ...e,
+    color: toneColor(cfg2, tone),
+    ...head && !e.author ? { author: { name: head, ...b2?.logoUrl ? { iconUrl: b2.logoUrl } : {} } } : {},
+    ...b2?.serverName && !e.footer ? { footer: b2.serverName } : {}
+  };
+}
+function brandReply(r, cfg2) {
+  if (!cfg2?.branding.applyToAll || !r.embeds?.length) return r;
+  const map = /* @__PURE__ */ new Map([[COLORS.info, toneColor(cfg2, "primary")], [COLORS.success, toneColor(cfg2, "success")], [COLORS.warning, toneColor(cfg2, "warning")], [COLORS.danger, toneColor(cfg2, "danger")]]);
+  return { ...r, embeds: r.embeds.map((e) => e.color !== void 0 && map.has(e.color) ? { ...e, color: map.get(e.color) } : e) };
+}
+var LOCAL_COMMAND_MODULES = { pruefung: "personnel" };
+var moduleOfCommand = (name) => BOT_COMMAND_MODULES[name] ?? LOCAL_COMMAND_MODULES[name] ?? "core";
+var visibleCommands = (all, disabled) => all.filter((c) => !disabled.includes(moduleOfCommand(c.name)));
+
+// apps/bot/src/commands/setup.ts
+var STEPS = [
+  { key: "general", label: "Allgemein", emoji: "\u{1F3F7}\uFE0F" },
+  { key: "colors", label: "Farben", emoji: "\u{1F3A8}" },
+  { key: "welcome", label: "Begr\xFC\xDFung", emoji: "\u{1F44B}" },
+  { key: "channels", label: "Kan\xE4le", emoji: "#\uFE0F\u20E3" },
+  { key: "roles", label: "Rollen", emoji: "\u{1F6E1}\uFE0F" },
+  { key: "modules", label: "Module", emoji: "\u{1F9E9}" }
+];
+var DEFAULT_COLORS = { primary: "#3b82f6", success: "#22c55e", warning: "#f59e0b", danger: "#ef4444" };
+var CHANNEL_NEEDS = import_discord5.PermissionFlagsBits.ViewChannel | import_discord5.PermissionFlagsBits.SendMessages | import_discord5.PermissionFlagsBits.EmbedLinks;
+function stepDone(cfg2, s) {
+  switch (s) {
+    case "general":
+      return !!(cfg2.branding.serverName || cfg2.branding.displayName || cfg2.branding.logoUrl);
+    case "colors":
+      return cfg2.setupDone || cfg2.branding.applyToAll || Object.keys(DEFAULT_COLORS).some((k) => cfg2.colors[k].toLowerCase() !== DEFAULT_COLORS[k]);
+    case "welcome":
+      return cfg2.welcome.enabled || cfg2.welcome.goodbyeEnabled;
+    case "channels":
+      return SETUP_CHANNELS.some((k) => !!cfg2.channels[k]);
+    case "roles":
+      return ACCESS_LEVELS.some((l) => cfg2.roles[l].length > 0);
+    case "modules":
+      return cfg2.setupDone || cfg2.modules.disabled.length > 0;
+  }
+}
+var ch = (id3) => id3 ? `<#${id3}>` : "\u2014";
+var roles = (ids) => ids.length ? ids.map((r) => `<@&${r}>`).join(" ") : "\u2014";
+var on = (b2) => b2 ? "an" : "aus";
+function homePanel(cfg2, note2) {
+  const next = STEPS.find((s) => !stepDone(cfg2, s.key));
+  const embed = brand(cfg2, {
+    title: "\u2699\uFE0F Einrichtung dieses Servers",
+    description: [
+      note2 ? `${note2}
+` : "",
+      "Richte den Bot Schritt f\xFCr Schritt ein. Jede \xC4nderung wird **sofort dauerhaft gespeichert** und kann jederzeit wieder ge\xE4ndert werden.",
+      "",
+      ...STEPS.map((s, i) => `${stepDone(cfg2, s.key) ? "\u2705" : "\u2B1C"} **${i + 1}. ${s.label}**`),
+      "",
+      next ? `\u27A1\uFE0F N\xE4chster Schritt: **${next.label}**` : cfg2.setupDone ? "\u{1F389} Einrichtung abgeschlossen." : "\u{1F44D} Alles eingerichtet \u2013 mit **Fertig** abschlie\xDFen."
+    ].join("\n"),
+    fields: [
+      { name: "Servername / Anzeigename", value: `${plain2(cfg2.branding.serverName ?? "\u2014")} / ${plain2(cfg2.branding.displayName ?? "\u2014")}`, inline: true },
+      { name: "Farben", value: `${cfg2.colors.primary} \xB7 ${cfg2.colors.success} \xB7 ${cfg2.colors.warning} \xB7 ${cfg2.colors.danger}${cfg2.branding.applyToAll ? " (alle Antworten)" : ""}`, inline: true },
+      { name: "Begr\xFC\xDFung / Abschied", value: `${on(cfg2.welcome.enabled)} / ${on(cfg2.welcome.goodbyeEnabled)}`, inline: true },
+      { name: "Kan\xE4le", value: SETUP_CHANNELS.map((k) => `${CHANNEL_LABEL[k]}: ${ch(cfg2.channels[k])}`).join("\n") },
+      { name: "Rollen", value: ACCESS_LEVELS.map((l) => `${LEVEL_LABEL[l]}: ${roles(cfg2.roles[l])}`).join("\n").slice(0, 1024) },
+      { name: "Module im Bot ausgeblendet", value: cfg2.modules.disabled.length ? cfg2.modules.disabled.map((k) => TOGGLE_MODULES.find((m) => m.key === k)?.name ?? k).join(", ") : "keine" }
+    ],
+    ...cfg2.branding.logoUrl ? { thumbnail: cfg2.branding.logoUrl } : {}
+  });
+  const buttons = [
+    ...STEPS.map((s) => ({ id: s.key === "general" || s.key === "colors" || s.key === "welcome" ? `setup:modal:${s.key}` : `setup:page:${s.key}`, label: s.label, emoji: s.emoji, style: next?.key === s.key ? "primary" : "secondary" })),
+    { id: "setup:preview", label: "Vorschau", emoji: "\u{1F441}\uFE0F", style: "secondary" },
+    { id: "setup:done", label: "Fertig", emoji: "\u2714\uFE0F", style: "success" }
+  ];
+  return { ephemeral: true, panel: true, embeds: [embed], buttons };
+}
+var back = { id: "setup:page:home", label: "Zur\xFCck zur \xDCbersicht", emoji: "\u21A9\uFE0F", style: "secondary" };
+function channelsPanel(cfg2) {
+  const selects = SETUP_CHANNELS.map((k) => ({ id: `setup:ch:${k}`, placeholder: `${CHANNEL_LABEL[k]} \u2013 Kanal w\xE4hlen (leer = keiner)`, options: [], kind: "channel", min: 0, max: 1, defaults: cfg2.channels[k] ? [cfg2.channels[k]] : [] }));
+  return { ephemeral: true, panel: true, embeds: [brand(cfg2, { title: "#\uFE0F\u20E3 Kan\xE4le", description: "W\xE4hle je Zweck einen Textkanal. Abw\xE4hlen entfernt die Zuordnung (der Kanal selbst bleibt unber\xFChrt).\n\n" + SETUP_CHANNELS.map((k) => `**${CHANNEL_LABEL[k]}:** ${ch(cfg2.channels[k])}`).join("\n") })], selects, buttons: [back] };
+}
+function rolesPanel(cfg2, level) {
+  const pick2 = { id: "setup:lvl", placeholder: "Stufe w\xE4hlen \u2026", options: ACCESS_LEVELS.map((l) => ({ label: LEVEL_LABEL[l], value: l, description: `${cfg2.roles[l].length} Rolle(n) zugeordnet` })), ...level ? { defaults: [level] } : {} };
+  const selects = [pick2];
+  if (level) selects.push({ id: `setup:role:${level}`, placeholder: `Discord-Rollen f\xFCr \u201E${LEVEL_LABEL[level]}\u201C (bis zu 10)`, options: [], kind: "role", min: 0, max: 10, defaults: cfg2.roles[level] });
+  const desc = [
+    "Ordne jeder Stufe Discord-Rollen zu. Gepr\xFCft werden immer die **tats\xE4chlichen Rollen** des Mitglieds \u2013 frisch von Discord.",
+    "Wer \u201EServer verwalten\u201C oder \u201EAdministrator\u201C hat, ist immer Serveradministrator. H\xF6here Stufen d\xFCrfen alles, was niedrigere d\xFCrfen.",
+    "Solange keine Rolle zugeordnet ist, d\xFCrfen Verwaltungsbefehle nur Mitglieder mit \u201EServer verwalten\u201C.",
+    "",
+    ...ACCESS_LEVELS.map((l) => `**${LEVEL_LABEL[l]}:** ${roles(cfg2.roles[l])}`)
+  ].join("\n");
+  return { ephemeral: true, panel: true, embeds: [brand(cfg2, { title: "\u{1F6E1}\uFE0F Rollen & Stufen", description: desc })], selects, buttons: [back] };
+}
+function modulesPanel(cfg2, systemOff) {
+  const select = {
+    id: "setup:mods",
+    placeholder: "Aktive Module ausw\xE4hlen \u2026",
+    min: 0,
+    max: TOGGLE_MODULES.length,
+    options: TOGGLE_MODULES.map((m) => ({ label: m.name, value: m.key, ...systemOff.includes(m.key) ? { description: "im System (Dashboard) ausgeschaltet" } : {} })),
+    defaults: TOGGLE_MODULES.filter((m) => !cfg2.modules.disabled.includes(m.key)).map((m) => m.key)
+  };
+  const desc = [
+    "Ausgew\xE4hlte Module sind aktiv. Abgew\xE4hlte Module werden im Bot **nur ausgeblendet**: ihre Befehle verschwinden auf diesem Server, **alle Daten bleiben erhalten** und kommen beim Wiedereinschalten zur\xFCck.",
+    systemOff.length ? `
+Im System (Dashboard) ausgeschaltet und daher ohnehin ausgeblendet: ${systemOff.map((k) => TOGGLE_MODULES.find((m) => m.key === k)?.name ?? k).join(", ")}.` : "",
+    "",
+    ...TOGGLE_MODULES.map((m) => `${cfg2.modules.disabled.includes(m.key) || systemOff.includes(m.key) ? "\u2B1C" : "\u2705"} ${m.name}`)
+  ].join("\n");
+  return { ephemeral: true, panel: true, embeds: [brand(cfg2, { title: "\u{1F9E9} Module", description: desc })], selects: [select], buttons: [back] };
+}
+function previewReply(cfg2, who2) {
+  const member = { id: who2.id, username: who2.name, displayName: who2.name, server: cfg2.branding.serverName || who2.server, memberCount: who2.memberCount, createdAt: null };
+  const embeds = [
+    brand(cfg2, { title: "\u{1F441}\uFE0F Vorschau: Bot-Nachricht", description: "So erscheinen Meldungen des Bots auf diesem Server (Hauptfarbe, Kopfzeile mit Anzeigename und Logo, Servername unten).", ...cfg2.branding.bannerUrl ? { image: cfg2.branding.bannerUrl } : {} }),
+    brand(cfg2, { title: "\u2705 Erfolg", description: "Beispiel einer Erfolgsmeldung." }, "success"),
+    brand(cfg2, { title: "\u26A0\uFE0F Warnung", description: "Beispiel einer Warnung." }, "warning"),
+    brand(cfg2, { title: "\u274C Fehler", description: "Beispiel einer Fehlermeldung." }, "danger")
+  ];
+  if (cfg2.welcome.enabled) embeds.push(brand(cfg2, { title: renderWelcomeText(cfg2.welcome.title, member).slice(0, 256) || "Willkommen", description: renderWelcomeText(cfg2.welcome.text, member).slice(0, 4e3), ...cfg2.branding.bannerUrl ? { image: cfg2.branding.bannerUrl } : {}, footer: `Begr\xFC\xDFung \u2192 ${cfg2.channels.welcome ? "Kanal eingestellt" : "kein Kanal eingestellt"}` }));
+  if (cfg2.welcome.goodbyeEnabled) embeds.push(brand(cfg2, { title: "Abschied", description: renderWelcomeText(cfg2.welcome.goodbyeText, member).slice(0, 4e3) }, "warning"));
+  return { ephemeral: true, embeds: embeds.slice(0, 10) };
+}
+function modal2(cfg2, step) {
+  if (step === "general") return { modal: { id: "setup:save:general", title: "Allgemein", fields: [
+    { id: "serverName", label: "Servername (in Bot-Nachrichten)", maxLength: 100, value: cfg2.branding.serverName ?? "", placeholder: "z. B. EN Polizei \u2013 Revier Mitte" },
+    { id: "displayName", label: "Anzeigename des Bots (Spitzname)", maxLength: 32, value: cfg2.branding.displayName ?? "", placeholder: "leer = Name aus dem Developer Portal" },
+    { id: "logoUrl", label: "Logo (https-Link zu einem Bild)", maxLength: 500, value: cfg2.branding.logoUrl ?? "", placeholder: "https://\u2026/logo.png" },
+    { id: "bannerUrl", label: "Banner (https-Link zu einem Bild)", maxLength: 500, value: cfg2.branding.bannerUrl ?? "", placeholder: "https://\u2026/banner.png" }
+  ] } };
+  if (step === "colors") return { modal: { id: "setup:save:colors", title: "Farben (#RRGGBB)", fields: [
+    { id: "primary", label: "Hauptfarbe", required: true, maxLength: 7, minLength: 7, value: cfg2.colors.primary },
+    { id: "success", label: "Erfolg", required: true, maxLength: 7, minLength: 7, value: cfg2.colors.success },
+    { id: "warning", label: "Warnung", required: true, maxLength: 7, minLength: 7, value: cfg2.colors.warning },
+    { id: "danger", label: "Fehler", required: true, maxLength: 7, minLength: 7, value: cfg2.colors.danger },
+    { id: "applyToAll", label: "Auf alle Bot-Antworten anwenden? (ja/nein)", required: true, maxLength: 4, value: cfg2.branding.applyToAll ? "ja" : "nein" }
+  ] } };
+  return { modal: { id: "setup:save:welcome", title: "Begr\xFC\xDFung & Abschied", fields: [
+    { id: "enabled", label: "Begr\xFC\xDFung senden? (ja/nein)", required: true, maxLength: 4, value: cfg2.welcome.enabled ? "ja" : "nein" },
+    { id: "title", label: "Titel der Begr\xFC\xDFung", maxLength: 256, value: cfg2.welcome.title },
+    { id: "text", label: "Text ({user} {server} {memberCount} {displayName})", paragraph: true, maxLength: 2e3, value: cfg2.welcome.text },
+    { id: "goodbyeEnabled", label: "Abschied senden? (ja/nein)", required: true, maxLength: 4, value: cfg2.welcome.goodbyeEnabled ? "ja" : "nein" },
+    { id: "goodbyeText", label: "Text beim Verlassen", paragraph: true, maxLength: 2e3, value: cfg2.welcome.goodbyeText }
+  ] } };
+}
+var FIELD_LABEL = { serverName: "Servername", displayName: "Anzeigename", logoUrl: "Logo", bannerUrl: "Banner", primary: "Hauptfarbe", success: "Erfolg", warning: "Warnung", danger: "Fehler", title: "Titel", text: "Text", goodbyeText: "Text beim Verlassen" };
+var yes = (v) => /^(ja|j|yes|y|an|1|true)$/i.test((v ?? "").trim());
+var yesNoValid = (v) => /^(ja|j|yes|y|an|1|true|nein|n|no|aus|0|false)$/i.test((v ?? "").trim());
+var orNull = (v) => (v ?? "").trim() || null;
+function patchFromModal(step, f2) {
+  let patch;
+  if (step === "general") patch = { branding: { serverName: orNull(f2.serverName), displayName: orNull(f2.displayName), logoUrl: orNull(f2.logoUrl), bannerUrl: orNull(f2.bannerUrl) } };
+  else if (step === "colors") {
+    if (!yesNoValid(f2.applyToAll)) return { error: "Bitte bei \u201EAuf alle Bot-Antworten anwenden?\u201C ja oder nein eintragen." };
+    patch = { colors: { primary: f2.primary?.trim() ?? "", success: f2.success?.trim() ?? "", warning: f2.warning?.trim() ?? "", danger: f2.danger?.trim() ?? "" }, branding: { applyToAll: yes(f2.applyToAll) } };
+  } else if (step === "welcome") {
+    if (!yesNoValid(f2.enabled) || !yesNoValid(f2.goodbyeEnabled)) return { error: "Bitte bei \u201Esenden?\u201C ja oder nein eintragen." };
+    patch = { welcome: { enabled: yes(f2.enabled), title: (f2.title ?? "").trim() || "Willkommen auf {server}!", text: (f2.text ?? "").trim(), goodbyeEnabled: yes(f2.goodbyeEnabled), goodbyeText: (f2.goodbyeText ?? "").trim() } };
+  } else return { error: "Unbekannter Schritt." };
+  for (const [k, v] of Object.entries(patch)) {
+    const r = SECTION_SCHEMAS[k].partial().safeParse(v);
+    if (!r.success) {
+      const i = r.error.issues[0];
+      return { error: `Ung\xFCltige Eingabe bei \u201E${FIELD_LABEL[String(i.path[0])] ?? String(i.path.join(".") || k)}\u201C: ${i.message}` };
+    }
+  }
+  return { patch };
+}
+async function cfgOf(c) {
+  return c.runtime.guildConfig.get(c.guildId, { fresh: true });
+}
+async function systemModulesOff(c) {
+  const r = await c.api.service("GET", `/bot/servers/${c.guildId}/modules`).catch(() => null);
+  return r?.disabled ?? [];
+}
+async function save(c, patch) {
+  return c.runtime.guildConfig.update(c.guildId, patch, { by: c.discordId });
+}
+var SETUP_COMMANDS = [{
+  name: "setup",
+  description: "Bot f\xFCr diesen Server einrichten (Name, Logo, Farben, Begr\xFC\xDFung, Kan\xE4le, Rollen, Module)",
+  async run(c) {
+    const denied = await guard(c, "setup");
+    if (denied) return denied;
+    if (!c.runtime) return errorReply("Die Einrichtung ist gerade nicht verf\xFCgbar.");
+    try {
+      const cfg2 = await cfgOf(c);
+      const first = !await c.runtime.guildConfig.exists(c.guildId);
+      return { ...homePanel(cfg2, first ? "\u{1F44B} Willkommen! F\xFCr diesen Server gibt es noch keine Einstellungen \u2013 wir legen sie jetzt an." : void 0), panel: false };
+    } catch {
+      return errorReply("Die Einstellungen konnten nicht geladen werden (System nicht erreichbar?). Bitte gleich erneut versuchen \u2013 es wurde nichts ge\xE4ndert.");
+    }
+  }
+}];
+var SETUP_INTERACTION = {
+  prefix: "setup",
+  opensModal: (args) => args[0] === "modal",
+  panel: (args) => args[0] !== "modal" && args[0] !== "preview",
+  async run(c) {
+    const denied = await guard(c, `setup:${c.args[0] ?? ""}`);
+    if (denied) return denied;
+    if (!c.runtime || !c.guildId) return errorReply("Die Einrichtung ist gerade nicht verf\xFCgbar.");
+    const [action, arg] = c.args;
+    try {
+      const cfg2 = await cfgOf(c);
+      switch (action) {
+        case "modal":
+          return arg === "general" || arg === "colors" || arg === "welcome" ? modal2(cfg2, arg) : errorReply("Unbekannter Schritt.");
+        case "page":
+          if (arg === "channels") return channelsPanel(cfg2);
+          if (arg === "roles") return rolesPanel(cfg2);
+          if (arg === "modules") return modulesPanel(cfg2, await systemModulesOff(c));
+          return homePanel(cfg2);
+        case "save": {
+          const r = patchFromModal(arg ?? "", c.fields ?? {});
+          if (r.error) return errorReply(r.error);
+          const next = await save(c, r.patch);
+          let note2 = "\u{1F4BE} Gespeichert.";
+          if (arg === "general" && (cfg2.branding.displayName ?? null) !== (next.branding.displayName ?? null)) {
+            const problem = await c.runtime.setNickname(c.guildId, next.branding.displayName);
+            note2 += problem ? ` \u26A0\uFE0F Anzeigename nicht gesetzt: ${problem}` : " Anzeigename des Bots aktualisiert.";
+          }
+          return homePanel(next, note2);
+        }
+        case "ch": {
+          if (!SETUP_CHANNELS.includes(arg)) return errorReply("Unbekannter Kanal-Zweck.");
+          const id3 = c.values?.[0] ?? null;
+          const snap = id3 ? await c.runtime.snapshot(c.guildId) : null;
+          const chan = id3 ? snap?.channels.find((x) => x.id === id3) : null;
+          if (id3 && snap && !chan) return errorReply("Den Kanal gibt es auf diesem Server nicht.");
+          const next = await save(c, { channels: { [arg]: id3 } });
+          const p = channelsPanel(next);
+          if (chan && (chan.perms & CHANNEL_NEEDS) !== CHANNEL_NEEDS && (chan.perms & import_discord5.PermissionFlagsBits.Administrator) === 0n) p.embeds[0].description += `
+
+\u26A0\uFE0F In <#${id3}> fehlen dem Bot Rechte (Kanal ansehen, Nachrichten senden, Links einbetten). Details: \`/system diagnose\``;
+          return p;
+        }
+        case "lvl": {
+          const level = c.values?.[0];
+          return rolesPanel(cfg2, level && ACCESS_LEVELS.includes(level) ? level : void 0);
+        }
+        case "role": {
+          const level = arg;
+          if (!ACCESS_LEVELS.includes(level)) return errorReply("Unbekannte Stufe.");
+          const ids = (c.values ?? []).filter((v) => /^\d{15,25}$/.test(v) && v !== c.guildId).slice(0, 10);
+          const next = await save(c, { roles: { [level]: ids } });
+          return rolesPanel(next, level);
+        }
+        case "mods": {
+          const keep = new Set(c.values ?? []);
+          const disabled = TOGGLE_MODULES.map((m) => m.key).filter((k) => !keep.has(k));
+          const next = await save(c, { modules: { disabled } });
+          await c.runtime.reregister(c.guildId).catch(() => void 0);
+          const p = modulesPanel(next, await systemModulesOff(c));
+          p.embeds[0].description = `\u{1F4BE} Gespeichert \u2013 Befehlsliste dieses Servers wird aktualisiert (Daten der ausgeblendeten Module bleiben erhalten).
+
+${p.embeds[0].description}`;
+          return p;
+        }
+        case "preview":
+          return previewReply(cfg2, { id: c.discordId, name: c.userDisplayName ?? c.userName ?? "Mitglied", server: cfg2.branding.serverName ?? "dieser Server", memberCount: 42 });
+        case "done": {
+          const next = await save(c, { setupDone: true });
+          const p = homePanel(next, "\u{1F389} Einrichtung gespeichert. Mit `/setup` kannst du jederzeit weiter anpassen, mit `/system diagnose` pr\xFCfen, ob dem Bot Rechte fehlen.");
+          p.embeds[0].color = toneColor(next, "success");
+          return p;
+        }
+        default:
+          return errorReply("Unbekannte Aktion.");
+      }
+    } catch (e) {
+      if (e instanceof ConfigConflictError) return errorReply(e.message);
+      if (e instanceof ConfigValidationError) return errorReply(`Ung\xFCltige Eingabe (${e.message}) \u2013 es wurde nichts gespeichert.`);
+      return errorReply("Speichern fehlgeschlagen (System nicht erreichbar?). Es wurde nichts ge\xE4ndert \u2013 bitte erneut versuchen.");
+    }
+  }
+};
+
+// apps/bot/src/commands/backup.ts
+var import_node_crypto = require("node:crypto");
+var ts4 = (iso) => iso && !Number.isNaN(Date.parse(iso)) ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:f>` : "\u2014";
+var kb = (n) => n === void 0 ? "\u2014" : n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`;
+var metaLine = (b2) => `\u2022 \`${b2.name}\` \u2013 ${ts4(b2.createdAt)} \xB7 ${b2.locations.length ? b2.locations.join(" + ") : "\u26A0\uFE0F nur Eintrag, Inhalt nicht mehr vorhanden"}${b2.database ? ` \xB7 DB: \`${b2.database.name}\`` : ""}`;
+var PLANS = /* @__PURE__ */ new Map();
+var PLAN_TTL = 10 * 6e4;
+var takePlan = (token, c) => {
+  for (const [k, v] of PLANS) if (v.expires < Date.now()) PLANS.delete(k);
+  const p = PLANS.get(token);
+  return p && p.userId === c.discordId && p.guildId === c.guildId ? p : null;
+};
+async function dbBackups(c) {
+  try {
+    return { list: await withRetry(() => c.api.asUser(c.discordId, "GET", "/backups/data")) };
+  } catch (e) {
+    if (e instanceof BotApiError && (e.status === 401 || e.status === 403)) return { list: null, note: "Datenbank-Sicherungen sehen nur verkn\xFCpfte Konten mit dem System-Recht `settings.manage`." };
+    return { list: null, note: "Datenbank-Sicherungen konnten nicht abgerufen werden (System nicht erreichbar?)." };
+  }
+}
+async function status(c) {
+  const rt = c.runtime;
+  const [bot, db, cfg2] = await Promise.all([rt.backups.list(c.guildId), dbBackups(c), rt.guildConfig.get(c.guildId).catch(() => null)]);
+  const lastBot = bot.find((b2) => b2.locations.length);
+  const lastDb = db.list?.[0];
+  return { ephemeral: true, embeds: [brand(cfg2, {
+    title: "\u{1F5C4}\uFE0F Sicherungsstatus",
+    fields: [
+      { name: "Letzte Bot-Sicherung (Einstellungen dieses Servers)", value: lastBot ? `${ts4(lastBot.createdAt)} \u2013 \`${lastBot.name}\`
+Ablage: ${lastBot.locations.join(" + ")}` : "noch keine \u2013 `/backup erstellen`" },
+      { name: "Letzte Datenbank-Sicherung (System)", value: lastDb ? `${ts4(lastDb.createdAt)} \u2013 \`${lastDb.name}\` (${lastDb.kind}, ${kb(lastDb.size)})` : db.note ?? "noch keine" },
+      { name: "Bot-Sicherungen", value: (bot.slice(0, 8).map(metaLine).join("\n") || "\u2014").slice(0, 1024) },
+      { name: "Ablageorte", value: `Datei: \`${rt.backups.files.location}\`
+Datenbank: Kopie der letzten Sicherungen im System${rt.backupDirWarning ? `
+\u26A0\uFE0F ${rt.backupDirWarning}` : ""}`.slice(0, 1024) }
+    ],
+    footer: "Sicherungen enthalten keine Tokens oder Schl\xFCssel."
+  }, rt.backupDirWarning ? "warning" : "primary")] };
+}
+async function create(c) {
+  const rt = c.runtime;
+  const notes = [];
+  let database = null;
+  try {
+    const r = await c.api.asUser(c.discordId, "POST", "/backups/data");
+    database = { name: r.name, rows: r.rows, size: r.size };
+  } catch (e) {
+    notes.push(e instanceof BotApiError && (e.status === 401 || e.status === 403) ? "\u26A0\uFE0F Datenbank-Sicherung nicht angelegt: daf\xFCr braucht dein verkn\xFCpftes Konto das System-Recht `settings.manage`." : "\u26A0\uFE0F Datenbank-Sicherung nicht angelegt (System nicht erreichbar?).");
+  }
+  try {
+    const { meta, problems } = await rt.backups.create(c.guildId, { reason: "manuell", by: c.discordId, guildName: null, database });
+    notes.push(...problems.map((p) => `\u26A0\uFE0F ${p}`));
+    const cfg2 = await rt.guildConfig.get(c.guildId).catch(() => null);
+    return { ephemeral: true, embeds: [brand(cfg2, {
+      title: "\u2705 Sicherung angelegt",
+      description: [
+        `**Bot-Einstellungen:** \`${meta.name}\` (${meta.locations.join(" + ")})`,
+        `Pr\xFCfsumme: \`${meta.checksum.slice(0, 16)}\u2026\``,
+        database ? `**Datenbank:** \`${database.name}\` \u2013 ${database.rows ?? "?"} Zeilen, ${kb(database.size)} (im Speicherordner des Systems)` : "**Datenbank:** \u2013",
+        ...notes.length ? ["", ...notes] : []
+      ].join("\n")
+    }, notes.length ? "warning" : "success")] };
+  } catch (e) {
+    return errorReply(`Bot-Sicherung fehlgeschlagen: ${e instanceof Error ? e.message : "unbekannter Fehler"}${database ? ` (Datenbank-Sicherung \`${database.name}\` wurde angelegt)` : ""}`);
+  }
+}
+async function chooser(c) {
+  const rt = c.runtime;
+  const list3 = (await rt.backups.list(c.guildId)).filter((b2) => b2.locations.length).slice(0, 25);
+  const cfg2 = await rt.guildConfig.get(c.guildId).catch(() => null);
+  const text2 = [
+    "W\xE4hle eine Sicherung. Danach wird sie **gepr\xFCft** (Format, Server, Pr\xFCfsumme, keine Geheimnisse), in einer **abgeschotteten Testumgebung** eingespielt und ein **Wiederherstellungsplan** mit allen \xC4nderungen angezeigt. Erst nach deiner ausdr\xFCcklichen Best\xE4tigung wird etwas ver\xE4ndert \u2013 und vorher wird der aktuelle Stand automatisch gesichert.",
+    "",
+    "**Datenbank (Ausbildungen, Pr\xFCfungen, Personal \u2026):** stellt der Bot bewusst nicht wieder her \u2013 das ersetzt den gesamten Datenbestand aller Server. Bitte zuerst in einer Testumgebung pr\xFCfen (siehe `docs/bot-erweiterung.md`) und dann im System einspielen; das System sichert dabei vorher automatisch."
+  ].join("\n");
+  if (!list3.length) return { ephemeral: true, embeds: [brand(cfg2, { title: "\u267B\uFE0F Wiederherstellen", description: `${text2}
+
+Es gibt noch keine Bot-Sicherung f\xFCr diesen Server \u2013 \`/backup erstellen\`.` })] };
+  return {
+    ephemeral: true,
+    embeds: [brand(cfg2, { title: "\u267B\uFE0F Wiederherstellen", description: text2 })],
+    select: { id: "bak:plan", placeholder: "Sicherung w\xE4hlen \u2026", options: list3.map((b2) => ({ label: b2.name.slice(0, 100), value: b2.name, description: `${new Date(b2.createdAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} \xB7 ${b2.locations.join(" + ")}`.slice(0, 100) })) }
+  };
+}
+function planReply(c, plan, token, cfg2) {
+  const ok = !plan.problems.length && plan.sandboxOk;
+  const lines = [
+    `**Sicherung:** \`${plan.name}\`${plan.snapshot?.createdAt ? ` vom ${ts4(plan.snapshot.createdAt)}` : ""}`,
+    `**Pr\xFCfung:** ${plan.problems.length ? "\u274C nicht bestanden" : "\u2705 Format, Server, Pr\xFCfsumme, keine Geheimnisse"}`,
+    `**Testumgebung:** ${plan.sandboxOk ? "\u2705 Testwiederherstellung erfolgreich (frisch gelesen identisch)" : "\u274C nicht erfolgreich"}`,
+    ...plan.problems.map((p) => `\u274C ${p}`),
+    "",
+    `**\xC4nderungen (${plan.changes.length}):**`,
+    ...plan.changes.length ? plan.changes.slice(0, 20).map((x) => `\u2022 \`${x}\``) : ["\u2022 keine \u2013 aktueller Stand entspricht der Sicherung"],
+    ...plan.changes.length > 20 ? [`\u2026 ${plan.changes.length - 20} weitere`] : [],
+    ...plan.warnings.length ? ["", ...plan.warnings.map((w) => `\u26A0\uFE0F ${w}`)] : [],
+    "",
+    ok ? "**Ablauf nach Best\xE4tigung:** 1. aktueller Stand wird gesichert \xB7 2. Sicherung erneut gepr\xFCft \xB7 3. Einstellungen eingespielt (nur, wenn sich seit diesem Plan nichts ge\xE4ndert hat)." : "Diese Sicherung kann nicht eingespielt werden."
+  ];
+  return {
+    ephemeral: true,
+    panel: true,
+    embeds: [brand(cfg2, { title: "\u{1F4CB} Wiederherstellungsplan", description: lines.join("\n").slice(0, 4e3) }, ok ? "warning" : "danger")],
+    buttons: ok && token && plan.changes.length ? [{ id: `bak:confirm:${token}`, label: "Wiederherstellung best\xE4tigen", emoji: "\u267B\uFE0F", style: "danger" }, { id: `bak:cancel:${token}`, label: "Abbrechen", style: "secondary" }] : []
+  };
+}
+var BACKUP_COMMANDS = [{
+  name: "backup",
+  description: "Sicherungen: Status, manuelle Sicherung, Wiederherstellung (f\xFCr Administratoren)",
+  subcommands: [
+    { name: "status", description: "Sicherungsstatus und letzte erfolgreiche Sicherung" },
+    { name: "erstellen", description: "Jetzt sichern (Bot-Einstellungen + Datenbank des Systems)" },
+    { name: "wiederherstellen", description: "Wiederherstellung pr\xFCfen, planen und best\xE4tigen" }
+  ],
+  async run(c) {
+    const sub = String(c.opts._sub ?? "status");
+    const denied = await guard(c, `backup ${sub}`);
+    if (denied) return denied;
+    if (!c.runtime || !c.guildId) return errorReply("Sicherungen sind gerade nicht verf\xFCgbar.");
+    try {
+      if (sub === "erstellen") return await create(c);
+      if (sub === "wiederherstellen") return await chooser(c);
+      return await status(c);
+    } catch (e) {
+      console.error("backup command failed:", e instanceof Error ? e.message : e);
+      return errorReply("Die Sicherungsfunktion ist unerwartet fehlgeschlagen. Es wurde nichts ver\xE4ndert.");
+    }
+  }
+}];
+var BACKUP_INTERACTION = {
+  prefix: "bak",
+  opensModal: (args) => args[0] === "confirm",
+  panel: (args) => args[0] !== "confirm",
+  async run(c) {
+    const [action, token] = c.args;
+    const denied = await guard(c, `bak:${action ?? ""}`);
+    if (denied) return denied;
+    if (!c.runtime || !c.guildId) return errorReply("Sicherungen sind gerade nicht verf\xFCgbar.");
+    const rt = c.runtime;
+    try {
+      const cfg2 = await rt.guildConfig.get(c.guildId).catch(() => null);
+      if (action === "plan") {
+        const name = c.values?.[0] ?? "";
+        const snap = await rt.snapshot(c.guildId);
+        const plan = await rt.backups.plan(c.guildId, name, snap ? { channelIds: snap.channels.map((x) => x.id), roleIds: snap.roles.map((x) => x.id) } : void 0);
+        const ok = !plan.problems.length && plan.sandboxOk && plan.changes.length > 0;
+        const t2 = ok ? (0, import_node_crypto.randomBytes)(6).toString("hex") : null;
+        if (t2) PLANS.set(t2, { plan, userId: c.discordId, guildId: c.guildId, expires: Date.now() + PLAN_TTL });
+        return planReply(c, plan, t2, cfg2);
+      }
+      const held = takePlan(token ?? "", c);
+      if (!held) return errorReply("Der Plan ist abgelaufen oder geh\xF6rt nicht dir. Bitte `/backup wiederherstellen` erneut ausf\xFChren.");
+      if (action === "cancel") {
+        PLANS.delete(token);
+        return { ephemeral: true, panel: true, embeds: [brand(cfg2, { title: "\u21A9\uFE0F Abgebrochen", description: "Es wurde nichts ver\xE4ndert." })] };
+      }
+      if (action === "confirm") return { modal: { id: `bak:apply:${token}`, title: "Wiederherstellung best\xE4tigen", fields: [{ id: "confirm", label: "Zur Best\xE4tigung WIEDERHERSTELLEN eingeben", required: true, maxLength: 20, placeholder: "WIEDERHERSTELLEN" }] } };
+      if (action === "apply") {
+        if ((c.fields?.confirm ?? "").trim() !== "WIEDERHERSTELLEN") return errorReply("Nicht best\xE4tigt \u2013 bitte genau WIEDERHERSTELLEN eingeben. Es wurde nichts ver\xE4ndert.");
+        PLANS.delete(token);
+        const { safety, config: config2 } = await rt.backups.apply(held.plan, { by: c.discordId });
+        await rt.reregister(c.guildId).catch(() => void 0);
+        const nick = await rt.setNickname(c.guildId, config2.branding.displayName).catch(() => null);
+        return { ephemeral: true, panel: true, embeds: [brand(config2, { title: "\u2705 Wiederherstellung abgeschlossen", description: [
+          `Eingespielt: \`${held.plan.name}\` (${held.plan.changes.length} \xC4nderungen).`,
+          `Vorheriger Stand gesichert als \`${safety.name}\` (${safety.locations.join(" + ")}) \u2013 damit l\xE4sst sich der Schritt r\xFCckg\xE4ngig machen.`,
+          ...nick ? [`\u26A0\uFE0F Anzeigename: ${plain2(nick)}`] : [],
+          "Pr\xFCfe jetzt mit `/system diagnose`, ob alle Kan\xE4le und Rollen passen."
+        ].join("\n") }, "success")] };
+      }
+      return errorReply("Unbekannte Aktion.");
+    } catch (e) {
+      return errorReply(`Wiederherstellung abgebrochen \u2013 es wurde nichts ver\xE4ndert: ${e instanceof Error ? e.message : "unbekannter Fehler"}`);
+    }
+  }
+};
+
+// apps/bot/src/commands/exams.ts
+var UUID3 = /^[0-9a-f-]{36}$/;
+var LETTERS = "ABCDEFGHIJKL";
+var STATE_ICON = { AVAILABLE: "\u{1F7E2}", IN_PROGRESS: "\u270F\uFE0F", PASSED: "\u2705", PENDING: "\u23F3", WAITING: "\u23F1\uFE0F", NO_ATTEMPTS: "\u26D4", LOCKED: "\u{1F512}", NOT_YET: "\u{1F4C5}", CLOSED: "\u{1F4C5}", INACTIVE: "\u23F8\uFE0F", NO_QUESTIONS: "\u26AA", NO_PROFILE: "\u{1F464}" };
+var STATE_LABEL = { AVAILABLE: "verf\xFCgbar", IN_PROGRESS: "l\xE4uft", PASSED: "bestanden", PENDING: "wird bewertet", WAITING: "Wartezeit", NO_ATTEMPTS: "keine Versuche mehr", LOCKED: "gesperrt", NOT_YET: "noch nicht verf\xFCgbar", CLOSED: "abgelaufen", INACTIVE: "nicht freigegeben", NO_QUESTIONS: "ohne Fragen", NO_PROFILE: "keine Personalakte" };
+var pts = (n) => n === null || n === void 0 ? "\u2014" : String(Math.round(n * 100) / 100).replace(".", ",");
+var t = (iso, f2 = "R") => iso && !Number.isNaN(Date.parse(iso)) ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:${f2}>` : "\u2014";
+var list2 = (a) => Array.isArray(a) ? a.map((x) => String(x ?? "")) : a == null || a === "" ? [] : [String(a)];
+var gapCount = (text2) => (text2.match(/\{\{[^{}]*\}\}/g) ?? []).length;
+var gapText = (text2) => {
+  let n = 0;
+  return text2.replace(/\{\{[^{}]*\}\}/g, () => `\uFF3BL\xFCcke ${++n}\uFF3D`);
+};
+async function cfgOf2(c) {
+  return c.guildId && c.runtime ? c.runtime.guildConfig.get(c.guildId).catch(() => null) : null;
+}
+var b = (cfg2, e, tone = "primary") => brand(cfg2, e, tone);
+function criteriaText(q2) {
+  const p = `${pts(q2.points)} Punkt${q2.points === 1 ? "" : "e"}`;
+  const how = {
+    SINGLE: "volle Punkte nur f\xFCr die richtige Antwort",
+    YESNO: "volle Punkte nur f\xFCr die richtige Antwort",
+    NUMBER: "volle Punkte, wenn die Zahl (ggf. mit Toleranz) stimmt",
+    MULTI: q2.partial ? "Teilpunkte: richtige Kreuze z\xE4hlen, falsche ziehen ab" : "volle Punkte nur, wenn genau alle richtigen gew\xE4hlt sind",
+    TEXT: q2.partial ? "Teilpunkte je gefundenem Stichwort bzw. Bewertung durch Pr\xFCfer" : "alle Stichworte n\xF6tig bzw. Bewertung durch Pr\xFCfer",
+    ORDER: q2.partial ? "Teilpunkte je Eintrag an der richtigen Stelle" : "volle Punkte nur bei komplett richtiger Reihenfolge",
+    MATCH: q2.partial ? "Teilpunkte je richtiger Zuordnung" : "volle Punkte nur, wenn alle Zuordnungen stimmen",
+    GAP: q2.partial ? "Teilpunkte je richtig gef\xFCllter L\xFCcke" : "volle Punkte nur, wenn alle L\xFCcken stimmen"
+  };
+  return `${p} \xB7 ${how[q2.type]}`;
+}
+function answerText2(q2, a) {
+  const l = list2(a);
+  if (!isAnswered(q2, a)) return "\u2014 (noch keine Antwort)";
+  const opt = (i) => {
+    const pos = q2.options.findIndex((o) => String(o.i) === i);
+    return pos >= 0 ? `${LETTERS[pos]}) ${q2.options[pos].text}` : i;
+  };
+  switch (q2.type) {
+    case "SINGLE":
+      return opt(l[0]);
+    case "MULTI":
+      return l.map(opt).join(", ");
+    case "YESNO":
+      return l[0] === "ja" ? "Ja" : "Nein";
+    case "ORDER":
+      return l.map((i, n) => `${n + 1}. ${q2.options.find((o) => String(o.i) === i)?.text ?? i}`).join(" \xB7 ");
+    case "MATCH":
+      return q2.options.map((o, row) => {
+        const m = q2.matches.findIndex((x) => String(x.i) === l[o.i]);
+        return `${row + 1}) ${o.text} \u2192 ${m >= 0 ? `${LETTERS[m]}) ${q2.matches[m].text}` : "\u2014"}`;
+      }).join(" \xB7 ");
+    case "GAP":
+      return l.map((x, n) => `L\xFCcke ${n + 1}: ${x || "\u2014"}`).join(" \xB7 ");
+    default:
+      return l[0];
+  }
+}
+function solutionText(q2) {
+  const c = q2.correct ?? [];
+  const opt = (i) => {
+    const pos = q2.options.findIndex((o) => String(o.i) === i);
+    return pos >= 0 ? `${LETTERS[pos]}) ${q2.options[pos].text}` : i;
+  };
+  switch (q2.type) {
+    case "SINGLE":
+    case "MULTI":
+      return c.map(opt).join(", ") || "\u2014";
+    case "YESNO":
+      return c[0] === "ja" ? "Ja" : "Nein";
+    case "NUMBER":
+      return `${c[0] ?? "\u2014"}${q2.tolerance ? ` (\xB1 ${q2.tolerance})` : ""}`;
+    case "TEXT":
+      return c.length ? `Stichworte: ${c.join(", ")}` : "manuell durch Pr\xFCfer";
+    case "ORDER":
+      return [...q2.options].sort((x, y) => x.i - y.i).map((o) => o.text).join(" \u2192 ");
+    case "MATCH":
+      return [...q2.options].sort((x, y) => x.i - y.i).map((o) => `${o.text} \u2192 ${q2.matches.find((m) => m.i === o.i)?.text ?? "?"}`).join(" \xB7 ");
+    case "GAP":
+      return (q2.gaps ?? []).map((g, n) => `L\xFCcke ${n + 1}: ${g.join(" | ")}`).join(" \xB7 ");
+  }
+}
+function questionReply(v, idx, cfg2, note2) {
+  const n = v.questions.length;
+  const i = Math.max(0, Math.min(idx, n - 1));
+  const q2 = v.questions[i];
+  if (!q2) return errorReply("Diese Pr\xFCfung hat keine Fragen.");
+  const a = v.answers?.[q2.id];
+  const flagged = v.flagged.includes(q2.id);
+  const lines = [q2.type === "GAP" ? gapText(q2.text) : q2.text];
+  if (q2.type === "SINGLE" || q2.type === "MULTI" || q2.type === "ORDER") lines.push("", ...q2.options.map((o, p) => `**${LETTERS[p]})** ${o.text}`));
+  if (q2.type === "MATCH") lines.push("", ...q2.options.map((o, p) => `**${p + 1})** ${o.text}`), "", ...q2.matches.map((m, p) => `**${LETTERS[p]})** ${m.text}`));
+  const answered = v.questions.filter((x) => isAnswered(x, v.answers?.[x.id])).length;
+  const embed = b(cfg2, {
+    title: clip2(`\u{1F4DD} ${v.title} \u2013 Frage ${i + 1}/${n}${flagged ? " \u{1F6A9}" : ""}`, 256),
+    description: clip2(`${note2 ? `${note2}
+
+` : ""}${lines.join("\n")}`, 4e3),
+    fields: [
+      { name: "Typ", value: `${EXAM_QUESTION_TYPE_LABEL[q2.type]} \u2013 ${EXAM_QUESTION_TYPE_HINT[q2.type]}`.slice(0, 1024) },
+      { name: "Bewertung", value: criteriaText(q2) },
+      { name: "Deine Antwort", value: clip2(plain2(answerText2(q2, a)), 1024) },
+      { name: "Fortschritt", value: `${answered}/${n} beantwortet${v.deadline ? ` \xB7 Abgabe sp\xE4testens ${t(v.deadline)}` : ""}`, inline: true }
+    ],
+    ...q2.image && /^https:\/\//.test(q2.image) ? { image: q2.image } : {},
+    footer: "Antworten werden sofort im System zwischengespeichert."
+  });
+  const base = `${v.id}:${i}`;
+  const selects = [];
+  const buttons = [];
+  if (q2.type === "SINGLE" || q2.type === "MULTI") selects.push({
+    id: `exam:a:${base}`,
+    placeholder: q2.type === "MULTI" ? "Antworten w\xE4hlen (mehrere m\xF6glich) \u2026" : "Antwort w\xE4hlen \u2026",
+    min: q2.type === "MULTI" ? 0 : 1,
+    max: q2.type === "MULTI" ? q2.options.length : 1,
+    options: q2.options.map((o, p) => ({ label: clip2(`${LETTERS[p]}) ${o.text}`, 100), value: String(o.i) })),
+    defaults: list2(a)
+  });
+  else if (q2.type === "YESNO") buttons.push({ id: `exam:yn:${base}:ja`, label: "Ja", style: list2(a)[0] === "ja" ? "success" : "secondary" }, { id: `exam:yn:${base}:nein`, label: "Nein", style: list2(a)[0] === "nein" ? "success" : "secondary" });
+  else buttons.push({ id: `exam:in:${base}`, label: isAnswered(q2, a) ? "Antwort \xE4ndern" : "Antwort eingeben", emoji: "\u270F\uFE0F", style: "primary" });
+  buttons.push(
+    { id: `exam:q:${v.id}:${i - 1}`, label: "Zur\xFCck", emoji: "\u25C0\uFE0F", style: "secondary", disabled: i === 0 },
+    { id: `exam:q:${v.id}:${i + 1}`, label: "Weiter", emoji: "\u25B6\uFE0F", style: "secondary", disabled: i >= n - 1 },
+    { id: `exam:flag:${base}`, label: flagged ? "Markierung weg" : "Markieren", emoji: "\u{1F6A9}", style: "secondary" },
+    { id: `exam:review:${v.id}`, label: "Abgeben \u2026", emoji: "\u{1F4E4}", style: "success" }
+  );
+  return { ephemeral: true, panel: true, embeds: [embed], selects, buttons };
+}
+function answerModal(v, idx) {
+  const q2 = v.questions[idx];
+  if (!q2) return errorReply("Frage nicht gefunden.");
+  const a = list2(v.answers?.[q2.id]);
+  const id3 = `exam:m:${v.id}:${idx}`;
+  const title = clip2(`Frage ${idx + 1}`, 45);
+  switch (q2.type) {
+    case "TEXT":
+      return { modal: { id: id3, title, fields: [{ id: "a", label: "Deine Antwort", paragraph: true, required: true, maxLength: 4e3, value: a[0] ?? "" }] } };
+    case "NUMBER":
+      return { modal: { id: id3, title, fields: [{ id: "a", label: "Deine Antwort (Zahl)", required: true, maxLength: 40, value: a[0] ?? "", placeholder: "z. B. 50 oder 2,5" }] } };
+    case "GAP": {
+      const n = gapCount(q2.text);
+      if (n > 5) return errorReply("Diese Frage hat mehr als 5 L\xFCcken \u2013 das passt nicht in ein Discord-Formular. Bitte im Dashboard beantworten.");
+      return { modal: { id: id3, title, fields: Array.from({ length: n }, (_, k) => ({ id: `g${k}`, label: `L\xFCcke ${k + 1}`, required: true, maxLength: 200, value: a[k] ?? "" })) } };
+    }
+    case "ORDER": {
+      const cur = a.length === q2.options.length ? a.map((i) => LETTERS[q2.options.findIndex((o) => String(o.i) === i)] ?? "").join(", ") : "";
+      return { modal: { id: id3, title, fields: [{ id: "a", label: `Reihenfolge der Buchstaben (zuerst \u2192 zuletzt)`, required: true, maxLength: 60, value: cur, placeholder: q2.options.map((_, p) => LETTERS[p]).join(", ") }] } };
+    }
+    case "MATCH": {
+      if (q2.options.length > 5) return { modal: { id: id3, title, fields: [{ id: "a", label: "Zuordnung, z. B. 1=B, 2=A, 3=C", required: true, maxLength: 120, value: q2.options.map((o, row) => {
+        const m = q2.matches.findIndex((x) => String(x.i) === a[o.i]);
+        return m >= 0 ? `${row + 1}=${LETTERS[m]}` : "";
+      }).filter(Boolean).join(", ") }] } };
+      return { modal: { id: id3, title, fields: q2.options.map((o, row) => {
+        const m = q2.matches.findIndex((x) => String(x.i) === a[o.i]);
+        return { id: `r${row}`, label: clip2(`${row + 1}) ${o.text} \u2192 Buchstabe`, 45), required: true, maxLength: 1, value: m >= 0 ? LETTERS[m] : "" };
+      }) } };
+    }
+    default:
+      return errorReply("Diese Frage wird mit den Buttons beantwortet.");
+  }
+}
+function parseModalAnswer(q2, f2) {
+  const letter = (s, max) => {
+    const p = LETTERS.indexOf(s.trim().toUpperCase());
+    return p >= 0 && p < max ? p : -1;
+  };
+  switch (q2.type) {
+    case "TEXT":
+      return (f2.a ?? "").trim() ? { value: f2.a.trim().slice(0, 4e3) } : { error: "Bitte eine Antwort eingeben." };
+    case "NUMBER": {
+      const s = (f2.a ?? "").trim();
+      return /^-?\d+(?:[.,]\d+)?$/.test(s.replace(/\s/g, "")) ? { value: s.replace(/\s/g, "") } : { error: "Bitte eine Zahl eingeben (z. B. 50 oder 2,5)." };
+    }
+    case "GAP":
+      return { value: Array.from({ length: gapCount(q2.text) }, (_, k) => (f2[`g${k}`] ?? "").trim().slice(0, 200)) };
+    case "ORDER": {
+      const parts = (f2.a ?? "").split(/[\s,;>→-]+/).filter(Boolean);
+      const pos = parts.map((p) => letter(p, q2.options.length));
+      if (pos.length !== q2.options.length || pos.some((p) => p < 0) || new Set(pos).size !== pos.length) return { error: `Bitte jeden Buchstaben ${q2.options.map((_, p) => LETTERS[p]).join(", ")} genau einmal angeben, z. B. \u201E${q2.options.map((_, p) => LETTERS[p]).reverse().join(", ")}\u201C.` };
+      return { value: pos.map((p) => String(q2.options[p].i)) };
+    }
+    case "MATCH": {
+      const out = Array.from({ length: q2.options.length }, () => "");
+      const pairs = f2.a !== void 0 ? (f2.a.match(/(\d+)\s*[=:→-]\s*([A-Za-z])/g) ?? []).map((m) => {
+        const x = /(\d+)\s*[=:→-]\s*([A-Za-z])/.exec(m);
+        return [Number(x[1]) - 1, x[2]];
+      }) : q2.options.map((_, row) => [row, f2[`r${row}`] ?? ""]);
+      for (const [row, l] of pairs) {
+        const o = q2.options[row];
+        const m = letter(l, q2.matches.length);
+        if (!o || m < 0) return { error: `Ung\xFCltige Zuordnung \u201E${row + 1}=${l}\u201C \u2013 bitte Zahlen 1\u2013${q2.options.length} und Buchstaben ${LETTERS[0]}\u2013${LETTERS[q2.matches.length - 1]} verwenden.` };
+        out[o.i] = String(q2.matches[m].i);
+      }
+      if (out.some((x) => !x)) return { error: "Bitte jedem Eintrag einen Buchstaben zuordnen." };
+      return { value: out };
+    }
+    default:
+      return { error: "Diese Frage wird mit den Buttons beantwortet." };
+  }
+}
+async function viewOf(c, attemptId) {
+  return c.api.asUser(c.discordId, "GET", `/hr/attempts/${attemptId}`);
+}
+async function saveAnswer(c, v, qid, value, flagged = v.flagged) {
+  const answers = { ...v.answers ?? {}, [qid]: value };
+  const r = await c.api.asUser(c.discordId, "PUT", `/hr/attempts/${v.id}/answers`, { answers, flagged });
+  if (r && r.status && r.status !== "IN_PROGRESS") return resultReply(r, await cfgOf2(c), "\u23F0 Die Zeit ist abgelaufen \u2013 gewertet wurde, was rechtzeitig gespeichert war.");
+  return { ...v, answers, flagged };
+}
+function reviewReply(v, cfg2) {
+  const open = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => !isAnswered(q2, v.answers?.[q2.id]));
+  const flagged = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => v.flagged.includes(q2.id));
+  return { ephemeral: true, panel: true, embeds: [b(cfg2, {
+    title: `\u{1F4E4} Abgabe: ${clip2(v.title, 200)}`,
+    description: [
+      `Beantwortet: **${v.questions.length - open.length}/${v.questions.length}**`,
+      open.length ? `Offen: ${open.map(({ i }) => `Frage ${i + 1}`).join(", ")}` : "\u2705 Alle Fragen beantwortet.",
+      flagged.length ? `\u{1F6A9} Markiert: ${flagged.map(({ i }) => `Frage ${i + 1}`).join(", ")}` : "",
+      "",
+      `Bestanden ab **${v.passPercent} %** der Punkte. Nach der Abgabe kannst du nichts mehr \xE4ndern.`
+    ].filter(Boolean).join("\n")
+  }, open.length ? "warning" : "primary")], buttons: [
+    { id: `exam:q:${v.id}:${open[0]?.i ?? 0}`, label: open.length ? "Zur ersten offenen Frage" : "Zur\xFCck zu den Fragen", emoji: "\u21A9\uFE0F", style: "secondary" },
+    { id: `exam:submit:${v.id}`, label: "Endg\xFCltig abgeben", emoji: "\u{1F4E4}", style: "danger" }
+  ] };
+}
+function resultReply(v, cfg2, note2) {
+  if (v.status === "VOIDED") return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u{1F4DD} ${clip2(v.title, 200)} \u2013 annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain2(v.voided.reason)}` : ""}. Er z\xE4hlt nicht als Versuch.` }, "warning")] };
+  if (v.status === "SUBMITTED" || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u23F3 ${clip2(v.title, 200)} \u2013 abgegeben`, description: `${note2 ? `${note2}
+
+` : ""}Deine Antworten sind gespeichert. Einige Fragen bewertet ein Pr\xFCfer \u2013 du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
+  const r = v.result;
+  const head = r.passed ? "\u2705 Bestanden" : "\u274C Nicht bestanden";
+  const score = r.percent !== void 0 && r.percent !== null ? ` \u2013 **${r.percent} %** (${pts(r.score)} von ${pts(r.maxScore)} Punkten, n\xF6tig: ${v.passPercent} %)` : "";
+  const review = v.reviewMode !== "NONE" ? v.questions.slice(0, 20).map((q2, i) => `${q2.earned !== void 0 ? q2.earned >= q2.points ? "\u2705" : q2.earned > 0 ? "\u{1F7E1}" : "\u274C" : q2.correctAnswer === void 0 ? "\u2022" : q2.correctAnswer ? "\u2705" : "\u274C"} Frage ${i + 1}${q2.earned !== void 0 ? ` (${pts(q2.earned)}/${pts(q2.points)})` : ""}${v.reviewMode === "SOLUTIONS" && q2.correct ? ` \u2013 L\xF6sung: ${clip2(solutionText(q2), 120)}` : ""}`) : [];
+  return { ephemeral: true, panel: true, embeds: [b(cfg2, {
+    title: `\u{1F4DD} ${clip2(v.title, 200)}`,
+    description: clip2([note2, `**${head}**${score}`, r.feedback ? `
+\u{1F4AC} R\xFCckmeldung: ${plain2(r.feedback)}` : "", review.length ? `
+**Einsicht (${EXAM_REVIEW_LABEL[v.reviewMode]}):**
+${review.join("\n")}` : "", r.passed ? "\nDas Ergebnis ist in deiner Personalakte dokumentiert." : ""].filter(Boolean).join("\n"), 4e3)
+  }, r.passed ? "success" : "danger")] };
+}
+async function exams(c) {
+  return withRetry(() => c.api.asUser(c.discordId, "GET", "/hr/exams"));
+}
+function examDetail(e, cfg2) {
+  const fields = [
+    { name: "\u2753 Fragen", value: e.questionsPerAttempt < e.questionTotal ? `${e.questionsPerAttempt} (zuf\xE4llig aus ${e.questionTotal})` : String(e.questionTotal), inline: true },
+    { name: "\u{1F3AF} Bestanden ab", value: `${e.passPercent} % der Punkte`, inline: true },
+    { name: "\u23F1\uFE0F Zeit", value: e.timeLimitMin ? `${e.timeLimitMin} Min.` : "ohne Limit", inline: true },
+    { name: "\u{1F501} Versuche", value: `${e.me.attemptsUsed}/${e.maxAttempts} genutzt${e.retryHours ? ` \xB7 ${e.retryHours} h Wartezeit` : ""}`, inline: true },
+    { name: "\u{1F441}\uFE0F Einsicht", value: EXAM_REVIEW_LABEL[e.reviewMode] ?? "\u2014", inline: true },
+    ...e.trainingName ? [{ name: "\u{1F393} Ausbildung", value: plain2(e.trainingName), inline: true }] : [],
+    ...e.requiredExamTitle ? [{ name: "\u{1F512} Voraussetzung", value: plain2(e.requiredExamTitle), inline: true }] : [],
+    { name: "Status", value: `${STATE_ICON[e.me.state]} ${STATE_LABEL[e.me.state]}${e.me.reason ? ` \u2013 ${plain2(e.me.reason)}` : ""}` }
+  ];
+  const can = e.me.state === "AVAILABLE" || e.me.state === "IN_PROGRESS";
+  return { ephemeral: true, panel: true, embeds: [b(cfg2, {
+    title: clip2(`\u{1F4DD} ${e.title}`, 256),
+    description: clip2([e.description, e.instructions ? `**Hinweise:**
+${e.instructions}` : "", "Bewertet wird automatisch nach den hinterlegten Kriterien (Punkte je Frage, ggf. Teilpunkte); Freitext ohne Stichworte bewertet ein Pr\xFCfer. Die Kriterien stehen bei jeder Frage."].filter(Boolean).join("\n\n"), 4e3),
+    fields
+  })], buttons: can ? [{ id: `exam:start:${e.id}`, label: e.me.state === "IN_PROGRESS" ? "Fortsetzen" : "Pr\xFCfung starten", emoji: "\u25B6\uFE0F", style: "success" }] : [] };
+}
+async function listReply3(c) {
+  const [all, cfg2] = await Promise.all([exams(c), cfgOf2(c)]);
+  const mine = all.filter((e) => e.active || e.me.state === "IN_PROGRESS" || e.me.state === "PASSED");
+  if (!mine.length) return { ephemeral: true, embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: "F\xFCr dich sind gerade keine Pr\xFCfungen freigegeben." })] };
+  return {
+    ephemeral: true,
+    embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: clip2(mine.map((e) => `${STATE_ICON[e.me.state]} **${plain2(e.title)}**${e.category ? ` \xB7 ${plain2(e.category)}` : ""} \u2013 ${STATE_LABEL[e.me.state]}`).join("\n"), 4e3), footer: "Pr\xFCfung ausw\xE4hlen, um Kriterien und Start zu sehen." })],
+    select: { id: "exam:open", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: mine.slice(0, 25).map((e) => ({ label: clip2(e.title, 100), value: e.id, description: clip2(STATE_LABEL[e.me.state], 100), emoji: STATE_ICON[e.me.state] })) }
+  };
+}
+async function resultsReply(c) {
+  const [all, cfg2] = await Promise.all([exams(c), cfgOf2(c)]);
+  const done = all.filter((e) => e.me.last || e.me.state === "PASSED" || e.me.state === "PENDING");
+  const passed = done.filter((e) => e.me.state === "PASSED");
+  const line2 = (e) => {
+    const last = e.me.last;
+    const pct = e.me.bestPercent !== null ? ` \xB7 bestes Ergebnis ${e.me.bestPercent} %` : "";
+    if (e.me.state === "PASSED") return `\u2705 **${plain2(e.title)}** \u2013 bestanden${pct}`;
+    if (e.me.state === "PENDING") return `\u23F3 **${plain2(e.title)}** \u2013 wird bewertet`;
+    return `${last?.passed === false ? "\u274C" : "\u2022"} **${plain2(e.title)}** \u2013 ${last?.passed === false ? "nicht bestanden" : last?.status ?? "\u2014"}${pct} \xB7 Versuche ${e.me.attemptsUsed}/${e.maxAttempts}${last?.at ? ` \xB7 zuletzt ${t(last.at)}` : ""}`;
+  };
+  return { ephemeral: true, embeds: [b(cfg2, {
+    title: "\u{1F393} Deine Pr\xFCfungsergebnisse",
+    description: clip2(done.length ? done.map(line2).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
+    fields: [{ name: "Qualifikationen (bestandene Pr\xFCfungen)", value: clip2(passed.length ? passed.map((e) => `\u2022 ${plain2(e.title)}${e.trainingName ? ` (${plain2(e.trainingName)})` : ""}`).join("\n") : "\u2014", 1024) }],
+    footer: "Alle Versuche bleiben im System erhalten; Ergebnisse stehen auch in der Personalakte."
+  })] };
+}
+async function trainingsReply(c) {
+  const [list3, cfg2] = await Promise.all([withRetry(() => c.api.asUser(c.discordId, "GET", "/hr/trainings")), cfgOf2(c)]);
+  return { ephemeral: true, embeds: [b(cfg2, {
+    title: "\u{1F393} Ausbildungen",
+    description: clip2(list3.length ? list3.slice(0, 25).map((x) => `**${plain2(x.name)}** \u2013 ${x.passed} bestanden${x.modules?.length ? ` \xB7 ${x.modules.length} Module: ${clip2(x.modules.map(plain2).join(", "), 200)}` : ""}${x.description ? `
+${clip2(plain2(x.description), 200)}` : ""}`).join("\n") : "Es sind keine Ausbildungen angelegt.", 4e3),
+    footer: "Termine: /ausbildung termine \xB7 Pr\xFCfungen: /pruefung liste"
+  })] };
+}
+async function manageReply3(c) {
+  const [all, cfg2] = await Promise.all([exams(c), cfgOf2(c)]);
+  const staff2 = all.filter((e) => e.canGrade || e.canEdit);
+  if (!staff2.length) return errorReply("Du bist f\xFCr keine Pr\xFCfung als Pr\xFCfer eingetragen (im System: Recht `exam.grade`/`exam.manage` oder Pr\xFCfer der Pr\xFCfung).");
+  return { ephemeral: true, embeds: [b(cfg2, {
+    title: "\u{1F5C2}\uFE0F Pr\xFCfungen verwalten",
+    description: clip2(staff2.map((e) => `${e.active ? "\u{1F7E2}" : "\u23F8\uFE0F"} **${plain2(e.title)}** \u2013 ${e.stats ? `${e.stats.participants} Teiln., ${e.stats.passed} bestanden${e.stats.passRate !== null ? ` (${e.stats.passRate} %)` : ""}${e.stats.pending ? ` \xB7 \u23F3 ${e.stats.pending} zu bewerten` : ""}` : "keine Daten"}`).join("\n"), 4e3)
+  })], select: { id: "exam:adm", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: staff2.slice(0, 25).map((e) => ({ label: clip2(e.title, 100), value: e.id, description: e.active ? "aktiv" : "nicht freigegeben" })) } };
+}
+function adminDetail(e, cfg2) {
+  const s = e.stats;
+  const buttons = [{ id: `exam:res:${e.id}`, label: "Auswertung", emoji: "\u{1F4CA}", style: "primary" }];
+  if (s?.pending) buttons.push({ id: `exam:pend:${e.id}`, label: `Zu bewerten (${s.pending})`, emoji: "\u23F3", style: "primary" });
+  if (e.canEdit) buttons.push({ id: `exam:post:${e.id}`, label: "In Discord ank\xFCndigen", emoji: "\u{1F4E2}", style: "secondary", disabled: !e.active }, { id: `exam:toggle:${e.id}`, label: e.active ? "Deaktivieren \u2026" : "Aktivieren \u2026", emoji: e.active ? "\u23F8\uFE0F" : "\u25B6\uFE0F", style: "secondary" });
+  return { ephemeral: true, panel: true, embeds: [b(cfg2, {
+    title: clip2(`\u{1F5C2}\uFE0F ${e.title}`, 256),
+    fields: [
+      { name: "Status", value: e.active ? "\u{1F7E2} aktiv" : "\u23F8\uFE0F nicht freigegeben", inline: true },
+      { name: "Fragen", value: `${e.questionsPerAttempt}/${e.questionTotal}`, inline: true },
+      { name: "Bestanden ab", value: `${e.passPercent} %`, inline: true },
+      { name: "Teilnehmende", value: String(s?.participants ?? 0), inline: true },
+      { name: "Bestanden", value: `${s?.passed ?? 0}${s?.passRate !== null && s?.passRate !== void 0 ? ` (${s.passRate} %)` : ""}`, inline: true },
+      { name: "\xD8 Ergebnis", value: s?.avgPercent !== null && s?.avgPercent !== void 0 ? `${s.avgPercent} %` : "\u2014", inline: true },
+      { name: "Offen", value: `\u23F3 ${s?.pending ?? 0} zu bewerten \xB7 \u270F\uFE0F ${s?.running ?? 0} laufen`, inline: true }
+    ],
+    footer: "Fragen bearbeiten und neue Pr\xFCfungen anlegen: im Dashboard."
+  })], buttons };
+}
+async function pendingReply(c, examId) {
+  const [rows, cfg2] = await Promise.all([c.api.asUser(c.discordId, "GET", `/hr/attempts?status=SUBMITTED${examId ? `&examId=${examId}` : ""}`), cfgOf2(c)]);
+  const open = rows.filter((r) => !r.own);
+  if (!open.length) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: "\u23F3 Zu bewerten", description: "Keine abgegebenen Versuche warten auf eine Bewertung." }, "success")] };
+  return {
+    ephemeral: true,
+    panel: true,
+    embeds: [b(cfg2, { title: `\u23F3 Zu bewerten (${open.length})`, description: clip2(open.slice(0, 25).map((r) => `\u2022 **${plain2(r.personnel.user.displayName)}** \u2013 ${plain2(r.exam.title)} \xB7 abgegeben ${t(r.submittedAt)}`).join("\n"), 4e3) })],
+    select: { id: "exam:g", placeholder: "Versuch zum Bewerten ausw\xE4hlen \u2026", options: open.slice(0, 25).map((r) => ({ label: clip2(`${r.personnel.user.displayName} \u2013 ${r.exam.title}`, 100), value: r.id, description: clip2(`abgegeben ${r.submittedAt ? new Date(r.submittedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }) : "\u2014"}`, 100) })) }
+  };
+}
+function gradingReply(v, cfg2) {
+  const fields = v.questions.slice(0, 20).map((q2, i) => ({
+    name: clip2(`Frage ${i + 1} \xB7 max ${pts(q2.points)} P. \xB7 ${q2.auto === null || q2.auto === void 0 ? "\u270D\uFE0F manuell" : `automatisch ${pts(q2.auto)} P.`}`, 256),
+    value: clip2(`${plain2(q2.type === "GAP" ? gapText(q2.text) : q2.text)}
+**Antwort:** ${plain2(answerText2(q2, v.answers?.[q2.id]))}
+**Kriterium:** ${plain2(solutionText(q2))}${q2.partial ? " (Teilpunkte)" : ""}`, 1024)
+  }));
+  const manual = v.questions.filter((q2) => q2.auto === null || q2.auto === void 0).length;
+  return { ephemeral: true, panel: true, embeds: [b(cfg2, {
+    title: clip2(`\u270D\uFE0F ${v.title} \u2013 ${v.name}`, 256),
+    description: `Status: **${v.status === "SUBMITTED" ? "wartet auf Bewertung" : v.status === "GRADED" ? "bewertet" : v.status}** \xB7 Bestanden ab ${v.passPercent} %${v.result?.percent !== void 0 && v.result?.percent !== null ? ` \xB7 aktuell ${v.result.percent} %` : ""}
+${manual ? `${manual} Frage(n) ohne automatische Bewertung \u2013 Punkte im Formular vergeben.` : "Alle Fragen sind automatisch bewertbar \u2013 optional R\xFCckmeldung geben."}${v.questions.length > 20 ? `
+\u2026 ${v.questions.length - 20} weitere Fragen im Dashboard` : ""}`,
+    fields
+  })], buttons: [
+    ...v.status !== "VOIDED" ? [{ id: `exam:gin:${v.id}`, label: v.status === "GRADED" ? "Neu bewerten" : "Bewerten", emoji: "\u270D\uFE0F", style: "success" }] : [],
+    ...v.status !== "VOIDED" ? [{ id: `exam:void:${v.id}`, label: "Annullieren \u2026", emoji: "\u{1F6AB}", style: "danger" }] : []
+  ] };
+}
+function gradeModal(v) {
+  const manual = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => q2.auto === null || q2.auto === void 0);
+  if (manual.length > 4) return errorReply(`${manual.length} Fragen m\xFCssen von Hand bewertet werden \u2013 das passt nicht in ein Discord-Formular (h\xF6chstens 4). Bitte im Dashboard bewerten.`);
+  return { modal: { id: `exam:gm:${v.id}`, title: "Versuch bewerten", fields: [
+    ...manual.map(({ q: q2, i }) => ({ id: `s${i}`, label: clip2(`Frage ${i + 1}: Punkte (0\u2013${pts(q2.points)})`, 45), required: true, maxLength: 6, placeholder: "0" })),
+    { id: "feedback", label: "R\xFCckmeldung an die Person (optional)", paragraph: true, maxLength: 2e3 }
+  ] } };
+}
+function parseGrade(v, f2) {
+  const scores = {};
+  for (const [i, q2] of v.questions.entries()) {
+    if (!(q2.auto === null || q2.auto === void 0)) continue;
+    const raw = (f2[`s${i}`] ?? "").trim().replace(",", ".");
+    const n = Number(raw);
+    if (raw === "" || !Number.isFinite(n) || n < 0 || n > q2.points) return { error: `Frage ${i + 1}: bitte eine Zahl von 0 bis ${pts(q2.points)} eintragen.` };
+    scores[q2.id] = n;
+  }
+  return { scores, ...f2.feedback?.trim() ? { feedback: f2.feedback.trim().slice(0, 2e3) } : {} };
+}
+function examBodyWithActive(detail, active2) {
+  const iso = (v) => v ? new Date(String(v)).toISOString() : null;
+  const r = examSchema.safeParse({ ...detail, availableFrom: iso(detail.availableFrom), availableUntil: iso(detail.availableUntil), active: active2 });
+  return r.success ? r.data : null;
+}
+var EXAM_COMMANDS = [{
+  name: "pruefung",
+  description: "Pr\xFCfungszentrum: Pr\xFCfungen ablegen, Ergebnisse, Ausbildungen; f\xFCr Ausbilder: verwalten und bewerten",
+  subcommands: [
+    { name: "liste", description: "Verf\xFCgbare Pr\xFCfungen mit Kriterien \u2013 direkt in Discord ablegen" },
+    { name: "ergebnisse", description: "Deine Ergebnisse, Versuche und Qualifikationen" },
+    { name: "ausbildungen", description: "Ausbildungen mit Modulen anzeigen" },
+    { name: "verwalten", description: "Ausbilder: Pr\xFCfungen, Auswertung, Freigabe, Ank\xFCndigung" },
+    { name: "bewerten", description: "Ausbilder: abgegebene Versuche bewerten" }
+  ],
+  async run(c) {
+    const sub = String(c.opts._sub ?? "liste");
+    const denied = await guard(c, `pruefung ${sub}`);
+    if (denied) return denied;
+    try {
+      if (sub === "ergebnisse") return await resultsReply(c);
+      if (sub === "ausbildungen") return await trainingsReply(c);
+      if (sub === "verwalten") return await manageReply3(c);
+      if (sub === "bewerten") return { ...await pendingReply(c), panel: false };
+      return await listReply3(c);
+    } catch (e) {
+      return mapError(e);
+    }
+  }
+}];
+var EXAM_INTERACTION = {
+  prefix: "exam",
+  opensModal: (args) => ["in", "gin", "void"].includes(args[0] ?? ""),
+  panel: (args) => !["in", "gin", "void"].includes(args[0] ?? ""),
+  async run(c) {
+    const [action, id3, rawIdx, extra] = c.args;
+    const denied = await guard(c, `exam:${action ?? ""}`);
+    if (denied) return denied;
+    const idx = Number(rawIdx ?? 0);
+    const target = action === "open" || action === "adm" || action === "g" ? c.values?.[0] : id3;
+    if (!target || !UUID3.test(target)) return errorReply("Ung\xFCltige Anfrage.");
+    try {
+      const cfg2 = await cfgOf2(c);
+      switch (action) {
+        case "open": {
+          const e = (await exams(c)).find((x) => x.id === target);
+          return e ? examDetail(e, cfg2) : errorReply("Pr\xFCfung nicht verf\xFCgbar.");
+        }
+        case "start": {
+          const v = await c.api.asUser(c.discordId, "POST", `/hr/exams/${target}/start`);
+          const first = v.questions.findIndex((q2) => !isAnswered(q2, v.answers?.[q2.id]));
+          return questionReply(v, first < 0 ? 0 : first, cfg2, v.instructions ? `**Hinweise:** ${clip2(v.instructions, 800)}` : void 0);
+        }
+        case "q": {
+          const v = await viewOf(c, target);
+          return v.status === "IN_PROGRESS" ? questionReply(v, idx, cfg2) : resultReply(v, cfg2);
+        }
+        case "a":
+        case "yn":
+        case "flag":
+        case "m": {
+          const v = await viewOf(c, target);
+          if (v.status !== "IN_PROGRESS") return resultReply(v, cfg2, "Dieser Versuch ist schon abgegeben.");
+          const q2 = v.questions[idx];
+          if (!q2) return errorReply("Frage nicht gefunden.");
+          let r;
+          if (action === "flag") r = await saveAnswer(c, v, q2.id, v.answers?.[q2.id] ?? "", v.flagged.includes(q2.id) ? v.flagged.filter((x) => x !== q2.id) : [...v.flagged, q2.id]);
+          else if (action === "a") r = await saveAnswer(c, v, q2.id, q2.type === "MULTI" ? [...c.values ?? []].sort() : c.values?.[0] ?? "");
+          else if (action === "yn") r = await saveAnswer(c, v, q2.id, extra === "ja" ? "ja" : "nein");
+          else {
+            const p = parseModalAnswer(q2, c.fields ?? {});
+            if (p.error) return errorReply(p.error);
+            r = await saveAnswer(c, v, q2.id, p.value);
+          }
+          return "questions" in r ? questionReply(r, idx, cfg2, action === "flag" ? void 0 : "\u{1F4BE} Antwort gespeichert.") : r;
+        }
+        case "in": {
+          const v = await viewOf(c, target);
+          return v.status === "IN_PROGRESS" ? answerModal(v, idx) : errorReply("Dieser Versuch ist schon abgegeben.");
+        }
+        case "review": {
+          const v = await viewOf(c, target);
+          return v.status === "IN_PROGRESS" ? reviewReply(v, cfg2) : resultReply(v, cfg2);
+        }
+        case "submit": {
+          const v = await viewOf(c, target);
+          if (v.status !== "IN_PROGRESS") return resultReply(v, cfg2, "Dieser Versuch ist schon abgegeben.");
+          return resultReply(await c.api.asUser(c.discordId, "POST", `/hr/attempts/${target}/submit`, { answers: v.answers ?? {} }), cfg2);
+        }
+        // ── Ausbilder ──
+        case "adm":
+        case "admv": {
+          const e = (await exams(c)).find((x) => x.id === target && (x.canGrade || x.canEdit));
+          return e ? adminDetail(e, cfg2) : errorReply("Pr\xFCfung nicht gefunden oder du bist daf\xFCr kein Pr\xFCfer.");
+        }
+        case "res": {
+          const r = await c.api.asUser(c.discordId, "GET", `/hr/exams/${target}/results`);
+          const hard = r.questions.filter((q2) => q2.asked && q2.correctRate !== null).sort((a, z) => a.correctRate - z.correctRate).slice(0, 5);
+          return { ephemeral: true, panel: true, embeds: [b(cfg2, {
+            title: clip2(`\u{1F4CA} Auswertung: ${r.exam.title}`, 256),
+            description: clip2(r.people.slice(0, 20).map((p) => `${p.passed ? "\u2705" : p.pending ? "\u23F3" : "\u274C"} **${plain2(p.name)}**${p.rank ? ` (${plain2(p.rank)})` : ""} \u2013 ${p.bestPercent !== null ? `${p.bestPercent} %` : "\u2014"} \xB7 ${p.attempts} Versuch(e)`).join("\n") || "Noch keine Versuche.", 4e3),
+            fields: [
+              { name: "Kennzahlen", value: `${r.stats.participants} Teilnehmende \xB7 ${r.stats.attempts} Versuche \xB7 ${r.stats.passed} bestanden${r.stats.passRate !== null ? ` (${r.stats.passRate} %)` : ""} \xB7 \xD8 ${r.stats.avgPercent ?? "\u2014"} %${r.stats.avgMinutes !== null ? ` \xB7 \xD8 ${r.stats.avgMinutes} Min.` : ""} \xB7 ${r.stats.voided} annulliert` },
+              ...hard.length ? [{ name: "Schwierigste Fragen", value: clip2(hard.map((q2) => `\u2022 ${q2.correctRate} % richtig \u2013 ${plain2(q2.text)}`).join("\n"), 1024) }] : []
+            ]
+          })], buttons: [{ id: `exam:pend:${target}`, label: `Zu bewerten (${r.stats.pending})`, emoji: "\u23F3", style: "primary", disabled: !r.stats.pending }] };
+        }
+        case "pend":
+          return await pendingReply(c, target);
+        case "post": {
+          const channelId = cfg2?.channels.exams ?? c.channelId;
+          if (!channelId) return errorReply("Kein Kanal f\xFCr Pr\xFCfungs-Ank\xFCndigungen eingestellt (`/setup` \u2192 Kan\xE4le).");
+          await c.api.asUser(c.discordId, "POST", `/hr/exams/${target}/discord`, { channelId, pingRoleIds: [] });
+          return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: "\u{1F4E2} Angek\xFCndigt", description: `Die Pr\xFCfung wird gleich in <#${channelId}> angek\xFCndigt.` }, "success")] };
+        }
+        case "toggle": {
+          const e = (await exams(c)).find((x) => x.id === target);
+          if (!e?.canEdit) return errorReply("Daf\xFCr fehlt dir im System das Recht `exam.manage`.");
+          return {
+            ephemeral: true,
+            panel: true,
+            embeds: [b(cfg2, { title: e.active ? "\u23F8\uFE0F Pr\xFCfung deaktivieren?" : "\u25B6\uFE0F Pr\xFCfung aktivieren?", description: e.active ? `**${plain2(e.title)}** wird nicht mehr zum Ablegen angeboten. Laufende und fr\xFChere Versuche, Ergebnisse und Fragen **bleiben vollst\xE4ndig erhalten**.` : `**${plain2(e.title)}** wird wieder zum Ablegen angeboten.` }, "warning")],
+            buttons: [{ id: `exam:togglec:${target}:${e.active ? 0 : 1}`, label: e.active ? "Ja, deaktivieren" : "Ja, aktivieren", style: e.active ? "danger" : "success" }, { id: `exam:admv:${target}`, label: "Abbrechen", style: "secondary" }]
+          };
+        }
+        case "togglec": {
+          const detail = await c.api.asUser(c.discordId, "GET", `/hr/exams/${target}`);
+          const body = examBodyWithActive(detail, rawIdx === "1");
+          if (!body) return errorReply("Die Pr\xFCfung konnte nicht vollst\xE4ndig gelesen werden \u2013 zur Sicherheit wurde nichts ge\xE4ndert. Bitte im Dashboard \xE4ndern.");
+          await c.api.asUser(c.discordId, "PUT", `/hr/exams/${target}`, body);
+          return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: rawIdx === "1" ? "\u25B6\uFE0F Aktiviert" : "\u23F8\uFE0F Deaktiviert", description: `${plain2(String(detail.title ?? ""))} \u2013 alle Versuche und Ergebnisse bleiben erhalten.` }, "success")] };
+        }
+        case "g":
+          return gradingReply(await viewOf(c, target), cfg2);
+        case "gin":
+          return gradeModal(await viewOf(c, target));
+        case "gm": {
+          const v = await viewOf(c, target);
+          const g = parseGrade(v, c.fields ?? {});
+          if (g.error) return errorReply(g.error);
+          const r = await c.api.asUser(c.discordId, "POST", `/hr/attempts/${target}/grade`, { scores: g.scores, ...g.feedback ? { feedback: g.feedback } : {} });
+          const res = gradingReply(r, cfg2);
+          res.embeds[0].description = `\u2705 Bewertet: **${r.result?.passed ? "bestanden" : "nicht bestanden"}**${r.result?.percent !== void 0 && r.result?.percent !== null ? ` (${r.result.percent} %)` : ""} \u2013 die Person wird benachrichtigt, das Ergebnis steht in der Personalakte.
+
+${res.embeds[0].description ?? ""}`;
+          return res;
+        }
+        case "void":
+          return { modal: { id: `exam:vm:${target}`, title: "Versuch annullieren", fields: [{ id: "reason", label: "Grund (wird dokumentiert, mind. 3 Zeichen)", paragraph: true, required: true, minLength: 3, maxLength: 500 }] } };
+        case "vm": {
+          const reason = (c.fields?.reason ?? "").trim();
+          if (reason.length < 3) return errorReply("Bitte einen Grund angeben.");
+          const r = await c.api.asUser(c.discordId, "POST", `/hr/attempts/${target}/void`, { reason });
+          const res = gradingReply(r, cfg2);
+          res.embeds[0].description = `\u{1F6AB} Annulliert \u2013 der Versuch bleibt mit Grund erhalten, z\xE4hlt aber nicht.
+
+${res.embeds[0].description ?? ""}`;
+          return res;
+        }
+        default:
+          return errorReply("Unbekannte Aktion.");
+      }
+    } catch (e) {
+      return mapError(e);
     }
   }
 };
@@ -84186,9 +85527,9 @@ async function shiftTypes2(c) {
   return cfg2?.enabled ? cfg2.types : null;
 }
 async function shiftPicker(c) {
-  const types = (await shiftTypes2(c))?.filter((t) => permittedFor(c, t));
+  const types = (await shiftTypes2(c))?.filter((t2) => permittedFor(c, t2));
   if (!types || types.length < 2) return null;
-  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t) => ({ label: clip2(t.name, 100), value: t.id, ...t.isDefault ? { description: "Standard" } : {} })) } };
+  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t2) => ({ label: clip2(t2.name, 100), value: t2.id, ...t2.isDefault ? { description: "Standard" } : {} })) } };
 }
 var INTERACTIONS = [
   {
@@ -84203,18 +85544,18 @@ var INTERACTIONS = [
         }
       }
       const shiftType = c.args[0] === "type" ? c.values?.[0] : void 0;
-      const status = c.args[0] === "type" ? "ON_DUTY" : c.args[0] ?? "";
-      if (!DUTY_DE[status]) return errorReply("Unbekannter Status.");
-      if (status === "ON_DUTY" && !shiftType) {
+      const status3 = c.args[0] === "type" ? "ON_DUTY" : c.args[0] ?? "";
+      if (!DUTY_DE[status3]) return errorReply("Unbekannter Status.");
+      if (status3 === "ON_DUTY" && !shiftType) {
         const pick2 = await shiftPicker(c);
         if (pick2) return pick2;
       }
       try {
-        const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status, ...shiftType ? { shiftType } : {} });
-        const name = shiftType ? (await shiftTypes2(c))?.find((t) => t.id === (r.shiftType ?? shiftType))?.name : void 0;
-        return okReply(`${DUTY_DE[status].emoji} Du bist jetzt **${DUTY_DE[status].label}**${name ? ` (Schicht: **${plain2(name)}**)` : ""}.`);
+        const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...shiftType ? { shiftType } : {} });
+        const name = shiftType ? (await shiftTypes2(c))?.find((t2) => t2.id === (r.shiftType ?? shiftType))?.name : void 0;
+        return okReply(`${DUTY_DE[status3].emoji} Du bist jetzt **${DUTY_DE[status3].label}**${name ? ` (Schicht: **${plain2(name)}**)` : ""}.`);
       } catch (e) {
-        if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status].label}**.`);
+        if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status3].label}**.`);
         return mapError(e);
       }
     }
@@ -84251,6 +85592,9 @@ var INTERACTIONS = [
   FORM_PANEL_INTERACTION,
   INFO_PANEL_INTERACTION,
   MB_INTERACTION,
+  SETUP_INTERACTION,
+  BACKUP_INTERACTION,
+  EXAM_INTERACTION,
   DUTY_REPORT_INTERACTION,
   TRAINING_INTERACTION,
   SHIFT_INTERACTION
@@ -84276,6 +85620,183 @@ var WARNING_COMMANDS = [{
       return okReply(`<@${c.opts.mitglied}> wurde verwarnt \u2013 **${r.count}/${r.limit}**${r.count >= r.limit ? " \u26D4 Grenze erreicht." : "."}`);
     } catch (e) {
       return mapError(e);
+    }
+  }
+}];
+
+// apps/bot/src/diagnostics.ts
+var import_discord6 = __toESM(require_src());
+var P = import_discord6.PermissionFlagsBits;
+var REQUIRED_PERMISSIONS = [
+  { flag: P.ViewChannel, name: "Kan\xE4le ansehen", needed: "alle Funktionen", severity: "error" },
+  { flag: P.SendMessages, name: "Nachrichten senden", needed: "alle Meldungen und Panels", severity: "error" },
+  { flag: P.EmbedLinks, name: "Links einbetten", needed: "Embeds (fast alle Bot-Nachrichten)", severity: "error" },
+  { flag: P.ReadMessageHistory, name: "Nachrichtenverlauf lesen", needed: "Panels aktualisieren, Ticket-Verl\xE4ufe", severity: "warn" },
+  { flag: P.ManageRoles, name: "Rollen verwalten", needed: "Dienst-, Verifizierungs- und Begr\xFC\xDFungsrollen", severity: "warn" },
+  { flag: P.ManageChannels, name: "Kan\xE4le verwalten", needed: "Support-Tickets, Sprach-Support", severity: "warn" },
+  { flag: P.ManageNicknames, name: "Spitznamen verwalten", needed: "Dienstnummer/Roblox-Name im Nickname", severity: "warn" },
+  { flag: P.ChangeNickname, name: "Nickname \xE4ndern", needed: "Anzeigename des Bots aus /setup", severity: "info" },
+  { flag: P.MoveMembers, name: "Mitglieder verschieben", needed: "Sprach-Support", severity: "info" },
+  { flag: P.CreatePublicThreads, name: "\xD6ffentliche Threads erstellen", needed: "Staff-Threads zu Bewerbungen/Ausbildungen", severity: "info" }
+];
+var CHANNEL_NEEDS2 = [{ flag: P.ViewChannel, name: "Kanal ansehen" }, { flag: P.SendMessages, name: "Nachrichten senden" }, { flag: P.EmbedLinks, name: "Links einbetten" }];
+var SYSTEM_CHANNELS = { dispatch: "Leitstelle", wanted: "Fahndungen", applications: "Bewerbungen", danger: "Gefahrenstatus", sek: "SEK", qualifications: "Qualifikationen", duty: "Dienst", teamlist: "Teamliste", tickets: "Support-Tickets", announcements: "Ank\xFCndigungen" };
+var ASSIGNED_ROLES = { dutyRole: "Im Dienst", breakRole: "Pause", radioRole: "Funk", sekRole: "SEK", trainingRole: "Ausbildung", adminDutyRole: "Admin-Dienst" };
+var has = (perms, flag) => (perms & P.Administrator) === P.Administrator || (perms & flag) === flag;
+function diagnoseGuild(g, cfg2, sys, rt) {
+  const out = [];
+  const add = (f2) => out.push(f2);
+  if (!rt.ready) add({ severity: "error", area: "Discord", text: "Der Bot ist nicht mit Discord verbunden.", fix: "Bot-Prozess und Netzwerk pr\xFCfen; Token im Developer Portal g\xFCltig?" });
+  else if (rt.wsPing > 1e3) add({ severity: "warn", area: "Discord", text: `Hohe Verz\xF6gerung zu Discord (${rt.wsPing} ms).`, fix: "Meist vor\xFCbergehend; bleibt es so, Hosting-Standort/Netzwerk pr\xFCfen." });
+  const missing = REQUIRED_PERMISSIONS.filter((r) => !has(g.botPermissions, r.flag));
+  for (const r of missing) add({ severity: r.severity, area: "Bot-Rechte", text: `Dem Bot fehlt das Server-Recht \u201E${r.name}\u201C \u2013 betroffen: ${r.needed}.`, fix: "Servereinstellungen \u2192 Rollen \u2192 Bot-Rolle \u2192 Recht aktivieren (oder den Bot mit dem Einladungslink aus dem Log neu einladen)." });
+  if (!missing.length) add({ severity: "ok", area: "Bot-Rechte", text: "Alle ben\xF6tigten Server-Rechte sind vorhanden." });
+  const channel = (id3, label2) => {
+    const c = g.channels.find((x) => x.id === id3);
+    if (!c) {
+      add({ severity: "error", area: "Kan\xE4le", text: `Kanal \u201E${label2}\u201C ist eingestellt, existiert aber nicht mehr.`, fix: "Kanal neu ausw\xE4hlen." });
+      return;
+    }
+    const lack = CHANNEL_NEEDS2.filter((n) => !has(c.perms, n.flag)).map((n) => n.name);
+    if (lack.length) add({ severity: "error", area: "Kan\xE4le", text: `Im Kanal #${c.name} (\u201E${label2}\u201C) fehlt dem Bot: ${lack.join(", ")}.`, fix: `Kanal-Einstellungen von #${c.name} \u2192 Berechtigungen \u2192 Bot-Rolle erlauben.` });
+  };
+  const unset = [];
+  for (const k of SETUP_CHANNELS) {
+    const id3 = cfg2.channels[k];
+    if (id3) channel(id3, CHANNEL_LABEL[k]);
+    else unset.push(CHANNEL_LABEL[k]);
+  }
+  if (sys) for (const [k, label2] of Object.entries(SYSTEM_CHANNELS)) {
+    const id3 = sys[k];
+    if (id3 && g.channels.some((c) => c.id === id3)) channel(id3, label2);
+  }
+  if (unset.length) add({ severity: "info", area: "Kan\xE4le", text: `Nicht konfiguriert: ${unset.join(", ")}.`, fix: "`/setup` \u2192 Kan\xE4le." });
+  const roleIds = new Set(g.roles.map((r) => r.id));
+  for (const l of ACCESS_LEVELS) for (const id3 of cfg2.roles[l]) if (!roleIds.has(id3)) add({ severity: "warn", area: "Rollen", text: `Eine Rolle der Stufe \u201E${LEVEL_LABEL[l]}\u201C existiert nicht mehr.`, fix: "`/setup` \u2192 Rollen neu zuordnen." });
+  if (!levelsConfigured(cfg2)) add({ severity: "info", area: "Rollen", text: "Noch keine Discord-Rollen den Stufen zugeordnet \u2013 Verwaltungsbefehle d\xFCrfen nur Mitglieder mit \u201EServer verwalten\u201C.", fix: "`/setup` \u2192 Rollen." });
+  else {
+    const empty = ACCESS_LEVELS.filter((l) => !cfg2.roles[l].length).map((l) => LEVEL_LABEL[l]);
+    if (empty.length) add({ severity: "info", area: "Rollen", text: `Ohne zugeordnete Rolle: ${empty.join(", ")}.` });
+  }
+  if (sys) for (const [k, label2] of Object.entries(ASSIGNED_ROLES)) {
+    const id3 = sys[k];
+    if (!id3 || !roleIds.has(id3)) continue;
+    const r = g.roles.find((x) => x.id === id3);
+    if (r.managed) add({ severity: "error", area: "Rollen", text: `Rolle \u201E${r.name}\u201C (${label2}) geh\xF6rt einer Integration und kann nicht vergeben werden.` });
+    else if (r.position >= g.botTopRolePosition) add({ severity: "error", area: "Rollen", text: `Rolle \u201E${r.name}\u201C (${label2}) steht \xFCber oder auf H\xF6he der Bot-Rolle \u2013 der Bot kann sie nicht vergeben.`, fix: "Servereinstellungen \u2192 Rollen \u2192 Bot-Rolle \xFCber diese Rolle ziehen." });
+  }
+  if (!rt.intents.members) add({ severity: "warn", area: "Discord", text: "Privilegierter Intent \u201EServer Members\u201C ist aus: keine Begr\xFC\xDFung/Abschied, Teamliste nur aus dem Cache.", fix: "Developer Portal \u2192 Bot \u2192 Privileged Gateway Intents \u2192 \u201EServer Members Intent\u201C an, Bot neu starten." });
+  if (!rt.intents.content) add({ severity: "info", area: "Discord", text: "Intent \u201EMessage Content\u201C ist aus: Ticket-Verl\xE4ufe ohne Nachrichtentext.", fix: "Developer Portal \u2192 Bot \u2192 \u201EMessage Content Intent\u201C." });
+  if (cfg2.modules.disabled.length) add({ severity: "info", area: "Module", text: `Im Bot ausgeblendet: ${cfg2.modules.disabled.join(", ")} (Daten bleiben erhalten).` });
+  const order = { error: 0, warn: 1, info: 2, ok: 3 };
+  return out.sort((a, b2) => order[a.severity] - order[b2.severity]);
+}
+var SEVERITY_ICON = { ok: "\u2705", info: "\u2139\uFE0F", warn: "\u26A0\uFE0F", error: "\u274C" };
+function findingsText(list3, max = 3800) {
+  const lines = [];
+  let len = 0;
+  for (const f2 of list3) {
+    const line2 = `${SEVERITY_ICON[f2.severity]} **${f2.area}:** ${f2.text}${f2.fix ? `
+  \u21B3 ${f2.fix}` : ""}`;
+    if (len + line2.length > max) {
+      lines.push(`\u2026 ${list3.length - lines.length} weitere`);
+      break;
+    }
+    lines.push(line2);
+    len += line2.length + 1;
+  }
+  return lines.join("\n") || "\u2705 Keine Auff\xE4lligkeiten.";
+}
+
+// apps/bot/src/commands/system.ts
+var dur = (sec) => {
+  const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
+  return `${d ? `${d} T ` : ""}${h} h ${m} min`;
+};
+var yesNo = (b2) => b2 === null ? "\u2754 unbekannt" : b2 ? "\u2705 ja" : "\u274C nein";
+async function systemConfig(c) {
+  try {
+    return { cfg: await withRetry(() => c.config ? c.config() : c.api.service("GET", "/bot/config")) };
+  } catch (e) {
+    return { cfg: null, problem: isTransient(e) ? "System (API) nach mehreren Versuchen nicht erreichbar \u2013 Kan\xE4le/Rollen aus dem Dashboard wurden nicht gepr\xFCft." : "Einstellungen aus dem System konnten nicht geladen werden." };
+  }
+}
+async function status2(c) {
+  const rt = c.runtime;
+  const s = rt.status();
+  const [api2, cfg2, backups] = await Promise.all([rt.apiHealth(), rt.guildConfig.get(c.guildId).catch(() => null), rt.backups.list(c.guildId).catch(() => [])]);
+  const last = backups.find((b2) => b2.locations.length);
+  const tone = !s.ready || !api2.reachable || api2.authOk === false ? "danger" : "success";
+  const e = brand(cfg2, {
+    title: "\u{1FA7A} Systemstatus",
+    fields: [
+      { name: "Discord", value: `${s.ready ? "\u{1F7E2} verbunden" : "\u{1F534} nicht verbunden"} \xB7 ${s.wsPing >= 0 ? `${s.wsPing} ms` : "\u2014"} \xB7 ${s.guilds} Server`, inline: true },
+      { name: "Laufzeit", value: dur(s.uptimeSec), inline: true },
+      { name: "System (API)", value: `${api2.reachable ? `\u{1F7E2} erreichbar (${api2.ms} ms)` : `\u{1F534} nicht erreichbar${api2.status ? ` (HTTP ${api2.status})` : ""}`}
+Bot-Zugang angenommen: ${yesNo(api2.authOk)}`, inline: true },
+      { name: "Privilegierte Intents", value: `Server Members: ${yesNo(s.intents.members)} \xB7 Presence: ${yesNo(s.intents.presences)} \xB7 Message Content: ${yesNo(s.intents.content)}` },
+      { name: "Einrichtung", value: cfg2 ? `${cfg2.setupDone ? "\u2705 abgeschlossen" : "\u2B1C noch nicht abgeschlossen"} (Revision ${cfg2.revision})` : "\u2754 nicht lesbar", inline: true },
+      { name: "Letzte Bot-Sicherung", value: last ? `<t:${Math.floor(Date.parse(last.createdAt) / 1e3)}:R> (${last.locations.join(" + ")})` : "noch keine", inline: true },
+      ...rt.backupDirWarning ? [{ name: "\u26A0\uFE0F Sicherungsordner", value: rt.backupDirWarning }] : []
+    ],
+    footer: "Tokens und Schl\xFCssel werden nie angezeigt."
+  }, tone);
+  return { ephemeral: true, embeds: [e] };
+}
+async function diagnose(c) {
+  const rt = c.runtime;
+  const [snap, cfg2, sys, api2] = await Promise.all([rt.snapshot(c.guildId), rt.guildConfig.get(c.guildId, { fresh: true }), systemConfig(c), rt.apiHealth()]);
+  if (!snap) return errorReply("Der Server konnte nicht gelesen werden (ist der Bot noch Mitglied?).");
+  const findings = diagnoseGuild(snap, cfg2, sys.cfg, rt.status());
+  if (!api2.reachable) findings.unshift({ severity: "error", area: "System (API)", text: "Die EN-Polizei-API ist nicht erreichbar \u2013 Befehle mit Systemdaten schlagen fehl.", fix: "L\xE4uft das System? Stimmt API_URL in der Bot-Konfiguration?" });
+  else if (api2.authOk === false) findings.unshift({ severity: "error", area: "System (API)", text: "Die API lehnt den Bot-Zugang ab.", fix: "BOT_API_TOKEN des Bots muss exakt dem Wert im System entsprechen (Wert wird hier bewusst nicht angezeigt)." });
+  if (sys.problem) findings.push({ severity: "warn", area: "System (API)", text: sys.problem });
+  if (rt.backupDirWarning) findings.push({ severity: "warn", area: "Sicherungen", text: rt.backupDirWarning, fix: "BOT_BACKUP_DIR auf einen Ordner au\xDFerhalb des Bot-Ordners setzen." });
+  const errors = findings.filter((f2) => f2.severity === "error").length, warns = findings.filter((f2) => f2.severity === "warn").length;
+  return { ephemeral: true, embeds: [brand(cfg2, { title: `\u{1F50E} Diagnose: ${errors} Fehler, ${warns} Warnungen`, description: redact(findingsText(findings)) }, errors ? "danger" : warns ? "warning" : "success")] };
+}
+async function integrations(c) {
+  const rt = c.runtime;
+  const s = rt.status();
+  const [api2, roblox, cfg2, mods] = await Promise.all([
+    rt.apiHealth(),
+    rt.robloxReachable(),
+    rt.guildConfig.get(c.guildId).catch(() => null),
+    withRetry(() => c.api.service("GET", `/bot/servers/${c.guildId}/modules`)).catch(() => null)
+  ]);
+  const lines = [
+    `${s.ready ? "\u{1F7E2}" : "\u{1F534}"} **Discord Gateway** \u2013 ${s.ready ? `verbunden, ${s.wsPing} ms` : "nicht verbunden"}`,
+    `${api2.reachable && api2.authOk !== false ? "\u{1F7E2}" : "\u{1F534}"} **EN-Polizei-API** \u2013 ${api2.reachable ? `erreichbar (${api2.ms} ms), Bot-Zugang ${api2.authOk === false ? "abgelehnt" : api2.authOk ? "angenommen" : "nicht gepr\xFCft"}` : "nicht erreichbar"}`,
+    `${roblox ? "\u{1F7E2}" : "\u{1F7E0}"} **Roblox (\xF6ffentliche Users-API)** \u2013 ${roblox ? "erreichbar" : "nicht erreichbar \u2013 Roblox-Namenssuche/-Pr\xFCfung im Bot eingeschr\xE4nkt"}`,
+    `${mods ? "\u{1F7E2}" : "\u{1F7E0}"} **Module dieses Servers (System)** \u2013 ${mods ? mods.disabled.length ? `ausgeschaltet: ${mods.disabled.join(", ")}` : "alle an" : "nicht abrufbar"}`
+  ];
+  return { ephemeral: true, embeds: [brand(cfg2, {
+    title: "\u{1F50C} Integrationen",
+    description: `${lines.join("\n")}
+
+Weitere Anbindungen (z. B. ER:LC, Zello Work) verwaltet das System selbst; der Bot hat dazu keinen direkten Zugang und zeigt deshalb keinen eigenen Status daf\xFCr an.`
+  })] };
+}
+var SYSTEM_COMMANDS = [{
+  name: "system",
+  description: "Technischer Status, Fehlerdiagnose und Integrationen (f\xFCr Administratoren)",
+  subcommands: [
+    { name: "status", description: "Verbindung zu Discord und System, Laufzeit, letzte Sicherung" },
+    { name: "diagnose", description: "Fehlende Bot-Rechte, nicht konfigurierte Kan\xE4le und Rollen finden" },
+    { name: "integrations", description: "Status der angebundenen Dienste" }
+  ],
+  async run(c) {
+    const sub = String(c.opts._sub ?? "status");
+    const denied = await guard(c, `system ${sub}`);
+    if (denied) return denied;
+    if (!c.runtime || !c.guildId) return errorReply("Diagnose ist gerade nicht verf\xFCgbar.");
+    try {
+      if (sub === "diagnose") return await diagnose(c);
+      if (sub === "integrations") return await integrations(c);
+      return await status2(c);
+    } catch (e) {
+      console.error("system command failed:", e instanceof Error ? e.message : e);
+      return errorReply("Die Pr\xFCfung ist unerwartet fehlgeschlagen. Details stehen (ohne Geheimnisse) im Bot-Log.");
     }
   }
 }];
@@ -84366,6 +85887,8 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
         { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Ausbildung & Pr\xFCfungen", value: "`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` \xB7 Ausbilder: `/pruefung verwalten` `/pruefung bewerten`" },
+        { name: "Administration", value: "`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -84422,15 +85945,15 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     description: "Setzt deinen Dienststatus",
     options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY) }],
     async run(c) {
-      const status = DUTY[str3(c, "status")];
-      if (!status) return errorReply("Unbekannter Status.");
-      if (status === "ON_DUTY") {
+      const status3 = DUTY[str3(c, "status")];
+      if (!status3) return errorReply("Unbekannter Status.");
+      if (status3 === "ON_DUTY") {
         const pick2 = await shiftPicker(c);
         if (pick2) return pick2;
       }
       try {
-        await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status });
-        return okReply(`Dienststatus: **${label(status)}**`);
+        await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3 });
+        return okReply(`Dienststatus: **${label(status3)}**`);
       } catch (e) {
         return mapError(e);
       }
@@ -84455,7 +85978,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         }
         const me = r.users[0];
         if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period2})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
-        const lines = Object.entries(me.byStatus).sort((a, b) => b[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm2(m)}`);
+        const lines = Object.entries(me.byStatus).sort((a, b2) => b2[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm2(m)}`);
         return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period2})`, [`**Gesamt: ${hm2(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
       } catch (e) {
         return mapError(e);
@@ -84482,14 +86005,14 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
     ],
     async run(c) {
-      const status = UNIT[str3(c, "status")];
-      if (!status) return errorReply("Unbekannter Status.");
+      const status3 = UNIT[str3(c, "status")];
+      if (!status3) return errorReply("Unbekannter Status.");
       try {
         const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
         const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
         if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status });
-        return okReply(`**${plain2(unit.callsign)}** \u2192 ${label(status)}`);
+        await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status: status3 });
+        return okReply(`**${plain2(unit.callsign)}** \u2192 ${label(status3)}`);
       } catch (e) {
         return mapError(e);
       }
@@ -84562,9 +86085,9 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     async run(c) {
       try {
         const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
-        const on = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
-        const lines = on.slice(0, 25).map((r) => `\u2022 **${plain2(r.callsign ?? "\u2014")}** ${plain2(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain2(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
+        const on2 = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
+        const lines = on2.slice(0, 25).map((r) => `\u2022 **${plain2(r.callsign ?? "\u2014")}** ${plain2(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain2(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on2.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
       } catch (e) {
         return mapError(e);
       }
@@ -84586,7 +86109,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
           { name: "Status", value: label(i.status), inline: true },
           { name: "Ort", value: clip2(plain2(i.location), 1024), inline: true },
           { name: "Einheiten", value: clip2(units, 1024) },
-          { name: "Verlauf", value: clip2(d.timeline.slice(0, 5).map((t) => `\u2022 ${plain2(t.summary)}`).join("\n") || "\u2014", 1024) }
+          { name: "Verlauf", value: clip2(d.timeline.slice(0, 5).map((t2) => `\u2022 ${plain2(t2.summary)}`).join("\n") || "\u2014", 1024) }
         ] }] };
       } catch (e) {
         return mapError(e);
@@ -84601,14 +86124,14 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
     ],
     async run(c) {
-      const status = INC_STATUS[str3(c, "status")];
-      if (!status) return errorReply("Unbekannter Status.");
+      const status3 = INC_STATUS[str3(c, "status")];
+      if (!status3) return errorReply("Unbekannter Status.");
       try {
         const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
         if (!incident) return reply;
-        if (status === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
-        else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status });
-        return okReply(`**${incident.number}** \u2192 ${label(status)}`);
+        if (status3 === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
+        else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status: status3 });
+        return okReply(`**${incident.number}** \u2192 ${label(status3)}`);
       } catch (e) {
         return mapError(e);
       }
@@ -84713,11 +86236,11 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       { name: "text", description: "Nachricht", type: "string", required: true, maxLength: 1500 }
     ],
     async run(c) {
-      const ch = CHANNEL[str3(c, "kanal")];
-      if (!ch) return errorReply("Unbekannter Kanal.");
+      const ch2 = CHANNEL[str3(c, "kanal")];
+      if (!ch2) return errorReply("Unbekannter Kanal.");
       try {
-        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch}/messages`, { body: str3(c, "text") });
-        return okReply(`Nachricht an **${ch}** gesendet.`);
+        await c.api.asUser(c.discordId, "POST", `/communication/channels/${ch2}/messages`, { body: str3(c, "text") });
+        return okReply(`Nachricht an **${ch2}** gesendet.`);
       } catch (e) {
         return mapError(e);
       }
@@ -84744,7 +86267,11 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   ...RADIO_WHITELIST_COMMANDS,
   ...TRAINING_COMMANDS,
   ...SHIFT_COMMANDS,
-  TICKET_COMMAND
+  TICKET_COMMAND,
+  ...SETUP_COMMANDS,
+  ...SYSTEM_COMMANDS,
+  ...BACKUP_COMMANDS,
+  ...EXAM_COMMANDS
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -84759,7 +86286,9 @@ var schema = external_exports.object({
   BOT_API_TOKEN: external_exports.string().min(32, "BOT_API_TOKEN must be at least 32 characters (same value as in the API)"),
   OUTBOX_POLL_SECONDS: external_exports.coerce.number().int().min(2).max(60).default(5),
   /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
-  LIVE_REFRESH_SECONDS: external_exports.coerce.number().int().min(5).max(3600).default(5)
+  LIVE_REFRESH_SECONDS: external_exports.coerce.number().int().min(5).max(3600).default(5),
+  /** Ordner für Bot-Sicherungen – absolut und AUSSERHALB des Bot-/Produktionsordners (Standard: ~/.en-polizei-bot/backups). */
+  BOT_BACKUP_DIR: external_exports.string().min(1).optional()
 });
 var guildIds = (cfg2) => [...new Set((cfg2.DISCORD_GUILD_ID ?? "").split(/[\s,;]+/).filter(Boolean))];
 function parseDotEnv(text2) {
@@ -84798,8 +86327,8 @@ function createLive(api2, platform2, log = console.log) {
       const s = await api2.service("GET", "/bot/danger");
       return { embed: dangerPanel(s), buttons: dangerButtons(s) };
     }
-    const t = await api2.service("GET", "/bot/team");
-    return { embed: teamlistEmbed(t.members, t.rankOrder), buttons: void 0 };
+    const t2 = await api2.service("GET", "/bot/team");
+    return { embed: teamlistEmbed(t2.members, t2.rankOrder), buttons: void 0 };
   }
   async function refresh(kind2, o = {}) {
     const stored = (await api2.service("GET", `/bot/state/${STATE_KEY[kind2]}`)).value;
@@ -84844,10 +86373,10 @@ function createLive(api2, platform2, log = console.log) {
 }
 
 // apps/bot/src/outbox.ts
-function dutyRoleChanges(status, cfg2) {
+function dutyRoleChanges(status3, cfg2) {
   const ids = (v) => (v ?? "").split(/[\s,;]+/).filter((r) => /^\d{15,25}$/.test(r));
   const map = { ON_DUTY: ids(cfg2.dutyRole), BREAK: ids(cfg2.breakRole), TRAINING: ids(cfg2.trainingRole), ADMINISTRATIVE: ids(cfg2.adminDutyRole) };
-  const add = map[status] ?? [];
+  const add = map[status3] ?? [];
   const all = [...new Set(Object.values(map).flat())];
   return { add: [...new Set(add)], remove: all.filter((r) => !add.includes(r)) };
 }
@@ -85054,8 +86583,8 @@ async function robloxCheck(username, doFetch = fetch) {
     if (!hit) return null;
     let avatarUrl = null;
     try {
-      const t = await doFetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${hit.id}&size=150x150&format=Png&isCircular=false`, { signal: AbortSignal.timeout(4e3) });
-      const img = t.ok ? (await t.json()).data?.[0] : void 0;
+      const t2 = await doFetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${hit.id}&size=150x150&format=Png&isCircular=false`, { signal: AbortSignal.timeout(4e3) });
+      const img = t2.ok ? (await t2.json()).data?.[0] : void 0;
       if (img?.state === "Completed" && img.imageUrl?.startsWith("https://")) avatarUrl = img.imageUrl;
     } catch {
     }
@@ -85073,7 +86602,7 @@ function welcomeEmbed(def, m, now = Date.now(), bannerFile) {
   const image = bannerFile ? `attachment://${bannerFile}` : def.image;
   return { title: title || "\u200B", ...description ? { description } : {}, color: hexColor(def.color), ...def.showAvatar && m.avatar ? { thumbnail: m.avatar } : {}, ...image ? { image } : {} };
 }
-function createWelcome(api2, actions, log = console.error) {
+function createWelcome(api2, actions, log = console.error, local) {
   const cache = /* @__PURE__ */ new Map();
   const config2 = async (guildId) => {
     const hit = cache.get(guildId);
@@ -85086,14 +86615,21 @@ function createWelcome(api2, actions, log = console.error) {
   const banners = /* @__PURE__ */ new Map();
   const banner = async (id3) => {
     if (!banners.has(id3)) {
-      const b = await api2.service("GET", `/bot/welcome/banner/${id3}`);
+      const b2 = await api2.service("GET", `/bot/welcome/banner/${id3}`);
       if (banners.size > 20) banners.clear();
-      banners.set(id3, { name: b.name.replace(/[^\w.-]/g, "") || "banner.png", data: Buffer.from(b.data, "base64") });
+      banners.set(id3, { name: b2.name.replace(/[^\w.-]/g, "") || "banner.png", data: Buffer.from(b2.data, "base64") });
     }
     return banners.get(id3);
   };
-  const say = async (def, m) => {
-    if (!def.enabled || !def.channelId) return;
+  const say = async (def, m, kind2) => {
+    if (!def.enabled || !def.channelId) {
+      const fallback = kind2 && local ? await local(m.guildId, kind2).catch((e) => {
+        log(`setup ${kind2} not loaded: ${e instanceof Error ? e.message : e}`);
+        return null;
+      }) : null;
+      if (fallback?.enabled && fallback.channelId) await actions.post(fallback.channelId, { ...fallback.pingUser ? { content: `<@${m.id}>`, mentionUserIds: [m.id] } : {}, embed: welcomeEmbed(fallback, m) });
+      return;
+    }
     const file = def.imageMediaId ? await banner(def.imageMediaId).catch((e) => {
       log(`banner not loaded: ${e instanceof Error ? e.message : e}`);
       return void 0;
@@ -85109,7 +86645,7 @@ function createWelcome(api2, actions, log = console.error) {
       });
       if (!cfg2) return;
       await Promise.all([
-        step("welcome message", say(cfg2.welcome, m)),
+        step("welcome message", say(cfg2.welcome, m, "welcome")),
         cfg2.dm.enabled && cfg2.dm.message.trim() ? step("welcome DM", actions.dm(m.id, renderWelcomeText(cfg2.dm.message, m).slice(0, 2e3))) : void 0,
         cfg2.autoRoleIds.length ? step("auto roles", actions.addRoles(m.guildId, m.id, cfg2.autoRoleIds)) : void 0
       ]);
@@ -85121,7 +86657,7 @@ function createWelcome(api2, actions, log = console.error) {
         return null;
       });
       await Promise.all([
-        cfg2 ? step("goodbye message", say(cfg2.goodbye, m)) : void 0,
+        cfg2 ? step("goodbye message", say(cfg2.goodbye, m, "goodbye")) : void 0,
         step("member-left actions", api2.service("POST", "/bot/member-left", { guildId: m.guildId, discordId: m.id }))
       ]);
     },
@@ -85151,9 +86687,9 @@ function ghostPingTargets(m, now = Date.now()) {
   return [...new Set(m.mentions.filter((u) => !u.bot && u.id !== m.authorId).map((u) => u.id))];
 }
 function ghostPingText(m, targets) {
-  const raw = m.content.trim() || targets.map((t) => `<@${t}>`).join(" ");
+  const raw = m.content.trim() || targets.map((t2) => `<@${t2}>`).join(" ");
   const quoted = raw.replace(/@(everyone|here)/g, "@\u200B$1").slice(0, 1500);
-  return `${targets.map((t) => `<@${t}>`).join(", ")},
+  return `${targets.map((t2) => `<@${t2}>`).join(", ")},
 Da war jemand sehr b\xF6se ! <@${m.authorId}> hat ${targets.length > 1 ? "euch" : "dich"} geghost-pinged mit dieser Nachricht !: "${quoted}"`;
 }
 function createGhostPing(api2, actions, log = console.error) {
@@ -85174,20 +86710,20 @@ function createGhostPing(api2, actions, log = console.error) {
 }
 
 // apps/bot/src/backup.ts
-var import_discord5 = __toESM(require_src());
+var import_discord7 = __toESM(require_src());
 var TYPE = {
-  [import_discord5.ChannelType.GuildText]: "text",
-  [import_discord5.ChannelType.GuildVoice]: "voice",
-  [import_discord5.ChannelType.GuildCategory]: "category",
-  [import_discord5.ChannelType.GuildAnnouncement]: "announcement",
-  [import_discord5.ChannelType.GuildStageVoice]: "stage",
-  [import_discord5.ChannelType.GuildForum]: "forum"
+  [import_discord7.ChannelType.GuildText]: "text",
+  [import_discord7.ChannelType.GuildVoice]: "voice",
+  [import_discord7.ChannelType.GuildCategory]: "category",
+  [import_discord7.ChannelType.GuildAnnouncement]: "announcement",
+  [import_discord7.ChannelType.GuildStageVoice]: "stage",
+  [import_discord7.ChannelType.GuildForum]: "forum"
 };
-var BACK = { text: import_discord5.ChannelType.GuildText, voice: import_discord5.ChannelType.GuildVoice, category: import_discord5.ChannelType.GuildCategory, announcement: import_discord5.ChannelType.GuildAnnouncement, stage: import_discord5.ChannelType.GuildStageVoice, forum: import_discord5.ChannelType.GuildForum };
+var BACK = { text: import_discord7.ChannelType.GuildText, voice: import_discord7.ChannelType.GuildVoice, category: import_discord7.ChannelType.GuildCategory, announcement: import_discord7.ChannelType.GuildAnnouncement, stage: import_discord7.ChannelType.GuildStageVoice, forum: import_discord7.ChannelType.GuildForum };
 async function captureGuild(guild) {
   await guild.roles.fetch();
   await guild.channels.fetch();
-  const roles = [...guild.roles.cache.values()].filter((r) => r.id !== guild.id && !r.managed).map((r) => ({ id: r.id, name: r.name, color: r.color, hoist: r.hoist, mentionable: r.mentionable, permissions: r.permissions.bitfield.toString(), position: r.position })).sort((a, b) => a.position - b.position);
+  const roles2 = [...guild.roles.cache.values()].filter((r) => r.id !== guild.id && !r.managed).map((r) => ({ id: r.id, name: r.name, color: r.color, hoist: r.hoist, mentionable: r.mentionable, permissions: r.permissions.bitfield.toString(), position: r.position })).sort((a, b2) => a.position - b2.position);
   const channels = [];
   for (const c of guild.channels.cache.values()) {
     const type = TYPE[c.type];
@@ -85204,15 +86740,15 @@ async function captureGuild(guild) {
       ...g.rateLimitPerUser !== void 0 ? { rateLimitPerUser: g.rateLimitPerUser } : {},
       ...g.bitrate !== void 0 ? { bitrate: g.bitrate } : {},
       ...g.userLimit !== void 0 ? { userLimit: g.userLimit } : {},
-      overwrites: [...g.permissionOverwrites.cache.values()].map((o) => ({ id: o.id, type: o.type === import_discord5.OverwriteType.Role ? "role" : "member", allow: o.allow.bitfield.toString(), deny: o.deny.bitfield.toString() }))
+      overwrites: [...g.permissionOverwrites.cache.values()].map((o) => ({ id: o.id, type: o.type === import_discord7.OverwriteType.Role ? "role" : "member", allow: o.allow.bitfield.toString(), deny: o.deny.bitfield.toString() }))
     });
   }
-  channels.sort((a, b) => Number(b.type === "category") - Number(a.type === "category") || a.position - b.position);
+  channels.sort((a, b2) => Number(b2.type === "category") - Number(a.type === "category") || a.position - b2.position);
   return {
     version: 1,
     guildId: guild.id,
     everyonePermissions: guild.roles.everyone.permissions.bitfield.toString(),
-    roles,
+    roles: roles2,
     channels,
     settings: { name: guild.name, verificationLevel: guild.verificationLevel, defaultMessageNotifications: guild.defaultMessageNotifications, explicitContentFilter: guild.explicitContentFilter, afkChannelId: guild.afkChannelId, afkTimeout: guild.afkTimeout, systemChannelId: guild.systemChannelId }
   };
@@ -85263,7 +86799,7 @@ async function restoreGuild(guild, data, parts) {
   }
   const chanMap = /* @__PURE__ */ new Map();
   if (parts.includes("channels")) {
-    const overwrites = (c) => c.overwrites.map((o) => ({ id: o.type === "role" ? roleMap.get(o.id) ?? null : o.id, type: o.type === "role" ? import_discord5.OverwriteType.Role : import_discord5.OverwriteType.Member, allow: new import_discord5.PermissionsBitField(BigInt(o.allow)), deny: new import_discord5.PermissionsBitField(BigInt(o.deny)) })).filter((o) => !!o.id && (o.type === import_discord5.OverwriteType.Role ? guild.roles.cache.has(o.id) : true));
+    const overwrites = (c) => c.overwrites.map((o) => ({ id: o.type === "role" ? roleMap.get(o.id) ?? null : o.id, type: o.type === "role" ? import_discord7.OverwriteType.Role : import_discord7.OverwriteType.Member, allow: new import_discord7.PermissionsBitField(BigInt(o.allow)), deny: new import_discord7.PermissionsBitField(BigInt(o.deny)) })).filter((o) => !!o.id && (o.type === import_discord7.OverwriteType.Role ? guild.roles.cache.has(o.id) : true));
     for (const c of data.channels) {
       const parent = c.parentId ? chanMap.get(c.parentId) ?? null : null;
       const existing = guild.channels.cache.find((x) => !x.isThread() && x.name === c.name && x.type === BACK[c.type] && ("parentId" in x ? (x.parentId ?? null) === parent : true));
@@ -85357,21 +86893,235 @@ function createVerify(api2, ops, log = console.error) {
   };
 }
 
+// apps/bot/src/bot-backup.ts
+var import_node_crypto2 = require("node:crypto");
+var import_promises = require("node:fs/promises");
+var import_node_os = __toESM(require("node:os"));
+var import_node_path2 = __toESM(require("node:path"));
+var BACKUP_FORMAT = "enpol-bot-backup";
+var BACKUP_VERSION = 1;
+var NAME = /^bot-(manuell|vor-wiederherstellung|vor-migration)-\d{8}-\d{6}(?:-\d{1,3})?\.json$/;
+var MIRROR_KEEP_FULL = 5;
+var MIRROR_KEEP_META = 30;
+function stableJson(v) {
+  if (Array.isArray(v)) return `[${v.map(stableJson).join(",")}]`;
+  if (v && typeof v === "object") return `{${Object.keys(v).sort().filter((k) => v[k] !== void 0).map((k) => `${JSON.stringify(k)}:${stableJson(v[k])}`).join(",")}}`;
+  return JSON.stringify(v ?? null);
+}
+var checksumOf = (contents) => (0, import_node_crypto2.createHash)("sha256").update(stableJson(contents)).digest("hex");
+var safeGuild = (g) => {
+  if (!/^\d{15,25}$/.test(g)) throw new Error("invalid guild id");
+  return g;
+};
+var safeName = (n) => {
+  if (!NAME.test(n)) throw new Error("invalid backup name");
+  return n;
+};
+var defaultBackupDir = (env = process.env) => import_node_path2.default.resolve(env.BOT_BACKUP_DIR || import_node_path2.default.join(import_node_os.default.homedir(), ".en-polizei-bot", "backups"));
+function insideProduction(dir, prodDirs) {
+  const d = import_node_path2.default.resolve(dir) + import_node_path2.default.sep;
+  return prodDirs.some((p) => d.startsWith(import_node_path2.default.resolve(p) + import_node_path2.default.sep));
+}
+function fsBackupFiles(dir) {
+  const gdir = (g) => import_node_path2.default.join(dir, safeGuild(g));
+  return {
+    location: dir,
+    async list(g) {
+      return (await (0, import_promises.readdir)(gdir(g)).catch(() => [])).filter((n) => NAME.test(n));
+    },
+    async read(g, n) {
+      return (0, import_promises.readFile)(import_node_path2.default.join(gdir(g), safeName(n)), "utf8").catch(() => null);
+    },
+    async write(g, n, text2) {
+      await (0, import_promises.mkdir)(gdir(g), { recursive: true, mode: 448 });
+      await (0, import_promises.chmod)(dir, 448).catch(() => void 0);
+      const f2 = import_node_path2.default.join(gdir(g), safeName(n));
+      await (0, import_promises.writeFile)(f2, text2, { mode: 384, flag: "wx" });
+    }
+  };
+}
+var mirrorKey = (g) => `botbak:${safeGuild(g)}`;
+function diffConfig(cur, next) {
+  const out = [];
+  const skip = /* @__PURE__ */ new Set(["revision", "updatedAt", "updatedBy", "version"]);
+  const walk = (a, b2, p) => {
+    if (stableJson(a) === stableJson(b2)) return;
+    if (a && b2 && typeof a === "object" && typeof b2 === "object" && !Array.isArray(a) && !Array.isArray(b2)) {
+      for (const k of /* @__PURE__ */ new Set([...Object.keys(a), ...Object.keys(b2)])) if (!(p === "" && skip.has(k))) walk(a[k], b2[k], p ? `${p}.${k}` : k);
+      return;
+    }
+    const show = (v) => {
+      const s = JSON.stringify(v ?? null);
+      return s.length > 60 ? `${s.slice(0, 57)}\u2026` : s;
+    };
+    out.push(`${p}: ${show(a)} \u2192 ${show(b2)}`);
+  };
+  walk(cur, next, "");
+  return out;
+}
+var BotBackupService = class {
+  constructor(store, files, db, now = () => /* @__PURE__ */ new Date()) {
+    this.store = store;
+    this.files = files;
+    this.db = db;
+    this.now = now;
+  }
+  store;
+  files;
+  db;
+  now;
+  stamp() {
+    return this.now().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
+  }
+  async readMirror(g) {
+    const v = await this.db.get(mirrorKey(g));
+    return { items: Array.isArray(v?.items) ? v.items : [], snapshots: v?.snapshots && typeof v.snapshots === "object" ? v.snapshots : {} };
+  }
+  /** Sicherung anlegen (Datei + Datenbank). Schlägt nur fehl, wenn KEIN Ort geschrieben werden konnte. */
+  async create(guildId, o) {
+    const cfg2 = scrubSecrets(await this.store.get(guildId, { fresh: true }));
+    const contents = { guildConfig: cfg2 };
+    const taken = /* @__PURE__ */ new Set([...await this.files.list(guildId).catch(() => []), ...(await this.readMirror(guildId).catch(() => ({ items: [] }))).items.map((x) => x.name)]);
+    let name = `bot-${o.reason}-${this.stamp()}.json`;
+    for (let n = 2; taken.has(name); n++) name = `bot-${o.reason}-${this.stamp()}-${n}.json`;
+    const snap = { format: BACKUP_FORMAT, version: BACKUP_VERSION, name, createdAt: this.now().toISOString(), reason: o.reason, guildId, guildName: o.guildName ?? null, createdBy: o.by ?? null, database: o.database ?? null, contents, checksum: checksumOf(contents) };
+    if (containsSecret(snap)) throw new Error("Sicherung abgebrochen: Inhalt sieht nach einem Geheimnis aus.");
+    const problems = [];
+    const locations = [];
+    try {
+      await this.files.write(guildId, name, JSON.stringify(snap, null, 2));
+      locations.push("Datei");
+    } catch (e) {
+      problems.push(`Datei nicht geschrieben (${this.files.location}): ${e instanceof Error ? e.message : e}`);
+    }
+    try {
+      const m = await this.readMirror(guildId);
+      const meta = { name, createdAt: snap.createdAt, reason: snap.reason, checksum: snap.checksum, createdBy: snap.createdBy, database: snap.database };
+      const items = [meta, ...m.items.filter((x) => x.name !== name)].slice(0, MIRROR_KEEP_META);
+      const keep = new Set(items.slice(0, MIRROR_KEEP_FULL).map((x) => x.name));
+      const snapshots = Object.fromEntries(Object.entries({ ...m.snapshots, [name]: snap }).filter(([k]) => keep.has(k)));
+      await this.db.put(mirrorKey(guildId), { items, snapshots });
+      locations.push("Datenbank");
+    } catch (e) {
+      problems.push(`Kopie in der Datenbank nicht gespeichert: ${e instanceof Error ? e.message : e}`);
+    }
+    if (!locations.length) throw new Error(`Sicherung fehlgeschlagen: ${problems.join(" \xB7 ")}`);
+    return { meta: { name, createdAt: snap.createdAt, reason: snap.reason, checksum: snap.checksum, createdBy: snap.createdBy, database: snap.database, locations }, problems };
+  }
+  /** Alle Sicherungen eines Servers (neueste zuerst), mit Ablageort. */
+  async list(guildId) {
+    const [names, m] = await Promise.all([this.files.list(guildId).catch(() => []), this.readMirror(guildId).catch(() => ({ items: [], snapshots: {} }))]);
+    const byName2 = /* @__PURE__ */ new Map();
+    for (const it of m.items) byName2.set(it.name, { ...it, locations: ["Datenbank"] });
+    for (const n of names) {
+      const hit = byName2.get(n);
+      if (hit) hit.locations = ["Datei", ...m.snapshots[n] ? ["Datenbank"] : []];
+      else {
+        const s = this.parse(await this.files.read(guildId, n));
+        byName2.set(n, { name: n, createdAt: s?.createdAt ?? "", reason: s?.reason ?? "manuell", checksum: s?.checksum ?? "", createdBy: s?.createdBy ?? null, database: s?.database ?? null, locations: ["Datei"] });
+      }
+    }
+    for (const [n, b2] of byName2) if (!names.includes(n) && !m.snapshots[n]) byName2.set(n, { ...b2, locations: [] });
+    return [...byName2.values()].sort((a, b2) => b2.createdAt.localeCompare(a.createdAt));
+  }
+  parse(text2) {
+    if (!text2) return null;
+    try {
+      return JSON.parse(text2);
+    } catch {
+      return null;
+    }
+  }
+  /** Sicherung laden: bevorzugt die Datei, sonst die Kopie in der Datenbank. */
+  async load(guildId, name) {
+    safeName(name);
+    return this.parse(await this.files.read(guildId, name).catch(() => null)) ?? (await this.readMirror(guildId).catch(() => null))?.snapshots[name] ?? null;
+  }
+  /** Formale Prüfung: Format, Version, Server, Prüfsumme, keine Geheimnisse, gültige Einstellungen. */
+  verify(s, guildId) {
+    if (!s || typeof s !== "object") return ["Datei fehlt oder ist kein g\xFCltiges JSON."];
+    const p = [];
+    if (s.format !== BACKUP_FORMAT) p.push("Unbekanntes Format.");
+    if (typeof s.version !== "number" || s.version > BACKUP_VERSION) p.push(`Version ${String(s.version)} wird von diesem Bot nicht unterst\xFCtzt.`);
+    if (s.guildId !== guildId) p.push("Die Sicherung geh\xF6rt zu einem anderen Discord-Server.");
+    if (!s.contents?.guildConfig) p.push("Keine Einstellungen enthalten.");
+    else {
+      if (checksumOf(s.contents) !== s.checksum) p.push("Pr\xFCfsumme stimmt nicht \u2013 die Datei wurde ver\xE4ndert oder ist besch\xE4digt.");
+      if (!guildConfigSchema.safeParse(s.contents.guildConfig).success) p.push("Die gesicherten Einstellungen sind ung\xFCltig.");
+    }
+    if (containsSecret(s)) p.push("Die Datei enth\xE4lt etwas, das wie ein Geheimnis aussieht \u2013 wird nicht eingespielt.");
+    return p;
+  }
+  /** Testwiederherstellung in einer abgeschotteten Umgebung (eigener Speicher, nichts Echtes wird berührt). */
+  async sandboxRestore(s) {
+    try {
+      const kv = memoryKeyValue();
+      const sandbox = new GuildConfigStore(kv, 0);
+      const want = parseGuildConfig(s.contents.guildConfig);
+      await sandbox.replace(s.guildId, want);
+      const got = await new GuildConfigStore(kv, 0).get(s.guildId);
+      const diff = diffConfig(want, got);
+      return diff.length ? { ok: false, problems: [`Test-Wiederherstellung weicht ab: ${diff.slice(0, 3).join("; ")}`] } : { ok: true, problems: [] };
+    } catch (e) {
+      return { ok: false, problems: [`Test-Wiederherstellung fehlgeschlagen: ${e instanceof Error ? e.message : e}`] };
+    }
+  }
+  /** Wiederherstellungsplan: Prüfung, Testlauf, Änderungen, Hinweise zu nicht mehr vorhandenen Kanälen/Rollen. Ändert nichts. */
+  async plan(guildId, name, present) {
+    const snapshot = await this.load(guildId, name);
+    const problems = this.verify(snapshot, guildId);
+    const cur = await this.store.get(guildId, { fresh: true });
+    if (!snapshot || problems.length) return { guildId, name, checksum: snapshot?.checksum ?? "", currentRevision: cur.revision, snapshot, changes: [], warnings: [], problems, sandboxOk: false };
+    const sandbox = await this.sandboxRestore(snapshot);
+    const next = parseGuildConfig(snapshot.contents.guildConfig);
+    const warnings = [];
+    if (present) {
+      const gone = (ids, have) => ids.filter((x) => !!x && !have.includes(x)).length;
+      const ch2 = gone(Object.values(next.channels), present.channelIds);
+      const ro = gone(Object.values(next.roles).flat(), present.roleIds);
+      if (ch2) warnings.push(`${ch2} gesicherte(r) Kanal/Kan\xE4le existiert nicht mehr \u2013 danach unter /setup neu w\xE4hlen.`);
+      if (ro) warnings.push(`${ro} gesicherte Rolle(n) existiert nicht mehr \u2013 Stufen danach pr\xFCfen.`);
+    }
+    return { guildId, name, checksum: snapshot.checksum, currentRevision: cur.revision, snapshot, changes: diffConfig(cur, next), warnings, problems: sandbox.problems, sandboxOk: sandbox.ok };
+  }
+  /**
+   * Einspielen eines geprüften Plans: Datei erneut prüfen (unverändert?), aktuellen Stand sichern (Pflicht),
+   * dann nur, wenn sich die Einstellungen seit dem Plan nicht geändert haben.
+   */
+  async apply(plan, o) {
+    if (plan.problems.length || !plan.sandboxOk) throw new Error("Der Plan ist nicht gepr\xFCft \u2013 Wiederherstellung abgelehnt.");
+    const again = await this.load(plan.guildId, plan.name);
+    const problems = this.verify(again, plan.guildId);
+    if (problems.length || again.checksum !== plan.checksum) throw new Error("Die Sicherung hat sich seit der Pr\xFCfung ver\xE4ndert \u2013 bitte neu planen.");
+    const cur = await this.store.get(plan.guildId, { fresh: true });
+    if (cur.revision !== plan.currentRevision) throw new Error("Die Einstellungen wurden seit der Pr\xFCfung ge\xE4ndert \u2013 bitte neu planen.");
+    const { meta: safety } = await this.create(plan.guildId, { reason: "vor-wiederherstellung", by: o.by, guildName: o.guildName ?? null });
+    const config2 = await this.store.replace(plan.guildId, parseGuildConfig(again.contents.guildConfig), { by: o.by, expectRevision: plan.currentRevision });
+    return { safety, config: config2 };
+  }
+};
+
 // apps/bot/src/index.ts
 loadDotEnv();
 var cfg = loadConfig();
+registerSecrets([cfg.DISCORD_TOKEN, cfg.BOT_API_TOKEN]);
+installLogRedaction();
 var api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
-var makeClient = (i) => new import_discord6.Client({
+var guildConfig = new GuildConfigStore(apiKeyValue(api));
+var backupDir = cfg.BOT_BACKUP_DIR ? defaultBackupDir({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : defaultBackupDir({});
+var backupDirWarning = insideProduction(backupDir, [process.cwd(), ...typeof __dirname === "string" ? [__dirname] : []]) ? `Der Sicherungsordner ${backupDir} liegt im Bot-/Produktionsordner. Bitte BOT_BACKUP_DIR auf einen Ordner au\xDFerhalb setzen (die Kopie in der Datenbank besteht trotzdem).` : null;
+var botBackups = new BotBackupService(guildConfig, fsBackupFiles(backupDir), apiKeyValue(api));
+var makeClient = (i) => new import_discord8.Client({
   intents: [
-    import_discord6.GatewayIntentBits.Guilds,
-    import_discord6.GatewayIntentBits.DirectMessages,
-    import_discord6.GatewayIntentBits.GuildMessages,
-    import_discord6.GatewayIntentBits.GuildVoiceStates,
-    ...i.content ? [import_discord6.GatewayIntentBits.MessageContent] : [],
-    ...i.members ? [import_discord6.GatewayIntentBits.GuildMembers] : [],
-    ...i.presences ? [import_discord6.GatewayIntentBits.GuildPresences] : []
+    import_discord8.GatewayIntentBits.Guilds,
+    import_discord8.GatewayIntentBits.DirectMessages,
+    import_discord8.GatewayIntentBits.GuildMessages,
+    import_discord8.GatewayIntentBits.GuildVoiceStates,
+    ...i.content ? [import_discord8.GatewayIntentBits.MessageContent] : [],
+    ...i.members ? [import_discord8.GatewayIntentBits.GuildMembers] : [],
+    ...i.presences ? [import_discord8.GatewayIntentBits.GuildPresences] : []
   ],
-  partials: [import_discord6.Partials.Channel, import_discord6.Partials.GuildMember]
+  partials: [import_discord8.Partials.Channel, import_discord8.Partials.GuildMember]
   // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 var INTENT_STEPS = [
@@ -85385,85 +87135,85 @@ var intents = INTENT_STEPS[0];
 var client = makeClient(intents);
 var tickets = createTicketRuntime(() => client, api);
 var toEmbed = (e) => {
-  const b = new import_discord6.EmbedBuilder().setTitle(e.title);
-  if (e.description) b.setDescription(e.description);
-  if (e.color !== void 0) b.setColor(e.color);
-  if (e.fields?.length) b.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
-  if (e.footer) b.setFooter({ text: e.footer });
-  if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b.setThumbnail(e.thumbnail);
-  if (e.image && /^(https|attachment):\/\//.test(e.image)) b.setImage(e.image);
-  if (e.author?.name) b.setAuthor({ name: e.author.name.slice(0, 256), ...e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {} });
-  b.setTimestamp(/* @__PURE__ */ new Date());
-  return b;
+  const b2 = new import_discord8.EmbedBuilder().setTitle(e.title);
+  if (e.description) b2.setDescription(e.description);
+  if (e.color !== void 0) b2.setColor(e.color);
+  if (e.fields?.length) b2.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
+  if (e.footer) b2.setFooter({ text: e.footer });
+  if (e.thumbnail && /^https:\/\//.test(e.thumbnail)) b2.setThumbnail(e.thumbnail);
+  if (e.image && /^(https|attachment):\/\//.test(e.image)) b2.setImage(e.image);
+  if (e.author?.name) b2.setAuthor({ name: e.author.name.slice(0, 256), ...e.author.iconUrl && /^https:\/\//.test(e.author.iconUrl) ? { iconURL: e.author.iconUrl } : {} });
+  b2.setTimestamp(/* @__PURE__ */ new Date());
+  return b2;
 };
-var STYLE2 = { primary: import_discord6.ButtonStyle.Primary, secondary: import_discord6.ButtonStyle.Secondary, success: import_discord6.ButtonStyle.Success, danger: import_discord6.ButtonStyle.Danger };
+var STYLE2 = { primary: import_discord8.ButtonStyle.Primary, secondary: import_discord8.ButtonStyle.Secondary, success: import_discord8.ButtonStyle.Success, danger: import_discord8.ButtonStyle.Danger };
 var toRows = (buttons = []) => {
   const rows = [];
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
-    rows.push(new import_discord6.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b) => {
-      const x = b.url ? new import_discord6.ButtonBuilder().setURL(b.url).setLabel(b.label).setStyle(import_discord6.ButtonStyle.Link) : new import_discord6.ButtonBuilder().setCustomId(b.id).setLabel(b.label).setStyle(STYLE2[b.style]);
-      if (b.emoji) x.setEmoji(b.emoji);
-      if (b.disabled) x.setDisabled(true);
+    rows.push(new import_discord8.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b2) => {
+      const x = b2.url ? new import_discord8.ButtonBuilder().setURL(b2.url).setLabel(b2.label).setStyle(import_discord8.ButtonStyle.Link) : new import_discord8.ButtonBuilder().setCustomId(b2.id).setLabel(b2.label).setStyle(STYLE2[b2.style]);
+      if (b2.emoji) x.setEmoji(b2.emoji);
+      if (b2.disabled) x.setDisabled(true);
       return x;
     })));
   }
   return rows;
 };
-var sep = () => new import_discord6.SeparatorBuilder().setDivider(true).setSpacing(import_discord6.SeparatorSpacingSize.Large);
-var toBox = (list, buttons, ping) => [
-  ...ping ? [new import_discord6.TextDisplayBuilder().setContent(ping)] : [],
-  ...list.map((e, i) => {
-    const c = new import_discord6.ContainerBuilder();
-    if (e.author?.name) c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`**${e.author.name}**`));
-    c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.heading === "small" ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
+var sep = () => new import_discord8.SeparatorBuilder().setDivider(true).setSpacing(import_discord8.SeparatorSpacingSize.Large);
+var toBox = (list3, buttons, ping) => [
+  ...ping ? [new import_discord8.TextDisplayBuilder().setContent(ping)] : [],
+  ...list3.map((e, i) => {
+    const c = new import_discord8.ContainerBuilder();
+    if (e.author?.name) c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(`**${e.author.name}**`));
+    c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(e.heading === "small" ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
     if (e.description) {
       if (e.heading === true) c.addSeparatorComponents(sep());
-      c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(e.description));
+      c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(e.description));
     }
-    for (const f2 of e.fields ?? []) c.addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`**${f2.name}**
+    for (const f2 of e.fields ?? []) c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(`**${f2.name}**
 ${f2.value}`));
-    const rows = i === list.length - 1 ? toRows(buttons) : [];
+    const rows = i === list3.length - 1 ? toRows(buttons) : [];
     if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
-    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord6.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
+    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
     return c;
   })
 ];
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
 var toModal2 = (m) => modalOf(m);
-var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } };
+var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } };
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
-  async setRole(guildId, userId, roleId, on) {
+  async setRole(guildId, userId, roleId, on2) {
     const member = await (await client.guilds.fetch(guildId)).members.fetch(userId);
-    if (on) await member.roles.add(roleId, "EN Polizei");
+    if (on2) await member.roles.add(roleId, "EN Polizei");
     else await member.roles.remove(roleId, "EN Polizei");
   },
   async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
-    const existing = channels.find((c) => c?.type === import_discord6.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
+    const existing = channels.find((c) => c?.type === import_discord8.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
     if (existing) return { channelId: existing.id, existing: true };
-    const view = [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.SendMessages, import_discord6.PermissionFlagsBits.ReadMessageHistory, import_discord6.PermissionFlagsBits.AttachFiles];
-    const ch = await guild.channels.create({
+    const view = [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.SendMessages, import_discord8.PermissionFlagsBits.ReadMessageHistory, import_discord8.PermissionFlagsBits.AttachFiles];
+    const ch2 = await guild.channels.create({
       name: ticketName(userName, userId),
-      type: import_discord6.ChannelType.GuildText,
+      type: import_discord8.ChannelType.GuildText,
       topic: `Support-Ticket von ${userName} (${userId})`,
-      ...categoryId && channels.get(categoryId)?.type === import_discord6.ChannelType.GuildCategory ? { parent: categoryId } : {},
+      ...categoryId && channels.get(categoryId)?.type === import_discord8.ChannelType.GuildCategory ? { parent: categoryId } : {},
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord6.OverwriteType.Role, deny: [import_discord6.PermissionFlagsBits.ViewChannel] },
-        { id: userId, type: import_discord6.OverwriteType.Member, allow: view },
-        { id: client.user.id, type: import_discord6.OverwriteType.Member, allow: [...view, import_discord6.PermissionFlagsBits.ManageChannels] },
-        ...staffRoleId ? [{ id: staffRoleId, type: import_discord6.OverwriteType.Role, allow: view }] : [],
-        ...extraUserIds.filter((id3) => id3 !== userId).map((id3) => ({ id: id3, type: import_discord6.OverwriteType.Member, allow: view }))
+        { id: guild.roles.everyone.id, type: import_discord8.OverwriteType.Role, deny: [import_discord8.PermissionFlagsBits.ViewChannel] },
+        { id: userId, type: import_discord8.OverwriteType.Member, allow: view },
+        { id: client.user.id, type: import_discord8.OverwriteType.Member, allow: [...view, import_discord8.PermissionFlagsBits.ManageChannels] },
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord8.OverwriteType.Role, allow: view }] : [],
+        ...extraUserIds.filter((id3) => id3 !== userId).map((id3) => ({ id: id3, type: import_discord8.OverwriteType.Member, allow: view }))
       ]
     });
-    return { channelId: ch.id, existing: false };
+    return { channelId: ch2.id, existing: false };
   },
   async deleteChannel(channelId, delayMs = 0) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch || ch.type !== import_discord6.ChannelType.GuildText || !ch.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
-    setTimeout(() => void ch.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2 || ch2.type !== import_discord8.ChannelType.GuildText || !ch2.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
+    setTimeout(() => void ch2.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
   },
   async sendDirectMessage(userId, text2) {
     await (await client.users.fetch(userId)).send({ content: text2, allowedMentions: { parse: [] } });
@@ -85473,36 +87223,36 @@ var platform = {
     return { channelId: m.channelId, messageId: m.id };
   },
   async postOrEdit({ channelId, messageId, embed, buttons }) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable() || !("messages" in ch)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isSendable() || !("messages" in ch2)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
     if (embed.box) {
-      const box = { components: toBox([embed], buttons), flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
-      const old = messageId ? await ch.messages.fetch(messageId).catch(() => null) : null;
-      if (old?.flags.has(import_discord6.MessageFlags.IsComponentsV2)) {
+      const box = { components: toBox([embed], buttons), flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
+      const old = messageId ? await ch2.messages.fetch(messageId).catch(() => null) : null;
+      if (old?.flags.has(import_discord8.MessageFlags.IsComponentsV2)) {
         await old.edit(box);
         return old.id;
       }
       if (old) await old.delete().catch(() => void 0);
-      return (await ch.send(box)).id;
+      return (await ch2.send(box)).id;
     }
     const payload = { embeds: [toEmbed(embed)], components: toRows(buttons), allowedMentions: { parse: [] } };
     if (messageId) {
-      const old = await ch.messages.fetch(messageId).catch(() => null);
+      const old = await ch2.messages.fetch(messageId).catch(() => null);
       if (old) {
         await old.edit(payload);
         return old.id;
       }
     }
-    return (await ch.send(payload)).id;
+    return (await ch2.send(payload)).id;
   },
   async deleteMessage(channelId, messageId) {
-    const ch = await client.channels.fetch(channelId);
-    if (ch?.isSendable() && "messages" in ch) await ch.messages.delete(messageId);
+    const ch2 = await client.channels.fetch(channelId);
+    if (ch2?.isSendable() && "messages" in ch2) await ch2.messages.delete(messageId);
   },
   async postPanel({ channelId, embed, buttons, select }) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch2.send({ embeds: [toEmbed(embed)], components: toComponents(buttons, select), allowedMentions: { parse: [] } });
   }
 };
 var live = createLive(api, platform);
@@ -85510,15 +87260,15 @@ var staffLists = createStaffLists(() => client, api);
 var radioRoles = createRadioRoleSync(api, {
   async members(guildId) {
     const g = await client.guilds.fetch(guildId);
-    const list = await g.members.fetch().catch(() => g.members.cache);
-    return [...list.values()].filter((m) => !m.user.bot).map((m) => ({ id: m.id, name: m.displayName, roleIds: [...m.roles.cache.keys()].filter((r) => r !== g.id) }));
+    const list3 = await g.members.fetch().catch(() => g.members.cache);
+    return [...list3.values()].filter((m) => !m.user.bot).map((m) => ({ id: m.id, name: m.displayName, roleIds: [...m.roles.cache.keys()].filter((r) => r !== g.id) }));
   }
 });
 var welcome = createWelcome(api, {
   async post(channelId, m) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ ...m.content ? { content: m.content } : {}, embeds: [toEmbed(m.embed)], ...m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}, allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch2.send({ ...m.content ? { content: m.content } : {}, embeds: [toEmbed(m.embed)], ...m.file ? { files: [{ attachment: m.file.data, name: m.file.name }] } : {}, allowedMentions: { parse: [], users: m.mentionUserIds ?? [] } });
   },
   async dm(userId, text2) {
     await platform.sendDirectMessage(userId, text2);
@@ -85528,12 +87278,12 @@ var welcome = createWelcome(api, {
     const ids = roleIds.filter((r) => guild.roles.cache.has(r));
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, "EN Polizei: Willkommen");
   }
-});
+}, console.error, async (guildId, kind2) => setupWelcome(await guildConfig.get(guildId), kind2));
 var ghostPing = createGhostPing(api, {
   async post(channelId, m) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    await ch2.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
   }
 });
 async function applyVerify(guildId, userId, a) {
@@ -85576,25 +87326,25 @@ var verify = createVerify(api, {
     return out;
   }
 });
-var VOICE_TALK = [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.Connect, import_discord6.PermissionFlagsBits.Speak, import_discord6.PermissionFlagsBits.Stream, import_discord6.PermissionFlagsBits.UseVAD];
+var VOICE_TALK = [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.Connect, import_discord8.PermissionFlagsBits.Speak, import_discord8.PermissionFlagsBits.Stream, import_discord8.PermissionFlagsBits.UseVAD];
 var voiceSupport = createVoiceSupport(api, {
   async post(channelId, m) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    return (await ch.send(payloadOf(m))).id;
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+    return (await ch2.send(payloadOf(m))).id;
   },
   async edit(channelId, messageId, m) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isTextBased() || !("messages" in ch)) return;
-    const msg = await ch.messages.fetch(messageId).catch(() => null);
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isTextBased() || !("messages" in ch2)) return;
+    const msg = await ch2.messages.fetch(messageId).catch(() => null);
     if (msg) await msg.edit({ ...payloadOf(m), content: m.content ?? "" });
   },
   async dm(userId, m) {
     await (await client.users.fetch(userId)).send(payloadOf(m));
   },
   members(channelId) {
-    const ch = client.channels.cache.get(channelId);
-    return ch?.isVoiceBased() ? [...ch.members.keys()] : [];
+    const ch2 = client.channels.cache.get(channelId);
+    return ch2?.isVoiceBased() ? [...ch2.members.keys()] : [];
   },
   voiceChannelOf(guildId, userId) {
     return client.guilds.cache.get(guildId)?.voiceStates.cache.get(userId)?.channelId ?? null;
@@ -85602,19 +87352,19 @@ var voiceSupport = createVoiceSupport(api, {
   async createVoice({ guildId, name, nearChannelId, userId, teamRoleId }) {
     const guild = await client.guilds.fetch(guildId);
     const near = await guild.channels.fetch(nearChannelId).catch(() => null);
-    const ch = await guild.channels.create({
+    const ch2 = await guild.channels.create({
       name,
-      type: import_discord6.ChannelType.GuildVoice,
+      type: import_discord8.ChannelType.GuildVoice,
       ...near?.parentId ? { parent: near.parentId } : {},
       reason: "EN Polizei: Sprach-Support",
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord6.OverwriteType.Role, deny: [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.Connect] },
-        { id: userId, type: import_discord6.OverwriteType.Member, allow: VOICE_TALK },
-        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord6.OverwriteType.Role, allow: [...VOICE_TALK, import_discord6.PermissionFlagsBits.MoveMembers] }] : [],
-        { id: client.user.id, type: import_discord6.OverwriteType.Member, allow: [import_discord6.PermissionFlagsBits.ViewChannel, import_discord6.PermissionFlagsBits.Connect, import_discord6.PermissionFlagsBits.MoveMembers, import_discord6.PermissionFlagsBits.ManageChannels] }
+        { id: guild.roles.everyone.id, type: import_discord8.OverwriteType.Role, deny: [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.Connect] },
+        { id: userId, type: import_discord8.OverwriteType.Member, allow: VOICE_TALK },
+        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord8.OverwriteType.Role, allow: [...VOICE_TALK, import_discord8.PermissionFlagsBits.MoveMembers] }] : [],
+        { id: client.user.id, type: import_discord8.OverwriteType.Member, allow: [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.Connect, import_discord8.PermissionFlagsBits.MoveMembers, import_discord8.PermissionFlagsBits.ManageChannels] }
       ]
     });
-    return ch.id;
+    return ch2.id;
   },
   async move(guildId, userId, channelId) {
     const member = await (await client.guilds.fetch(guildId)).members.fetch(userId).catch(() => null);
@@ -85623,53 +87373,126 @@ var voiceSupport = createVoiceSupport(api, {
     return true;
   },
   async deleteChannel(channelId) {
-    const ch = await client.channels.fetch(channelId).catch(() => null);
-    if (ch?.type === import_discord6.ChannelType.GuildVoice) await ch.delete("EN Polizei: Support-Fall geschlossen");
+    const ch2 = await client.channels.fetch(channelId).catch(() => null);
+    if (ch2?.type === import_discord8.ChannelType.GuildVoice) await ch2.delete("EN Polizei: Support-Fall geschlossen");
   },
   async thread(channelId, messageId, name) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isTextBased() || !("messages" in ch)) return null;
-    const msg = await ch.messages.fetch(messageId);
+    const ch2 = await client.channels.fetch(channelId);
+    if (!ch2?.isTextBased() || !("messages" in ch2)) return null;
+    const msg = await ch2.messages.fetch(messageId);
     return (await msg.startThread({ name: name.slice(0, 100), autoArchiveDuration: 1440 })).id;
   },
   async threadPost(threadId, text2) {
-    const ch = await client.channels.fetch(threadId);
-    if (ch?.isSendable()) await ch.send({ content: text2.slice(0, 2e3), allowedMentions: { parse: [] } });
+    const ch2 = await client.channels.fetch(threadId);
+    if (ch2?.isSendable()) await ch2.send({ content: text2.slice(0, 2e3), allowedMentions: { parse: [] } });
   }
 });
+var memberMemo = /* @__PURE__ */ new Map();
+var access = {
+  async member(guildId, userId) {
+    const key4 = `${guildId}:${userId}`;
+    const hit = memberMemo.get(key4);
+    if (hit && Date.now() - hit.at < 3e3) return hit.m;
+    const guild = await client.guilds.fetch(guildId);
+    const m = await guild.members.fetch({ user: userId, force: true }).catch((e) => {
+      if (e?.code === 10007 || e?.code === 10013) return null;
+      throw e;
+    });
+    const out = m ? { userId, roleIds: [...m.roles.cache.keys()].filter((r) => r !== guild.id), isOwner: guild.ownerId === userId, administrator: m.permissions.has(import_discord8.PermissionFlagsBits.Administrator), manageGuild: m.permissions.has(import_discord8.PermissionFlagsBits.ManageGuild) } : null;
+    if (memberMemo.size > 500) memberMemo.clear();
+    memberMemo.set(key4, { at: Date.now(), m: out });
+    return out;
+  },
+  config: (guildId) => guildConfig.get(guildId)
+};
+async function guildSnapshot(guildId) {
+  const g = await client.guilds.fetch(guildId).catch(() => null);
+  if (!g) return null;
+  const me = g.members.me ?? await g.members.fetchMe().catch(() => null);
+  if (!me) return null;
+  await g.channels.fetch().catch(() => void 0);
+  const kindOf = (t2) => t2 === import_discord8.ChannelType.GuildText || t2 === import_discord8.ChannelType.GuildAnnouncement ? "text" : t2 === import_discord8.ChannelType.GuildVoice || t2 === import_discord8.ChannelType.GuildStageVoice ? "voice" : t2 === import_discord8.ChannelType.GuildCategory ? "category" : "other";
+  return {
+    id: g.id,
+    name: g.name,
+    botPermissions: me.permissions.bitfield,
+    botTopRolePosition: me.roles.highest.position,
+    channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500).map((c) => ({ id: c.id, name: c.name, kind: kindOf(c.type), perms: ("permissionsFor" in c ? c.permissionsFor(me)?.bitfield : void 0) ?? 0n })),
+    roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id).map((r) => ({ id: r.id, name: r.name, position: r.position, managed: r.managed }))
+  };
+}
+var registerGuild = null;
+var runtime = {
+  guildConfig,
+  backups: botBackups,
+  access,
+  backupDirWarning,
+  status: () => ({ ready: client.isReady(), wsPing: Math.round(client.ws.ping), uptimeSec: Math.round(process.uptime()), guilds: client.guilds.cache.size, intents: { ...intents } }),
+  snapshot: guildSnapshot,
+  async apiHealth() {
+    const t0 = Date.now();
+    const res = await fetch(`${cfg.API_URL}/health`, { signal: AbortSignal.timeout(5e3) }).catch(() => null);
+    const ms = Date.now() - t0;
+    if (!res) return { reachable: false, status: 0, ms, authOk: null };
+    const authOk = await api.service("GET", "/bot/config").then(() => true, (e) => e?.status === 401 || e?.status === 403 ? false : null);
+    return { reachable: res.ok, status: res.status, ms, authOk };
+  },
+  async robloxReachable() {
+    const res = await fetch("https://users.roblox.com/v1/usernames/users", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ usernames: ["Roblox"], excludeBannedUsers: false }), signal: AbortSignal.timeout(6e3) }).catch(() => null);
+    return !!res?.ok;
+  },
+  async setNickname(guildId, nick) {
+    const g = await client.guilds.fetch(guildId).catch(() => null);
+    const me = g ? g.members.me ?? await g.members.fetchMe().catch(() => null) : null;
+    if (!me) return "Server nicht gefunden.";
+    return me.setNickname(nick, "EN Polizei: Anzeigename aus /setup").then(() => null, () => "dem Bot fehlt das Recht \u201ENickname \xE4ndern\u201C.");
+  },
+  async reregister(guildId) {
+    await registerGuild?.(guildId);
+  }
+};
+var DENIED = errorReply("Die Rechtepr\xFCfung ist fehlgeschlagen \u2013 Aktion aus Sicherheitsgr\xFCnden abgelehnt. Bitte erneut versuchen.");
+var INTERACTION_MODULES = { duty: "shift_logs", shift: "shift_logs", leave: "personnel", trn: "personnel", exam: "personnel", quali: "applications", support: "support", tk: "support", cad: "cad", rwreq: "communication", drep: "reports" };
+async function preflight(guildId, userId, key4, module2) {
+  if (guildId && module2 !== "core") {
+    const gc = await guildConfig.get(guildId).catch(() => null);
+    if (gc?.modules.disabled.includes(module2)) return errorReply(`Das Modul \u201E${TOGGLE_MODULES.find((m) => m.key === module2)?.name ?? module2}\u201C ist auf diesem Server im Bot ausgeblendet. Die Daten bleiben erhalten \u2013 ein Serveradministrator kann es unter \`/setup\` \u2192 Module wieder einschalten.`);
+  }
+  return authorize(access, { guildId: guildId ?? void 0, userId }, key4);
+}
 function memberEvent(m) {
   if (!m.user) return null;
   return { id: m.id, guildId: m.guild.id, bot: m.user.bot, username: m.user.username, displayName: m.displayName ?? m.user.username, server: m.guild.name, memberCount: m.guild.memberCount, createdAt: m.user.createdAt, avatar: m.user.displayAvatarURL({ size: 256 }) };
 }
-function addOptions(b, options2 = []) {
+function addOptions(b2, options2 = []) {
   for (const o of options2) {
     const common = (x) => {
       x.setName(o.name);
       x.setDescription(o.description);
       x.setRequired(!!o.required);
     };
-    if (o.type === "string") b.addStringOption((x) => {
+    if (o.type === "string") b2.addStringOption((x) => {
       common(x);
       if (o.maxLength) x.setMaxLength(o.maxLength);
       if (o.autocomplete) x.setAutocomplete(true);
       else if (o.choices) x.addChoices(...o.choices);
       return x;
     });
-    else if (o.type === "integer") b.addIntegerOption((x) => {
+    else if (o.type === "integer") b2.addIntegerOption((x) => {
       common(x);
       if (o.min !== void 0) x.setMinValue(o.min);
       if (o.max !== void 0) x.setMaxValue(o.max);
       return x;
     });
-    else if (o.type === "boolean") b.addBooleanOption((x) => {
+    else if (o.type === "boolean") b2.addBooleanOption((x) => {
       common(x);
       return x;
     });
-    else if (o.type === "user") b.addUserOption((x) => {
+    else if (o.type === "user") b2.addUserOption((x) => {
       common(x);
       return x;
     });
-    else b.addNumberOption((x) => {
+    else b2.addNumberOption((x) => {
       common(x);
       if (o.min !== void 0) x.setMinValue(o.min);
       if (o.max !== void 0) x.setMaxValue(o.max);
@@ -85678,37 +87501,37 @@ function addOptions(b, options2 = []) {
   }
 }
 function toBuilder(def) {
-  const b = new import_discord6.SlashCommandBuilder().setName(def.name).setDescription(def.description);
-  if (def.subcommands?.length) for (const sc of def.subcommands) b.addSubcommand((x) => {
+  const b2 = new import_discord8.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  if (def.subcommands?.length) for (const sc of def.subcommands) b2.addSubcommand((x) => {
     x.setName(sc.name).setDescription(sc.description);
     addOptions(x, sc.options);
     return x;
   });
-  else addOptions(b, def.options);
-  return b.toJSON();
+  else addOptions(b2, def.options);
+  return b2.toJSON();
 }
 function joinedAtOf2(m) {
   const x = m;
-  const t = x?.joinedTimestamp ?? (x?.joined_at ? Date.parse(x.joined_at) : NaN);
-  return typeof t === "number" && Number.isFinite(t) ? new Date(t).toISOString() : void 0;
+  const t2 = x?.joinedTimestamp ?? (x?.joined_at ? Date.parse(x.joined_at) : NaN);
+  return typeof t2 === "number" && Number.isFinite(t2) ? new Date(t2).toISOString() : void 0;
 }
 async function markDecided(message, d) {
   const embeds = message.embeds.map((e, i, all) => {
-    const b = import_discord6.EmbedBuilder.from(e).setColor(d.color);
-    if (i === all.length - 1) b.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
-    return b;
+    const b2 = import_discord8.EmbedBuilder.from(e).setColor(d.color);
+    if (i === all.length - 1) b2.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
+    return b2;
   });
-  const badge = d.badge ? new import_discord6.ButtonBuilder().setCustomId("decided").setLabel(d.badge.label).setStyle(STYLE2[d.badge.style]).setDisabled(true) : null;
+  const badge = d.badge ? new import_discord8.ButtonBuilder().setCustomId("decided").setLabel(d.badge.label).setStyle(STYLE2[d.badge.style]).setDisabled(true) : null;
   if (badge && d.badge?.emoji) badge.setEmoji(d.badge.emoji);
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord6.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? "") && !(badge && c.customId === "decided"));
-    if (kept.length) rows.push(new import_discord6.ActionRowBuilder().addComponents(kept.map((c) => import_discord6.ButtonBuilder.from(c))));
+    const kept = row.components.filter((c) => c.type === import_discord8.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? "") && !(badge && c.customId === "decided"));
+    if (kept.length) rows.push(new import_discord8.ActionRowBuilder().addComponents(kept.map((c) => import_discord8.ButtonBuilder.from(c))));
   }
   if (badge) {
     if (rows[0] && rows[0].components.length < 5) rows[0].components.unshift(badge);
-    else rows.unshift(new import_discord6.ActionRowBuilder().addComponents(badge));
+    else rows.unshift(new import_discord8.ActionRowBuilder().addComponents(badge));
   }
   await message.edit({ ...d.note ? { content: d.note.slice(0, 2e3) } : {}, embeds, components: rows, allowedMentions: { parse: [] } });
 }
@@ -85724,7 +87547,7 @@ function baseCtx(i) {
     memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
-    isGuildAdmin: !!perms && (perms.has(import_discord6.PermissionFlagsBits.ManageGuild) || perms.has(import_discord6.PermissionFlagsBits.Administrator)),
+    isGuildAdmin: !!perms && (perms.has(import_discord8.PermissionFlagsBits.ManageGuild) || perms.has(import_discord8.PermissionFlagsBits.Administrator)),
     config: () => api.service("GET", "/bot/config"),
     refreshLive: (kind2, o) => live.refresh(kind2, o),
     robloxLookup: (name) => robloxLookup(name),
@@ -85733,6 +87556,7 @@ function baseCtx(i) {
     listCategories: (guildId) => tickets.listCategories(guildId),
     userNameOf: (id3) => client.users.fetch(id3).then((u) => u.username, () => null),
     voiceSupport,
+    runtime,
     verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
     userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
     discord: {
@@ -85749,13 +87573,13 @@ function baseCtx(i) {
         const role = g.roles.cache.get(roleId) ?? await g.roles.fetch(roleId).catch(() => null);
         if (!role || role.managed) throw new Error("Die Rolle gibt es nicht (mehr).");
         const m = await g.members.fetch(userId);
-        const has = m.roles.cache.has(roleId);
-        if (mode === "toggle" && has || mode === "remove") {
-          if (!has) return "unchanged";
+        const has2 = m.roles.cache.has(roleId);
+        if (mode === "toggle" && has2 || mode === "remove") {
+          if (!has2) return "unchanged";
           await m.roles.remove(roleId, "EN Polizei: Message-Builder-Button");
           return "removed";
         }
-        if (has) return "unchanged";
+        if (has2) return "unchanged";
         await m.roles.add(roleId, "EN Polizei: Message-Builder-Button");
         return "added";
       }
@@ -85772,12 +87596,15 @@ function rolesOf(m) {
   return Array.isArray(x.roles) ? x.roles : [...x.roles.cache?.keys() ?? []];
 }
 async function safeRun(label2, fn) {
+  let r;
   try {
-    return await fn();
+    r = await fn();
   } catch (e) {
     console.error(`${label2} failed:`, e instanceof Error ? e.message : e);
     return mapError(e);
   }
+  const g = guildScope.getStore();
+  return g ? brandReply(r, await guildConfig.get(g).catch(() => null)) : r;
 }
 async function handleCommand(i) {
   const def = byName(i.commandName);
@@ -85789,22 +87616,23 @@ async function handleCommand(i) {
     const v = i.options.get(o.name)?.value;
     opts[o.name] = typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : void 0;
   }
+  const policyKey = sub ? `${def.name} ${sub}` : def.name;
   if (def.opensModal) {
-    const reply2 = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    const reply2 = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
-      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
     }
     return;
   }
   const pub = !!def.publicReply?.(opts);
-  await i.deferReply(pub ? {} : { flags: import_discord6.MessageFlags.Ephemeral });
-  const reply = await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+  await i.deferReply(pub ? {} : { flags: import_discord8.MessageFlags.Ephemeral });
+  const reply = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
   if (pub && reply.ephemeral) {
     await i.deleteReply().catch(() => void 0);
     const p = replyPayload(reply);
-    await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
     return;
   }
   await i.editReply(replyPayload(reply));
@@ -85813,39 +87641,49 @@ async function handleAutocomplete(i) {
   const def = byName(i.commandName);
   const focused = i.options.getFocused(true);
   const sub = def?.subcommands?.length ? i.options.getSubcommand(false) ?? void 0 : void 0;
-  const list = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? "")).catch(() => []) : [];
-  await i.respond(list.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
+  const list3 = def?.complete ? await def.complete({ ...baseCtx(i), opts: sub ? { _sub: sub } : {} }, focused.name, String(focused.value ?? "")).catch(() => []) : [];
+  await i.respond(list3.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
 }
 async function resetSelect(i) {
-  if (i.message.flags.has(import_discord6.MessageFlags.Ephemeral)) return;
+  if (i.message.flags.has(import_discord8.MessageFlags.Ephemeral)) return;
   await i.message.edit({ components: i.message.components }).catch((e) => console.error("could not reset select menu:", e instanceof Error ? e.message : e));
 }
 async function handleComponent(i) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
+  const check = () => preflight(i.guildId, i.user.id, `${hit.def.prefix}:${hit.args[0] ?? ""}`, INTERACTION_MODULES[hit.def.prefix] ?? "core").catch(() => DENIED);
   if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : void 0)) {
-    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
+    const reply2 = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
-      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
     }
     if (i.isAnySelectMenu()) await resetSelect(i);
     return;
   }
-  if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
+  if (hit.def.panel?.(hit.args) && (i.isButton() || i.isAnySelectMenu() || i.isModalSubmit() && i.isFromMessage())) {
     await i.deferUpdate();
-    const reply2 = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const fields2 = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
+    const reply2 = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...fields2 ? { fields: fields2 } : {}, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     const p = replyPayload(reply2);
-    if (reply2.embeds?.[0]?.box) await i.editReply(p);
-    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord6.MessageFlags.Ephemeral });
+    if (reply2.panel) await i.editReply(p);
+    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord6.MessageFlags.Ephemeral });
+  if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
+    await i.deferUpdate();
+    const reply2 = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const p = replyPayload(reply2);
+    if (reply2.embeds?.[0]?.box) await i.editReply(p);
+    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
+    return;
+  }
+  await i.deferReply({ flags: import_discord8.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
-  const modal2 = i.isModalSubmit() ? modalValuesOf(i) : void 0;
+  const modal3 = i.isModalSubmit() ? modalValuesOf(i) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
-  const reply = await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal: modal2 }));
+  const reply = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal: modal3 }));
   await i.editReply(replyPayload(reply));
   const source = i.isModalSubmit() ? i.isFromMessage() ? i.message : null : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error("could not update the application message:", e instanceof Error ? e.message : e));
@@ -85928,6 +87766,7 @@ async function checkApi() {
 function wireReady(client0) {
   client0.once("clientReady", async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
+    console.log(`Bot-Sicherungen: ${backupDir}`);
     console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
     console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(", ") || "keiner \u2013 Bot mit dem Link oben einladen"}`);
     void checkApi();
@@ -85940,17 +87779,23 @@ function wireReady(client0) {
     const registered = /* @__PURE__ */ new Map();
     const register = async (g, name, quiet = false) => {
       const mods = await api.service("GET", `/bot/servers/${g}/modules`).catch(() => null);
-      const list = mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json;
-      const sig = list.map((j) => j.name).sort().join(",");
+      const botOff = (await guildConfig.get(g).catch(() => null))?.modules.disabled ?? [];
+      const list3 = visibleCommands(mods ? json.filter((j) => commandsForServer([{ name: j.name }], mods.disabled).length) : json, botOff);
+      const sig = list3.map((j) => j.name).sort().join(",");
       if (quiet && registered.get(g) === sig) return;
       try {
-        await c.application.commands.set(list, g);
+        await c.application.commands.set(list3, g);
         registered.set(g, sig);
-        console.log(`${list.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(", ")})` : ""}`);
+        console.log(`${list3.length} slash commands registered for ${name ?? g}${mods?.disabled.length ? ` (Module aus: ${mods.disabled.join(", ")})` : ""}`);
       } catch (e) {
         console.error(`could not register commands for ${name ?? g} (invited with the applications.commands scope?): ${e instanceof Error ? e.message : e}`);
       }
     };
+    registerGuild = (g) => {
+      guildConfig.forget(g);
+      return register(g, c.guilds.cache.get(g)?.name, true);
+    };
+    if (backupDirWarning) console.warn(backupDirWarning);
     setInterval(() => {
       for (const [id3, gname] of c.guilds.cache.map((x) => [x.id, x.name])) void register(id3, gname, true);
     }, 12e4).unref();
@@ -85965,21 +87810,21 @@ function wireReady(client0) {
     startOutboxLoop(
       api,
       async (channelId, embeds, buttons, opts) => {
-        const ch = await client.channels.fetch(channelId);
-        if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+        const ch2 = await client.channels.fetch(channelId);
+        if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
         const avatar = opts?.avatarUserId ? await client.users.fetch(opts.avatarUserId).then((u) => u.displayAvatarURL({ size: 256 }), () => void 0) : void 0;
-        let list = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
-        if (opts?.authorUserId && list[0]) {
+        let list3 = avatar && embeds[0] ? [{ ...embeds[0], thumbnail: avatar }, ...embeds.slice(1)] : embeds;
+        if (opts?.authorUserId && list3[0]) {
           const u = await client.users.fetch(opts.authorUserId).catch(() => null);
-          if (u) list = [{ ...list[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list.slice(1)];
+          if (u) list3 = [{ ...list3[0], author: { name: `@${u.username}`, iconUrl: u.displayAvatarURL({ size: 64 }) } }, ...list3.slice(1)];
         }
-        const roles = opts?.pingRoleIds ?? [];
-        const ping = roles.length ? roles.map((r) => `<@&${r}>`).join(" ") : void 0;
-        const msg = list[0]?.box ? await ch.send({ components: toBox(list, buttons, ping), flags: import_discord6.MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles } }) : await ch.send({ ...ping ? { content: ping } : {}, embeds: list.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles } });
+        const roles2 = opts?.pingRoleIds ?? [];
+        const ping = roles2.length ? roles2.map((r) => `<@&${r}>`).join(" ") : void 0;
+        const msg = list3[0]?.box ? await ch2.send({ components: toBox(list3, buttons, ping), flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles: roles2 } }) : await ch2.send({ ...ping ? { content: ping } : {}, embeds: list3.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles: roles2 } });
         if (opts?.replaceKey) {
           const key4 = `last-${opts.replaceKey}-${channelId}`;
           const old = await api.service("GET", `/bot/state/${key4}`).then((r) => r.value, () => null);
-          if (old && old !== msg.id) await ch.messages.delete(old).catch(() => void 0);
+          if (old && old !== msg.id) await ch2.messages.delete(old).catch(() => void 0);
           await api.service("PUT", `/bot/state/${key4}`, { value: msg.id }).catch((e) => console.error("could not remember message:", e instanceof Error ? e.message : e));
         }
         if (opts?.trackKey) {
@@ -86036,9 +87881,9 @@ function wireReady(client0) {
           if (!/^msg-[laqe]-[0-9a-f-]{36}$/.test(key4)) throw new Error("invalid key");
           const spots = await api.service("GET", `/bot/state/${key4}`).then((r) => Array.isArray(r.value) ? r.value : []);
           for (const spot of spots) {
-            const ch = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
-            if (!ch?.isTextBased() || !("messages" in ch) || !spot.messageId) continue;
-            const msg = await ch.messages.fetch(spot.messageId).catch(() => null);
+            const ch2 = spot.channelId ? await client.channels.fetch(spot.channelId).catch(() => null) : null;
+            if (!ch2?.isTextBased() || !("messages" in ch2) || !spot.messageId) continue;
+            const msg = await ch2.messages.fetch(spot.messageId).catch(() => null);
             const badge = p.badge;
             const style = badge && ["primary", "secondary", "success", "danger"].includes(String(badge.style)) ? String(badge.style) : "secondary";
             if (msg) await markDecided(msg, {
@@ -86059,22 +87904,22 @@ function wireReady(client0) {
         if (type === "mb.send") {
           await runMbSend(api, String(p.sendId ?? ""), {
             async missingPerms(guildId2, channelId, payloads) {
-              const ch = await client.channels.fetch(channelId).catch(() => null);
-              if (!ch || ch.isDMBased() || !ch.isSendable() || !("permissionsFor" in ch)) throw new Error("Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.");
-              if (!guildId2 || ch.guildId !== guildId2) throw new Error("Der Kanal geh\xF6rt nicht zu dem Discord-Server, f\xFCr den die Nachricht gebaut wurde.");
-              const perms = ch.permissionsFor(client.user);
+              const ch2 = await client.channels.fetch(channelId).catch(() => null);
+              if (!ch2 || ch2.isDMBased() || !ch2.isSendable() || !("permissionsFor" in ch2)) throw new Error("Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.");
+              if (!guildId2 || ch2.guildId !== guildId2) throw new Error("Der Kanal geh\xF6rt nicht zu dem Discord-Server, f\xFCr den die Nachricht gebaut wurde.");
+              const perms = ch2.permissionsFor(client.user);
               const need = [
-                [import_discord6.PermissionFlagsBits.ViewChannel, "Kanal ansehen", true],
-                [import_discord6.PermissionFlagsBits.SendMessages, "Nachrichten senden", true],
-                [import_discord6.PermissionFlagsBits.EmbedLinks, "Links einbetten", payloads.some((x) => x.embeds.length)],
-                [import_discord6.PermissionFlagsBits.MentionEveryone, "@everyone, @here und alle Rollen erw\xE4hnen", payloads.some((x) => x.allowed_mentions.parse.includes("everyone") && /@(everyone|here)/.test(x.content ?? ""))]
+                [import_discord8.PermissionFlagsBits.ViewChannel, "Kanal ansehen", true],
+                [import_discord8.PermissionFlagsBits.SendMessages, "Nachrichten senden", true],
+                [import_discord8.PermissionFlagsBits.EmbedLinks, "Links einbetten", payloads.some((x) => x.embeds.length)],
+                [import_discord8.PermissionFlagsBits.MentionEveryone, "@everyone, @here und alle Rollen erw\xE4hnen", payloads.some((x) => x.allowed_mentions.parse.includes("everyone") && /@(everyone|here)/.test(x.content ?? ""))]
               ];
               return need.filter(([flag, , used]) => used && !perms?.has(flag)).map(([, name]) => name);
             },
             async send(channelId, x) {
-              const ch = await client.channels.fetch(channelId);
-              if (!ch?.isSendable()) throw new Error("Der Kanal ist nicht beschreibbar.");
-              return ch.send({ ...x.content ? { content: x.content } : {}, embeds: x.embeds, components: x.components, allowedMentions: { parse: x.allowed_mentions.parse } });
+              const ch2 = await client.channels.fetch(channelId);
+              if (!ch2?.isSendable()) throw new Error("Der Kanal ist nicht beschreibbar.");
+              return ch2.send({ ...x.content ? { content: x.content } : {}, embeds: x.embeds, components: x.components, allowedMentions: { parse: x.allowed_mentions.parse } });
             }
           });
           return true;
@@ -86116,10 +87961,10 @@ function wireReady(client0) {
         }
         if (type === "bot.backup.restore") {
           const id3 = String(p.backupId ?? "");
-          const b = await api.service("GET", `/bot/discord-backups/${id3}`);
-          if (!b.data) throw new Error("backup has no data");
+          const b2 = await api.service("GET", `/bot/discord-backups/${id3}`);
+          if (!b2.data) throw new Error("backup has no data");
           const parts = (Array.isArray(p.parts) ? p.parts : []).filter((x) => x === "roles" || x === "channels" || x === "settings");
-          const result = await restoreGuild(await client.guilds.fetch(String(p.guildId ?? "")), b.data, parts);
+          const result = await restoreGuild(await client.guilds.fetch(String(p.guildId ?? "")), b2.data, parts);
           await api.service("POST", `/bot/discord-backups/${id3}/result`, result);
           return true;
         }
@@ -86164,7 +88009,7 @@ process.on("unhandledRejection", (e) => console.error("unhandledRejection:", e i
 var crashes = [];
 process.on("uncaughtException", (e) => {
   console.error("uncaughtException:", e instanceof Error ? e.stack ?? e.message : e);
-  crashes = [...crashes.filter((t) => Date.now() - t < 6e4), Date.now()];
+  crashes = [...crashes.filter((t2) => Date.now() - t2 < 6e4), Date.now()];
   if (crashes.length > 20) {
     console.error("zu viele Fehler in kurzer Zeit \u2013 Bot wird neu gestartet");
     process.exit(1);

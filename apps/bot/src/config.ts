@@ -11,6 +11,8 @@ const schema = z.object({
   OUTBOX_POLL_SECONDS: z.coerce.number().int().min(2).max(60).default(5),
   /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
   LIVE_REFRESH_SECONDS: z.coerce.number().int().min(5).max(3600).default(5),
+  /** Ordner für Bot-Sicherungen – absolut und AUSSERHALB des Bot-/Produktionsordners (Standard: ~/.en-polizei-bot/backups). */
+  BOT_BACKUP_DIR: z.string().min(1).optional(),
 });
 export type BotConfig = z.infer<typeof schema>;
 
