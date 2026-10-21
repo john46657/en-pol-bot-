@@ -75,6 +75,10 @@ export class ServersService implements OnModuleInit {
     }
     return s;
   }
+  /** Darf der Benutzer das auf diesem Server? (nur Anzeige, z. B. Bearbeiten-Schalter; erzwungen wird es in `access`) */
+  async allowed(actor: Actor, guildId: string, permission: string) {
+    return (await this.authz.authorize(actor.userId!, guildId, permission)).allowed;
+  }
   /** Nur Mitgliedschaft (bzw. globaler Systemadministrator) – für Auskünfte über sich selbst. */
   async accessAsMember(actor: Actor, serverId: string) {
     const s = await this.load(serverId);

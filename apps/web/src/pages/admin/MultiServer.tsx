@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Server, ShieldCheck, Trash2 } from 'lucide-react';
 import { api, ApiError } from '../../lib/api';
@@ -63,6 +64,7 @@ function ServerList({ servers, selected, onSelect, globalAdmin }: { servers: Ser
               <span className="font-medium">{s.name}</span> <span className="text-xs text-muted">{s.guildId}</span>
             </button>
             {s.archivedAt ? <Badge>Archiviert</Badge> : <Badge tone={STATUS[s.status]?.tone}>{STATUS[s.status]?.label ?? s.status}</Badge>}
+            {!s.archivedAt && <Link className="rounded border border-line px-2 py-1 text-xs hover:bg-panel-2" to={`/servers/${s.guildId}/settings`}>Konfiguration & Branding</Link>}
             {globalAdmin && !s.archivedAt && <>
               <Button size="sm" variant="secondary" disabled={status.isPending} onClick={() => status.mutate(s)}>{s.status === 'ACTIVE' ? 'Deaktivieren' : 'Freischalten'}</Button>
               <Button size="sm" variant="ghost" aria-label={`${s.name} archivieren`} disabled={archive.isPending} onClick={() => { void confirmDialog(`„${s.name}“ archivieren? Daten bleiben erhalten, der Server ist danach nicht mehr wählbar.`).then((ok) => { if (ok) archive.mutate(s); }) }}><Trash2 size={14} /></Button>

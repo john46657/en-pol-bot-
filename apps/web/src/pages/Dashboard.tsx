@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react';
+import { AreaBanner } from '../components/AreaBanner';
+import { useBranding } from '../lib/branding';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
 import { ChevronDown, ChevronUp, Eye, EyeOff, GripVertical, Maximize2, Minimize2, Plus, RotateCcw, Save, Trash2, X } from 'lucide-react';
@@ -160,8 +162,19 @@ export function Dashboard() {
   const newLayout = () => { const id = `l${Date.now().toString(36)}`; setLayouts({ active: id, items: [...layouts.items, { id, name: `Layout ${layouts.items.length + 1}`, widgets: [{ widget: 'stats', size: 'XL' as const, minimized: false, hidden: false }] }].slice(0, 10) }); };
   const removeLayout = () => { if (layouts.items.length < 2) return; const items = layouts.items.filter((l) => l.id !== active.id); setLayouts({ active: items[0]!.id, items }); };
 
+  const brand = useBranding().data;
   return (
     <>
+      <AreaBanner area="dashboard" />
+      {brand && !brand.setupCompleted && can('servers.manage') && (
+        <p className="mb-3 rounded-lg border border-primary/40 bg-primary/10 p-2 text-sm">Die Server-Einrichtung (Name, Logo, Farben, Module) ist noch nicht abgeschlossen. <Link className="font-medium underline" to={`/servers/${brand.guildId}/setup`}>Einrichtungsassistent öffnen</Link></p>
+      )}
+      {brand?.configured && !edit && (brand.dashboardTitle || brand.welcomeText) && (
+        <div className="mb-3 rounded-lg border border-line bg-panel p-3" style={{ borderLeft: `4px solid ${brand.design.primary}` }}>
+          {brand.dashboardTitle && <p className="text-lg font-semibold">{brand.dashboardTitle}</p>}
+          {brand.welcomeText && <p className="whitespace-pre-wrap text-sm text-muted">{brand.welcomeText}</p>}
+        </div>
+      )}
       <PageHeader title={`Willkommen, ${user?.displayName}`} subtitle={edit ? 'Bearbeiten: Widgets ziehen, Größe ändern, minimieren, ausblenden – wird automatisch gespeichert.' : undefined}
         actions={<div className="flex flex-wrap items-center gap-2">
           {layouts.items.length > 1 || edit ? <Select aria-label="Layout" className="w-auto py-1.5 text-sm" value={active.id} onChange={(e) => setLayouts({ ...layouts, active: e.target.value })}>{layouts.items.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select> : null}

@@ -1,4 +1,5 @@
 import { lazy, useState } from 'react';
+import { AreaBanner } from '../../components/AreaBanner';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, type Page } from '../../lib/api';
@@ -22,6 +23,7 @@ export function SupportTickets() {
   const go = (k: TabKey) => setSearch(k === 'list' ? {} : { tab: k });
   return (
     <>
+      <AreaBanner area="tickets" />
       <PageHeader title="Ticket-Center" subtitle="Discord-Ticketsystem – Tickets bearbeiten, Transkripte, Statistik und die komplette Einrichtung (Panels, Kategorien, Formulare, Abteilungen, SLA)." />
       <Tabs tabs={keys.map((k) => TAB[k])} active={TAB[tab]} onChange={(t) => go(keys.find((k) => TAB[k] === t)!)} />
       <div className="mt-4">

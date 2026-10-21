@@ -10,7 +10,8 @@ const Icon = ({ icon, name }: { icon: string | null; name: string }) => (icon
   : <span aria-hidden className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">{name.slice(0, 2).toUpperCase()}</span>);
 
 /** Server-Auswahl wie bei Dyno – oben links beim Namen. „Alle Server“ zeigt alles und bearbeitet die gemeinsamen Einstellungen. */
-export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicked?: () => void }) {
+/** `brand`: Name/Logo aus der Server-Konfiguration des gewählten Servers (statt Discord-Name/-Icon). */
+export function ServerSwitcher({ orgName, onPicked, brand }: { orgName: string; onPicked?: () => void; brand?: { name: string; logo: string | null } }) {
   const guilds = useGuilds();
   const [server, setServer] = useServer();
   const [open, setOpen] = useState(false);
@@ -25,7 +26,8 @@ export function ServerSwitcher({ orgName, onPicked }: { orgName: string; onPicke
   const user = useOptionalAuth()?.user;
   // nur Server, die man wählen darf (registriert + bestätigtes Mitglied); globale Systemadministratoren: alle
   const list = (guilds.data ?? []).filter((g) => user?.globalAdmin || !user?.servers || user.servers.includes(g.id));
-  const sel = list.find((g) => g.id === server);
+  const found = list.find((g) => g.id === server);
+  const sel = found && brand ? { ...found, name: brand.name || found.name, icon: brand.logo ?? found.icon } : found;
   // nur ein (oder kein) Server: einfach der Name wie bisher
   if (list.length < 2) return <Link to="/servers" title="Server-Übersicht" onClick={onPicked} className="flex min-w-0 items-center gap-2 rounded-md hover:text-primary">{sel ? <Icon icon={sel.icon} name={sel.name} /> : <Shield size={18} className="text-primary" aria-hidden />}<span className="min-w-0 truncate">{sel?.name ?? orgName}</span></Link>;
   return (

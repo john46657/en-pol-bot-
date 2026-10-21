@@ -57,6 +57,7 @@ Getrennt wird zentral in der Datenbankschicht (`apps/api/src/prisma/server-scope
 | Sonstiges | SEK, Funk-Freigaben, Workflows, Kommunikation |
 | **Rollen & Rechte** | Auf einem Server zählen **nur** dessen Rollen (plus globaler Systemadministrator). Persönliche Ausnahmen gelten je Server. |
 | **Einstellungen** | Kanäle, CAD-, MDT-, HR-, Ticket-, Willkommens-, Verifizierungs-, Logging-, Schicht-, Abmeldungs-Konfiguration usw. je Server (`PER_SERVER_SETTING_KEYS`), **ohne** Rückgriff auf Werte anderer Server |
+| **Branding & Server-Konfiguration** | Name, Bilder, Farben, Einrichtungsassistent, Versionen je Server – siehe [server-config.md](server-config.md) |
 
 Gemeinsam (global) bleiben nur: Benutzerkonten und Anmeldung, Backups, der Server-Verbund selbst, das Audit-Log (mit Server-Spalte) und der Bot-Zustand.
 

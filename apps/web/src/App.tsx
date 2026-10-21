@@ -34,6 +34,8 @@ const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default
 const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
 const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
+const ServerSettings = lazy(() => import('./pages/admin/ServerSettings').then((m) => ({ default: m.ServerSettings })));
+const CurrentServerSettings = lazy(() => import('./pages/admin/ServerSettings').then((m) => ({ default: m.CurrentServerSettings })));
 const MultiServer = lazy(() => import('./pages/admin/MultiServer').then((m) => ({ default: m.MultiServer })));
 const MessageBuilder = lazy(() => import('./pages/message-builder/MessageBuilder').then((m) => ({ default: m.MessageBuilder })));
 const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default: m.Embeds })));
@@ -192,6 +194,9 @@ export function App() {
         <Route element={<Guard><AppShell /></Guard>}>
           <Route index element={<Home />} />
           <Route path="servers" element={<ServerOverview />} />
+          <Route path="servers/:guildId/settings" element={<Guard perm="servers.view"><ServerSettings /></Guard>} />
+          <Route path="servers/:guildId/setup" element={<Guard perm="servers.view"><ServerSettings setup /></Guard>} />
+          <Route path="server-settings" element={<Guard perm="servers.view"><CurrentServerSettings /></Guard>} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />

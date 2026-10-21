@@ -1,4 +1,4 @@
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, Server, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -67,6 +67,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
   ]),
   { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration', keywords: 'allgemein discord kanäle anmeldung' },
+  { path: '/server-settings', label: 'Server-Konfiguration', icon: Server, perm: 'servers.view', group: 'Administration', keywords: 'branding logo bilder farben design einrichtung assistent module datensicherung' },
   grp('Discord-Nachrichten', PanelTop, 'Administration', [
     { path: '/admin/embeds', label: 'Embeds', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/form-panels', label: 'Formular-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },

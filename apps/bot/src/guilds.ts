@@ -6,6 +6,8 @@ export interface GuildInfo {
   id: string; name: string; icon: string | null;
   channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number; bot?: BotPerms }[];
   roles: { id: string; name: string; color: number; position: number }[];
+  /** Server-weite Rechte des Bots (Einrichtungsassistent im Dashboard prüft sie). */
+  botPermissions?: Record<'administrator' | 'viewChannel' | 'sendMessages' | 'embedLinks' | 'attachFiles' | 'readMessageHistory' | 'manageChannels' | 'manageRoles', boolean>;
 }
 
 const kind = (t: ChannelType): GuildInfo['channels'][number]['type'] =>
@@ -21,6 +23,13 @@ function botPerms(g: Guild, c: GuildBasedChannel): BotPerms | undefined {
   return { view: p.has(PermissionFlagsBits.ViewChannel), send: p.has(PermissionFlagsBits.SendMessages), embed: p.has(PermissionFlagsBits.EmbedLinks), mentionEveryone: p.has(PermissionFlagsBits.MentionEveryone) };
 }
 
+function guildPerms(g: Guild): GuildInfo['botPermissions'] | undefined {
+  const p = g.members?.me?.permissions;
+  if (!p) return undefined;
+  const F = PermissionFlagsBits;
+  return { administrator: p.has(F.Administrator), viewChannel: p.has(F.ViewChannel), sendMessages: p.has(F.SendMessages), embedLinks: p.has(F.EmbedLinks), attachFiles: p.has(F.AttachFiles), readMessageHistory: p.has(F.ReadMessageHistory), manageChannels: p.has(F.ManageChannels), manageRoles: p.has(F.ManageRoles) };
+}
+
 export function guildInfo(g: Guild): GuildInfo {
   return {
     id: g.id, name: g.name.slice(0, 100), icon: g.iconURL({ size: 64 }) ?? null,
@@ -29,6 +38,7 @@ export function guildInfo(g: Guild): GuildInfo {
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
     roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250)
       .map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position })),
+    ...(guildPerms(g) ? { botPermissions: guildPerms(g)! } : {}),
   };
 }
 

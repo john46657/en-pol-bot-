@@ -5515,4 +5515,252 @@ declare function slaState(t: SlaInput, now?: Date): {
     resolveOverdue: boolean;
 };
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseTicketRef, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketNumber, ticketRef, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+/**
+ * Server-Konfiguration je Discord-Server (Mandant = Guild-ID): Name, Branding, Bilder, Design, Einrichtungsassistent.
+ * Dieselben Regeln gelten im Dashboard (Live-Vorschau, Formularprüfung) und auf dem Server (Speichern).
+ */
+
+/** Bildarten und ihre Grenzen (Dateigröße in Bytes, Abmessungen in Pixel, Seitenverhältnis Breite/Höhe). */
+declare const BRANDING_IMAGES: {
+    readonly logo: {
+        readonly label: "Serverlogo";
+        readonly maxBytes: number;
+        readonly minW: 64;
+        readonly minH: 64;
+        readonly maxW: 4096;
+        readonly maxH: 4096;
+        readonly ratio: readonly [0.5, 2];
+    };
+    readonly avatar: {
+        readonly label: "Profilbild (rund)";
+        readonly maxBytes: number;
+        readonly minW: 64;
+        readonly minH: 64;
+        readonly maxW: 4096;
+        readonly maxH: 4096;
+        readonly ratio: readonly [0.8, 1.25];
+    };
+    readonly banner: {
+        readonly label: "Dashboard-Banner";
+        readonly maxBytes: number;
+        readonly minW: 600;
+        readonly minH: 100;
+        readonly maxW: 8192;
+        readonly maxH: 4096;
+        readonly ratio: readonly [2, 12];
+    };
+    readonly background: {
+        readonly label: "Hintergrundbild";
+        readonly maxBytes: number;
+        readonly minW: 800;
+        readonly minH: 450;
+        readonly maxW: 8192;
+        readonly maxH: 8192;
+        readonly ratio: readonly [0.4, 4];
+    };
+    readonly area: {
+        readonly label: "Bereichsbild";
+        readonly maxBytes: number;
+        readonly minW: 600;
+        readonly minH: 100;
+        readonly maxW: 8192;
+        readonly maxH: 4096;
+        readonly ratio: readonly [2, 12];
+    };
+};
+type BrandingImageKind = keyof typeof BRANDING_IMAGES;
+declare const BRANDING_IMAGE_TYPES: readonly ["image/png", "image/jpeg", "image/webp"];
+/** Dashboard-Bereiche mit eigenem Kopfbild (nur Bereiche, die es im Dashboard tatsächlich gibt). */
+declare const BRANDING_AREAS: {
+    readonly dashboard: "Dashboard (Startseite)";
+    readonly tickets: "Ticket-Center";
+    readonly team: "Team";
+};
+type BrandingArea = keyof typeof BRANDING_AREAS;
+/** Prüft Bildmaße gegen die Regeln der Bildart; liefert den Grund oder null. */
+declare function checkBrandingImage(kind: BrandingImageKind, meta: {
+    mime: string;
+    size: number;
+    width: number;
+    height: number;
+}): string | null;
+/** Gespeicherte Konfiguration eines Servers (Bilder nur als ID eines eigenen hochgeladenen Bildes – nie als externe URL). */
+declare const serverConfigSchema: z.ZodObject<{
+    general: z.ZodObject<{
+        displayName: z.ZodString;
+        shortName: z.ZodDefault<z.ZodString>;
+        dashboardTitle: z.ZodDefault<z.ZodString>;
+        welcomeText: z.ZodDefault<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        displayName: string;
+        shortName: string;
+        dashboardTitle: string;
+        welcomeText: string;
+    }, {
+        displayName: string;
+        shortName?: string | undefined;
+        dashboardTitle?: string | undefined;
+        welcomeText?: string | undefined;
+    }>;
+    branding: z.ZodDefault<z.ZodObject<{
+        logo: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        avatar: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        banner: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        background: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        areas: z.ZodDefault<z.ZodObject<{
+            dashboard: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+            tickets: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+            team: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        }, "strict", z.ZodTypeAny, {
+            dashboard: string | null;
+            team: string | null;
+            tickets: string | null;
+        }, {
+            dashboard?: string | null | undefined;
+            team?: string | null | undefined;
+            tickets?: string | null | undefined;
+        }>>;
+    }, "strict", z.ZodTypeAny, {
+        avatar: string | null;
+        logo: string | null;
+        banner: string | null;
+        background: string | null;
+        areas: {
+            dashboard: string | null;
+            team: string | null;
+            tickets: string | null;
+        };
+    }, {
+        avatar?: string | null | undefined;
+        logo?: string | null | undefined;
+        banner?: string | null | undefined;
+        background?: string | null | undefined;
+        areas?: {
+            dashboard?: string | null | undefined;
+            team?: string | null | undefined;
+            tickets?: string | null | undefined;
+        } | undefined;
+    }>>;
+    design: z.ZodDefault<z.ZodObject<{
+        primary: z.ZodDefault<z.ZodString>;
+        accent: z.ZodDefault<z.ZodString>;
+        /** user = persönliche Einstellung jedes Benutzers; dark/light = Standard dieses Servers (wenn der Benutzer „System“ gewählt hat) */
+        mode: z.ZodDefault<z.ZodEnum<["user", "dark", "light"]>>;
+        useBackground: z.ZodDefault<z.ZodBoolean>;
+    }, "strict", z.ZodTypeAny, {
+        primary: string;
+        mode: "user" | "dark" | "light";
+        accent: string;
+        useBackground: boolean;
+    }, {
+        primary?: string | undefined;
+        mode?: "user" | "dark" | "light" | undefined;
+        accent?: string | undefined;
+        useBackground?: boolean | undefined;
+    }>>;
+}, "strict", z.ZodTypeAny, {
+    general: {
+        displayName: string;
+        shortName: string;
+        dashboardTitle: string;
+        welcomeText: string;
+    };
+    branding: {
+        avatar: string | null;
+        logo: string | null;
+        banner: string | null;
+        background: string | null;
+        areas: {
+            dashboard: string | null;
+            team: string | null;
+            tickets: string | null;
+        };
+    };
+    design: {
+        primary: string;
+        mode: "user" | "dark" | "light";
+        accent: string;
+        useBackground: boolean;
+    };
+}, {
+    general: {
+        displayName: string;
+        shortName?: string | undefined;
+        dashboardTitle?: string | undefined;
+        welcomeText?: string | undefined;
+    };
+    branding?: {
+        avatar?: string | null | undefined;
+        logo?: string | null | undefined;
+        banner?: string | null | undefined;
+        background?: string | null | undefined;
+        areas?: {
+            dashboard?: string | null | undefined;
+            team?: string | null | undefined;
+            tickets?: string | null | undefined;
+        } | undefined;
+    } | undefined;
+    design?: {
+        primary?: string | undefined;
+        mode?: "user" | "dark" | "light" | undefined;
+        accent?: string | undefined;
+        useBackground?: boolean | undefined;
+    } | undefined;
+}>;
+type ServerConfigData = z.infer<typeof serverConfigSchema>;
+declare const defaultServerConfig: (displayName: string) => ServerConfigData;
+/** Alle in einer Konfiguration verwendeten Bild-IDs (zum Prüfen der Zugehörigkeit und vor dem Entfernen). */
+declare const configAssetIds: (c: ServerConfigData) => string[];
+/** Schritte des Einrichtungsassistenten. */
+declare const SETUP_STEPS: readonly [{
+    readonly key: "connect";
+    readonly label: "Bot verbinden";
+}, {
+    readonly key: "server";
+    readonly label: "Server & Berechtigungen";
+}, {
+    readonly key: "names";
+    readonly label: "Name & Anzeige";
+}, {
+    readonly key: "images";
+    readonly label: "Logo & Bilder";
+}, {
+    readonly key: "design";
+    readonly label: "Farben & Design";
+}, {
+    readonly key: "modules";
+    readonly label: "Module";
+}, {
+    readonly key: "review";
+    readonly label: "Prüfen & speichern";
+}, {
+    readonly key: "finish";
+    readonly label: "Vorschau & Abschluss";
+}];
+type SetupStepKey = typeof SETUP_STEPS[number]['key'];
+/** Discord-Rechte, die der Bot auf dem Server braucht (Kanäle/Rollen für Tickets, Nachrichten, Dateien). */
+declare const REQUIRED_BOT_PERMISSIONS: {
+    readonly viewChannel: "Kanäle ansehen";
+    readonly sendMessages: "Nachrichten senden";
+    readonly embedLinks: "Links einbetten";
+    readonly attachFiles: "Dateien anhängen";
+    readonly readMessageHistory: "Nachrichtenverlauf lesen";
+    readonly manageChannels: "Kanäle verwalten";
+    readonly manageRoles: "Rollen verwalten";
+};
+type BotPermissionKey = keyof typeof REQUIRED_BOT_PERMISSIONS;
+type GuildBotPermissions = Partial<Record<BotPermissionKey | 'administrator', boolean>>;
+declare function missingBotPermissions(p: GuildBotPermissions | null | undefined): BotPermissionKey[] | null;
+/** Lesbare Schriftfarbe auf einer Farbe (#rrggbb). */
+declare function readableTextOn(color: string): '#ffffff' | '#111827';
+/**
+ * Echter Bildtyp und Abmessungen aus den Dateibytes (PNG, JPEG, WebP). Alles andere – auch SVG/HTML mit Bild-Endung – ergibt null.
+ * Funktioniert im Browser (Vorabprüfung) und auf dem Server (verbindliche Prüfung).
+ */
+declare function imageInfo(b: Uint8Array): {
+    mime: 'image/png' | 'image/jpeg' | 'image/webp';
+    width: number;
+    height: number;
+} | null;
+
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, BRANDING_AREAS, BRANDING_IMAGES, BRANDING_IMAGE_TYPES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type BotPermissionKey, type BrandingArea, type BrandingImageKind, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, type GuildBotPermissions, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIRED_BOT_PERMISSIONS, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, SETUP_STEPS, STATUS_KINDS, STATUS_LABEL, type ServerConfigData, type SetupStepKey, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkBrandingImage, checkStatusChange, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, configAssetIds, csvCell, dangerLevelOf, defaultServerConfig, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, imageInfo, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPermissions, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseTicketRef, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, readableTextOn, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, serverConfigSchema, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketNumber, ticketRef, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
