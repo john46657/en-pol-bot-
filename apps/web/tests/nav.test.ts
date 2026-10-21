@@ -42,7 +42,8 @@ describe('Menüsuche und Gruppen', () => {
     expect(searchNav(NAV, '  ', all)).toEqual([]);
   });
   it('Reiter-Treffer nur mit Recht für den Reiter', () => {
-    expect(searchNav(NAV, 'backups', (p) => p !== 'settings.manage').some((h) => h.to === '/admin/backups')).toBe(false);
+    expect(searchNav(NAV, 'backups', (p) => p !== 'backups.view').some((h) => h.to === '/admin/backups')).toBe(false);
+    expect(searchNav(NAV, 'backups', (p) => p === 'backups.view').some((h) => h.to === '/admin/backups')).toBe(true);
   });
   it('jeder Menüpunkt gehört zu einer bekannten Gruppe; Menünamen ohne Emojis', () => {
     for (const n of NAV) {

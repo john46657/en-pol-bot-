@@ -1,42 +1,50 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Download, Eye, RotateCcw, Trash2 } from 'lucide-react';
+import { Download, Eye, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
 import { BACKUP_PART_LABEL, BACKUP_PARTS, type BackupConfig, type BackupPart, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { errText } from '../../lib/tickets';
 import { useGuilds, useServer } from '../../lib/guilds';
 import { Toggle } from '../../components/ApplicationSettings';
+import { useAuth } from '../../lib/auth';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 
-interface DataFile { name: string; kind: 'auto' | 'manuell' | 'vor-wiederherstellung'; size: number; createdAt: string }
+type DataKind = 'auto' | 'manuell' | 'vor-wiederherstellung' | 'vor-umstellung' | 'vor-mehrserver' | 'vor-zusammenfuehrung' | 'vor-migration';
+interface DataFile { name: string; kind: DataKind; size: number; createdAt: string; verify: { status: 'SUCCESS' | 'FAILED'; at: string; error: string | null } | null }
+interface BackupRun { id: string; action: 'CREATE' | 'VERIFY' | 'RESTORE'; kind: string | null; status: 'RUNNING' | 'SUCCESS' | 'FAILED'; fileName: string | null; rows: number | null; size: number | null; error: string | null; startedAt: string; finishedAt: string | null; createdByName: string }
+interface VerifyResult { ok: boolean; name: string; rows: number; tables: number; mismatches: { table: string; expected: number; actual: number }[]; durationMs: number; error: string | null }
 interface DiscordBackup { id: string; guildId: string; guildName: string; name: string; auto: boolean; status: 'PENDING' | 'READY' | 'FAILED'; stats: { roles: number; channels: number; categories: number } | null; error: string | null; createdAt: string; restoredAt: string | null; restoreResult: BackupRestoreResult | null }
 
 const fmt = (d: string) => new Date(d).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 const mb = (n: number) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
-const KIND: Record<DataFile['kind'], string> = { auto: 'automatisch', manuell: 'von Hand', 'vor-wiederherstellung': 'vor Wiederherstellung' };
+const KIND: Record<DataKind, string> = { auto: 'automatisch', manuell: 'von Hand', 'vor-wiederherstellung': 'vor Wiederherstellung', 'vor-umstellung': 'vor Umstellung', 'vor-mehrserver': 'vor Mehrserver', 'vor-zusammenfuehrung': 'vor Zusammenführung', 'vor-migration': 'vor Datenbank-Update' };
+const ACTION: Record<BackupRun['action'], string> = { CREATE: 'Sicherung', VERIFY: 'Wiederherstellungstest', RESTORE: 'Wiederherstellung' };
 const CONFIRM = 'WIEDERHERSTELLEN';
 
 /** Administration → Backups: Discord-Server (wie Xenon) und Dashboard-Daten sichern und wiederherstellen. */
 export function Backups() {
-  const [tab, setTab] = useState('Discord-Server');
+  const [tab, setTab] = useState('Dashboard-Daten');
   const qc = useQueryClient();
+  const { can } = useAuth();
+  const manage = can('backups.manage');
   const cfg = useQuery({ queryKey: ['backup-config'], queryFn: () => api<BackupConfig>('/backups/config') });
   const saveCfg = useMutation({ mutationFn: (c: BackupConfig) => api<BackupConfig>('/backups/config', { method: 'PUT', body: c }), onSuccess: (r) => qc.setQueryData(['backup-config'], r) });
   const c = cfg.data;
   return (
     <>
       <PageHeader title="💾 Backups" subtitle="Discord-Server und Dashboard-Daten sichern – und bei Bedarf wiederherstellen." />
-      {c && (
+      {c && manage && (
         <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-line bg-panel p-3 text-sm">
           <label className="flex items-center gap-2"><Toggle label="Dashboard-Daten stündlich sichern" checked={c.dataAuto} onChange={(v) => saveCfg.mutate({ ...c, dataAuto: v })} />Dashboard-Daten stündlich sichern</label>
           <label className="flex items-center gap-2"><Toggle label="Discord-Server täglich sichern" checked={c.discordAuto} onChange={(v) => saveCfg.mutate({ ...c, discordAuto: v })} />Discord-Server täglich sichern</label>
+          <label className="flex items-center gap-2"><Toggle label="Täglicher Wiederherstellungstest" checked={c.verifyAuto} onChange={(v) => saveCfg.mutate({ ...c, verifyAuto: v })} />Täglicher Wiederherstellungstest (nachts)</label>
           <label className="flex items-center gap-2">Behalten<div className="w-20"><Select aria-label="Automatische Backups behalten" value={c.keep} onChange={(e) => saveCfg.mutate({ ...c, keep: Number(e.target.value) })}>{[3, 7, 14, 30, 60].map((n) => <option key={n} value={n}>{n}</option>)}</Select></div>Tage</label>
-          <p className="basis-full text-xs text-muted">Dashboard-Daten: die letzten 48 Stunden jede Stunde, davor ein Backup pro Tag. Discord: so viele Backups je Server.</p>
+          <p className="basis-full text-xs text-muted">Dashboard-Daten: die letzten 48 Stunden jede Stunde, davor ein Backup pro Tag. Discord: so viele Backups je Server. Der Wiederherstellungstest spielt das neueste Backup zwischen 3 und 5 Uhr probehalber ein und rollt es wieder zurück – Schreibzugriffe warten währenddessen kurz.</p>
           {saveCfg.error && <span role="alert" className="text-danger">{errText(saveCfg.error)}</span>}
         </div>
       )}
-      <Tabs tabs={['Discord-Server', 'Dashboard-Daten']} active={tab} onChange={setTab} />
-      <div className="mt-3">{tab === 'Discord-Server' ? <DiscordBackups /> : <DataBackups />}</div>
+      <Tabs tabs={['Dashboard-Daten', 'Verlauf', 'Discord-Server']} active={tab} onChange={setTab} />
+      <div className="mt-3">{tab === 'Discord-Server' ? <DiscordBackups /> : tab === 'Verlauf' ? <BackupRuns /> : <DataBackups />}</div>
     </>
   );
 }
@@ -137,9 +145,42 @@ function DiscordRestore({ backup, onClose, onDone }: { backup: DiscordBackup; on
   );
 }
 
+/** Verlauf aller Sicherungen, Wiederherstellungstests und Wiederherstellungen mit Zeitpunkt und Ergebnis. */
+function BackupRuns() {
+  const q = useQuery({ queryKey: ['backup-runs'], queryFn: () => api<BackupRun[]>('/backups/runs'), refetchInterval: 15_000 });
+  return (
+    <Card title="Verlauf">
+      {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <EmptyState text="Noch keine Läufe protokolliert." /> : (
+        <div className="table-scroll"><table className="w-full text-sm">
+          <thead className="text-left text-xs uppercase text-muted"><tr><th className="py-1">Zeitpunkt</th><th>Vorgang</th><th>Ergebnis</th><th>Datei</th><th>Umfang</th><th>Von</th></tr></thead>
+          <tbody>{q.data.map((r) => (
+            <tr key={r.id} className="border-t border-line align-top">
+              <td className="py-1.5">{fmt(r.startedAt)}{r.finishedAt && <span className="block text-[11px] text-muted">fertig {fmt(r.finishedAt)}</span>}</td>
+              <td>{ACTION[r.action]}{r.kind && <span className="block text-[11px] text-muted">{KIND[r.kind as DataKind] ?? r.kind}</span>}</td>
+              <td>{r.status === 'SUCCESS' ? <Badge tone="success">erfolgreich</Badge> : r.status === 'FAILED' ? <Badge tone="danger">fehlgeschlagen</Badge> : <Badge tone="info">läuft</Badge>}{r.error && <span className="block max-w-xs text-[11px] text-danger">{r.error}</span>}</td>
+              <td className="text-xs">{r.fileName ?? '—'}</td>
+              <td className="text-xs">{r.rows !== null ? `${r.rows} Zeilen` : '—'}{r.size ? ` · ${mb(r.size)}` : ''}</td>
+              <td className="text-xs">{r.createdByName}</td>
+            </tr>
+          ))}</tbody>
+        </table></div>
+      )}
+    </Card>
+  );
+}
+
+function VerifyBadge({ v }: { v: DataFile['verify'] }) {
+  if (!v) return <Badge tone="neutral">nicht geprüft</Badge>;
+  return v.status === 'SUCCESS' ? <Badge tone="success">✓ Wiederherstellung geprüft {fmt(v.at)}</Badge> : <Badge tone="danger">✗ Test fehlgeschlagen {fmt(v.at)}</Badge>;
+}
+
 function DataBackups() {
   const qc = useQueryClient();
+  const { can } = useAuth();
+  const manage = can('backups.manage'), canRestore = can('backups.restore');
   const q = useQuery({ queryKey: ['data-backups'], queryFn: () => api<DataFile[]>('/backups/data') });
+  const [verified, setVerified] = useState<VerifyResult>();
+  const verify = useMutation({ mutationFn: (n: string) => api<VerifyResult>(`/backups/data/${n}/verify`, { method: 'POST' }), onSuccess: (r) => { setVerified(r); void qc.invalidateQueries({ queryKey: ['data-backups'] }); void qc.invalidateQueries({ queryKey: ['backup-runs'] }); } });
   const [restore, setRestore] = useState<{ name?: string; file?: File }>();
   const [confirm, setConfirm] = useState('');
   const [del, setDel] = useState<string>();
@@ -156,24 +197,36 @@ function DataBackups() {
   });
   return (
     <div className="grid gap-3">
-      <Card title="Dashboard-Daten" actions={<Button size="sm" disabled={create.isPending} onClick={() => create.mutate()}>💾 Jetzt sichern</Button>}>
+      <Card title="Dashboard-Daten" actions={manage ? <Button size="sm" disabled={create.isPending} onClick={() => create.mutate()}>💾 Jetzt sichern</Button> : undefined}>
+        <p className="mb-2 rounded-md border border-line bg-panel-2 p-2 text-xs">Eine erzeugte Datei allein beweist nicht, dass sich die Daten wiederherstellen lassen. <b>Wiederherstellung testen</b> spielt das Backup tatsächlich ein, vergleicht jede Tabelle und rollt danach alles zurück – am aktuellen Datenbestand ändert sich nichts.</p>
         <p className="mb-2 text-xs text-muted">Alle Daten des Dashboards (Personal, Akten, Einsätze, Berichte, Bewerbungen, Tickets, Einstellungen, Konten …) als komprimierte Datei. Hochgeladene Dateien (Bilder, Anhänge) liegen im Speicherordner und sind nicht enthalten. Die Backups enthalten auch Konten – nur vertrauenswürdig weitergeben.</p>
         {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mb-2 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
         {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <EmptyState text="Noch keine Backups." /> : (
           <ul className="divide-y divide-line">{q.data.map((f) => (
             <li key={f.name} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-              <span className="min-w-0 flex-1"><b>{fmt(f.createdAt)}</b> <Badge tone={f.kind === 'auto' ? 'neutral' : f.kind === 'manuell' ? 'info' : 'warning'}>{KIND[f.kind]}</Badge> <span className="text-xs text-muted">{mb(f.size)}</span></span>
-              <a href={`/api/v1/backups/data/${f.name}`} className="inline-flex items-center rounded px-2 py-1 text-xs hover:bg-panel-2"><Download size={14} className="mr-1" />Herunterladen</a>
-              <Button size="sm" variant="secondary" onClick={() => { setConfirm(''); setRestore({ name: f.name }); }}><RotateCcw size={14} className="mr-1" />Wiederherstellen</Button>
-              <Button size="sm" variant="ghost" aria-label="Backup löschen" onClick={() => setDel(f.name)}><Trash2 size={14} /></Button>
+              <span className="min-w-0 flex-1"><b>{fmt(f.createdAt)}</b> <Badge tone={f.kind === 'auto' ? 'neutral' : f.kind === 'manuell' ? 'info' : 'warning'}>{KIND[f.kind] ?? f.kind}</Badge> <span className="text-xs text-muted">{mb(f.size)}</span> <VerifyBadge v={f.verify} />{f.verify?.error && <span className="block text-[11px] text-danger">{f.verify.error}</span>}</span>
+              {manage && <Button size="sm" variant="ghost" disabled={verify.isPending} onClick={() => verify.mutate(f.name)}><ShieldCheck size={14} className="mr-1" />{verify.isPending && verify.variables === f.name ? 'Wird getestet…' : 'Wiederherstellung testen'}</Button>}
+              {manage && <a href={`/api/v1/backups/data/${f.name}`} className="inline-flex items-center rounded px-2 py-1 text-xs hover:bg-panel-2"><Download size={14} className="mr-1" />Herunterladen</a>}
+              {canRestore && <Button size="sm" variant="secondary" onClick={() => { setConfirm(''); setRestore({ name: f.name }); }}><RotateCcw size={14} className="mr-1" />Wiederherstellen</Button>}
+              {manage && <Button size="sm" variant="ghost" aria-label="Backup löschen" onClick={() => setDel(f.name)}><Trash2 size={14} /></Button>}
             </li>
           ))}</ul>
         )}
       </Card>
-      <Card title="Backup-Datei einspielen">
+      {verified && (
+        <Modal open title={verified.ok ? 'Wiederherstellungstest bestanden' : 'Wiederherstellungstest fehlgeschlagen'} onClose={() => setVerified(undefined)}>
+          <div className="grid gap-2 text-sm">
+            <p>{verified.ok ? `✓ ${verified.tables} Tabellen mit ${verified.rows} Zeilen eingespielt und geprüft (${(verified.durationMs / 1000).toFixed(1)} s). Danach wurde alles zurückgerollt.` : `✗ ${verified.error ?? 'Unbekannter Fehler'}`}</p>
+            {verified.mismatches.length > 0 && <ul className="text-xs">{verified.mismatches.map((m) => <li key={m.table}>{m.table}: {m.actual} statt {m.expected} Zeilen</li>)}</ul>}
+            <div className="flex justify-end"><Button onClick={() => setVerified(undefined)}>Schließen</Button></div>
+          </div>
+        </Modal>
+      )}
+      {verify.error && <p role="alert" className="text-sm text-danger">{errText(verify.error)}</p>}
+      {canRestore && <Card title="Backup-Datei einspielen">
         <p className="mb-2 text-xs text-muted">Eine heruntergeladene Backup-Datei (.json.gz) wieder einspielen – z. B. nach einem Umzug auf einen neuen Server.</p>
         <input type="file" accept=".gz,.json,application/gzip,application/json" aria-label="Backup-Datei" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setConfirm(''); setRestore({ file }); } e.target.value = ''; }} className="text-sm" />
-      </Card>
+      </Card>}
       {restore && (
         <Modal open title="Dashboard-Daten wiederherstellen" onClose={() => setRestore(undefined)}>
           <div className="grid gap-3 text-sm">

@@ -1,6 +1,6 @@
 import type { ExamInput } from '@enrp/shared';
 
-const base = { partial: false, tolerance: 0, explanation: null, image: null, matches: [] as string[], options: [] as string[], correct: [] as string[] };
+const base = { partial: false, tolerance: 0, explanation: null, image: null, matches: [] as string[], options: [] as string[], correct: [] as string[], topic: null as string | null, difficulty: 'MEDIUM' as const, caseKind: null, rubric: [] as { id: string; label: string; points: number }[] };
 
 /** Beispiel-Prüfung mit allen Fragetypen – Startpunkt für neue Prüfungen. */
 export const EXAM_TEMPLATE: ExamInput = {
@@ -17,6 +17,6 @@ export const EXAM_TEMPLATE: ExamInput = {
     { ...base, id: 'gap', type: 'GAP', text: 'Der Notruf der Polizei lautet {{110}}, der von Feuerwehr und Rettungsdienst {{112}}.', points: 2, partial: true },
     { ...base, id: 'text', type: 'TEXT', text: 'Beschreibe kurz, wie du dich bei einem Funkausfall verhältst.', points: 3 },
   ],
-  questionCount: 0, passPercent: 70, timeLimitMin: 20, maxAttempts: 3, retryHours: 24, autoGrade: true, showResult: true, reviewMode: 'SOLUTIONS', layout: 'PAGED',
+  questionCount: 0, drawRules: [], passPercent: 70, timeLimitMin: 20, maxAttempts: 3, retryHours: 24, autoGrade: true, showResult: true, reviewMode: 'SOLUTIONS', layout: 'PAGED',
   shuffleQuestions: false, shuffleOptions: true, examinerIds: [], audienceRoleIds: [], trainingId: null, requiredExamId: null, availableFrom: null, availableUntil: null, notifyExaminers: true, active: false,
 };

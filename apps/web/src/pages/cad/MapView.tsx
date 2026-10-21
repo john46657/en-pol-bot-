@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layers, Locate, Minus, Pencil, Plus, X } from 'lucide-react';
 import { ERLC_BUILTIN_MAP, gameToPixel, pixelToGame, postalPosition, type CadConfig } from '@enrp/shared';
@@ -9,10 +10,16 @@ import { usePrefs } from '../../lib/prefs';
 import { Button, Field, Input, Modal, Select, Textarea } from '../../components/ui';
 
 /** Ein Marker auf der Karte: Spielkoordinate, Layer, Darstellung und Inhalt des Info-Fensters. */
-interface Marker { id: string; layer: string; x: number; z: number; emoji: string; color: string; label: string; title: string; body: ReactNode; actions?: ReactNode; pulse?: boolean }
+interface Marker { id: string; layer: string; x: number; z: number; emoji: string; color: string; label: string; title: string; body: ReactNode; actions?: ReactNode; pulse?: boolean; /** veraltet oder unbestätigt → abgeschwächt dargestellt */ dim?: boolean }
 type Mode = { kind: 'view' } | { kind: 'poi' } | { kind: 'zone'; points: [number, number][] } | { kind: 'pick'; onPick: (x: number, z: number) => void; hint: string; tag?: string };
 
 const MAX_ZOOM = 6;
+/** Herkunft einer Notruf-Position – nur echte Ortsdaten, ungefähre ausdrücklich als solche. */
+const POSITION_SOURCE: Record<string, string> = { CALLER: 'Standort des Anrufers laut ER:LC', API: 'Notruf-Position laut ER:LC', POI: 'Ortsangabe → eigener POI (ungefähr)', POSTAL: 'Mitte der Postleitzahl (ungefähr)', CALIBRATED: 'umgerechnete Notruf-Position (ungefähr)', NONE: 'keine genaue Position' };
+const FILTER_KEY = 'enrp.cad.mapFilter';
+type MapFilter = { status: string; priority: string; type: string };
+const readFilter = (): MapFilter => { try { return { status: '', priority: '', type: '', ...(JSON.parse(localStorage.getItem(FILTER_KEY) ?? '{}') as Partial<MapFilter>) }; } catch { return { status: '', priority: '', type: '' }; } };
+const CaseLinks = ({ cases }: { cases?: { id: string; number: string }[] }) => (cases?.length ? <p className="mt-1 text-xs">🗂️ {cases.map((c, i) => <span key={c.id}>{i ? ', ' : ''}<Link className="underline" to={`/cases/${c.id}`}>{c.number}</Link></span>)}</p> : null);
 type View = { s: number; tx: number; ty: number };
 
 /**
@@ -40,6 +47,9 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
   const [mode, setMode] = useState<Mode>({ kind: 'view' });
   const [editObj, setEditObj] = useState<Partial<CadMapObject> | null>(null);
   const [showLayers, setShowLayers] = useState(false);
+  const [filter, setFilterState] = useState<MapFilter>(readFilter);
+  const setFilter = (f: MapFilter) => { setFilterState(f); try { localStorage.setItem(FILTER_KEY, JSON.stringify(f)); } catch { /* privater Modus */ } };
+  const [showUnplaced, setShowUnplaced] = useState(false);
   /** PLZ-Suche: gefundene Postleitzahl wird markiert und angesprungen */
   const [plzQuery, setPlzQuery] = useState('');
   const [plzMark, setPlzMark] = useState<{ postal: string; x: number; z: number } | null>(null);
@@ -169,12 +179,12 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
     if (!data) return [];
     const out: Marker[] = [];
     const is = (s: CadMapData['units'][number]) => cfg.unitTypes.find((t) => t.key === s.type);
-    for (const i of data.incidents) out.push({ id: `incident:${i.id}`, layer: 'incidents', x: i.mapX!, z: i.mapZ!, emoji: style('incident').emoji, color: cfg.priorities.find((p) => p.key === i.priority)?.color ?? style('incident').color,
-      label: i.number, title: `${i.number} · ${i.title}`, pulse: i.status === 'CRITICAL',
-      body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Priorität</dt><dd>{optLabel(cfg.priorities, i.priority)}</dd><dt className="text-muted">Status</dt><dd>{optLabel(cfg.incidentStatuses, i.status)}</dd>{i.keyword && <><dt className="text-muted">Stichwort</dt><dd>{i.keyword}</dd></>}<dt className="text-muted">Ort</dt><dd>{i.location ?? '—'}</dd><dt className="text-muted">Einheiten</dt><dd>{i.units.filter((u) => !u.clearedAt).map((u) => u.unit.callsign).join(', ') || 'keine'}</dd></dl>,
+    for (const i of data.incidents) if ((!filter.status || i.status === filter.status) && (!filter.priority || i.priority === filter.priority) && (!filter.type || i.type === filter.type)) out.push({ id: `incident:${i.id}`, layer: 'incidents', x: i.mapX!, z: i.mapZ!, emoji: style('incident').emoji, color: cfg.priorities.find((p) => p.key === i.priority)?.color ?? style('incident').color,
+      label: `${i.number}${i.stale ? ' ⏳' : ''}`, title: `${i.number} · ${i.title}`, pulse: i.status === 'CRITICAL', dim: i.stale,
+      body: <><dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Priorität</dt><dd>{optLabel(cfg.priorities, i.priority)}</dd><dt className="text-muted">Status</dt><dd>{optLabel(cfg.incidentStatuses, i.status)}</dd>{i.keyword && <><dt className="text-muted">Stichwort</dt><dd>{i.keyword}</dd></>}<dt className="text-muted">Ort</dt><dd>{i.location ?? '—'}</dd><dt className="text-muted">Einheiten</dt><dd>{i.units.filter((u) => !u.clearedAt).map((u) => u.unit.callsign).join(', ') || 'keine'}</dd></dl>{i.stale && <p className="mt-1 text-[11px] text-warning">⏳ Seit längerem nicht aktualisiert – Stand prüfen.</p>}<CaseLinks cases={i.cases} /></>,
       actions: actionsFor?.({ kind: 'incident', id: i.id }) });
-    for (const c of data.calls) out.push({ id: `call:${c.id}`, layer: 'calls', x: c.mapX!, z: c.mapZ!, emoji: style('call').emoji, color: style('call').color, label: `#${c.callNumber}`, title: `🚨 NOTRUF #${c.callNumber}`, pulse: c.status === 'OPEN',
-      body: <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Meldung</dt><dd>{c.description ?? '—'}</dd><dt className="text-muted">Ort</dt><dd>{c.positionDescriptor ?? '—'}</dd><dt className="text-muted">Zeit</dt><dd>{new Date(c.startedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</dd><dt className="text-muted">Status</dt><dd>{c.status === 'OPEN' ? 'Offen' : c.status === 'CLAIMED' ? 'Übernommen' : 'Geschlossen'}</dd>{c.incident && <><dt className="text-muted">Einsatz</dt><dd>{c.incident.number}</dd></>}</dl>,
+    for (const c of data.calls) out.push({ id: `call:${c.id}`, layer: 'calls', x: c.mapX!, z: c.mapZ!, emoji: style('call').emoji, color: style('call').color, label: `#${c.callNumber}${c.notReported ? ' ⏳' : ''}`, title: `🚨 NOTRUF #${c.callNumber}`, pulse: c.status === 'OPEN' && !c.notReported, dim: c.notReported || ['POI', 'POSTAL', 'CALIBRATED'].includes(c.positionSource ?? ''),
+      body: <><dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs"><dt className="text-muted">Position</dt><dd>{c.positionSource ? POSITION_SOURCE[c.positionSource] ?? c.positionSource : 'Herkunft unbekannt (ältere Daten)'}</dd><dt className="text-muted">Meldung</dt><dd>{c.description ?? '—'}</dd><dt className="text-muted">Ort</dt><dd>{c.positionDescriptor ?? '—'}</dd><dt className="text-muted">Zeit</dt><dd>{new Date(c.startedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</dd><dt className="text-muted">Status</dt><dd>{c.status === 'OPEN' ? 'Offen' : c.status === 'CLAIMED' ? 'Übernommen' : 'Geschlossen'}</dd>{c.incident && <><dt className="text-muted">Einsatz</dt><dd>{c.incident.number}</dd></>}</dl>{c.notReported && <p className="mt-1 text-[11px] text-warning">⏳ In ER:LC nicht mehr gemeldet – veraltet.</p>}<CaseLinks cases={c.cases} /></>,
       actions: actionsFor?.({ kind: 'call', id: c.id }) });
     for (const u of data.units) {
       const t = is(u);
@@ -214,7 +224,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
       body: <div className="text-xs">{o.description ?? ''}{o.category && <p className="text-muted">Kategorie: {o.category}</p>}</div>,
       actions: can('cad.manage_map') ? <Button size="sm" variant="secondary" onClick={() => setEditObj(o)}>Bearbeiten</Button> : undefined });
     return out;
-  }, [data, cfg, actionsFor, can, vehicleFilter]);
+  }, [data, cfg, actionsFor, can, vehicleFilter, filter]);
 
   const shown = markers.filter((mk) => !hidden.has(mk.layer));
   const visible = shown.filter((mk) => onImage(mk.x, mk.z));
@@ -244,7 +254,7 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
             return (
               <button key={mk.id} data-marker type="button" title={mk.title} aria-label={mk.title} onClick={(e) => { e.stopPropagation(); setSelected(mk.id === selected ? null : mk.id); }}
                 className="absolute flex items-center gap-1" style={{ left: px, top: py, transform: `translate(-50%, -50%) scale(${1 / view.s})`, zIndex: mk.id === selected ? 20 : mk.layer === 'calls' || mk.layer === 'incidents' ? 10 : 5 }}>
-                <span className={`grid h-7 w-7 place-items-center rounded-full border-2 text-sm shadow ${mk.pulse ? 'animate-pulse' : ''}`} style={{ borderColor: mk.color, background: `${mk.color}cc` }}>{mk.emoji}</span>
+                <span className={`grid h-7 w-7 place-items-center rounded-full border-2 text-sm shadow ${mk.pulse ? 'animate-pulse' : ''} ${mk.dim ? 'border-dashed opacity-60' : ''}`} style={{ borderColor: mk.color, background: `${mk.color}cc` }}>{mk.emoji}</span>
                 {(!compact || mk.layer === 'calls' || mk.layer === 'incidents') && <span className="whitespace-nowrap rounded bg-black/70 px-1 text-[11px] font-medium text-white">{mk.label}</span>}
               </button>
             );
@@ -257,7 +267,21 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
           {offMap.length > 4 && ` und ${offMap.length - 4} weitere`} – Tipp: einen POI mit dem Namen des Ortes (z. B. „Bank“) setzen, dann landen solche Notrufe dort.
         </div>
       )}
-      {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand</div>}
+      {data?.stale && <div data-ui className="absolute left-2 bottom-2 rounded bg-warning/90 px-2 py-1 text-xs text-black">ER:LC-API momentan nicht erreichbar – letzter bekannter Stand{data.erlc?.length ? ` (${data.erlc.map((e) => `${e.name}: ${e.lastSyncAt ? new Date(e.lastSyncAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : 'nie'}`).join(', ')})` : ''}</div>}
+      {!compact && data?.unplaced && (data.unplaced.incidents.length + data.unplaced.calls.length > 0) && (
+        <div data-ui className={`absolute ${data.stale ? 'bottom-9' : 'bottom-2'} left-2 z-10 max-w-[calc(100%-1rem)] sm:max-w-xs`}>
+          <Button size="sm" variant="secondary" aria-expanded={showUnplaced} onClick={() => setShowUnplaced((v) => !v)}>📍❔ Ohne genaue Position ({data.unplaced.incidents.length + data.unplaced.calls.length})</Button>
+          {showUnplaced && (
+            <div className="mt-1 max-h-60 overflow-auto rounded-md border border-line bg-panel p-2 text-xs shadow-lg">
+              <p className="mb-1 text-muted">Für diese Einträge liegt keine genaue Position vor – sie werden nicht geraten.</p>
+              <ul className="grid gap-1">
+                {data.unplaced.incidents.map((i) => <li key={i.id}><Link className="underline" to={`/cad/incidents?id=${i.id}`}>{i.number}</Link> · {i.title} · {i.location ?? 'ohne Ort'}<CaseLinks cases={i.cases} /></li>)}
+                {data.unplaced.calls.map((c) => <li key={c.id}><Link className="underline" to={`/cad/calls?id=${c.id}`}>Notruf #{c.callNumber}</Link> · {c.description ?? '—'} · {c.positionDescriptor ?? 'Ort unbekannt'}{c.notReported && <span className="text-warning"> · nicht mehr gemeldet</span>}<CaseLinks cases={c.cases} /></li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Steuerung */}
       <div data-ui className="absolute right-2 top-2 flex flex-col gap-1">
@@ -270,6 +294,13 @@ export function MapView({ cfg, data, height = '70vh', focus, onCreateIncidentAt,
         <div data-ui className="absolute right-12 top-2 max-h-[80%] w-56 overflow-auto rounded-md border border-line bg-panel p-2 text-sm shadow-lg">
           <p className="mb-1 text-xs font-semibold text-muted">Ebenen</p>
           <input type="search" aria-label="Fahrzeuge filtern" placeholder="🚓 Modell, Besitzer, Einheit…" className="mb-1 w-full rounded border border-line bg-bg px-2 py-1 text-xs" value={vehicleFilter} onChange={(e) => setVehicleFilter(e.target.value)} />
+          <p className="mb-1 mt-1 text-xs font-semibold text-muted">Einsätze filtern</p>
+          <div className="mb-2 grid gap-1">
+            <select aria-label="Einsätze nach Status filtern" className="rounded border border-line bg-bg px-1 py-0.5 text-xs" value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })}><option value="">alle Status</option>{cfg.incidentStatuses.filter((x) => !x.closed).map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
+            <select aria-label="Einsätze nach Priorität filtern" className="rounded border border-line bg-bg px-1 py-0.5 text-xs" value={filter.priority} onChange={(e) => setFilter({ ...filter, priority: e.target.value })}><option value="">alle Prioritäten</option>{cfg.priorities.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
+            <select aria-label="Einsätze nach Einsatzart filtern" className="rounded border border-line bg-bg px-1 py-0.5 text-xs" value={filter.type} onChange={(e) => setFilter({ ...filter, type: e.target.value })}><option value="">alle Einsatzarten</option>{cfg.incidentTypes.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
+          </div>
+          <p className="mb-1 text-[11px] text-muted">Gestrichelt/blass = veraltet, nicht mehr gemeldet oder nur ungefähre Position.</p>
           {cfg.layers.map((l) => <label key={l.key} className="flex items-center justify-between gap-2 py-0.5"><span className="flex items-center gap-2"><input type="checkbox" checked={!hidden.has(l.key)} onChange={() => toggleLayer(l.key)} />{l.label}</span><span className="text-xs text-muted">{counts(l.key)}</span></label>)}
         </div>
       )}

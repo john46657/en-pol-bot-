@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowLeft, ArrowUp, ChevronDown, ChevronRight, Copy, Download, Eye, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
 import {
-  EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES,
-  examProblems, gapAnswers, gradeAnswer, maskGaps, questionProblems, type ExamInput, type ExamQuestionType, type Question,
+  EXAM_CASE_KINDS, EXAM_CASE_KIND_LABEL, EXAM_CASE_TEMPLATES, EXAM_DIFFICULTIES, EXAM_DIFFICULTY_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES,
+  examProblems, gapAnswers, gradeAnswer, maskGaps, questionProblems, type DrawRule, type ExamCaseKind, type ExamDifficulty, type ExamInput, type ExamQuestionType, type Question,
 } from '@enrp/shared';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
@@ -17,14 +17,15 @@ import { AnswerReview, download, fileSafe, fromLocal, pts, QuestionImage, Questi
 interface Training { id: string; name: string }
 
 const emptyExam = (): ExamInput => ({
-  title: '', description: null, instructions: null, category: null, questions: [], questionCount: 0, passPercent: 70, timeLimitMin: null, maxAttempts: 3, retryHours: 24,
+  title: '', description: null, instructions: null, category: null, questions: [], questionCount: 0, drawRules: [], passPercent: 70, timeLimitMin: null, maxAttempts: 3, retryHours: 24,
   autoGrade: true, showResult: true, reviewMode: 'ANSWERS', layout: 'PAGED', shuffleQuestions: false, shuffleOptions: false, examinerIds: [], audienceRoleIds: [],
   trainingId: null, requiredExamId: null, availableFrom: null, availableUntil: null, notifyExaminers: true, active: true,
 });
 const newId = () => crypto.randomUUID().slice(0, 8);
 const newQuestion = (type: ExamQuestionType = 'SINGLE'): Question => ({
   id: newId(), type, text: type === 'GAP' ? 'Text mit {{Lücke}}' : '', options: ['SINGLE', 'MULTI', 'ORDER', 'MATCH'].includes(type) ? ['', ''] : [], matches: type === 'MATCH' ? ['', ''] : [],
-  correct: type === 'YESNO' ? ['ja'] : [], points: 1, partial: false, tolerance: 0, explanation: null, image: null,
+  correct: type === 'YESNO' ? ['ja'] : [], points: type === 'CASE' ? 4 : 1, partial: false, tolerance: 0, explanation: null, image: null,
+  topic: null, difficulty: 'MEDIUM', caseKind: type === 'CASE' ? 'OTHER' : null, rubric: type === 'CASE' ? [{ id: newId(), label: '', points: 4 }] : [],
 });
 const usesOptions = (t: ExamQuestionType) => t === 'SINGLE' || t === 'MULTI' || t === 'ORDER' || t === 'MATCH';
 const canPartial = (q: Question) => q.type === 'MULTI' || q.type === 'ORDER' || q.type === 'MATCH' || q.type === 'GAP' || (q.type === 'TEXT' && q.correct.length > 1);
@@ -36,10 +37,14 @@ const clean = (d: ExamInput): ExamInput => ({
     ...q, text: q.text.trim(), options: usesOptions(q.type) ? q.options.map((o) => o.trim()) : [], matches: q.type === 'MATCH' ? q.matches.map((o) => o.trim()) : [],
     correct: q.type === 'ORDER' || q.type === 'MATCH' || q.type === 'GAP' ? [] : q.correct.map((c) => c.trim()).filter(Boolean), partial: canPartial(q) && q.partial,
     tolerance: q.type === 'NUMBER' ? q.tolerance : 0, image: q.image?.trim() || null, explanation: q.explanation?.trim() || null,
+    topic: q.topic?.trim() || null, caseKind: q.type === 'CASE' ? q.caseKind ?? 'OTHER' : null,
+    rubric: q.type === 'CASE' || q.type === 'TEXT' ? q.rubric.map((r) => ({ ...r, label: r.label.trim() })).filter((r) => r.label) : [],
   })),
+  drawRules: d.drawRules.map((r) => ({ ...r, topic: r.topic?.trim() || null })),
 });
 /** Frage so, wie Teilnehmer sie sehen (für die Vorschau). */
 const asAttempt = (q: Question): AttemptQuestion => ({
+  topic: q.topic, difficulty: q.difficulty, caseKind: q.caseKind, rubric: q.rubric,
   id: q.id, type: q.type, text: q.type === 'GAP' ? maskGaps(q.text) : q.text, image: q.image, points: q.points, partial: q.partial,
   options: usesOptions(q.type) ? q.options.map((text, i) => ({ i, text })) : [], matches: q.type === 'MATCH' ? q.matches.map((text, i) => ({ i, text })).reverse() : [],
   correct: q.correct, gaps: q.type === 'GAP' ? gapAnswers(q.text) : undefined, tolerance: q.tolerance, explanation: q.explanation,
@@ -90,6 +95,13 @@ function ExamEditor({ id, initial, updatedAt, attemptCount, fromImport }: { id?:
   const toggle = (qid: string, v?: boolean) => setOpen((s) => { const n = new Set(s); if (v ?? !n.has(qid)) n.add(qid); else n.delete(qid); return n; });
   const problems = examProblems(d);
   const maxPoints = d.questions.reduce((n, q) => n + q.points, 0);
+  const topics = useMemo(() => [...new Set(d.questions.map((q) => q.topic?.trim()).filter((t): t is string => !!t))].sort((a, b) => a.localeCompare(b, 'de')), [d.questions]);
+  const insertCase = (i: number) => {
+    const t = EXAM_CASE_TEMPLATES[i];
+    if (!t) return;
+    const q: Question = { ...newQuestion('CASE'), text: t.text, points: t.points, topic: t.topic, caseKind: t.caseKind, rubric: t.rubric.map((r) => ({ id: newId(), ...r })) };
+    set({ questions: [...d.questions, q] }); toggle(q.id, true);
+  };
 
   // lokaler Entwurf: nichts geht verloren (Neuladen, Tab geschlossen)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -161,6 +173,7 @@ function ExamEditor({ id, initial, updatedAt, attemptCount, fromImport }: { id?:
             )}>
               <div className="grid gap-2">
                 {!d.questions.length && <p className="rounded-md border border-dashed border-line p-6 text-center text-sm text-muted">Noch keine Fragen. Wähle unten einen Fragetyp und füge die erste Frage hinzu.</p>}
+                <datalist id="exam-topics">{topics.map((t) => <option key={t} value={t} />)}</datalist>
                 {d.questions.map((q, i) => (
                   <QuestionEditor key={q.id} q={q} index={i} count={d.questions.length} open={open.has(q.id)} onToggle={() => toggle(q.id)}
                     onChange={(x) => setQ(i, x)} onMove={(dir) => moveQ(i, dir)}
@@ -173,6 +186,10 @@ function ExamEditor({ id, initial, updatedAt, attemptCount, fromImport }: { id?:
                   </Select>
                   <Button disabled={d.questions.length >= 200} onClick={addQuestion}><Plus size={14} />Frage hinzufügen</Button>
                   <span className="text-xs text-muted">{EXAM_QUESTION_TYPE_HINT[addType]}</span>
+                  <Select aria-label="Fiktives Fallbeispiel als Vorlage einfügen" className="w-auto min-w-56" value="" onChange={(e) => { insertCase(Number(e.target.value)); e.target.value = ''; }}>
+                    <option value="">📋 Fallbeispiel-Vorlage einfügen …</option>
+                    {EXAM_CASE_TEMPLATES.map((t, i) => <option key={t.caseKind} value={i}>{EXAM_CASE_KIND_LABEL[t.caseKind]}</option>)}
+                  </Select>
                 </div>
               </div>
             </Card>
@@ -186,6 +203,7 @@ function ExamEditor({ id, initial, updatedAt, attemptCount, fromImport }: { id?:
                   <L label="Zeitlimit (Min.)" hint="leer = ohne"><Input aria-label="Zeitlimit in Minuten" type="number" min={1} max={600} value={d.timeLimitMin ?? ''} onChange={(e) => set({ timeLimitMin: e.target.value ? Number(e.target.value) : null })} /></L>
                   <L label="Fragen je Versuch" hint={`0 = alle (${d.questions.length})`}><Input aria-label="Fragen je Versuch" type="number" min={0} max={200} value={d.questionCount} onChange={(e) => set({ questionCount: Number(e.target.value) })} /></L>
                 </div>
+                <DrawRules rules={d.drawRules} topics={topics} questions={d.questions} onChange={(drawRules) => set({ drawRules })} />
                 <Switch label="Fragen mischen" checked={d.shuffleQuestions} onChange={(v) => set({ shuffleQuestions: v })} hint="Jeder Versuch in anderer Reihenfolge" />
                 <Switch label="Antworten mischen" checked={d.shuffleOptions} onChange={(v) => set({ shuffleOptions: v })} hint="Reihenfolge der Antwortmöglichkeiten" />
               </div>
@@ -244,7 +262,7 @@ function ExamEditor({ id, initial, updatedAt, attemptCount, fromImport }: { id?:
           <Button disabled={!!problems.length || save.isPending || (!dirty && !isNew)} onClick={() => save.mutate()}><Save size={14} />{isNew ? 'Prüfung erstellen' : 'Speichern'}</Button>
         </div>
       </div>
-      <ConfirmDialog open={del} danger title="Prüfung löschen?" message={`Die Prüfung${attemptCount ? ` und ${attemptCount} ${attemptCount === 1 ? 'Versuch' : 'Versuche'}` : ''} werden gelöscht. Einträge in den Personalakten bleiben. Das kann nicht rückgängig gemacht werden.`} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => remove.mutate()} onClose={() => setDel(false)} />
+      <ConfirmDialog open={del} danger title="Prüfung löschen?" message={attemptCount ? `Diese Prüfung hat ${attemptCount} ${attemptCount === 1 ? 'Versuch' : 'Versuche'}. Damit die Prüfungsnachweise erhalten bleiben, kann sie nicht gelöscht werden – bitte stattdessen „Freigegeben“ ausschalten.` : 'Die Prüfung wird gelöscht. Das kann nicht rückgängig gemacht werden.'} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => remove.mutate()} onClose={() => setDel(false)} />
     </div>
   );
 }
@@ -306,6 +324,9 @@ function QuestionEditor({ q, index, count, open, onToggle, onChange, onRemove, o
             <L label="Fragetyp"><Select aria-label={`Typ von Frage ${n}`} className="w-48" value={q.type} onChange={(e) => setType(e.target.value as ExamQuestionType)}>{EXAM_QUESTION_TYPES.map((t) => <option key={t} value={t}>{EXAM_QUESTION_TYPE_LABEL[t]}</option>)}</Select></L>
             <L label="Punkte"><Input aria-label={`Punkte für Frage ${n}`} type="number" min={0} max={100} step={0.5} className="w-24" value={q.points} onChange={(e) => onChange({ ...q, points: Number(e.target.value) })} /></L>
             {canPartial(q) && <div className="pb-1.5"><Switch label="Teilpunkte" checked={q.partial} onChange={(v) => onChange({ ...q, partial: v })} hint="anteilig je richtigem Teil" /></div>}
+            <L label="Thema"><Input aria-label={`Thema von Frage ${n}`} list="exam-topics" className="w-48" maxLength={60} value={q.topic ?? ''} onChange={(e) => onChange({ ...q, topic: e.target.value || null })} placeholder="z. B. Festnahme" /></L>
+            <L label="Schwierigkeit"><Select aria-label={`Schwierigkeit von Frage ${n}`} className="w-32" value={q.difficulty} onChange={(e) => onChange({ ...q, difficulty: e.target.value as ExamDifficulty })}>{EXAM_DIFFICULTIES.map((x) => <option key={x} value={x}>{EXAM_DIFFICULTY_LABEL[x]}</option>)}</Select></L>
+            {q.type === 'CASE' && <L label="Fallart"><Select aria-label={`Fallart von Frage ${n}`} className="w-44" value={q.caseKind ?? 'OTHER'} onChange={(e) => onChange({ ...q, caseKind: e.target.value as ExamCaseKind })}>{EXAM_CASE_KINDS.map((x) => <option key={x} value={x}>{EXAM_CASE_KIND_LABEL[x]}</option>)}</Select></L>}
           </div>
           <p className="text-xs text-muted">{EXAM_QUESTION_TYPE_HINT[q.type]}</p>
           <L label={q.type === 'GAP' ? 'Text mit Lücken' : 'Frage'}>
@@ -362,6 +383,7 @@ function QuestionEditor({ q, index, count, open, onToggle, onChange, onRemove, o
               <L label="Toleranz (±)"><Input aria-label={`Toleranz für Frage ${n}`} className="w-28" type="number" min={0} step="any" value={q.tolerance} onChange={(e) => onChange({ ...q, tolerance: Math.max(0, Number(e.target.value) || 0) })} /></L>
             </div>
           )}
+          {(q.type === 'CASE' || (q.type === 'TEXT' && !q.correct.length)) && <RubricEditor q={q} n={n} onChange={onChange} />}
           {q.type === 'TEXT' && (
             <L label="Stichworte (optional, kommagetrennt)" hint="Alle Stichworte müssen in der Antwort vorkommen (mit Teilpunkten: anteilig). Leer = Bewertung durch einen Prüfer.">
               <Input aria-label={`Stichworte für Frage ${n}`} value={keywords} onChange={(e) => { setKeywords(e.target.value); onChange({ ...q, correct: e.target.value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12) }); }} />
@@ -379,6 +401,47 @@ function QuestionEditor({ q, index, count, open, onToggle, onChange, onRemove, o
         </div>
       )}
     </fieldset>
+  );
+}
+
+/** Kriterienkatalog für die manuelle Bewertung (Fallbeispiel, Freitext ohne Stichworte). */
+function RubricEditor({ q, n, onChange }: { q: Question; n: number; onChange: (q: Question) => void }) {
+  const sum = q.rubric.reduce((x, r) => x + r.points, 0);
+  const setItem = (i: number, p: Partial<Question['rubric'][number]>) => onChange({ ...q, rubric: q.rubric.map((r, j) => (j === i ? { ...r, ...p } : r)) });
+  return (
+    <div className="grid gap-1.5 rounded-md border border-line p-2">
+      <span className="text-xs text-muted">Kriterienkatalog – der Prüfer vergibt je Kriterium Punkte (Summe {pts(sum)}, höchstens {pts(q.points)} zählen){q.type === 'TEXT' ? ' · optional' : ''}</span>
+      {q.rubric.map((r, i) => (
+        <div key={r.id} className="flex items-center gap-2">
+          <Input aria-label={`Kriterium ${i + 1} von Frage ${n}`} className="py-1" maxLength={300} value={r.label} onChange={(e) => setItem(i, { label: e.target.value })} placeholder="z. B. Eigensicherung beachtet" />
+          <Input aria-label={`Punkte für Kriterium ${i + 1} von Frage ${n}`} type="number" min={0} max={100} step={0.5} className="w-20 py-1" value={r.points} onChange={(e) => setItem(i, { points: Math.max(0, Number(e.target.value) || 0) })} />
+          <Button size="sm" variant="ghost" aria-label={`Kriterium ${i + 1} entfernen`} onClick={() => onChange({ ...q, rubric: q.rubric.filter((_, j) => j !== i) })}><X size={13} /></Button>
+        </div>
+      ))}
+      {q.rubric.length < 20 && <div><Button size="sm" variant="ghost" onClick={() => onChange({ ...q, rubric: [...q.rubric, { id: newId(), label: '', points: 1 }] })}><Plus size={14} />Kriterium hinzufügen</Button></div>}
+    </div>
+  );
+}
+
+/** Zufällige Zusammenstellung nach Thema und Schwierigkeit; schwache Themen der Person werden bevorzugt. */
+function DrawRules({ rules, topics, questions, onChange }: { rules: DrawRule[]; topics: string[]; questions: Question[]; onChange: (r: DrawRule[]) => void }) {
+  const avail = (r: DrawRule) => questions.filter((q) => (!r.topic || (q.topic ?? '').toLowerCase() === r.topic.toLowerCase()) && (!r.difficulty || q.difficulty === r.difficulty)).length;
+  const setRule = (i: number, p: Partial<DrawRule>) => onChange(rules.map((r, j) => (j === i ? { ...r, ...p } : r)));
+  return (
+    <div className="grid gap-1.5">
+      <span className="text-xs font-medium">Ziehregeln (Zufallsauswahl)</span>
+      <span className="text-xs text-muted">Je Regel werden zufällig Fragen gezogen. Themen, die die Person zuletzt nicht bestanden hat, werden bevorzugt. Mit Regeln gilt „Fragen je Versuch“ nicht.</span>
+      {rules.map((r, i) => (
+        <div key={i} className="grid grid-cols-[1fr_6.5rem_4rem_auto] items-center gap-1.5">
+          <Select aria-label={`Thema der Regel ${i + 1}`} className="py-1" value={r.topic ?? ''} onChange={(e) => setRule(i, { topic: e.target.value || null })}><option value="">alle Themen</option>{topics.map((t) => <option key={t} value={t}>{t}</option>)}</Select>
+          <Select aria-label={`Schwierigkeit der Regel ${i + 1}`} className="py-1" value={r.difficulty ?? ''} onChange={(e) => setRule(i, { difficulty: (e.target.value || null) as ExamDifficulty | null })}><option value="">jede</option>{EXAM_DIFFICULTIES.map((x) => <option key={x} value={x}>{EXAM_DIFFICULTY_LABEL[x]}</option>)}</Select>
+          <Input aria-label={`Anzahl der Regel ${i + 1}`} type="number" min={1} max={200} className="py-1" value={r.count} onChange={(e) => setRule(i, { count: Math.max(1, Number(e.target.value) || 1) })} />
+          <Button size="sm" variant="ghost" aria-label={`Regel ${i + 1} entfernen`} onClick={() => onChange(rules.filter((_, j) => j !== i))}><X size={13} /></Button>
+          <span className={`col-span-4 -mt-1 text-[11px] ${avail(r) < r.count ? 'text-warning' : 'text-muted'}`}>{avail(r)} passende Fragen</span>
+        </div>
+      ))}
+      {rules.length < 30 && <div><Button size="sm" variant="ghost" onClick={() => onChange([...rules, { topic: null, difficulty: null, count: 1 }])}><Plus size={14} />Regel hinzufügen</Button></div>}
+    </div>
   );
 }
 

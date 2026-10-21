@@ -9,6 +9,8 @@ import { postalPosition } from '@enrp/shared';
 import { MiniMap } from './MiniMap';
 import { LockBanner, useEditLock } from '../../lib/locks';
 import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
+import { CasesFor } from '../premium/Cases';
+import { QualityPanel } from '../premium/Quality';
 
 export interface IncidentDraft { restrictRoleIds?: string[]; title?: string; type?: string; keyword?: string; priority?: string; status?: string; location?: string; description?: string; involved?: string; requiredUnits?: string; internalNotes?: string; mapX?: number | null; mapZ?: number | null }
 
@@ -190,6 +192,8 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
           </div>
         </div>
       </div>
+      <div className="mt-3"><CasesFor type="INCIDENT" id={i.id} /></div>
+      <div className="mt-3"><QualityPanel target="INCIDENT" id={i.id} /></div>
       <h3 className="mb-1 mt-4 text-sm font-semibold">Einsatzchronik</h3>
       <ol className="max-h-80 space-y-1 overflow-auto text-sm">{i.log.map((l) => <li key={l.id} className="flex gap-2"><span className="w-12 shrink-0 text-xs text-muted">{new Date(l.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span><span aria-hidden>{KIND[l.kind] ?? '•'}</span><span className="min-w-0 flex-1">{l.text}{l.authorId && i.names[l.authorId] ? <span className="text-xs text-muted"> – {i.names[l.authorId]}</span> : null}</span></li>)}</ol>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">

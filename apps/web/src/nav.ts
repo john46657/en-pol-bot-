@@ -1,4 +1,4 @@
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { Compass, FolderKanban, ShieldCheck, TrendingUp, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -15,6 +15,7 @@ const grp = (label: string, icon: LucideIcon, group: Group, tabs: NavTab[]): Nav
 export const NAV: NavItem[] = [
   { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations', keywords: 'bürger haftbefehl' },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
+  { path: '/situation', label: 'Lageassistent', icon: Compass, perm: 'situation.view', group: 'Operations', keywords: 'lage lagebericht führung' },
   grp('Leitstelle', MapPinned, 'Operations', [
     { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
     { path: '/incidents', label: 'Einsätze', perm: 'incidents.view' },
@@ -40,6 +41,8 @@ export const NAV: NavItem[] = [
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
+  { path: '/cases', label: 'Vorgänge', icon: FolderKanban, perm: 'cases.view', group: 'Records', keywords: 'vorgangsnummer verknüpfung akte' },
+  { path: '/quality', label: 'Qualitätsprüfer', icon: ShieldCheck, perm: 'quality.view', group: 'Records', keywords: 'pflichtfelder prüfung vollständigkeit' },
   grp('Personal', UserCheck, 'Organisation', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
@@ -62,6 +65,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/leave', label: 'Einstellungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
+  { path: '/forecast', label: 'Personalprognose', icon: TrendingUp, perm: 'forecast.view', group: 'Organisation', keywords: 'bedarf schichtplanung besetzung' },
   grp('Benutzer & Rollen', Users, 'Administration', [
     { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
     { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
@@ -77,7 +81,8 @@ export const NAV: NavItem[] = [
   grp('Protokolle', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },
     { path: '/admin/logging', label: 'Logging (Discord)', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/backups', label: 'Backups', perm: 'settings.manage', area: 'dashboard.settings.view' },
+    { path: '/admin/backups', label: 'Backups', perm: 'backups.view' },
+    { path: '/admin/system', label: 'Systemstatus', perm: 'integrations.view' },
   ]),
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Account', keywords: 'design profil 2fa favoriten' },

@@ -8,6 +8,8 @@ export const MODULE_LABELS: Record<string, string> = {
   fleet: '🚓 Polizeifahrzeuge', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
   messagebuilder: '✉️ Message Builder',
   radiowhitelist: '🎙️ Funk-Whitelist',
+  situation: '🧭 Lageassistent', career: '🧾 Beamtenlaufbahn', cases: '🗂️ Vorgänge', quality: '🔎 Qualitätsprüfer', forecast: '📈 Personalprognose',
+  integrations: '🩺 Systemstatus & API', backups: '💾 Backups',
 };
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -32,6 +34,7 @@ export const ACTION_LABELS: Record<string, string> = {
   channels: 'Kanäle wählen', webhooks: 'Webhooks verwalten', retry: 'erneut versuchen',
   grant: 'freischalten/verlängern', suspend: 'sperren/entsperren', remove: 'entziehen/entfernen', requests: 'Anträge bearbeiten', roles: 'Rollen(-regeln) bearbeiten',
   integration: 'Integration/Zugangsdaten', logs: 'Änderungsprotokoll ansehen',
+  exception: 'begründete Ausnahmen dokumentieren', restore: 'wiederherstellen',
 };
 
 export const permLabel = (key: string) => {

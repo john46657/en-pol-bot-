@@ -12,6 +12,7 @@ import { fmtDate, requestStatus, statusInfo, useHrConfig, useRanks, type HrRank,
 import { Avatar } from '../../components/TeamRoster';
 import { SaveStatus } from '../../components/SaveStatus';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea, type Tone } from '../../components/ui';
+import { CareerTab, ProgressTab } from '../premium/Career';
 import { RankLabel } from './PersonnelOverview';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : null);
@@ -102,6 +103,8 @@ export function PersonnelFile() {
     ['Notizen', !!s.notes && p.notes !== null],
     ['Empfehlungen', true],
     ['Historie', !!s.history && p.history !== null],
+    ['Laufbahn', can('career.view')],
+    ['Prüfungsfortschritt', can('exam.view')],
   ];
   const visible = tabs.filter(([, ok]) => ok).map(([t]) => t);
   const active = visible.includes(tab) ? tab : visible[0] ?? '';
@@ -157,6 +160,8 @@ export function PersonnelFile() {
       {active === 'Notizen' && <SimpleTab p={p} records={p.notes ?? []} type="NOTE" title="Notizen" label="Notiz" canAdd={can('personnel.edit')} canDelete={can('personnel.delete')} />}
       {active === 'Empfehlungen' && <SimpleTab p={p} records={p.recommendations} type="RECOMMENDATION" title="Empfehlungen" label="Empfehlung" canAdd={can('promotion.create')} canDelete={can('promotion.manage')} />}
       {active === 'Historie' && <HistoryTab p={p} />}
+      {active === 'Laufbahn' && <CareerTab personnelId={p.id} />}
+      {active === 'Prüfungsfortschritt' && <ProgressTab personnelId={p.id} />}
       {active !== 'Übersicht' && !visible.includes('Übersicht') && editCard}
 
       <ConfirmDialog open={del} danger title="Personalakte löschen" busy={remove.isPending} confirmLabel="Endgültig löschen" onClose={() => setDel(false)} onConfirm={() => remove.mutate()}

@@ -62,6 +62,12 @@ const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.O
 const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
 import * as R from './pages/resources';
+const SituationPage = lazy(() => import('./pages/premium/Situation').then((m) => ({ default: m.SituationPage })));
+const CasesPage = lazy(() => import('./pages/premium/Cases').then((m) => ({ default: m.CasesPage })));
+const CaseDetailPage = lazy(() => import('./pages/premium/Cases').then((m) => ({ default: m.CaseDetailPage })));
+const QualityPage = lazy(() => import('./pages/premium/Quality').then((m) => ({ default: m.QualityPage })));
+const ForecastPage = lazy(() => import('./pages/premium/Forecast').then((m) => ({ default: m.ForecastPage })));
+const SystemStatusPage = lazy(() => import('./pages/premium/SystemStatus').then((m) => ({ default: m.SystemStatusPage })));
 import { CadLayout } from './pages/cad/CadLayout';
 const CadDashboard = lazy(() => import('./pages/cad/CadDashboard').then((m) => ({ default: m.CadDashboard })));
 const CadIncidents = lazy(() => import('./pages/cad/CadIncidents').then((m) => ({ default: m.CadIncidents })));
@@ -241,7 +247,13 @@ export function App() {
           <Route path="admin/shifts" element={<Guard perm="settings.view" area="dashboard.settings.view"><Shifts /></Guard>} />
           <Route path="admin/servers" element={<Guard perm="settings.view" area="dashboard.settings.view"><ServerLinks /></Guard>} />
           <Route path="admin/multi-server" element={<Guard perm="servers.view" area="dashboard.settings.view"><MultiServer /></Guard>} />
-          <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
+          <Route path="admin/backups" element={<Guard perm="backups.view"><Backups /></Guard>} />
+          <Route path="admin/system" element={<Guard perm="integrations.view"><SystemStatusPage /></Guard>} />
+          <Route path="situation" element={<Guard perm="situation.view"><SituationPage /></Guard>} />
+          <Route path="cases" element={<Guard perm="cases.view"><CasesPage /></Guard>} />
+          <Route path="cases/:id" element={<Guard perm="cases.view"><CaseDetailPage /></Guard>} />
+          <Route path="quality" element={<Guard perm="quality.view"><QualityPage /></Guard>} />
+          <Route path="forecast" element={<Guard perm="forecast.view"><ForecastPage /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />
           <Route path="admin/embeds" element={<Guard perm="settings.view" area="dashboard.settings.view"><Embeds /></Guard>} />
