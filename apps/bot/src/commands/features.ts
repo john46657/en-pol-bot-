@@ -13,6 +13,9 @@ import { DUTY_REPORT_INTERACTION } from './duty-reports';
 import { TRAINING_INTERACTION } from './trainings';
 import { RADIO_WHITELIST_INTERACTION } from './radio-whitelist';
 import { permittedFor, SHIFT_INTERACTION } from './shifts';
+import { SETUP_INTERACTION } from './setup';
+import { BACKUP_INTERACTION } from './backup';
+import { EXAM_INTERACTION } from './exams';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -207,6 +210,9 @@ export const INTERACTIONS: InteractionDef[] = [
   FORM_PANEL_INTERACTION,
   INFO_PANEL_INTERACTION,
   MB_INTERACTION,
+  SETUP_INTERACTION,
+  BACKUP_INTERACTION,
+  EXAM_INTERACTION,
   DUTY_REPORT_INTERACTION,
   TRAINING_INTERACTION,
   SHIFT_INTERACTION,

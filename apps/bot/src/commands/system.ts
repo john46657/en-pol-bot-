@@ -1,0 +1,93 @@
+import { guard } from '../access';
+import { brand } from '../branding';
+import { diagnoseGuild, findingsText, type Finding } from '../diagnostics';
+import { errorReply, type EmbedData, type Reply } from '../format';
+import type { DiscordConfig } from '../platform';
+import { isTransient, redact, withRetry } from '../safety';
+import type { CommandDef, Ctx } from './types';
+
+const dur = (sec: number) => { const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60); return `${d ? `${d} T ` : ''}${h} h ${m} min`; };
+const yesNo = (b: boolean | null) => (b === null ? '❔ unbekannt' : b ? '✅ ja' : '❌ nein');
+
+/** Konfiguration aus dem System (Dashboard) – mit Wiederholung bei kurzen Aussetzern; fehlt sie, läuft die Diagnose trotzdem. */
+async function systemConfig(c: Ctx): Promise<{ cfg: DiscordConfig | null; problem?: string }> {
+  try { return { cfg: await withRetry(() => (c.config ? c.config() : c.api.service<DiscordConfig>('GET', '/bot/config'))) }; } catch (e) {
+    return { cfg: null, problem: isTransient(e) ? 'System (API) nach mehreren Versuchen nicht erreichbar – Kanäle/Rollen aus dem Dashboard wurden nicht geprüft.' : 'Einstellungen aus dem System konnten nicht geladen werden.' };
+  }
+}
+
+async function status(c: Ctx): Promise<Reply> {
+  const rt = c.runtime!;
+  const s = rt.status();
+  const [api, cfg, backups] = await Promise.all([rt.apiHealth(), rt.guildConfig.get(c.guildId!).catch(() => null), rt.backups.list(c.guildId!).catch(() => [])]);
+  const last = backups.find((b) => b.locations.length);
+  const tone = !s.ready || !api.reachable || api.authOk === false ? 'danger' : 'success';
+  const e: EmbedData = brand(cfg, {
+    title: '🩺 Systemstatus',
+    fields: [
+      { name: 'Discord', value: `${s.ready ? '🟢 verbunden' : '🔴 nicht verbunden'} · ${s.wsPing >= 0 ? `${s.wsPing} ms` : '—'} · ${s.guilds} Server`, inline: true },
+      { name: 'Laufzeit', value: dur(s.uptimeSec), inline: true },
+      { name: 'System (API)', value: `${api.reachable ? `🟢 erreichbar (${api.ms} ms)` : `🔴 nicht erreichbar${api.status ? ` (HTTP ${api.status})` : ''}`}\nBot-Zugang angenommen: ${yesNo(api.authOk)}`, inline: true },
+      { name: 'Privilegierte Intents', value: `Server Members: ${yesNo(s.intents.members)} · Presence: ${yesNo(s.intents.presences)} · Message Content: ${yesNo(s.intents.content)}` },
+      { name: 'Einrichtung', value: cfg ? `${cfg.setupDone ? '✅ abgeschlossen' : '⬜ noch nicht abgeschlossen'} (Revision ${cfg.revision})` : '❔ nicht lesbar', inline: true },
+      { name: 'Letzte Bot-Sicherung', value: last ? `<t:${Math.floor(Date.parse(last.createdAt) / 1000)}:R> (${last.locations.join(' + ')})` : 'noch keine', inline: true },
+      ...(rt.backupDirWarning ? [{ name: '⚠️ Sicherungsordner', value: rt.backupDirWarning }] : []),
+    ],
+    footer: 'Tokens und Schlüssel werden nie angezeigt.',
+  }, tone);
+  return { ephemeral: true, embeds: [e] };
+}
+
+async function diagnose(c: Ctx): Promise<Reply> {
+  const rt = c.runtime!;
+  const [snap, cfg, sys, api] = await Promise.all([rt.snapshot(c.guildId!), rt.guildConfig.get(c.guildId!, { fresh: true }), systemConfig(c), rt.apiHealth()]);
+  if (!snap) return errorReply('Der Server konnte nicht gelesen werden (ist der Bot noch Mitglied?).');
+  const findings: Finding[] = diagnoseGuild(snap, cfg, sys.cfg, rt.status());
+  if (!api.reachable) findings.unshift({ severity: 'error', area: 'System (API)', text: 'Die EN-Polizei-API ist nicht erreichbar – Befehle mit Systemdaten schlagen fehl.', fix: 'Läuft das System? Stimmt API_URL in der Bot-Konfiguration?' });
+  else if (api.authOk === false) findings.unshift({ severity: 'error', area: 'System (API)', text: 'Die API lehnt den Bot-Zugang ab.', fix: 'BOT_API_TOKEN des Bots muss exakt dem Wert im System entsprechen (Wert wird hier bewusst nicht angezeigt).' });
+  if (sys.problem) findings.push({ severity: 'warn', area: 'System (API)', text: sys.problem });
+  if (rt.backupDirWarning) findings.push({ severity: 'warn', area: 'Sicherungen', text: rt.backupDirWarning, fix: 'BOT_BACKUP_DIR auf einen Ordner außerhalb des Bot-Ordners setzen.' });
+  const errors = findings.filter((f) => f.severity === 'error').length, warns = findings.filter((f) => f.severity === 'warn').length;
+  return { ephemeral: true, embeds: [brand(cfg, { title: `🔎 Diagnose: ${errors} Fehler, ${warns} Warnungen`, description: redact(findingsText(findings)) }, errors ? 'danger' : warns ? 'warning' : 'success')] };
+}
+
+async function integrations(c: Ctx): Promise<Reply> {
+  const rt = c.runtime!;
+  const s = rt.status();
+  const [api, roblox, cfg, mods] = await Promise.all([
+    rt.apiHealth(), rt.robloxReachable(), rt.guildConfig.get(c.guildId!).catch(() => null),
+    withRetry(() => c.api.service<{ disabled: string[] }>('GET', `/bot/servers/${c.guildId}/modules`)).catch(() => null),
+  ]);
+  const lines = [
+    `${s.ready ? '🟢' : '🔴'} **Discord Gateway** – ${s.ready ? `verbunden, ${s.wsPing} ms` : 'nicht verbunden'}`,
+    `${api.reachable && api.authOk !== false ? '🟢' : '🔴'} **EN-Polizei-API** – ${api.reachable ? `erreichbar (${api.ms} ms), Bot-Zugang ${api.authOk === false ? 'abgelehnt' : api.authOk ? 'angenommen' : 'nicht geprüft'}` : 'nicht erreichbar'}`,
+    `${roblox ? '🟢' : '🟠'} **Roblox (öffentliche Users-API)** – ${roblox ? 'erreichbar' : 'nicht erreichbar – Roblox-Namenssuche/-Prüfung im Bot eingeschränkt'}`,
+    `${mods ? '🟢' : '🟠'} **Module dieses Servers (System)** – ${mods ? (mods.disabled.length ? `ausgeschaltet: ${mods.disabled.join(', ')}` : 'alle an') : 'nicht abrufbar'}`,
+  ];
+  return { ephemeral: true, embeds: [brand(cfg, {
+    title: '🔌 Integrationen',
+    description: `${lines.join('\n')}\n\nWeitere Anbindungen (z. B. ER:LC, Zello Work) verwaltet das System selbst; der Bot hat dazu keinen direkten Zugang und zeigt deshalb keinen eigenen Status dafür an.`,
+  })] };
+}
+
+export const SYSTEM_COMMANDS: CommandDef[] = [{
+  name: 'system', description: 'Technischer Status, Fehlerdiagnose und Integrationen (für Administratoren)',
+  subcommands: [
+    { name: 'status', description: 'Verbindung zu Discord und System, Laufzeit, letzte Sicherung' },
+    { name: 'diagnose', description: 'Fehlende Bot-Rechte, nicht konfigurierte Kanäle und Rollen finden' },
+    { name: 'integrations', description: 'Status der angebundenen Dienste' },
+  ],
+  async run(c) {
+    const sub = String(c.opts._sub ?? 'status');
+    const denied = await guard(c, `system ${sub}`); if (denied) return denied;
+    if (!c.runtime || !c.guildId) return errorReply('Diagnose ist gerade nicht verfügbar.');
+    try {
+      if (sub === 'diagnose') return await diagnose(c);
+      if (sub === 'integrations') return await integrations(c);
+      return await status(c);
+    } catch (e) {
+      console.error('system command failed:', e instanceof Error ? e.message : e);
+      return errorReply('Die Prüfung ist unerwartet fehlgeschlagen. Details stehen (ohne Geheimnisse) im Bot-Log.');
+    }
+  },
+}];

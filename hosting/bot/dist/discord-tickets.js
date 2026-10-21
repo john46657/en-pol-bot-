@@ -40,22 +40,36 @@ function embedOf(e, stamp = true) {
         b.setDescription('​');
     return b;
 }
-/** Menü + Buttons zu Discord-Reihen (max. 5 Reihen, 5 Buttons je Reihe). */
 function componentsOf(buttons = [], selects = []) {
     const rows = [];
     for (const s of selects.slice(0, 5)) {
         let menu;
-        if (s.kind === 'user')
-            menu = new discord_js_1.UserSelectMenuBuilder();
-        else if (s.kind === 'role')
-            menu = new discord_js_1.RoleSelectMenuBuilder();
+        const defaults = (s.defaults ?? []).filter((d) => /^\d{15,25}$/.test(d)).slice(0, 25);
+        if (s.kind === 'user') {
+            const m = new discord_js_1.UserSelectMenuBuilder();
+            if (defaults.length)
+                m.setDefaultUsers(defaults);
+            menu = m;
+        }
+        else if (s.kind === 'role') {
+            const m = new discord_js_1.RoleSelectMenuBuilder();
+            if (defaults.length)
+                m.setDefaultRoles(defaults);
+            menu = m;
+        }
+        else if (s.kind === 'channel') {
+            const m = new discord_js_1.ChannelSelectMenuBuilder().setChannelTypes(discord_js_1.ChannelType.GuildText, discord_js_1.ChannelType.GuildAnnouncement);
+            if (defaults.length)
+                m.setDefaultChannels(defaults);
+            menu = m;
+        }
         else {
             const sm = new discord_js_1.StringSelectMenuBuilder();
-            sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...(o.description ? { description: o.description.slice(0, 100) } : {}), ...(o.emoji ? { emoji: o.emoji } : {}) })));
+            sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...(o.description ? { description: o.description.slice(0, 100) } : {}), ...(o.emoji ? { emoji: o.emoji } : {}), ...(s.defaults?.includes(o.value) ? { default: true } : {}) })));
             menu = sm;
         }
         menu.setCustomId(s.id).setPlaceholder(s.placeholder.slice(0, 150));
-        const max = Math.max(1, Math.min(s.max ?? 1, s.kind === 'user' || s.kind === 'role' ? 25 : (s.options?.length ?? 1)));
+        const max = Math.max(1, Math.min(s.max ?? 1, s.kind === 'user' || s.kind === 'role' || s.kind === 'channel' ? 25 : (s.options?.length ?? 1)));
         menu.setMinValues(Math.min(s.min ?? 1, max)).setMaxValues(max);
         rows.push(new discord_js_1.ActionRowBuilder().addComponents(menu));
     }

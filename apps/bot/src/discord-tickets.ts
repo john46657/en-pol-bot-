@@ -1,5 +1,5 @@
 import {
-  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, ComponentType, EmbedBuilder, FileUploadBuilder, LabelBuilder, ModalBuilder, OverwriteType, PermissionFlagsBits, RoleSelectMenuBuilder,
+  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, ComponentType, EmbedBuilder, FileUploadBuilder, LabelBuilder, ModalBuilder, OverwriteType, PermissionFlagsBits, RoleSelectMenuBuilder,
   StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder,
   type Client, type Message, type MessageActionRowComponentBuilder, type ModalSubmitInteraction, type TextChannel,
 } from 'discord.js';
@@ -31,19 +31,23 @@ export function embedOf(e: EmbedSpec, stamp = true) {
 }
 
 /** Menü + Buttons zu Discord-Reihen (max. 5 Reihen, 5 Buttons je Reihe). */
-export function componentsOf(buttons: ComponentButton[] = [], selects: ComponentSelect[] = []) {
+/** Bot-eigene Erweiterung: Kanal-Auswahl (nur Text-/Ankündigungskanäle) und vorausgewählte Werte. */
+export type BotSelect = Omit<ComponentSelect, 'kind'> & { kind?: ComponentSelect['kind'] | 'channel'; defaults?: string[] };
+export function componentsOf(buttons: ComponentButton[] = [], selects: BotSelect[] = []) {
   const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
   for (const s of selects.slice(0, 5)) {
-    let menu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder;
-    if (s.kind === 'user') menu = new UserSelectMenuBuilder();
-    else if (s.kind === 'role') menu = new RoleSelectMenuBuilder();
+    let menu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder;
+    const defaults = (s.defaults ?? []).filter((d) => /^\d{15,25}$/.test(d)).slice(0, 25);
+    if (s.kind === 'user') { const m = new UserSelectMenuBuilder(); if (defaults.length) m.setDefaultUsers(defaults); menu = m; }
+    else if (s.kind === 'role') { const m = new RoleSelectMenuBuilder(); if (defaults.length) m.setDefaultRoles(defaults); menu = m; }
+    else if (s.kind === 'channel') { const m = new ChannelSelectMenuBuilder().setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement); if (defaults.length) m.setDefaultChannels(defaults); menu = m; }
     else {
       const sm = new StringSelectMenuBuilder();
-      sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...(o.description ? { description: o.description.slice(0, 100) } : {}), ...(o.emoji ? { emoji: o.emoji } : {}) })));
+      sm.addOptions((s.options ?? []).slice(0, 25).map((o) => ({ label: o.label.slice(0, 100), value: o.value.slice(0, 100), ...(o.description ? { description: o.description.slice(0, 100) } : {}), ...(o.emoji ? { emoji: o.emoji } : {}), ...(s.defaults?.includes(o.value) ? { default: true } : {}) })));
       menu = sm;
     }
     menu.setCustomId(s.id).setPlaceholder(s.placeholder.slice(0, 150));
-    const max = Math.max(1, Math.min(s.max ?? 1, s.kind === 'user' || s.kind === 'role' ? 25 : (s.options?.length ?? 1)));
+    const max = Math.max(1, Math.min(s.max ?? 1, s.kind === 'user' || s.kind === 'role' || s.kind === 'channel' ? 25 : (s.options?.length ?? 1)));
     menu.setMinValues(Math.min(s.min ?? 1, max)).setMaxValues(max);
     rows.push(new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(menu));
   }
