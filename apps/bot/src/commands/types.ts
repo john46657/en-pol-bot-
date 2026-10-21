@@ -8,6 +8,7 @@ import type { AccessDeps } from '../access';
 import type { BotBackupService } from '../bot-backup';
 import type { GuildSnapshot, RuntimeStatus } from '../diagnostics';
 import type { GuildConfigStore } from '../guild-config';
+import type { BotProfileActions, ImageFile } from './bot-profile';
 
 /** Laufzeit für Einrichtung (/setup), Diagnose (/system), Sicherungen (/backup) und Stufen-Rechte. Echte Umsetzung in index.ts, in Tests ein Fake. */
 export interface BotRuntime {
@@ -78,8 +79,12 @@ export interface Ctx {
   voiceSupport?: VoiceSupportRuntime;
   /** Einrichtung, Diagnose, Sicherungen, Stufen-Rechte */
   runtime?: BotRuntime;
+  /** Angehängte Dateien eines Slash-Befehls (Option vom Typ `attachment`), nach Optionsname. */
+  attachments?: Record<string, ImageFile>;
+  /** Name, Profilbild und Status des Bots ändern (/botprofil). */
+  botProfile?: BotProfileActions;
 }
-export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number; /** Vorschläge beim Tippen über `CommandDef.complete` (nur Text-Optionen). */ autocomplete?: boolean }
+export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user' | 'attachment'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number; /** Vorschläge beim Tippen über `CommandDef.complete` (nur Text-Optionen). */ autocomplete?: boolean }
 /** Unterbefehl (`/leave manage`): Name landet in `opts._sub`, seine Optionen wie gewohnt in `opts`. */
 export interface SubcommandDef { name: string; description: string; options?: OptionDef[] }
 export interface CommandDef {

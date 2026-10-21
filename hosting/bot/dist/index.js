@@ -29,6 +29,7 @@ const bot_backup_1 = require("./bot-backup");
 const access_1 = require("./access");
 const branding_1 = require("./branding");
 const safety_1 = require("./safety");
+const bot_profile_1 = require("./commands/bot-profile");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
 // Tokens nie in Logs: bekannte Geheimnisse + typische Token-Muster werden geschwärzt
@@ -420,6 +421,54 @@ const runtime = {
     },
     async reregister(guildId) { await registerGuild?.(guildId); },
 };
+/** Gespeicherter Bot-Status (Discord merkt sich die Presence eines Bots nicht). */
+const PRESENCE_KEY = 'botpresence';
+const botState = (0, guild_config_1.apiKeyValue)(api);
+/** /botprofil: Name, Profilbild und Status über die Discord-API (discord.js). */
+const botProfile = {
+    async isBotOwner(userId) {
+        const app = await client.application.fetch();
+        const owner = app.owner;
+        if (!owner)
+            return false;
+        return 'members' in owner ? owner.members.has(userId) : owner.id === userId;
+    },
+    async canChangeNickname(guildId) {
+        const g = await client.guilds.fetch(guildId);
+        const me = g.members.me ?? await g.members.fetchMe();
+        return me.permissions.has(discord_js_1.PermissionFlagsBits.ChangeNickname);
+    },
+    async setServerNick(guildId, nick) { const g = await client.guilds.fetch(guildId); await g.members.editMe({ nick, reason: 'EN Polizei: /botprofil name' }); },
+    async setGlobalName(name) { await client.user.setUsername(name); },
+    async download(url, maxBytes) {
+        // nur Anhänge von Discord laden (keine beliebigen Adressen)
+        const u = new URL(url);
+        if (u.protocol !== 'https:' || !/^(cdn\.discordapp\.com|media\.discordapp\.net)$/.test(u.hostname))
+            throw new Error('not a Discord attachment');
+        const res = await fetch(u, { signal: AbortSignal.timeout(15_000) });
+        if (!res.ok || !res.body)
+            throw new Error(`HTTP ${res.status}`);
+        const tooLarge = () => Object.assign(new Error('too large'), { code: 'TOO_LARGE' });
+        if (Number(res.headers.get('content-length') ?? 0) > maxBytes)
+            throw tooLarge();
+        const parts = [];
+        let size = 0;
+        for await (const chunk of res.body) {
+            size += chunk.length;
+            if (size > maxBytes)
+                throw tooLarge();
+            parts.push(Buffer.from(chunk));
+        }
+        return Buffer.concat(parts);
+    },
+    async setServerAvatar(guildId, image) { const g = await client.guilds.fetch(guildId); await g.members.editMe({ avatar: image, reason: 'EN Polizei: /botprofil avatar' }); },
+    async setGlobalAvatar(image) { await client.user.setAvatar(image); },
+    async setPresence(p) { currentPresence = p; client.user.setPresence((0, bot_profile_1.toPresenceData)(p)); },
+    loadPresence: async () => (await botState.get(PRESENCE_KEY)),
+    savePresence: (p) => botState.put(PRESENCE_KEY, p),
+};
+/** Zuletzt gesetzter Status – nach einer neuen Verbindung wieder setzen. */
+let currentPresence = null;
 const DENIED = (0, format_1.errorReply)('Die Rechteprüfung ist fehlgeschlagen – Aktion aus Sicherheitsgründen abgelehnt. Bitte erneut versuchen.');
 /** Modul eines Buttons/Menüs (Präfix) – für ausgeblendete Module im Bot. */
 const INTERACTION_MODULES = { duty: 'shift_logs', shift: 'shift_logs', leave: 'personnel', trn: 'personnel', exam: 'personnel', quali: 'applications', support: 'support', tk: 'support', cad: 'cad', rwreq: 'communication', drep: 'reports' };
@@ -458,6 +507,8 @@ function addOptions(b, options = []) {
             b.addBooleanOption((x) => { common(x); return x; });
         else if (o.type === 'user')
             b.addUserOption((x) => { common(x); return x; });
+        else if (o.type === 'attachment')
+            b.addAttachmentOption((x) => { common(x); return x; });
         else
             b.addNumberOption((x) => { common(x); if (o.min !== undefined)
                 x.setMinValue(o.min); if (o.max !== undefined)
@@ -523,6 +574,7 @@ function baseCtx(i) {
         userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
         voiceSupport,
         runtime,
+        botProfile,
         verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
         userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
         discord: {
@@ -589,14 +641,21 @@ async function handleCommand(i) {
     const sub = def.subcommands?.length ? i.options.getSubcommand(false) ?? undefined : undefined;
     if (sub)
         opts._sub = sub;
+    const attachments = {};
     for (const o of (sub ? def.subcommands?.find((x) => x.name === sub)?.options : def.options) ?? []) {
+        if (o.type === 'attachment') {
+            const a = i.options.getAttachment(o.name);
+            if (a)
+                attachments[o.name] = { url: a.url, name: a.name, contentType: a.contentType, size: a.size };
+            continue;
+        }
         const v = i.options.get(o.name)?.value;
         opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
     }
     const policyKey = sub ? `${def.name} ${sub}` : def.name;
     if (def.opensModal) {
         // Formulare müssen die erste Antwort sein – kein deferReply vorher.
-        const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+        const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
         if (reply.modal)
             await i.showModal(toModal(reply.modal));
         else {
@@ -608,7 +667,7 @@ async function handleCommand(i) {
     // Antworten sind nur für den Aufrufer sichtbar (Daten gehören nicht in öffentliche Channels) – außer bei ausdrücklich öffentlichen Befehlen
     const pub = !!def.publicReply?.(opts);
     await i.deferReply(pub ? {} : { flags: discord_js_1.MessageFlags.Ephemeral });
-    const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
     if (pub && reply.ephemeral) {
         // Fehler o. Ä. eines öffentlichen Befehls: öffentliche „denkt nach“-Antwort weg, Hinweis nur für den Aufrufer
         await i.deleteReply().catch(() => undefined);
@@ -792,6 +851,11 @@ async function checkApi() {
 function wireReady(client0) {
     client0.once('clientReady', async (c) => {
         console.log(`Logged in as ${c.user.tag}`);
+        // gespeicherten Status (/botprofil status) setzen; Discord vergisst ihn bei jeder neuen Verbindung
+        void (0, bot_profile_1.restorePresence)(botProfile).then((p) => { if (p)
+            currentPresence = p; });
+        client0.on('shardReady', () => { if (currentPresence)
+            client0.user?.setPresence((0, bot_profile_1.toPresenceData)(currentPresence)); });
         console.log(`Bot-Sicherungen: ${backupDir}`);
         // Einladungs-Link (Administrator-Rechte, wie im Dashboard)
         console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);

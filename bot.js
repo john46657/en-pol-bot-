@@ -84340,7 +84340,8 @@ var POLICIES = {
   "exam:gm": { level: "instructor" },
   "exam:void": { level: "instructor" },
   "exam:vm": { level: "instructor", sensitive: true },
-  "exam:pend": { level: "instructor" }
+  "exam:pend": { level: "instructor" },
+  botprofil: { level: "admin" }
 };
 function policyFor(key4) {
   if (POLICIES[key4]) return POLICIES[key4];
@@ -85801,6 +85802,189 @@ var SYSTEM_COMMANDS = [{
   }
 }];
 
+// apps/bot/src/commands/bot-profile.ts
+var NICK_MAX = 32;
+var USERNAME_MIN = 2;
+var USERNAME_MAX = 32;
+var ACTIVITY_MAX = 128;
+var AVATAR_MAX_BYTES = 8 * 1024 * 1024;
+var STATUS_COOLDOWN_MS = 2e4;
+var STATUSES = { online: "Online", idle: "Abwesend", dnd: "Bitte nicht st\xF6ren", invisible: "Unsichtbar" };
+var ACTIVITIES = { keine: -1, spielt: 0, streamt: 1, hoert: 2, schaut: 3, benutzerdefiniert: 4, wettkampf: 5 };
+var ACTIVITY_LABEL = { keine: "keine Aktivit\xE4t", spielt: "Spielt", streamt: "Streamt", hoert: "H\xF6rt", schaut: "Schaut", benutzerdefiniert: "Benutzerdefiniert", wettkampf: "Tritt an in" };
+function checkNick(raw) {
+  const nick = raw.trim();
+  if (!nick) return { nick: null };
+  if (nick.length > NICK_MAX) return { error: `Der Name ist zu lang (h\xF6chstens ${NICK_MAX} Zeichen).` };
+  return { nick };
+}
+function checkUsername(raw) {
+  const name = raw.trim();
+  if (name.length < USERNAME_MIN || name.length > USERNAME_MAX) return { error: `Der globale Name muss ${USERNAME_MIN}\u2013${USERNAME_MAX} Zeichen lang sein.` };
+  if (/[@#:]|```/.test(name)) return { error: "Der globale Name darf kein @, #, : oder ``` enthalten." };
+  if (/discord|clyde/i.test(name)) return { error: "Discord erlaubt \u201Ediscord\u201C und \u201Eclyde\u201C nicht im Namen." };
+  if (/^(everyone|here)$/i.test(name)) return { error: "\u201Eeveryone\u201C und \u201Ehere\u201C sind als Name nicht erlaubt." };
+  return { name };
+}
+function imageType(b2) {
+  if (b2.length >= 8 && b2.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) return "png";
+  if (b2.length >= 3 && b2[0] === 255 && b2[1] === 216 && b2[2] === 255) return "jpeg";
+  if (b2.length >= 6 && /^GIF8[79]a$/.test(b2.subarray(0, 6).toString("latin1"))) return "gif";
+  return null;
+}
+function checkAttachment(f2) {
+  if (!f2) return "Bitte ein Bild anh\xE4ngen oder \u201Ezuruecksetzen\u201C w\xE4hlen.";
+  if (f2.size > AVATAR_MAX_BYTES) return `Das Bild ist zu gro\xDF (h\xF6chstens ${AVATAR_MAX_BYTES / 1024 / 1024} MB).`;
+  if (f2.contentType && !/^image\/(png|jpeg|gif)$/i.test(f2.contentType.split(";")[0].trim())) return "Erlaubt sind nur PNG, JPG und GIF.";
+  return null;
+}
+function checkPresence(o) {
+  const status3 = o.status || "online";
+  const activity = o.activity || (o.text?.trim() ? "benutzerdefiniert" : "keine");
+  if (!(status3 in STATUSES)) return { error: "Unbekannter Status." };
+  if (!(activity in ACTIVITIES)) return { error: "Unbekannte Aktivit\xE4tsart." };
+  const text2 = o.text?.trim() || null;
+  if (activity !== "keine" && !text2) return { error: "F\xFCr eine Aktivit\xE4t bitte einen Text angeben." };
+  if (text2 && text2.length > ACTIVITY_MAX) return { error: `Der Aktivit\xE4tstext ist zu lang (h\xF6chstens ${ACTIVITY_MAX} Zeichen).` };
+  const url = o.url?.trim() || null;
+  if (activity === "streamt" && !(url && /^https:\/\/(www\.)?(twitch\.tv|youtube\.com)\/\S+$/i.test(url))) return { error: "F\xFCr \u201EStreamt\u201C verlangt Discord einen Twitch- oder YouTube-Link (https://twitch.tv/\u2026 oder https://youtube.com/\u2026)." };
+  if (url && activity !== "streamt") return { error: "Ein Link ist nur bei \u201EStreamt\u201C m\xF6glich." };
+  return { presence: { status: status3, activity, text: activity === "keine" ? null : text2, url } };
+}
+function toPresenceData(p) {
+  if (p.activity === "keine" || !p.text) return { status: p.status, activities: [] };
+  const type = ACTIVITIES[p.activity];
+  if (p.activity === "benutzerdefiniert") return { status: p.status, activities: [{ name: "Custom Status", type, state: p.text }] };
+  return { status: p.status, activities: [{ name: p.text, type, ...p.url ? { url: p.url } : {} }] };
+}
+var presenceText = (p) => `${STATUSES[p.status]}${p.activity !== "keine" && p.text ? ` \xB7 ${ACTIVITY_LABEL[p.activity]}${p.activity === "benutzerdefiniert" ? ":" : ""} ${plain2(p.text)}` : ""}`;
+function discordErrorText2(e, what) {
+  const x = e;
+  const raw = JSON.stringify(x?.rawError?.errors ?? "") + (x?.message ?? "");
+  if (x?.status === 429 || /RATE_LIMIT|too fast|zu schnell/i.test(raw)) return `Discord l\xE4sst ${what} gerade nicht zu: zu viele \xC4nderungen in kurzer Zeit (Discord erlaubt nur wenige pro Stunde). Bitte sp\xE4ter erneut versuchen.`;
+  if (x?.code === 50013) return `Dem Bot fehlt auf diesem Server die n\xF6tige Berechtigung f\xFCr ${what}.`;
+  if (x?.code === 50001) return `Der Bot hat keinen Zugriff f\xFCr ${what}.`;
+  if (x?.code === 50035) return `Discord hat ${what} abgelehnt (ung\xFCltiger Wert${/USERNAME_TOO_MANY_USERS/.test(raw) ? ": dieser Name wird schon zu oft verwendet" : /BINARY_TYPE_MAX_SIZE|too large/i.test(raw) ? ": Bild zu gro\xDF" : /IMAGE|AVATAR/i.test(raw) ? ": Bild wird nicht akzeptiert" : ""}).`;
+  if (x?.code === "TOO_LARGE") return "Das Bild ist zu gro\xDF.";
+  if (typeof x?.status === "number" && x.status >= 500) return `Discord ist gerade gest\xF6rt \u2013 ${what} hat nicht geklappt. Bitte sp\xE4ter erneut versuchen.`;
+  return `${what[0].toUpperCase()}${what.slice(1)} hat nicht geklappt${x?.message ? `: ${redact(String(x.message)).slice(0, 200)}` : "."}`;
+}
+var lastStatusChange = 0;
+async function scopeAllowed(c, scope, p) {
+  if (scope === "global" && !await p.isBotOwner(c.discordId).catch(() => false)) return errorReply("Globale \xC4nderungen wirken auf **alle** Server des Bots und sind deshalb nur dem Bot-Inhaber (Inhaber bzw. Team der Discord-Anwendung) erlaubt. F\xFCr diesen Server: `bereich: server`.");
+  return null;
+}
+async function setName(c, p, scope) {
+  const input = String(c.opts.name ?? "");
+  if (scope === "server") {
+    const r2 = checkNick(input);
+    if (r2.error) return errorReply(r2.error);
+    if (!await p.canChangeNickname(c.guildId).catch(() => false)) return errorReply("Dem Bot fehlt auf diesem Server das Recht \u201ENickname \xE4ndern\u201C. Servereinstellungen \u2192 Rollen \u2192 Bot-Rolle \u2192 \u201ENickname \xE4ndern\u201C aktivieren.");
+    try {
+      await p.setServerNick(c.guildId, r2.nick ?? null);
+    } catch (e) {
+      return errorReply(discordErrorText2(e, "die Namens\xE4nderung"));
+    }
+    return okReply(r2.nick ? `Der Bot hei\xDFt auf diesem Server jetzt **${plain2(r2.nick)}**.` : "Der Name des Bots auf diesem Server wurde zur\xFCckgesetzt (globaler Name).");
+  }
+  const r = checkUsername(input);
+  if (r.error) return errorReply(r.error);
+  try {
+    await p.setGlobalName(r.name);
+  } catch (e) {
+    return errorReply(discordErrorText2(e, "die Namens\xE4nderung"));
+  }
+  return okReply(`Der globale Name des Bots ist jetzt **${plain2(r.name)}** (gilt auf allen Servern, au\xDFer wo ein eigener Server-Name gesetzt ist).`);
+}
+async function setAvatar(c, p, scope) {
+  const reset = c.opts.zuruecksetzen === true;
+  const file = c.attachments?.bild;
+  let image = null;
+  if (!reset) {
+    const pre = checkAttachment(file);
+    if (pre) return errorReply(pre);
+    try {
+      image = await p.download(file.url, AVATAR_MAX_BYTES);
+    } catch (e) {
+      return errorReply(e?.code === "TOO_LARGE" ? `Das Bild ist zu gro\xDF (h\xF6chstens ${AVATAR_MAX_BYTES / 1024 / 1024} MB).` : "Das Bild konnte nicht geladen werden. Bitte erneut anh\xE4ngen.");
+    }
+    if (image.length > AVATAR_MAX_BYTES) return errorReply(`Das Bild ist zu gro\xDF (h\xF6chstens ${AVATAR_MAX_BYTES / 1024 / 1024} MB).`);
+    if (!imageType(image)) return errorReply("Die Datei ist kein PNG-, JPG- oder GIF-Bild (gepr\xFCft wird der Inhalt, nicht die Endung).");
+  }
+  try {
+    if (scope === "server") await p.setServerAvatar(c.guildId, image);
+    else await p.setGlobalAvatar(image);
+  } catch (e) {
+    return errorReply(discordErrorText2(e, "die \xC4nderung des Profilbilds"));
+  }
+  if (scope === "server") return okReply(image ? "Das Profilbild des Bots auf diesem Server wurde ge\xE4ndert." : "Das Profilbild des Bots auf diesem Server wurde zur\xFCckgesetzt (globales Profilbild).");
+  return okReply(image ? "Das globale Profilbild des Bots wurde ge\xE4ndert (gilt auf allen Servern ohne eigenes Server-Profilbild)." : "Das globale Profilbild des Bots wurde entfernt (Discord-Standardbild).");
+}
+async function setStatus(c, p) {
+  if (!await p.isBotOwner(c.discordId).catch(() => false)) return errorReply("Der Status des Bots gilt bei Discord immer f\xFCr **alle** Server (einen Status je Server gibt es nicht). \xC4ndern darf ihn deshalb nur der Bot-Inhaber (Inhaber bzw. Team der Discord-Anwendung).");
+  const r = checkPresence({ status: c.opts.status, activity: c.opts.art, text: c.opts.text, url: c.opts.link });
+  if (r.error) return errorReply(r.error);
+  const wait = lastStatusChange + STATUS_COOLDOWN_MS - Date.now();
+  if (wait > 0) return errorReply(`Bitte ${Math.ceil(wait / 1e3)} Sekunden warten \u2013 Discord begrenzt, wie oft der Status ge\xE4ndert werden darf.`);
+  try {
+    await p.setPresence(r.presence);
+  } catch (e) {
+    return errorReply(discordErrorText2(e, "die Status\xE4nderung"));
+  }
+  lastStatusChange = Date.now();
+  const saved = await p.savePresence(r.presence).then(() => true, () => false);
+  return { ephemeral: true, embeds: [{ title: "\u2705 Status ge\xE4ndert", description: `${presenceText(r.presence)}${saved ? "" : "\n\n\u26A0\uFE0F Konnte nicht gespeichert werden (System nicht erreichbar?) \u2013 nach einem Neustart gilt wieder der vorherige Status."}`, color: COLORS.success }] };
+}
+var BOT_PROFILE_COMMANDS = [{
+  name: "botprofil",
+  description: "Name, Profilbild und Status des Bots anpassen",
+  subcommands: [
+    { name: "name", description: "Bot-Namen \xE4ndern (leer lassen = Server-Name zur\xFCcksetzen)", options: [
+      { name: "name", description: "Neuer Name (Server: bis 32 Zeichen, leer = zur\xFCcksetzen)", type: "string", maxLength: USERNAME_MAX },
+      { name: "bereich", description: "Nur dieser Server (Standard) oder global f\xFCr alle Server (nur Bot-Inhaber)", type: "string", choices: [{ name: "dieser Server", value: "server" }, { name: "global (alle Server)", value: "global" }] }
+    ] },
+    { name: "avatar", description: "Profilbild des Bots \xE4ndern (PNG, JPG oder GIF)", options: [
+      { name: "bild", description: "Neues Profilbild (PNG, JPG oder GIF, bis 8 MB)", type: "attachment" },
+      { name: "bereich", description: "Nur dieser Server (Standard) oder global f\xFCr alle Server (nur Bot-Inhaber)", type: "string", choices: [{ name: "dieser Server", value: "server" }, { name: "global (alle Server)", value: "global" }] },
+      { name: "zuruecksetzen", description: "Profilbild zur\xFCcksetzen statt ein neues zu setzen", type: "boolean" }
+    ] },
+    { name: "status", description: "Status und Aktivit\xE4tstext des Bots (gilt auf allen Servern, nur Bot-Inhaber)", options: [
+      { name: "status", description: "Online-Status", type: "string", choices: Object.keys(STATUSES).map((k) => ({ name: STATUSES[k], value: k })) },
+      { name: "art", description: "Art der Aktivit\xE4t (Standard: benutzerdefiniert, wenn ein Text angegeben ist)", type: "string", choices: Object.keys(ACTIVITIES).map((k) => ({ name: ACTIVITY_LABEL[k], value: k })) },
+      { name: "text", description: `Aktivit\xE4tstext (bis ${ACTIVITY_MAX} Zeichen)`, type: "string", maxLength: ACTIVITY_MAX },
+      { name: "link", description: "Nur bei \u201EStreamt\u201C: Twitch- oder YouTube-Link", type: "string", maxLength: 200 }
+    ] }
+  ],
+  async run(c) {
+    const sub = String(c.opts._sub ?? "");
+    const denied = await guard(c, `botprofil ${sub}`);
+    if (denied) return denied;
+    const p = c.botProfile;
+    if (!p || !c.guildId) return errorReply("Das geht nur auf einem Discord-Server.");
+    const scope = c.opts.bereich === "global" ? "global" : "server";
+    const blocked = await scopeAllowed(c, scope, p);
+    if (blocked) return blocked;
+    if (sub === "name") return setName(c, p, scope);
+    if (sub === "avatar") return setAvatar(c, p, scope);
+    if (sub === "status") return setStatus(c, p);
+    return errorReply("Unbekannter Unterbefehl.");
+  }
+}];
+async function restorePresence(p, log = console.error) {
+  const saved = await p.loadPresence().catch((e) => {
+    log(`bot status not loaded: ${e instanceof Error ? e.message : e}`);
+    return null;
+  });
+  if (!saved) return null;
+  const ok = checkPresence({ status: saved.status, activity: saved.activity, text: saved.text ?? void 0, url: saved.url ?? void 0 });
+  if (!ok.presence) {
+    log("saved bot status is invalid \u2013 ignored");
+    return null;
+  }
+  await p.setPresence(ok.presence).catch((e) => log(`bot status not set: ${e instanceof Error ? e.message : e}`));
+  return ok.presence;
+}
+
 // apps/bot/src/commands/index.ts
 var hm2 = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
@@ -85888,7 +86072,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
         { name: "Ausbildung & Pr\xFCfungen", value: "`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` \xB7 Ausbilder: `/pruefung verwalten` `/pruefung bewerten`" },
-        { name: "Administration", value: "`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen`" },
+        { name: "Administration", value: "`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
         { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
@@ -86271,7 +86455,8 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   ...SETUP_COMMANDS,
   ...SYSTEM_COMMANDS,
   ...BACKUP_COMMANDS,
-  ...EXAM_COMMANDS
+  ...EXAM_COMMANDS,
+  ...BOT_PROFILE_COMMANDS
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -87451,6 +87636,58 @@ var runtime = {
     await registerGuild?.(guildId);
   }
 };
+var PRESENCE_KEY = "botpresence";
+var botState = apiKeyValue(api);
+var botProfile = {
+  async isBotOwner(userId) {
+    const app = await client.application.fetch();
+    const owner = app.owner;
+    if (!owner) return false;
+    return "members" in owner ? owner.members.has(userId) : owner.id === userId;
+  },
+  async canChangeNickname(guildId) {
+    const g = await client.guilds.fetch(guildId);
+    const me = g.members.me ?? await g.members.fetchMe();
+    return me.permissions.has(import_discord8.PermissionFlagsBits.ChangeNickname);
+  },
+  async setServerNick(guildId, nick) {
+    const g = await client.guilds.fetch(guildId);
+    await g.members.editMe({ nick, reason: "EN Polizei: /botprofil name" });
+  },
+  async setGlobalName(name) {
+    await client.user.setUsername(name);
+  },
+  async download(url, maxBytes) {
+    const u = new URL(url);
+    if (u.protocol !== "https:" || !/^(cdn\.discordapp\.com|media\.discordapp\.net)$/.test(u.hostname)) throw new Error("not a Discord attachment");
+    const res = await fetch(u, { signal: AbortSignal.timeout(15e3) });
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    const tooLarge = () => Object.assign(new Error("too large"), { code: "TOO_LARGE" });
+    if (Number(res.headers.get("content-length") ?? 0) > maxBytes) throw tooLarge();
+    const parts = [];
+    let size = 0;
+    for await (const chunk of res.body) {
+      size += chunk.length;
+      if (size > maxBytes) throw tooLarge();
+      parts.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(parts);
+  },
+  async setServerAvatar(guildId, image) {
+    const g = await client.guilds.fetch(guildId);
+    await g.members.editMe({ avatar: image, reason: "EN Polizei: /botprofil avatar" });
+  },
+  async setGlobalAvatar(image) {
+    await client.user.setAvatar(image);
+  },
+  async setPresence(p) {
+    currentPresence = p;
+    client.user.setPresence(toPresenceData(p));
+  },
+  loadPresence: async () => await botState.get(PRESENCE_KEY),
+  savePresence: (p) => botState.put(PRESENCE_KEY, p)
+};
+var currentPresence = null;
 var DENIED = errorReply("Die Rechtepr\xFCfung ist fehlgeschlagen \u2013 Aktion aus Sicherheitsgr\xFCnden abgelehnt. Bitte erneut versuchen.");
 var INTERACTION_MODULES = { duty: "shift_logs", shift: "shift_logs", leave: "personnel", trn: "personnel", exam: "personnel", quali: "applications", support: "support", tk: "support", cad: "cad", rwreq: "communication", drep: "reports" };
 async function preflight(guildId, userId, key4, module2) {
@@ -87489,6 +87726,10 @@ function addOptions(b2, options2 = []) {
       return x;
     });
     else if (o.type === "user") b2.addUserOption((x) => {
+      common(x);
+      return x;
+    });
+    else if (o.type === "attachment") b2.addAttachmentOption((x) => {
       common(x);
       return x;
     });
@@ -87557,6 +87798,7 @@ function baseCtx(i) {
     userNameOf: (id3) => client.users.fetch(id3).then((u) => u.username, () => null),
     voiceSupport,
     runtime,
+    botProfile,
     verifyApply: (guildId, userId, a) => applyVerify(guildId, userId, a),
     userDisplayName: displayNameOf(i.member) ?? i.user.globalName ?? i.user.username,
     discord: {
@@ -87612,13 +87854,19 @@ async function handleCommand(i) {
   const opts = {};
   const sub = def.subcommands?.length ? i.options.getSubcommand(false) ?? void 0 : void 0;
   if (sub) opts._sub = sub;
+  const attachments = {};
   for (const o of (sub ? def.subcommands?.find((x) => x.name === sub)?.options : def.options) ?? []) {
+    if (o.type === "attachment") {
+      const a = i.options.getAttachment(o.name);
+      if (a) attachments[o.name] = { url: a.url, name: a.name, contentType: a.contentType, size: a.size };
+      continue;
+    }
     const v = i.options.get(o.name)?.value;
     opts[o.name] = typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : void 0;
   }
   const policyKey = sub ? `${def.name} ${sub}` : def.name;
   if (def.opensModal) {
-    const reply2 = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+    const reply2 = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
@@ -87628,7 +87876,7 @@ async function handleCommand(i) {
   }
   const pub = !!def.publicReply?.(opts);
   await i.deferReply(pub ? {} : { flags: import_discord8.MessageFlags.Ephemeral });
-  const reply = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts }));
+  const reply = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
   if (pub && reply.ephemeral) {
     await i.deleteReply().catch(() => void 0);
     const p = replyPayload(reply);
@@ -87766,6 +88014,12 @@ async function checkApi() {
 function wireReady(client0) {
   client0.once("clientReady", async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
+    void restorePresence(botProfile).then((p) => {
+      if (p) currentPresence = p;
+    });
+    client0.on("shardReady", () => {
+      if (currentPresence) client0.user?.setPresence(toPresenceData(currentPresence));
+    });
     console.log(`Bot-Sicherungen: ${backupDir}`);
     console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
     console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(", ") || "keiner \u2013 Bot mit dem Link oben einladen"}`);
