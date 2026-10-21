@@ -49,8 +49,6 @@ export declare class ServersService implements OnModuleInit {
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
-    /** Darf der Benutzer das auf diesem Server? (nur Anzeige, z. B. Bearbeiten-Schalter; erzwungen wird es in `access`) */
-    allowed(actor: Actor, guildId: string, permission: string): Promise<boolean>;
     /** Nur Mitgliedschaft (bzw. globaler Systemadministrator) – für Auskünfte über sich selbst. */
     accessAsMember(actor: Actor, serverId: string): Promise<{
         id: string;

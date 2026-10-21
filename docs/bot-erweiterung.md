@@ -49,16 +49,14 @@ existieren – es legt keine neuen Ausbildungsaufgaben an.
 - Deaktivierte Module werden nur ausgeblendet (Befehle nicht registriert, Ausführung abgelehnt) – Daten bleiben.
 - Der Bot ruft für Prüfungsversuche keine Lösch-Routen auf; frühere Versuche bleiben im System.
 
-### Abgrenzung zur Server-Konfiguration im Dashboard
+### Verhältnis zum Dashboard
 
-Parallel ist auf `main` die Server-Konfiguration fürs **Dashboard** entstanden (`docs/server-config.md`, Tabellen `ServerConfig*`).
-Sie gestaltet laut eigener Doku ausdrücklich nur das Dashboard. Die Bot-Einrichtung `/setup` ergänzt sie für **Discord**:
-Bot-Spitzname, Embed-Farben, Begrüßungstexte, Kanäle, Stufen-Rollen und im Bot ausgeblendete Module. Beide Systeme
-schreiben nicht in die Daten des anderen. Die Modul-Schalter des Systems (Dashboard) bleiben maßgeblich: Was dort aus ist,
+Die Bot-Einrichtung `/setup` gilt nur für **Discord**: Bot-Spitzname, Embed-Farben, Begrüßungstexte, Kanäle, Stufen-Rollen
+und im Bot ausgeblendete Module. Die Modul-Schalter des Systems (Dashboard) bleiben maßgeblich: Was dort aus ist,
 blendet der Bot ebenfalls aus. Zusätzlich kann `/setup` Module **nur im Bot** ausblenden.
 
-Unterschied bei Bildern: Das Dashboard speichert nur geprüfte Uploads. `/setup` nimmt `https://`-Links, weil Discord die Bilder
-in Embeds selbst lädt. Der Bot lädt sie weder herunter noch liefert er sie aus.
+Bilder nimmt `/setup` als `https://`-Links, weil Discord die Bilder in Embeds selbst lädt. Der Bot lädt sie weder herunter
+noch liefert er sie aus.
 
 ## 4. Rollen- und Berechtigungssystem
 
@@ -92,7 +90,7 @@ Datenbank in einer Testumgebung prüfen, bevor sie produktiv eingespielt wird:
 
 ## 6. Tests
 
-`pnpm --filter @enrp/bot test` umfasst 20 Dateien und 227 Tests. Davon sind 38 neu in `apps/bot/tests/bot-extension.test.ts`:
+`pnpm --filter @enrp/bot test` umfasst 20 Dateien und 227 Tests. Davon sind 37 neu in `apps/bot/tests/bot-extension.test.ts`:
 
 | Pflichttest | Abgedeckt durch |
 |---|---|
@@ -103,7 +101,6 @@ Datenbank in einer Testumgebung prüfen, bevor sie produktiv eingespielt wird:
 | 5 Wiederherstellung in Testumgebung | Sichern → Ändern → Plan mit Testlauf → Bestätigen; Prüfsumme, Konflikt, Bestätigungstext, echtes Dateisystem |
 | 6 Fehlende Rechte verständlich | `diagnoseGuild` und `/system diagnose` mit Lösungsweg und ohne Tokens |
 | 7 Bestehende Befehle | alle 43 bisherigen Befehle und 16 Interaktions-Präfixe vorhanden; alle bisherigen Tests grün; Begrüßung ohne Doppelpost |
-| 8 Keine Dashboard-/Website-Dateien | Git-Diff gegen `origin/main` enthält nur Bot-, Bot-Artefakt- und Doku-Dateien |
 
 ## 7. Einschränkungen
 

@@ -2355,64 +2355,6 @@ model DiscordServer {
   modules            ServerModuleSetting[]
   roleMappings       DiscordRoleMapping[]
   connections        ServerConnectionMember[]
-  config             ServerConfig?
-  configRevisions    ServerConfigRevision[]
-  assets             ServerAsset[]
-}
-
-/// Konfiguration eines Servers (Name, Branding, Design) – streng validiert (packages/shared/src/server-config.ts), versioniert.
-model ServerConfig {
-  id               String        @id @default(uuid()) @db.Uuid
-  serverId         String        @unique @db.Uuid
-  data             Json
-  /// Optimistische Sperre: Speichern nur mit der zuletzt gelesenen Version
-  version          Int           @default(1)
-  /// Einrichtungsassistent: zuletzt erreichter Schritt, abgeschlossen am
-  setupStep        Int           @default(0)
-  setupCompletedAt DateTime?
-  updatedById      String?       @db.Uuid
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  server           DiscordServer @relation(fields: [serverId], references: [id], onDelete: Restrict)
-}
-
-/// Jede gespeicherte Konfiguration (inkl. Modul-Zustand) – zum Nachvollziehen und Wiederherstellen. Wird nie verändert.
-model ServerConfigRevision {
-  id          String        @id @default(uuid()) @db.Uuid
-  serverId    String        @db.Uuid
-  version     Int
-  data        Json
-  /// Modul-Schalter zum Zeitpunkt des Speicherns { moduleKey: enabled }
-  modules     Json          @default("{}")
-  note        String?
-  createdById String?       @db.Uuid
-  createdAt   DateTime      @default(now())
-  server      DiscordServer @relation(fields: [serverId], references: [id], onDelete: Restrict)
-
-  @@unique([serverId, version])
-}
-
-/// Hochgeladenes Bild eines Servers (Logo, Banner …). Gehört genau einem Server; Datei unter zufälligem Namen.
-model ServerAsset {
-  id           String        @id @default(uuid()) @db.Uuid
-  serverId     String        @db.Uuid
-  /// Besitzer-Guild (redundant zur Server-Zuordnung, für Prüfungen und Backups)
-  guildId      String
-  kind         String
-  mime         String
-  size         Int
-  width        Int
-  height       Int
-  sha256       String
-  storageKey   String        @unique
-  originalName String
-  uploadedById String?       @db.Uuid
-  createdAt    DateTime      @default(now())
-  /// Datei entfernt (nur wenn von keiner Konfiguration/Version mehr verwendet und ausdrücklich bestätigt); Eintrag bleibt
-  deletedAt    DateTime?
-  server       DiscordServer @relation(fields: [serverId], references: [id], onDelete: Restrict)
-
-  @@index([serverId, kind])
 }
 
 /// Mitgliedschaft eines Benutzers auf einem Server. Nur MEMBER berechtigt zum Zugriff auf diesen Server.

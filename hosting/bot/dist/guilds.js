@@ -13,13 +13,6 @@ function botPerms(g, c) {
         return undefined;
     return { view: p.has(discord_js_1.PermissionFlagsBits.ViewChannel), send: p.has(discord_js_1.PermissionFlagsBits.SendMessages), embed: p.has(discord_js_1.PermissionFlagsBits.EmbedLinks), mentionEveryone: p.has(discord_js_1.PermissionFlagsBits.MentionEveryone) };
 }
-function guildPerms(g) {
-    const p = g.members?.me?.permissions;
-    if (!p)
-        return undefined;
-    const F = discord_js_1.PermissionFlagsBits;
-    return { administrator: p.has(F.Administrator), viewChannel: p.has(F.ViewChannel), sendMessages: p.has(F.SendMessages), embedLinks: p.has(F.EmbedLinks), attachFiles: p.has(F.AttachFiles), readMessageHistory: p.has(F.ReadMessageHistory), manageChannels: p.has(F.ManageChannels), manageRoles: p.has(F.ManageRoles) };
-}
 function guildInfo(g) {
     return {
         id: g.id, name: g.name.slice(0, 100), icon: g.iconURL({ size: 64 }) ?? null,
@@ -28,7 +21,6 @@ function guildInfo(g) {
         // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
         roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250)
             .map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position })),
-        ...(guildPerms(g) ? { botPermissions: guildPerms(g) } : {}),
     };
 }
 /** Meldet alle Server des Bots an das System (beim Start, bei Änderungen und regelmäßig). */

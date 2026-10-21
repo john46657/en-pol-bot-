@@ -246,8 +246,8 @@ var TICKET_PLACEHOLDERS = {
   "{channel}": "Ticket-Channel (#\u2026)",
   "{actor}": "Wer die Aktion ausgel\xF6st hat (@\u2026)"
 };
-function renderTicketText(text2, vars) {
-  return text2.replace(/\{[a-z_]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
+function renderTicketText(text, vars) {
+  return text.replace(/\{[a-z_]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
 }
 function ticketChannelName(format, vars) {
   const raw = renderTicketText(format || "ticket-{ticket_id}", vars).toLowerCase();
@@ -317,9 +317,9 @@ var DEFAULT_APPLICATION_MESSAGES = {
   confirmation: "Bist du sicher, dass du dich bewerben m\xF6chtest?\n\nSobald du startest, schicke ich dir nacheinander **{questionCount} Fragen**. Du hast **{timeLimit}** Zeit, die Bewerbung abzuschlie\xDFen \u2013 sonst musst du neu starten. Abbrechen kannst du jederzeit, indem du **abbrechen** schreibst.",
   completion: "\u2705 Deine Bewerbung **{number}** ist eingegangen! Das Team pr\xFCft sie \u2013 die Entscheidung bekommst du hier per Direktnachricht."
 };
-function renderApplicationText(text2, vars, appendReason = false) {
-  const out = text2.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
-  return appendReason && vars["{reason}"] && !text2.includes("{reason}") ? `${out}
+function renderApplicationText(text, vars, appendReason = false) {
+  const out = text.replace(/\{[a-zA-Z]+\}/g, (m) => m in vars ? vars[m] ?? "" : m);
+  return appendReason && vars["{reason}"] && !text.includes("{reason}") ? `${out}
 
 **Grund:** ${vars["{reason}"]}` : out;
 }
@@ -610,20 +610,20 @@ var ERLC_POSTALS = {
   "1212": [1407, -606],
   "1213": [1700, -671]
 };
-function postalPosition(text2) {
-  if (!text2) return null;
-  const tagged = /\b(?:plz|postal(?:\s*code)?|p)\s*[-:#.]?\s*(\d{3,4})\b/i.exec(text2)?.[1];
-  const postal = tagged && ERLC_POSTALS[tagged] ? tagged : (text2.match(/(?<![\d.,])\d{3,4}(?![\d.,])/g) ?? []).find((n) => ERLC_POSTALS[n]);
+function postalPosition(text) {
+  if (!text) return null;
+  const tagged = /\b(?:plz|postal(?:\s*code)?|p)\s*[-:#.]?\s*(\d{3,4})\b/i.exec(text)?.[1];
+  const postal = tagged && ERLC_POSTALS[tagged] ? tagged : (text.match(/(?<![\d.,])\d{3,4}(?![\d.,])/g) ?? []).find((n) => ERLC_POSTALS[n]);
   const p = postal ? ERLC_POSTALS[postal] : void 0;
   return postal && p ? { postal, x: p[0], z: p[1] } : null;
 }
-var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z11]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z11 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
+var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z10]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z10 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
 function postalMatchRate(m, samples) {
   const labels = postalLabels(m.width, m.height);
   const known = samples.filter((s) => ERLC_POSTALS[s[2]]);
   if (!known.length) return 0;
-  const hits = known.filter(([x, z11, k]) => {
-    const px = m.originX + x * m.scale, py = m.originY + z11 * m.scale;
+  const hits = known.filter(([x, z10, k]) => {
+    const px = m.originX + x * m.scale, py = m.originY + z10 * m.scale;
     let best = labels[0], d = Infinity;
     for (const l of labels) {
       const dd2 = (l.px - px) ** 2 + (l.py - py) ** 2;
@@ -646,9 +646,9 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
     const scale = pts2.reduce((a, p) => a + (p.x - mx) * (p.lx - mlx) + (p.z - mz) * (p.ly - mly), 0) / den;
     return { scale, originX: mlx - scale * mx, originY: mly - scale * mz };
   };
-  let pts = samples.flatMap(([x, z11, k]) => {
+  let pts = samples.flatMap(([x, z10, k]) => {
     const l = labels.get(k);
-    return l && Number.isFinite(x) && Number.isFinite(z11) ? [{ x, z: z11, lx: l.px, ly: l.py, k }] : [];
+    return l && Number.isFinite(x) && Number.isFinite(z10) ? [{ x, z: z10, lx: l.px, ly: l.py, k }] : [];
   });
   const enough = (p) => p.length >= 20 && new Set(p.map((q) => q.k)).size >= 6 && Math.max(...p.map((q) => q.x)) - Math.min(...p.map((q) => q.x)) >= 1e3 && Math.max(...p.map((q) => q.z)) - Math.min(...p.map((q) => q.z)) >= 1e3;
   if (!enough(pts)) return null;
@@ -666,8 +666,8 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
   const out = { scale: r(f.scale, 4), originX: r(f.originX), originY: r(f.originY) };
   return { ...out, n: pts.length, postals: new Set(pts.map((p) => p.k)).size, match: postalMatchRate({ width, height, ...out }, samples) };
 }
-var gameToPixel = (m, x, z11) => ({ px: m.originX + x * m.scale, py: m.originY + z11 * m.scale });
-var onErlcMap = (x, z11) => typeof x === "number" && typeof z11 === "number" && Number.isFinite(x) && Number.isFinite(z11) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z11) <= ERLC_MAP_SIZE / 2;
+var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
+var onErlcMap = (x, z10) => typeof x === "number" && typeof z10 === "number" && Number.isFinite(x) && Number.isFinite(z10) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z10) <= ERLC_MAP_SIZE / 2;
 function poiForPlace(place, pois) {
   const norm2 = (v) => v.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
   const p = place ? norm2(place) : "";
@@ -706,10 +706,10 @@ function fitExact(pairs) {
     const worst = Math.max(...from.map((f, i) => Math.abs(a * f + b - to[i])));
     return worst <= 60 && a > 0 ? { a, b } : null;
   };
-  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z11 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
-  return x && z11 ? { ax: x.a, bx: x.b, az: z11.a, bz: z11.b, n: pairs.length } : null;
+  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z10 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
+  return x && z10 ? { ax: x.a, bx: x.b, az: z10.a, bz: z10.b, n: pairs.length } : null;
 }
-var applyCallCalibration = (c, x, z11) => ({ x: c.ax * x + c.bx, z: c.az * z11 + c.bz });
+var applyCallCalibration = (c, x, z10) => ({ x: c.ax * x + c.bx, z: c.az * z10 + c.bz });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -1023,7 +1023,7 @@ function accountAge(created, now = Date.now()) {
   if (days < 730) return `${Math.floor(days / 30)} Monate`;
   return `${Math.floor(days / 365)} Jahre`;
 }
-function renderWelcomeText(text2, m, now = Date.now()) {
+function renderWelcomeText(text, m, now = Date.now()) {
   const vars = {
     "{user}": `<@${m.id}>`,
     "{username}": m.username,
@@ -1032,7 +1032,7 @@ function renderWelcomeText(text2, m, now = Date.now()) {
     "{memberCount}": String(m.memberCount),
     "{accountAge}": accountAge(m.createdAt, now)
   };
-  return text2.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
+  return text.replace(/\{[a-zA-Z]+\}/g, (k) => vars[k] ?? k);
 }
 var hexColor = (c, fallback = 3900150) => /^#[0-9a-fA-F]{6}$/.test(c) ? parseInt(c.slice(1), 16) : fallback;
 
@@ -1119,7 +1119,7 @@ var sf = z.string().regex(/^\d{15,25}$/, "Discord-ID (15\u201325 Ziffern)");
 var color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 var emoji = z.string().trim().max(64);
 var imageRef = z.union([z.string().trim().max(500).regex(/^(https:\/\/\S+|media:[0-9a-f-]{36})$/, "Bild: https://-Link oder hochgeladene Datei"), z.literal("")]).default("");
-var toInt = (hex2) => parseInt(hex2.slice(1), 16);
+var toInt = (hex) => parseInt(hex.slice(1), 16);
 var staffSectionSchema = z.object({
   roleId: sf,
   /** eigene Überschrift statt der Rollen-Erwähnung (leer = @Rolle) */
@@ -1251,11 +1251,11 @@ function formPanelMessage(p) {
   };
 }
 function formPanelResult(p, values, user, now = /* @__PURE__ */ new Date()) {
-  const text2 = renderPanelTemplate(p.template, values, user, now).slice(0, p.asEmbed ? 4e3 : 2e3);
+  const text = renderPanelTemplate(p.template, values, user, now).slice(0, p.asEmbed ? 4e3 : 2e3);
   const ping = p.pingRoleIds.map((r) => `<@&${r}>`).join(" ");
   return {
-    ...p.asEmbed ? { ...ping ? { content: ping } : {}, embeds: [{ ...p.embedTitle ? { title: renderPanelTemplate(p.embedTitle, values, user, now).slice(0, 256) } : {}, description: text2, color: toInt(p.embedColor), ...p.asUser ? {} : { author: user.name, ...user.avatar ? { authorIcon: user.avatar } : {} } }] } : { content: `${ping ? `${ping}
-` : ""}${text2}`.slice(0, 2e3) },
+    ...p.asEmbed ? { ...ping ? { content: ping } : {}, embeds: [{ ...p.embedTitle ? { title: renderPanelTemplate(p.embedTitle, values, user, now).slice(0, 256) } : {}, description: text, color: toInt(p.embedColor), ...p.asUser ? {} : { author: user.name, ...user.avatar ? { authorIcon: user.avatar } : {} } }] } : { content: `${ping ? `${ping}
+` : ""}${text}`.slice(0, 2e3) },
     mentionRoles: p.pingRoleIds,
     reactions: p.reactions
   };
@@ -1925,18 +1925,18 @@ function parseQuestions(raw) {
   });
 }
 var GAP = /\{\{([^{}]*)\}\}/g;
-var gapAnswers = (text2) => [...text2.matchAll(GAP)].map((m) => (m[1] ?? "").split("|").map((s) => s.trim()).filter(Boolean));
-var maskGaps = (text2) => text2.replace(GAP, "{{}}");
-function splitGaps(text2) {
+var gapAnswers = (text) => [...text.matchAll(GAP)].map((m) => (m[1] ?? "").split("|").map((s) => s.trim()).filter(Boolean));
+var maskGaps = (text) => text.replace(GAP, "{{}}");
+function splitGaps(text) {
   const out = [];
   let last = 0;
   let n = 0;
-  for (const m of text2.matchAll(GAP)) {
-    if (m.index > last) out.push(text2.slice(last, m.index));
+  for (const m of text.matchAll(GAP)) {
+    if (m.index > last) out.push(text.slice(last, m.index));
     out.push(n++);
     last = m.index + m[0].length;
   }
-  if (last < text2.length) out.push(text2.slice(last));
+  if (last < text.length) out.push(text.slice(last));
   return out;
 }
 var norm = (x) => String(x ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -2894,8 +2894,8 @@ function csvCell(v) {
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
-function parseCsv(text2) {
-  const src = text2.replace(/^﻿/, "");
+function parseCsv(text) {
+  const src = text.replace(/^﻿/, "");
   const firstLine = src.split(/\r?\n/, 1)[0] ?? "";
   const sep = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ";" : ",";
   const records = [];
@@ -3247,126 +3247,6 @@ function slaState(t2, now = /* @__PURE__ */ new Date()) {
     resolveOverdue: !!resolveDueAt && open && !paused && now > resolveDueAt
   };
 }
-
-// src/server-config.ts
-import { z as z10 } from "zod";
-var BRANDING_IMAGES = {
-  logo: { label: "Serverlogo", maxBytes: 2 * 1024 * 1024, minW: 64, minH: 64, maxW: 4096, maxH: 4096, ratio: [0.5, 2] },
-  avatar: { label: "Profilbild (rund)", maxBytes: 2 * 1024 * 1024, minW: 64, minH: 64, maxW: 4096, maxH: 4096, ratio: [0.8, 1.25] },
-  banner: { label: "Dashboard-Banner", maxBytes: 5 * 1024 * 1024, minW: 600, minH: 100, maxW: 8192, maxH: 4096, ratio: [2, 12] },
-  background: { label: "Hintergrundbild", maxBytes: 5 * 1024 * 1024, minW: 800, minH: 450, maxW: 8192, maxH: 8192, ratio: [0.4, 4] },
-  area: { label: "Bereichsbild", maxBytes: 5 * 1024 * 1024, minW: 600, minH: 100, maxW: 8192, maxH: 4096, ratio: [2, 12] }
-};
-var BRANDING_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
-var BRANDING_AREAS = { dashboard: "Dashboard (Startseite)", tickets: "Ticket-Center", team: "Team" };
-function checkBrandingImage(kind, meta) {
-  const r = BRANDING_IMAGES[kind];
-  if (!BRANDING_IMAGE_TYPES.includes(meta.mime)) return "Nur PNG, JPG oder WebP sind erlaubt.";
-  if (meta.size > r.maxBytes) return `Die Datei ist zu gro\xDF (h\xF6chstens ${Math.round(r.maxBytes / 1048576)} MB).`;
-  if (meta.width < r.minW || meta.height < r.minH) return `Das Bild ist zu klein (mindestens ${r.minW} \xD7 ${r.minH} Pixel, ist ${meta.width} \xD7 ${meta.height}).`;
-  if (meta.width > r.maxW || meta.height > r.maxH) return `Das Bild ist zu gro\xDF (h\xF6chstens ${r.maxW} \xD7 ${r.maxH} Pixel, ist ${meta.width} \xD7 ${meta.height}).`;
-  const ratio = meta.width / meta.height;
-  if (ratio < r.ratio[0] || ratio > r.ratio[1]) return `Das Seitenverh\xE4ltnis passt nicht (${r.label}: Breite \xF7 H\xF6he zwischen ${r.ratio[0]} und ${r.ratio[1]}, ist ${ratio.toFixed(2)}).`;
-  return null;
-}
-var hex = z10.string().regex(/^#[0-9a-fA-F]{6}$/, "Farbe als #rrggbb");
-var assetId = z10.string().uuid().nullable().default(null);
-var text = (max) => z10.string().trim().max(max).default("");
-var serverConfigSchema = z10.object({
-  general: z10.object({
-    displayName: z10.string().trim().min(1, "Bitte einen Namen angeben.").max(80),
-    shortName: z10.string().trim().max(16).default(""),
-    dashboardTitle: text(80),
-    welcomeText: text(1e3)
-  }).strict(),
-  branding: z10.object({
-    logo: assetId,
-    avatar: assetId,
-    banner: assetId,
-    background: assetId,
-    areas: z10.object({ dashboard: assetId, tickets: assetId, team: assetId }).strict().default({})
-  }).strict().default({}),
-  design: z10.object({
-    primary: hex.default("#1e3a8a"),
-    accent: hex.default("#3b82f6"),
-    /** user = persönliche Einstellung jedes Benutzers; dark/light = Standard dieses Servers (wenn der Benutzer „System“ gewählt hat) */
-    mode: z10.enum(["user", "dark", "light"]).default("user"),
-    useBackground: z10.boolean().default(false)
-  }).strict().default({})
-}).strict();
-var defaultServerConfig = (displayName) => serverConfigSchema.parse({ general: { displayName: displayName.slice(0, 80) || "Server" } });
-var configAssetIds = (c) => [c.branding.logo, c.branding.avatar, c.branding.banner, c.branding.background, ...Object.values(c.branding.areas)].filter((x) => !!x);
-var SETUP_STEPS = [
-  { key: "connect", label: "Bot verbinden" },
-  { key: "server", label: "Server & Berechtigungen" },
-  { key: "names", label: "Name & Anzeige" },
-  { key: "images", label: "Logo & Bilder" },
-  { key: "design", label: "Farben & Design" },
-  { key: "modules", label: "Module" },
-  { key: "review", label: "Pr\xFCfen & speichern" },
-  { key: "finish", label: "Vorschau & Abschluss" }
-];
-var REQUIRED_BOT_PERMISSIONS = {
-  viewChannel: "Kan\xE4le ansehen",
-  sendMessages: "Nachrichten senden",
-  embedLinks: "Links einbetten",
-  attachFiles: "Dateien anh\xE4ngen",
-  readMessageHistory: "Nachrichtenverlauf lesen",
-  manageChannels: "Kan\xE4le verwalten",
-  manageRoles: "Rollen verwalten"
-};
-function missingBotPermissions(p) {
-  if (!p) return null;
-  if (p.administrator) return [];
-  return Object.keys(REQUIRED_BOT_PERMISSIONS).filter((k) => !p[k]);
-}
-function readableTextOn(color3) {
-  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color3);
-  if (!m) return "#ffffff";
-  const [r, g, b] = [m[1], m[2], m[3]].map((h) => {
-    const c = parseInt(h, 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return 1.05 / (lum + 0.05) >= 3 ? "#ffffff" : "#111827";
-}
-function imageInfo(b) {
-  const u16be = (i) => b[i] << 8 | b[i + 1];
-  const u32be = (i) => (b[i] << 24 >>> 0) + (b[i + 1] << 16) + (b[i + 2] << 8) + b[i + 3];
-  const u24le = (i) => b[i] | b[i + 1] << 8 | b[i + 2] << 16;
-  const ascii = (i, n) => String.fromCharCode(...b.subarray(i, i + n));
-  const ok = (mime, width, height) => width > 0 && height > 0 ? { mime, width, height } : null;
-  if (b.length >= 24 && [137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => b[i] === v)) {
-    return ascii(12, 4) === "IHDR" ? ok("image/png", u32be(16), u32be(20)) : null;
-  }
-  if (b.length >= 4 && b[0] === 255 && b[1] === 216 && b[2] === 255) {
-    let i = 2;
-    while (i + 9 < b.length) {
-      if (b[i] !== 255) return null;
-      const marker = b[i + 1];
-      if (marker === 255) {
-        i++;
-        continue;
-      }
-      if (marker === 216 || marker === 1 || marker >= 208 && marker <= 215) {
-        i += 2;
-        continue;
-      }
-      const len2 = u16be(i + 2);
-      if (len2 < 2) return null;
-      if (marker >= 192 && marker <= 207 && ![196, 200, 204].includes(marker)) return ok("image/jpeg", u16be(i + 7), u16be(i + 5));
-      i += 2 + len2;
-    }
-    return null;
-  }
-  if (b.length >= 30 && ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP") {
-    const chunk = ascii(12, 4);
-    if (chunk === "VP8 " && b[23] === 157 && b[24] === 1 && b[25] === 42) return ok("image/webp", (b[26] | b[27] << 8) & 16383, (b[28] | b[29] << 8) & 16383);
-    if (chunk === "VP8L" && b[20] === 47) return ok("image/webp", 1 + ((b[22] & 63) << 8 | b[21]), 1 + ((b[24] & 15) << 10 | b[23] << 2 | (b[22] & 192) >> 6));
-    if (chunk === "VP8X") return ok("image/webp", 1 + u24le(24), 1 + u24le(27));
-  }
-  return null;
-}
 export {
   AI_CHECK_HINT,
   AI_CHECK_LEVEL_LABEL,
@@ -3378,9 +3258,6 @@ export {
   BACKUP_PARTS,
   BACKUP_PART_LABEL,
   BOT_COMMAND_MODULES,
-  BRANDING_AREAS,
-  BRANDING_IMAGES,
-  BRANDING_IMAGE_TYPES,
   CAD_EVENTS,
   CAD_EVENT_LABELS,
   CAD_EVENT_SEND_TYPE,
@@ -3481,12 +3358,10 @@ export {
   REPORT_TYPES,
   REQUEST_STATUSES,
   REQUEST_STATUS_DEFAULT,
-  REQUIRED_BOT_PERMISSIONS,
   REQUIREMENT_LABEL,
   REQUIREMENT_TYPES,
   ROBLOX_NAME,
   ROBLOX_VERIFICATION_STATUSES,
-  SETUP_STEPS,
   STATUS_KINDS,
   STATUS_LABEL,
   TICKET_ACTIONS,
@@ -3530,16 +3405,13 @@ export {
   canDelegate,
   canTransition,
   checkAnswer,
-  checkBrandingImage,
   checkStatusChange,
   cleanReportValues,
   cloneWithNewIds,
   commandsForServer,
   conditionMatches,
-  configAssetIds,
   csvCell,
   dangerLevelOf,
-  defaultServerConfig,
   defaultTicketButtons,
   departmentSchema,
   describeDiscordError,
@@ -3579,7 +3451,6 @@ export {
   hireMappingSchema,
   hrConfigSchema,
   hrStatusSchema,
-  imageInfo,
   infoOptionEmbed,
   infoOptionSchema,
   infoPanelMessage,
@@ -3617,7 +3488,6 @@ export {
   mbSelectOptionSchema,
   mbSummary,
   mdtConfigSchema,
-  missingBotPermissions,
   missingBotPerms,
   moduleDef,
   moduleDependencyError,
@@ -3651,7 +3521,6 @@ export {
   radioRoleSyncAction,
   rangeSchema,
   rankSchema,
-  readableTextOn,
   renderApplicationText,
   renderPanelTemplate,
   renderStaffList,
@@ -3666,7 +3535,6 @@ export {
   requirementSchema,
   resolvePermission,
   rolesMatch,
-  serverConfigSchema,
   severitySchema,
   slaState,
   splitGaps,

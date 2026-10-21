@@ -31,8 +31,6 @@ declare const guildsBody: z.ZodObject<{
             name: string;
             position: number;
         }[], unknown[]>;
-        /** Server-weite Rechte des Bots (Einrichtungsassistent); fehlt bei älteren Bot-Versionen */
-        botPermissions: z.ZodCatch<z.ZodOptional<z.ZodRecord<z.ZodEnum<["administrator", "viewChannel", "sendMessages", "embedLinks", "attachFiles", "readMessageHistory", "manageChannels", "manageRoles"]>, z.ZodBoolean>>>;
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
@@ -56,14 +54,12 @@ declare const guildsBody: z.ZodObject<{
             name: string;
             position: number;
         }[];
-        botPermissions?: Partial<Record<"administrator" | "viewChannel" | "sendMessages" | "embedLinks" | "attachFiles" | "readMessageHistory" | "manageChannels" | "manageRoles", boolean>> | undefined;
     }, {
         id: string;
         name: string;
         channels: unknown[];
         roles: unknown[];
         icon?: unknown;
-        botPermissions?: unknown;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
@@ -89,7 +85,6 @@ declare const guildsBody: z.ZodObject<{
             name: string;
             position: number;
         }[];
-        botPermissions?: Partial<Record<"administrator" | "viewChannel" | "sendMessages" | "embedLinks" | "attachFiles" | "readMessageHistory" | "manageChannels" | "manageRoles", boolean>> | undefined;
     }[];
 }, {
     guilds: {
@@ -98,7 +93,6 @@ declare const guildsBody: z.ZodObject<{
         channels: unknown[];
         roles: unknown[];
         icon?: unknown;
-        botPermissions?: unknown;
     }[];
 }>;
 declare const redeem: z.ZodObject<{

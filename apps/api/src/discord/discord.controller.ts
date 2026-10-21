@@ -23,8 +23,6 @@ const guildsBody = z.object({ guilds: z.array(z.object({
     /** Rechte des Bots im Kanal (Message Builder prüft vor dem Senden); fehlt bei älteren Bot-Versionen */
     bot: z.object({ view: z.boolean(), send: z.boolean(), embed: z.boolean(), mentionEveryone: z.boolean().optional() }).optional().catch(undefined) }), 500),
   roles: lenient(z.object({ id: sf, name: z.string().max(100), color: z.number().int().min(0).catch(0), position: z.number().int().catch(0) }), 250),
-  /** Server-weite Rechte des Bots (Einrichtungsassistent); fehlt bei älteren Bot-Versionen */
-  botPermissions: z.record(z.enum(['administrator', 'viewChannel', 'sendMessages', 'embedLinks', 'attachFiles', 'readMessageHistory', 'manageChannels', 'manageRoles']), z.boolean()).optional().catch(undefined),
 })).max(50) });
 const redeem = z.object({ code: z.string().trim().min(8).max(12), discordId: z.string().regex(/^\d{15,25}$/) });
 const ack = z.object({ ok: z.boolean(), error: z.string().max(300).optional() });
