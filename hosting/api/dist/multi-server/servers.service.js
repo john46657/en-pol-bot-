@@ -222,7 +222,8 @@ let ServersService = class ServersService {
     async modules(actor, serverId) {
         await this.access(actor, serverId, 'modules.view');
         const rows = await this.prisma.serverModuleSetting.findMany({ where: { serverId } });
-        return shared_1.MODULES.map((m) => {
+        // global ausgeschaltete Module erscheinen nicht in der Verwaltung
+        return shared_1.MODULES.filter((m) => !m.off).map((m) => {
             const r = rows.find((x) => x.moduleKey === m.key);
             return { key: m.key, name: m.name, description: m.description, system: !!m.system, dependsOn: m.dependsOn ?? [], enabled: m.system ? true : r?.enabled ?? true, settings: r ? parseSafe(m.key, r.settings) : parseSafe(m.key, {}), version: r?.version ?? 0, updatedAt: r?.updatedAt ?? null, updatedById: r?.updatedById ?? null };
         });
@@ -271,7 +272,8 @@ let ServersService = class ServersService {
     /** Einstellungen eines Moduls lesen (ohne Rechteprüfung – für interne Dienste wie den Wochen-Reset). */
     async moduleState(serverId, key) {
         const r = await this.prisma.serverModuleSetting.findUnique({ where: { serverId_moduleKey: { serverId, moduleKey: key } } });
-        return { enabled: (0, shared_1.moduleDef)(key)?.system ? true : r?.enabled ?? true, settings: parseSafe(key, r?.settings ?? {}) };
+        const def = (0, shared_1.moduleDef)(key);
+        return { enabled: def?.system ? true : def?.off ? false : r?.enabled ?? true, settings: parseSafe(key, r?.settings ?? {}) };
     }
     // ───────── Rollen & Rechte je Server ─────────
     async serverRole(s, roleId) {

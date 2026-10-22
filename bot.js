@@ -80632,12 +80632,13 @@ var MODULES = [
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
   { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
-  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
+  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", off: true, permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
+var OFF_MODULES = MODULES.filter((m) => m.off).map((m) => m.key);
 var BOT_COMMAND_MODULES = {
   cad: "cad",
   bericht: "reports",

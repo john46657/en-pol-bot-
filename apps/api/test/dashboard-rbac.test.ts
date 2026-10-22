@@ -152,7 +152,8 @@ describe('Discord role sync after login', () => {
     const me = await agent.get('/api/v1/auth/me').set('X-Guild-Id', GUILD);
     expect(me.status).toBe(200);
     expect(me.body.roles).toContain('Moderator'); // verknüpft über Rolle „Moderator“ → MOD_ROLE
-    expect(me.body.permissions).toContain('ticket.close');
+    // das Recht der Rolle gehört zu Support-Tickets – das Modul ist global ausgeschaltet, also nicht wirksam
+    expect(me.body.permissions).not.toContain('ticket.close');
     // Moderator-Rolle auf Discord weg → Dashboard-Rolle weg
     members.set(D.mod, [ACCESS_ROLE]);
     access.forget(user.id);

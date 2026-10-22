@@ -40,7 +40,7 @@ export declare class AuthorizationService {
     /** Nach Änderungen an Servern/Modulen (diese Instanz sofort, andere spätestens nach 5 s). */
     invalidate(): void;
     server(guildId: string): Promise<ServerRow | null>;
-    /** Abgeschaltete Module eines Servers (ohne Eintrag = an). */
+    /** Abgeschaltete Module eines Servers (ohne Eintrag = an; global ausgeschaltete immer). */
     disabledModules(serverId: string): Promise<Set<string>>;
     isMember(userId: string, serverId: string): Promise<boolean>;
     /** Server-/Mitgliedschafts-/Modulprüfung ohne Berechtigung (für Listen effektiver Rechte und eigene Prüfungen). */
