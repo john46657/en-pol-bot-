@@ -117,7 +117,7 @@ export class DiscordOAuthService {
     }
     if (user && !user.active) throw new DiscordLoginFailure('inactive');
     if (!user) {
-      if (!settings.signup && !owner) throw new DiscordLoginFailure('no_account');
+      if (!settings.signup && !owner && !guildAdmin) throw new DiscordLoginFailure('no_account'); // Discord-Admins kommen immer rein
       user = await this.createUser(du, meta);
     }
     if (owner) await this.ensureAdmin(user.id);

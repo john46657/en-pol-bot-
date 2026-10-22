@@ -186,6 +186,10 @@ describe('login with Discord', () => {
     discord.user = { id: '222222222222222222', username: 'newbie', global_name: null };
     discord.members.set('222222222222222222', []);
     expect((await discordLogin()).location).toMatch(/discord=no_account$/);
+    // Discord-Administrator des Servers bekommt trotzdem ein Konto
+    discord.members.set('222222222222222222', [ROLE_ADMIN]);
+    expect((await discordLogin()).location).toMatch(/\/servers$/);
+    discord.members.set('222222222222222222', []);
     discord.user = prev;
   });
 
