@@ -59,3 +59,32 @@ describe('/dienstbericht liste + anzeigen', () => {
     expect((await run(member.api, 'anzeigen', { nummer: 'TB-2026-AAAAAA' })).buttons).toBeUndefined();
   });
 });
+
+describe('/dienstbericht ausfüllen – ungültige Eingaben', () => {
+  it('keeps the draft when the system rejects a value and offers „Eingaben korrigieren“ with the old values', async () => {
+    const tpl = { ...template, fields: [{ id: 'roblox', label: 'Roblox-Username', type: 'short', placeholder: '', required: true, maxLength: 100, options: [] }, { id: 'festnahmen', label: 'Festnahmen', type: 'number', placeholder: '', required: false, maxLength: 10, options: [] }] };
+    let fail = true;
+    const calls: Call[] = [];
+    const api: Api = {
+      async asUser(_d, method, path, body) {
+        calls.push({ method, path, body });
+        if (method === 'GET' && path.startsWith('/duty-reports/templates')) return [tpl] as never;
+        if (method === 'POST' && path === '/duty-reports') { if (fail) throw new BotApiError(400, 'VALIDATION_FAILED', '„Festnahmen“ darf nicht negativ sein (eingegeben: -2).'); return { number: 'TB-2026-BBBBBB', merged: false } as never; }
+        throw new BotApiError(404, 'NOT_FOUND', 'no route');
+      },
+      async service() { throw new Error('unused'); },
+    };
+    const sub = interactionFor(`drep:sub:n:${T1}:0`)!;
+    const r = await sub.def.run({ discordId: ME, api, opts: {}, args: sub.args, fields: { roblox: 'frd_le0n', festnahmen: '-2' } });
+    expect(r.content).toContain('nicht negativ');
+    expect(r.buttons?.[0]?.id).toBe(`drep:next:n:${T1}:0`);
+    const next = interactionFor(r.buttons![0]!.id)!;
+    const again = await next.def.run({ discordId: ME, api, opts: {}, args: next.args });
+    expect(again.modal?.fields.find((f) => f.id === 'roblox')?.value).toBe('frd_le0n');
+    expect(again.modal?.fields.find((f) => f.id === 'festnahmen')?.placeholder).toContain('ab 0');
+    fail = false;
+    const ok = await sub.def.run({ discordId: ME, api, opts: {}, args: sub.args, fields: { roblox: 'frd_le0n', festnahmen: '2' } });
+    expect(ok.content).toContain('TB-2026-BBBBBB');
+    expect((await next.def.run({ discordId: ME, api, opts: {}, args: next.args })).content).toContain('abgelaufen');
+  });
+});

@@ -2,6 +2,7 @@ import { periodLabel, type ReportField, type ReportTemplate } from '@enrp/shared
 import { COLORS, errorReply, listEmbed, okReply, plain, type ModalSpec, type Reply } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
+import { BotApiError } from '../api';
 
 interface Report { id: string; number: string; templateId: string; templateName: string; period: ReportTemplate['period']; periodStart: string; values: Record<string, string>; status: string; template: ReportTemplate | null; canEdit: boolean; canReview?: boolean; version: number; author?: { id: string; displayName: string }; reviewerName?: string | null; reviewNote?: string | null }
 const STATUS_DE: Record<string, string> = { SUBMITTED: '🕓 eingereicht', REVIEWED: '✅ geprüft', RETURNED: '↩️ zur Nachbesserung' };
@@ -16,7 +17,7 @@ const sweep = () => { for (const [k, v] of drafts) if (Date.now() - v.at > 30 * 
 const PAGE = 5;
 const pages = (t: ReportTemplate) => Math.max(1, Math.ceil(t.fields.length / PAGE));
 
-const hint = (f: ReportField) => (f.type === 'select' && f.options.length ? `z. B. ${f.options.join(' / ')}` : f.type === 'number' ? 'Zahl' : f.placeholder).slice(0, 100);
+const hint = (f: ReportField) => (f.type === 'select' && f.options.length ? `z. B. ${f.options.join(' / ')}` : f.type === 'number' ? 'Zahl ab 0, z. B. 3' : f.placeholder).slice(0, 100);
 function modal(t: ReportTemplate, mode: Mode, id: string, page: number, values: Record<string, string>): ModalSpec {
   const n = pages(t);
   return {
@@ -172,12 +173,20 @@ export const DUTY_REPORT_INTERACTION: InteractionDef = {
       d.at = Date.now();
       drafts.set(k, d);
       if (page + 1 < pages(t)) return { ephemeral: true, content: `Seite ${page + 1} von ${pages(t)} gespeichert.`, buttons: [{ id: `drep:next:${mode}:${id}:${page + 1}`, label: `Weiter (${page + 2}/${pages(t)})`, emoji: '➡️', style: 'primary' }] };
-      drafts.delete(k);
+      // Entwurf erst nach dem erfolgreichen Speichern verwerfen – bei ungültigen Eingaben (z. B. negative Zahl) bleibt alles erhalten
+      const fix = (e: unknown): Reply => {
+        const r = mapError(e);
+        return e instanceof BotApiError && e.status === 400 ? { ...r, buttons: [{ id: `drep:next:${mode}:${id}:0`, label: 'Eingaben korrigieren', emoji: '✏️', style: 'primary' }] } : r;
+      };
       if (mode === 'e') {
-        const r = await c.api.asUser<{ number: string }>(c.discordId, 'PATCH', `/duty-reports/${id}`, { values: d.values });
+        const r = await c.api.asUser<{ number: string }>(c.discordId, 'PATCH', `/duty-reports/${id}`, { values: d.values }).catch((e: unknown) => fix(e));
+        if (!('number' in r)) return r;
+        drafts.delete(k);
         return okReply(`Bericht **${r.number}** aktualisiert – auch im Dashboard und in Discord.`);
       }
-      const r = await c.api.asUser<{ number: string; merged: boolean }>(c.discordId, 'POST', '/duty-reports', { templateId: id, values: d.values, source: 'DISCORD', guildId: c.guildId ?? null });
+      const r = await c.api.asUser<{ number: string; merged: boolean }>(c.discordId, 'POST', '/duty-reports', { templateId: id, values: d.values, source: 'DISCORD', guildId: c.guildId ?? null }).catch((e: unknown) => fix(e));
+      if (!('number' in r)) return r;
+      drafts.delete(k);
       return okReply(r.merged ? `Für diesen Zeitraum gab es schon deinen Bericht **${r.number}** – er wurde aktualisiert.` : `Bericht **${r.number}** eingereicht. Du findest ihn auch im Dashboard; mit „Bearbeiten“ kannst du ihn ändern.`);
     } catch (e) {
       return e instanceof Error && !('status' in e) ? errorReply(e.message) : mapError(e);

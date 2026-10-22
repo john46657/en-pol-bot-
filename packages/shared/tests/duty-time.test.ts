@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dutyTimeText, isDutyTimeField, periodEnd, periodStart, policeReportFields, reportMessage, reportTemplateSchema } from '../src/duty-reports';
+import { cleanReportValues, dutyTimeText, isDutyTimeField, periodEnd, periodStart, policeReportFields, reportMessage, reportTemplateSchema } from '../src/duty-reports';
 
 const day = new Date('2026-10-08T00:00:00Z'), end = periodEnd('DAILY', day);
 const at = (h: number, m = 0) => new Date(Date.UTC(2026, 9, 8, h, m));
@@ -41,5 +41,25 @@ describe('reportMessage – Listen-Darstellung', () => {
     const t = reportTemplateSchema.parse({ id: '00000000-0000-4000-8000-000000000000', name: 'X', fields: [{ id: 'a', label: 'A' }] });
     expect(t.layout).toBe('FIELDS');
     expect(reportMessage(t, { number: 'TB-1', period: 'DAILY', periodStart: new Date(), values: { a: '1' }, authorName: 'M', status: 'SUBMITTED', updatedAt: new Date(), edited: false }, 'x').embeds![0]!.fields).toHaveLength(1);
+  });
+});
+
+describe('Zeitraum und Zahlenfelder', () => {
+  it('Zeitraum nach deutschem Kalendertag: Montag 00:30 (Berlin) gehört zur neuen Woche, Sonntag 23:30 zur alten', () => {
+    // Mo 12.10.2026 00:30 MESZ = So 11.10. 22:30 UTC
+    expect(periodStart('WEEKLY', new Date('2026-10-11T22:30:00Z')).toISOString()).toBe('2026-10-12T00:00:00.000Z');
+    expect(periodStart('WEEKLY', new Date('2026-10-11T21:30:00Z')).toISOString()).toBe('2026-10-05T00:00:00.000Z');
+    // Winterzeit: 01.12. 00:15 MEZ = 30.11. 23:15 UTC
+    expect(periodStart('DAILY', new Date('2026-11-30T23:15:00Z')).toISOString()).toBe('2026-12-01T00:00:00.000Z');
+    // gespeicherte Daten (UTC-Mitternacht) ergeben denselben Zeitraum wie bisher
+    expect(periodStart('DAILY', new Date('2026-10-16T00:00:00Z')).toISOString()).toBe('2026-10-16T00:00:00.000Z');
+  });
+  it('Zahlen: nur Werte ab 0, verständliche Fehlermeldung; leere optionale Felder und Notiz bleiben erlaubt', () => {
+    const t = reportTemplateSchema.parse({ id: '11111111-1111-4111-8111-111111111111', name: 'Tagesbericht', fields: policeReportFields() });
+    expect(cleanReportValues(t, { roblox: 'frd_le0n', festnahmen: '-2' })).toEqual({ error: '„Festnahmen“ darf nicht negativ sein (eingegeben: -2).' });
+    expect(cleanReportValues(t, { roblox: 'frd_le0n', dispatch: 'drei' })).toEqual({ error: expect.stringContaining('„Dispatch“ muss eine Zahl ab 0 sein') });
+    expect(cleanReportValues(t, { festnahmen: '1' })).toEqual({ error: '„Roblox-Username“ fehlt.' });
+    const ok = cleanReportValues(t, { roblox: ' frd_le0n ', festnahmen: '0', geblitzt: '12', notiz: '' });
+    expect(ok).toEqual({ values: expect.objectContaining({ roblox: 'frd_le0n', festnahmen: '0', geblitzt: '12', notiz: '' }) });
   });
 });
