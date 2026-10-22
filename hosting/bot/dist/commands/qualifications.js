@@ -41,6 +41,13 @@ const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions)
     if (s.expiresAt <= now)
         sessions.delete(k); };
 exports.sweepSessions = sweepSessions;
+/** Fortschritt ans System melden (Dashboard: Bewerbung „in Bearbeitung“) – Fehler egal, die Bewerbung läuft weiter. */
+const report = (api, userId, userName, s) => void api.service('POST', '/bot/application-progress', {
+    discordId: userId, discordName: userName, unit: s.unit, unitName: s.appName, ...(s.guildId ? { guildId: s.guildId } : {}),
+    answered: s.answers.length, total: s.questions.length, startedAt: new Date(s.startedAt).toISOString(), expiresAt: new Date(s.expiresAt).toISOString(),
+}).catch(() => undefined);
+/** Abgebrochen/abgelaufen: nicht mehr „in Bearbeitung“. */
+const unreport = (api, userId, unit) => void api.service('DELETE', `/bot/application-progress?discordId=${userId}&unit=${encodeURIComponent(unit)}`).catch(() => undefined);
 /** Abbrechen während der Fragen: einfach „abbrechen“ schreiben (kein Button unter den Fragen). */
 const CANCEL_WORD = 'abbrechen';
 /** Einstellungen des Servers (ohne eigene: die gemeinsamen). */
@@ -213,11 +220,13 @@ async function handleDirectMessage(a) {
     }
     if (s.expiresAt <= now) {
         sessions.delete(a.userId);
+        unreport(a.api, a.userId, s.unit);
         await say(`⏰ Die Zeit für deine Bewerbung ist abgelaufen (${(0, shared_1.formatMinutes)(Math.round(limitMs(s.settings) / 60_000))}). Bitte starte sie über das Panel neu.`, format_1.COLORS.warning);
         return;
     }
     if (a.content.trim().toLowerCase() === CANCEL_WORD) {
         sessions.delete(a.userId);
+        unreport(a.api, a.userId, s.unit);
         await say('Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.', format_1.COLORS.neutral);
         return;
     }
@@ -267,6 +276,7 @@ async function handleDirectMessage(a) {
 async function proceed(o, s) {
     const say = (description, color = format_1.COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: (0, format_1.clip)(s.unitName, 256), description, color }, buttons });
     if (s.answers.length < s.questions.length) {
+        report(o.api, o.userId, o.userName, s);
         await o.sendDm(o.userId, questionMessage(s));
         return;
     }
@@ -278,6 +288,7 @@ async function proceed(o, s) {
     catch (e) {
         if (e instanceof api_1.BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
             sessions.delete(o.userId);
+            unreport(o.api, o.userId, s.unit);
             await say(e.status === 409 ? 'Du hast hierfür bereits eine offene Bewerbung. Bitte warte auf die Entscheidung.' : 'Die Fragen wurden inzwischen geändert. Bitte starte die Bewerbung neu.', format_1.COLORS.warning);
             return;
         }
@@ -417,7 +428,10 @@ exports.QUALI_INTERACTION = {
                 return { ...(0, format_1.okReply)('Gespeichert.'), update: { embeds: [{ title: (0, format_1.clip)(s.unitName, 256), color: format_1.COLORS.success, description: (0, format_1.clip)(`**${i + 1}/${s.questions.length}.** ${(0, format_1.plain)(q.text)}\n\n✅ ${(0, format_1.plain)(answerText(value))}`, 4000) }] } };
             }
             if (action === 'cancel') {
+                const running = sessions.get(c.discordId);
                 const had = sessions.delete(c.discordId);
+                if (running)
+                    unreport(c.api, c.discordId, running.unit);
                 return (0, format_1.okReply)(had ? 'Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.' : 'Es läuft keine Bewerbung.');
             }
             if (action === 'decide') {
@@ -456,6 +470,7 @@ exports.QUALI_INTERACTION = {
                 sessions.delete(c.discordId);
                 return (0, format_1.errorReply)('Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.');
             }
+            report(c.api, c.discordId, c.userName ?? c.discordId, s);
             return (0, format_1.okReply)('Los geht’s – beantworte die Fragen einfach hier im Chat.');
         }
         catch (e) {

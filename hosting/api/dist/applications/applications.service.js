@@ -18,6 +18,7 @@ const notify_service_1 = require("../notifications/notify.service");
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
+const application_progress_1 = require("./application-progress");
 const audit_service_1 = require("../audit/audit.service");
 const errors_1 = require("../common/errors");
 const discord_service_1 = require("../discord/discord.service");
@@ -115,6 +116,7 @@ let ApplicationsService = class ApplicationsService {
                 throw new errors_1.AppError('CONFLICT', `Du kannst dich erst in ${(0, shared_2.formatMinutes)(wait)} erneut bewerben.`);
         }
         const a = await this.prisma.application.create({ data: { number: (0, numbering_1.makeNumber)('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], guildId: meta.guildId ?? null, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+        await (0, application_progress_1.clearProgress)(this.prisma, meta.discordId, application_progress_1.POLICE_UNIT); // nicht mehr „in Bearbeitung“
         // 🔔 Neue Bewerbung → alle, die Bewerbungen prüfen dürfen (im Server der Bewerbung)
         await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🔔 Neue Bewerbung ${a.number}`, body: `${d.robloxUsername}${meta.discordName ? ` · ${meta.discordName}` : ''}`, entityType: 'Application', entityId: a.id }, { guildId: meta.guildId ?? null });
         await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
@@ -282,6 +284,26 @@ let ApplicationsService = class ApplicationsService {
             total: pTotal + qTotal, page: f.page, pageSize: f.pageSize,
             types: [...(allowed.police ? [{ key: 'police', name: pName }] : []), ...units.map((u) => ({ key: `q:${u.unit}`, name: u.unitName }))].filter((t, i, all) => all.findIndex((x) => x.key === t.key) === i),
         };
+    }
+    /**
+     * Angefangene, noch nicht eingereichte Bewerbungen (Fragen per Direktnachricht oder Link zum Web-Formular) –
+     * gleiche Filter wie die Liste (Art, Server, Suche); Bewerbungen für Einheiten nur mit qualifications.view.
+     */
+    async inProgress(f, allowed) {
+        const now = new Date();
+        await this.prisma.applicationProgress.deleteMany({ where: { expiresAt: { lte: now } } });
+        const q = f.q?.trim();
+        const unit = f.type === 'police' ? application_progress_1.POLICE_UNIT : f.type?.startsWith('q:') ? f.type.slice(2) : undefined;
+        if (unit && unit !== application_progress_1.POLICE_UNIT && !allowed.quali)
+            return [];
+        const rows = await this.prisma.applicationProgress.findMany({
+            where: { ...(f.guildId ? { guildId: f.guildId } : {}), ...(unit ? { unit } : allowed.quali ? {} : { unit: application_progress_1.POLICE_UNIT }), ...(q ? { OR: [{ discordName: { contains: q, mode: 'insensitive' } }, { discordId: q }] } : {}) },
+            orderBy: { startedAt: 'desc' }, take: 100,
+        });
+        const known = new Map(this.live.getMembers().members.filter((m) => m.avatar).map((m) => [m.id, m.avatar]));
+        const fetched = await this.access.avatars(rows.map((r) => r.discordId).filter((id) => !known.has(id)));
+        return rows.map((r) => ({ id: r.id, typeKey: r.unit === application_progress_1.POLICE_UNIT ? 'police' : `q:${r.unit}`, typeName: r.unitName, discordId: r.discordId, discordName: r.discordName, guildId: r.guildId, source: r.source,
+            answered: r.answered, total: r.total, startedAt: r.startedAt, updatedAt: r.updatedAt, expiresAt: r.expiresAt, avatar: known.get(r.discordId) ?? fetched.get(r.discordId) ?? null }));
     }
     /** Bewerbung endgültig löschen (applications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
     async remove(actor, id) {

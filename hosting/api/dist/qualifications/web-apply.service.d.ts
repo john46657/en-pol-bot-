@@ -1,6 +1,7 @@
 import { type FormField } from '@enrp/shared';
 import { ApplicationsService } from '../applications/applications.service';
 import { QualificationsService } from './qualifications.service';
+import { PrismaService } from '../prisma/prisma.service';
 /** Schlüssel der Polizei-Bewerbung (wie im Bot); alles andere ist eine Einheit aus der Qualifikations-Konfiguration. */
 export declare const POLICE_KEY = "@polizei";
 export interface WebApplyInput {
@@ -18,8 +19,9 @@ export interface WebApplyInput {
 export declare class WebApplyService {
     private readonly q;
     private readonly apps;
+    private readonly prisma;
     private readonly secret;
-    constructor(q: QualificationsService, apps: ApplicationsService);
+    constructor(q: QualificationsService, apps: ApplicationsService, prisma: PrismaService);
     private sign;
     private verify;
     /** Name, Einstellungen und Fragen einer Bewerbung (Polizei oder Einheit). */

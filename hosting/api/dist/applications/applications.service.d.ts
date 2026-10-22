@@ -195,6 +195,31 @@ export declare class ApplicationsService {
             name: string;
         }[];
     }>;
+    /**
+     * Angefangene, noch nicht eingereichte Bewerbungen (Fragen per Direktnachricht oder Link zum Web-Formular) –
+     * gleiche Filter wie die Liste (Art, Server, Suche); Bewerbungen für Einheiten nur mit qualifications.view.
+     */
+    inProgress(f: {
+        type?: string;
+        q?: string;
+        guildId?: string;
+    }, allowed: {
+        quali: boolean;
+    }): Promise<{
+        id: string;
+        typeKey: string;
+        typeName: string;
+        discordId: string;
+        discordName: string;
+        guildId: string | null;
+        source: string;
+        answered: number | null;
+        total: number | null;
+        startedAt: Date;
+        updatedAt: Date;
+        expiresAt: Date;
+        avatar: string | null;
+    }[]>;
     /** Bewerbung endgültig löschen (applications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */
     remove(actor: Actor, id: string): Promise<void>;
     get(id: string): Promise<{

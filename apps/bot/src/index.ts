@@ -750,6 +750,8 @@ function wireReady(client0: Client) {
   console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
   console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(', ') || 'keiner – Bot mit dem Link oben einladen'}`);
   void checkApi();
+  // laufende Bewerbungen lagen nur im Speicher – im Dashboard nicht mehr als „in Bearbeitung“ zeigen
+  void api.service('POST', '/bot/application-progress/reset').catch(() => undefined);
   const json = COMMANDS.map(toBuilder);
   // Befehle auf JEDEM Server des Bots registrieren (sofort sichtbar) – auch auf neuen Servern, sobald der Bot eingeladen wird.
   // DISCORD_GUILD_ID wird zusätzlich berücksichtigt (falls der Bot dort noch nicht im Cache ist).

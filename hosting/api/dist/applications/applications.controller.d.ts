@@ -54,6 +54,19 @@ declare const inboxQ: z.ZodObject<{
     pageSize?: number | undefined;
     q?: string | undefined;
 }>;
+declare const progressQ: z.ZodObject<{
+    type: z.ZodOptional<z.ZodString>;
+    q: z.ZodOptional<z.ZodString>;
+    guildId: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    type?: string | undefined;
+    guildId?: string | undefined;
+    q?: string | undefined;
+}, {
+    type?: string | undefined;
+    guildId?: string | undefined;
+    q?: string | undefined;
+}>;
 declare const listQ: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
@@ -154,7 +167,7 @@ export declare class ApplicationsController {
     analytics(q: z.infer<typeof analyticsQ>): Promise<{
         days: number;
         kpis: {
-            key: "pending" | "total" | "approvalRate" | "avgReviewMin" | "completionRate";
+            key: "total" | "pending" | "approvalRate" | "avgReviewMin" | "completionRate";
             value: number;
             change: number;
         }[];
@@ -231,6 +244,22 @@ export declare class ApplicationsController {
             name: string;
         }[];
     }>;
+    /** Angefangene, noch nicht eingereichte Bewerbungen („in Bearbeitung“) – Filter wie die Liste. */
+    inProgress(a: Actor, q: z.infer<typeof progressQ>): Promise<{
+        id: string;
+        typeKey: string;
+        typeName: string;
+        discordId: string;
+        discordName: string;
+        guildId: string | null;
+        source: string;
+        answered: number | null;
+        total: number | null;
+        startedAt: Date;
+        updatedAt: Date;
+        expiresAt: Date;
+        avatar: string | null;
+    }[]>;
     remove(a: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;

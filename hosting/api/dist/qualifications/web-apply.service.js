@@ -19,6 +19,8 @@ const errors_1 = require("../common/errors");
 const web_url_1 = require("../common/web-url");
 const env_1 = require("../config/env");
 const qualifications_service_1 = require("./qualifications.service");
+const application_progress_1 = require("../applications/application-progress");
+const prisma_service_1 = require("../prisma/prisma.service");
 /** Schlüssel der Polizei-Bewerbung (wie im Bot); alles andere ist eine Einheit aus der Qualifikations-Konfiguration. */
 exports.POLICE_KEY = '@polizei';
 /** Länge der Signatur (HMAC-SHA256, base64url). */
@@ -31,10 +33,12 @@ const SIG_LENGTH = 43;
 let WebApplyService = class WebApplyService {
     q;
     apps;
+    prisma;
     secret = (0, env_1.loadEnv)().SESSION_SECRET;
-    constructor(q, apps) {
+    constructor(q, apps, prisma) {
         this.q = q;
         this.apps = apps;
+        this.prisma = prisma;
     }
     sign(body) { return (0, node_crypto_1.createHmac)('sha256', this.secret).update(`webapply:${body}`).digest('base64url'); }
     verify(token) {
@@ -69,6 +73,8 @@ let WebApplyService = class WebApplyService {
         const now = Date.now();
         const claims = { k: d.unit, d: d.discordId, n: d.discordName, ...(d.guildId ? { g: d.guildId } : {}), ...(d.joinedAt ? { j: d.joinedAt.toISOString() } : {}), t: now, e: now + f.settings.timeLimitMinutes * 60_000 };
         const body = Buffer.from(JSON.stringify(claims)).toString('base64url');
+        // im Dashboard als „angefangen“ zeigen, bis abgeschickt wird oder der Link abläuft
+        await (0, application_progress_1.saveProgress)(this.prisma, { discordId: d.discordId, discordName: d.discordName, unit: d.unit, unitName: f.name, guildId: d.guildId, source: 'WEB', startedAt: new Date(now), expiresAt: new Date(claims.e) });
         return { url: (0, web_url_1.webUrl)(`/bewerbung/${body}${this.sign(body)}`), expiresAt: new Date(claims.e).toISOString(), timeLimit: (0, shared_1.formatMinutes)(f.settings.timeLimitMinutes) };
     }
     /** Öffentlich: Formular zum Link. */
@@ -105,6 +111,6 @@ let WebApplyService = class WebApplyService {
 exports.WebApplyService = WebApplyService;
 exports.WebApplyService = WebApplyService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [qualifications_service_1.QualificationsService, applications_service_1.ApplicationsService])
+    __metadata("design:paramtypes", [qualifications_service_1.QualificationsService, applications_service_1.ApplicationsService, prisma_service_1.PrismaService])
 ], WebApplyService);
 //# sourceMappingURL=web-apply.service.js.map

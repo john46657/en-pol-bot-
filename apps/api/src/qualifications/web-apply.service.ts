@@ -7,6 +7,8 @@ import { AppError } from '../common/errors';
 import { webUrl } from '../common/web-url';
 import { loadEnv } from '../config/env';
 import { QualificationsService } from './qualifications.service';
+import { saveProgress } from '../applications/application-progress';
+import { PrismaService } from '../prisma/prisma.service';
 
 /** Schlüssel der Polizei-Bewerbung (wie im Bot); alles andere ist eine Einheit aus der Qualifikations-Konfiguration. */
 export const POLICE_KEY = '@polizei';
@@ -25,7 +27,7 @@ export interface WebApplyInput { unit: string; discordId: string; discordName: s
 @Injectable()
 export class WebApplyService {
   private readonly secret = loadEnv().SESSION_SECRET;
-  constructor(private readonly q: QualificationsService, private readonly apps: ApplicationsService) {}
+  constructor(private readonly q: QualificationsService, private readonly apps: ApplicationsService, private readonly prisma: PrismaService) {}
 
   private sign(body: string) { return createHmac('sha256', this.secret).update(`webapply:${body}`).digest('base64url'); }
 
@@ -59,6 +61,8 @@ export class WebApplyService {
     const now = Date.now();
     const claims: Claims = { k: d.unit, d: d.discordId, n: d.discordName, ...(d.guildId ? { g: d.guildId } : {}), ...(d.joinedAt ? { j: d.joinedAt.toISOString() } : {}), t: now, e: now + f.settings.timeLimitMinutes * 60_000 };
     const body = Buffer.from(JSON.stringify(claims)).toString('base64url');
+    // im Dashboard als „angefangen“ zeigen, bis abgeschickt wird oder der Link abläuft
+    await saveProgress(this.prisma, { discordId: d.discordId, discordName: d.discordName, unit: d.unit, unitName: f.name, guildId: d.guildId, source: 'WEB', startedAt: new Date(now), expiresAt: new Date(claims.e) });
     return { url: webUrl(`/bewerbung/${body}${this.sign(body)}`), expiresAt: new Date(claims.e).toISOString(), timeLimit: formatMinutes(f.settings.timeLimitMinutes) };
   }
 
