@@ -15,6 +15,7 @@ import { checkAnswer, type FormField } from '@enrp/shared';
 import { DEFAULT_FORM } from '../applications/applications.service';
 import { cooldownLeft, decisionMessage, decisionRoles, LEFT_ACTOR, LEFT_REASON, submitRoles } from './decision';
 import { RobloxService } from '../persons/roblox.service';
+import { clearProgress } from '../applications/application-progress';
 import { applyPanelParts, formatMinutes, qualiPanelParts, type ApplicationPanelParts, type MessageSpec } from '@enrp/shared';
 
 const KEY = 'qualifications.config';
@@ -177,6 +178,7 @@ export class QualificationsService {
       await this.audit.record({ userId: user?.id ?? null }, { action: 'qualifications.application.submit', module: 'qualifications', entityType: 'QualificationApplication', entityId: row.id, after: { number: row.number, unit: unit.key, discordId: d.discordId } }, tx);
       return row;
     });
+    await clearProgress(this.prisma, d.discordId, unit.key); // nicht mehr „in Bearbeitung“
     // Eigener Channel der Einheit (falls eingestellt) – sonst der allgemeine Qualifications-Channel
     await this.discord.enqueue('qualifications', 'qualification.submitted', {
       id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers, pingRoleIds: unit.pingRoleIds, guildName: d.guildId ? (await this.discord.guilds()).find((g) => g.id === d.guildId)?.name ?? null : null,

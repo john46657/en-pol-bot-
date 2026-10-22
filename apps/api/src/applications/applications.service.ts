@@ -6,6 +6,7 @@ import { NotifyService } from '../notifications/notify.service';
 import { Injectable } from '@nestjs/common';
 import { APPLICATION_TRANSITIONS, ApplicationStatus, checkAnswer, isValidRobloxUserId, type FormField } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { clearProgress, POLICE_UNIT } from './application-progress';
 import { AuditService, Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { DiscordService } from '../discord/discord.service';
@@ -83,6 +84,7 @@ export class ApplicationsService {
       if (wait) throw new AppError('CONFLICT', `Du kannst dich erst in ${formatMinutes(wait)} erneut bewerben.`);
     }
     const a = await this.prisma.application.create({ data: { number: makeNumber('APP'), robloxUsername: d.robloxUsername, robloxUserId: d.robloxUserId, answers, grantRoleIds: [...grantRoleIds], guildId: meta.guildId ?? null, discordId: meta.discordId, discordName: meta.discordName, durationSec: meta.durationSec, joinedAt: meta.joinedAt, source: meta.discordId ? 'DISCORD' : 'WEB' } });
+    await clearProgress(this.prisma, meta.discordId, POLICE_UNIT); // nicht mehr „in Bearbeitung“
     // 🔔 Neue Bewerbung → alle, die Bewerbungen prüfen dürfen (im Server der Bewerbung)
     await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🔔 Neue Bewerbung ${a.number}`, body: `${d.robloxUsername}${meta.discordName ? ` · ${meta.discordName}` : ''}`, entityType: 'Application', entityId: a.id }, { guildId: meta.guildId ?? null });
     await this.audit.record({ userId: null }, { action: 'application.submit', module: 'applications', entityType: 'Application', entityId: a.id, after: { source: a.source } });
@@ -251,6 +253,26 @@ export class ApplicationsService {
       total: pTotal + qTotal, page: f.page, pageSize: f.pageSize,
       types: [...(allowed.police ? [{ key: 'police', name: pName }] : []), ...units.map((u) => ({ key: `q:${u.unit}`, name: u.unitName }))].filter((t, i, all) => all.findIndex((x) => x.key === t.key) === i),
     };
+  }
+
+  /**
+   * Angefangene, noch nicht eingereichte Bewerbungen (Fragen per Direktnachricht oder Link zum Web-Formular) –
+   * gleiche Filter wie die Liste (Art, Server, Suche); Bewerbungen für Einheiten nur mit qualifications.view.
+   */
+  async inProgress(f: { type?: string; q?: string; guildId?: string }, allowed: { quali: boolean }) {
+    const now = new Date();
+    await this.prisma.applicationProgress.deleteMany({ where: { expiresAt: { lte: now } } });
+    const q = f.q?.trim();
+    const unit = f.type === 'police' ? POLICE_UNIT : f.type?.startsWith('q:') ? f.type.slice(2) : undefined;
+    if (unit && unit !== POLICE_UNIT && !allowed.quali) return [];
+    const rows = await this.prisma.applicationProgress.findMany({
+      where: { ...(f.guildId ? { guildId: f.guildId } : {}), ...(unit ? { unit } : allowed.quali ? {} : { unit: POLICE_UNIT }), ...(q ? { OR: [{ discordName: { contains: q, mode: 'insensitive' as const } }, { discordId: q }] } : {}) },
+      orderBy: { startedAt: 'desc' }, take: 100,
+    });
+    const known = new Map(this.live.getMembers().members.filter((m) => m.avatar).map((m) => [m.id, m.avatar]));
+    const fetched = await this.access.avatars(rows.map((r) => r.discordId).filter((id) => !known.has(id)));
+    return rows.map((r) => ({ id: r.id, typeKey: r.unit === POLICE_UNIT ? 'police' : `q:${r.unit}`, typeName: r.unitName, discordId: r.discordId, discordName: r.discordName, guildId: r.guildId, source: r.source,
+      answered: r.answered, total: r.total, startedAt: r.startedAt, updatedAt: r.updatedAt, expiresAt: r.expiresAt, avatar: known.get(r.discordId) ?? fetched.get(r.discordId) ?? null }));
   }
 
   /** Bewerbung endgültig löschen (applications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */

@@ -30,6 +30,7 @@ const submit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().min(1).m
 const move = zod_1.z.object({ status: zod_1.z.enum(shared_1.APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Annehmen oder Ablehnen bitte über die Entscheidung.'), reason: zod_1.z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
 const inboxQ = pagination_1.pageQuery.extend({ pageSize: zod_1.z.coerce.number().int().min(1).max(100).default(20), type: zod_1.z.string().regex(/^(police|q:.{1,24})$/).optional(), status: zod_1.z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), order: zod_1.z.enum(['newest', 'oldest']).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+const progressQ = zod_1.z.object({ type: zod_1.z.string().regex(/^(police|q:.{1,24})$/).optional(), q: zod_1.z.string().max(100).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const listQ = pagination_1.pageQuery.extend({ status: zod_1.z.union([zod_1.z.enum(shared_1.APPLICATION_STATUSES), zod_1.z.literal('OPEN')]).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), order: zod_1.z.enum(['newest', 'oldest']).optional() });
 const guildQ = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const analyticsQ = zod_1.z.object({ type: zod_1.z.string().max(80).optional(), status: zod_1.z.enum(['APPROVED', 'PENDING', 'REJECTED']).optional(), reviewer: zod_1.z.string().uuid().optional(), days: zod_1.z.coerce.number().int().min(7).max(365).default(30) });
@@ -59,6 +60,11 @@ let ApplicationsController = class ApplicationsController {
     async inbox(a, q) {
         const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
         return this.a.inbox({ ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined }, { police: true, quali });
+    }
+    /** Angefangene, noch nicht eingereichte Bewerbungen („in Bearbeitung“) – Filter wie die Liste. */
+    async inProgress(a, q) {
+        const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
+        return this.a.inProgress({ ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined }, { quali });
     }
     remove(a, id) { return this.a.remove(a, id); }
     get(id) { return this.a.get(id); }
@@ -137,6 +143,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", Promise)
 ], ApplicationsController.prototype, "inbox", null);
+__decorate([
+    (0, common_1.Get)('in-progress'),
+    (0, decorators_1.RequirePermission)('applications.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(progressQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", Promise)
+], ApplicationsController.prototype, "inProgress", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.HttpCode)(204),

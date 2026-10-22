@@ -700,6 +700,27 @@ model Application {
   @@index([status])
 }
 
+/// Angefangene, noch nicht eingereichte Bewerbung (Fragen per DM oder Link zum Web-Formular) – Anzeige „in Bearbeitung“ im Dashboard
+model ApplicationProgress {
+  id          String   @id @default(uuid()) @db.Uuid
+  discordId   String
+  discordName String
+  /// `@polizei` (Polizei-Bewerbung) oder Schlüssel der Einheit / Bewerbungsart
+  unit        String
+  unitName    String
+  guildId     String?
+  source      String   @default("DISCORD") // DISCORD (Fragen per Direktnachricht) | WEB (Link zum Formular)
+  /// beantwortete Fragen / Fragen insgesamt (nur bei Bewerbung per Direktnachricht bekannt)
+  answered    Int?
+  total       Int?
+  startedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime
+
+  @@unique([discordId, unit])
+  @@index([expiresAt])
+}
+
 model AcademyCourse {
   id           String              @id @default(uuid()) @db.Uuid
   /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand

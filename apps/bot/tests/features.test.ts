@@ -151,6 +151,16 @@ describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
     await handleDirectMessage({ userId: ME, userName: 'oscar', content: '-', ...say });
     expect(out[3]!.embed.description).toContain('APP-1');
     expect(calls.at(-1)).toMatchObject({ kind: 'service', path: '/bot/application', body: { robloxUsername: 'Builderman', robloxUserId: '156', discordId: ME, answers: { age: '18' } } });
+    // Dashboard: angefangene Bewerbung mit Fortschritt (0/3 beim Start, dann je beantworteter Frage)
+    expect(calls.filter((c) => c.path === '/bot/application-progress').map((c) => (c.body as { answered: number; total: number; unit: string })).map((b) => `${b.unit} ${b.answered}/${b.total}`)).toEqual(['@polizei 0/3', '@polizei 1/3', '@polizei 2/3']);
+  });
+  it('cancelling removes the application from „in Bearbeitung“', async () => {
+    const { api, calls } = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: false } });
+    const { p } = fakePlatform();
+    const start = interactionFor('quali:start:@polizei')!;
+    await start.def.run({ ...ctx(api, { platform: p }), args: start.args });
+    await handleDirectMessage({ userId: ME, userName: 'oscar', content: 'abbrechen', api, sendDm: async () => undefined });
+    expect(calls.at(-1)).toMatchObject({ kind: 'service', method: 'DELETE', path: `/bot/application-progress?discordId=${ME}&unit=%40polizei` });
   });
   it('a „Roblox User“ question replaces the built-in one and checks the account on Roblox', async () => {
     const rbForm = [{ key: 'rb', label: 'Dein Roblox User', required: true, type: 'ROBLOX', maxLength: 20 }, { key: 'why', label: 'Warum?', required: true, maxLength: 100 }];

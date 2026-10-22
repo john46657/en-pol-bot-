@@ -82016,6 +82016,18 @@ var guildOf = /* @__PURE__ */ new Map();
 var sweepSessions = (now = Date.now()) => {
   for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
 };
+var report = (api2, userId, userName, s) => void api2.service("POST", "/bot/application-progress", {
+  discordId: userId,
+  discordName: userName,
+  unit: s.unit,
+  unitName: s.appName,
+  ...s.guildId ? { guildId: s.guildId } : {},
+  answered: s.answers.length,
+  total: s.questions.length,
+  startedAt: new Date(s.startedAt).toISOString(),
+  expiresAt: new Date(s.expiresAt).toISOString()
+}).catch(() => void 0);
+var unreport = (api2, userId, unit) => void api2.service("DELETE", `/bot/application-progress?discordId=${userId}&unit=${encodeURIComponent(unit)}`).catch(() => void 0);
 var CANCEL_WORD = "abbrechen";
 var getConfig = (api2, guildId) => api2.service("GET", `/bot/qualifications${guildId ? `?guildId=${guildId}` : ""}`);
 var field = (f2) => {
@@ -82168,11 +82180,13 @@ async function handleDirectMessage(a) {
   }
   if (s.expiresAt <= now) {
     sessions.delete(a.userId);
+    unreport(a.api, a.userId, s.unit);
     await say(`\u23F0 Die Zeit f\xFCr deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 6e4))}). Bitte starte sie \xFCber das Panel neu.`, COLORS.warning);
     return;
   }
   if (a.content.trim().toLowerCase() === CANCEL_WORD) {
     sessions.delete(a.userId);
+    unreport(a.api, a.userId, s.unit);
     await say("Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten.", COLORS.neutral);
     return;
   }
@@ -82222,6 +82236,7 @@ _Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Nam
 async function proceed(o, s) {
   const say = (description, color3 = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip2(s.unitName, 256), description, color: color3 }, buttons });
   if (s.answers.length < s.questions.length) {
+    report(o.api, o.userId, o.userName, s);
     await o.sendDm(o.userId, questionMessage(s));
     return;
   }
@@ -82232,6 +82247,7 @@ async function proceed(o, s) {
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
       sessions.delete(o.userId);
+      unreport(o.api, o.userId, s.unit);
       await say(e.status === 409 ? "Du hast hierf\xFCr bereits eine offene Bewerbung. Bitte warte auf die Entscheidung." : "Die Fragen wurden inzwischen ge\xE4ndert. Bitte starte die Bewerbung neu.", COLORS.warning);
       return;
     }
@@ -82359,7 +82375,9 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
 \u2705 ${plain2(answerText(value))}`, 4e3) }] } };
       }
       if (action === "cancel") {
+        const running2 = sessions.get(c.discordId);
         const had = sessions.delete(c.discordId);
+        if (running2) unreport(c.api, c.discordId, running2.unit);
         return okReply(had ? "Bewerbung abgebrochen. Du kannst jederzeit \xFCber das Panel neu starten." : "Es l\xE4uft keine Bewerbung.");
       }
       if (action === "decide") {
@@ -82389,6 +82407,7 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
         sessions.delete(c.discordId);
         return errorReply("Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.");
       }
+      report(c.api, c.discordId, c.userName ?? c.discordId, s);
       return okReply("Los geht\u2019s \u2013 beantworte die Fragen einfach hier im Chat.");
     } catch (e) {
       if (e instanceof BotApiError && e.status === 409) return errorReply("\xDCber diese Bewerbung wurde bereits entschieden.");
@@ -83431,7 +83450,7 @@ function discordErrorText(e) {
   if (x?.name === "RateLimitError") return describeDiscordError({ status: 429 });
   return describeDiscordError({ status: typeof x?.status === "number" ? x.status : void 0, code: typeof x?.code === "number" ? x.code : void 0, message: typeof x?.message === "string" ? x.message : String(e) });
 }
-async function report(api2, path3, body, log) {
+async function report2(api2, path3, body, log) {
   for (let i = 1; i <= 3; i++) {
     try {
       await api2.service("POST", path3, body);
@@ -83456,23 +83475,23 @@ async function runMbSend(api2, sendId, discord, log = console.log) {
     stop = e instanceof Error ? e.message : String(e);
   }
   if (stop) {
-    await report(api2, `${base}/items/${s.items[0]?.position ?? 0}`, { ok: false, error: stop }, log);
-    await report(api2, `${base}/finish`, { error: "Nicht gesendet." }, log);
+    await report2(api2, `${base}/items/${s.items[0]?.position ?? 0}`, { ok: false, error: stop }, log);
+    await report2(api2, `${base}/finish`, { error: "Nicht gesendet." }, log);
     return;
   }
   for (const item of s.items) {
     try {
       const msg = await discord.send(channelId, item.payload);
-      await report(api2, `${base}/items/${item.position}`, { ok: true, messageId: msg.id }, log);
+      await report2(api2, `${base}/items/${item.position}`, { ok: true, messageId: msg.id }, log);
     } catch (e) {
       const error = discordErrorText(e);
       log(`message builder ${sendId}: message ${item.position + 1} failed: ${error}`);
-      await report(api2, `${base}/items/${item.position}`, { ok: false, error }, log);
+      await report2(api2, `${base}/items/${item.position}`, { ok: false, error }, log);
       stop = "Nicht gesendet, weil eine vorherige Nachricht fehlschlug.";
       break;
     }
   }
-  await report(api2, `${base}/finish`, stop ? { error: stop } : {}, log);
+  await report2(api2, `${base}/finish`, stop ? { error: stop } : {}, log);
 }
 var MB_INTERACTION = {
   prefix: "mb",
@@ -83655,8 +83674,8 @@ var DUTY_REPORT_INTERACTION = {
         return openModal(c, t3, mode, id3, page, d2.values);
       }
       if (action !== "sub") return errorReply("Unbekannte Aktion.");
-      const { t: t2, report: report2 } = await load(c, mode, id3);
-      const d = drafts.get(k) ?? { values: { ...report2?.values ?? {} }, at: Date.now() };
+      const { t: t2, report: report3 } = await load(c, mode, id3);
+      const d = drafts.get(k) ?? { values: { ...report3?.values ?? {} }, at: Date.now() };
       d.values = { ...d.values, ...c.fields ?? {} };
       d.at = Date.now();
       drafts.set(k, d);
@@ -87986,6 +88005,7 @@ function wireReady(client0) {
     console.log(`Bot einladen: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot%20applications.commands&permissions=8`);
     console.log(`Server (${c.guilds.cache.size}): ${[...c.guilds.cache.values()].map((g) => g.name).join(", ") || "keiner \u2013 Bot mit dem Link oben einladen"}`);
     void checkApi();
+    void api.service("POST", "/bot/application-progress/reset").catch(() => void 0);
     const json = COMMANDS.map(toBuilder);
     try {
       await c.application.commands.set([]);

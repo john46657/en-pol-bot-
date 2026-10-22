@@ -15,7 +15,7 @@ import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationSettingsEditor, withDefaults, type AppCommon } from '../components/ApplicationSettings';
 import { PanelSendBox } from '../components/PanelSendBox';
 import { fromDraft, newUnit, toDraft, UnitsEditor, unitsComplete, type DraftUnit, type Unit } from '../components/UnitsEditor';
-import { Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
 /** Eine Zeile der gemeinsamen Liste: Polizei-Bewerbung oder Bewerbung für eine Einheit (Flugstaffel, GSG9 …). */
 interface InboxRow {
@@ -24,6 +24,8 @@ interface InboxRow {
   decisionReason: string | null; decidedByName: string | null; guildId: string | null; avatar: string | null;
 }
 interface Inbox extends Page<InboxRow> { types: { key: string; name: string }[] }
+/** Angefangene, noch nicht eingereichte Bewerbung (Fragen per Direktnachricht oder Link zum Web-Formular). */
+interface ProgressRow { id: string; typeKey: string; typeName: string; discordId: string; discordName: string; guildId: string | null; source: 'DISCORD' | 'WEB'; answered: number | null; total: number | null; startedAt: string; updatedAt: string; expiresAt: string; avatar: string | null }
 interface PoliceCfg extends Partial<AppCommon> { title: string; description: string; name?: string; panelChannelId?: string }
 interface QualiConfig { title: string; intro: string; units: Unit[]; police: PoliceCfg; policeForm: FormField[]; own?: boolean; panelPosted?: { channelId: string; messageId: string } | null }
 const OPEN = ['SUBMITTED', 'SCREENING', 'INTERVIEW', 'PENDING_DECISION', 'OPEN'];
@@ -53,6 +55,9 @@ export function Applications() {
   const [type, setType] = useState('');
   const [remove, setRemove] = useState<InboxRow>();
   const list = useQuery({ queryKey: ['applications-cards', type, status, q, page, pageSize, order, server], queryFn: () => api<Inbox>('/applications/inbox', { query: { type: type || undefined, status: status || undefined, q: q.trim() || undefined, page, pageSize, order, guildId: server } }), enabled: tab === 'Bewerbungen' });
+  // angefangene Bewerbungen: nur bei „Offen“/„Alle“, regelmäßig aktualisiert (Fortschritt Frage für Frage)
+  const showProgress = status === 'OPEN' || status === '';
+  const progress = useQuery({ queryKey: ['applications-progress', type, q, server], queryFn: () => api<ProgressRow[]>('/applications/in-progress', { query: { type: type || undefined, q: q.trim() || undefined, guildId: server } }), enabled: tab === 'Bewerbungen' && showProgress, refetchInterval: 30_000 });
   const refresh = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['applications-cards'] }); };
   const decide = useMutation({
     mutationFn: (v: { row: InboxRow; status: 'ACCEPTED' | 'REJECTED'; reason?: string }) => v.row.kind === 'police'
@@ -86,6 +91,7 @@ export function Applications() {
                 <FilterBox label="Anzahl"><Select aria-label="Anzahl pro Seite" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>{PAGE_SIZES.map((n) => <option key={n} value={n}>{n} / Seite</option>)}</Select></FilterBox>
               </div>
             </div>
+            {showProgress && !!progress.data?.length && <InProgress rows={progress.data} />}
             {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über Discord (/bewerbungspanel) oder die Webseite /apply." /> : (
               <div className="grid gap-2">{list.data.items.map((a) => {
                 const isOpen = expanded.has(a.id);
@@ -141,6 +147,32 @@ export function Applications() {
         {tab === 'Einrichtung' && manage && <PoliceSetup />}
       </div>
     </>
+  );
+}
+
+/** Wer gerade eine Bewerbung ausfüllt (angefangen, noch nicht eingereicht) – mit Fortschritt. */
+function InProgress({ rows }: { rows: ProgressRow[] }) {
+  return (
+    <section aria-label="Angefangene Bewerbungen" className="mb-4 grid gap-2">
+      <p className="text-sm text-muted">✏️ {rows.length === 1 ? '1 Bewerbung wird' : `${rows.length} Bewerbungen werden`} gerade ausgefüllt (noch nicht eingereicht)</p>
+      {rows.map((p) => {
+        const step = p.source === 'DISCORD' && p.total ? `Frage ${Math.min((p.answered ?? 0) + 1, p.total)}/${p.total}` : 'Link zum Web-Formular erhalten';
+        return (
+          <div key={p.id} className="flex items-center gap-3 rounded-lg border border-dashed border-warning/50 bg-panel p-3">
+            <Avatar src={p.avatar} name={p.discordName} size={40} />
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-2 font-medium">{p.discordName}s Bewerbung für „{p.typeName}“ <Badge tone="warning">In Bearbeitung</Badge><GuildTag id={p.guildId} /></span>
+              <span className="block truncate text-xs text-muted">{p.discordId} · {step} · angefangen {fmt(p.startedAt)} ({ago(p.startedAt)}) · läuft ab {fmt(p.expiresAt)}</span>
+              {p.source === 'DISCORD' && !!p.total && (
+                <span role="progressbar" aria-label={`Fortschritt: ${p.answered ?? 0} von ${p.total} Fragen beantwortet`} aria-valuemin={0} aria-valuemax={p.total} aria-valuenow={p.answered ?? 0} className="mt-1.5 block h-1 w-full max-w-xs overflow-hidden rounded bg-panel-2">
+                  <span className="block h-full bg-warning" style={{ width: `${Math.round(((p.answered ?? 0) / p.total) * 100)}%` }} />
+                </span>
+              )}
+            </span>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 

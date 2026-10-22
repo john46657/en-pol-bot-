@@ -12,10 +12,11 @@ const persons_module_1 = require("../persons/persons.module");
 const applications_controller_1 = require("./applications.controller");
 const applications_service_1 = require("./applications.service");
 const applications_analytics_service_1 = require("./applications-analytics.service");
+const application_progress_1 = require("./application-progress");
 let ApplicationsModule = class ApplicationsModule {
 };
 exports.ApplicationsModule = ApplicationsModule;
 exports.ApplicationsModule = ApplicationsModule = __decorate([
-    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [applications_controller_1.ApplicationsController], providers: [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService], exports: [applications_service_1.ApplicationsService] })
+    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [applications_controller_1.ApplicationsController, application_progress_1.BotApplicationProgressController], providers: [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService], exports: [applications_service_1.ApplicationsService] })
 ], ApplicationsModule);
 //# sourceMappingURL=applications.module.js.map

@@ -28,6 +28,7 @@ const shared_1 = require("@enrp/shared");
 const applications_service_1 = require("../applications/applications.service");
 const decision_1 = require("./decision");
 const roblox_service_1 = require("../persons/roblox.service");
+const application_progress_1 = require("../applications/application-progress");
 const shared_2 = require("@enrp/shared");
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
@@ -208,6 +209,7 @@ let QualificationsService = class QualificationsService {
             await this.audit.record({ userId: user?.id ?? null }, { action: 'qualifications.application.submit', module: 'qualifications', entityType: 'QualificationApplication', entityId: row.id, after: { number: row.number, unit: unit.key, discordId: d.discordId } }, tx);
             return row;
         });
+        await (0, application_progress_1.clearProgress)(this.prisma, d.discordId, unit.key); // nicht mehr „in Bearbeitung“
         // Eigener Channel der Einheit (falls eingestellt) – sonst der allgemeine Qualifications-Channel
         await this.discord.enqueue('qualifications', 'qualification.submitted', {
             id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers, pingRoleIds: unit.pingRoleIds, guildName: d.guildId ? (await this.discord.guilds()).find((g) => g.id === d.guildId)?.name ?? null : null,
