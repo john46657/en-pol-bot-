@@ -1,5 +1,7 @@
 # Support-Ticket-System
 
+> **Derzeit ausgeschaltet:** Das Modul ist global deaktiviert und ausgeblendet (`off: true` in `packages/shared/src/modules.ts`). Code und Daten bleiben erhalten; Menüpunkt, Rechte (`ticket.*`), API-Zugriffe mit Server und der Befehl `/support` sind gesperrt. Zum Einschalten `off: true` entfernen.
+
 Ein komplett im Dashboard konfigurierbares Ticket-System für den Discord-Bot. **Nichts ist fest eingebaut** – Panels, Kategorien, Fragen, Buttons, Texte, Rollen, Channels, Status, Prioritäten und Schließgründe liegen in der Datenbank und werden unter **Operations → Support Tickets** verwaltet. Der Bot führt nur aus, was das System entscheidet. Rechte und Protokoll prüft bzw. schreibt immer das System.
 
 *Hinweis:* „Tickets“ (`/tickets`) im System sind Strafzettel; Support-Tickets heißen intern `SupportTicket` und leben unter `/support-tickets`.

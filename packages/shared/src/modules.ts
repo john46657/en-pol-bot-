@@ -2,8 +2,9 @@
  * Modul-Katalog für den Multi-Server-Betrieb: jedes Modul kann je Discord-Server an- oder ausgeschaltet werden.
  * Die Zuordnung Recht → Modul läuft über das Präfix des Rechts (`cad.view` → Modul `cad`). Systemmodule sind immer an.
  * Abhängigkeiten nur dort, wo es fachlich wirklich eine gibt (MDT funktioniert ohne CAD).
+ * `off`: auf allen Servern ausgeschaltet und ausgeblendet (Code und Daten bleiben erhalten); zum Einschalten `off` entfernen.
  */
-export interface ModuleDef { key: string; name: string; description: string; system?: boolean; dependsOn?: string[]; permissionPrefixes: string[] }
+export interface ModuleDef { key: string; name: string; description: string; system?: boolean; off?: boolean; dependsOn?: string[]; permissionPrefixes: string[] }
 
 export const MODULES = [
   { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules'] },
@@ -15,7 +16,7 @@ export const MODULES = [
   { key: 'investigations', name: 'Beschwerden', description: 'Beschwerden', permissionPrefixes: ['complaints'] },
   { key: 'personnel', name: 'Personal', description: 'Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern', permissionPrefixes: ['personnel', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'leave'] },
   { key: 'applications', name: 'Bewerbungen', description: 'Bewerbungen, Qualifikationen, Academy, Team-Chance', permissionPrefixes: ['applications', 'qualifications', 'academy', 'teamchance'] },
-  { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
+  { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', off: true, permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },
   { key: 'message_builder', name: 'Discord Message Builder', description: 'Nachrichten und Embeds bauen, Vorlagen, Versand über den Bot, Versandhistorie', permissionPrefixes: ['messagebuilder'] },
   { key: 'communication', name: 'Kommunikation', description: 'Nachrichten, Funk-Codes, Funk-Whitelist', permissionPrefixes: ['communication', 'radio', 'radiowhitelist'] },
@@ -24,6 +25,8 @@ export const MODULES = [
 export type ModuleKey = (typeof MODULES)[number]['key'];
 export const MODULE_KEYS: readonly string[] = MODULES.map((m) => m.key);
 export const moduleDef = (key: string): ModuleDef | undefined => (MODULES as readonly ModuleDef[]).find((m) => m.key === key);
+/** Global ausgeschaltete Module (`off`) – gelten auf jedem Server als abgeschaltet. */
+export const OFF_MODULES: readonly string[] = (MODULES as readonly ModuleDef[]).filter((m) => m.off).map((m) => m.key);
 
 /** Modul eines Rechts (`*`/unbekannt → core). */
 export function moduleOfPermission(permission: string): string {
@@ -36,6 +39,7 @@ export function moduleDependencyError(key: string, enabled: boolean, state: Reco
   const def = moduleDef(key);
   if (!def) return 'Unbekanntes Modul.';
   if (def.system && !enabled) return `„${def.name}“ ist ein Systemmodul und kann nicht deaktiviert werden.`;
+  if (def.off && enabled) return `„${def.name}“ ist global ausgeschaltet.`;
   if (enabled) {
     const missing = (def.dependsOn ?? []).filter((d) => state[d] === false);
     if (missing.length) return `„${def.name}“ braucht: ${missing.map((m) => moduleDef(m)?.name ?? m).join(', ')}.`;

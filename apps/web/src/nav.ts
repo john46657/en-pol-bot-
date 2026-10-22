@@ -1,3 +1,4 @@
+import { moduleOfPermission, OFF_MODULES } from '@enrp/shared';
 import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
@@ -35,7 +36,6 @@ export const NAV: NavItem[] = [
   { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Records' },
   { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Records' },
   grp('Berichte', FileText, 'Records', [
-    { path: '/reports', label: 'Einsatzberichte', perm: 'reports.view' },
     { path: '/duty-reports', label: 'Tages-/Wochenberichte', perm: 'dutyreports.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
@@ -84,7 +84,9 @@ export const NAV: NavItem[] = [
 ];
 type Can = (p: string) => boolean;
 /** Sichtbar = Modul-Recht und (falls gesetzt) Bereichs-Recht. Nur Komfort – die API prüft selbst. */
-const allowed = (n: { perm?: string; area?: string }, can: Can) => (!n.perm || can(n.perm)) && (!n.area || can(n.area));
+const allowed = (n: { perm?: string; area?: string }, can: Can) => !isOff(n.perm) && (!n.perm || can(n.perm)) && (!n.area || can(n.area));
+/** Gehört das Recht zu einem global ausgeschalteten Modul? Dann bleibt der Menüpunkt ausgeblendet (auch unter „Alle Server“). */
+const isOff = (perm?: string) => !!perm && perm.split('|').every((p) => OFF_MODULES.includes(moduleOfPermission(p)));
 export const visibleTabs = (n: NavItem, can: Can) => (n.tabs ?? []).filter((t) => allowed(t, can));
 export const visible = (n: NavItem, can: Can) => (n.tabs ? visibleTabs(n, can).length > 0 : allowed(n, can));
 /** Ziel des Menüpunkts: bei Reitern der erste erlaubte. */

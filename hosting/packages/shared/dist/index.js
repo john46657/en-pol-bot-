@@ -107,6 +107,7 @@ __export(index_exports, {
   MODULE_KEYS: () => MODULE_KEYS,
   MUSIC_TRACKS: () => MUSIC_TRACKS,
   NO_TICKET_BUTTON: () => NO_TICKET_BUTTON,
+  OFF_MODULES: () => OFF_MODULES,
   PERIOD_LABEL: () => PERIOD_LABEL,
   PERMISSION_CATALOG: () => PERMISSION_CATALOG,
   POLICE_APPLICATION_KEY: () => POLICE_APPLICATION_KEY,
@@ -1870,13 +1871,14 @@ var MODULES = [
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
   { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
-  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
+  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", off: true, permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var moduleDef = (key3) => MODULES.find((m) => m.key === key3);
+var OFF_MODULES = MODULES.filter((m) => m.off).map((m) => m.key);
 function moduleOfPermission(permission) {
   const prefix = permission.split(".")[0] ?? "";
   return MODULES.find((m) => m.permissionPrefixes.includes(prefix))?.key ?? "core";
@@ -1885,6 +1887,7 @@ function moduleDependencyError(key3, enabled, state) {
   const def = moduleDef(key3);
   if (!def) return "Unbekanntes Modul.";
   if (def.system && !enabled) return `\u201E${def.name}\u201C ist ein Systemmodul und kann nicht deaktiviert werden.`;
+  if (def.off && enabled) return `\u201E${def.name}\u201C ist global ausgeschaltet.`;
   if (enabled) {
     const missing = (def.dependsOn ?? []).filter((d) => state[d] === false);
     if (missing.length) return `\u201E${def.name}\u201C braucht: ${missing.map((m) => moduleDef(m)?.name ?? m).join(", ")}.`;
@@ -3674,6 +3677,7 @@ function slaState(t2, now = /* @__PURE__ */ new Date()) {
   MODULE_KEYS,
   MUSIC_TRACKS,
   NO_TICKET_BUTTON,
+  OFF_MODULES,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
   POLICE_APPLICATION_KEY,

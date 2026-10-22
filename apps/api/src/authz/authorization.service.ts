@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ALL_PERMISSIONS, moduleOfPermission, resolvePermission, type PermissionKey } from '@enrp/shared';
+import { ALL_PERMISSIONS, moduleOfPermission, OFF_MODULES, resolvePermission, type PermissionKey } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { PermissionService } from './permission.service';
@@ -52,12 +52,12 @@ export class AuthorizationService {
     return row;
   }
 
-  /** Abgeschaltete Module eines Servers (ohne Eintrag = an). */
+  /** Abgeschaltete Module eines Servers (ohne Eintrag = an; global ausgeschaltete immer). */
   async disabledModules(serverId: string): Promise<Set<string>> {
     const c = this.modules.get(serverId);
     if (c && Date.now() - c.at < TTL) return c.disabled;
     const rows = await this.prisma.serverModuleSetting.findMany({ where: { serverId, enabled: false }, select: { moduleKey: true } });
-    const disabled = new Set(rows.map((r) => r.moduleKey));
+    const disabled = new Set([...rows.map((r) => r.moduleKey), ...OFF_MODULES]);
     this.modules.set(serverId, { at: Date.now(), disabled });
     return disabled;
   }

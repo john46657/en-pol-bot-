@@ -56,13 +56,13 @@ let AuthorizationService = class AuthorizationService {
         this.servers.set(guildId, { at: Date.now(), row });
         return row;
     }
-    /** Abgeschaltete Module eines Servers (ohne Eintrag = an). */
+    /** Abgeschaltete Module eines Servers (ohne Eintrag = an; global ausgeschaltete immer). */
     async disabledModules(serverId) {
         const c = this.modules.get(serverId);
         if (c && Date.now() - c.at < TTL)
             return c.disabled;
         const rows = await this.prisma.serverModuleSetting.findMany({ where: { serverId, enabled: false }, select: { moduleKey: true } });
-        const disabled = new Set(rows.map((r) => r.moduleKey));
+        const disabled = new Set([...rows.map((r) => r.moduleKey), ...shared_1.OFF_MODULES]);
         this.modules.set(serverId, { at: Date.now(), disabled });
         return disabled;
     }
