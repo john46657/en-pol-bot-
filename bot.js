@@ -83526,7 +83526,7 @@ var sweep = () => {
 };
 var PAGE = 5;
 var pages = (t2) => Math.max(1, Math.ceil(t2.fields.length / PAGE));
-var hint = (f2) => (f2.type === "select" && f2.options.length ? `z. B. ${f2.options.join(" / ")}` : f2.type === "number" ? "Zahl" : f2.placeholder).slice(0, 100);
+var hint = (f2) => (f2.type === "select" && f2.options.length ? `z. B. ${f2.options.join(" / ")}` : f2.type === "number" ? "Zahl ab 0, z. B. 3" : f2.placeholder).slice(0, 100);
 function modal(t2, mode, id3, page, values) {
   const n = pages(t2);
   return {
@@ -83680,12 +83680,19 @@ var DUTY_REPORT_INTERACTION = {
       d.at = Date.now();
       drafts.set(k, d);
       if (page + 1 < pages(t2)) return { ephemeral: true, content: `Seite ${page + 1} von ${pages(t2)} gespeichert.`, buttons: [{ id: `drep:next:${mode}:${id3}:${page + 1}`, label: `Weiter (${page + 2}/${pages(t2)})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
-      drafts.delete(k);
+      const fix = (e) => {
+        const r2 = mapError(e);
+        return e instanceof BotApiError && e.status === 400 ? { ...r2, buttons: [{ id: `drep:next:${mode}:${id3}:0`, label: "Eingaben korrigieren", emoji: "\u270F\uFE0F", style: "primary" }] } : r2;
+      };
       if (mode === "e") {
-        const r2 = await c.api.asUser(c.discordId, "PATCH", `/duty-reports/${id3}`, { values: d.values });
+        const r2 = await c.api.asUser(c.discordId, "PATCH", `/duty-reports/${id3}`, { values: d.values }).catch((e) => fix(e));
+        if (!("number" in r2)) return r2;
+        drafts.delete(k);
         return okReply(`Bericht **${r2.number}** aktualisiert \u2013 auch im Dashboard und in Discord.`);
       }
-      const r = await c.api.asUser(c.discordId, "POST", "/duty-reports", { templateId: id3, values: d.values, source: "DISCORD", guildId: c.guildId ?? null });
+      const r = await c.api.asUser(c.discordId, "POST", "/duty-reports", { templateId: id3, values: d.values, source: "DISCORD", guildId: c.guildId ?? null }).catch((e) => fix(e));
+      if (!("number" in r)) return r;
+      drafts.delete(k);
       return okReply(r.merged ? `F\xFCr diesen Zeitraum gab es schon deinen Bericht **${r.number}** \u2013 er wurde aktualisiert.` : `Bericht **${r.number}** eingereicht. Du findest ihn auch im Dashboard; mit \u201EBearbeiten\u201C kannst du ihn \xE4ndern.`);
     } catch (e) {
       return e instanceof Error && !("status" in e) ? errorReply(e.message) : mapError(e);
@@ -83697,13 +83704,28 @@ var DUTY_REPORT_INTERACTION = {
 function parseGermanDate(text, now = /* @__PURE__ */ new Date()) {
   const m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*(?:,?\s*(?:um\s*)?(\d{1,2})[:.](\d{2}))?\s*(?:uhr)?\s*$/i.exec(text);
   if (!m) return null;
+  if (m[3] && m[3].length === 3) return null;
   const year = m[3] ? m[3].length === 2 ? 2e3 + Number(m[3]) : Number(m[3]) : now.getFullYear();
   const [d, mo, h, mi] = [Number(m[1]), Number(m[2]), Number(m[4] ?? 18), Number(m[5] ?? 0)];
   const guess = Date.UTC(year, mo - 1, d, h, mi);
   if (new Date(guess).getUTCDate() !== d || h > 23 || mi > 59) return null;
   const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
   const asBerlin = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
-  return new Date(guess - (asBerlin - guess)).toISOString();
+  const iso = new Date(guess - (asBerlin - guess)).toISOString();
+  if (!m[3] && Date.parse(iso) < now.getTime() - 864e5) return parseGermanDate(`${d}.${mo}.${year + 1} ${h}:${String(mi).padStart(2, "0")}`, now);
+  return iso;
+}
+function checkTrainingTime(text, now = /* @__PURE__ */ new Date()) {
+  const t2 = text.trim();
+  if (!t2) return { error: "Bitte angeben, wann die Ausbildung stattfindet \u2013 z. B. `08.10.2026 18:30`." };
+  const startsAt = parseGermanDate(t2, now);
+  if (!startsAt) {
+    return { error: /^\s*\d{1,2}\.\d{1,2}\./.test(t2) ? `\u201E${t2.slice(0, 20)}\u201C ist kein g\xFCltiges Datum bzw. keine g\xFCltige Uhrzeit (Tag, Monat und Uhrzeit 00:00\u201323:59 pr\xFCfen). Beispiel: \`08.10.2026 18:30\`` : `Den Zeitpunkt \u201E${t2.slice(0, 20)}\u201C verstehe ich nicht. Bitte so angeben: \`TT.MM.JJJJ HH:MM\`, z. B. \`08.10.2026 18:30\` (deutsche Zeit).` };
+  }
+  const at = Date.parse(startsAt);
+  if (at < now.getTime()) return { error: `Der Zeitpunkt <t:${Math.floor(at / 1e3)}:F> liegt in der Vergangenheit \u2013 bitte einen zuk\xFCnftigen Termin angeben.` };
+  if (at > now.getTime() + 366 * 864e5) return { error: "Der Termin liegt mehr als ein Jahr in der Zukunft \u2013 bitte das Jahr pr\xFCfen." };
+  return { startsAt };
 }
 var TRAINING_COMMANDS = [{
   name: "ausbildung",
@@ -83741,10 +83763,13 @@ var TRAINING_INTERACTION = {
       }
       if (action === "new") {
         const f2 = c.fields ?? {};
-        const startsAt = parseGermanDate(f2.when ?? "");
-        if (!startsAt) return errorReply("Zeitpunkt bitte so angeben: 08.10.2026 18:30");
-        const s = await c.api.asUser(c.discordId, "POST", "/hr/training-sessions", { title: (f2.title ?? "").trim(), startsAt, forRank: f2.rank || null, duration: f2.duration || null, notes: f2.notes || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
-        return okReply(`Ausbildung angesetzt (**${s.number}**) \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
+        const title = (f2.title ?? "").trim();
+        if (title.length < 2) return errorReply("Bitte einen Titel mit mindestens 2 Zeichen angeben, z. B. \u201EGrundausbildung\u201C.");
+        const when = checkTrainingTime(f2.when ?? "");
+        if ("error" in when) return errorReply(when.error);
+        const unix2 = Math.floor(Date.parse(when.startsAt) / 1e3);
+        const s = await c.api.asUser(c.discordId, "POST", "/hr/training-sessions", { title, startsAt: when.startsAt, forRank: f2.rank?.trim() || null, duration: f2.duration?.trim() || null, notes: f2.notes?.trim() || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
+        return okReply(`Ausbildung **${plain2(title)}** angesetzt (**${s.number}**) f\xFCr <t:${unix2}:F> (<t:${unix2}:R>)${f2.duration?.trim() ? ` \xB7 Dauer: ${plain2(f2.duration.trim())}` : ""} \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
       }
       return errorReply("Unbekannte Aktion.");
     } catch (e) {

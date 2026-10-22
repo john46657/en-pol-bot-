@@ -44,9 +44,14 @@ export type ReportField = z.infer<typeof reportFieldSchema>;
 
 export const PERIOD_LABEL: Record<ReportTemplate['period'], string> = { DAILY: 'Tagesbericht', WEEKLY: 'Wochenbericht', FREE: 'Bericht' };
 
-/** Beginn des Zeitraums (Europe/Berlin-nah: lokale Mitternacht des Servers; Woche ab Montag). */
-export function periodStart(period: ReportTemplate['period'], d = new Date()): Date {
-  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+/**
+ * Beginn des Zeitraums als UTC-Mitternacht des Kalendertags in Europe/Berlin (Woche ab Montag).
+ * Früher galt der UTC-Kalendertag – ein Bericht montags um 00:30 deutscher Zeit landete so in der Vorwoche
+ * (und überschrieb dort bei „ein Bericht je Zeitraum“ den vorhandenen). Das Speicherformat bleibt gleich.
+ */
+export function periodStart(period: ReportTemplate['period'], d = new Date(), timeZone = 'Europe/Berlin'): Date {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d).map((x) => [x.type, x.value]));
+  const x = new Date(Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day)));
   if (period === 'WEEKLY') x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
   return x;
 }
@@ -119,7 +124,7 @@ export function cleanReportValues(t: ReportTemplate, input: Record<string, unkno
   for (const f of t.fields) {
     const v = String(input[f.id] ?? '').trim().slice(0, f.maxLength);
     if (f.required && !v) return { error: `„${f.label}“ fehlt.` };
-    if (v && f.type === 'number' && !/^-?\d+([.,]\d+)?$/.test(v)) return { error: `„${f.label}“ muss eine Zahl sein.` };
+    if (v && f.type === 'number' && !/^\d+([.,]\d+)?$/.test(v)) return { error: /^-\d/.test(v) ? `„${f.label}“ darf nicht negativ sein (eingegeben: ${v}).` : `„${f.label}“ muss eine Zahl ab 0 sein, z. B. 3 (eingegeben: ${v.slice(0, 20)}).` };
     if (v && f.type === 'select' && f.options.length && !f.options.includes(v)) return { error: `„${f.label}“: bitte eine der Möglichkeiten wählen (${f.options.join(', ')}).` };
     values[f.id] = v;
   }
