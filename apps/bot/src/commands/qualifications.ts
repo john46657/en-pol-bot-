@@ -55,6 +55,14 @@ const guildOf = new Map<string, string>();
 export const resetSessions = () => { sessions.clear(); joinedAtOf.clear(); guildOf.clear(); };
 export const sweepSessions = (now = Date.now()) => { for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k); };
 
+/** Fortschritt ans System melden (Dashboard: Bewerbung „in Bearbeitung“) – Fehler egal, die Bewerbung läuft weiter. */
+const report = (api: Api, userId: string, userName: string, s: Session) => void api.service('POST', '/bot/application-progress', {
+  discordId: userId, discordName: userName, unit: s.unit, unitName: s.appName, ...(s.guildId ? { guildId: s.guildId } : {}),
+  answered: s.answers.length, total: s.questions.length, startedAt: new Date(s.startedAt).toISOString(), expiresAt: new Date(s.expiresAt).toISOString(),
+}).catch(() => undefined);
+/** Abgebrochen/abgelaufen: nicht mehr „in Bearbeitung“. */
+const unreport = (api: Api, userId: string, unit: string) => void api.service('DELETE', `/bot/application-progress?discordId=${userId}&unit=${encodeURIComponent(unit)}`).catch(() => undefined);
+
 /** Abbrechen während der Fragen: einfach „abbrechen“ schreiben (kein Button unter den Fragen). */
 const CANCEL_WORD = 'abbrechen';
 /** Einstellungen des Servers (ohne eigene: die gemeinsamen). */
@@ -204,11 +212,13 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
   if (!s) { await say('Du hast gerade keine laufende Bewerbung. Starte eine über das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).', COLORS.neutral); return; }
   if (s.expiresAt <= now) {
     sessions.delete(a.userId);
+    unreport(a.api, a.userId, s.unit);
     await say(`⏰ Die Zeit für deine Bewerbung ist abgelaufen (${formatMinutes(Math.round(limitMs(s.settings) / 60_000))}). Bitte starte sie über das Panel neu.`, COLORS.warning);
     return;
   }
   if (a.content.trim().toLowerCase() === CANCEL_WORD) {
     sessions.delete(a.userId);
+    unreport(a.api, a.userId, s.unit);
     await say('Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.', COLORS.neutral);
     return;
   }
@@ -242,7 +252,7 @@ export async function handleDirectMessage(a: { userId: string; userName: string;
 /** Nächste Frage senden – oder nach der letzten Antwort einreichen. */
 async function proceed(o: { api: Api; userId: string; userName: string; sendDm: SendDm; robloxLookup?: RobloxLookup; now: number }, s: Session): Promise<void> {
   const say = (description: string, color: number = COLORS.info, buttons?: ButtonSpec[]) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color }, buttons });
-  if (s.answers.length < s.questions.length) { await o.sendDm(o.userId, questionMessage(s)); return; }
+  if (s.answers.length < s.questions.length) { report(o.api, o.userId, o.userName, s); await o.sendDm(o.userId, questionMessage(s)); return; }
   try {
     const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
     sessions.delete(o.userId);
@@ -250,6 +260,7 @@ async function proceed(o: { api: Api; userId: string; userName: string; sendDm: 
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
       sessions.delete(o.userId);
+      unreport(o.api, o.userId, s.unit);
       await say(e.status === 409 ? 'Du hast hierfür bereits eine offene Bewerbung. Bitte warte auf die Entscheidung.' : 'Die Fragen wurden inzwischen geändert. Bitte starte die Bewerbung neu.', COLORS.warning);
       return;
     }
@@ -369,7 +380,9 @@ export const QUALI_INTERACTION: InteractionDef = {
         return { ...okReply('Gespeichert.'), update: { embeds: [{ title: clip(s.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s.questions.length}.** ${plain(q.text)}\n\n✅ ${plain(answerText(value))}`, 4000) }] } };
       }
       if (action === 'cancel') {
+        const running = sessions.get(c.discordId);
         const had = sessions.delete(c.discordId);
+        if (running) unreport(c.api, c.discordId, running.unit);
         return okReply(had ? 'Bewerbung abgebrochen. Du kannst jederzeit über das Panel neu starten.' : 'Es läuft keine Bewerbung.');
       }
       if (action === 'decide') {
@@ -395,6 +408,7 @@ export const QUALI_INTERACTION: InteractionDef = {
       sessions.set(c.discordId, s);
       try { await c.platform.sendDm(c.discordId, questionMessage(s)); }
       catch { sessions.delete(c.discordId); return errorReply('Ich kann dir keine Direktnachricht schicken. Bitte erlaube Direktnachrichten und versuche es erneut.'); }
+      report(c.api, c.discordId, c.userName ?? c.discordId, s);
       return okReply('Los geht’s – beantworte die Fragen einfach hier im Chat.');
     } catch (e) {
       if (e instanceof BotApiError && e.status === 409) return errorReply('Über diese Bewerbung wurde bereits entschieden.');

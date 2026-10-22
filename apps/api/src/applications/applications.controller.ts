@@ -17,6 +17,7 @@ const submit = z.object({ robloxUsername: z.string().trim().min(1).max(64), robl
 const move = z.object({ status: z.enum(APPLICATION_STATUSES).refine((s) => s !== 'ACCEPTED' && s !== 'REJECTED', 'Annehmen oder Ablehnen bitte über die Entscheidung.'), reason: z.string().trim().min(3).max(1000).optional() });
 /** `OPEN` = alle noch nicht entschiedenen (eingereicht, Prüfung, Gespräch, Entscheidung offen). */
 const inboxQ = pageQuery.extend({ pageSize: z.coerce.number().int().min(1).max(100).default(20), type: z.string().regex(/^(police|q:.{1,24})$/).optional(), status: z.enum(['OPEN', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']).optional(), order: z.enum(['newest', 'oldest']).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
+const progressQ = z.object({ type: z.string().regex(/^(police|q:.{1,24})$/).optional(), q: z.string().max(100).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional() });
 const listQ = pageQuery.extend({ status: z.union([z.enum(APPLICATION_STATUSES), z.literal('OPEN')]).optional(), guildId: z.string().regex(/^\d{15,25}$/).optional(), order: z.enum(['newest', 'oldest']).optional() });
 const guildQ = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional() });
 
@@ -49,6 +50,12 @@ export class ApplicationsController {
   async inbox(@CurrentActor() a: Actor, @Query(zodBody(inboxQ)) q: z.infer<typeof inboxQ>) {
     const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
     return this.a.inbox({ ...q, guildId: q.guildId ?? currentGuild() ?? undefined }, { police: true, quali });
+  }
+  /** Angefangene, noch nicht eingereichte Bewerbungen („in Bearbeitung“) – Filter wie die Liste. */
+  @Get('in-progress') @RequirePermission('applications.view')
+  async inProgress(@CurrentActor() a: Actor, @Query(zodBody(progressQ)) q: z.infer<typeof progressQ>) {
+    const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
+    return this.a.inProgress({ ...q, guildId: q.guildId ?? currentGuild() ?? undefined }, { quali });
   }
   @Delete(':id') @HttpCode(204) @RequirePermission('applications.delete')
   remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.a.remove(a, id); }
