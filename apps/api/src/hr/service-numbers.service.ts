@@ -8,7 +8,7 @@ import type { Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { hireEvents, type AcceptedApplication } from '../common/hire-events';
 import { HrCoreService } from './hr-core.service';
-import { HrPeopleService } from './hr-people.service';
+import { FORMER, HrPeopleService } from './hr-people.service';
 import { BackupService } from '../backup/backup.service';
 
 const SETTINGS_KEY = 'dienstnummer.settings';
@@ -18,7 +18,8 @@ const isUnique = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestErr
  * Dienstnummern: Nummernkreise, atomare Vergabe (Unique-Constraints + Wiederholung – nie doppelt),
  * manuelle Vergabe/Änderung/Freigabe/Sperre, Historie und die Automatik nach angenommener Bewerbung.
  */
-import { onePersonnel } from '../common/guild-context';
+import { onePersonnel, runInGuild } from '../common/guild-context';
+import { LEFT_REASON } from '../qualifications/decision';
 @Injectable()
 export class ServiceNumbersService implements OnModuleInit {
   constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService, private readonly perms: PermissionService, private readonly discord: DiscordAccessService, private readonly live: DiscordLiveService, private readonly backup: BackupService) {}
@@ -424,6 +425,31 @@ export class ServiceNumbersService implements OnModuleInit {
     } catch (e) {
       await pending(e instanceof AppError ? e.message : 'Vergabe fehlgeschlagen');
     }
+  }
+
+  /**
+   * Vom Bot: Mitglied hat den Discord-Server verlassen → Personalakte dieses Servers auf „Ausgetreten“ (bleibt erhalten,
+   * steht aber nicht mehr in der Personalliste) und Dienstnummer wieder freigeben.
+   */
+  async memberLeft(guildId: string, discordId: string) {
+    const link = await this.prisma.discordLink.findUnique({ where: { discordId } });
+    if (!link) return { removed: 0, released: 0 };
+    return runInGuild(guildId, async () => {
+      let removed = 0, released = 0;
+      for (const p of await this.prisma.personnel.findMany({ where: { userId: link.userId, employmentStatus: { notIn: FORMER } } })) {
+        await this.prisma.$transaction(async (tx) => {
+          for (const n of await tx.serviceNumber.findMany({ where: { OR: [{ personnelId: p.id }, { userId: p.userId }], status: { in: ['ACTIVE', 'RESERVED'] } } })) {
+            await tx.serviceNumber.update({ where: { id: n.id }, data: { status: 'FREE', personnelId: null, userId: null, assignedAt: null, reservedAt: null } });
+            await tx.serviceNumberEvent.create({ data: { display: n.display, userId: p.userId, personnelId: p.id, action: 'RELEASED', reason: LEFT_REASON, actorId: null } });
+            released++;
+          }
+          const after = await tx.personnel.update({ where: { id: p.id }, data: { employmentStatus: 'RESIGNED', serviceNumber: null } });
+          await this.core.audit.record({ userId: null }, { action: 'personnel.left_discord', module: 'personnel', entityType: 'Personnel', entityId: p.id, before: p, after, reason: LEFT_REASON }, tx);
+        });
+        removed++;
+      }
+      return { removed, released };
+    });
   }
 
   /** Ausstehende Einstellungen (ohne Nummer). */

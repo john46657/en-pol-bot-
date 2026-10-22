@@ -297,7 +297,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
     /** Nummer freigeben / als ehemalig markieren / sperren / entsperren / reservieren. */
     setStatus(actor: Actor, display: string, to: 'FREE' | 'FORMER' | 'BLOCKED' | 'UNBLOCK' | 'RESERVED', reason?: string, userId?: string): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "RESERVED" | "FREE" | "BLOCKED" | "FORMER";
     }>;
     /** Discord nach Vergabe: Nickname, DM (je nach Einstellung). */
     private afterAssign;
@@ -316,6 +316,14 @@ export declare class ServiceNumbersService implements OnModuleInit {
         skipped: number;
     }>;
     onApplicationAccepted(actor: Actor, a: AcceptedApplication): Promise<void>;
+    /**
+     * Vom Bot: Mitglied hat den Discord-Server verlassen → Personalakte dieses Servers auf „Ausgetreten“ (bleibt erhalten,
+     * steht aber nicht mehr in der Personalliste) und Dienstnummer wieder freigeben.
+     */
+    memberLeft(guildId: string, discordId: string): Promise<{
+        removed: number;
+        released: number;
+    }>;
     /** Ausstehende Einstellungen (ohne Nummer). */
     pending(): Promise<{
         name: string;

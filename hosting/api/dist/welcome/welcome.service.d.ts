@@ -6,6 +6,7 @@ import { ApplicationsService } from '../applications/applications.service';
 import { QualificationsService } from '../qualifications/qualifications.service';
 import { SupportTicketsService } from '../support-tickets/tickets.service';
 import { MediaService } from '../media/media.service';
+import { ServiceNumbersService } from '../hr/service-numbers.service';
 export declare const welcomeConfigSchema: z.ZodEffects<z.ZodObject<{
     welcome: z.ZodDefault<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodBoolean>;
@@ -201,8 +202,9 @@ export declare class WelcomeService {
     private readonly qualifications;
     private readonly tickets;
     private readonly media;
+    private readonly serviceNumbers;
     private readonly log;
-    constructor(prisma: PrismaService, audit: AuditService, applications: ApplicationsService, qualifications: QualificationsService, tickets: SupportTicketsService, media: MediaService);
+    constructor(prisma: PrismaService, audit: AuditService, applications: ApplicationsService, qualifications: QualificationsService, tickets: SupportTicketsService, media: MediaService, serviceNumbers: ServiceNumbersService);
     private keyOf;
     /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
     config(guildId?: string | null): Promise<WelcomeConfig & {
@@ -228,7 +230,7 @@ export declare class WelcomeService {
         name: string;
         data: string;
     }>;
-    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
+    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln, Personalakte auf „Ausgetreten“ + Dienstnummer frei. Fehler eines Bereichs stoppen die anderen nicht. */
     memberLeft(guildId: string, discordId: string): Promise<{
         applications: {
             denied: number;
@@ -240,6 +242,10 @@ export declare class WelcomeService {
         };
         tickets: {
             closed: number;
+        };
+        personnel: {
+            removed: number;
+            released: number;
         };
     }>;
 }

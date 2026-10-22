@@ -8,8 +8,10 @@ export interface OverviewFilter {
     status?: string;
     rank?: string;
     department?: string;
-    state?: 'active' | 'inactive' | 'absent';
+    state?: 'active' | 'inactive' | 'absent' | 'former';
 }
+/** Ehemalige (ausgetreten/entlassen, z. B. automatisch beim Verlassen des Discord-Servers): Akte bleibt, steht aber nicht mehr in der Liste. */
+export declare const FORMER: string[];
 export declare const RECORD_TYPES: readonly ["NOTE", "WARNING", "AWARD", "RECOMMENDATION"];
 export type RecordType = (typeof RECORD_TYPES)[number];
 /** Personal-Übersicht, Personalakte und Einträge (Notizen, Verwarnungen, Auszeichnungen, Empfehlungen). */

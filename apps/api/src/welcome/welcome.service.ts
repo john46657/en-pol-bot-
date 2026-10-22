@@ -9,6 +9,7 @@ import { ApplicationsService } from '../applications/applications.service';
 import { QualificationsService } from '../qualifications/qualifications.service';
 import { SupportTicketsService } from '../support-tickets/tickets.service';
 import { MediaService } from '../media/media.service';
+import { ServiceNumbersService } from '../hr/service-numbers.service';
 import { AppError } from '../common/errors';
 
 const KEY = 'welcome.config';
@@ -38,7 +39,7 @@ export const welcomeConfigSchema = z.object({
 @Injectable()
 export class WelcomeService {
   private readonly log = new Logger('Welcome');
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly applications: ApplicationsService, private readonly qualifications: QualificationsService, private readonly tickets: SupportTicketsService, private readonly media: MediaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly applications: ApplicationsService, private readonly qualifications: QualificationsService, private readonly tickets: SupportTicketsService, private readonly media: MediaService, private readonly serviceNumbers: ServiceNumbersService) {}
 
   private keyOf(guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${KEY}@${g}` : KEY; } // Gruppe mit geteilten Einstellungen → Haupt-Server
 
@@ -88,14 +89,15 @@ export class WelcomeService {
     return { mime: f.mime, name: f.name, data: f.data.toString('base64') };
   }
 
-  /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
+  /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln, Personalakte auf „Ausgetreten“ + Dienstnummer frei. Fehler eines Bereichs stoppen die anderen nicht. */
   async memberLeft(guildId: string, discordId: string) {
     const safe = <T>(label: string, p: Promise<T>, empty: T) => p.catch((e: Error) => { this.log.warn(`member left (${label}): ${e.message}`); return empty; });
-    const [applications, qualifications, tickets] = await Promise.all([
+    const [applications, qualifications, tickets, personnel] = await Promise.all([
       safe('applications', this.applications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
       safe('qualifications', this.qualifications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
       safe('tickets', this.tickets.memberLeft(guildId, discordId), { closed: 0 }),
+      safe('personnel', this.serviceNumbers.memberLeft(guildId, discordId), { removed: 0, released: 0 }),
     ]);
-    return { applications, qualifications, tickets };
+    return { applications, qualifications, tickets, personnel };
   }
 }

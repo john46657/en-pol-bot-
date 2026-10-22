@@ -58,9 +58,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         channelId: string | null;
         buttonLabel: string;
     };
+    nickname: string;
     verifiedRoleIds: string[];
     unverifiedRoleIds: string[];
-    nickname: string;
     autoOnJoin: boolean;
     binds: {
         id: string;
@@ -79,9 +79,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
+    nickname?: string | undefined;
     verifiedRoleIds?: string[] | undefined;
     unverifiedRoleIds?: string[] | undefined;
-    nickname?: string | undefined;
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;
@@ -100,9 +100,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         channelId: string | null;
         buttonLabel: string;
     };
+    nickname: string;
     verifiedRoleIds: string[];
     unverifiedRoleIds: string[];
-    nickname: string;
     autoOnJoin: boolean;
     binds: {
         id: string;
@@ -121,9 +121,9 @@ export declare const verifyConfigSchema: z.ZodEffects<z.ZodObject<{
         channelId?: string | null | undefined;
         buttonLabel?: string | undefined;
     } | undefined;
+    nickname?: string | undefined;
     verifiedRoleIds?: string[] | undefined;
     unverifiedRoleIds?: string[] | undefined;
-    nickname?: string | undefined;
     autoOnJoin?: boolean | undefined;
     binds?: {
         id: string;

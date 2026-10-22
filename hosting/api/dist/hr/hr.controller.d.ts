@@ -20,18 +20,18 @@ declare const overviewQ: z.ZodObject<{
     status: z.ZodOptional<z.ZodString>;
     rank: z.ZodOptional<z.ZodString>;
     department: z.ZodOptional<z.ZodString>;
-    state: z.ZodOptional<z.ZodEnum<["active", "inactive", "absent"]>>;
+    state: z.ZodOptional<z.ZodEnum<["active", "inactive", "absent", "former"]>>;
 }, "strip", z.ZodTypeAny, {
     status?: string | undefined;
     department?: string | undefined;
     rank?: string | undefined;
-    state?: "active" | "inactive" | "absent" | undefined;
+    state?: "active" | "inactive" | "absent" | "former" | undefined;
     q?: string | undefined;
 }, {
     status?: string | undefined;
     department?: string | undefined;
     rank?: string | undefined;
-    state?: "active" | "inactive" | "absent" | undefined;
+    state?: "active" | "inactive" | "absent" | "former" | undefined;
     q?: string | undefined;
 }>;
 declare const createP: z.ZodObject<{
@@ -1987,14 +1987,14 @@ declare const listQ: z.ZodObject<{
     rank: z.ZodOptional<z.ZodString>;
     limit: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    status?: "ACTIVE" | "FREE" | "RESERVED" | "BLOCKED" | "FORMER" | undefined;
+    status?: "ACTIVE" | "RESERVED" | "FREE" | "BLOCKED" | "FORMER" | undefined;
     department?: string | undefined;
     rank?: string | undefined;
     rangeId?: string | undefined;
     limit?: number | undefined;
     q?: string | undefined;
 }, {
-    status?: "ACTIVE" | "FREE" | "RESERVED" | "BLOCKED" | "FORMER" | undefined;
+    status?: "ACTIVE" | "RESERVED" | "FREE" | "BLOCKED" | "FORMER" | undefined;
     department?: string | undefined;
     rank?: string | undefined;
     rangeId?: string | undefined;
@@ -2367,19 +2367,19 @@ export declare class ServiceNumbersController {
         as: 'FREE' | 'FORMER';
     }): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "RESERVED" | "FREE" | "BLOCKED" | "FORMER";
     }>;
     block(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "RESERVED" | "FREE" | "BLOCKED" | "FORMER";
     }>;
     unblock(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "RESERVED" | "FREE" | "BLOCKED" | "FORMER";
     }>;
     reserve(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "RESERVED" | "FREE" | "BLOCKED" | "FORMER";
     }>;
 }
 declare const sessionBody: z.ZodObject<{

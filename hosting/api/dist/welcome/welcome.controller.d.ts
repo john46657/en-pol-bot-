@@ -65,6 +65,10 @@ export declare class BotWelcomeController {
         tickets: {
             closed: number;
         };
+        personnel: {
+            removed: number;
+            released: number;
+        };
     }>;
 }
 export {};

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HrPeopleService = exports.RECORD_TYPES = void 0;
+exports.HrPeopleService = exports.RECORD_TYPES = exports.FORMER = void 0;
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const permission_service_1 = require("../authz/permission.service");
@@ -17,7 +17,9 @@ const discord_oauth_service_1 = require("../auth/discord-oauth.service");
 const errors_1 = require("../common/errors");
 const hr_core_service_1 = require("./hr-core.service");
 const discord_live_service_1 = require("../discord/discord-live.service");
-const INACTIVE = ['RESIGNED', 'TERMINATED', 'INACTIVE'];
+/** Ehemalige (ausgetreten/entlassen, z. B. automatisch beim Verlassen des Discord-Servers): Akte bleibt, steht aber nicht mehr in der Liste. */
+exports.FORMER = ['RESIGNED', 'TERMINATED'];
+const INACTIVE = [...exports.FORMER, 'INACTIVE'];
 exports.RECORD_TYPES = ['NOTE', 'WARNING', 'AWARD', 'RECOMMENDATION'];
 /** Personal-Übersicht, Personalakte und Einträge (Notizen, Verwarnungen, Auszeichnungen, Empfehlungen). */
 let HrPeopleService = class HrPeopleService {
@@ -43,7 +45,8 @@ let HrPeopleService = class HrPeopleService {
         const now = new Date();
         const where = {
             ...(f.status ? { employmentStatus: f.status } : {}), ...(f.rank ? { rank: f.rank } : {}), ...(f.department ? { team: f.department } : {}),
-            ...(f.state === 'active' ? { employmentStatus: { notIn: INACTIVE } } : f.state === 'inactive' ? { employmentStatus: { in: INACTIVE } } : {}),
+            ...(f.state === 'active' ? { employmentStatus: { notIn: INACTIVE } } : f.state === 'inactive' ? { employmentStatus: 'INACTIVE' } : f.state === 'former' ? { employmentStatus: { in: exports.FORMER } } : {}),
+            ...(!f.status && (!f.state || f.state === 'absent') ? { NOT: { employmentStatus: { in: exports.FORMER } } } : {}),
             ...(f.state === 'absent' ? { user: { leaveRequests: { some: { status: 'APPROVED', startsAt: { lte: now }, endsAt: { gte: now } } } } } : {}),
         };
         const links = new Map((await this.prisma.discordLink.findMany()).map((l) => [l.userId, l.discordId]));

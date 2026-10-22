@@ -20,6 +20,7 @@ const applications_service_1 = require("../applications/applications.service");
 const qualifications_service_1 = require("../qualifications/qualifications.service");
 const tickets_service_1 = require("../support-tickets/tickets.service");
 const media_service_1 = require("../media/media.service");
+const service_numbers_service_1 = require("../hr/service-numbers.service");
 const errors_1 = require("../common/errors");
 const KEY = 'welcome.config';
 const sf = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
@@ -53,14 +54,16 @@ let WelcomeService = class WelcomeService {
     qualifications;
     tickets;
     media;
+    serviceNumbers;
     log = new common_1.Logger('Welcome');
-    constructor(prisma, audit, applications, qualifications, tickets, media) {
+    constructor(prisma, audit, applications, qualifications, tickets, media, serviceNumbers) {
         this.prisma = prisma;
         this.audit = audit;
         this.applications = applications;
         this.qualifications = qualifications;
         this.tickets = tickets;
         this.media = media;
+        this.serviceNumbers = serviceNumbers;
     }
     keyOf(guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${KEY}@${g}` : KEY; } // Gruppe mit geteilten Einstellungen → Haupt-Server
     /** `own` = dieser Server hat eigene Einstellungen (sonst gilt die gemeinsame). */
@@ -108,20 +111,21 @@ let WelcomeService = class WelcomeService {
         const f = await this.media.welcomeBanner(id);
         return { mime: f.mime, name: f.name, data: f.data.toString('base64') };
     }
-    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
+    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln, Personalakte auf „Ausgetreten“ + Dienstnummer frei. Fehler eines Bereichs stoppen die anderen nicht. */
     async memberLeft(guildId, discordId) {
         const safe = (label, p, empty) => p.catch((e) => { this.log.warn(`member left (${label}): ${e.message}`); return empty; });
-        const [applications, qualifications, tickets] = await Promise.all([
+        const [applications, qualifications, tickets, personnel] = await Promise.all([
             safe('applications', this.applications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
             safe('qualifications', this.qualifications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
             safe('tickets', this.tickets.memberLeft(guildId, discordId), { closed: 0 }),
+            safe('personnel', this.serviceNumbers.memberLeft(guildId, discordId), { removed: 0, released: 0 }),
         ]);
-        return { applications, qualifications, tickets };
+        return { applications, qualifications, tickets, personnel };
     }
 };
 exports.WelcomeService = WelcomeService;
 exports.WelcomeService = WelcomeService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, applications_service_1.ApplicationsService, qualifications_service_1.QualificationsService, tickets_service_1.SupportTicketsService, media_service_1.MediaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, applications_service_1.ApplicationsService, qualifications_service_1.QualificationsService, tickets_service_1.SupportTicketsService, media_service_1.MediaService, service_numbers_service_1.ServiceNumbersService])
 ], WelcomeService);
 //# sourceMappingURL=welcome.service.js.map

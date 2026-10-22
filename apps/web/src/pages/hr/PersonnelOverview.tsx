@@ -13,7 +13,7 @@ import { Avatar } from '../../components/TeamRoster';
 import { Badge, Button, Card, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
 type SortKey = 'serviceNumber' | 'name' | 'rank' | 'department' | 'status' | 'trainings' | 'promotions' | 'awards' | 'warnings';
-type State = '' | 'active' | 'inactive' | 'absent';
+type State = '' | 'active' | 'inactive' | 'absent' | 'former';
 interface ViewPrefs { /** 2 = Standard-Sortierung nach Dienstnummer */ ver?: number; view: 'cards' | 'table'; sort: SortKey; dir: 'asc' | 'desc'; compact: boolean; filters: { status: string; rank: string; department: string; state: State } }
 const DEFAULT_VIEW: ViewPrefs = { ver: 2, view: 'table', sort: 'serviceNumber', dir: 'asc', compact: false, filters: { status: '', rank: '', department: '', state: '' } };
 const COLS: { key: SortKey; label: string }[] = [
@@ -53,7 +53,7 @@ function FileCounts({ r }: { r: PersonRow }) {
   if (!shown.length) return <span className="text-muted">—</span>;
   return <span className="flex flex-wrap gap-1.5">{shown.map(([icon, label, n]) => <span key={label} title={`${label}: ${n}`} className={`rounded px-1.5 py-0.5 text-xs ${icon === '⚠️' ? 'bg-warning/15 text-warning' : 'bg-panel-2'}`}><span aria-hidden>{icon} </span>{n}<span className="sr-only"> {label}</span></span>)}</span>;
 }
-const STATES: [State, string][] = [['', 'Alle'], ['active', 'Aktiv'], ['absent', 'Abwesend'], ['inactive', 'Inaktiv']];
+const STATES: [State, string][] = [['', 'Alle'], ['active', 'Aktiv'], ['absent', 'Abwesend'], ['inactive', 'Inaktiv'], ['former', 'Ehemalige']];
 
 export const RankLabel = ({ name, color, icon }: { name: string | null; color: string | null; icon: string | null }) =>
   name ? <span className="inline-flex items-center gap-1.5">{icon ? <span aria-hidden>{icon}</span> : <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color ?? '#64748b' }} />}{name}</span> : <span className="text-muted">—</span>;

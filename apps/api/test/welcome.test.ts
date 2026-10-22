@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, login, makeUser } from './helpers';
+import { createTestApp, login, makeUser, registerServer } from './helpers';
 import type { PrismaService } from '../src/prisma/prisma.service';
+import { recordSpace } from '../src/common/guild-context';
 import { DEFAULT_CONFIG } from '../src/qualifications/qualifications.config';
 
 const TOKEN = 'test-bot-token-welcome-0123456789abcdef0123';
@@ -111,7 +112,7 @@ describe('action on user leave', () => {
 
     const r = await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: GUILD, discordId: LEAVER });
     expect(r.status).toBe(200);
-    expect(r.body).toEqual({ applications: { denied: 0, withdrawn: 1 }, qualifications: { denied: 1, withdrawn: 1 }, tickets: { closed: 0 } });
+    expect(r.body).toEqual({ applications: { denied: 0, withdrawn: 1 }, qualifications: { denied: 1, withdrawn: 1 }, tickets: { closed: 0 }, personnel: { removed: 0, released: 0 } });
     const q = await prisma.qualificationApplication.findMany({ where: { discordId: { in: [LEAVER, STAYER] } }, select: { unit: true, discordId: true, guildId: true, status: true, decisionReason: true } });
     const st = (unit: string, d = LEAVER, g = GUILD) => q.find((x) => x.unit === unit && x.discordId === d && x.guildId === g)?.status;
     expect([st('sek'), st('flugstaffel'), st('sek', STAYER), st('ausbilder', LEAVER, OTHER)]).toEqual(['REJECTED', 'WITHDRAWN', 'OPEN', 'OPEN']);
@@ -122,6 +123,37 @@ describe('action on user leave', () => {
     // zweiter Austritt ändert nichts mehr
     expect((await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: GUILD, discordId: LEAVER })).body.qualifications).toEqual({ denied: 0, withdrawn: 0 });
     expect((await http().post('/api/v1/bot/member-left').send({ guildId: GUILD, discordId: LEAVER })).status).toBe(401);
+  });
+
+  it('personnel file stays but leaves the list (Ausgetreten) and the service number becomes free again', async () => {
+    const admin = (await login(app, 'wel_admin')).agent;
+    const LEFT = '320000000000000009', HR_GUILD = '310000000000000009';
+    await registerServer(prisma, HR_GUILD, [(await prisma.user.findUniqueOrThrow({ where: { username: 'wel_admin' } })).id]);
+    const u = await prisma.user.create({ data: { username: 'wel_leaver_dn', displayName: 'Leaver DN', passwordHash: 'x' } });
+    await prisma.discordLink.create({ data: { userId: u.id, discordId: LEFT } });
+    const serverId = recordSpace(HR_GUILD)!; // Akten-Bereich des Servers, den die Person verlässt
+    const p = await prisma.personnel.create({ data: { serverId, userId: u.id, serviceNumber: 'WL07', employmentStatus: 'ACTIVE' } });
+    const range = await prisma.serviceNumberRange.create({ data: { serverId, name: 'Welcome-Test', prefix: 'WL', start: 1, end: 99, padLength: 2 } });
+    await prisma.serviceNumber.create({ data: { serverId, rangeId: range.id, value: 7, display: 'WL07', status: 'ACTIVE', userId: u.id, personnelId: p.id, assignedAt: new Date() } });
+    const listed = async (state = '') => ((await admin.get(`/api/v1/hr/people${state ? `?state=${state}` : ''}`).set('x-guild-id', HR_GUILD)).body.rows as { id: string }[]).some((r) => r.id === p.id);
+    expect(await listed()).toBe(true);
+
+    // anderer Server → Akte dort bleibt unberührt
+    expect((await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: OTHER, discordId: LEFT })).body.personnel).toEqual({ removed: 0, released: 0 });
+    const r = await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: HR_GUILD, discordId: LEFT });
+    expect(r.body.personnel).toEqual({ removed: 1, released: 1 });
+    expect(await prisma.personnel.findUniqueOrThrow({ where: { id: p.id } })).toMatchObject({ employmentStatus: 'RESIGNED', serviceNumber: null });
+    expect(await prisma.serviceNumber.findFirstOrThrow({ where: { rangeId: range.id, value: 7 } })).toMatchObject({ status: 'FREE', userId: null, personnelId: null });
+    expect(await listed()).toBe(false);
+    expect(await listed('former')).toBe(true);
+    expect((await admin.get(`/api/v1/hr/people/${p.id}`).set('x-guild-id', HR_GUILD)).status).toBe(200); // Akte bleibt
+    // zweiter Austritt ändert nichts mehr
+    expect((await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: HR_GUILD, discordId: LEFT })).body.personnel).toEqual({ removed: 0, released: 0 });
+
+    await prisma.serviceNumberEvent.deleteMany({ where: { userId: u.id } });
+    await prisma.serviceNumber.deleteMany({ where: { rangeId: range.id } });
+    await prisma.serviceNumberRange.delete({ where: { id: range.id } });
+    await prisma.user.delete({ where: { id: u.id } });
   });
 
   it('closes the open support tickets of the person on that server when set under Tickets → General', async () => {
