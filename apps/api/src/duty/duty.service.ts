@@ -208,7 +208,7 @@ export class DutyService {
       if (s.status !== 'BREAK') ms += Math.max(0, end - s.startedAt.getTime());
       prevEnd = s.endedAt?.getTime() ?? null;
     }
-    return { count, minutes: Math.round(ms / 60_000) };
+    return { count, minutes: Math.round(ms / 60_000), seconds: Math.round(ms / 1000) };
   }
 
   /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */

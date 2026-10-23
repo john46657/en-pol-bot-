@@ -73,7 +73,8 @@ let client = makeClient(intents);
 const tickets = createTicketRuntime(() => client, api);
 
 const toEmbed = (e: EmbedData) => {
-  const b = new EmbedBuilder().setTitle(e.title);
+  const b = new EmbedBuilder();
+  if (e.title) b.setTitle(e.title); // ohne Titel: nur Kopfzeile + Text (z. B. „Shift Management“ wie bei Trident)
   if (e.description) b.setDescription(e.description);
   if (e.color !== undefined) b.setColor(e.color);
   if (e.fields?.length) b.addFields(e.fields.map((f) => ({ name: f.name, value: f.value, inline: f.inline ?? false })));
@@ -635,7 +636,9 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
     await i.deferUpdate();
     const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
     const p = replyPayload(reply);
-    if (reply.embeds?.[0]?.box) await i.editReply(p);
+    // Panel als Embed auf einer älteren Kasten-Nachricht: Discord kann Komponenten-Nachrichten nicht zurück in Embeds wandeln → neu posten
+    if (reply.panel && !reply.embeds?.[0]?.box && i.message.flags.has(MessageFlags.IsComponentsV2)) { await i.message.delete().catch(() => undefined); await i.followUp(p); }
+    else if (reply.embeds?.[0]?.box || reply.panel) await i.editReply(p);
     else await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral });
     return;
   }

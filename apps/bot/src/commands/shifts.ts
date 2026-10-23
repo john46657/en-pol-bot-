@@ -1,5 +1,5 @@
 import { BotApiError } from '../api';
-import { clip, COLORS, DUTY_DE, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply } from '../format';
+import { clip, COLORS, DUTY_DE, errorReply, okReply, plain, shiftDuration, type ButtonSpec, type EmbedData, type Reply } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
@@ -41,13 +41,6 @@ function logEmbed(title: string, log: ShiftLog, emptyText: string): EmbedData {
 /** Schichtart aus der Eingabe (ID oder Name, ohne Groß-/Kleinschreibung). */
 const findType = (types: ShiftTypeInfo[], wanted: string) => { const w = wanted.trim().toLowerCase(); return types.find((x) => x.id === w || x.name.toLowerCase() === w); };
 
-/** Minuten → „2 Stunden, 5 Minuten“ (wie bei Trident ausgeschrieben). */
-const long = (min: number) => {
-  const h = Math.floor(min / 60), m = Math.round(min % 60);
-  const parts = [...(h ? [`${h} ${h === 1 ? 'Stunde' : 'Stunden'}`] : []), ...(m || !h ? [`${m} ${m === 1 ? 'Minute' : 'Minuten'}`] : [])];
-  return parts.join(', ');
-};
-
 /** Schichtart fürs Panel: gewählte, sonst Standard bzw. erste (wie Trident „Shift Type“); ohne eingerichtete Arten keine. */
 const pickType = (c: Ctx, types: ShiftTypeInfo[], wanted?: string) => {
   if (wanted) return findType(types, wanted);
@@ -55,45 +48,49 @@ const pickType = (c: Ctx, types: ShiftTypeInfo[], wanted?: string) => {
   return usable.find((t) => t.isDefault) ?? usable[0];
 };
 
+const STATUS_EN: Record<string, string> = { ON_DUTY: 'On Shift', BREAK: 'On Break', TRAINING: 'Training', ADMINISTRATIVE: 'Administrative' };
+
 /**
- * `/shift manage`: Panel wie bei Trident – laufende Schicht, Gesamtübersicht (Anzahl, Gesamt- und Durchschnittsdauer),
- * Schichtart und immer „Start“, „Pause“, „Beenden“ (was gerade nicht geht, ist ausgegraut). Das Panel ist für alle im
- * Channel sichtbar; Klicks des Besitzers zeichnen es neu, die Buttons tragen dafür seine Discord-ID.
+ * `/shift manage`: Panel wie bei Trident – Kopfzeile „Shift Management“ mit Profilbild, laufende Schicht,
+ * „All Time Information“ (Anzahl, Gesamt- und Durchschnittsdauer), Schichtart und immer „Start“, „Pause“, „End“
+ * (was gerade nicht geht, ist ausgegraut). Das Panel ist für alle im Channel sichtbar; Klicks des Besitzers zeichnen
+ * es neu, die Buttons tragen dafür seine Discord-ID.
  */
 export async function manageReply(c: Ctx, type?: ShiftTypeInfo, notice?: string): Promise<Reply> {
   const [log, stats] = await Promise.all([
     c.api.asUser<ShiftLog>(c.discordId, 'GET', '/team/me/shifts?days=1'),
-    c.api.asUser<{ count: number; minutes: number }>(c.discordId, 'GET', '/team/me/shift-stats'),
+    c.api.asUser<{ count: number; minutes: number; seconds?: number }>(c.discordId, 'GET', '/team/me/shift-stats'),
   ]);
   const current = log.items.find((s) => s.active);
   const onBreak = current?.status === 'BREAK';
-  const st = current ? DUTY_DE[current.status] : undefined;
   const typeName = current ? current.shiftType : type?.name ?? null;
+  const total = stats.seconds ?? stats.minutes * 60;
+  const running = current ? (Date.now() - new Date(current.startedAt).getTime()) / 1000 - current.breakMinutes * 60 : 0;
   const description = [
-    `**Mitglied**: <@${c.discordId}>`, '',
     ...(notice ? [notice, ''] : []),
-    ...(current ? ['### 🕒 Aktuelle Schicht', `**Status**: ${st?.emoji ?? '🟢'} ${st?.label ?? current.status}`, `**Begonnen**: ${ts(current.startedAt, 'R')}`,
-      `**Dauer**: ${long(current.minutes - current.breakMinutes)}`, `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : 'keine'}`, ''] : []),
-    '### 📋 Gesamtübersicht',
-    `**Anzahl Schichten**: ${stats.count}`,
-    `**Gesamtdauer**: ${long(stats.minutes)}`,
-    `**Durchschnittliche Dauer**: ${long(stats.count ? stats.minutes / stats.count : 0)}`,
-    ...(typeName ? ['', `-# Schichtart: ${plain(typeName)}`] : []),
+    ...(current ? ['### 🕒 Current Shift', `**Status**: ${STATUS_EN[current.status] ?? current.status}`, `**Started**: ${ts(current.startedAt, 'R')}`,
+      `**Duration**: ${shiftDuration(running)}`, `**Breaks**: ${current.breaks ? `${current.breaks} (${shiftDuration(current.breakMinutes * 60)})` : 'none'}`, ''] : []),
+    '### 📋 All Time Information',
+    `**Shift Count**: ${stats.count}`,
+    `**Total Duration**: ${shiftDuration(total)}`,
+    `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
+    '', `-# Shift Type: ${typeName ? plain(typeName) : 'default'}`,
   ].join('\n');
   const buttons: ButtonSpec[] = [
     { id: `shift:on:${!current && type ? type.id : ''}:${c.discordId}`, label: 'Start', style: 'success', emoji: '▶️', disabled: !!current },
-    { id: `shift:break:${c.discordId}`, label: onBreak ? 'Pause beenden' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
-    { id: `shift:off:${c.discordId}`, label: 'Beenden', style: 'danger', emoji: '⏹️', disabled: !current },
+    { id: `shift:break:${c.discordId}`, label: onBreak ? 'Resume' : 'Pause', style: 'primary', emoji: '⏸️', disabled: !current },
+    { id: `shift:off:${c.discordId}`, label: 'End', style: 'danger', emoji: '⏹️', disabled: !current },
   ];
-  return { ephemeral: false, buttons, embeds: [{ box: true, heading: 'small', title: 'Schichtverwaltung', description: clip(description, 3900) }] };
+  return { ephemeral: false, panel: true, buttons, embeds: [{ author: { name: 'Shift Management', ...(c.userAvatar ? { iconUrl: c.userAvatar } : {}) }, title: '', description: clip(description, 3900) }] };
 }
 
+const NOTICE: Record<string, string> = { ON_DUTY: '🟢 Your shift is now **active**.', BREAK: '🟡 You are now **on break**.', OFF_DUTY: '🔴 Your shift has **ended**.' };
 /** Status setzen und das Panel neu zeichnen; „schon so“ (409) und Fehler stehen oben im Panel. */
 async function switchTo(c: Ctx, status: 'ON_DUTY' | 'BREAK' | 'OFF_DUTY', type?: ShiftTypeInfo): Promise<Reply> {
   let notice: string;
   try {
     await c.api.asUser(c.discordId, 'PUT', '/team/me/status', { status, ...(type ? { shiftType: type.id } : {}) });
-    notice = status === 'ON_DUTY' && type ? `🟢 Schicht **${plain(type.name)}** gestartet.` : `${DUTY_DE[status]!.emoji} Jetzt **${DUTY_DE[status]!.label}**.`;
+    notice = status === 'ON_DUTY' && type ? `🟢 Shift **${plain(type.name)}** started.` : NOTICE[status]!;
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status]!.label}**.` : mapError(e).content ?? '❌ Das hat nicht geklappt.';
   }

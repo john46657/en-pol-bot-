@@ -25,7 +25,7 @@ function fakeApi(routes: Record<string, unknown>) {
 }
 const run = (api: Api, sub: string, opts: Record<string, string | number> = {}) => byName('shift')!.run({ discordId: ME, api, opts: { _sub: sub, ...opts } } as Ctx);
 const click = async (api: Api, id: string, values?: string[]) => { const hit = interactionFor(id)!; return hit.def.run({ discordId: ME, api, opts: {}, args: hit.args, ...(values ? { values } : {}) }); };
-const text = (r: Reply) => `${r.content ?? ''} ${r.embeds?.map((e) => `${e.title} ${e.description ?? ''} ${e.fields?.map((f) => `${f.name} ${f.value}`).join(' ') ?? ''}`).join(' ') ?? ''}`;
+const text = (r: Reply) => `${r.content ?? ''} ${r.embeds?.map((e) => `${e.author?.name ?? ''} ${e.title} ${e.description ?? ''} ${e.fields?.map((f) => `${f.name} ${f.value}`).join(' ') ?? ''}`).join(' ') ?? ''}`;
 const shift = (o: Record<string, unknown> = {}) => ({ id: 's1', userId: UID, name: 'Max', callsign: 'ADAM-1', shiftType: 'SEK', startedAt: '2026-10-17T10:00:00Z', endedAt: null, active: true, status: 'ON_DUTY', minutes: 90, breakMinutes: 15, breaks: 1, startedBy: null, endedBy: null, ...o });
 const types = { enabled: true, types: [{ id: 'streife', name: 'Streife', isDefault: true }, { id: 'sek', name: 'SEK', isDefault: false }] };
 
@@ -37,33 +37,35 @@ describe('/shift', () => {
     const { api, calls } = fakeApi({ 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
     const r = await run(api, 'manage');
     expect(calls.map((x) => x.path)).toContain('/team/me/shifts?days=1');
-    expect(r.embeds?.[0]).toMatchObject({ box: true, title: 'Schichtverwaltung' });
+    expect(r.embeds?.[0]).toMatchObject({ author: { name: 'Shift Management' }, title: '' });
+    expect(r.panel).toBe(true); // Buttons zeichnen das Panel an Ort und Stelle neu
     const t = text(r);
-    expect(t).toContain('**Anzahl Schichten**: 4');
-    expect(t).toContain('**Gesamtdauer**: 4 Stunden, 10 Minuten');
-    expect(t).toContain('**Durchschnittliche Dauer**: 1 Stunde, 3 Minuten'); // 62,5 → 63 Minuten
-    expect(t).toContain('Schichtart: Streife');
+    expect(t).toContain('### 📋 All Time Information');
+    expect(t).toContain('**Shift Count**: 4');
+    expect(t).toContain('**Total Duration**: 4 hours, 10 minutes');
+    expect(t).toContain('**Average Duration**: 1 hour, 2 minutes, 30 seconds');
+    expect(t).toContain('-# Shift Type: Streife');
     expect(ids(r)).toEqual([`shift:on:streife:${ME}`, `shift:break:${ME} (aus)`, `shift:off:${ME} (aus)`]);
     expect(r.ephemeral).toBe(false); // für alle im Channel sichtbar
-    expect(t).toContain(`**Mitglied**: <@${ME}>`);
     expect(byName('shift')!.publicReply?.({ _sub: 'manage' })).toBe(true);
     for (const sub of ['active', 'leaderboard', 'admin']) expect(byName('shift')!.publicReply?.({ _sub: sub })).toBe(true);
     expect((await run(api, 'manage', { type: 'SEK' })).buttons?.[0]?.id).toBe(`shift:on:sek:${ME}`);
     expect(text(await run(api, 'manage', { type: 'gibtsnicht' }))).toContain('Unbekannte Schichtart');
     const fresh = fakeApi({ 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': { count: 0, minutes: 0 }, 'GET /bot/shifts': { enabled: false, types: [] } });
     const f = text(await run(fresh.api, 'manage'));
-    expect(f).toContain('**Gesamtdauer**: 0 Minuten');
-    expect(f).not.toContain('Schichtart');
+    expect(f).toContain('**Total Duration**: 0 seconds');
+    expect(f).toContain('Shift Type: default');
   });
   it('manage while on duty shows the running shift; Start is greyed out, Pause/Beenden clickable', async () => {
     const on = fakeApi({ 'GET /team/me/shifts': { days: 1, items: [shift()] }, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
     const r = await run(on.api, 'manage');
-    expect(text(r)).toContain('Aktuelle Schicht');
-    expect(text(r)).toContain('**Dauer**: 1 Stunde, 15 Minuten'); // 90 − 15 Minuten Pause
-    expect(text(r)).toContain('Schichtart: SEK');
+    expect(text(r)).toContain('Current Shift');
+    expect(text(r)).toContain('**Status**: On Shift');
+    expect(text(r)).toContain('**Breaks**: 1 (15 minutes)');
+    expect(text(r)).toContain('Shift Type: SEK');
     expect(ids(r)).toEqual([`shift:on::${ME} (aus)`, `shift:break:${ME}`, `shift:off:${ME}`]);
     const brk = fakeApi({ 'GET /team/me/shifts': { days: 1, items: [shift({ status: 'BREAK' })] }, 'GET /team/me/shift-stats': stats, 'GET /bot/shifts': types });
-    expect((await run(brk.api, 'manage')).buttons?.[1]?.label).toBe('Pause beenden');
+    expect((await run(brk.api, 'manage')).buttons?.[1]?.label).toBe('Resume');
   });
   it('buttons update the panel in place and set the status', async () => {
     const { api, calls } = fakeApi({ 'GET /bot/shifts': types, 'GET /team/me/shifts': none, 'GET /team/me/shift-stats': stats, 'GET /team/me': { status: 'ON_DUTY' }, 'PUT /team/me/status': {} });
@@ -71,11 +73,11 @@ describe('/shift', () => {
     expect(start.def.updatesMessage?.(start.args)).toBe(true);
     const r = await click(api, 'shift:on:sek');
     expect(calls.find((x) => x.method === 'PUT')).toMatchObject({ body: { status: 'ON_DUTY', shiftType: 'sek' } });
-    expect(text(r)).toContain('**SEK** gestartet');
-    expect(r.embeds?.[0]?.box).toBe(true);
+    expect(text(r)).toContain('Shift **SEK** started');
+    expect(r.panel).toBe(true);
     await click(api, 'shift:break');
     expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'BREAK' } });
-    expect(text(await click(api, 'shift:off'))).toContain('außer Dienst');
+    expect(text(await click(api, 'shift:off'))).toContain('Your shift has **ended**');
     expect(calls.filter((x) => x.method === 'PUT').at(-1)).toMatchObject({ body: { status: 'OFF_DUTY' } });
   });
   it('public panel: only its owner can use the buttons; old panels without owner still work', async () => {
@@ -88,7 +90,7 @@ describe('/shift', () => {
     }
     expect(calls.filter((x) => x.method === 'PUT')).toEqual([]);
     const own = await click(api, `shift:on::${ME}`);
-    expect(own.embeds?.[0]?.box).toBe(true);
+    expect(own.panel).toBe(true);
     expect(calls.find((x) => x.method === 'PUT')!.body).toEqual({ status: 'ON_DUTY' });
     await click(api, `shift:off:${ME}`);
     expect(calls.filter((x) => x.method === 'PUT').at(-1)!.body).toEqual({ status: 'OFF_DUTY' });
