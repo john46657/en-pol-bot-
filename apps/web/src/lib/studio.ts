@@ -3,7 +3,7 @@ import { api } from './api';
 import type { FieldDef } from '../components/FormModal';
 
 export interface CustomFieldDef { key: string; label: string; type: 'text' | 'number' | 'select' | 'date'; required: boolean; options?: string[] }
-export interface StudioConfig { org: { name: string }; theme: { accent: string; customAccents?: { name: string; hex: string }[] }; customFields: { persons: CustomFieldDef[]; vehicles: CustomFieldDef[] } }
+export interface StudioConfig { org: { name: string; dateFormat?: 'DD.MM.YYYY' | 'YYYY-MM-DD' | 'MM/DD/YYYY'; timezone?: string }; theme: { accent: string; customAccents?: { name: string; hex: string }[] }; customFields: { persons: CustomFieldDef[]; vehicles: CustomFieldDef[] } }
 
 export const ACCENTS: Record<string, string> = {
   blue: '#3b82f6', green: '#22c55e', amber: '#f59e0b', red: '#ef4444', cyan: '#06b6d4', violet: '#8b5cf6',

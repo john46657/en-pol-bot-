@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isTimeZone } from '@enrp/shared';
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const path = z.string().regex(/^\/[a-z0-9/_-]{0,80}$/);
@@ -24,7 +25,8 @@ export const preferencesSchema = z.object({
   fontSize: z.number().int().min(12).max(18).optional(),
   density: z.enum(['compact', 'comfortable']).optional(),
   language: z.enum(['de', 'en']).optional(),
-  timezone: z.string().max(64).optional(),
+  /** Ungültige Zeitzone (alter Wert) wird verworfen statt das Speichern aller Einstellungen zu blockieren. */
+  timezone: z.preprocess((v) => (isTimeZone(v) ? v : undefined), z.string().max(64).optional()),
   dateFormat: z.enum(['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']).optional(),
   notifications: z.object({ muted: z.array(z.string().max(40)).max(50), toasts: z.boolean().optional() }).optional(),
   favorites: z.array(path).max(30).optional(),

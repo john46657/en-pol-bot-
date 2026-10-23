@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Menu, RefreshCw, Settings, Shield, Siren, Smartphone, Truck, UserCheck, Users, X, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
+import { useAppearance } from '../../lib/prefs';
 import { ConfirmHost, SkeletonRows } from '../../components/ui';
 import { SaveStatus } from '../../components/SaveStatus';
 import { NotificationCenter } from '../../components/NotificationCenter';
@@ -63,6 +64,7 @@ const title = (path: string) => MDT_NAV.flatMap((g) => g.items).filter((i) => !i
  */
 export function MdtShell() {
   const { user, can } = useAuth();
+  useAppearance();
   const loc = useLocation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);

@@ -9,6 +9,8 @@ export declare class StudioService {
     config(): Promise<{
         org: {
             name: string;
+            dateFormat: string;
+            timezone: string;
         };
         theme: {
             accent: string;

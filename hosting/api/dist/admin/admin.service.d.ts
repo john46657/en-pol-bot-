@@ -6,7 +6,7 @@ import { AuditService, Actor } from '../audit/audit.service';
 export declare const SETTING_SCHEMAS: {
     readonly 'org.name': z.ZodString;
     readonly 'org.serverName': z.ZodString;
-    readonly 'org.timezone': z.ZodString;
+    readonly 'org.timezone': z.ZodEffects<z.ZodString, string, string>;
     readonly 'org.dateFormat': z.ZodEnum<["DD.MM.YYYY", "YYYY-MM-DD", "MM/DD/YYYY"]>;
     readonly 'retention.sessionDays': z.ZodNumber;
     readonly 'retention.loginHistoryDays': z.ZodNumber;

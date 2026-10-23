@@ -6,6 +6,8 @@ import { RotateCcw } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { backgroundIsLight, DEFAULT_PREFS, GRADIENTS, usePrefs, type Preferences } from '../lib/prefs';
 import { NAV, navFor, tr, visible } from '../nav';
+import { timeZones } from '@enrp/shared';
+import { useStudio } from '../lib/studio';
 import { QUICK_ACTIONS } from './Dashboard';
 import { Button, Card, Input, PageHeader, Select } from '../components/ui';
 import { TwoFactorCard } from '../components/TwoFactorCard';
@@ -20,7 +22,7 @@ const NOTIFICATION_TYPES: [string, string][] = [
   ['INCIDENT_ASSIGNMENT', '🚨 Einsatz zugewiesen'], ['REPORT_REVIEW', '📄 Bericht zur Prüfung'], ['COMPLAINT_ASSIGNMENT', '⚖️ Beschwerde zugewiesen'],
   ['ACADEMY_ASSIGNMENT', '🎓 Akademie'], ['SEK', '🎯 SEK'], ['RADIO', '📡 Funk'], ['WORKFLOW', '⚙️ Workflows'],
 ];
-const TIMEZONES = ['Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/London', 'UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
+const TIMEZONES = timeZones();
 
 const Row = ({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) => (
   <div className="grid items-center gap-1 py-2 sm:grid-cols-[220px_1fr]"><div><p className="text-sm font-medium">{label}</p>{hint && <p className="text-xs text-muted">{hint}</p>}</div><div className="flex flex-wrap items-center gap-2">{children}</div></div>
@@ -57,14 +59,15 @@ function NameCard() {
 /** Persönliche Einstellungen – wirken nur für einen selbst und werden automatisch gespeichert (auf jedem Gerät gleich). */
 export function PersonalSettings() {
   const { can } = useAuth();
-  const { prefs: p, update } = usePrefs();
+  const { prefs: p, own, update } = usePrefs();
+  const orgDate = useStudio().data?.org?.dateFormat ?? DEFAULT_PREFS.dateFormat;
   const set = <K extends keyof Preferences>(k: K) => (v: Preferences[K]) => update({ [k]: v } as Partial<Preferences>);
   const navItems = NAV.filter((n) => visible(n, can));
   const bgLight = backgroundIsLight(p.background);
   return (
     <>
       <PageHeader title="Persönliche Einstellungen" subtitle="Nur für dich – andere Benutzer sehen davon nichts. Alles wird automatisch gespeichert und auf allen Geräten geladen."
-        actions={<Button variant="ghost" onClick={() => update({ ...DEFAULT_PREFS, favorites: p.favorites, quickActions: p.quickActions, notifications: p.notifications })}><RotateCcw size={14} />Design zurücksetzen</Button>} />
+        actions={<Button variant="ghost" onClick={() => update({ ...DEFAULT_PREFS, dateFormat: undefined, favorites: p.favorites, quickActions: p.quickActions, notifications: p.notifications })}><RotateCcw size={14} />Design zurücksetzen</Button>} />
       <div className="grid gap-4 xl:grid-cols-2">
         <NameCard />
         <Card title="🎨 Design">
@@ -94,8 +97,8 @@ export function PersonalSettings() {
           <Row label={`Schriftgröße (${p.fontSize} px)`}><input type="range" aria-label="Schriftgröße" min={12} max={18} value={p.fontSize} onChange={(e) => update({ fontSize: Number(e.target.value) })} className="w-56" /></Row>
           <Row label="Darstellung"><Seg label="Darstellung" value={p.density} onChange={set('density')} options={[['comfortable', 'Komfortabel'], ['compact', 'Kompakt']]} /></Row>
           <Row label="Teamliste"><Seg label="Teamlisten-Ansicht" value={p.teamList.view} onChange={(v) => update({ teamList: { ...p.teamList, view: v } })} options={[['cards', 'Karten'], ['table', 'Tabelle']]} /></Row>
-          <Row label="Zeitzone"><Select aria-label="Zeitzone" className="w-auto" value={p.timezone ?? ''} onChange={(e) => update({ timezone: e.target.value || undefined })}><option value="">Wie dieses Gerät</option>{TIMEZONES.map((z) => <option key={z}>{z}</option>)}</Select></Row>
-          <Row label="Datumsformat"><Select aria-label="Datumsformat" className="w-auto" value={p.dateFormat} onChange={(e) => update({ dateFormat: e.target.value as Preferences['dateFormat'] })}><option>DD.MM.YYYY</option><option>YYYY-MM-DD</option><option>MM/DD/YYYY</option></Select></Row>
+          <Row label="Zeitzone"><Select aria-label="Zeitzone" className="w-auto max-w-full" value={p.timezone ?? ''} onChange={(e) => update({ timezone: e.target.value || undefined })}><option value="">Wie dieses Gerät</option>{TIMEZONES.map((z) => <option key={z}>{z}</option>)}</Select></Row>
+          <Row label="Datumsformat"><Select aria-label="Datumsformat" className="w-auto max-w-full" value={own.dateFormat ?? ''} onChange={(e) => update({ dateFormat: (e.target.value || undefined) as Preferences['dateFormat'] | undefined })}><option value="">Wie Organisation ({orgDate})</option><option>DD.MM.YYYY</option><option>YYYY-MM-DD</option><option>MM/DD/YYYY</option></Select></Row>
         </Card>
         <Card title="🔔 Benachrichtigungen">
           <p className="mb-2 text-xs text-muted">Ausgeschaltete Arten erscheinen nicht im Benachrichtigungs-Center, nicht im Zähler und nicht als Popup.</p>

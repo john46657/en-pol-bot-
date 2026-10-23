@@ -4,8 +4,8 @@ import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, MapPinned, Menu, Moni
 import { ServerSwitcher } from './ServerSwitcher';
 import { useAuth } from '../lib/auth';
 import { useMediaQuery } from '../lib/media';
-import { accentHex, useStudio } from '../lib/studio';
-import { useApplyPrefs, usePrefs } from '../lib/prefs';
+import { useStudio } from '../lib/studio';
+import { useAppearance, usePrefs } from '../lib/prefs';
 import { flush } from '../lib/autosave';
 import { badgeFor, useNavBadges } from '../lib/badges';
 import { useActivityHeartbeat } from '../lib/activity';
@@ -25,7 +25,7 @@ export function AppShell() {
   const loc = useLocation();
   const nav = useNavigate();
   const orgName = studio.data?.org?.name ?? 'EN Polizei';
-  useApplyPrefs(prefs, accentHex(studio.data?.theme?.accent));
+  useAppearance();
   useEffect(() => { document.title = orgName; }, [orgName]);
   // Seitenwechsel: offene Änderungen sofort senden (sie liegen ohnehin schon lokal vor)
   useEffect(() => { void flush(); }, [loc.pathname]);

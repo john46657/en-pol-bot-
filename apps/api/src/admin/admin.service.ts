@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
+import { isTimeZone } from '@enrp/shared';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
@@ -16,7 +17,7 @@ const idList = () => z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).optional
 export const SETTING_SCHEMAS = {
   'org.name': z.string().min(1).max(100),
   'org.serverName': z.string().min(1).max(100),
-  'org.timezone': z.string().min(3).max(64),
+  'org.timezone': z.string().min(3).max(64).refine(isTimeZone, 'Unbekannte Zeitzone – bitte aus der Liste wählen (z. B. Europe/Berlin).'),
   'org.dateFormat': z.enum(['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']),
   'retention.sessionDays': z.number().int().min(1).max(365),
   'retention.loginHistoryDays': z.number().int().min(30).max(3650),

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.layoutsSchema = exports.preferencesSchema = void 0;
 const zod_1 = require("zod");
+const shared_1 = require("@enrp/shared");
 const hex = zod_1.z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const path = zod_1.z.string().regex(/^\/[a-z0-9/_-]{0,80}$/);
 /**
@@ -25,7 +26,8 @@ exports.preferencesSchema = zod_1.z.object({
     fontSize: zod_1.z.number().int().min(12).max(18).optional(),
     density: zod_1.z.enum(['compact', 'comfortable']).optional(),
     language: zod_1.z.enum(['de', 'en']).optional(),
-    timezone: zod_1.z.string().max(64).optional(),
+    /** Ungültige Zeitzone (alter Wert) wird verworfen statt das Speichern aller Einstellungen zu blockieren. */
+    timezone: zod_1.z.preprocess((v) => ((0, shared_1.isTimeZone)(v) ? v : undefined), zod_1.z.string().max(64).optional()),
     dateFormat: zod_1.z.enum(['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']).optional(),
     notifications: zod_1.z.object({ muted: zod_1.z.array(zod_1.z.string().max(40)).max(50), toasts: zod_1.z.boolean().optional() }).optional(),
     favorites: zod_1.z.array(path).max(30).optional(),
