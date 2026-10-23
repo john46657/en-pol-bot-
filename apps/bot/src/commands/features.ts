@@ -16,6 +16,7 @@ import { permittedFor, SHIFT_INTERACTION } from './shifts';
 import { SETUP_INTERACTION } from './setup';
 import { BACKUP_INTERACTION } from './backup';
 import { EXAM_INTERACTION } from './exams';
+import { REMINDER_INTERACTION } from './reminders';
 
 const str = (c: Ctx, k: string) => String(c.opts[k] ?? '').trim();
 const choices = (m: Record<string, string>) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
@@ -216,6 +217,7 @@ export const INTERACTIONS: InteractionDef[] = [
   DUTY_REPORT_INTERACTION,
   TRAINING_INTERACTION,
   SHIFT_INTERACTION,
+  REMINDER_INTERACTION,
 ];
 
 export const interactionFor = (customId: string) => {

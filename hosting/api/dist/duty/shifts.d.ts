@@ -88,6 +88,11 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         autoOffMinutes?: number | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
+    reminder: {
+        enabled: boolean;
+        afterMinutes: number;
+        autoOffMinutes: number;
+    };
     enabled: boolean;
     types: {
         id: string;
@@ -98,12 +103,12 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         permittedRoleIds: string[];
         logChannelId?: string | null | undefined;
     }[];
-    reminder: {
-        enabled: boolean;
-        afterMinutes: number;
-        autoOffMinutes: number;
-    };
 }, {
+    reminder?: {
+        enabled?: boolean | undefined;
+        afterMinutes?: number | undefined;
+        autoOffMinutes?: number | undefined;
+    } | undefined;
     enabled?: boolean | undefined;
     types?: {
         id: string;
@@ -114,12 +119,12 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         onBreakRoleIds?: string[] | undefined;
         permittedRoleIds?: string[] | undefined;
     }[] | undefined;
-    reminder?: {
-        enabled?: boolean | undefined;
-        afterMinutes?: number | undefined;
-        autoOffMinutes?: number | undefined;
-    } | undefined;
 }>, {
+    reminder: {
+        enabled: boolean;
+        afterMinutes: number;
+        autoOffMinutes: number;
+    };
     enabled: boolean;
     types: {
         id: string;
@@ -130,12 +135,12 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         permittedRoleIds: string[];
         logChannelId?: string | null | undefined;
     }[];
-    reminder: {
-        enabled: boolean;
-        afterMinutes: number;
-        autoOffMinutes: number;
-    };
 }, {
+    reminder?: {
+        enabled?: boolean | undefined;
+        afterMinutes?: number | undefined;
+        autoOffMinutes?: number | undefined;
+    } | undefined;
     enabled?: boolean | undefined;
     types?: {
         id: string;
@@ -146,11 +151,6 @@ export declare const shiftsConfigSchema: z.ZodEffects<z.ZodObject<{
         onBreakRoleIds?: string[] | undefined;
         permittedRoleIds?: string[] | undefined;
     }[] | undefined;
-    reminder?: {
-        enabled?: boolean | undefined;
-        afterMinutes?: number | undefined;
-        autoOffMinutes?: number | undefined;
-    } | undefined;
 }>;
 export type ShiftType = z.infer<typeof shiftTypeSchema>;
 export type ShiftsConfig = z.infer<typeof shiftsConfigSchema>;
@@ -160,6 +160,11 @@ export declare class ShiftsService {
     constructor(prisma: PrismaService, audit: AuditService);
     config(): Promise<ShiftsConfig>;
     save(actor: Actor, input: ShiftsConfig): Promise<{
+        reminder: {
+            enabled: boolean;
+            afterMinutes: number;
+            autoOffMinutes: number;
+        };
         enabled: boolean;
         types: {
             id: string;
@@ -170,11 +175,6 @@ export declare class ShiftsService {
             permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
-        reminder: {
-            enabled: boolean;
-            afterMinutes: number;
-            autoOffMinutes: number;
-        };
     }>;
     /** Welche Schicht-Art gilt? Gewählte → bei Pause die laufende → Standard. `null`, wenn das Modul aus ist. */
     resolve(cfg: ShiftsConfig, requested: string | undefined, current: string | null | undefined): Promise<ShiftType | null>;
@@ -191,6 +191,11 @@ export declare class ShiftsController {
     constructor(s: ShiftsService);
     /** Schicht-Arten (Auswahl beim Dienstbeginn). */
     config(): Promise<{
+        reminder: {
+            enabled: boolean;
+            afterMinutes: number;
+            autoOffMinutes: number;
+        };
         enabled: boolean;
         types: {
             id: string;
@@ -201,13 +206,13 @@ export declare class ShiftsController {
             permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
-        reminder: {
-            enabled: boolean;
-            afterMinutes: number;
-            autoOffMinutes: number;
-        };
     }>;
     save(a: Actor, b: ShiftsConfig): Promise<{
+        reminder: {
+            enabled: boolean;
+            afterMinutes: number;
+            autoOffMinutes: number;
+        };
         enabled: boolean;
         types: {
             id: string;
@@ -218,17 +223,17 @@ export declare class ShiftsController {
             permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
-        reminder: {
-            enabled: boolean;
-            afterMinutes: number;
-            autoOffMinutes: number;
-        };
     }>;
 }
 export declare class BotShiftsController {
     private readonly s;
     constructor(s: ShiftsService);
     config(): Promise<{
+        reminder: {
+            enabled: boolean;
+            afterMinutes: number;
+            autoOffMinutes: number;
+        };
         enabled: boolean;
         types: {
             id: string;
@@ -239,10 +244,5 @@ export declare class BotShiftsController {
             permittedRoleIds: string[];
             logChannelId?: string | null | undefined;
         }[];
-        reminder: {
-            enabled: boolean;
-            afterMinutes: number;
-            autoOffMinutes: number;
-        };
     }>;
 }

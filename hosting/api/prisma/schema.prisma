@@ -700,6 +700,28 @@ model Application {
   @@index([status])
 }
 
+/// Persönliche Erinnerung (`/remind-me`): dauerhaft gespeichert, damit sie Neustarts übersteht. Fällige werden genau einmal
+/// (atomar) in die Bot-Warteschlange gelegt; Verschieben setzt sie wieder auf PENDING.
+model Reminder {
+  id        String    @id @default(uuid()) @db.Uuid
+  discordId String
+  guildId   String?
+  /// Kanal, in dem `/remind-me` benutzt wurde (Zustellung ohne DM bzw. Ersatz, wenn die DM nicht ankommt)
+  channelId String?
+  text      String
+  dm        Boolean   @default(false)
+  dueAt     DateTime
+  /// PENDING | SENT | DONE | CANCELLED
+  status    String    @default("PENDING")
+  /// wie oft schon ausgelöst – schützt Buttons vor doppelten Klicks
+  fireCount Int       @default(0)
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  @@index([status, dueAt])
+  @@index([discordId, status])
+}
+
 /// KI-Bewerbungsprüfung (Gemini o. Ä.): je Analyse eine Zeile, eindeutig der Bewerbung zugeordnet. Nur Entscheidungshilfe –
 /// ändert nie den Status der Bewerbung. Dashboard und Discord lesen dieselben Zeilen.
 model ApplicationAiReview {

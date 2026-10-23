@@ -19,6 +19,7 @@ const shifts_1 = require("./shifts");
 const setup_1 = require("./setup");
 const backup_1 = require("./backup");
 const exams_1 = require("./exams");
+const reminders_1 = require("./reminders");
 const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
@@ -262,6 +263,7 @@ exports.INTERACTIONS = [
     duty_reports_1.DUTY_REPORT_INTERACTION,
     trainings_1.TRAINING_INTERACTION,
     shifts_1.SHIFT_INTERACTION,
+    reminders_1.REMINDER_INTERACTION,
 ];
 const interactionFor = (customId) => {
     const [prefix, ...args] = customId.split(':');

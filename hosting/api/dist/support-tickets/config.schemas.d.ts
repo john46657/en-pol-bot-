@@ -866,12 +866,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     claimed: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -879,12 +879,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     assigned: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -892,12 +892,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     user_message: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -905,12 +905,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     info_requested: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -918,12 +918,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     priority: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -931,12 +931,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     escalated: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -944,12 +944,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     closed: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -957,12 +957,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     reopened: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -970,12 +970,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     transcript_ready: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -983,12 +983,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
     transcript_failed: z.ZodDefault<z.ZodObject<{
         channel: z.ZodDefault<z.ZodBoolean>;
@@ -996,124 +996,124 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dashboard: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     }, {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     priority: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     created: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     closed: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     claimed: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     assigned: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     user_message: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     info_requested: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     escalated: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     reopened: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     transcript_ready: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
     transcript_failed: {
         channel: boolean;
-        dashboard: boolean;
         dm: boolean;
+        dashboard: boolean;
     };
 }, {
     priority?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     created?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     closed?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     claimed?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     assigned?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     user_message?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     info_requested?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     escalated?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     reopened?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     transcript_ready?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
     transcript_failed?: {
         channel?: boolean | undefined;
-        dashboard?: boolean | undefined;
         dm?: boolean | undefined;
+        dashboard?: boolean | undefined;
     } | undefined;
 }>>;
 export declare const reasonSchema: z.ZodObject<{
@@ -1166,12 +1166,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         claimed: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1179,12 +1179,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         assigned: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1192,12 +1192,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         user_message: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1205,12 +1205,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         info_requested: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1218,12 +1218,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         priority: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1231,12 +1231,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         escalated: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1244,12 +1244,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         closed: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1257,12 +1257,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         reopened: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1270,12 +1270,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         transcript_ready: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1283,12 +1283,12 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
         transcript_failed: z.ZodDefault<z.ZodObject<{
             channel: z.ZodDefault<z.ZodBoolean>;
@@ -1296,124 +1296,124 @@ export declare const settingsSchema: z.ZodObject<{
             dashboard: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         }, {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
         priority: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         created: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         closed: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         claimed: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         assigned: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         user_message: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         info_requested: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         escalated: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         reopened: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         transcript_ready: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         transcript_failed: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
     }, {
         priority?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         created?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         closed?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         claimed?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         assigned?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         user_message?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         info_requested?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         escalated?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         reopened?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         transcript_ready?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         transcript_failed?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
@@ -1421,58 +1421,58 @@ export declare const settingsSchema: z.ZodObject<{
     notifications: {
         priority: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         created: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         closed: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         claimed: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         assigned: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         user_message: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         info_requested: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         escalated: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         reopened: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         transcript_ready: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
         transcript_failed: {
             channel: boolean;
-            dashboard: boolean;
             dm: boolean;
+            dashboard: boolean;
         };
     };
     leadRoleIds: string[];
@@ -1501,58 +1501,58 @@ export declare const settingsSchema: z.ZodObject<{
     notifications?: {
         priority?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         created?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         closed?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         claimed?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         assigned?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         user_message?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         info_requested?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         escalated?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         reopened?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         transcript_ready?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
         transcript_failed?: {
             channel?: boolean | undefined;
-            dashboard?: boolean | undefined;
             dm?: boolean | undefined;
+            dashboard?: boolean | undefined;
         } | undefined;
     } | undefined;
     leadRoleIds?: string[] | undefined;

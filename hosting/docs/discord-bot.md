@@ -37,6 +37,8 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/fahndung person grund [prioritaet]` | Person zur Fahndung ausschreiben | `wanted.create` |
 | `/benachrichtigungen` | ungelesene Benachrichtigungen | – |
 | `/bewerbung` | Bewerbung bei EN Polizei – Fragen einzeln per **Direktnachricht** (auch **ohne** Verknüpfung); Entscheidung kommt per DM | – |
+| `/remind-me in what dm` | persönliche Erinnerung: `in` = Zeit (`10m`, `30 min`, `1h`, `1h30m`, `2 Tage`, nur Zahl = Minuten; 1 Minute bis 365 Tage), `what` = Text, `dm` = per Direktnachricht (Standard: im Kanal des Befehls). Gespeichert im System → übersteht Neustarts; verpasste Erinnerungen kommen genau einmal mit Hinweis „verspätet“. Sind DMs geschlossen, kommt sie im Kanal mit Erwähnung. Unter der Erinnerung: **10 Minuten / 30 Minuten / 1 Stunde / 1 Tag** verschieben oder **Erledigt** (nur der erste Klick zählt, nur die eigene). Ohne Verknüpfung nutzbar, max. 25 offene | – |
+| `/erinnerungen` | eigene offene Erinnerungen ansehen und löschen | – |
 | `/bewerbungspanel` | postet das Bewerbungs-Panel mit Button „Jetzt bewerben“ (startet denselben DM-Ablauf) | Discord „Server verwalten“ |
 | `/gefahrenstatus [aktion] [stufe] [grund]` | Gefahrenstatus anzeigen / setzen (grün, gelb, rot) / als Button-Panel in den Channel posten | anzeigen: `dashboard.view` · setzen: `dispatch.manage` · Panel: Discord „Server verwalten“ |
 | `/teamliste` | selbst aktualisierende Teamliste einrichten bzw. sofort aktualisieren | `team.view` + Discord „Server verwalten“ |

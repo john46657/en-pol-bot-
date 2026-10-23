@@ -687,58 +687,58 @@ export declare class SupportTicketsController {
             notifications: {
                 priority: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 created: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 closed: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 claimed: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 assigned: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 user_message: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 info_requested: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 escalated: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 reopened: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 transcript_ready: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
                 transcript_failed: {
                     channel: boolean;
-                    dashboard: boolean;
                     dm: boolean;
+                    dashboard: boolean;
                 };
             };
             leadRoleIds: string[];
@@ -783,58 +783,58 @@ export declare class SupportTicketsController {
         notifications: {
             priority: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             created: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             closed: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             claimed: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             assigned: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             user_message: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             info_requested: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             escalated: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             reopened: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             transcript_ready: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
             transcript_failed: {
                 channel: boolean;
-                dashboard: boolean;
                 dm: boolean;
+                dashboard: boolean;
             };
         };
         leadRoleIds: string[];
