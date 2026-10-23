@@ -15,6 +15,7 @@ import { SYSTEM_COMMANDS } from './system';
 import { BACKUP_COMMANDS } from './backup';
 import { EXAM_COMMANDS } from './exams';
 import { BOT_PROFILE_COMMANDS } from './bot-profile';
+import { REMINDER_COMMANDS } from './reminders';
 import { clip, COLORS, EmbedData, errorReply, incidentLine, label, listEmbed, okReply, personEmbed, plain, Reply, Row, vehicleEmbed } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -107,7 +108,7 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
         { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`' },
         { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
-        { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
+        { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel · `/remind-me` (Erinnerung, z. B. `in: 30m`) · `/erinnerungen`' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
     },
   },
@@ -413,6 +414,7 @@ export const COMMANDS: CommandDef[] = [
   ...BACKUP_COMMANDS,
   ...EXAM_COMMANDS,
   ...BOT_PROFILE_COMMANDS,
+  ...REMINDER_COMMANDS,
 ];
 
 export { mapError };

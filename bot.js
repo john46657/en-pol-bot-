@@ -5731,12 +5731,12 @@ var require_formdata_parser = __commonJS({
               return "failure";
             }
             if (bufferStartsWith(input, filenameBuffer, position)) {
-              let check = position.position + filenameBuffer.length;
-              if (input[check] === 42) {
+              let check2 = position.position + filenameBuffer.length;
+              if (input[check2] === 42) {
                 position.position += 1;
-                check += 1;
+                check2 += 1;
               }
-              if (input[check] !== 61 || input[check + 1] !== 34) {
+              if (input[check2] !== 61 || input[check2 + 1] !== 34) {
                 return "failure";
               }
               position.position += 12;
@@ -76906,7 +76906,7 @@ var ZodType = class {
     const result = await (isAsync(maybeAsyncResult) ? maybeAsyncResult : Promise.resolve(maybeAsyncResult));
     return handleResult(ctx, result);
   }
-  refine(check, message) {
+  refine(check2, message) {
     const getIssueProperties = (val) => {
       if (typeof message === "string" || typeof message === "undefined") {
         return { message };
@@ -76917,7 +76917,7 @@ var ZodType = class {
       }
     };
     return this._refinement((val, ctx) => {
-      const result = check(val);
+      const result = check2(val);
       const setError = () => ctx.addIssue({
         code: ZodIssueCode.custom,
         ...getIssueProperties(val)
@@ -76940,9 +76940,9 @@ var ZodType = class {
       }
     });
   }
-  refinement(check, refinementData) {
+  refinement(check2, refinementData) {
     return this._refinement((val, ctx) => {
-      if (!check(val)) {
+      if (!check2(val)) {
         ctx.addIssue(typeof refinementData === "function" ? refinementData(val, ctx) : refinementData);
         return false;
       } else {
@@ -77164,70 +77164,70 @@ var ZodString = class _ZodString extends ZodType {
     }
     const status3 = new ParseStatus();
     let ctx = void 0;
-    for (const check of this._def.checks) {
-      if (check.kind === "min") {
-        if (input.data.length < check.value) {
+    for (const check2 of this._def.checks) {
+      if (check2.kind === "min") {
+        if (input.data.length < check2.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
-            minimum: check.value,
+            minimum: check2.value,
             type: "string",
             inclusive: true,
             exact: false,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "max") {
-        if (input.data.length > check.value) {
+      } else if (check2.kind === "max") {
+        if (input.data.length > check2.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
-            maximum: check.value,
+            maximum: check2.value,
             type: "string",
             inclusive: true,
             exact: false,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "length") {
-        const tooBig = input.data.length > check.value;
-        const tooSmall = input.data.length < check.value;
+      } else if (check2.kind === "length") {
+        const tooBig = input.data.length > check2.value;
+        const tooSmall = input.data.length < check2.value;
         if (tooBig || tooSmall) {
           ctx = this._getOrReturnCtx(input, ctx);
           if (tooBig) {
             addIssueToContext(ctx, {
               code: ZodIssueCode.too_big,
-              maximum: check.value,
+              maximum: check2.value,
               type: "string",
               inclusive: true,
               exact: true,
-              message: check.message
+              message: check2.message
             });
           } else if (tooSmall) {
             addIssueToContext(ctx, {
               code: ZodIssueCode.too_small,
-              minimum: check.value,
+              minimum: check2.value,
               type: "string",
               inclusive: true,
               exact: true,
-              message: check.message
+              message: check2.message
             });
           }
           status3.dirty();
         }
-      } else if (check.kind === "email") {
+      } else if (check2.kind === "email") {
         if (!emailRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "email",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "emoji") {
+      } else if (check2.kind === "emoji") {
         if (!emojiRegex) {
           emojiRegex = new RegExp(_emojiRegex, "u");
         }
@@ -77236,61 +77236,61 @@ var ZodString = class _ZodString extends ZodType {
           addIssueToContext(ctx, {
             validation: "emoji",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "uuid") {
+      } else if (check2.kind === "uuid") {
         if (!uuidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "uuid",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "nanoid") {
+      } else if (check2.kind === "nanoid") {
         if (!nanoidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "nanoid",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "cuid") {
+      } else if (check2.kind === "cuid") {
         if (!cuidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "cuid",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "cuid2") {
+      } else if (check2.kind === "cuid2") {
         if (!cuid2Regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "cuid2",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "ulid") {
+      } else if (check2.kind === "ulid") {
         if (!ulidRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "ulid",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "url") {
+      } else if (check2.kind === "url") {
         try {
           new URL(input.data);
         } catch {
@@ -77298,153 +77298,153 @@ var ZodString = class _ZodString extends ZodType {
           addIssueToContext(ctx, {
             validation: "url",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "regex") {
-        check.regex.lastIndex = 0;
-        const testResult = check.regex.test(input.data);
+      } else if (check2.kind === "regex") {
+        check2.regex.lastIndex = 0;
+        const testResult = check2.regex.test(input.data);
         if (!testResult) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "regex",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "trim") {
+      } else if (check2.kind === "trim") {
         input.data = input.data.trim();
-      } else if (check.kind === "includes") {
-        if (!input.data.includes(check.value, check.position)) {
+      } else if (check2.kind === "includes") {
+        if (!input.data.includes(check2.value, check2.position)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
-            validation: { includes: check.value, position: check.position },
-            message: check.message
+            validation: { includes: check2.value, position: check2.position },
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "toLowerCase") {
+      } else if (check2.kind === "toLowerCase") {
         input.data = input.data.toLowerCase();
-      } else if (check.kind === "toUpperCase") {
+      } else if (check2.kind === "toUpperCase") {
         input.data = input.data.toUpperCase();
-      } else if (check.kind === "startsWith") {
-        if (!input.data.startsWith(check.value)) {
+      } else if (check2.kind === "startsWith") {
+        if (!input.data.startsWith(check2.value)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
-            validation: { startsWith: check.value },
-            message: check.message
+            validation: { startsWith: check2.value },
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "endsWith") {
-        if (!input.data.endsWith(check.value)) {
+      } else if (check2.kind === "endsWith") {
+        if (!input.data.endsWith(check2.value)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
-            validation: { endsWith: check.value },
-            message: check.message
+            validation: { endsWith: check2.value },
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "datetime") {
-        const regex = datetimeRegex(check);
+      } else if (check2.kind === "datetime") {
+        const regex = datetimeRegex(check2);
         if (!regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
             validation: "datetime",
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "date") {
+      } else if (check2.kind === "date") {
         const regex = dateRegex;
         if (!regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
             validation: "date",
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "time") {
-        const regex = timeRegex(check);
+      } else if (check2.kind === "time") {
+        const regex = timeRegex(check2);
         if (!regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_string,
             validation: "time",
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "duration") {
+      } else if (check2.kind === "duration") {
         if (!durationRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "duration",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "ip") {
-        if (!isValidIP(input.data, check.version)) {
+      } else if (check2.kind === "ip") {
+        if (!isValidIP(input.data, check2.version)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "ip",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "jwt") {
-        if (!isValidJWT(input.data, check.alg)) {
+      } else if (check2.kind === "jwt") {
+        if (!isValidJWT(input.data, check2.alg)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "jwt",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "cidr") {
-        if (!isValidCidr(input.data, check.version)) {
+      } else if (check2.kind === "cidr") {
+        if (!isValidCidr(input.data, check2.version)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "cidr",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "base64") {
+      } else if (check2.kind === "base64") {
         if (!base64Regex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "base64",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "base64url") {
+      } else if (check2.kind === "base64url") {
         if (!base64urlRegex.test(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             validation: "base64url",
             code: ZodIssueCode.invalid_string,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
       } else {
-        util.assertNever(check);
+        util.assertNever(check2);
       }
     }
     return { status: status3.value, value: input.data };
@@ -77456,10 +77456,10 @@ var ZodString = class _ZodString extends ZodType {
       ...errorUtil.errToObj(message)
     });
   }
-  _addCheck(check) {
+  _addCheck(check2) {
     return new _ZodString({
       ...this._def,
-      checks: [...this._def.checks, check]
+      checks: [...this._def.checks, check2]
     });
   }
   email(message) {
@@ -77724,67 +77724,67 @@ var ZodNumber = class _ZodNumber extends ZodType {
     }
     let ctx = void 0;
     const status3 = new ParseStatus();
-    for (const check of this._def.checks) {
-      if (check.kind === "int") {
+    for (const check2 of this._def.checks) {
+      if (check2.kind === "int") {
         if (!util.isInteger(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_type,
             expected: "integer",
             received: "float",
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "min") {
-        const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
+      } else if (check2.kind === "min") {
+        const tooSmall = check2.inclusive ? input.data < check2.value : input.data <= check2.value;
         if (tooSmall) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
-            minimum: check.value,
+            minimum: check2.value,
             type: "number",
-            inclusive: check.inclusive,
+            inclusive: check2.inclusive,
             exact: false,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "max") {
-        const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
+      } else if (check2.kind === "max") {
+        const tooBig = check2.inclusive ? input.data > check2.value : input.data >= check2.value;
         if (tooBig) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
-            maximum: check.value,
+            maximum: check2.value,
             type: "number",
-            inclusive: check.inclusive,
+            inclusive: check2.inclusive,
             exact: false,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "multipleOf") {
-        if (floatSafeRemainder(input.data, check.value) !== 0) {
+      } else if (check2.kind === "multipleOf") {
+        if (floatSafeRemainder(input.data, check2.value) !== 0) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.not_multiple_of,
-            multipleOf: check.value,
-            message: check.message
+            multipleOf: check2.value,
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "finite") {
+      } else if (check2.kind === "finite") {
         if (!Number.isFinite(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.not_finite,
-            message: check.message
+            message: check2.message
           });
           status3.dirty();
         }
       } else {
-        util.assertNever(check);
+        util.assertNever(check2);
       }
     }
     return { status: status3.value, value: input.data };
@@ -77815,10 +77815,10 @@ var ZodNumber = class _ZodNumber extends ZodType {
       ]
     });
   }
-  _addCheck(check) {
+  _addCheck(check2) {
     return new _ZodNumber({
       ...this._def,
-      checks: [...this._def.checks, check]
+      checks: [...this._def.checks, check2]
     });
   }
   int(message) {
@@ -77953,45 +77953,45 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
     }
     let ctx = void 0;
     const status3 = new ParseStatus();
-    for (const check of this._def.checks) {
-      if (check.kind === "min") {
-        const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
+    for (const check2 of this._def.checks) {
+      if (check2.kind === "min") {
+        const tooSmall = check2.inclusive ? input.data < check2.value : input.data <= check2.value;
         if (tooSmall) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
             type: "bigint",
-            minimum: check.value,
-            inclusive: check.inclusive,
-            message: check.message
+            minimum: check2.value,
+            inclusive: check2.inclusive,
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "max") {
-        const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
+      } else if (check2.kind === "max") {
+        const tooBig = check2.inclusive ? input.data > check2.value : input.data >= check2.value;
         if (tooBig) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
             type: "bigint",
-            maximum: check.value,
-            inclusive: check.inclusive,
-            message: check.message
+            maximum: check2.value,
+            inclusive: check2.inclusive,
+            message: check2.message
           });
           status3.dirty();
         }
-      } else if (check.kind === "multipleOf") {
-        if (input.data % check.value !== BigInt(0)) {
+      } else if (check2.kind === "multipleOf") {
+        if (input.data % check2.value !== BigInt(0)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.not_multiple_of,
-            multipleOf: check.value,
-            message: check.message
+            multipleOf: check2.value,
+            message: check2.message
           });
           status3.dirty();
         }
       } else {
-        util.assertNever(check);
+        util.assertNever(check2);
       }
     }
     return { status: status3.value, value: input.data };
@@ -78031,10 +78031,10 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
       ]
     });
   }
-  _addCheck(check) {
+  _addCheck(check2) {
     return new _ZodBigInt({
       ...this._def,
-      checks: [...this._def.checks, check]
+      checks: [...this._def.checks, check2]
     });
   }
   positive(message) {
@@ -78154,35 +78154,35 @@ var ZodDate = class _ZodDate extends ZodType {
     }
     const status3 = new ParseStatus();
     let ctx = void 0;
-    for (const check of this._def.checks) {
-      if (check.kind === "min") {
-        if (input.data.getTime() < check.value) {
+    for (const check2 of this._def.checks) {
+      if (check2.kind === "min") {
+        if (input.data.getTime() < check2.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_small,
-            message: check.message,
+            message: check2.message,
             inclusive: true,
             exact: false,
-            minimum: check.value,
+            minimum: check2.value,
             type: "date"
           });
           status3.dirty();
         }
-      } else if (check.kind === "max") {
-        if (input.data.getTime() > check.value) {
+      } else if (check2.kind === "max") {
+        if (input.data.getTime() > check2.value) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.too_big,
-            message: check.message,
+            message: check2.message,
             inclusive: true,
             exact: false,
-            maximum: check.value,
+            maximum: check2.value,
             type: "date"
           });
           status3.dirty();
         }
       } else {
-        util.assertNever(check);
+        util.assertNever(check2);
       }
     }
     return {
@@ -78190,10 +78190,10 @@ var ZodDate = class _ZodDate extends ZodType {
       value: new Date(input.data.getTime())
     };
   }
-  _addCheck(check) {
+  _addCheck(check2) {
     return new _ZodDate({
       ...this._def,
-      checks: [...this._def.checks, check]
+      checks: [...this._def.checks, check2]
     });
   }
   min(minDate, message) {
@@ -80054,10 +80054,10 @@ function cleanParams(params, data) {
   const p2 = typeof p === "string" ? { message: p } : p;
   return p2;
 }
-function custom(check, _params = {}, fatal) {
-  if (check)
+function custom(check2, _params = {}, fatal) {
+  if (check2)
     return ZodAny.create().superRefine((data, ctx) => {
-      const r = check(data);
+      const r = check2(data);
       if (r instanceof Promise) {
         return r.then((r2) => {
           if (!r2) {
@@ -81324,6 +81324,63 @@ var AI_REVIEW_RESPONSE_SCHEMA = {
   },
   required: ["gesamt", "kriterien", "staerken", "schwaechen", "fehlende_angaben", "widersprueche", "rueckfragen", "unsicherheiten", "empfehlung", "empfehlung_begruendung"]
 };
+var REMINDER_MIN_MS = 6e4;
+var REMINDER_MAX_MS = 365 * 864e5;
+var REMINDER_TEXT_MAX = 1e3;
+var REMINDER_SNOOZE = [
+  { minutes: 10, label: "10 Minuten" },
+  { minutes: 30, label: "30 Minuten" },
+  { minutes: 60, label: "1 Stunde" },
+  { minutes: 1440, label: "1 Tag" }
+];
+var REMINDER_SNOOZE_MINUTES = REMINDER_SNOOZE.map((s) => s.minutes);
+var UNITS = [
+  [/^(d|t|tag|tage|tagen|day|days)$/, 864e5],
+  [/^(w|wo|woche|wochen|week|weeks)$/, 7 * 864e5],
+  [/^(h|std|stde|stdn|stunde|stunden|hr|hrs|hour|hours)$/, 36e5],
+  [/^(m|min|mins|minute|minuten|minutes)$/, 6e4]
+];
+function parseReminderDuration(input) {
+  const raw = String(input ?? "").trim().toLowerCase();
+  const hint2 = "Beispiele: `10m`, `30 min`, `1h`, `1h30m`, `2 Tage`.";
+  if (!raw) return { ok: false, error: `Bitte angeben, in wie viel Zeit ich dich erinnern soll. ${hint2}` };
+  const cleaned = raw.replace(/\b(und|and|in)\b/g, " ").replace(/[+,](?!\d)/g, " ");
+  if (/^\d+$/.test(cleaned.trim())) return check(Number(cleaned.trim()) * 6e4, hint2);
+  const re = /(\d+(?:[.,]\d+)?)\s*([a-zäöü]+)/g;
+  let total = 0, matched = false, rest = cleaned, m;
+  while (m = re.exec(cleaned)) {
+    const n = Number(m[1].replace(",", "."));
+    const unit = UNITS.find(([u]) => u.test(m[2]));
+    if (!unit || !Number.isFinite(n)) return { ok: false, error: `\u201E${m[2]}\u201C verstehe ich nicht als Zeiteinheit. ${hint2}` };
+    total += n * unit[1];
+    matched = true;
+    rest = rest.replace(m[0], " ");
+  }
+  if (rest.trim() || !matched) return { ok: false, error: `\u201E${String(input).slice(0, 30)}\u201C ist keine g\xFCltige Zeitangabe. ${hint2}` };
+  return check(Math.round(total), hint2);
+}
+function check(ms, hint2) {
+  if (ms < REMINDER_MIN_MS) return { ok: false, error: `Die Zeit muss mindestens 1 Minute betragen. ${hint2}` };
+  if (ms > REMINDER_MAX_MS) return { ok: false, error: "H\xF6chstens 365 Tage im Voraus." };
+  return { ok: true, ms };
+}
+function parseBool(v, fallback = false) {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  const s = String(v ?? "").trim().toLowerCase();
+  if (["true", "ja", "yes", "y", "j", "1", "an", "on", "wahr"].includes(s)) return true;
+  if (["false", "nein", "no", "n", "0", "aus", "off", "falsch"].includes(s)) return false;
+  return fallback;
+}
+function formatReminderDuration(ms) {
+  let m = Math.round(ms / 6e4);
+  const d = Math.floor(m / 1440);
+  m -= d * 1440;
+  const h = Math.floor(m / 60);
+  m -= h * 60;
+  const parts = [d && `${d} ${d === 1 ? "Tag" : "Tage"}`, h && `${h} ${h === 1 ? "Stunde" : "Stunden"}`, m && `${m} ${m === 1 ? "Minute" : "Minuten"}`].filter(Boolean);
+  return parts.join(" ") || "0 Minuten";
+}
 
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
@@ -83026,8 +83083,8 @@ function parseLeaveDate(input, end, now = /* @__PURE__ */ new Date()) {
     if (h > 23 || min > 59) return null;
   }
   if (m < 1 || m > 12 || d < 1 || d > 31) return null;
-  const check = new Date(Date.UTC(y, m - 1, d));
-  if (check.getUTCMonth() !== m - 1) return null;
+  const check2 = new Date(Date.UTC(y, m - 1, d));
+  if (check2.getUTCMonth() !== m - 1) return null;
   return berlinTime(y, m, d, h, min);
 }
 var fmt = (iso) => new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -85544,6 +85601,131 @@ ${res.embeds[0].description ?? ""}`;
   }
 };
 
+// apps/bot/src/commands/reminders.ts
+var ts5 = (iso, f2 = "R") => `<t:${Math.floor(Date.parse(iso) / 1e3)}:${f2}>`;
+var isId = (v) => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v);
+var apiError2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(e.message) : mapError(e);
+var REMINDER_COMMANDS = [{
+  name: "remind-me",
+  description: "Erinnert dich nach einer Zeit an etwas (per DM oder hier im Kanal)",
+  options: [
+    { name: "in", description: "In wie viel Zeit? z. B. 10m, 30 min, 1h, 1h30m, 2 Tage", type: "string", required: true, maxLength: 50 },
+    { name: "what", description: "Woran soll ich dich erinnern?", type: "string", required: true, maxLength: REMINDER_TEXT_MAX },
+    { name: "dm", description: "Per Direktnachricht erinnern (Standard: hier im Kanal)", type: "boolean" }
+  ],
+  async run(c) {
+    const d = parseReminderDuration(c.opts.in);
+    if (!d.ok) return errorReply(d.error);
+    const text2 = String(c.opts.what ?? "").trim();
+    if (!text2) return errorReply("Bitte angeben, woran ich dich erinnern soll.");
+    if (text2.length > REMINDER_TEXT_MAX) return errorReply(`Der Erinnerungstext darf h\xF6chstens ${REMINDER_TEXT_MAX} Zeichen lang sein.`);
+    const channelId = c.guildId && c.channelId ? c.channelId : null;
+    let dm = parseBool(c.opts.dm, false) || !channelId;
+    let note2 = "";
+    if (dm && channelId && c.platform) {
+      try {
+        await c.platform.sendDm(c.discordId, { embed: { title: "\u23F0 Erinnerung gespeichert", description: `Ich schreibe dir hier ${formatReminderDuration(d.ms)} nach dem Speichern:
+> ${clip2(plain2(text2), 300)}`, color: COLORS.info } });
+      } catch {
+        dm = false;
+        note2 = "\n\u26A0\uFE0F Ich kann dir keine Direktnachricht schicken (DMs geschlossen?) \u2013 die Erinnerung kommt deshalb **hier im Kanal**.";
+      }
+    }
+    try {
+      const r = await c.api.service("POST", "/bot/reminders", { discordId: c.discordId, guildId: c.guildId ?? null, channelId, text: text2, dm, delayMs: d.ms });
+      return okReply(`${r.duplicate ? "Diese Erinnerung hast du gerade schon gespeichert. " : ""}Ich erinnere dich ${ts5(r.dueAt)} (${ts5(r.dueAt, "f")}) ${r.dm ? "per **Direktnachricht**" : "hier im **Kanal**"}:
+> ${clip2(plain2(text2), 300)}${note2}
+-# \xDCbersicht und l\xF6schen: \`/erinnerungen\``);
+    } catch (e) {
+      return apiError2(e);
+    }
+  }
+}, {
+  name: "erinnerungen",
+  description: "Deine offenen Erinnerungen ansehen und l\xF6schen",
+  async run(c) {
+    try {
+      const list4 = await c.api.service("GET", `/bot/reminders?discordId=${c.discordId}`);
+      if (!list4.length) return okReply("Du hast keine offenen Erinnerungen. Neue mit `/remind-me`.");
+      const lines = list4.map((r, i) => `**${i + 1}.** ${ts5(r.dueAt)} \xB7 ${r.dm ? "DM" : "Kanal"} \u2013 ${clip2(plain2(r.text), 120)}`);
+      return {
+        ephemeral: true,
+        embeds: [{ title: `\u23F0 Deine Erinnerungen (${list4.length})`, color: COLORS.info, description: clip2(lines.join("\n"), 4e3) }],
+        buttons: list4.slice(0, 20).map((r, i) => ({ id: `remind:cancel:${r.id}`, label: `${i + 1} l\xF6schen`, style: "danger" }))
+      };
+    } catch (e) {
+      return apiError2(e);
+    }
+  }
+}];
+function reminderMessage(p) {
+  const id3 = String(p.id), fire = Number(p.fire) || 1;
+  const late2 = typeof p.lateMinutes === "number" && typeof p.dueAt === "string" ? `
+
+\u26A0\uFE0F Versp\xE4tet zugestellt (der Bot war nicht erreichbar) \u2013 f\xE4llig war ${ts5(p.dueAt, "f")}.` : "";
+  return {
+    embed: {
+      title: "\u23F0 Erinnerung",
+      color: COLORS.warning,
+      description: clip2(`${plain2(p.text) || "\u2014"}${late2}`, 4e3),
+      fields: typeof p.createdAt === "string" ? [{ name: "Gespeichert", value: ts5(p.createdAt), inline: true }] : [],
+      footer: "Sp\xE4ter noch einmal erinnern:"
+    },
+    buttons: [...REMINDER_SNOOZE.map((s) => ({ id: `remind:snooze:${id3}:${fire}:${s.minutes}`, label: s.label, style: "secondary", emoji: "\u23F0" })), { id: `remind:done:${id3}:${fire}`, label: "Erledigt", style: "success", emoji: "\u2705" }]
+  };
+}
+async function deliverReminder(p, t2) {
+  const userId = String(p.discordId ?? "");
+  if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
+  const channelId = typeof p.channelId === "string" && /^\d{15,25}$/.test(p.channelId) ? p.channelId : null;
+  const m = reminderMessage(p);
+  if (p.dm === true || !channelId) {
+    try {
+      await t2.dm(userId, m);
+      return "dm";
+    } catch (e) {
+      if (!channelId) throw new Error(`reminder DM failed: ${e instanceof Error ? e.message : e}`);
+      await t2.channel(channelId, { ...m, content: `<@${userId}> deine Erinnerung \u2013 eine Direktnachricht an dich war nicht m\xF6glich (DMs geschlossen?).`, mentionUserId: userId });
+      return "channel-fallback";
+    }
+  }
+  await t2.channel(channelId, { ...m, content: `<@${userId}>`, mentionUserId: userId });
+  return "channel";
+}
+var REMINDER_INTERACTION = {
+  prefix: "remind",
+  async run(c) {
+    const [action, id3, a, b2] = c.args;
+    if (!isId(id3)) return errorReply("Unbekannte Erinnerung.");
+    try {
+      if (action === "cancel") {
+        await c.api.service("DELETE", `/bot/reminders/${id3}?discordId=${c.discordId}`);
+        return okReply("Erinnerung gel\xF6scht.");
+      }
+      const fire = Number(a);
+      if (!Number.isInteger(fire) || fire < 1) return errorReply("Unbekannte Aktion.");
+      if (action === "snooze") {
+        const minutes = Number(b2);
+        if (!REMINDER_SNOOZE.some((s) => s.minutes === minutes)) return errorReply("Ung\xFCltige Zeit zum Verschieben.");
+        const r = await c.api.service("POST", `/bot/reminders/${id3}/snooze`, { discordId: c.discordId, fire, minutes });
+        return {
+          ...okReply(`Verschoben \u2013 ich erinnere dich ${ts5(r.dueAt)} (${ts5(r.dueAt, "f")}) erneut.`),
+          update: { embeds: [{ title: "\u23F0 Erinnerung (verschoben)", color: COLORS.neutral, description: clip2(`${plain2(r.text)}
+
+N\xE4chste Erinnerung ${ts5(r.dueAt)}.`, 4e3) }], buttons: [] }
+        };
+      }
+      if (action === "done") {
+        await c.api.service("POST", `/bot/reminders/${id3}/done`, { discordId: c.discordId, fire });
+        return { ...okReply("Erledigt."), update: { embeds: [{ title: "\u2705 Erinnerung erledigt", color: COLORS.success, description: "Diese Erinnerung ist abgeschlossen." }], buttons: [] } };
+      }
+      return errorReply("Unbekannte Aktion.");
+    } catch (e) {
+      return apiError2(e);
+    }
+  }
+};
+
 // apps/bot/src/commands/features.ts
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
@@ -85762,7 +85944,8 @@ var INTERACTIONS = [
   EXAM_INTERACTION,
   DUTY_REPORT_INTERACTION,
   TRAINING_INTERACTION,
-  SHIFT_INTERACTION
+  SHIFT_INTERACTION,
+  REMINDER_INTERACTION
 ];
 var interactionFor = (customId) => {
   const [prefix, ...args] = customId.split(":");
@@ -86241,7 +86424,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         { name: "Ausbildung & Pr\xFCfungen", value: "`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` \xB7 Ausbilder: `/pruefung verwalten` `/pruefung bewerten`" },
         { name: "Administration", value: "`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
-        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel" },
+        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel \xB7 `/remind-me` (Erinnerung, z. B. `in: 30m`) \xB7 `/erinnerungen`" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
     }
@@ -86623,7 +86806,8 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   ...SYSTEM_COMMANDS,
   ...BACKUP_COMMANDS,
   ...EXAM_COMMANDS,
-  ...BOT_PROFILE_COMMANDS
+  ...BOT_PROFILE_COMMANDS,
+  ...REMINDER_COMMANDS
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 
@@ -86758,7 +86942,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "mb.send" || item.type === "message.post" || item.type.startsWith("bot.") || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder") {
+    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "mb.send" || item.type === "message.post" || item.type.startsWith("bot.") || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder" || item.type === "reminder.due") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -88066,9 +88250,9 @@ async function resetSelect(i) {
 async function handleComponent(i) {
   const hit = interactionFor(i.customId);
   if (!hit) return;
-  const check = () => preflight(i.guildId, i.user.id, `${hit.def.prefix}:${hit.args[0] ?? ""}`, INTERACTION_MODULES[hit.def.prefix] ?? "core").catch(() => DENIED);
+  const check2 = () => preflight(i.guildId, i.user.id, `${hit.def.prefix}:${hit.args[0] ?? ""}`, INTERACTION_MODULES[hit.def.prefix] ?? "core").catch(() => DENIED);
   if ((i.isButton() || i.isAnySelectMenu()) && hit.def.opensModal?.(hit.args, i.isAnySelectMenu() ? i.values : void 0)) {
-    const reply2 = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
+    const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
@@ -88080,7 +88264,7 @@ async function handleComponent(i) {
   if (hit.def.panel?.(hit.args) && (i.isButton() || i.isAnySelectMenu() || i.isModalSubmit() && i.isFromMessage())) {
     await i.deferUpdate();
     const fields2 = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
-    const reply2 = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...fields2 ? { fields: fields2 } : {}, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
+    const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...fields2 ? { fields: fields2 } : {}, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     const p = replyPayload(reply2);
     if (reply2.panel) await i.editReply(p);
     else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
@@ -88088,7 +88272,7 @@ async function handleComponent(i) {
   }
   if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
     await i.deferUpdate();
-    const reply2 = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
+    const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
     const p = replyPayload(reply2);
     if (reply2.embeds?.[0]?.box) await i.editReply(p);
     else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
@@ -88098,7 +88282,7 @@ async function handleComponent(i) {
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
   const modal3 = i.isModalSubmit() ? modalValuesOf(i) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
-  const reply = await check() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal: modal3 }));
+  const reply = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, fields, values, modal: modal3 }));
   await i.editReply(replyPayload(reply));
   const source = i.isModalSubmit() ? i.isFromMessage() ? i.message : null : i.message;
   if (reply.decided && source) await markDecided(source, reply.decided).catch((e) => console.error("could not update the application message:", e instanceof Error ? e.message : e));
@@ -88292,6 +88476,18 @@ function wireReady(client0) {
           const userId = String(p.discordId ?? "");
           if (!/^\d{15,25}$/.test(userId)) throw new Error("no Discord user id");
           await platform.sendDm(userId, dutyReminderDm(p));
+          return true;
+        }
+        if (type === "reminder.due") {
+          const how = await deliverReminder(p, {
+            dm: (userId, m) => platform.sendDm(userId, m),
+            channel: async (channelId, m) => {
+              const ch2 = await client.channels.fetch(channelId);
+              if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+              await ch2.send({ content: m.content, embeds: [toEmbed(m.embed)], components: toComponents(m.buttons), allowedMentions: { users: [m.mentionUserId] } });
+            }
+          });
+          if (how === "channel-fallback") console.log(`reminder ${String(p.id)}: DM not possible, delivered in channel`);
           return true;
         }
         if (type === "verify.member") {

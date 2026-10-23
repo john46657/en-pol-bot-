@@ -134,6 +134,12 @@ __export(index_exports, {
   RADIO_GRANT_SOURCE_LABEL: () => RADIO_GRANT_SOURCE_LABEL,
   RADIO_GRANT_STATUSES: () => RADIO_GRANT_STATUSES,
   RADIO_GRANT_STATUS_LABEL: () => RADIO_GRANT_STATUS_LABEL,
+  REMINDER_MAX_MS: () => REMINDER_MAX_MS,
+  REMINDER_MAX_PENDING: () => REMINDER_MAX_PENDING,
+  REMINDER_MIN_MS: () => REMINDER_MIN_MS,
+  REMINDER_SNOOZE: () => REMINDER_SNOOZE,
+  REMINDER_SNOOZE_MINUTES: () => REMINDER_SNOOZE_MINUTES,
+  REMINDER_TEXT_MAX: () => REMINDER_TEXT_MAX,
   REPORT_FIELD_TYPES: () => REPORT_FIELD_TYPES,
   REPORT_STATUSES: () => REPORT_STATUSES,
   REPORT_STATUS_LABEL: () => REPORT_STATUS_LABEL,
@@ -227,6 +233,7 @@ __export(index_exports, {
   formPanelResult: () => formPanelResult,
   formPanelSchema: () => formPanelSchema,
   formatMinutes: () => formatMinutes,
+  formatReminderDuration: () => formatReminderDuration,
   formatServiceNumber: () => formatServiceNumber,
   freeFieldKey: () => freeFieldKey,
   gameToPixel: () => gameToPixel,
@@ -287,10 +294,12 @@ __export(index_exports, {
   panelFieldSchema: () => panelFieldSchema,
   panelUnits: () => panelUnits,
   parseAiReview: () => parseAiReview,
+  parseBool: () => parseBool,
   parseCsv: () => parseCsv,
   parseFormDate: () => parseFormDate,
   parsePlayer: () => parsePlayer,
   parseQuestions: () => parseQuestions,
+  parseReminderDuration: () => parseReminderDuration,
   parseTicketRef: () => parseTicketRef,
   periodEnd: () => periodEnd,
   periodLabel: () => periodLabel,
@@ -3778,6 +3787,66 @@ var AI_REVIEW_RESPONSE_SCHEMA = {
   },
   required: ["gesamt", "kriterien", "staerken", "schwaechen", "fehlende_angaben", "widersprueche", "rueckfragen", "unsicherheiten", "empfehlung", "empfehlung_begruendung"]
 };
+
+// src/reminders.ts
+var REMINDER_MIN_MS = 6e4;
+var REMINDER_MAX_MS = 365 * 864e5;
+var REMINDER_TEXT_MAX = 1e3;
+var REMINDER_MAX_PENDING = 25;
+var REMINDER_SNOOZE = [
+  { minutes: 10, label: "10 Minuten" },
+  { minutes: 30, label: "30 Minuten" },
+  { minutes: 60, label: "1 Stunde" },
+  { minutes: 1440, label: "1 Tag" }
+];
+var REMINDER_SNOOZE_MINUTES = REMINDER_SNOOZE.map((s) => s.minutes);
+var UNITS = [
+  [/^(d|t|tag|tage|tagen|day|days)$/, 864e5],
+  [/^(w|wo|woche|wochen|week|weeks)$/, 7 * 864e5],
+  [/^(h|std|stde|stdn|stunde|stunden|hr|hrs|hour|hours)$/, 36e5],
+  [/^(m|min|mins|minute|minuten|minutes)$/, 6e4]
+];
+function parseReminderDuration(input) {
+  const raw = String(input ?? "").trim().toLowerCase();
+  const hint = "Beispiele: `10m`, `30 min`, `1h`, `1h30m`, `2 Tage`.";
+  if (!raw) return { ok: false, error: `Bitte angeben, in wie viel Zeit ich dich erinnern soll. ${hint}` };
+  const cleaned = raw.replace(/\b(und|and|in)\b/g, " ").replace(/[+,](?!\d)/g, " ");
+  if (/^\d+$/.test(cleaned.trim())) return check(Number(cleaned.trim()) * 6e4, hint);
+  const re = /(\d+(?:[.,]\d+)?)\s*([a-zäöü]+)/g;
+  let total = 0, matched = false, rest = cleaned, m;
+  while (m = re.exec(cleaned)) {
+    const n = Number(m[1].replace(",", "."));
+    const unit = UNITS.find(([u]) => u.test(m[2]));
+    if (!unit || !Number.isFinite(n)) return { ok: false, error: `\u201E${m[2]}\u201C verstehe ich nicht als Zeiteinheit. ${hint}` };
+    total += n * unit[1];
+    matched = true;
+    rest = rest.replace(m[0], " ");
+  }
+  if (rest.trim() || !matched) return { ok: false, error: `\u201E${String(input).slice(0, 30)}\u201C ist keine g\xFCltige Zeitangabe. ${hint}` };
+  return check(Math.round(total), hint);
+}
+function check(ms, hint) {
+  if (ms < REMINDER_MIN_MS) return { ok: false, error: `Die Zeit muss mindestens 1 Minute betragen. ${hint}` };
+  if (ms > REMINDER_MAX_MS) return { ok: false, error: "H\xF6chstens 365 Tage im Voraus." };
+  return { ok: true, ms };
+}
+function parseBool(v, fallback = false) {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  const s = String(v ?? "").trim().toLowerCase();
+  if (["true", "ja", "yes", "y", "j", "1", "an", "on", "wahr"].includes(s)) return true;
+  if (["false", "nein", "no", "n", "0", "aus", "off", "falsch"].includes(s)) return false;
+  return fallback;
+}
+function formatReminderDuration(ms) {
+  let m = Math.round(ms / 6e4);
+  const d = Math.floor(m / 1440);
+  m -= d * 1440;
+  const h = Math.floor(m / 60);
+  m -= h * 60;
+  const parts = [d && `${d} ${d === 1 ? "Tag" : "Tage"}`, h && `${h} ${h === 1 ? "Stunde" : "Stunden"}`, m && `${m} ${m === 1 ? "Minute" : "Minuten"}`].filter(Boolean);
+  return parts.join(" ") || "0 Minuten";
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AI_CHECK_HINT,
@@ -3894,6 +3963,12 @@ var AI_REVIEW_RESPONSE_SCHEMA = {
   RADIO_GRANT_SOURCE_LABEL,
   RADIO_GRANT_STATUSES,
   RADIO_GRANT_STATUS_LABEL,
+  REMINDER_MAX_MS,
+  REMINDER_MAX_PENDING,
+  REMINDER_MIN_MS,
+  REMINDER_SNOOZE,
+  REMINDER_SNOOZE_MINUTES,
+  REMINDER_TEXT_MAX,
   REPORT_FIELD_TYPES,
   REPORT_STATUSES,
   REPORT_STATUS_LABEL,
@@ -3987,6 +4062,7 @@ var AI_REVIEW_RESPONSE_SCHEMA = {
   formPanelResult,
   formPanelSchema,
   formatMinutes,
+  formatReminderDuration,
   formatServiceNumber,
   freeFieldKey,
   gameToPixel,
@@ -4047,10 +4123,12 @@ var AI_REVIEW_RESPONSE_SCHEMA = {
   panelFieldSchema,
   panelUnits,
   parseAiReview,
+  parseBool,
   parseCsv,
   parseFormDate,
   parsePlayer,
   parseQuestions,
+  parseReminderDuration,
   parseTicketRef,
   periodEnd,
   periodLabel,

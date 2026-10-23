@@ -23,6 +23,7 @@ const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
 const message_builder_1 = require("./message-builder");
 const format_2 = require("./format");
+const reminders_1 = require("./commands/reminders");
 const shared_1 = require("@enrp/shared");
 const guild_config_1 = require("./guild-config");
 const bot_backup_1 = require("./bot-backup");
@@ -965,6 +966,21 @@ function wireReady(client0) {
                 if (!/^\d{15,25}$/.test(userId))
                     throw new Error('no Discord user id');
                 await platform.sendDm(userId, (0, format_2.dutyReminderDm)(p));
+                return true;
+            }
+            if (type === 'reminder.due') {
+                // /remind-me: per DM bzw. im Kanal; DM nicht möglich → im Kanal mit Erwähnung (nur die Person wird gepingt)
+                const how = await (0, reminders_1.deliverReminder)(p, {
+                    dm: (userId, m) => platform.sendDm(userId, m),
+                    channel: async (channelId, m) => {
+                        const ch = await client.channels.fetch(channelId);
+                        if (!ch?.isSendable())
+                            throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
+                        await ch.send({ content: m.content, embeds: [toEmbed(m.embed)], components: toComponents(m.buttons), allowedMentions: { users: [m.mentionUserId] } });
+                    },
+                });
+                if (how === 'channel-fallback')
+                    console.log(`reminder ${String(p.id)}: DM not possible, delivered in channel`);
                 return true;
             }
             if (type === 'verify.member') {

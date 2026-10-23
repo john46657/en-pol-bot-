@@ -19,6 +19,7 @@ const system_1 = require("./system");
 const backup_1 = require("./backup");
 const exams_1 = require("./exams");
 const bot_profile_1 = require("./bot-profile");
+const reminders_1 = require("./reminders");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
 const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, '0')} min`;
@@ -110,7 +111,7 @@ exports.COMMANDS = [
                             { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
                             { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
-                            { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel' },
+                            { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel · `/remind-me` (Erinnerung, z. B. `in: 30m`) · `/erinnerungen`' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
                         ] }] };
         },
@@ -510,6 +511,7 @@ exports.COMMANDS = [
     ...backup_1.BACKUP_COMMANDS,
     ...exams_1.EXAM_COMMANDS,
     ...bot_profile_1.BOT_PROFILE_COMMANDS,
+    ...reminders_1.REMINDER_COMMANDS,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);
 exports.byName = byName;
