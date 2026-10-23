@@ -31,12 +31,12 @@ let WelcomeController = class WelcomeController {
     constructor(s) {
         this.s = s;
     }
-    config(q) { return this.s.config(q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    save(a, q, b) { return this.s.save(a, b, q.guildId ?? (0, guild_context_1.currentGuild)()); }
+    config(q) { return this.s.config((0, guild_context_1.targetGuild)(q.guildId)); }
+    save(a, q, b) { return this.s.save(a, b, (0, guild_context_1.targetGuild)(q.guildId)); }
     /** Test-Nachricht in Discord (gespeicherte Einstellungen, dein Profil als Beispiel-Mitglied). */
-    test(a, q, b) { return this.s.test(a, q.guildId ?? (0, guild_context_1.currentGuild)(), b.kind); }
+    test(a, q, b) { return this.s.test(a, (0, guild_context_1.targetGuild)(q.guildId), b.kind); }
     reset(a, q) {
-        const g = q.guildId ?? (0, guild_context_1.currentGuild)();
+        const g = (0, guild_context_1.targetGuild)(q.guildId);
         if (!g)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Wähle zuerst einen Server.');
         return this.s.reset(a, g);

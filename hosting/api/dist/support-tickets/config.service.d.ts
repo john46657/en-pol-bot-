@@ -14,21 +14,22 @@ export declare class TicketConfigService {
     /** `guildId`: nur Kategorien/Panels dieses Servers und die für alle Server. */
     all(guildId?: string): Promise<{
         categories: ({
+            guildId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             color: number;
             description: string;
             active: boolean;
-            guildId: string | null;
             name: string;
             position: number;
             questions: Prisma.JsonValue;
             archivedAt: Date | null;
+            departmentId: string | null;
+            formVersion: number;
             emoji: string | null;
             staffRoleIds: string[];
             accessRoleNames: string[];
-            formVersion: number;
             buttonStyle: string;
             discordCategoryId: string | null;
             channelNameFormat: string;
@@ -72,7 +73,6 @@ export declare class TicketConfigService {
             autoUnclaimMinutes: number;
             staffAlertMinutes: number;
             closeRequestCloses: boolean;
-            departmentId: string | null;
             confidential: boolean;
             formMode: string;
             escalateUnassignedMinutes: number;
@@ -81,13 +81,13 @@ export declare class TicketConfigService {
             questions: TicketQuestion[];
         })[];
         panels: {
+            guildId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             color: number;
             title: string;
             description: string;
-            guildId: string | null;
             name: string;
             position: number;
             channelId: string | null;
@@ -228,11 +228,11 @@ export declare class TicketConfigService {
             active: boolean;
             name: string;
             position: number;
+            notifyChannelId: string | null;
             emoji: string | null;
             staffRoleIds: string[];
             leadRoleIds: string[];
             accessRoleNames: string[];
-            notifyChannelId: string | null;
         }[];
     }>;
     categoryOut<T extends {
@@ -280,11 +280,11 @@ export declare class TicketConfigService {
         active: boolean;
         name: string;
         position: number;
+        notifyChannelId: string | null;
         emoji: string | null;
         staffRoleIds: string[];
         leadRoleIds: string[];
         accessRoleNames: string[];
-        notifyChannelId: string | null;
     }[]>;
     department(id: string | null | undefined): Promise<null> | Prisma.Prisma__TicketDepartmentClient<{
         id: string;
@@ -294,29 +294,30 @@ export declare class TicketConfigService {
         active: boolean;
         name: string;
         position: number;
+        notifyChannelId: string | null;
         emoji: string | null;
         staffRoleIds: string[];
         leadRoleIds: string[];
         accessRoleNames: string[];
-        notifyChannelId: string | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
     settings(): Promise<TicketSettings>;
     category(id: string): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: Prisma.JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -360,7 +361,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -371,21 +371,22 @@ export declare class TicketConfigService {
     saveCategory(actor: Actor & {
         name?: string;
     }, id: string | null, d: CategoryInput): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: Prisma.JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -429,7 +430,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -448,21 +448,22 @@ export declare class TicketConfigService {
     }[]>;
     /** Archivieren = ausblenden und nicht mehr öffnen lassen; Tickets und Formular-Versionen bleiben vollständig erhalten. */
     archiveCategory(actor: Actor, id: string, archived: boolean): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: Prisma.JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -506,7 +507,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -522,30 +522,31 @@ export declare class TicketConfigService {
         active: boolean;
         name: string;
         position: number;
+        notifyChannelId: string | null;
         emoji: string | null;
         staffRoleIds: string[];
         leadRoleIds: string[];
         accessRoleNames: string[];
-        notifyChannelId: string | null;
     }>;
     /** Löschen nur ohne Kategorien und Tickets – sonst deaktivieren (Zuständigkeiten bleiben nachvollziehbar). */
     deleteDepartment(actor: Actor, id: string): Promise<void>;
     duplicateCategory(actor: Actor, id: string): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: Prisma.JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -589,7 +590,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -599,13 +599,13 @@ export declare class TicketConfigService {
     }>;
     deleteCategory(actor: Actor, id: string): Promise<void>;
     savePanel(actor: Actor, id: string | null, d: PanelInput): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         position: number;
         channelId: string | null;
@@ -628,13 +628,13 @@ export declare class TicketConfigService {
         publishError: string | null;
     }>;
     duplicatePanel(actor: Actor, id: string): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         position: number;
         channelId: string | null;

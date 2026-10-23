@@ -36,9 +36,9 @@ let VoiceSupportController = class VoiceSupportController {
     constructor(s) {
         this.s = s;
     }
-    rooms(q) { return this.s.rooms(q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    save(a, q, b) { return this.s.saveRooms(a, b, q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    cases(q) { return this.s.cases({ guildId: q.guildId ?? (0, guild_context_1.currentGuild)(), status: q.status }); }
+    rooms(q) { return this.s.rooms((0, guild_context_1.targetGuild)(q.guildId)); }
+    save(a, q, b) { return this.s.saveRooms(a, b, (0, guild_context_1.targetGuild)(q.guildId)); }
+    cases(q) { return this.s.cases({ guildId: (0, guild_context_1.targetGuild)(q.guildId), status: q.status }); }
     /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
     action(a, id, b) { return this.s.webAction(a, id, b); }
 };

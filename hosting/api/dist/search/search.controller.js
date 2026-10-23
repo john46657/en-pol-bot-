@@ -73,7 +73,7 @@ let SearchController = class SearchController {
         if (allowed('ticket.view'))
             jobs.push(this.tickets.list(u.id, { q: term, page: 1, pageSize: take }).then((r) => r.items.map((x) => ({ type: 'support-ticket', id: x.id, label: `${x.number} ${x.name}`, sub: x.creatorName }))));
         if (allowed('applications.view'))
-            jobs.push(this.prisma.application.findMany({ where: { OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
+            jobs.push(this.prisma.application.findMany({ where: { ...((0, guild_context_1.currentGuild)() ? { guildId: (0, guild_context_1.currentGuild)() } : {}), OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
         if (allowed('radio.view')) {
             const g = (0, guild_context_1.currentGuild)();
             jobs.push(this.prisma.radioCode.findMany({ where: { AND: [{ OR: [{ guildId: null }, ...(g ? [{ guildId: g }] : [])] }, { OR: [{ code: ci(term) }, { meaning: ci(term) }] }] }, take }).then((r) => r.map((x) => ({ type: 'radio-code', id: x.code, label: x.code, sub: x.meaning }))));

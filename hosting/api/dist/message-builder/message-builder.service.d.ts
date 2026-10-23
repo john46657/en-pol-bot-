@@ -2055,18 +2055,18 @@ export declare class MessageBuilderService {
     }[]>;
     private assertCategory;
     createCategory(actor: Actor, b: z.infer<typeof categorySchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        guildId: string | null;
         name: string;
         position: number;
     }>;
     updateCategory(actor: Actor, id: string, b: z.infer<typeof categorySchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        guildId: string | null;
         name: string;
         position: number;
     }>;

@@ -123,19 +123,19 @@ export declare class UsersController {
             totpEnabledAt: Date | null;
             roles: {
                 role: {
+                    guildId: string | null;
                     id: string;
                     color: string | null;
                     priority: number;
                     active: boolean;
-                    guildId: string | null;
                     name: string;
                     icon: string | null;
                 };
                 guildIds: string[];
             }[];
             overrides: {
-                reason: string | null;
                 guildId: string | null;
+                reason: string | null;
                 permissionKey: string;
                 effect: string;
             }[];
@@ -165,19 +165,19 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
+                guildId: string | null;
                 id: string;
                 color: string | null;
                 priority: number;
                 active: boolean;
-                guildId: string | null;
                 name: string;
                 icon: string | null;
             };
             guildIds: string[];
         }[];
         overrides: {
-            reason: string | null;
             guildId: string | null;
+            reason: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -214,19 +214,19 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
+                guildId: string | null;
                 id: string;
                 color: string | null;
                 priority: number;
                 active: boolean;
-                guildId: string | null;
                 name: string;
                 icon: string | null;
             };
             guildIds: string[];
         }[];
         overrides: {
-            reason: string | null;
             guildId: string | null;
+            reason: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -247,19 +247,19 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
+                guildId: string | null;
                 id: string;
                 color: string | null;
                 priority: number;
                 active: boolean;
-                guildId: string | null;
                 name: string;
                 icon: string | null;
             };
             guildIds: string[];
         }[];
         overrides: {
-            reason: string | null;
             guildId: string | null;
+            reason: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -281,19 +281,19 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
+                guildId: string | null;
                 id: string;
                 color: string | null;
                 priority: number;
                 active: boolean;
-                guildId: string | null;
                 name: string;
                 icon: string | null;
             };
             guildIds: string[];
         }[];
         overrides: {
-            reason: string | null;
             guildId: string | null;
+            reason: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -317,19 +317,19 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
+                guildId: string | null;
                 id: string;
                 color: string | null;
                 priority: number;
                 active: boolean;
-                guildId: string | null;
                 name: string;
                 icon: string | null;
             };
             guildIds: string[];
         }[];
         overrides: {
-            reason: string | null;
             guildId: string | null;
+            reason: string | null;
             permissionKey: string;
             effect: string;
         }[];
@@ -350,30 +350,30 @@ export declare class UsersController {
         totpEnabledAt: Date | null;
         roles: {
             role: {
+                guildId: string | null;
                 id: string;
                 color: string | null;
                 priority: number;
                 active: boolean;
-                guildId: string | null;
                 name: string;
                 icon: string | null;
             };
             guildIds: string[];
         }[];
         overrides: {
-            reason: string | null;
             guildId: string | null;
+            reason: string | null;
             permissionKey: string;
             effect: string;
         }[];
     }>;
     setOverride(a: Actor, id: string, b: z.infer<typeof override>): Promise<{
+        guildId: string | null;
         id: string;
         createdById: string | null;
         createdAt: Date;
         reason: string | null;
         userId: string;
-        guildId: string | null;
         permissionKey: string;
         effect: string;
     }>;

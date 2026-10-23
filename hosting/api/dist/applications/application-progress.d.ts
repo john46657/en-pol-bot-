@@ -19,12 +19,12 @@ export declare const saveProgress: (prisma: Db, p: {
     expiresAt: Date;
 }) => import("@prisma/client").Prisma.Prisma__ApplicationProgressClient<{
     unit: string;
+    guildId: string | null;
     id: string;
     updatedAt: Date;
     expiresAt: Date;
     source: string;
     startedAt: Date;
-    guildId: string | null;
     discordId: string;
     discordName: string;
     unitName: string;

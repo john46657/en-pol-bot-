@@ -27,36 +27,36 @@ export declare class ServersService implements OnModuleInit {
      */
     splitSettings(): Promise<void>;
     load(serverId: string): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
     /** Server laden und Recht auf GENAU diesem Server prüfen (fremde Server: 404 statt Hinweis auf Existenz). */
     access(actor: Actor, serverId: string, permission: string): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
     /** Nur Mitgliedschaft (bzw. globaler Systemadministrator) – für Auskünfte über sich selbst. */
     accessAsMember(actor: Actor, serverId: string): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
@@ -64,12 +64,12 @@ export declare class ServersService implements OnModuleInit {
     requireGlobalAdmin(actor: Actor, what: string): Promise<void>;
     /** Sichtbar: globale Systemadministratoren alle; sonst Server mit bestätigter Mitgliedschaft und `servers.view` dort. */
     list(actor: Actor): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
@@ -78,12 +78,12 @@ export declare class ServersService implements OnModuleInit {
         guildId: string;
         name: string;
     }): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
@@ -94,24 +94,24 @@ export declare class ServersService implements OnModuleInit {
         status?: 'ACTIVE' | 'DISABLED';
         version: number;
     }): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
     /** „Löschen“ = archivieren: nicht mehr wählbar, aber ALLE Fachdaten und Archive bleiben erhalten. */
     archive(actor: Actor, serverId: string): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
@@ -210,6 +210,7 @@ export declare class ServersService implements OnModuleInit {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -217,7 +218,6 @@ export declare class ServersService implements OnModuleInit {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -234,6 +234,7 @@ export declare class ServersService implements OnModuleInit {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -241,7 +242,6 @@ export declare class ServersService implements OnModuleInit {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -256,6 +256,7 @@ export declare class ServersService implements OnModuleInit {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -263,7 +264,6 @@ export declare class ServersService implements OnModuleInit {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -309,8 +309,8 @@ export declare class ServersService implements OnModuleInit {
     }>;
     roleMappings(actor: Actor, serverId: string): Promise<({
         role: {
-            id: string;
             guildId: string | null;
+            id: string;
             name: string;
         };
     } & {
@@ -330,8 +330,8 @@ export declare class ServersService implements OnModuleInit {
         roleId: string;
     }[]): Promise<({
         role: {
-            id: string;
             guildId: string | null;
+            id: string;
             name: string;
         };
     } & {

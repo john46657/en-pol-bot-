@@ -1,3 +1,4 @@
+import { targetGuild } from '../common/guild-context';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -29,18 +30,18 @@ export class QualificationsController {
   /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
   /** `?guildId=` – Einstellungen eines Servers (ohne eigene: die gemeinsamen, `own: false`). */
   @Get('config') @RequirePermission('qualifications.view')
-  config(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.q.setup(q.guildId); }
+  config(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.q.setup(targetGuild(q.guildId) ?? undefined); }
   @Put('config') @RequirePermission('qualifications.manage')
-  save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(saveSchema)) b: z.infer<typeof saveSchema>) { return this.q.saveConfig(a, b, q.guildId); }
+  save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(saveSchema)) b: z.infer<typeof saveSchema>) { return this.q.saveConfig(a, b, targetGuild(q.guildId) ?? undefined); }
   /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
   @Delete('config') @RequirePermission('qualifications.manage')
-  reset(@CurrentActor() a: Actor, @Query(zodBody(guildRequired)) q: z.infer<typeof guildRequired>) { return this.q.resetGuild(a, q.guildId); }
+  reset(@CurrentActor() a: Actor, @Query(zodBody(guildRequired)) q: z.infer<typeof guildRequired>) { return this.q.resetGuild(a, targetGuild(q.guildId)!); }
   /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
   @Post('police-panel/send') @HttpCode(202) @RequirePermission('qualifications.manage')
-  sendPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendPolicePanel(a, b.mode, q.guildId); }
+  sendPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendPolicePanel(a, b.mode, targetGuild(q.guildId) ?? undefined); }
   /** Qualifikations-Panel (Auswahl der Einheiten) direkt aus dem Dashboard senden. */
   @Post('quali-panel/send') @HttpCode(202) @RequirePermission('qualifications.manage')
-  sendQualiPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendQualiPanel(a, b.mode, q.guildId); }
+  sendQualiPanel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(panelSend)) b: z.infer<typeof panelSend>) { return this.q.sendQualiPanel(a, b.mode, targetGuild(q.guildId) ?? undefined); }
   @Get('applications') @RequirePermission('qualifications.view')
   list(@Query(zodBody(list)) f: z.infer<typeof list>) { return this.q.list(f); }
   @Get('history') @RequirePermission('qualifications.view') @DiscordManagerAllows('quali')

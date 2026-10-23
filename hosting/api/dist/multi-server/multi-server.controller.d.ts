@@ -166,56 +166,56 @@ export declare class ServersController {
     private readonly s;
     constructor(s: ServersService);
     list(a: Actor): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }[]>;
     create(a: Actor, b: z.infer<typeof createServer>): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
     get(a: Actor, id: string): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
     patch(a: Actor, id: string, b: z.infer<typeof patchServer>): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
     }>;
     remove(a: Actor, id: string): Promise<{
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         updatedAt: Date;
         version: number;
-        guildId: string;
         name: string;
         archivedAt: Date | null;
         rolesInitializedAt: Date | null;
@@ -288,6 +288,7 @@ export declare class ServersController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -295,7 +296,6 @@ export declare class ServersController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -310,6 +310,7 @@ export declare class ServersController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -317,7 +318,6 @@ export declare class ServersController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -332,6 +332,7 @@ export declare class ServersController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -339,7 +340,6 @@ export declare class ServersController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -380,8 +380,8 @@ export declare class ServersController {
     }>;
     roleMappings(a: Actor, id: string): Promise<({
         role: {
-            id: string;
             guildId: string | null;
+            id: string;
             name: string;
         };
     } & {
@@ -394,8 +394,8 @@ export declare class ServersController {
     })[]>;
     setRoleMappings(a: Actor, id: string, b: z.infer<typeof mappings>): Promise<({
         role: {
-            id: string;
             guildId: string | null;
+            id: string;
             name: string;
         };
     } & {

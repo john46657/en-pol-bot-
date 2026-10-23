@@ -13,16 +13,16 @@ declare const requestBody: z.ZodObject<{
     reason: string;
     startsAt: Date;
     endsAt: Date;
-    type?: string | undefined;
     guildId?: string | undefined;
+    type?: string | undefined;
     comment?: string | undefined;
     forDiscordId?: string | undefined;
 }, {
     reason: string;
     startsAt: Date;
     endsAt: Date;
-    type?: string | undefined;
     guildId?: string | undefined;
+    type?: string | undefined;
     comment?: string | undefined;
     forDiscordId?: string | undefined;
 }>;

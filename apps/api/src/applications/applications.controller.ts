@@ -1,4 +1,4 @@
-import { currentGuild } from '../common/guild-context';
+import { currentGuild, targetGuild } from '../common/guild-context';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -39,7 +39,7 @@ export class ApplicationsController {
   @Public() @Throttle({ default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 5, ttl: 3_600_000 } }) @Post()
   submit(@Body(zodBody(submit)) b: z.infer<typeof submit>) { return this.a.submit(b); }
   @Get() @RequirePermission('applications.view')
-  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, q.guildId ?? currentGuild() ?? undefined, q.order); } // Server getrennt: gewählter Server
+  list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.a.list(q, q.status, targetGuild(q.guildId) ?? undefined, q.order); } // Server getrennt: gewählter Server
   /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
   @Get('analytics') @RequirePermission('applications.view')
   analytics(@Query(zodBody(analyticsQ)) q: z.infer<typeof analyticsQ>) { return this.stats.overview({ ...q, guildId: currentGuild() }); }
@@ -49,13 +49,13 @@ export class ApplicationsController {
   @Get('inbox') @RequirePermission('applications.view')
   async inbox(@CurrentActor() a: Actor, @Query(zodBody(inboxQ)) q: z.infer<typeof inboxQ>) {
     const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
-    return this.a.inbox({ ...q, guildId: q.guildId ?? currentGuild() ?? undefined }, { police: true, quali });
+    return this.a.inbox({ ...q, guildId: targetGuild(q.guildId) ?? undefined }, { police: true, quali });
   }
   /** Angefangene, noch nicht eingereichte Bewerbungen („in Bearbeitung“) – Filter wie die Liste. */
   @Get('in-progress') @RequirePermission('applications.view')
   async inProgress(@CurrentActor() a: Actor, @Query(zodBody(progressQ)) q: z.infer<typeof progressQ>) {
     const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
-    return this.a.inProgress({ ...q, guildId: q.guildId ?? currentGuild() ?? undefined }, { quali });
+    return this.a.inProgress({ ...q, guildId: targetGuild(q.guildId) ?? undefined }, { quali });
   }
   @Delete(':id') @HttpCode(204) @RequirePermission('applications.delete')
   remove(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.a.remove(a, id); }

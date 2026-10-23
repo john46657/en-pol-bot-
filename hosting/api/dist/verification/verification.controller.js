@@ -40,9 +40,9 @@ let VerificationController = class VerificationController {
     }
     oauthSettings() { return this.oauth.settings(); }
     saveOauth(a, b) { return this.oauth.save(a, b); }
-    config(q) { return this.s.config(q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    save(a, q, b) { return this.s.save(a, b, q.guildId ?? (0, guild_context_1.currentGuild)()); }
-    panel(a, q) { return this.s.postPanel(a, q.guildId ?? (0, guild_context_1.currentGuild)() ?? null); }
+    config(q) { return this.s.config((0, guild_context_1.targetGuild)(q.guildId)); }
+    save(a, q, b) { return this.s.save(a, b, (0, guild_context_1.targetGuild)(q.guildId)); }
+    panel(a, q) { return this.s.postPanel(a, (0, guild_context_1.targetGuild)(q.guildId)); }
     list(q) { return this.s.list(q); }
     unlink(a, id) { return this.s.unlink(a, did(id)); }
     refresh(id) { return this.s.refresh(did(id)); }

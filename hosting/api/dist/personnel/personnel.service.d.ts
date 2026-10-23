@@ -57,9 +57,9 @@ export declare class PersonnelService {
             results: {
                 id: string;
                 createdAt: Date;
+                passed: boolean;
                 enrollmentId: string;
                 score: number;
-                passed: boolean;
                 gradedById: string | null;
             }[];
         } & {
@@ -69,6 +69,7 @@ export declare class PersonnelService {
             courseId: string;
         })[];
         records: {
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -80,7 +81,6 @@ export declare class PersonnelService {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[];
     } & {
@@ -167,6 +167,7 @@ export declare class PersonnelService {
         summary: string;
         details?: string;
     }): Promise<{
+        details: string | null;
         id: string;
         status: string | null;
         createdById: string;
@@ -178,7 +179,6 @@ export declare class PersonnelService {
         attachments: string[];
         data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
-        details: string | null;
         deletedAt: Date | null;
     }>;
 }

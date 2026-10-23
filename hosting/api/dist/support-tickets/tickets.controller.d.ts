@@ -68,20 +68,20 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"priority">;
     priorityId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "priority";
     priorityId: string;
+    action: "priority";
 }, {
-    action: "priority";
     priorityId: string;
+    action: "priority";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"status">;
     statusId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "status";
     statusId: string;
+    action: "status";
 }, {
-    action: "status";
     statusId: string;
+    action: "status";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"category">;
     categoryId: z.ZodString;
@@ -176,11 +176,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"department">;
     departmentId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "department";
     departmentId: string;
+    action: "department";
 }, {
-    action: "department";
     departmentId: string;
+    action: "department";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"request_info">;
     text: z.ZodString;
@@ -229,9 +229,9 @@ declare const listQ: z.ZodObject<{
     guildId?: string | undefined;
     kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
     categoryId?: string | undefined;
-    departmentId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
+    departmentId?: string | undefined;
     q?: string | undefined;
     queue?: "unassigned" | "in_progress" | "waiting" | "overdue" | undefined;
     from?: Date | undefined;
@@ -244,9 +244,9 @@ declare const listQ: z.ZodObject<{
     guildId?: string | undefined;
     kind?: "all" | "open" | "closed" | "archived" | "escalated" | "deleted" | undefined;
     categoryId?: string | undefined;
-    departmentId?: string | undefined;
     statusId?: string | undefined;
     priorityId?: string | undefined;
+    departmentId?: string | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -516,6 +516,7 @@ declare const previewQ: z.ZodObject<{
     }>, "many">;
     values: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">, z.ZodBoolean, z.ZodNull]>>>;
 }, "strip", z.ZodTypeAny, {
+    values: Record<string, string | boolean | string[] | null>;
     fields: {
         id: string;
         type: "SHORT" | "LONG" | "YESNO" | "SELECT" | "MULTI" | "CHECKBOX" | "NUMBER" | "DATE" | "FILE";
@@ -530,7 +531,6 @@ declare const previewQ: z.ZodObject<{
         min?: number | undefined;
         max?: number | undefined;
     }[];
-    values: Record<string, string | boolean | string[] | null>;
 }, {
     fields: {
         id: string;
@@ -557,21 +557,22 @@ export declare class SupportTicketsController {
         guildId?: string;
     }): Promise<{
         categories: ({
+            guildId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             color: number;
             description: string;
             active: boolean;
-            guildId: string | null;
             name: string;
             position: number;
             questions: import("@prisma/client/runtime/library").JsonValue;
             archivedAt: Date | null;
+            departmentId: string | null;
+            formVersion: number;
             emoji: string | null;
             staffRoleIds: string[];
             accessRoleNames: string[];
-            formVersion: number;
             buttonStyle: string;
             discordCategoryId: string | null;
             channelNameFormat: string;
@@ -615,7 +616,6 @@ export declare class SupportTicketsController {
             autoUnclaimMinutes: number;
             staffAlertMinutes: number;
             closeRequestCloses: boolean;
-            departmentId: string | null;
             confidential: boolean;
             formMode: string;
             escalateUnassignedMinutes: number;
@@ -624,13 +624,13 @@ export declare class SupportTicketsController {
             questions: import("@enrp/shared").TicketQuestion[];
         })[];
         panels: {
+            guildId: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             color: number;
             title: string;
             description: string;
-            guildId: string | null;
             name: string;
             position: number;
             channelId: string | null;
@@ -771,11 +771,11 @@ export declare class SupportTicketsController {
             active: boolean;
             name: string;
             position: number;
+            notifyChannelId: string | null;
             emoji: string | null;
             staffRoleIds: string[];
             leadRoleIds: string[];
             accessRoleNames: string[];
-            notifyChannelId: string | null;
         }[];
     }>;
     settings(u: AuthUser, b: z.infer<typeof settingsSchema>): Promise<{
@@ -860,21 +860,22 @@ export declare class SupportTicketsController {
         userMessageNotifyMinutes: number;
     }>;
     createCategory(u: AuthUser, b: z.infer<typeof categorySchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -918,7 +919,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -927,21 +927,22 @@ export declare class SupportTicketsController {
         questions: import("@enrp/shared").TicketQuestion[];
     }>;
     updateCategory(u: AuthUser, id: string, b: z.infer<typeof categorySchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -985,7 +986,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -994,21 +994,22 @@ export declare class SupportTicketsController {
         questions: import("@enrp/shared").TicketQuestion[];
     }>;
     dupCategory(u: AuthUser, id: string): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -1052,7 +1053,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -1062,13 +1062,13 @@ export declare class SupportTicketsController {
     }>;
     delCategory(u: AuthUser, id: string): Promise<void>;
     createPanel(u: AuthUser, b: z.infer<typeof panelSchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         position: number;
         channelId: string | null;
@@ -1091,13 +1091,13 @@ export declare class SupportTicketsController {
         publishError: string | null;
     }>;
     updatePanel(u: AuthUser, id: string, b: z.infer<typeof panelSchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         position: number;
         channelId: string | null;
@@ -1120,13 +1120,13 @@ export declare class SupportTicketsController {
         publishError: string | null;
     }>;
     dupPanel(u: AuthUser, id: string): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         position: number;
         channelId: string | null;
@@ -1227,11 +1227,11 @@ export declare class SupportTicketsController {
         active: boolean;
         name: string;
         position: number;
+        notifyChannelId: string | null;
         emoji: string | null;
         staffRoleIds: string[];
         leadRoleIds: string[];
         accessRoleNames: string[];
-        notifyChannelId: string | null;
     }>;
     updateDepartment(u: AuthUser, id: string, b: z.infer<typeof departmentSchema>): Promise<{
         id: string;
@@ -1241,31 +1241,32 @@ export declare class SupportTicketsController {
         active: boolean;
         name: string;
         position: number;
+        notifyChannelId: string | null;
         emoji: string | null;
         staffRoleIds: string[];
         leadRoleIds: string[];
         accessRoleNames: string[];
-        notifyChannelId: string | null;
     }>;
     delDepartment(u: AuthUser, id: string): Promise<void>;
     archiveCategory(u: AuthUser, id: string, b: {
         archived: boolean;
     }): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         color: number;
         description: string;
         active: boolean;
-        guildId: string | null;
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
         archivedAt: Date | null;
+        departmentId: string | null;
+        formVersion: number;
         emoji: string | null;
         staffRoleIds: string[];
         accessRoleNames: string[];
-        formVersion: number;
         buttonStyle: string;
         discordCategoryId: string | null;
         channelNameFormat: string;
@@ -1309,7 +1310,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        departmentId: string | null;
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
@@ -1534,9 +1534,9 @@ export declare class SupportTicketsController {
             id: string;
             createdAt: Date;
             categoryId: string;
+            creatorId: string;
             comment: string | null;
             ticketId: string;
-            creatorId: string;
             staffIds: string[];
             stars: number;
         }[];
@@ -1554,11 +1554,11 @@ export declare class SupportTicketsController {
             version: number;
             lastError: string | null;
             createdByName: string | null;
-            attempts: number;
-            ticketId: string;
             creatorId: string;
             creatorName: string;
             claimers: string[];
+            attempts: number;
+            ticketId: string;
             categoryName: string;
             statusName: string;
             sizeBytes: number;
@@ -1685,27 +1685,25 @@ export declare class SupportTicketsController {
             id: string;
             createdAt: Date;
             categoryId: string;
+            creatorId: string;
             comment: string | null;
             ticketId: string;
-            creatorId: string;
             staffIds: string[];
             stars: number;
         } | null;
         names: Record<string, string>;
+        guildId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         lastActivityAt: Date;
         closedAt: Date | null;
-        guildId: string;
         name: string;
         categoryId: string;
         channelId: string | null;
         archivedAt: Date | null;
-        deletedAt: Date | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         panelId: string | null;
-        departmentId: string | null;
         controlMessageId: string | null;
         creatorId: string;
         creatorName: string;
@@ -1723,7 +1721,9 @@ export declare class SupportTicketsController {
         staffAlertedAt: Date | null;
         closeRequestedAt: Date | null;
         deleteAt: Date | null;
+        deletedAt: Date | null;
         escalatedAt: Date | null;
+        departmentId: string | null;
         subject: string | null;
         openKey: string | null;
         waitingSince: Date | null;
@@ -1895,8 +1895,8 @@ declare const formSubmit: z.ZodObject<{
     }>, "many">>>;
 }, "strip", z.ZodTypeAny, {
     discordId: string;
-    step: number;
     values: Record<string, string | boolean | string[] | null>;
+    step: number;
     files: Record<string, {
         name: string;
         size: number;

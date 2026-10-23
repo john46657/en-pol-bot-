@@ -46,11 +46,11 @@ export declare class TicketTranscriptService {
             text: string;
             data: Prisma.JsonValue | null;
             createdByName: string | null;
-            attempts: number;
-            ticketId: string;
             creatorId: string;
             creatorName: string;
             claimers: string[];
+            attempts: number;
+            ticketId: string;
             ticketNumber: number;
             categoryName: string;
             statusName: string;
@@ -76,11 +76,11 @@ export declare class TicketTranscriptService {
         text: string;
         data: Prisma.JsonValue | null;
         createdByName: string | null;
-        attempts: number;
-        ticketId: string;
         creatorId: string;
         creatorName: string;
         claimers: string[];
+        attempts: number;
+        ticketId: string;
         ticketNumber: number;
         categoryName: string;
         statusName: string;

@@ -6,10 +6,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inRequest = exports.runInGuild = exports.currentRequestId = exports.currentGuild = void 0;
+exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inDashboardRequest = exports.inRequest = exports.runInGuild = exports.currentRequestId = exports.targetGuild = exports.currentGuild = void 0;
 exports.setServerLinkResolvers = setServerLinkResolvers;
 const node_async_hooks_1 = require("node:async_hooks");
 const common_1 = require("@nestjs/common");
+const errors_1 = require("./errors");
 /**
  * Gewählter Discord-Server der Anfrage (Header `X-Guild-Id`, gesetzt von der Server-Auswahl im Dashboard bzw. vom Bot).
  * Server laufen getrennt: serverbezogene Rollen gelten nur dort, Teamliste/Voice/Einstellungen zeigen nur diesen Server.
@@ -18,6 +19,18 @@ const common_1 = require("@nestjs/common");
 const store = new node_async_hooks_1.AsyncLocalStorage();
 const currentGuild = () => store.getStore()?.guildId ?? null;
 exports.currentGuild = currentGuild;
+/**
+ * Server, den eine Anfrage per `?guildId=` (oder im Body) ansprechen darf. Server sind getrennt: im Kontext eines
+ * gewählten Servers nur dieser – ein anderer wird abgelehnt (sonst könnte ein Server-Admin per Parameter Daten und
+ * Einstellungen fremder Server lesen/ändern). Ohne Kontext („Alle Server“, Bot-Dienstweg) gilt der angegebene.
+ */
+const targetGuild = (requested) => {
+    const g = (0, exports.currentGuild)();
+    if (g && requested && requested !== g)
+        throw new errors_1.AppError('PERMISSION_DENIED', 'Server sind getrennt – wechsle oben zum Server, um seine Daten zu bearbeiten.', { reason: 'FOREIGN_SERVER' });
+    return g ?? requested ?? null;
+};
+exports.targetGuild = targetGuild;
 /** Request-ID der laufenden Anfrage (Korrelations-ID für Audit/Fehlersuche), außerhalb von Anfragen undefiniert. */
 const currentRequestId = () => store.getStore()?.requestId;
 exports.currentRequestId = currentRequestId;
@@ -26,11 +39,15 @@ exports.runInGuild = runInGuild;
 /** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
 const inRequest = () => store.getStore()?.request === true;
 exports.inRequest = inRequest;
+/** Anfrage aus dem Dashboard (Sitzung), nicht vom Bot und keine Hintergrund-Aufgabe? */
+const inDashboardRequest = () => { const s = store.getStore(); return s?.request === true && !s.bot; };
+exports.inDashboardRequest = inDashboardRequest;
 let GuildContextMiddleware = class GuildContextMiddleware {
     use(req, _res, next) {
         const h = req.headers['x-guild-id'];
         const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
-        store.run({ guildId, request: true, requestId: req.requestId }, next);
+        const bot = typeof req.headers.authorization === 'string' && req.headers.authorization.startsWith('Bot ');
+        store.run({ guildId, request: true, bot, requestId: req.requestId }, next);
     }
 };
 exports.GuildContextMiddleware = GuildContextMiddleware;

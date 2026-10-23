@@ -1,5 +1,5 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
-import { currentGuild, inRequest, PER_SERVER_SETTING_KEYS, recordSpace, registeredSpaces, settingsGuild } from '../common/guild-context';
+import { currentGuild, inDashboardRequest, inRequest, PER_SERVER_SETTING_KEYS, recordSpace, registeredSpaces, settingsGuild } from '../common/guild-context';
 
 /**
  * Daten, die je Discord-Server getrennt sind (Spalte `serverId` = Bereich des Servers bzw. einer ausdrücklich eingerichteten
@@ -21,6 +21,17 @@ export const GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'Ca
 /** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
 export const RELATION_SCOPED_MODELS: Record<string, string> = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', ErlcPlayerPresence: 'server', MessageBuilderSendItem: 'send' };
 
+/**
+ * Daten mit Discord-Server (`guildId`), deren Listen die Dienste selbst nach Server filtern. Zusätzlich hier: Einzelabrufe
+ * (per ID/Nummer) aus dem Dashboard liefern nur Einträge des gewählten Servers – fremde gelten als „nicht gefunden“.
+ * Einträge ohne Server (alt, Web-Bewerbung) bleiben sichtbar. Bot-Anfragen bleiben unberührt (z. B. Bewerbungs-Kanal
+ * auf einem anderen Server, Entscheidungen per DM).
+ */
+export const DASHBOARD_GUILD_OWNED_MODELS = new Set(['Application', 'QualificationApplication', 'SupportTicket', 'LeaveRequest', 'DutyReport', 'RadioRequest', 'VoiceSupportCase', 'PanelSubmission', 'HrTrainingSession', 'DiscordBackup']);
+const SINGLE_READS = new Set(['findUnique', 'findUniqueOrThrow', 'findFirst', 'findFirstOrThrow']);
+/** Modelle, deren `guildId` Pflicht ist (Filter ohne „oder kein Server“). */
+const GUILD_REQUIRED = new Set(['SupportTicket', 'VoiceSupportCase', 'DiscordBackup']);
+
 const FILTERED = new Set(['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate', 'groupBy', 'updateMany', 'deleteMany']);
 const delegate = (base: PrismaClient, model: string) => (base as unknown as Record<string, { findUnique: (a: unknown) => Promise<{ serverId: string | null } | null> }>)[model[0]!.toLowerCase() + model.slice(1)]!;
 
@@ -36,6 +47,7 @@ export function withServerScope(base: PrismaClient) {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           if (model === 'SystemSetting') return scopeSetting(operation, args as Record<string, unknown>, query as (a: unknown) => Promise<unknown>);
+          if (model && DASHBOARD_GUILD_OWNED_MODELS.has(model)) return ownSingleRead(model, operation, args as Record<string, unknown>, query as (a: unknown) => Promise<unknown>);
           if (model && (GUILD_SCOPED_MODELS.has(model) || model in RELATION_SCOPED_MODELS)) return scopeByGuild(base, model, operation, args as Record<string, unknown>, query as (a: unknown) => Promise<unknown>);
           if (!model || !SERVER_SCOPED_MODELS.has(model)) return query(args);
           const space = recordSpace();
@@ -147,4 +159,27 @@ async function scopeByGuild(base: PrismaClient, model: string, operation: string
     }
   }
   return query(a);
+}
+
+/** Einzelabruf aus dem Dashboard: Eintrag eines anderen Servers → wie nicht vorhanden (siehe DASHBOARD_GUILD_OWNED_MODELS). */
+async function ownSingleRead(model: string, operation: string, args: Record<string, unknown> | undefined, query: (a: unknown) => Promise<unknown>) {
+  const g = currentGuild();
+  if (!g || !SINGLE_READS.has(operation) || !inDashboardRequest()) return query(args);
+  const a = { ...(args ?? {}) };
+  if (operation.startsWith('findFirst')) {
+    // bei findFirst schon in der Abfrage filtern – sonst verdeckte ein fremder Treffer einen passenden eigenen
+    const own = GUILD_REQUIRED.has(model) ? { guildId: g } : { OR: [{ guildId: null }, { guildId: g }] };
+    a.where = a.where ? { AND: [a.where, own] } : own;
+    return query(a);
+  }
+  const sel = a.select as Record<string, unknown> | undefined;
+  const added = !!sel && !sel.guildId;
+  if (added) a.select = { ...sel, guildId: true };
+  const row = (await query(a)) as Record<string, unknown> | null;
+  if (row && typeof row.guildId === 'string' && row.guildId !== g) {
+    if (operation.endsWith('OrThrow')) throw new Prisma.PrismaClientKnownRequestError(`${model}: Datensatz gehört zu einem anderen Server.`, { code: 'P2025', clientVersion: Prisma.prismaVersion.client });
+    return null;
+  }
+  if (row && added) delete row.guildId;
+  return row;
 }

@@ -6,7 +6,7 @@ import type { Actor } from '../audit/audit.service';
 export declare class BackupController {
     private readonly s;
     constructor(s: BackupService);
-    config(): Promise<{
+    config(a: Actor): Promise<{
         dataAuto: boolean;
         discordAuto: boolean;
         keep: number;
@@ -16,7 +16,7 @@ export declare class BackupController {
         discordAuto: boolean;
         keep: number;
     }>;
-    listData(): Promise<{
+    listData(a: Actor): Promise<{
         name: string;
         kind: import("./backup.service").DataBackupKind;
         size: number;
@@ -27,7 +27,7 @@ export declare class BackupController {
         rows: number;
         size: number;
     }>;
-    download(name: string, res: Response): Promise<void>;
+    download(a: Actor, name: string, res: Response): Promise<void>;
     deleteData(a: Actor, name: string): Promise<void>;
     restore(a: Actor, name: string, _b: unknown): Promise<{
         rows: number;
@@ -41,11 +41,11 @@ export declare class BackupController {
         guildId?: string;
     }): import("@prisma/client").Prisma.PrismaPromise<{
         error: string | null;
+        guildId: string;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
-        guildId: string;
         name: string;
         guildName: string;
         auto: boolean;
@@ -55,11 +55,11 @@ export declare class BackupController {
     }[]>;
     getDiscord(id: string): Promise<{
         error: string | null;
+        guildId: string;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
-        guildId: string;
         name: string;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;
@@ -73,11 +73,11 @@ export declare class BackupController {
         name?: string;
     }): Promise<{
         error: string | null;
+        guildId: string;
         id: string;
         status: string;
         createdById: string | null;
         createdAt: Date;
-        guildId: string;
         name: string;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         guildName: string;

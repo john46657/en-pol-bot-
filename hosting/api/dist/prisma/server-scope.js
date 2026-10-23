@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RELATION_SCOPED_MODELS = exports.GUILD_SCOPED_MODELS = exports.SERVER_SCOPED_MODELS = void 0;
+exports.DASHBOARD_GUILD_OWNED_MODELS = exports.RELATION_SCOPED_MODELS = exports.GUILD_SCOPED_MODELS = exports.SERVER_SCOPED_MODELS = void 0;
 exports.withServerScope = withServerScope;
 const client_1 = require("@prisma/client");
 const guild_context_1 = require("../common/guild-context");
@@ -22,6 +22,16 @@ exports.GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHand
     'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook']);
 /** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
 exports.RELATION_SCOPED_MODELS = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', ErlcPlayerPresence: 'server', MessageBuilderSendItem: 'send' };
+/**
+ * Daten mit Discord-Server (`guildId`), deren Listen die Dienste selbst nach Server filtern. Zusätzlich hier: Einzelabrufe
+ * (per ID/Nummer) aus dem Dashboard liefern nur Einträge des gewählten Servers – fremde gelten als „nicht gefunden“.
+ * Einträge ohne Server (alt, Web-Bewerbung) bleiben sichtbar. Bot-Anfragen bleiben unberührt (z. B. Bewerbungs-Kanal
+ * auf einem anderen Server, Entscheidungen per DM).
+ */
+exports.DASHBOARD_GUILD_OWNED_MODELS = new Set(['Application', 'QualificationApplication', 'SupportTicket', 'LeaveRequest', 'DutyReport', 'RadioRequest', 'VoiceSupportCase', 'PanelSubmission', 'HrTrainingSession', 'DiscordBackup']);
+const SINGLE_READS = new Set(['findUnique', 'findUniqueOrThrow', 'findFirst', 'findFirstOrThrow']);
+/** Modelle, deren `guildId` Pflicht ist (Filter ohne „oder kein Server“). */
+const GUILD_REQUIRED = new Set(['SupportTicket', 'VoiceSupportCase', 'DiscordBackup']);
 const FILTERED = new Set(['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate', 'groupBy', 'updateMany', 'deleteMany']);
 const delegate = (base, model) => base[model[0].toLowerCase() + model.slice(1)];
 /**
@@ -37,6 +47,8 @@ function withServerScope(base) {
                 async $allOperations({ model, operation, args, query }) {
                     if (model === 'SystemSetting')
                         return scopeSetting(operation, args, query);
+                    if (model && exports.DASHBOARD_GUILD_OWNED_MODELS.has(model))
+                        return ownSingleRead(model, operation, args, query);
                     if (model && (exports.GUILD_SCOPED_MODELS.has(model) || model in exports.RELATION_SCOPED_MODELS))
                         return scopeByGuild(base, model, operation, args, query);
                     if (!model || !exports.SERVER_SCOPED_MODELS.has(model))
@@ -166,5 +178,31 @@ async function scopeByGuild(base, model, operation, args, query) {
         }
     }
     return query(a);
+}
+/** Einzelabruf aus dem Dashboard: Eintrag eines anderen Servers → wie nicht vorhanden (siehe DASHBOARD_GUILD_OWNED_MODELS). */
+async function ownSingleRead(model, operation, args, query) {
+    const g = (0, guild_context_1.currentGuild)();
+    if (!g || !SINGLE_READS.has(operation) || !(0, guild_context_1.inDashboardRequest)())
+        return query(args);
+    const a = { ...(args ?? {}) };
+    if (operation.startsWith('findFirst')) {
+        // bei findFirst schon in der Abfrage filtern – sonst verdeckte ein fremder Treffer einen passenden eigenen
+        const own = GUILD_REQUIRED.has(model) ? { guildId: g } : { OR: [{ guildId: null }, { guildId: g }] };
+        a.where = a.where ? { AND: [a.where, own] } : own;
+        return query(a);
+    }
+    const sel = a.select;
+    const added = !!sel && !sel.guildId;
+    if (added)
+        a.select = { ...sel, guildId: true };
+    const row = (await query(a));
+    if (row && typeof row.guildId === 'string' && row.guildId !== g) {
+        if (operation.endsWith('OrThrow'))
+            throw new client_1.Prisma.PrismaClientKnownRequestError(`${model}: Datensatz gehört zu einem anderen Server.`, { code: 'P2025', clientVersion: client_1.Prisma.prismaVersion.client });
+        return null;
+    }
+    if (row && added)
+        delete row.guildId;
+    return row;
 }
 //# sourceMappingURL=server-scope.js.map

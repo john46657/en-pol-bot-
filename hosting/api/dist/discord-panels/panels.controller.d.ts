@@ -227,10 +227,10 @@ export declare class PanelsController {
         queued: boolean;
     }>;
     subs(id: string): import("@prisma/client").Prisma.PrismaPromise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        guildId: string | null;
         discordId: string;
         channelId: string | null;
         messageId: string | null;

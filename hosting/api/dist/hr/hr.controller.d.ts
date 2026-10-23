@@ -99,19 +99,19 @@ declare const record: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     type: "NOTE" | "AWARD" | "RECOMMENDATION" | "WARNING";
     summary: string;
+    details?: string | undefined;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
     attachments?: string[] | undefined;
-    details?: string | undefined;
     severity?: string | undefined;
     awardId?: string | undefined;
 }, {
     type: "NOTE" | "AWARD" | "RECOMMENDATION" | "WARNING";
     summary: string;
+    details?: string | undefined;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
     attachments?: string[] | undefined;
-    details?: string | undefined;
     severity?: string | undefined;
     awardId?: string | undefined;
 }>;
@@ -122,17 +122,17 @@ declare const editRecord: z.ZodObject<{
     expiresAt: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     category: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    details?: string | null | undefined;
     status?: "ACTIVE" | "REVOKED" | undefined;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
     summary?: string | undefined;
-    details?: string | null | undefined;
 }, {
+    details?: string | null | undefined;
     status?: "ACTIVE" | "REVOKED" | undefined;
     category?: string | undefined;
     expiresAt?: string | null | undefined;
     summary?: string | undefined;
-    details?: string | null | undefined;
 }>;
 export declare class HrController {
     private readonly core;
@@ -452,6 +452,7 @@ export declare class HrController {
         next: import("@enrp/shared").PromotionCheck[];
         promotions: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -463,11 +464,11 @@ export declare class HrController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         transfers: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -479,7 +480,6 @@ export declare class HrController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         requests: {
@@ -507,6 +507,7 @@ export declare class HrController {
         }[];
         awards: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -518,12 +519,12 @@ export declare class HrController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         warnings: {
             state: string;
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -535,11 +536,11 @@ export declare class HrController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         notes: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -551,11 +552,11 @@ export declare class HrController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -567,7 +568,6 @@ export declare class HrController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[];
         trainings: ({
@@ -608,8 +608,8 @@ export declare class HrController {
             personnelId: string;
             examId: string;
             snapshot: import("@prisma/client/runtime/library").JsonValue | null;
-            score: number | null;
             passed: boolean | null;
+            score: number | null;
             gradedById: string | null;
             questionIds: string[];
             shuffle: import("@prisma/client/runtime/library").JsonValue;
@@ -709,6 +709,7 @@ export declare class HrController {
         limit: number;
     }>;
     addRecord(a: Actor, id: string, b: z.infer<typeof record>): Promise<{
+        details: string | null;
         id: string;
         status: string | null;
         createdById: string;
@@ -720,10 +721,10 @@ export declare class HrController {
         attachments: string[];
         data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
-        details: string | null;
         deletedAt: Date | null;
     }>;
     editRecord(a: Actor, id: string, b: z.infer<typeof editRecord>): Promise<{
+        details: string | null;
         id: string;
         status: string | null;
         createdById: string;
@@ -735,7 +736,6 @@ export declare class HrController {
         attachments: string[];
         data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
-        details: string | null;
         deletedAt: Date | null;
     }>;
     deleteRecord(a: Actor, id: string, b: z.infer<typeof reason>): Promise<void>;
@@ -1639,8 +1639,8 @@ export declare class HrExamController {
         voidReason: string | null;
         personnelId: string;
         examId: string;
-        score: number | null;
         passed: boolean | null;
+        score: number | null;
         maxScore: number | null;
         gradedAt: Date | null;
         submittedAt: Date | null;
@@ -2397,9 +2397,9 @@ declare const sessionBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title: string;
     startsAt: string;
+    guildId?: string | null | undefined;
     notes?: string | null | undefined;
     location?: string | null | undefined;
-    guildId?: string | null | undefined;
     duration?: string | null | undefined;
     trainingId?: string | null | undefined;
     channelId?: string | null | undefined;
@@ -2409,9 +2409,9 @@ declare const sessionBody: z.ZodObject<{
 }, {
     title: string;
     startsAt: string;
+    guildId?: string | null | undefined;
     notes?: string | null | undefined;
     location?: string | null | undefined;
-    guildId?: string | null | undefined;
     duration?: string | null | undefined;
     trainingId?: string | null | undefined;
     channelId?: string | null | undefined;
@@ -2425,13 +2425,13 @@ declare const evalBody: z.ZodObject<{
     actualDuration: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    passed: string[];
     attended: string[];
+    passed: string[];
     note?: string | null | undefined;
     actualDuration?: string | null | undefined;
 }, {
-    passed: string[];
     attended: string[];
+    passed: string[];
     note?: string | null | undefined;
     actualDuration?: string | null | undefined;
 }>;
@@ -2453,6 +2453,7 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -2461,17 +2462,16 @@ export declare class HrTrainingSessionsController {
         updatedAt: Date;
         title: string;
         location: string | null;
-        guildId: string | null;
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
         channelId: string | null;
         startsAt: Date;
-        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2489,6 +2489,7 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -2497,17 +2498,16 @@ export declare class HrTrainingSessionsController {
         updatedAt: Date;
         title: string;
         location: string | null;
-        guildId: string | null;
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
         channelId: string | null;
         startsAt: Date;
-        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2525,6 +2525,7 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -2533,17 +2534,16 @@ export declare class HrTrainingSessionsController {
         updatedAt: Date;
         title: string;
         location: string | null;
-        guildId: string | null;
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
         channelId: string | null;
         startsAt: Date;
-        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2561,6 +2561,7 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -2569,17 +2570,16 @@ export declare class HrTrainingSessionsController {
         updatedAt: Date;
         title: string;
         location: string | null;
-        guildId: string | null;
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
         channelId: string | null;
         startsAt: Date;
-        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2599,6 +2599,7 @@ export declare class HrTrainingSessionsController {
         } | null;
         instructorName: string | null;
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -2607,17 +2608,16 @@ export declare class HrTrainingSessionsController {
         updatedAt: Date;
         title: string;
         location: string | null;
-        guildId: string | null;
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
         channelId: string | null;
         startsAt: Date;
-        passed: string[];
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
         attended: string[];
+        passed: string[];
         actualDuration: string | null;
         evaluationNote: string | null;
         evaluatedAt: Date | null;
@@ -2636,6 +2636,7 @@ export declare class HrTrainingSessionsController {
             } | null;
             instructorName: string | null;
             number: string;
+            guildId: string | null;
             id: string;
             status: string;
             notes: string | null;
@@ -2644,17 +2645,16 @@ export declare class HrTrainingSessionsController {
             updatedAt: Date;
             title: string;
             location: string | null;
-            guildId: string | null;
             duration: string | null;
             trainingId: string | null;
             instructorId: string | null;
             channelId: string | null;
             startsAt: Date;
-            passed: string[];
             forRank: string | null;
             promoteRankId: string | null;
             maxSignups: number | null;
             attended: string[];
+            passed: string[];
             actualDuration: string | null;
             evaluationNote: string | null;
             evaluatedAt: Date | null;

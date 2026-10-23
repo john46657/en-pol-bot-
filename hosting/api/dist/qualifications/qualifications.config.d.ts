@@ -248,13 +248,13 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
 }, "strip", z.ZodTypeAny, {
     mode: "DM" | "WEB";
-    cooldownMinutes: number;
     messages: {
         denied: string;
         accepted: string;
         confirmation: string;
         completion: string;
     };
+    cooldownMinutes: number;
     roles: {
         denied: string[];
         required: {
@@ -277,13 +277,13 @@ export declare const appSettingsSchema: z.ZodDefault<z.ZodObject<{
     onLeave: "DENY" | "NONE" | "WITHDRAW";
 }, {
     mode?: "DM" | "WEB" | undefined;
-    cooldownMinutes?: number | undefined;
     messages?: {
         denied?: string | undefined;
         accepted?: string | undefined;
         confirmation?: string | undefined;
         completion?: string | undefined;
     } | undefined;
+    cooldownMinutes?: number | undefined;
     roles?: {
         denied?: string[] | undefined;
         required?: {
@@ -494,13 +494,13 @@ export declare const unitSchema: z.ZodObject<{
         mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         mode: "DM" | "WEB";
-        cooldownMinutes: number;
         messages: {
             denied: string;
             accepted: string;
             confirmation: string;
             completion: string;
         };
+        cooldownMinutes: number;
         roles: {
             denied: string[];
             required: {
@@ -523,13 +523,13 @@ export declare const unitSchema: z.ZodObject<{
         onLeave: "DENY" | "NONE" | "WITHDRAW";
     }, {
         mode?: "DM" | "WEB" | undefined;
-        cooldownMinutes?: number | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
+        cooldownMinutes?: number | undefined;
         roles?: {
             denied?: string[] | undefined;
             required?: {
@@ -565,13 +565,13 @@ export declare const unitSchema: z.ZodObject<{
     enabled: boolean;
     settings: {
         mode: "DM" | "WEB";
-        cooldownMinutes: number;
         messages: {
             denied: string;
             accepted: string;
             confirmation: string;
             completion: string;
         };
+        cooldownMinutes: number;
         roles: {
             denied: string[];
             required: {
@@ -620,13 +620,13 @@ export declare const unitSchema: z.ZodObject<{
     enabled?: boolean | undefined;
     settings?: {
         mode?: "DM" | "WEB" | undefined;
-        cooldownMinutes?: number | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
+        cooldownMinutes?: number | undefined;
         roles?: {
             denied?: string[] | undefined;
             required?: {
@@ -756,13 +756,13 @@ export declare const policeSchema: z.ZodObject<{
         mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
     }, "strip", z.ZodTypeAny, {
         mode: "DM" | "WEB";
-        cooldownMinutes: number;
         messages: {
             denied: string;
             accepted: string;
             confirmation: string;
             completion: string;
         };
+        cooldownMinutes: number;
         roles: {
             denied: string[];
             required: {
@@ -785,13 +785,13 @@ export declare const policeSchema: z.ZodObject<{
         onLeave: "DENY" | "NONE" | "WITHDRAW";
     }, {
         mode?: "DM" | "WEB" | undefined;
-        cooldownMinutes?: number | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
+        cooldownMinutes?: number | undefined;
         roles?: {
             denied?: string[] | undefined;
             required?: {
@@ -820,13 +820,13 @@ export declare const policeSchema: z.ZodObject<{
     enabled: boolean;
     settings: {
         mode: "DM" | "WEB";
-        cooldownMinutes: number;
         messages: {
             denied: string;
             accepted: string;
             confirmation: string;
             completion: string;
         };
+        cooldownMinutes: number;
         roles: {
             denied: string[];
             required: {
@@ -860,13 +860,13 @@ export declare const policeSchema: z.ZodObject<{
     enabled?: boolean | undefined;
     settings?: {
         mode?: "DM" | "WEB" | undefined;
-        cooldownMinutes?: number | undefined;
         messages?: {
             denied?: string | undefined;
             accepted?: string | undefined;
             confirmation?: string | undefined;
             completion?: string | undefined;
         } | undefined;
+        cooldownMinutes?: number | undefined;
         roles?: {
             denied?: string[] | undefined;
             required?: {
@@ -1086,13 +1086,13 @@ export declare const configSchema: z.ZodObject<{
             mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1115,13 +1115,13 @@ export declare const configSchema: z.ZodObject<{
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1157,13 +1157,13 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1212,13 +1212,13 @@ export declare const configSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1253,13 +1253,13 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1308,13 +1308,13 @@ export declare const configSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1443,13 +1443,13 @@ export declare const configSchema: z.ZodObject<{
             mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1472,13 +1472,13 @@ export declare const configSchema: z.ZodObject<{
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1507,13 +1507,13 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1547,13 +1547,13 @@ export declare const configSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1590,13 +1590,13 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1633,13 +1633,13 @@ export declare const configSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1690,13 +1690,13 @@ export declare const configSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1733,13 +1733,13 @@ export declare const configSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -1963,13 +1963,13 @@ export declare const saveSchema: z.ZodObject<{
             mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -1992,13 +1992,13 @@ export declare const saveSchema: z.ZodObject<{
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -2034,13 +2034,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -2089,13 +2089,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -2130,13 +2130,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -2185,13 +2185,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -2320,13 +2320,13 @@ export declare const saveSchema: z.ZodObject<{
             mode: z.ZodDefault<z.ZodEnum<["DM", "WEB"]>>;
         }, "strip", z.ZodTypeAny, {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -2349,13 +2349,13 @@ export declare const saveSchema: z.ZodObject<{
             onLeave: "DENY" | "NONE" | "WITHDRAW";
         }, {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -2384,13 +2384,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -2424,13 +2424,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -2559,13 +2559,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -2602,13 +2602,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled: boolean;
         settings: {
             mode: "DM" | "WEB";
-            cooldownMinutes: number;
             messages: {
                 denied: string;
                 accepted: string;
                 confirmation: string;
                 completion: string;
             };
+            cooldownMinutes: number;
             roles: {
                 denied: string[];
                 required: {
@@ -2672,13 +2672,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {
@@ -2715,13 +2715,13 @@ export declare const saveSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
-            cooldownMinutes?: number | undefined;
             messages?: {
                 denied?: string | undefined;
                 accepted?: string | undefined;
                 confirmation?: string | undefined;
                 completion?: string | undefined;
             } | undefined;
+            cooldownMinutes?: number | undefined;
             roles?: {
                 denied?: string[] | undefined;
                 required?: {

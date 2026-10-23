@@ -37,8 +37,8 @@ export declare const erlcServerInput: z.ZodObject<{
     pollSeconds: number;
     features: ("vehicles" | "commands" | "players" | "joinLogs" | "staff" | "queue" | "emergencyCalls" | "modCalls" | "killLogs" | "commandLogs" | "webhook")[];
     webhookEnabled: boolean;
-    description?: string | null | undefined;
     guildId?: string | null | undefined;
+    description?: string | null | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     settings?: {
@@ -48,9 +48,9 @@ export declare const erlcServerInput: z.ZodObject<{
     key?: string | undefined;
 }, {
     name: string;
+    guildId?: string | null | undefined;
     description?: string | null | undefined;
     active?: boolean | undefined;
-    guildId?: string | null | undefined;
     serverRef?: string | null | undefined;
     logoUrl?: string | null | undefined;
     pollSeconds?: number | undefined;

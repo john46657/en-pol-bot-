@@ -103,10 +103,10 @@ let SupportTicketsController = class SupportTicketsController {
     /** Formular testen: serverseitige Prüfung wie beim Einreichen, es entsteht KEIN Ticket. */
     previewForm(b) { return this.s.previewForm(b.fields, b.values); }
     // ---- Tickets ----
-    list(u, q) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
+    list(u, q) { return this.s.list(u.id, { ...q, guildId: (0, guild_context_1.targetGuild)(q.guildId) ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
     async create(u, b) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
     stats(u) { return this.s.stats(u.id); }
-    overview(u, q) { return this.s.overview(u.id, q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined); }
+    overview(u, q) { return this.s.overview(u.id, (0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
     auditLog(q) { return this.s.auditLog(q); }
     /** Transkript-Seite /transcript/EMD-000123: Versionen (Mitarbeiter mit Zugriff oder der Ersteller selbst – Prüfung im Service). */
     async byRef(u, ref, res) { privateHeaders(res); return this.s.transcriptsByRef(u.id, ref.slice(0, 20)); }

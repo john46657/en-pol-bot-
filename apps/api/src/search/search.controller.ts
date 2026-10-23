@@ -49,7 +49,7 @@ export class SearchController {
       jobs.push(Promise.resolve(this.live.getMembers().members.filter((m) => m.displayName.toLowerCase().includes(t) || m.username.toLowerCase().includes(t) || m.id === term).slice(0, take).map((m) => ({ type: 'member', id: m.id, label: m.displayName, sub: `@${m.username}` }))));
     }
     if (allowed('ticket.view')) jobs.push(this.tickets.list(u.id, { q: term, page: 1, pageSize: take }).then((r) => r.items.map((x) => ({ type: 'support-ticket', id: x.id, label: `${x.number} ${x.name}`, sub: x.creatorName }))));
-    if (allowed('applications.view')) jobs.push(this.prisma.application.findMany({ where: { OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
+    if (allowed('applications.view')) jobs.push(this.prisma.application.findMany({ where: { ...(currentGuild() ? { guildId: currentGuild() } : {}), OR: [{ number: { contains: upper } }, { robloxUsername: ci(term) }, { discordName: ci(term) }] }, take, orderBy: { createdAt: 'desc' } }).then((r) => r.map((x) => ({ type: 'application', id: x.id, label: x.number, sub: x.robloxUsername }))));
     if (allowed('radio.view')) {
       const g = currentGuild();
       jobs.push(this.prisma.radioCode.findMany({ where: { AND: [{ OR: [{ guildId: null }, ...(g ? [{ guildId: g }] : [])] }, { OR: [{ code: ci(term) }, { meaning: ci(term) }] }] }, take }).then((r) => r.map((x) => ({ type: 'radio-code', id: x.code, label: x.code, sub: x.meaning }))));

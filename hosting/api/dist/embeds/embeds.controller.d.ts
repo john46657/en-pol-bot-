@@ -6,11 +6,11 @@ export declare class EmbedsController {
     private readonly s;
     constructor(s: EmbedsService);
     list(): Promise<{
+        guildId: string | null;
         id: string;
         color: string;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         channelId: string | null;
         content: string;
@@ -38,11 +38,11 @@ export declare class EmbedsController {
         pingRoles: boolean;
     }[]>;
     save(a: Actor, id: string, b: EmbedDoc): Promise<{
+        guildId: string | null;
         id: string;
         color: string;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         channelId: string | null;
         content: string;
@@ -70,11 +70,11 @@ export declare class EmbedsController {
         pingRoles: boolean;
     }>;
     duplicate(a: Actor, id: string): Promise<{
+        guildId: string | null;
         id: string;
         color: string;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         channelId: string | null;
         content: string;

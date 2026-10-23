@@ -13,11 +13,11 @@ declare const casesQ: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["OPEN", "WAITING", "CLAIMED", "DECLINED", "ABANDONED", "CLOSED"]>>;
 }, "strip", z.ZodTypeAny, {
-    status?: "OPEN" | "CLAIMED" | "CLOSED" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
     guildId?: string | undefined;
+    status?: "OPEN" | "CLAIMED" | "CLOSED" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
 }, {
-    status?: "OPEN" | "CLAIMED" | "CLOSED" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
     guildId?: string | undefined;
+    status?: "OPEN" | "CLAIMED" | "CLOSED" | "WAITING" | "DECLINED" | "ABANDONED" | undefined;
 }>;
 declare const voice: z.ZodObject<{
     guildId: z.ZodString;
@@ -90,15 +90,14 @@ export declare class VoiceSupportController {
     save(a: Actor, q: z.infer<typeof guildQ>, b: VoiceSupportRoom[]): Promise<VoiceSupportRoom[]>;
     cases(q: z.infer<typeof casesQ>): Promise<{
         number: string;
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         userId: string;
         closedAt: Date | null;
-        guildId: string;
         channelId: string | null;
         claimedById: string | null;
-        notifyChannelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -108,6 +107,7 @@ export declare class VoiceSupportController {
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
+        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
         messages: number;
@@ -116,15 +116,14 @@ export declare class VoiceSupportController {
     /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
     action(a: Actor, id: string, b: z.infer<typeof webAction>): Promise<{
         number: string;
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         userId: string;
         closedAt: Date | null;
-        guildId: string;
         channelId: string | null;
         claimedById: string | null;
-        notifyChannelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -134,6 +133,7 @@ export declare class VoiceSupportController {
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
+        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
         messages: number;

@@ -57,13 +57,13 @@ export declare class QualificationsService {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -100,13 +100,13 @@ export declare class QualificationsService {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -168,13 +168,13 @@ export declare class QualificationsService {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -211,13 +211,13 @@ export declare class QualificationsService {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -268,13 +268,13 @@ export declare class QualificationsService {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -311,13 +311,13 @@ export declare class QualificationsService {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -376,39 +376,39 @@ export declare class QualificationsService {
         decidedByName: string | null;
         number: string;
         unit: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         userId: string | null;
-        guildId: string | null;
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
         unitName: string;
     }[]>;
     get(id: string): Promise<{
         number: string;
         unit: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         userId: string | null;
-        guildId: string | null;
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: Prisma.JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
         unitName: string;
     }>;
     /** Bewerbung endgültig löschen (qualifications.delete) – im Audit-Log bleibt festgehalten, was gelöscht wurde. */

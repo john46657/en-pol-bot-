@@ -101,6 +101,7 @@ export declare class HrPeopleService {
         next: import("@enrp/shared").PromotionCheck[];
         promotions: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -112,11 +113,11 @@ export declare class HrPeopleService {
             attachments: string[];
             data: Prisma.JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         transfers: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -128,7 +129,6 @@ export declare class HrPeopleService {
             attachments: string[];
             data: Prisma.JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         requests: {
@@ -156,6 +156,7 @@ export declare class HrPeopleService {
         }[];
         awards: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -167,12 +168,12 @@ export declare class HrPeopleService {
             attachments: string[];
             data: Prisma.JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         warnings: {
             state: string;
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -184,11 +185,11 @@ export declare class HrPeopleService {
             attachments: string[];
             data: Prisma.JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         notes: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -200,11 +201,11 @@ export declare class HrPeopleService {
             attachments: string[];
             data: Prisma.JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
             createdByName: string;
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -216,7 +217,6 @@ export declare class HrPeopleService {
             attachments: string[];
             data: Prisma.JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[];
         trainings: ({
@@ -257,8 +257,8 @@ export declare class HrPeopleService {
             personnelId: string;
             examId: string;
             snapshot: Prisma.JsonValue | null;
-            score: number | null;
             passed: boolean | null;
+            score: number | null;
             gradedById: string | null;
             questionIds: string[];
             shuffle: Prisma.JsonValue;
@@ -397,6 +397,7 @@ export declare class HrPeopleService {
         awardId?: string;
         attachments?: string[];
     }): Promise<{
+        details: string | null;
         id: string;
         status: string | null;
         createdById: string;
@@ -408,7 +409,6 @@ export declare class HrPeopleService {
         attachments: string[];
         data: Prisma.JsonValue | null;
         summary: string;
-        details: string | null;
         deletedAt: Date | null;
     }>;
     /** Aktive Verwarnungen einer Person (nicht zurückgenommen, nicht abgelaufen). */
@@ -456,6 +456,7 @@ export declare class HrPeopleService {
         expiresAt?: string | null;
         category?: string;
     }): Promise<{
+        details: string | null;
         id: string;
         status: string | null;
         createdById: string;
@@ -467,7 +468,6 @@ export declare class HrPeopleService {
         attachments: string[];
         data: Prisma.JsonValue | null;
         summary: string;
-        details: string | null;
         deletedAt: Date | null;
     }>;
     deleteRecord(actor: Actor, recordId: string, reason?: string): Promise<void>;

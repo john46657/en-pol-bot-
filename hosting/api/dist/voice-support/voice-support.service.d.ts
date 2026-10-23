@@ -46,9 +46,9 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
     }>>;
     primary: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    guildId: string;
     id: string;
     notes: boolean;
-    guildId: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -70,8 +70,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
         closedTrack: string;
     };
 }, {
-    id: string;
     guildId: string;
+    id: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -94,9 +94,9 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
         closedTrack?: string | undefined;
     } | undefined;
 }>, {
+    guildId: string;
     id: string;
     notes: boolean;
-    guildId: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -118,8 +118,8 @@ export declare const roomSchema: z.ZodEffects<z.ZodObject<{
         closedTrack: string;
     };
 }, {
-    id: string;
     guildId: string;
+    id: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -183,9 +183,9 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
     }>>;
     primary: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    guildId: string;
     id: string;
     notes: boolean;
-    guildId: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -207,8 +207,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         closedTrack: string;
     };
 }, {
-    id: string;
     guildId: string;
+    id: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -231,9 +231,9 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         closedTrack?: string | undefined;
     } | undefined;
 }>, {
+    guildId: string;
     id: string;
     notes: boolean;
-    guildId: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -255,8 +255,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         closedTrack: string;
     };
 }, {
-    id: string;
     guildId: string;
+    id: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -279,9 +279,9 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         closedTrack?: string | undefined;
     } | undefined;
 }>, "many">, {
+    guildId: string;
     id: string;
     notes: boolean;
-    guildId: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -303,8 +303,8 @@ export declare const roomsSchema: z.ZodEffects<z.ZodArray<z.ZodEffects<z.ZodObje
         closedTrack: string;
     };
 }[], {
-    id: string;
     guildId: string;
+    id: string;
     name: string;
     enabled: boolean;
     notifyChannelId: string;
@@ -356,15 +356,14 @@ export declare class VoiceSupportService {
         status?: string;
     }): Promise<{
         number: string;
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         userId: string;
         closedAt: Date | null;
-        guildId: string;
         channelId: string | null;
         claimedById: string | null;
-        notifyChannelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -374,6 +373,7 @@ export declare class VoiceSupportService {
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
+        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
         messages: number;
@@ -565,15 +565,14 @@ export declare class VoiceSupportService {
         action: 'close';
     }): Promise<{
         number: string;
+        guildId: string;
         id: string;
         status: string;
         createdAt: Date;
         userId: string;
         closedAt: Date | null;
-        guildId: string;
         channelId: string | null;
         claimedById: string | null;
-        notifyChannelId: string | null;
         closeReason: string | null;
         closedById: string | null;
         closedByName: string | null;
@@ -583,6 +582,7 @@ export declare class VoiceSupportService {
         claimedByName: string | null;
         claimedAt: Date | null;
         createdChannel: boolean;
+        notifyChannelId: string | null;
         notifyMessageId: string | null;
         threadId: string | null;
         messages: number;

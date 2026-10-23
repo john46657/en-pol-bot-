@@ -40,15 +40,15 @@ declare const inboxQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
+    guildId?: string | undefined;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     type?: string | undefined;
-    guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
+    guildId?: string | undefined;
     status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     type?: string | undefined;
-    guildId?: string | undefined;
     order?: "newest" | "oldest" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -59,12 +59,12 @@ declare const progressQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
     guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    type?: string | undefined;
     guildId?: string | undefined;
+    type?: string | undefined;
     q?: string | undefined;
 }, {
-    type?: string | undefined;
     guildId?: string | undefined;
+    type?: string | undefined;
     q?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -78,13 +78,13 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "OPEN" | undefined;
     guildId?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "OPEN" | undefined;
     order?: "newest" | "oldest" | undefined;
     q?: string | undefined;
 }, {
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "OPEN" | undefined;
     guildId?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "SUBMITTED" | "SCREENING" | "INTERVIEW" | "PENDING_DECISION" | "OPEN" | undefined;
     order?: "newest" | "oldest" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -140,6 +140,7 @@ export declare class ApplicationsController {
         items: {
             decidedByName: string | null;
             number: string;
+            guildId: string | null;
             id: string;
             robloxUserId: string | null;
             robloxUsername: string;
@@ -148,16 +149,15 @@ export declare class ApplicationsController {
             updatedAt: Date;
             version: number;
             source: string;
-            guildId: string | null;
             discordId: string | null;
             discordName: string | null;
             decidedAt: Date | null;
             joinedAt: Date | null;
-            decidedById: string | null;
-            decisionReason: string | null;
             answers: import("@prisma/client/runtime/library").JsonValue;
             grantRoleIds: string[];
+            decidedById: string | null;
             durationSec: number | null;
+            decisionReason: string | null;
         }[];
         total: number;
         page: number;
@@ -263,6 +263,7 @@ export declare class ApplicationsController {
     remove(a: Actor, id: string): Promise<void>;
     get(id: string): Promise<{
         number: string;
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         robloxUsername: string;
@@ -271,20 +272,20 @@ export declare class ApplicationsController {
         updatedAt: Date;
         version: number;
         source: string;
-        guildId: string | null;
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
     }>;
     /** Prüfschritte benötigen applications.review; Entscheidungen applications.decide. */
     move(a: Actor, id: string, b: z.infer<typeof move>): Promise<{
         number: string;
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         robloxUsername: string;
@@ -293,22 +294,22 @@ export declare class ApplicationsController {
         updatedAt: Date;
         version: number;
         source: string;
-        guildId: string | null;
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
     }>;
     decide(a: Actor, id: string, b: {
         accept: boolean;
         reason: string;
     }): Promise<{
         number: string;
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         robloxUsername: string;
@@ -317,16 +318,15 @@ export declare class ApplicationsController {
         updatedAt: Date;
         version: number;
         source: string;
-        guildId: string | null;
         discordId: string | null;
         discordName: string | null;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
     }>;
     /** Annehmen/Ablehnen per Discord-Button (aus jedem offenen Status); optionaler Grund geht per DM an die Person. Manager-Rolle reicht. */
     discordDecide(a: Actor, id: string, b: {

@@ -139,13 +139,13 @@ export declare class TicketsController {
                 version: number;
             };
             legalCode: {
+                code: string;
                 serverId: string | null;
                 id: string;
                 title: string;
                 category: string;
                 description: string | null;
                 expiresAt: Date | null;
-                code: string;
                 penalty: import("@prisma/client/runtime/library").JsonValue;
                 active: boolean;
                 effectiveDate: Date;

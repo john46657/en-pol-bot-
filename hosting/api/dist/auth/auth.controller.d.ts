@@ -16,11 +16,11 @@ declare const login2faSchema: z.ZodObject<{
     ticket: z.ZodString;
     code: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    ticket: string;
     code: string;
+    ticket: string;
 }, {
-    ticket: string;
     code: string;
+    ticket: string;
 }>;
 declare const passwordSchema: z.ZodObject<{
     current: z.ZodString;

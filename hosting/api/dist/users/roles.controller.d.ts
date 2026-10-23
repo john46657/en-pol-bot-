@@ -12,20 +12,20 @@ declare const createRole: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
+    guildId?: string | null | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
-    guildId?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }, {
     name: string;
+    guildId?: string | null | undefined;
     color?: string | null | undefined;
     description?: string | null | undefined;
     priority?: number | undefined;
     active?: boolean | undefined;
-    guildId?: string | null | undefined;
     icon?: string | null | undefined;
     discordRoleIds?: string[] | undefined;
 }>;
@@ -112,6 +112,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -119,7 +120,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -147,6 +147,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -154,7 +155,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -169,6 +169,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -176,7 +177,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -191,6 +191,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -198,7 +199,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -214,6 +214,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -221,7 +222,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -236,6 +236,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -243,7 +244,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -258,6 +258,7 @@ export declare class RolesController {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -265,7 +266,6 @@ export declare class RolesController {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
