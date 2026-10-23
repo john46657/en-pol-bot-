@@ -8,7 +8,7 @@ import { AppError } from '../common/errors';
 import { customFieldsConfig } from '../studio/custom-fields';
 import { ACCENTS } from '../studio/studio.service';
 import { formSchema } from '../qualifications/qualifications.config';
-import { currentGuild, PER_SERVER_SETTING_KEYS, settingsGuild } from '../common/guild-context';
+import { currentGuild, PER_SERVER_SETTING_KEYS, runInGuild, settingsGuild } from '../common/guild-context';
 
 /** Eine oder mehrere Discord-IDs, mit Komma getrennt (z. B. Channels auf mehreren Servern). */
 const singleId = () => z.string().regex(/^\d{15,25}$/).optional();
@@ -68,6 +68,11 @@ export class AdminService {
     const rows = valid(await this.prisma.systemSetting.findMany({ where: { key: { in: keys } } })); // je Server umgeleitet (server-scope.ts)
     const settings: Record<string, unknown> = {};
     for (const r of rows) { settings[r.key] = r.value; if (PER_SERVER_SETTING_KEYS.includes(r.key)) settings[`${r.key}@${g}`] = r.value; }
+    // Discord-Anmeldung: ohne eigene Einstellung gilt für den Server der Grundwert – den anzeigen (ohne `@Server` = nicht eigen)
+    if (!('auth.discord' in settings)) {
+      const base = valid((await runInGuild(null, async () => await this.prisma.systemSetting.findMany({ where: { key: 'auth.discord' } }))));
+      if (base[0]) settings['auth.discord'] = base[0].value;
+    }
     return { settings, allowedKeys: keys, serverScoped: PER_SERVER_SETTING_KEYS };
   }
 

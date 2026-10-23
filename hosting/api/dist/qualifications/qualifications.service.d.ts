@@ -349,7 +349,7 @@ export declare class QualificationsService {
         panelChannelId?: string | undefined;
     }>;
     /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
-    openFor(discordId: string, unit?: string): Promise<{
+    openFor(discordId: string, unit?: string, guildId?: string | null): Promise<{
         open: boolean;
         number: string | null;
         unitName: string | null;

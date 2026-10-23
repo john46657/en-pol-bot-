@@ -54,8 +54,8 @@ export function Settings() {
         <Card title="Organisation">
           <div className="space-y-3">{TEXT.map(([k, label, placeholder]) => <Field key={k} label={`${label}${isServerValue(k) ? ` (nur ${serverName})` : ''}`}>{(id) => <Input id={id} value={val(k)} placeholder={placeholder} disabled={!manage} maxLength={100} onChange={(e) => edit(k, e.target.value, (v) => { if (v.trim()) put(k, v.trim(), label); return true; })} />}</Field>)}
             {/* Auswahl statt Freitext: halbe Eingaben („Eur“) wären sonst als ungültige Zeitzone gespeichert worden */}
-            <Field label="Zeitzone (Berichte, Transkripte, Wochen-Reset)">{(id) => { const tz = val('org.timezone') || DEFAULT_TIME_ZONE; return <Select id={id} disabled={!manage} value={tz} onChange={(e) => put('org.timezone', e.target.value, 'Zeitzone')}>{[...new Set([tz, ...TIMEZONES])].map((z) => <option key={z}>{z}</option>)}</Select>; }}</Field>
-            <Field label="Datumsformat (Standard für alle ohne eigenes)">{(id) => <Select id={id} disabled={!manage} value={val('org.dateFormat') || 'DD.MM.YYYY'} onChange={(e) => put('org.dateFormat', e.target.value, 'Datumsformat')}>{['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'].map((f) => <option key={f}>{f}</option>)}</Select>}</Field></div>
+            <Field label={`Zeitzone (Berichte, Transkripte, Wochen-Reset)${isServerValue('org.timezone') ? ` – nur ${serverName}` : ''}`}>{(id) => { const tz = val('org.timezone') || DEFAULT_TIME_ZONE; return <Select id={id} disabled={!manage} value={tz} onChange={(e) => put('org.timezone', e.target.value, 'Zeitzone')}>{[...new Set([tz, ...TIMEZONES])].map((z) => <option key={z}>{z}</option>)}</Select>; }}</Field>
+            <Field label={`Datumsformat (Standard für alle ohne eigenes)${isServerValue('org.dateFormat') ? ` – nur ${serverName}` : ''}`}>{(id) => <Select id={id} disabled={!manage} value={val('org.dateFormat') || 'DD.MM.YYYY'} onChange={(e) => put('org.dateFormat', e.target.value, 'Datumsformat')}>{['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'].map((f) => <option key={f}>{f}</option>)}</Select>}</Field></div>
         </Card>
         <Card title="Datenaufbewahrung" actions={manage && <Button variant="secondary" size="sm" onClick={() => retention.mutate()} disabled={retention.isPending}>Jetzt ausführen</Button>}>
           <p className="mb-3 text-xs text-muted">Audit-Logs werden bei der Bereinigung nie gelöscht.</p>
@@ -91,19 +91,31 @@ export function Settings() {
       </Card>
       {manage && <SystemNoticeCard />}
       <BotInviteCard />
-      <DiscordLoginCard manage={manage} value={get<DiscordLogin>('auth.discord')} onSave={(v) => put('auth.discord', v, 'Discord-Anmeldung')} />
+      {/* je Server getrennt: Entwurf beim Serverwechsel neu laden */}
+      <DiscordLoginCard key={server ?? 'all'} manage={manage} serverName={serverName} own={!server || q.data.settings[`auth.discord@${server}`] !== undefined}
+        serverRoles={server ? guilds.data?.find((g) => g.id === server)?.roles.map((r) => r.id) : undefined}
+        value={get<DiscordLogin>('auth.discord')} onSave={(v) => put('auth.discord', v, 'Discord-Anmeldung')} />
     </>
   );
 }
 
 interface DiscordLogin { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds?: string[]; guildAdmins?: boolean }
 
-/** „Mit Discord anmelden“: neue Konten, Server-Pflicht, Discord-Rolle → Systemrolle (wird bei jeder Discord-Anmeldung abgeglichen). */
-function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: DiscordLogin; onSave: (v: DiscordLogin) => void }) {
-  const [d, setDraft] = useState<DiscordLogin>(value ?? { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] });
-  const [team, setTeamText] = useState((value?.teamRoleIds ?? []).join(', '));
+/**
+ * „Mit Discord anmelden“ – JE SERVER (oben links gewählt): Registrierung, Discord-Admins, Teamrollen und Discord-Rolle →
+ * Systemrolle gelten nur für diesen Server. Unter „Alle Server“: Grundwert für Server ohne eigene Einstellung.
+ */
+function DiscordLoginCard({ manage, value, onSave, serverName, own, serverRoles }: { manage: boolean; value?: DiscordLogin; onSave: (v: DiscordLogin) => void; serverName: string | null; own: boolean; serverRoles?: string[] }) {
+  // Grundwert als Vorlage für einen Server: nur Rollen dieses Servers übernehmen (soweit bekannt)
+  const initial = (v: DiscordLogin): DiscordLogin => {
+    if (own || !serverRoles?.length) return v;
+    const team = (v.teamRoleIds ?? []).filter((id) => serverRoles.includes(id));
+    return { ...v, teamRoleIds: team.length ? team : v.teamRoleIds ?? [], roleMap: v.roleMap.filter((m) => serverRoles.includes(m.discordRoleId)) };
+  };
+  const [d, setDraft] = useState<DiscordLogin>(value ? initial(value) : { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] });
+  const [team, setTeamText] = useState((d.teamRoleIds ?? []).join(', '));
   const [loaded, setLoaded] = useState(!!value);
-  useEffect(() => { if (value && !loaded) { setDraft(value); setTeamText((value.teamRoleIds ?? []).join(', ')); setLoaded(true); } }, [value, loaded]);
+  useEffect(() => { if (value && !loaded) { const v = initial(value); setDraft(v); setTeamText((v.teamRoleIds ?? []).join(', ')); setLoaded(true); } }, [value, loaded]);
   // automatisch speichern: nur vollständige Zuordnungen und gültige IDs
   const commit = (next: DiscordLogin, teamText: string) => { if (manage) onSave({ ...next, roleMap: next.roleMap.filter((r) => /^\d{15,25}$/.test(r.discordRoleId) && r.role), teamRoleIds: teamText.match(/\d{15,25}/g) ?? [] }); };
   const setD = (next: DiscordLogin) => { setDraft(next); commit(next, team); };
@@ -112,19 +124,23 @@ function DiscordLoginCard({ manage, value, onSave }: { manage: boolean; value?: 
   const providers = useQuery({ queryKey: ['auth-providers'], queryFn: () => api<{ discord: boolean }>('/auth/providers') });
   const row = (i: number, p: Partial<DiscordLogin['roleMap'][number]>) => setD({ ...d, roleMap: d.roleMap.map((r, j) => (j === i ? { ...r, ...p } : r)) });
   return (
-    <Card title="Mit Discord anmelden – Zugang zum Dashboard" className="mt-4">
+    <Card title={`Mit Discord anmelden – Zugang zum Dashboard${serverName ? ` – ${serverName}` : ''}`} className="mt-4">
+      <p className="mb-2 text-xs text-muted">{serverName
+        ? <>Gilt nur für <b>{serverName}</b> (Server laufen getrennt): Teamrollen, Rollen-Zuordnung, Discord-Admins und Registrierung dieses Servers.{own ? '' : ' Noch keine eigene Einstellung – bis zur ersten Änderung gilt der Grundwert („Alle Server“).'}</>
+        : 'Grundwert für Server ohne eigene Einstellung. Wähle oben links einen Server, um Teamrollen und Zuordnungen nur für ihn festzulegen.'}</p>
       <p className="mb-3 text-xs text-muted">
         {providers.data?.discord ? 'Aktiv – Anmeldung nur über Discord (Notfall: PASSWORD_LOGIN=true im Panel). Deine eigene Discord-ID gehört in ADMIN_DISCORD_IDS, damit du immer Admin-Rechte hast.' : 'Noch nicht aktiv (Passwort-Anmeldung ist für die Einrichtung aktiv): Setze ADMIN_DISCORD_IDS (deine Discord-ID) und DISCORD_CLIENT_SECRET (Discord Developer Portal → OAuth2) im Panel und trage die Redirect-URL unten im Developer Portal ein.'}
         {' '}Redirect-URL: <code>{window.location.origin}/api/v1/auth/discord/callback</code>
       </p>
       <div className="space-y-2 text-sm">
         <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.signup} onChange={(e) => setD({ ...d, signup: e.target.checked })} />Neue Benutzer können sich mit Discord registrieren (Konto wird bei der ersten Anmeldung erstellt)</label>
-        <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Nur Mitglieder unseres Discord-Servers dürfen sich anmelden</label>
+        {/* gilt vor jeder Server-Zuordnung → nur als Grundwert */}
+        {!serverName && <label className="flex items-center gap-2"><input type="checkbox" disabled={!manage} checked={d.requireGuild} onChange={(e) => setD({ ...d, requireGuild: e.target.checked })} />Nur Mitglieder unserer Discord-Server dürfen sich anmelden (gilt für alle Server)</label>}
         <label className="flex items-start gap-2"><input type="checkbox" className="mt-1" disabled={!manage} checked={d.guildAdmins !== false} onChange={(e) => setD({ ...d, guildAdmins: e.target.checked })} /><span>Discord-Admins haben immer Zugang: Wer auf einem Server das Discord-Recht <b>Administrator</b> hat (oder Besitzer ist), kommt auch ohne Teamrolle rein und bekommt die Rolle „Server-Administrator“ – nur für diesen Server. Verliert die Person das Recht, wird die Rolle wieder entzogen.</span></label>
       </div>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rollen mit Dashboard-Zugriff (Teamrollen)</h3>
       <div className="max-w-xl"><RolePicker ariaLabel="Teamrollen" disabled={!manage} max={20} value={team.match(/\d{15,25}/g) ?? []} onChange={(ids) => setTeam(ids.join(', '))} /></div>
-      <p className="mt-1 text-xs text-muted">Nur Personen mit einer dieser Discord-Rollen können sich anmelden (mehrere Server / Rollen: kommagetrennt). Leer = alle Servermitglieder. Konten in ADMIN_DISCORD_IDS und (falls oben aktiviert) Discord-Admins des jeweiligen Servers kommen immer rein. Wird bei jeder Anmeldung und danach laufend geprüft (Verlust der Rolle beendet die Sitzung). Discord-Rollen mit Dashboard-Rollen verknüpfen: Rollen &amp; Rechte → Rolle → „Verknüpfte Discord-Rollen“.</p>
+      <p className="mt-1 text-xs text-muted">{serverName ? `Nur Mitglieder von ${serverName} mit einer dieser Rollen bekommen über diesen Server Zugang. Leer = alle Mitglieder dieses Servers.` : 'Nur Personen mit einer dieser Discord-Rollen können sich anmelden. Leer = alle Servermitglieder.'} Zugang gibt jeder Server, dessen Einstellung die Person erfüllt. Konten in ADMIN_DISCORD_IDS und (falls oben aktiviert) Discord-Admins des jeweiligen Servers kommen immer rein. Wird bei jeder Anmeldung und danach laufend geprüft (Verlust der Rolle beendet die Sitzung). Discord-Rollen mit Dashboard-Rollen verknüpfen: Rollen &amp; Rechte → Rolle → „Verknüpfte Discord-Rollen“.</p>
       <h3 className="mb-1 mt-4 text-xs font-semibold uppercase text-muted">Discord-Rolle → Systemrolle (bei jeder Discord-Anmeldung abgeglichen)</h3>
       <div className="space-y-2">
         {d.roleMap.map((r, i) => (

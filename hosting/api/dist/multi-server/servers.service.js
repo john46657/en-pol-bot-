@@ -49,8 +49,10 @@ let ServersService = class ServersService {
         for (const m of shared_1.MODULES) {
             await this.prisma.appModule.upsert({ where: { key: m.key }, create: { key: m.key, name: m.name, description: m.description, isSystem: !!m.system, dependsOn: m.dependsOn ?? [] }, update: { name: m.name, description: m.description, isSystem: !!m.system, dependsOn: m.dependsOn ?? [] } }).catch((e) => this.log.warn(`Modul ${m.key}: ${e instanceof Error ? e.message : e}`));
         }
-        if (process.env.NODE_ENV !== 'test')
+        if (process.env.NODE_ENV !== 'test') {
             await this.splitSettings().catch((e) => this.log.warn(`Einstellungen je Server: ${e instanceof Error ? e.message : e}`));
+            await this.splitLaterSettings().catch((e) => this.log.warn(`Einstellungen je Server (Anmeldung/Zeitzone): ${e instanceof Error ? e.message : e}`));
+        }
         // Server von vor der Trennung: einmalig bisherige Rollen samt Zuweisungen als eigene Server-Rollen übernehmen
         for (const s of await this.prisma.discordServer.findMany({ where: { rolesInitializedAt: null }, select: { id: true, name: true } })) {
             await (0, server_roles_1.initServerRoles)(this.prisma, s.id, true).then((n) => n && this.log.log(`${n} Rollen für ${s.name} übernommen`), (e) => this.log.warn(`Rollen für ${s.name}: ${e instanceof Error ? e.message : e}`));
@@ -79,6 +81,41 @@ let ServersService = class ServersService {
             await tx.systemSetting.create({ data: { key: FLAG, value: { at: new Date().toISOString(), servers: servers.length, copied } } });
             if (copied)
                 this.log.log(`${copied} Einstellungen auf ${servers.length} Server übertragen (je Server eigene Kopie)`);
+        }, { timeout: 60_000 });
+    }
+    /**
+     * Einmalig: Discord-Anmeldung (Teamrollen, Rollen-Zuordnung …), Zeitzone und Datumsformat gelten jetzt je Server. Jeder
+     * bestehende Server bekommt den bisherigen gemeinsamen Wert als eigene Kopie – bei der Anmeldung nur mit Rollen, die zu
+     * diesem Server gehören (soweit der Bot sie gemeldet hat).
+     */
+    async splitLaterSettings() {
+        const FLAG = 'migration.serverSplit.v2';
+        await this.prisma.$transaction(async (tx) => {
+            await tx.$executeRaw `SELECT pg_advisory_xact_lock(hashtext(${FLAG}))`;
+            if (await tx.systemSetting.findUnique({ where: { key: FLAG } }))
+                return;
+            const servers = await tx.discordServer.findMany({ where: { archivedAt: null }, select: { guildId: true } });
+            const base = await tx.systemSetting.findMany({ where: { key: { in: [...guild_context_1.LATER_PER_SERVER_KEYS] } } });
+            const reported = (await tx.systemSetting.findUnique({ where: { key: 'discord.guilds' } }))?.value;
+            const rolesOf = new Map((Array.isArray(reported) ? reported : []).filter((g) => g.id && Array.isArray(g.roles)).map((g) => [g.id, new Set(g.roles.map((r) => r.id))]));
+            let copied = 0;
+            for (const sv of servers) {
+                const g = (0, guild_context_1.settingsGuild)(sv.guildId) ?? sv.guildId;
+                const own = rolesOf.get(g);
+                for (const row of base) {
+                    let value = row.value;
+                    if (row.key === 'auth.discord' && own && value && typeof value === 'object' && !Array.isArray(value)) {
+                        const v = value;
+                        const team = (v.teamRoleIds ?? []).filter((id) => own.has(id));
+                        // keine eigene Teamrolle dabei: Liste behalten – leer hieße „alle Mitglieder“ und gäbe mehr Zugang als vorher
+                        value = { ...v, teamRoleIds: team.length ? team : v.teamRoleIds ?? [], roleMap: (v.roleMap ?? []).filter((m) => own.has(m.discordRoleId)) };
+                    }
+                    copied += (await tx.systemSetting.createMany({ data: [{ key: `${row.key}@${g}`, value }], skipDuplicates: true })).count;
+                }
+            }
+            await tx.systemSetting.create({ data: { key: FLAG, value: { at: new Date().toISOString(), servers: servers.length, copied } } });
+            if (copied)
+                this.log.log(`${copied} Einstellungen (Anmeldung/Zeitzone) auf ${servers.length} Server übertragen`);
         }, { timeout: 60_000 });
     }
     // ───────── Zugriff ─────────

@@ -49,8 +49,10 @@ export const PER_SERVER_SETTING_KEYS: readonly string[] = [
   ...SERVER_SCOPED_SETTINGS, 'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
   'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
   'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
-  'messagebuilder.channels',
+  'messagebuilder.channels', 'auth.discord', 'org.timezone', 'org.dateFormat',
 ];
+/** Erst später je Server getrennt: bestehende Server bekommen einmalig den bisherigen gemeinsamen Wert als eigene Kopie. */
+export const LATER_PER_SERVER_KEYS: readonly string[] = ['auth.discord', 'org.timezone', 'org.dateFormat'];
 export const scopedKey = (key: string, guildId: string | null) => { const g = settingsGuild(guildId); return g && (SERVER_SCOPED_SETTINGS as readonly string[]).includes(key) ? `${key}@${g}` : key; };
 
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----

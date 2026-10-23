@@ -19,6 +19,14 @@ export interface DiscordLoginSettings {
 }
 export declare const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings;
 /**
+ * Anmelde-Einstellungen JE SERVER (`auth.discord@<Server>`): Teamrollen, Rollen-Zuordnung, Discord-Admins und Registrierung
+ * gelten nur für den eigenen Server. `base` = gemeinsamer Grundwert (Server ohne eigene Einstellung, „Nur Mitglieder“).
+ */
+export interface LoginPolicy {
+    base: DiscordLoginSettings;
+    byGuild: Record<string, DiscordLoginSettings>;
+}
+/**
  * `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server,
  * `admin` = Server, auf denen die Person das Discord-Recht „Administrator“ hat oder Besitzer ist.
  */
@@ -52,7 +60,17 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     onModuleInit(): void;
     onModuleDestroy(): void;
     isOwnerId(discordId: string): boolean;
+    /** Gemeinsamer Grundwert – unabhängig vom gewählten Server der Anfrage. */
     settings(): Promise<DiscordLoginSettings>;
+    /** Einstellungen der angegebenen Server: eigener Wert des Servers (bzw. seiner Gruppe), sonst der Grundwert. */
+    policy(guildIds: string[]): Promise<LoginPolicy>;
+    /** Server, auf denen die Mitgliedschaft Zugang gibt (Teamrolle des Servers, Discord-Admin des Servers oder keine Teamrollen dort). */
+    grantingGuilds(member: {
+        byGuild: Record<string, string[]>;
+        admin?: string[];
+    }, p: LoginPolicy): string[];
+    /** Sind irgendwo Teamrollen Pflicht? Dann kommt ohne Server-Mitgliedschaft niemand rein. */
+    teamRolesRequired(p: LoginPolicy): boolean;
     /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
     membership(discordId: string): Promise<Membership>;
     /** Besitzer und Rollen mit dem Discord-Recht „Administrator“ (die @everyone-Rolle hat die ID des Servers); `null` = nicht lesbar. */
@@ -72,9 +90,9 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
     avatars(ids: string[]): Promise<Map<string, string | null>>;
     /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
     verdict(member: {
-        roles: string[];
+        byGuild: Record<string, string[]>;
         admin?: string[];
-    } | null, s: DiscordLoginSettings): AccessVerdict;
+    } | null, p: LoginPolicy): AccessVerdict;
     /**
      * Mitgliedschaften je registriertem Server festhalten: geprüft und Mitglied → MEMBER (mit Discord-Rollen), geprüft und
      * nicht Mitglied → LEFT. Manuelle Mitgliedschaften (Konten ohne Discord) bleiben unangetastet.
@@ -86,7 +104,7 @@ export declare class DiscordAccessService implements OnModuleInit, OnModuleDestr
      * (`UserRole.guildIds`) – eine Discord-Rolle auf Server A verleiht nie Rechte auf Server B. Nur die in `byGuild`/`checked`
      * geprüften Server werden geändert; Rollen ohne Discord-Verknüpfung und „System Administrator“ bleiben unangetastet.
      */
-    syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked?: string[], adminGuilds?: string[]): Promise<void>;
+    syncRoles(userId: string, byGuild: Record<string, string[]>, p?: LoginPolicy, checked?: string[], adminGuilds?: string[]): Promise<void>;
     /** Rolle „Server-Administrator“ (alle Rechte, nur auf diesem Server) für registrierte Server anlegen, falls es sie noch nicht gibt. */
     private ensureServerAdminRoles;
     /**

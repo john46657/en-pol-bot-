@@ -113,7 +113,6 @@ let DiscordOAuthService = class DiscordOAuthService {
             return { kind: 'installed', guildId, guildName: tok.guild?.name ?? null, userId: p.userId ?? null };
         }
         const { user: du, guilds } = await this.discordUser(code, p.mode === 'login');
-        const settings = await this.settings();
         if (p.mode === 'link') {
             const other = await this.prisma.discordLink.findUnique({ where: { discordId: du.id } });
             if (other && other.userId !== p.userId)
@@ -129,24 +128,28 @@ let DiscordOAuthService = class DiscordOAuthService {
         const link = await this.prisma.discordLink.findUnique({ where: { discordId: du.id } });
         let user = link ? await this.prisma.user.findUnique({ where: { id: link.userId } }) : null;
         const owner = this.isAdminId(du.id); // Besitzer/Admins aus ADMIN_DISCORD_IDS kommen immer rein
-        if (!owner && settings.requireGuild && member === 'unknown' && !user)
+        // Teamrollen, Discord-Admins und Registrierung gelten je Server: Zugang gibt jeder Server, dessen Einstellung die Person erfüllt
+        const policy = await this.access.policy(member && member !== 'unknown' ? member.checked : []);
+        const base = policy.base;
+        if (!owner && base.requireGuild && member === 'unknown' && !user)
             throw new DiscordLoginFailure('cannot_verify');
-        if (!owner && settings.requireGuild && member === null)
+        if (!owner && base.requireGuild && member === null)
             throw new DiscordLoginFailure('not_member');
-        // Team-Rolle Pflicht: ohne eine der eingestellten Discord-Rollen kein Zugang (Besitzer aus ADMIN_DISCORD_IDS ausgenommen)
-        const guildAdmin = settings.guildAdmins && member && member !== 'unknown' && !!member.admin?.length; // Discord-Administrator eines Servers
-        if (!owner && !guildAdmin && settings.teamRoleIds.length) {
+        const granted = member && member !== 'unknown' ? this.access.grantingGuilds(member, policy) : [];
+        if (!owner && this.access.teamRolesRequired(policy)) {
             if (member === 'unknown')
                 throw new DiscordLoginFailure('cannot_verify');
             if (member === null)
                 throw new DiscordLoginFailure('not_member');
-            if (!member.roles.some((r) => settings.teamRoleIds.includes(r)))
+            if (!granted.length)
                 throw new DiscordLoginFailure('no_team_role');
         }
         if (user && !user.active)
             throw new DiscordLoginFailure('inactive');
         if (!user) {
-            if (!settings.signup && !owner)
+            // Registrierung: erlaubt, wenn einer der Server, die Zugang geben, sie erlaubt (ohne Server: Grundwert)
+            const signup = granted.length ? granted.some((g) => (policy.byGuild[g] ?? base).signup) : base.signup;
+            if (!signup && !owner)
                 throw new DiscordLoginFailure('no_account');
             user = await this.createUser(du, meta);
         }
@@ -156,13 +159,12 @@ let DiscordOAuthService = class DiscordOAuthService {
             await this.prisma.discordLink.updateMany({ where: { userId: user.id, discordId: du.id }, data: { managedGuilds: guilds, guildsSyncedAt: new Date() } });
         if (member && member !== 'unknown') {
             await this.access.recordMemberships(user.id, member.byGuild, member.checked);
-            await this.access.syncRoles(user.id, member.byGuild, settings, member.checked, member.admin);
+            await this.access.syncRoles(user.id, member.byGuild, policy, member.checked, member.admin);
         }
         this.access.remember(user.id, true);
         await this.prisma.loginHistory.create({ data: { userId: user.id, username: user.username, success: true, ip: meta.ip, reason: 'DISCORD' } });
         return { kind: 'login', ...(await this.auth.startSession(user, meta, 'auth.login.discord')) };
     }
-    settings() { return this.access.settings(); }
     /** Code bei Discord einlösen (Login und Bot-Einladung). */
     async exchange(code) {
         try {

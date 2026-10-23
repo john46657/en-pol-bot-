@@ -60,6 +60,10 @@ Getrennt wird zentral in der Datenbankschicht (`apps/api/src/prisma/server-scope
 
 Gemeinsam (global) bleiben nur: Benutzerkonten und Anmeldung, Backups, der Server-Verbund selbst, das Audit-Log (mit Server-Spalte) und der Bot-Zustand.
 
+**Discord-Anmeldung je Server** (`auth.discord@<Server>`, *Einstellungen → Mit Discord anmelden* mit gewähltem Server): Teamrollen, Discord-Rolle → Systemrolle, „Discord-Admins haben immer Zugang“ und die Registrierung neuer Konten gelten nur für den jeweiligen Server. Zugang gibt jeder Server, dessen Einstellung die Person erfüllt. Ohne eigene Einstellung gilt der Grundwert („Alle Server“); „Nur Mitglieder unserer Discord-Server“ ist immer der Grundwert. Beim Update bekommt jeder bestehende Server den bisherigen gemeinsamen Wert als eigene Kopie (nur mit seinen eigenen Rollen, soweit der Bot sie gemeldet hat). Ebenso je Server: **Zeitzone** und **Datumsformat**.
+
+**Bewerbungen** (Polizei und Einheiten) laufen je Server: Formular, Einstellungen, Liste, Sperren, „schon eine offene Bewerbung“ und die Wartezeit bis zur nächsten Bewerbung zählen nur auf dem Server der Bewerbung.
+
 Ausnahmen gibt es **nur ausdrücklich**:
 - **Server-Verbund-Gruppe mit „Akten teilen“**: gemeinsamer Bereich für die Gruppe.
 - **CAD-Querverbindung**: Ein Discord-Befehl von einem verbundenen Server (z. B. SEK/K9) arbeitet nur dann im Bereich der Leitstelle, wenn **beide Seiten** es eingerichtet haben. Der SEK-Server trägt die Leitstelle als Heimat-Server ein (CAD → Einstellungen), die Leitstelle legt die Verbindung an (`CadServerLink`). Welche Aktionen erlaubt sind (Status, Funk, Einsätze sehen, Disponieren), bestimmt weiterhin die Verbindung. Dashboard-Anfragen werden nie umgeleitet (`apps/api/src/cad/cad-link.interceptor.ts`).

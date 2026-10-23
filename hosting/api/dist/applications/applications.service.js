@@ -104,13 +104,15 @@ let ApplicationsService = class ApplicationsService {
         }
         // Bewerbungssperre (Discord-ID oder Roblox-ID)
         await this.bans.assertAllowed({ discordId: meta.discordId, robloxUserId: d.robloxUserId }, application_bans_service_1.BAN_POLICE, 'die Polizei-Bewerbung', meta.guildId ?? null);
-        if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES } } }))) {
+        // offene Bewerbung und Wartezeit gelten je Server (eine Bewerbung auf Server A sperrt nicht Server B)
+        const onServer = meta.guildId ? { guildId: meta.guildId } : {};
+        if (d.robloxUserId && (await this.prisma.application.count({ where: { robloxUserId: d.robloxUserId, status: { in: OPEN_STATUSES }, ...onServer } }))) {
             throw new errors_1.AppError('CONFLICT', 'Für diesen Roblox-Benutzer gibt es schon eine offene Bewerbung.');
         }
-        if (meta.discordId && (await this.openForDiscord(meta.discordId)).open)
+        if (meta.discordId && (await this.openForDiscord(meta.discordId, meta.guildId)).open)
             throw new errors_1.AppError('CONFLICT', 'Für dieses Discord-Konto gibt es schon eine offene Bewerbung.');
         if (meta.discordId) {
-            const last = await this.prisma.application.findFirst({ where: { discordId: meta.discordId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
+            const last = await this.prisma.application.findFirst({ where: { discordId: meta.discordId, ...onServer }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
             const wait = (0, decision_1.cooldownLeft)(police.settings, last?.createdAt);
             if (wait)
                 throw new errors_1.AppError('CONFLICT', `Du kannst dich erst in ${(0, shared_2.formatMinutes)(wait)} erneut bewerben.`);
@@ -171,8 +173,9 @@ let ApplicationsService = class ApplicationsService {
         }, { always: true });
     }
     /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
-    async openForDiscord(discordId) {
-        const a = await this.prisma.application.findFirst({ where: { discordId, status: { in: OPEN_STATUSES } }, select: { number: true } });
+    /** Offene Bewerbung dieser Discord-ID – mit `guildId` nur auf diesem Server. */
+    async openForDiscord(discordId, guildId) {
+        const a = await this.prisma.application.findFirst({ where: { discordId, status: { in: OPEN_STATUSES }, ...(guildId ? { guildId } : {}) }, select: { number: true } });
         return { open: !!a, number: a?.number ?? null };
     }
     async openTicket(actor, id) {

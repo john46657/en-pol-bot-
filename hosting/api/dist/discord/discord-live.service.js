@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const realtime_service_1 = require("../realtime/realtime.service");
 const notify_service_1 = require("../notifications/notify.service");
+const guild_context_1 = require("../common/guild-context");
 const MAX_CHANGES = 100;
 /**
  * Aktueller Discord-Stand, den der Bot meldet (Teammitglieder ≥ alle 60 s, Voice bei jeder Änderung).
@@ -36,9 +37,11 @@ let DiscordLiveService = class DiscordLiveService {
     }
     /** Welche Discord-Rollen machen jemanden zum Teammitglied? Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen. */
     async teamRoleIds() {
-        const login = (await this.prisma.systemSetting.findUnique({ where: { key: 'auth.discord' } }))?.value;
+        // Grundwert und Einstellungen aller Server (`auth.discord@<Server>`) – Rollen-IDs sind je Server eindeutig
+        const rows = await (0, guild_context_1.runInGuild)(null, async () => await this.prisma.systemSetting.findMany({ where: { OR: [{ key: 'auth.discord' }, { key: { startsWith: 'auth.discord@' } }] } }));
+        const logins = rows.map((r) => r.value);
         const linked = await this.prisma.role.findMany({ where: { active: true, discordRoleIds: { isEmpty: false } }, select: { discordRoleIds: true } });
-        return [...new Set([...(login?.teamRoleIds ?? []), ...(login?.roleMap ?? []).map((m) => m.discordRoleId), ...linked.flatMap((r) => r.discordRoleIds)])];
+        return [...new Set([...logins.flatMap((l) => [...(l?.teamRoleIds ?? []), ...(l?.roleMap ?? []).map((m) => m.discordRoleId)]), ...linked.flatMap((r) => r.discordRoleIds)])];
     }
     setMembers(list) {
         const next = new Map(list.map((m) => [`${m.guildId}:${m.id}`, m]));

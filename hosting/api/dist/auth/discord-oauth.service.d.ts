@@ -1,7 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
-import { DiscordAccessService, type DiscordLoginSettings } from '../authz/discord-access.service';
+import { DiscordAccessService } from '../authz/discord-access.service';
 import { PermissionService } from '../authz/permission.service';
 /** Kein gültiger Passwort-Hash → mit Passwort nicht anmeldbar (nur Discord). */
 export declare const DISCORD_ONLY_PASSWORD = "!discord-login-only";
@@ -84,7 +84,6 @@ export declare class DiscordOAuthService {
         guildName?: undefined;
         userId?: undefined;
     }>;
-    settings(): Promise<DiscordLoginSettings>;
     /** Code bei Discord einlösen (Login und Bot-Einladung). */
     private exchange;
     private discordUser;

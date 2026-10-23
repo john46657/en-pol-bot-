@@ -307,10 +307,13 @@ declare const voiceBody: z.ZodObject<{
 }>;
 declare const openQ: z.ZodObject<{
     discordId: z.ZodString;
+    guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     discordId: string;
+    guildId?: string | undefined;
 }, {
     discordId: string;
+    guildId?: string | undefined;
 }>;
 declare const application: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
