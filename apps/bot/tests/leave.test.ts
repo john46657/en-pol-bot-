@@ -4,7 +4,7 @@ import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import { parseDuration, parseLeaveDate } from '../src/commands/leave';
 import type { Ctx } from '../src/commands/types';
-import { humanDuration, leaveDecisionText, leaveDirectEmbed, leaveExtensionDirectEmbed, outboxButtons, renderOutboxEmbeds, type Reply } from '../src/format';
+import { humanDuration, shiftDuration, leaveDecisionText, leaveDirectEmbed, leaveExtensionDirectEmbed, outboxButtons, renderOutboxEmbeds, type Reply } from '../src/format';
 import { pollOnce } from '../src/outbox';
 
 const ME = '123456789012345678', GUILD = '323456789012345678';
@@ -122,6 +122,23 @@ describe('shifts in Discord', () => {
     expect(synced).toEqual([`${ME} +800000000000000001 -800000000000000002`]);
     expect(sent[0]).toContain('900000000000000001');
     expect(sent[0]).toContain('Schicht: **SEK**');
+  });
+  it('shift log like Trident: started/ended with member, time and the same shift ID; posted with @member header', async () => {
+    const base = { discordId: ME, name: 'ghost_gaming7542', shiftType: 'Dienst', shiftId: '1508566299347784460', shiftStartedAt: '2026-05-25T20:23:00.000Z' };
+    const [start] = renderOutboxEmbeds('duty.changed', { ...base, status: 'ON_DUTY', previous: 'OFF_DUTY', totalSeconds: 0 })!;
+    expect(start).toMatchObject({ title: 'Shift Started • Dienst', color: 0x22c55e, footer: 'Shift ID: 1508566299347784460', author: { name: '@ghost_gaming7542' } });
+    expect(start!.description).toBe(`**Staff Member**: <@${ME}>\n**Started**: <t:1779740580:R> (<t:1779740580:f>)`);
+    const [end] = renderOutboxEmbeds('duty.changed', { ...base, status: 'OFF_DUTY', previous: 'ON_DUTY', totalSeconds: 1, breakSeconds: 0 })!;
+    expect(end).toMatchObject({ title: 'Shift Ended • Dienst', color: 0xef4444, footer: 'Shift ID: 1508566299347784460' });
+    expect(end!.description).toBe(`**Staff Member**: <@${ME}>\n**Total Time**: 1 second`);
+    expect(renderOutboxEmbeds('duty.changed', { ...base, status: 'BREAK', previous: 'ON_DUTY', totalSeconds: 600 })![0]!.title).toBe('Break Started • Dienst');
+    expect(renderOutboxEmbeds('duty.changed', { ...base, status: 'ON_DUTY', previous: 'BREAK', previousSeconds: 300 })![0]!.description).toContain('**Break Time**: 5 minutes');
+    expect(shiftDuration(3 * 3600 + 5 * 60 + 7)).toBe('3 hours, 5 minutes, 7 seconds');
+    const opts: unknown[] = [];
+    const item = { id: 's1', type: 'duty.changed', channelKey: 'duty', payload: { ...base, status: 'ON_DUTY', previous: 'OFF_DUTY', channelId: '900000000000000001' } };
+    const { api } = fakeApi({ 'GET /bot/config': {}, 'GET /bot/outbox?limit=20': [item], 'POST /bot/outbox/s1/ack': {} });
+    expect(await pollOnce(api, async (_ch, _e, _b, o) => { opts.push(o); }, () => undefined)).toBe(1);
+    expect(opts[0]).toMatchObject({ authorUserId: ME });
   });
   it('outbox: a new danger status replaces the previous message in the channel', async () => {
     const opts: unknown[] = [];

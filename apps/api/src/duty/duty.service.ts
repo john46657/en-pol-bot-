@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomInt } from 'node:crypto';
 import { DutyStatus } from '@enrp/shared';
 import { RealtimeService } from '../realtime/realtime.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,6 +9,12 @@ import { DiscordService } from '../discord/discord.service';
 import { ShiftsService, type ShiftsConfig, type ShiftType } from './shifts';
 import { recordSpace, recordWhere, onePersonnel } from '../common/guild-context';
 
+/** Schicht-ID wie bei Trident: Discord-Snowflake aus dem Beginn der Schicht (Zeitstempel + Zufall), als Text. */
+export const newShiftId = (at: Date) => ((BigInt(at.getTime() - 1_420_070_400_000) << BigInt(22)) | BigInt(randomInt(1 << 22))).toString();
+
+/** Eckdaten einer Schicht für das Shift-Log: ID, Beginn, Zeit im Dienst und in der Pause (Sekunden). */
+export interface ShiftSummary { shiftId: string; startedAt: Date; workSeconds: number; breakSeconds: number }
+
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 @Injectable()
 export class DutyService {
@@ -16,6 +23,7 @@ export class DutyService {
   async setStatus(actor: Actor, status: DutyStatus, d: { unitId?: string; callsign?: string; shiftType?: string; discordRoleIds?: string[] }, targetUserId?: string) {
     const userId = targetUserId ?? actor.userId!;
     let previous: { status: string; startedAt: Date; shiftType: string | null } | null = null;
+    let summary: ShiftSummary | null = null;
     const cfg = await this.shifts.config();
     let type: ShiftType | null = null;
     return this.prisma.$transaction(async (tx) => {
@@ -35,11 +43,33 @@ export class DutyService {
       if (open) await tx.dutySession.update({ where: { id: open.id }, data: { endedAt: at } });
       previous = open ? { status: open.status, startedAt: open.startedAt, shiftType: open.shiftType } : null;
       if (d.unitId && !(await tx.unit.findUnique({ where: { id: d.unitId } }))) throw new AppError('NOT_FOUND', 'Einheit nicht gefunden.');
+      // Schicht-ID: neue Schicht → neue ID; Pause/Schichtwechsel → ID der laufenden Schicht
+      let shiftId = open?.shiftId ?? null;
+      if (open && !shiftId) {
+        // ältere Sitzungen ohne ID: zusammenhängende Sitzungen der laufenden Schicht nachträglich verknüpfen
+        const chain = [open.id];
+        let start = open.startedAt;
+        for (let i = 0; i < 500; i++) {
+          const p = await tx.dutySession.findFirst({ where: { userId, endedAt: start }, select: { id: true, startedAt: true, shiftId: true } });
+          if (!p) break;
+          chain.push(p.id); start = p.startedAt;
+          if (p.shiftId) { shiftId = p.shiftId; break; }
+        }
+        shiftId ??= newShiftId(start);
+        await tx.dutySession.updateMany({ where: { id: { in: chain } }, data: { shiftId } });
+      }
+      if (!open && status !== 'OFF_DUTY') shiftId = newShiftId(at);
       let created = null;
       if (status !== 'OFF_DUTY') {
         const pers = await tx.personnel.findFirst({ where: { userId } });
         // servereigene Dienstzeit: Akten-Bereich des Servers (bzw. der gemeinsamen Shift-Log-Gruppe); ohne Server gemeinsamer Bestand
-        created = await tx.dutySession.create({ data: { userId, serverId: recordSpace() ?? null, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
+        created = await tx.dutySession.create({ data: { userId, serverId: recordSpace() ?? null, status, startedAt: at, lastActivityAt: at, unitId: d.unitId, shiftType: type?.id ?? null, shiftId, callsign: (d.callsign ?? pers?.callsign ?? undefined)?.toUpperCase() } });
+      }
+      if (shiftId) {
+        const parts = await tx.dutySession.findMany({ where: { userId, shiftId }, select: { status: true, startedAt: true, endedAt: true } });
+        const sec = (x: (typeof parts)[number]) => Math.max(0, Math.round(((x.endedAt ?? at).getTime() - x.startedAt.getTime()) / 1000));
+        summary = { shiftId, startedAt: new Date(Math.min(...parts.map((x) => x.startedAt.getTime()))),
+          workSeconds: parts.filter((x) => x.status !== 'BREAK').reduce((n, x) => n + sec(x), 0), breakSeconds: parts.filter((x) => x.status === 'BREAK').reduce((n, x) => n + sec(x), 0) };
       }
       await this.audit.record(actor, { action: targetUserId && targetUserId !== actor.userId ? 'duty.status.set_by_supervisor' : 'duty.status', module: 'team', entityType: 'User', entityId: userId, before: { status: open?.status ?? 'OFF_DUTY' }, after: { status } }, tx);
       return created ?? { status: 'OFF_DUTY' };
@@ -47,7 +77,7 @@ export class DutyService {
       this.rt.publish('team', 'duty.changed', { userId, status });
       const before = (previous as { status: string; startedAt: Date; shiftType: string | null } | null);
       const t = type as ShiftType | null;
-      if ((before?.status ?? 'OFF_DUTY') !== status || (t && status !== 'OFF_DUTY' && t.id !== before?.shiftType)) await this.notifyDiscord(actor, userId, status, before, cfg, t);
+      if ((before?.status ?? 'OFF_DUTY') !== status || (t && status !== 'OFF_DUTY' && t.id !== before?.shiftType)) await this.notifyDiscord(actor, userId, status, before, cfg, t, summary as ShiftSummary | null);
       return r;
     });
   }
@@ -56,7 +86,7 @@ export class DutyService {
    * Discord-Abgleich: Dienst-Rollen (Im Dienst/Pause/Training/Verwaltung) und Meldung im Dienst-Channel.
    * Wird nur eingereiht, wenn ein Dienst-Channel oder eine Dienst-Rolle eingestellt ist. Fehler stören den Statuswechsel nie.
    */
-  private async notifyDiscord(actor: Actor, userId: string, status: string, before: { status: string; startedAt: Date } | null, cfg: ShiftsConfig, type: ShiftType | null) {
+  private async notifyDiscord(actor: Actor, userId: string, status: string, before: { status: string; startedAt: Date } | null, cfg: ShiftsConfig, type: ShiftType | null, summary: ShiftSummary | null) {
     try {
       const ch = await this.discord.channels();
       // Schichten-Modul an: Rollen und Log-Channel der Schicht-Art; sonst die Dienst-Rollen aus den Einstellungen
@@ -70,7 +100,10 @@ export class DutyService {
       const by = actor.userId && actor.userId !== userId ? await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }) : null;
       await this.discord.enqueue('duty', 'duty.changed', {
         discordId: link?.discordId ?? null, name: user?.displayName ?? '—', callsign: user?.personnel[0]?.callsign ?? null, rank: user?.personnel[0]?.rank ?? null,
-        status, previous: before?.status ?? 'OFF_DUTY', previousMinutes: before ? Math.round((Date.now() - before.startedAt.getTime()) / 60_000) : null, setBy: by?.displayName ?? null,
+        status, previous: before?.status ?? 'OFF_DUTY', previousMinutes: before ? Math.round((Date.now() - before.startedAt.getTime()) / 60_000) : null,
+        previousSeconds: before ? Math.round((Date.now() - before.startedAt.getTime()) / 1000) : null, setBy: by?.displayName ?? null,
+        // Shift-Log wie Trident: Schicht-ID, Beginn der Schicht, Gesamtzeit ohne Pausen, Pausenzeit
+        ...(summary ? { shiftId: summary.shiftId, shiftStartedAt: summary.startedAt.toISOString(), totalSeconds: summary.workSeconds, breakSeconds: summary.breakSeconds } : {}),
         ...(shift ? { shiftType: shift.name, roles: { add: shift.add, remove: shift.remove }, ...(shift.channelId ? { channelId: shift.channelId } : {}) } : {}),
       }, { always: roles || !!shift?.channelId });
     } catch { /* best effort */ }
@@ -225,7 +258,7 @@ export class DutyService {
       const ms = (s: S) => (s.endedAt ?? now).getTime() - s.startedAt.getTime();
       const types = [...new Set(g.map((s) => s.shiftType).filter((x): x is string => !!x))];
       return {
-        id: first.id, userId: first.userId, name: first.user.displayName, rank: first.user.personnel[0]?.rank ?? null, callsign: last.callsign ?? first.user.personnel[0]?.callsign ?? null,
+        id: first.id, shiftId: g.find((s) => s.shiftId)?.shiftId ?? null, userId: first.userId, name: first.user.displayName, rank: first.user.personnel[0]?.rank ?? null, callsign: last.callsign ?? first.user.personnel[0]?.callsign ?? null,
         shiftTypes: types, shiftType: typeName(types[0] ?? null), shiftTypeNames: types.map((t) => typeName(t)!),
         startedAt: first.startedAt, endedAt: end, active: !end, status: end ? 'OFF_DUTY' : last.status,
         minutes: Math.round(g.reduce((n, s) => n + ms(s), 0) / 60_000),

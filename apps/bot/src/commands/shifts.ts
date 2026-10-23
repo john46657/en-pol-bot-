@@ -4,7 +4,7 @@ import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 
 /** Eine Schicht aus `/team/me/shifts` bzw. `/team/shifts` (zusammenhängende Dienst-Sitzungen bis „Außer Dienst“). */
-interface ShiftRow { id: string; userId: string; name: string; callsign: string | null; shiftType: string | null; startedAt: string; endedAt: string | null; active: boolean; status: string; minutes: number; breakMinutes: number; breaks: number; startedBy: string | null; endedBy: string | null }
+interface ShiftRow { id: string; shiftId?: string | null; userId: string; name: string; callsign: string | null; shiftType: string | null; startedAt: string; endedAt: string | null; active: boolean; status: string; minutes: number; breakMinutes: number; breaks: number; startedBy: string | null; endedBy: string | null }
 interface ShiftLog { days: number; items: ShiftRow[]; member?: { userId: string; name: string } | null }
 interface ShiftTypeInfo { id: string; name: string; isDefault: boolean; permittedRoleIds?: string[] }
 interface OverviewRow { userId: string; name: string; callsign: string | null; dutyStatus: string; onDutySince: string | null; shiftType: string | null }
@@ -23,7 +23,7 @@ async function shiftTypes(c: Ctx): Promise<ShiftTypeInfo[]> {
 export const permittedFor = (c: Ctx, t: ShiftTypeInfo) => !t.permittedRoleIds?.length || !c.memberRoleIds || t.permittedRoleIds.some((r) => c.memberRoleIds!.includes(r));
 
 /** Eine Zeile im Verlauf: Beginn, Dauer, Schichtart, Pausen. */
-const line = (s: ShiftRow, i: number) => `\`${i + 1}.\` ${ts(s.startedAt)} · **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` · ${plain(s.shiftType)}` : ''}${s.breaks ? ` · ${s.breaks}× Pause (${hm(s.breakMinutes)})` : ''}${s.active ? ` · ${DUTY_DE[s.status]?.emoji ?? '🟢'} läuft` : ''}`;
+const line = (s: ShiftRow, i: number) => `\`${i + 1}.\` ${ts(s.startedAt)} · **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` · ${plain(s.shiftType)}` : ''}${s.breaks ? ` · ${s.breaks}× Pause (${hm(s.breakMinutes)})` : ''}${s.active ? ` · ${DUTY_DE[s.status]?.emoji ?? '🟢'} läuft` : ''}${s.shiftId ? ` · \`${s.shiftId}\`` : ''}`;
 
 /** Übersicht: laufende Schicht oben, darunter Summe und die letzten Schichten. */
 function logEmbed(title: string, log: ShiftLog, emptyText: string): EmbedData {

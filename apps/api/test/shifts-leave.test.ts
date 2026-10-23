@@ -48,20 +48,21 @@ describe('Shifts module', () => {
     const off = (await login(app, 'sl_off')).agent;
     // per Discord-Button ohne Auswahl → Standard-Schicht
     expect((await http().put('/api/v1/team/me/status').set(bot(OFF_D)).send({ status: 'ON_DUTY' })).status).toBe(200);
-    expect(await lastOutbox('duty.changed')).toMatchObject({ discordId: OFF_D, status: 'ON_DUTY', shiftType: 'Im Dienst', channelId: CH.log, roles: { add: [R.shift], remove: expect.arrayContaining([R.brk, R.shift2]) } });
+    const started = await lastOutbox('duty.changed');
+    expect(started).toMatchObject({ discordId: OFF_D, status: 'ON_DUTY', shiftType: 'Im Dienst', channelId: CH.log, shiftId: expect.stringMatching(/^\d{17,20}$/), totalSeconds: 0, roles: { add: [R.shift], remove: expect.arrayContaining([R.brk, R.shift2]) } });
     expect((await off.put('/api/v1/team/me/status').send({ status: 'BREAK' })).status).toBe(200);
-    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'BREAK', shiftType: 'Im Dienst', roles: { add: [R.brk], remove: expect.arrayContaining([R.shift, R.shift2]) } });
+    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'BREAK', shiftType: 'Im Dienst', shiftId: started!.shiftId, roles: { add: [R.brk], remove: expect.arrayContaining([R.shift, R.shift2]) } });
     // Schicht wechseln, ohne den Dienst zu verlassen
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(200);
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(409);
     const sek = await lastOutbox('duty.changed');
-    expect(sek).toMatchObject({ shiftType: 'SEK Einsatz', roles: { add: [R.shift2] } });
+    expect(sek).toMatchObject({ shiftType: 'SEK Einsatz', shiftId: started!.shiftId, roles: { add: [R.shift2] } });
     expect(sek!.channelId).toBeUndefined(); // ohne eigenen Log-Channel → normaler Dienst-Channel
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'gibtsnicht' })).status).toBe(404);
     const team = (await off.get('/api/v1/team/overview')).body as { name: string; shiftType: string | null }[];
     expect(team.find((t) => t.name === 'sl_off')?.shiftType).toBe('SEK Einsatz');
     expect((await off.put('/api/v1/team/me/status').send({ status: 'OFF_DUTY' })).status).toBe(200);
-    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'OFF_DUTY', roles: { add: [], remove: expect.arrayContaining([R.shift, R.brk, R.shift2]) } });
+    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'OFF_DUTY', shiftId: started!.shiftId, shiftStartedAt: expect.any(String), totalSeconds: expect.any(Number), roles: { add: [], remove: expect.arrayContaining([R.shift, R.brk, R.shift2]) } });
     // Modul aus → keine Schicht-Auswahl möglich
     await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(400);

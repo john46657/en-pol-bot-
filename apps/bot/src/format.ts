@@ -104,6 +104,7 @@ export function renderOutbox(type: string, p: Record<string, unknown>): EmbedDat
         description: clip(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${plain(p.reason)}` : ''}`, 4000) || undefined };
     }
     case 'duty.changed': {
+      if (typeof p.shiftId === 'string' && p.shiftId) return shiftLogEmbed(p);
       const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
       const who = `${p.callsign ? `${plain(p.callsign)} · ` : ''}${plain(p.name)}`;
       const mins = typeof p.previousMinutes === 'number' && prev !== 'OFF_DUTY' ? ` – ${fmtDuration(p.previousMinutes * 60)}` : '';
@@ -211,6 +212,42 @@ const LEAVE_EVENTS: Record<string, { text: string; color: number }> = {
   extended: { text: '🕒 Abmeldung verlängert', color: COLORS.info }, extension_denied: { text: '❌ Verlängerung abgelehnt', color: COLORS.danger },
 };
 const unixOf = (v: unknown) => Math.floor(new Date(String(v)).getTime() / 1000);
+/** Dauer wie bei Trident: „1 second“, „2 hours, 5 minutes“ (höchstens drei Teile). */
+export function shiftDuration(sec: number): string {
+  let rest = Math.max(0, Math.round(sec));
+  const parts: string[] = [];
+  for (const [size, unit] of [[86_400, 'day'], [3_600, 'hour'], [60, 'minute'], [1, 'second']] as const) {
+    const v = Math.floor(rest / size);
+    rest %= size;
+    if (v) parts.push(`${v} ${unit}${v === 1 ? '' : 's'}`);
+  }
+  return parts.slice(0, 3).join(', ') || '0 seconds';
+}
+
+/**
+ * Shift-Log wie bei Trident: oben @Mitglied mit Profilbild (setzt der Bot), Titel „Shift Started • Schichtart“,
+ * Mitglied + Beginn bzw. Gesamtzeit, unten die Shift-ID (gleich für Beginn, Pausen und Ende einer Schicht).
+ */
+function shiftLogEmbed(p: Record<string, unknown>): EmbedData {
+  const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
+  const t = (v: unknown, style: string) => `<t:${unixOf(v)}:${style}>`;
+  const now = new Date().toISOString();
+  const [event, color] = prev === 'OFF_DUTY' ? ['Shift Started', COLORS.success] : st === 'OFF_DUTY' ? ['Shift Ended', COLORS.danger]
+    : st === 'BREAK' ? ['Break Started', COLORS.warning] : prev === 'BREAK' ? ['Break Ended', COLORS.info] : ['Shift Updated', COLORS.info];
+  const kind = p.shiftType ? plain(p.shiftType) : 'Dienst';
+  const secs = (v: unknown) => shiftDuration(Number(v) || 0);
+  const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)}`];
+  if (event === 'Shift Started') lines.push(`**Started**: ${t(p.shiftStartedAt ?? now, 'R')} (${t(p.shiftStartedAt ?? now, 'f')})`);
+  else if (event === 'Shift Ended') {
+    lines.push(`**Total Time**: ${secs(p.totalSeconds)}`);
+    if (Number(p.breakSeconds) > 0) lines.push(`**Break Time**: ${secs(p.breakSeconds)}`);
+  } else if (event === 'Break Started') lines.push(`**Break Started**: ${t(now, 'R')}`, `**Shift Time**: ${secs(p.totalSeconds)}`);
+  else if (event === 'Break Ended') lines.push(`**Break Time**: ${secs(p.previousSeconds)}`);
+  else lines.push(`**Status**: ${DUTY_DE[st]?.label ?? label(st)}`);
+  if (p.setBy) lines.push(`**${event === 'Shift Ended' ? 'Ended' : 'Set'} By**: ${plain(p.setBy)}`);
+  return { author: { name: clip(`@${String(p.name ?? '—')}`, 200) }, title: clip(`${event} • ${kind}`, 256), color, description: clip(lines.join('\n'), 4000), footer: `Shift ID: ${String(p.shiftId)}` };
+}
+
 /** Dauer menschenlesbar: „6 Stunden“, „1 Tag“, „2 Wochen“, „1 Woche, 2 Tage“. */
 export function humanDuration(ms: number): string {
   const H = 3_600_000, D = 24 * H, W = 7 * D;
