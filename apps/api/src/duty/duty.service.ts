@@ -15,6 +15,10 @@ export const newShiftId = (at: Date) => ((BigInt(at.getTime() - 1_420_070_400_00
 /** Eckdaten einer Schicht für das Shift-Log: ID, Beginn, Zeit im Dienst und in der Pause (Sekunden). */
 export interface ShiftSummary { shiftId: string; startedAt: Date; workSeconds: number; breakSeconds: number }
 
+/** Gehört die Sitzung zur selben Schicht wie die vorige? Gleiche Schicht-ID oder nahtloser Statuswechsel (ältere Sitzungen). */
+const sameShift = (prev: { userId: string; shiftId: string | null; endedAt: Date | null } | undefined, s: { userId: string; shiftId: string | null; startedAt: Date }) =>
+  !!prev && prev.userId === s.userId && ((!!prev.shiftId && prev.shiftId === s.shiftId) || prev.endedAt?.getTime() === s.startedAt.getTime());
+
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 @Injectable()
 export class DutyService {
@@ -196,19 +200,87 @@ export class DutyService {
     return { days, since, users };
   }
 
-  /** Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`): Anzahl und Zeit im Dienst ohne Pausen. */
+  /**
+   * Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`, `/shift admin`): Anzahl und Zeit im Dienst ohne Pausen,
+   * dazu die letzte Schicht (Status, Zeit, Schichtart, ID).
+   */
   async shiftStats(userId: string) {
-    const sessions = await this.prisma.dutySession.findMany({ where: { userId, ...recordWhere() }, select: { startedAt: true, endedAt: true, status: true }, orderBy: { startedAt: 'asc' } });
+    const sessions = await this.prisma.dutySession.findMany({ where: { userId, ...recordWhere() }, select: { userId: true, shiftId: true, shiftType: true, startedAt: true, endedAt: true, status: true }, orderBy: { startedAt: 'asc' } });
     const now = Date.now();
-    let count = 0, ms = 0, prevEnd: number | null = null;
+    let count = 0, ms = 0, lastMs = 0;
+    let prev: (typeof sessions)[number] | undefined;
     for (const s of sessions) {
-      // nahtloser Statuswechsel (Im Dienst ↔ Pause) gehört zur selben Schicht – wie in `shiftLog`
-      if (prevEnd !== s.startedAt.getTime()) count++;
-      const end = s.endedAt?.getTime() ?? now;
-      if (s.status !== 'BREAK') ms += Math.max(0, end - s.startedAt.getTime());
-      prevEnd = s.endedAt?.getTime() ?? null;
+      if (!sameShift(prev, s)) { count++; lastMs = 0; }
+      const work = s.status !== 'BREAK' ? Math.max(0, (s.endedAt?.getTime() ?? now) - s.startedAt.getTime()) : 0;
+      ms += work; lastMs += work;
+      prev = s;
     }
-    return { count, minutes: Math.round(ms / 60_000), seconds: Math.round(ms / 1000) };
+    const cfg = prev ? await this.shifts.config() : null;
+    const last = prev ? { shiftId: prev.shiftId, status: prev.endedAt ? 'ENDED' : prev.status, seconds: Math.round(lastMs / 1000), shiftType: cfg!.types.find((t) => t.id === prev!.shiftType)?.name ?? null } : null;
+    return { count, minutes: Math.round(ms / 60_000), seconds: Math.round(ms / 1000), last };
+  }
+
+  /** Sitzungen einer Schicht (im Bereich des Servers). */
+  private async shiftParts(shiftId: string) {
+    if (!/^\d{1,25}$/.test(shiftId)) throw new AppError('NOT_FOUND', 'Schicht nicht gefunden.');
+    const parts = await this.prisma.dutySession.findMany({ where: { shiftId, ...recordWhere() }, orderBy: { startedAt: 'asc' } });
+    if (!parts.length) throw new AppError('NOT_FOUND', 'Schicht nicht gefunden.');
+    return parts;
+  }
+  private static workMs(parts: { status: string; startedAt: Date; endedAt: Date | null }[], now = Date.now()) {
+    return parts.filter((p) => p.status !== 'BREAK').reduce((n, p) => n + Math.max(0, (p.endedAt?.getTime() ?? now) - p.startedAt.getTime()), 0);
+  }
+
+  /**
+   * Schichtleitung (`/shift admin` → Modify Shift): Zeit im Dienst einer Schicht ändern. Mehr Zeit → Beginn der Schicht früher;
+   * weniger Zeit → Dienst-Sitzungen von hinten kürzen (Ende früher, bei laufender Sitzung Beginn später). Pausen bleiben, wie sie sind.
+   */
+  async modifyShift(actor: Actor, shiftId: string, action: 'add' | 'remove' | 'set', seconds: number) {
+    const parts = await this.shiftParts(shiftId);
+    const now = Date.now();
+    const before = DutyService.workMs(parts, now);
+    let delta = (action === 'add' ? seconds : action === 'remove' ? -seconds : seconds - Math.round(before / 1000)) * 1000;
+    if (delta > 0) {
+      const first = parts[0]!;
+      if (first.status === 'BREAK') throw new AppError('CONFLICT', 'Die Schicht beginnt mit einer Pause – Zeit kann nicht hinzugefügt werden.');
+      await this.prisma.dutySession.update({ where: { id: first.id }, data: { startedAt: new Date(first.startedAt.getTime() - delta) } });
+    } else if (delta < 0) {
+      let rest = -delta;
+      for (const p of [...parts].reverse()) {
+        if (rest <= 0) break;
+        if (p.status === 'BREAK') continue;
+        const end = p.endedAt?.getTime() ?? now;
+        const cut = Math.min(rest, Math.max(0, end - p.startedAt.getTime()));
+        if (!cut) continue;
+        await this.prisma.dutySession.update({ where: { id: p.id }, data: p.endedAt ? { endedAt: new Date(end - cut) } : { startedAt: new Date(p.startedAt.getTime() + cut) } });
+        rest -= cut;
+      }
+      delta = -(-delta - rest);
+    }
+    const after = Math.max(0, Math.round((before + delta) / 1000));
+    await this.audit.record(actor, { action: 'duty.shift.update', module: 'team', entityType: 'DutyShift', entityId: shiftId, before: { userId: parts[0]!.userId, seconds: Math.round(before / 1000) }, after: { action, seconds: after } });
+    this.rt.publish('team', 'duty.changed', { userId: parts[0]!.userId });
+    return { shiftId, userId: parts[0]!.userId, seconds: after };
+  }
+
+  /** Schichtleitung: eine beendete Schicht löschen (laufende erst beenden). */
+  async deleteShift(actor: Actor, shiftId: string) {
+    const parts = await this.shiftParts(shiftId);
+    if (parts.some((p) => !p.endedAt)) throw new AppError('CONFLICT', 'Die Schicht läuft noch – bitte zuerst beenden.');
+    await this.prisma.dutySession.deleteMany({ where: { id: { in: parts.map((p) => p.id) } } });
+    await this.audit.record(actor, { action: 'duty.shift.delete', module: 'team', entityType: 'DutyShift', entityId: shiftId, before: { userId: parts[0]!.userId, seconds: Math.round(DutyService.workMs(parts) / 1000), startedAt: parts[0]!.startedAt.toISOString() } });
+    this.rt.publish('team', 'duty.changed', { userId: parts[0]!.userId });
+    return { shiftId, deleted: true };
+  }
+
+  /** Schichtleitung (Clear User Shifts): alle beendeten Schichten eines Mitglieds löschen, optional nur eine Schichtart. Die laufende bleibt. */
+  async clearShifts(actor: Actor, userId: string, shiftType?: string) {
+    const open = await this.prisma.dutySession.findFirst({ where: { userId, endedAt: null }, select: { shiftId: true } });
+    const where = { userId, endedAt: { not: null }, ...recordWhere(), ...(shiftType ? { shiftType } : {}), ...(open?.shiftId ? { NOT: { shiftId: open.shiftId } } : {}) };
+    const { count } = await this.prisma.dutySession.deleteMany({ where });
+    await this.audit.record(actor, { action: 'duty.shifts.reset', module: 'team', entityType: 'User', entityId: userId, after: { sessions: count, shiftType: shiftType ?? null } });
+    this.rt.publish('team', 'duty.changed', { userId });
+    return { deleted: count };
   }
 
   /** Discord-IDs verknüpfter Benutzer (für @Erwähnungen in Discord). */
@@ -226,15 +298,14 @@ export class DutyService {
     const since = days ? now - days * 86_400_000 : null;
     const sessions = await this.prisma.dutySession.findMany({
       where: { ...recordWhere(), ...(shiftType ? { shiftType } : {}), ...(since ? { OR: [{ endedAt: null }, { endedAt: { gt: new Date(since) } }] } : {}) },
-      select: { userId: true, status: true, startedAt: true, endedAt: true, user: { select: { displayName: true, personnel: { ...onePersonnel(), select: { callsign: true } } } } },
+      select: { userId: true, shiftId: true, status: true, startedAt: true, endedAt: true, user: { select: { displayName: true, personnel: { ...onePersonnel(), select: { callsign: true } } } } },
       orderBy: [{ userId: 'asc' }, { startedAt: 'asc' }],
     });
-    const rows = new Map<string, { userId: string; name: string; callsign: string | null; ms: number; shifts: number; prevEnd: number | null }>();
+    const rows = new Map<string, { userId: string; name: string; callsign: string | null; ms: number; shifts: number; prev?: (typeof sessions)[number] }>();
     for (const s of sessions) {
-      const r = rows.get(s.userId) ?? { userId: s.userId, name: s.user.displayName, callsign: s.user.personnel[0]?.callsign ?? null, ms: 0, shifts: 0, prevEnd: null };
-      // nahtloser Statuswechsel (Im Dienst ↔ Pause) gehört zur selben Schicht
-      if (r.prevEnd !== s.startedAt.getTime()) r.shifts++;
-      r.prevEnd = s.endedAt?.getTime() ?? null;
+      const r = rows.get(s.userId) ?? { userId: s.userId, name: s.user.displayName, callsign: s.user.personnel[0]?.callsign ?? null, ms: 0, shifts: 0 };
+      if (!sameShift(r.prev, s)) r.shifts++;
+      r.prev = s;
       if (s.status !== 'BREAK') r.ms += Math.max(0, (s.endedAt?.getTime() ?? now) - Math.max(s.startedAt.getTime(), since ?? 0));
       rows.set(s.userId, r);
     }
@@ -290,8 +361,8 @@ export class DutyService {
     for (const s of sessions) {
       const g = groups[groups.length - 1];
       const prev = g?.[g.length - 1];
-      // Statuswechsel beendet die alte Sitzung und startet die neue im selben Moment → gleiche Schicht
-      if (prev && prev.userId === s.userId && prev.endedAt?.getTime() === s.startedAt.getTime()) g!.push(s);
+      // gleiche Schicht-ID bzw. Statuswechsel im selben Moment (ältere Sitzungen) → gleiche Schicht
+      if (sameShift(prev, s)) g!.push(s);
       else groups.push([s]);
     }
     const cfg = await this.shifts.config();
@@ -308,6 +379,7 @@ export class DutyService {
         minutes: Math.round(g.reduce((n, s) => n + ms(s), 0) / 60_000),
         breakMinutes: Math.round(g.filter((s) => s.status === 'BREAK').reduce((n, s) => n + ms(s), 0) / 60_000),
         breaks: g.filter((s) => s.status === 'BREAK').length,
+        seconds: Math.round(g.filter((s) => s.status !== 'BREAK').reduce((n, s) => n + ms(s), 0) / 1000),
         startedBy: null as string | null, endedBy: null as string | null,
       };
     }).filter((x) => (x.endedAt ?? now) > since && (!f.shiftType || x.shiftTypes.includes(f.shiftType)))

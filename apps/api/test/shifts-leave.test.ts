@@ -103,6 +103,50 @@ describe('Shifts module', () => {
     expect((await lead.get('/api/v1/team/shifts?shiftType=sek')).body.items.filter((x: { name: string }) => x.name === 'sl_off')).toHaveLength(1);
     await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
   });
+
+  it('leaderboard, active shifts, stats and admin actions (modify, delete, clear) – team.manage only for changes', async () => {
+    const lead = (await login(app, 'sl_lead')).agent;
+    const off = (await login(app, 'sl_off')).agent;
+    const offId = (await prisma.user.findFirstOrThrow({ where: { username: 'sl_off' } })).id;
+    await prisma.dutySession.deleteMany({ where: { userId: offId } });
+    // zwei beendete Schichten: 1 h (mit 30 min Pause dazwischen) und 2 h; eine laufende (10 min)
+    const t = (min: number) => new Date(Date.now() - min * 60_000);
+    await prisma.dutySession.createMany({ data: [
+      { userId: offId, status: 'ON_DUTY', shiftId: '100', startedAt: t(600), endedAt: t(570) },
+      { userId: offId, status: 'BREAK', shiftId: '100', startedAt: t(570), endedAt: t(540) },
+      { userId: offId, status: 'ON_DUTY', shiftId: '100', startedAt: t(540), endedAt: t(510) },
+      { userId: offId, status: 'ON_DUTY', shiftId: '200', startedAt: t(300), endedAt: t(180) },
+      { userId: offId, status: 'ON_DUTY', shiftId: '300', startedAt: t(10) },
+    ] });
+    const board = (await http().get('/api/v1/team/leaderboard').set(bot(OFF_D))).body;
+    expect(board.days).toBeNull();
+    const row = board.users.find((u: { userId: string }) => u.userId === offId);
+    expect(row).toMatchObject({ discordId: OFF_D, shifts: 3 });
+    expect(Math.round(row.seconds / 60)).toBe(190);
+    const active = (await http().get('/api/v1/team/active-shifts').set(bot(OFF_D))).body as { userId: string; discordId: string; seconds: number; shiftId: string }[];
+    expect(active.find((a) => a.userId === offId)).toMatchObject({ discordId: OFF_D, shiftId: '300' });
+    const stats = (await lead.get(`/api/v1/team/${offId}/shift-stats`)).body;
+    expect(stats).toMatchObject({ count: 3, last: { shiftId: '300', status: 'ON_DUTY' } });
+    expect((await off.get(`/api/v1/team/${offId}/shift-stats`)).status).toBe(403);
+    expect((await http().get(`/api/v1/team/${offId}/shift-stats`).set(bot(LEAD_D))).body.count).toBe(3);
+    // Modify: +30 min, −90 min (über die Pause hinweg nur Dienstzeit), auf 45 min setzen
+    expect((await off.patch('/api/v1/team/shifts/100').send({ action: 'add', seconds: 1800 })).status).toBe(403);
+    expect((await lead.patch('/api/v1/team/shifts/100').send({ action: 'add', seconds: 1800 })).body.seconds).toBe(5400);
+    expect((await lead.patch('/api/v1/team/shifts/100').send({ action: 'remove', seconds: 5400 })).body.seconds).toBe(0);
+    expect((await lead.patch('/api/v1/team/shifts/100').send({ action: 'set', seconds: 2700 })).body.seconds).toBe(2700);
+    const list = (await lead.get(`/api/v1/team/shifts?userId=${offId}&days=30`)).body.items as { shiftId: string; seconds: number; breaks: number }[];
+    expect(list.find((x) => x.shiftId === '100')).toMatchObject({ seconds: 2700, breaks: 1 });
+    expect(list).toHaveLength(3); // Schicht bleibt trotz Lücken eine Schicht (gleiche ID)
+    // Delete: laufende nicht, beendete ja; unbekannt 404
+    expect((await lead.delete('/api/v1/team/shifts/300')).status).toBe(409);
+    expect((await lead.delete('/api/v1/team/shifts/200')).status).toBe(200);
+    expect((await lead.delete('/api/v1/team/shifts/200')).status).toBe(404);
+    // Clear: alle beendeten, die laufende bleibt
+    expect((await lead.delete(`/api/v1/team/${offId}/shifts`)).body.deleted).toBe(3);
+    expect(await prisma.dutySession.findMany({ where: { userId: offId } })).toMatchObject([{ shiftId: '300', endedAt: null }]);
+    expect(await prisma.auditLog.count({ where: { action: { in: ['duty.shift.update', 'duty.shift.delete', 'duty.shifts.reset'] } } })).toBe(5);
+    await lead.put(`/api/v1/team/${offId}/status`).send({ status: 'OFF_DUTY' });
+  });
 });
 
 describe('Leave of Absences', () => {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Param, ParseUUIDPipe, Post, Put, Query, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { DUTY_STATUSES } from '@enrp/shared';
@@ -10,12 +10,14 @@ import { zodBody } from '../common/zod.pipe';
 const hoursQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) });
 /** Rangliste: ohne `days` alle Zeiten (wie Trident), optional nur eine Schichtart. */
 const boardQuery = z.object({ days: z.coerce.number().int().min(1).max(3650).optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
-const logQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7), userId: z.string().uuid().optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() });
+const logQuery = z.object({ days: z.coerce.number().int().min(1).max(3650).default(7), userId: z.string().uuid().optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() });
 /** Vom Bot: Discord-Rollen des Aufrufers auf dem Server (für die erlaubten Rollen einer Schichtart); sonst gespeicherte Mitgliedschaften. */
 const discordRolesOf = (r: { headers: Record<string, string | string[] | undefined> }) => {
   const auth = r.headers.authorization, raw = r.headers['x-discord-roles'];
   return typeof auth === 'string' && auth.startsWith('Bot ') && typeof raw === 'string' ? { discordRoleIds: raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) } : {};
 };
+const modifyBody = z.object({ action: z.enum(['add', 'remove', 'set']), seconds: z.number().int().min(0).max(366 * 86_400) });
+const clearQuery = z.object({ shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 const body = z.object({ status: z.enum(DUTY_STATUSES), unitId: z.string().uuid().optional(), callsign: z.string().max(16).optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 
 @ApiTags('team')
@@ -54,6 +56,18 @@ export class DutyController {
   active(@CurrentActor() a: Actor) { return this.d.active(a.userId!); }
   @Put('me/status') @RequirePermission('team.view')
   set(@CurrentActor() a: Actor, @Body(zodBody(body)) b: z.infer<typeof body>, @Req() r: { headers: Record<string, string | string[] | undefined> }) { return this.d.setStatus(a, b.status, { ...b, ...discordRolesOf(r) }); }
+
+  /** Schichtleitung (`/shift admin`): Gesamtwerte und letzte Schicht eines Mitglieds. */
+  @Get(':userId/shift-stats') @RequirePermission('team.manage')
+  statsFor(@Param('userId', ParseUUIDPipe) userId: string) { return this.d.shiftStats(userId); }
+  /** Schicht ändern: Zeit hinzufügen, abziehen oder setzen (Sekunden, ohne Pausen). */
+  @Patch('shifts/:shiftId') @RequirePermission('team.manage')
+  modifyShift(@CurrentActor() a: Actor, @Param('shiftId') shiftId: string, @Body(zodBody(modifyBody)) b: z.infer<typeof modifyBody>) { return this.d.modifyShift(a, shiftId, b.action, b.seconds); }
+  @Delete('shifts/:shiftId') @RequirePermission('team.manage')
+  deleteShift(@CurrentActor() a: Actor, @Param('shiftId') shiftId: string) { return this.d.deleteShift(a, shiftId); }
+  /** Alle beendeten Schichten eines Mitglieds löschen (optional nur eine Schichtart). */
+  @Delete(':userId/shifts') @RequirePermission('team.manage')
+  clearShifts(@CurrentActor() a: Actor, @Param('userId', ParseUUIDPipe) userId: string, @Query(zodBody(clearQuery)) q: z.infer<typeof clearQuery>) { return this.d.clearShifts(a, userId, q.shiftType); }
 
   /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
   @Put(':userId/status') @RequirePermission('team.manage')

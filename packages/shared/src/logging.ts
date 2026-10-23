@@ -163,6 +163,9 @@ export const LOG_TYPES: Record<string, string> = {
   'studio.workflow.update': 'studio',
   'duty.status': 'team',
   'duty.status.set_by_supervisor': 'team',
+  'duty.shift.update': 'team',
+  'duty.shift.delete': 'team',
+  'duty.shifts.reset': 'team',
   'radio.add': 'team',
   'radio.remove': 'team',
   'shifts.config': 'team',
@@ -189,7 +192,7 @@ const WORDS: Record<string, string> = {
   dienstnummer: 'Dienstnummer', range: 'Nummernkreis', training: 'Ausbildung', exam: 'Prüfung', academy: 'Akademie', sek: 'SEK', role: 'Rolle', user: 'Benutzer', roles: 'Rollen', override: 'Einzelrecht',
   auth: 'Anmeldung', discord: 'Discord', radiocode: 'Funk-Code', embed: 'Embed', formpanel: 'Formular-Panel', stafflist: 'Staff-Liste', welcome: 'Willkommen', verification: 'Verifizierung',
   studio: 'Studio', workflow: 'Workflow', settings: 'Einstellungen', servers: 'Server-Verbund', danger: 'Gefahrenstatus', erlc: 'ER:LC', server: 'Server', leave: 'Abmeldung', duty: 'Dienst', poll: 'Abstimmung',
-  shifts: 'Schichten', template: 'Vorlage', config: 'Einstellungen', panel: 'Panel', legalcode: 'Tatbestand', media: 'Datei', notification: 'Systemhinweis', voice_support: 'Sprach-Support', hr: 'Personal',
+  shifts: 'Schichten', shift: 'Schicht', template: 'Vorlage', config: 'Einstellungen', panel: 'Panel', legalcode: 'Tatbestand', media: 'Datei', notification: 'Systemhinweis', voice_support: 'Sprach-Support', hr: 'Personal',
   submission: 'Einsendung', requirement: 'Voraussetzung', note: 'Notiz', grade: 'Bewertung', enroll: 'Einschreibung', lock: 'Sperre', retention: 'Bereinigung',
 };
 const VERBS: Record<string, string> = {

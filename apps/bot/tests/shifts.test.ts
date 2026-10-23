@@ -3,6 +3,7 @@ import { BotApiError, type Api } from '../src/api';
 import { byName } from '../src/commands';
 import { interactionFor } from '../src/commands/features';
 import type { Ctx } from '../src/commands/types';
+import { parseShiftDuration } from '../src/commands/shifts';
 import type { Reply } from '../src/format';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', UID = '0b6f8c1e-2d4a-4c3b-9a7e-1f2e3d4c5b6a';
@@ -152,19 +153,55 @@ describe('/shift', () => {
     const empty = fakeApi({ 'GET /team/active-shifts': [] });
     expect((await run(empty.api, 'active')).embeds?.[0]?.description).toBe('There are no active shifts.');
   });
-  it('admin shows a member and can end the running shift', async () => {
-    const { api, calls } = fakeApi({ 'GET /team/shifts': { days: 7, member: { userId: UID, name: 'Max' }, items: [shift()] }, [`PUT /team/${UID}/status`]: {} });
-    const r = await run(api, 'admin', { member: OTHER });
-    expect(calls.at(-1)!.path).toBe(`/team/shifts?discordId=${OTHER}&days=7`);
-    expect(r.buttons?.[0]?.id).toBe(`shift:end:${UID}:${OTHER}`);
-    const btn = interactionFor(r.buttons![0]!.id)!;
-    const done = await btn.def.run({ discordId: ME, api, opts: {}, args: btn.args });
-    expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ path: `/team/${UID}/status`, body: { status: 'OFF_DUTY' } });
-    expect(done.content).toContain('Schicht beendet');
-    expect(done.ephemeral).toBe(true); // Bestätigung privat …
-    expect(done.update?.embeds?.[0]?.title).toContain('Schichten von Max'); // … öffentliche Nachricht wird neu gezeichnet
-    expect(r.ephemeral).toBe(false);
-    const unlinked = fakeApi({ 'GET /team/shifts': { days: 7, member: null, items: [] } });
+  it('admin like Trident: header with member, all time + last shift, Shift Actions menu and Start/Pause/End for the member', async () => {
+    const stats = { count: 2, minutes: 1703, seconds: 102_185, last: { shiftId: '1508566299347784460', status: 'ENDED', seconds: 102_177, shiftType: null } };
+    const { api, calls } = fakeApi({ 'GET /team/shifts': { days: 1, member: { userId: UID, name: 'Max' }, items: [] }, [`GET /team/${UID}/shift-stats`]: stats, [`PUT /team/${UID}/status`]: {} });
+    const ctx = { discordId: ME, api, opts: { _sub: 'admin', member: OTHER }, userNameOf: async () => 'jujus_ogg', userAvatarOf: async () => 'https://cdn.example/a.png' } as unknown as Ctx;
+    const r = await byName('shift')!.run(ctx);
+    expect(r.embeds?.[0]?.author).toEqual({ name: 'Shift Management: @jujus_ogg', iconUrl: 'https://cdn.example/a.png' });
+    const t = text(r);
+    expect(t).toContain('**Shift Count**: 2');
+    expect(t).toContain('**Total Duration**: 1 day, 4 hours, 23 minutes');
+    expect(t).toContain('**Average Duration**: 14 hours, 11 minutes, 33 seconds');
+    expect(t).toContain('### 🕒 Last Shift');
+    expect(t).toContain('**Status**: ⚫ Ended');
+    expect(t).toContain('**Total Time**: 1 day, 4 hours, 22 minutes');
+    expect(t).toContain('-# Shift Type: default');
+    expect(r.panel).toBe(true);
+    expect(r.select?.id).toBe(`shift:act:${UID}:${OTHER}`);
+    expect(r.select?.options.map((o) => o.label)).toEqual(['View Shift List', 'Modify Shift', 'Delete Shift', 'Clear User Shifts']);
+    expect(r.buttons?.map((b) => `${b.label}${b.disabled ? ' (aus)' : ''}`)).toEqual(['Start', 'Pause (aus)', 'End (aus)']);
+    // Start für das Mitglied → Status über die Schichtleitung, Panel neu
+    const start = interactionFor(r.buttons![0]!.id)!;
+    expect(start.def.panel?.(start.args)).toBe(true);
+    const after = await start.def.run({ ...ctx, opts: {}, args: start.args });
+    expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ path: `/team/${UID}/status`, body: { status: 'ON_DUTY' } });
+    expect(text(after)).toContain('Shift started');
+    // Menü: Modify/Delete öffnen Formulare (letzte Schicht vorausgefüllt), Clear fragt nach
+    const act = interactionFor(r.select!.id)!;
+    expect(act.def.opensModal?.(act.args, ['modify'])).toBe(true);
+    expect(act.def.opensModal?.(act.args, ['list'])).toBe(false);
+    const modal = await act.def.run({ ...ctx, opts: {}, args: act.args, values: ['modify'] });
+    expect(modal.modal?.id).toBe(`shift:mod:${UID}:${OTHER}`);
+    expect(modal.modal?.fields[0]?.value).toBe('1508566299347784460');
+    expect((await act.def.run({ ...ctx, opts: {}, args: act.args, values: ['clear'] })).buttons?.[0]?.id).toBe(`shift:clear:${UID}:${OTHER}`);
+    const unlinked = fakeApi({ 'GET /team/shifts': { days: 1, member: null, items: [] } });
     expect(text(await run(unlinked.api, 'admin', { member: OTHER }))).toContain('keinem Konto');
+  });
+  it('admin actions: modify (add/remove/set time), delete and clear shifts', async () => {
+    const stats = { count: 1, minutes: 60, seconds: 3600, last: { shiftId: '42', status: 'ENDED', seconds: 3600, shiftType: 'SEK' } };
+    const { api, calls } = fakeApi({ 'GET /team/shifts': { days: 1, member: { userId: UID, name: 'Max' }, items: [] }, [`GET /team/${UID}/shift-stats`]: stats,
+      'PATCH /team/shifts/42': { seconds: 9000 }, 'DELETE /team/shifts/42': { deleted: true }, [`DELETE /team/${UID}/shifts`]: { deleted: 3 } });
+    const go = async (id: string, extra: object) => { const hit = interactionFor(id)!; return hit.def.run({ discordId: ME, api, opts: {}, args: hit.args, ...extra }); };
+    const mod = await go(`shift:mod:${UID}:${OTHER}`, { fields: { shift: '42', duration: '1h 30m' }, modal: { values: { shift: '42', action: ['add'], duration: '1h 30m' }, files: {} } });
+    expect(calls.find((c) => c.method === 'PATCH')).toMatchObject({ path: '/team/shifts/42', body: { action: 'add', seconds: 5400 } });
+    expect(text(mod)).toContain('new total time: 2 hours, 30 minutes');
+    expect(mod.panel).toBe(true);
+    expect(text(await go(`shift:mod:${UID}:${OTHER}`, { fields: { shift: '42', duration: 'viel' }, modal: { values: { action: ['set'] }, files: {} } }))).toContain('Ungültige Dauer');
+    expect(text(await go(`shift:del:${UID}:${OTHER}`, { fields: { shift: '42' } }))).toContain('Shift `42` deleted');
+    expect(text(await go(`shift:clear:${UID}:${OTHER}`, {}))).toContain('3 entries');
+    expect(parseShiftDuration('1d 2h')).toBe(93_600);
+    expect(parseShiftDuration('45')).toBe(2700);
+    expect(parseShiftDuration('90s')).toBe(90);
   });
 });

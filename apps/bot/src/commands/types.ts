@@ -61,6 +61,8 @@ export interface Ctx {
   memberJoinedAt?: string;
   /** Discord-Benutzername zu einer ID (z. B. Ticket für ein anderes Mitglied). */
   userNameOf?: (userId: string) => Promise<string | null>;
+  /** Profilbild zu einer Discord-ID (z. B. Kopfzeile von `/shift admin`). */
+  userAvatarOf?: (userId: string) => Promise<string | null>;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
   /** Roblox-Verifizierung: Rollen/Nickname eines Mitglieds auf einem Server setzen; liefert Hinweise, was nicht ging. */

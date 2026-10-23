@@ -507,6 +507,7 @@ function baseCtx(i: ChatInputCommandInteraction | AutocompleteInteraction | Butt
     applyEffects: (effects) => tickets.apply(effects),
     listCategories: (guildId) => tickets.listCategories(guildId),
     userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+    userAvatarOf: (id) => client.users.fetch(id).then((u) => u.displayAvatarURL({ size: 64 }), () => null),
     voiceSupport,
     runtime,
     botProfile,
@@ -627,7 +628,7 @@ async function handleComponent(i: ButtonInteraction | ModalSubmitInteraction | A
     // Assistent/Prüfungsseite an Ort und Stelle neu zeichnen; Fehler o. Ä. als eigene, private Antwort
     await i.deferUpdate();
     const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
-    const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(fields ? { fields } : {}), ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
+    const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(fields ? { fields } : {}), ...(i.isModalSubmit() ? { modal: modalValuesOf(i) } : {}), ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
     const p = replyPayload(reply);
     if (reply.panel) await i.editReply(p);
     else await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | MessageFlags.Ephemeral });
