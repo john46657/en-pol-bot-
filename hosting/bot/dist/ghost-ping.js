@@ -22,18 +22,20 @@ function ghostPingText(m, targets) {
 }
 /** Ghost-Ping-Meldung: an/aus im Dashboard (Einstellungen → Discord-Bot), Standard an. */
 function createGhostPing(api, actions, log = console.error) {
-    let cached;
-    const enabled = async () => {
+    // je Server: die Einstellung im Dashboard gilt für den gewählten Server
+    const cache = new Map();
+    const enabled = async (guildId) => {
+        const cached = cache.get(guildId);
         if (cached && Date.now() - cached.at < CACHE_MS)
             return cached.enabled;
-        const r = await api.service('GET', '/bot/ghost-ping').catch(() => ({ enabled: cached?.enabled ?? true }));
-        cached = { at: Date.now(), enabled: r.enabled !== false };
-        return cached.enabled;
+        const r = await api.service('GET', `/bot/ghost-ping?guildId=${encodeURIComponent(guildId)}`).catch(() => ({ enabled: cached?.enabled ?? true }));
+        cache.set(guildId, { at: Date.now(), enabled: r.enabled !== false });
+        return r.enabled !== false;
     };
     return {
         async deleted(m) {
             const targets = ghostPingTargets(m);
-            if (!targets.length || !(await enabled()))
+            if (!targets.length || !(await enabled(m.guildId)))
                 return;
             // nur die Geghost-Pingten werden benachrichtigt, der Absender nur genannt
             await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`ghost ping message failed: ${e instanceof Error ? e.message : e}`));

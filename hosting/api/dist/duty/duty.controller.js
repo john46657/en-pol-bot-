@@ -21,12 +21,16 @@ const duty_service_1 = require("./duty.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const hoursQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7) });
-const logQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(90).default(7), userId: zod_1.z.string().uuid().optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
+/** Rangliste: ohne `days` alle Zeiten (wie Trident), optional nur eine Schichtart. */
+const boardQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(3650).optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
+const logQuery = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(3650).default(7), userId: zod_1.z.string().uuid().optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 /** Vom Bot: Discord-Rollen des Aufrufers auf dem Server (für die erlaubten Rollen einer Schichtart); sonst gespeicherte Mitgliedschaften. */
 const discordRolesOf = (r) => {
     const auth = r.headers.authorization, raw = r.headers['x-discord-roles'];
     return typeof auth === 'string' && auth.startsWith('Bot ') && typeof raw === 'string' ? { discordRoleIds: raw.split(',').filter((x) => /^\d{15,25}$/.test(x)).slice(0, 100) } : {};
 };
+const modifyBody = zod_1.z.object({ action: zod_1.z.enum(['add', 'remove', 'set']), seconds: zod_1.z.number().int().min(0).max(366 * 86_400) });
+const clearQuery = zod_1.z.object({ shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 const body = zod_1.z.object({ status: zod_1.z.enum(shared_1.DUTY_STATUSES), unitId: zod_1.z.string().uuid().optional(), callsign: zod_1.z.string().max(16).optional(), shiftType: zod_1.z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 let DutyController = class DutyController {
     d;
@@ -43,7 +47,9 @@ let DutyController = class DutyController {
     /** Eigene Gesamtwerte aller Schichten (Discord: `/shift manage`). */
     myShiftStats(a) { return this.d.shiftStats(a.userId); }
     /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
-    leaderboard(a, f) { return this.d.leaderboard(f.days, a.userId); }
+    leaderboard(a, f) { return this.d.leaderboard(f.days ?? null, a.userId, f.shiftType); }
+    /** Laufende Schichten mit Beginn, Dauer ohne Pausen und Discord-ID (Discord: `/shift active`). */
+    activeShifts() { return this.d.activeShifts(); }
     /** Dienststunden aller Beamten (Schichtleitung). */
     hours(f) { return this.d.hours(f.days); }
     /** Schicht-Logs: wer wann welche Schicht gestartet/beendet hat (Schichtleitung). */
@@ -51,6 +57,13 @@ let DutyController = class DutyController {
     /** „Bin noch im Dienst“ (Erinnerung) bzw. echte Aktivität im Dashboard/MDT. */
     active(a) { return this.d.active(a.userId); }
     set(a, b, r) { return this.d.setStatus(a, b.status, { ...b, ...discordRolesOf(r) }); }
+    /** Schichtleitung (`/shift admin`): Gesamtwerte und letzte Schicht eines Mitglieds. */
+    statsFor(userId) { return this.d.shiftStats(userId); }
+    /** Schicht ändern: Zeit hinzufügen, abziehen oder setzen (Sekunden, ohne Pausen). */
+    modifyShift(a, shiftId, b) { return this.d.modifyShift(a, shiftId, b.action, b.seconds); }
+    deleteShift(a, shiftId) { return this.d.deleteShift(a, shiftId); }
+    /** Alle beendeten Schichten eines Mitglieds löschen (optional nur eine Schichtart). */
+    clearShifts(a, userId, q) { return this.d.clearShifts(a, userId, q.shiftType); }
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a, userId, b) { return this.d.setStatus(a, b.status, b, userId); }
 };
@@ -107,11 +120,18 @@ __decorate([
     (0, common_1.Get)('leaderboard'),
     (0, decorators_1.RequirePermission)('team.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
-    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(hoursQuery))),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(boardQuery))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "leaderboard", null);
+__decorate([
+    (0, common_1.Get)('active-shifts'),
+    (0, decorators_1.RequirePermission)('team.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "activeShifts", null);
 __decorate([
     (0, common_1.Get)('hours'),
     (0, decorators_1.RequirePermission)('team.manage'),
@@ -147,6 +167,43 @@ __decorate([
     __metadata("design:paramtypes", [Object, void 0, Object]),
     __metadata("design:returntype", void 0)
 ], DutyController.prototype, "set", null);
+__decorate([
+    (0, common_1.Get)(':userId/shift-stats'),
+    (0, decorators_1.RequirePermission)('team.manage'),
+    __param(0, (0, common_1.Param)('userId', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "statsFor", null);
+__decorate([
+    (0, common_1.Patch)('shifts/:shiftId'),
+    (0, decorators_1.RequirePermission)('team.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('shiftId')),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(modifyBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "modifyShift", null);
+__decorate([
+    (0, common_1.Delete)('shifts/:shiftId'),
+    (0, decorators_1.RequirePermission)('team.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('shiftId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "deleteShift", null);
+__decorate([
+    (0, common_1.Delete)(':userId/shifts'),
+    (0, decorators_1.RequirePermission)('team.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('userId', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Query)((0, zod_pipe_1.zodBody)(clearQuery))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], DutyController.prototype, "clearShifts", null);
 __decorate([
     (0, common_1.Put)(':userId/status'),
     (0, decorators_1.RequirePermission)('team.manage'),

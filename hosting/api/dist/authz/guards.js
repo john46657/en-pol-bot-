@@ -33,7 +33,9 @@ const UUID = '[0-9a-fA-F-]{36}';
 const BOT_USER_ROUTES = [
     ['GET', /^\/persons\/?$/], ['GET', new RegExp(`^/persons/${UUID}$`)], ['GET', /^\/vehicles\/?$/], ['GET', new RegExp(`^/vehicles/${UUID}$`)],
     ['GET', /^\/wanted\/?$/], ['GET', /^\/search\/?$/], ['GET', /^\/incidents\/?$/], ['POST', /^\/incidents\/?$/],
-    ['GET', /^\/team\/(overview|me|me\/hours|me\/shifts|me\/shift-stats|hours|shifts|leaderboard)$/], ['PUT', /^\/team\/me\/status$/], ['PUT', new RegExp(`^/team/${UUID}/status$`)],
+    ['GET', /^\/team\/(overview|me|me\/hours|me\/shifts|me\/shift-stats|hours|shifts|leaderboard|active-shifts)$/], ['PUT', /^\/team\/me\/status$/], ['PUT', new RegExp(`^/team/${UUID}/status$`)],
+    // `/shift admin`: Gesamtwerte eines Mitglieds, Schicht ändern/löschen, alle Schichten löschen (Rechte prüft die API: team.manage)
+    ['GET', new RegExp(`^/team/${UUID}/shift-stats$`)], ['PATCH', /^\/team\/shifts\/\d{1,25}$/], ['DELETE', /^\/team\/shifts\/\d{1,25}$/], ['DELETE', new RegExp(`^/team/${UUID}/shifts$`)],
     ['GET', /^\/dispatch\/units\/?$/], ['PUT', new RegExp(`^/dispatch/units/${UUID}/status$`)],
     ['POST', /^\/tickets\/?$/],
     ['GET', /^\/auth\/me$/], ['DELETE', /^\/discord\/link$/], ['GET', /^\/notifications\/?$/],

@@ -57,7 +57,9 @@ let intents = INTENT_STEPS[0];
 let client = makeClient(intents);
 const tickets = (0, discord_tickets_1.createTicketRuntime)(() => client, api);
 const toEmbed = (e) => {
-    const b = new discord_js_1.EmbedBuilder().setTitle(e.title);
+    const b = new discord_js_1.EmbedBuilder();
+    if (e.title)
+        b.setTitle(e.title); // ohne Titel: nur Kopfzeile + Text (z. B. „Shift Management“ wie bei Trident)
     if (e.description)
         b.setDescription(e.description);
     if (e.color !== undefined)
@@ -121,10 +123,11 @@ const toBox = (list, buttons, ping) => [
 /** Auswahlmenüs als eigene Reihen über den Buttons. */
 const toComponents = (buttons, select, selects = []) => (0, discord_tickets_1.componentsOf)(buttons, [...(select ? [select] : []), ...selects]);
 const toModal = (m) => (0, discord_tickets_1.modalOf)(m);
+const filesOf = (r) => (r.files?.length ? { files: r.files.map((f) => ({ attachment: Buffer.from(f.data, 'utf8'), name: f.name })) } : {});
 const replyPayload = (r) => (r.embeds?.[0]?.box
     // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
     ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: discord_js_1.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } }
-    : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } });
+    : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] }, ...filesOf(r) });
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
 /** Echte Discord-Umsetzung der Plattform-Aktionen (in Tests ein Fake). */
@@ -565,6 +568,7 @@ function baseCtx(i) {
     return {
         discordId: i.user.id, interactionId: i.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
         guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
+        ...(i.guild ? { guildName: i.guild.name, ...(i.guild.iconURL({ size: 64 }) ? { guildIcon: i.guild.iconURL({ size: 64 }) } : {}) } : {}),
         isGuildAdmin: !!perms && (perms.has(discord_js_1.PermissionFlagsBits.ManageGuild) || perms.has(discord_js_1.PermissionFlagsBits.Administrator)),
         config: () => api.service('GET', '/bot/config'),
         refreshLive: (kind, o) => live.refresh(kind, o),
@@ -573,6 +577,7 @@ function baseCtx(i) {
         applyEffects: (effects) => tickets.apply(effects),
         listCategories: (guildId) => tickets.listCategories(guildId),
         userNameOf: (id) => client.users.fetch(id).then((u) => u.username, () => null),
+        userAvatarOf: (id) => client.users.fetch(id).then((u) => u.displayAvatarURL({ size: 64 }), () => null),
         voiceSupport,
         runtime,
         botProfile,
@@ -717,7 +722,7 @@ async function handleComponent(i) {
         // Assistent/Prüfungsseite an Ort und Stelle neu zeichnen; Fehler o. Ä. als eigene, private Antwort
         await i.deferUpdate();
         const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f, id) => [id, 'value' in f ? String(f.value) : ''])) : undefined;
-        const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(fields ? { fields } : {}), ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
+        const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...(fields ? { fields } : {}), ...(i.isModalSubmit() ? { modal: (0, discord_tickets_1.modalValuesOf)(i) } : {}), ...(i.isAnySelectMenu() ? { values: i.values } : {}) }));
         const p = replyPayload(reply);
         if (reply.panel)
             await i.editReply(p);
@@ -730,7 +735,12 @@ async function handleComponent(i) {
         await i.deferUpdate();
         const reply = (await check()) ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
         const p = replyPayload(reply);
-        if (reply.embeds?.[0]?.box)
+        // Panel als Embed auf einer älteren Kasten-Nachricht: Discord kann Komponenten-Nachrichten nicht zurück in Embeds wandeln → neu posten
+        if (reply.panel && !reply.embeds?.[0]?.box && i.message.flags.has(discord_js_1.MessageFlags.IsComponentsV2)) {
+            await i.message.delete().catch(() => undefined);
+            await i.followUp(p);
+        }
+        else if (reply.embeds?.[0]?.box || reply.panel)
             await i.editReply(p);
         else
             await i.followUp({ ...p, flags: ('flags' in p ? (p.flags ?? 0) : 0) | discord_js_1.MessageFlags.Ephemeral });
