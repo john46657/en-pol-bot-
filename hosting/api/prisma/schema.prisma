@@ -603,6 +603,8 @@ model DutySession {
   callsign       String?
   /// Schicht-Art (Admin → Shifts), z. B. „Im Dienst“
   shiftType      String?
+  /// Schicht-ID (wie Trident „Shift ID“): gleich für alle zusammenhängenden Sitzungen einer Schicht (Im Dienst ↔ Pause ↔ Schichtwechsel)
+  shiftId        String?
   startedAt      DateTime  @default(now())
   endedAt        DateTime?
   /// Letzte echte Aktivität (Dashboard/MDT, Discord-Befehle) – für die Inaktivitäts-Erinnerung
@@ -613,6 +615,7 @@ model DutySession {
 
   @@index([userId, endedAt])
   @@index([serverId])
+  @@index([shiftId])
 }
 
 /// Wochenarchiv des automatischen Wochen-Resets (Montag 00:00 Europe/Berlin): Rangliste + alle Dienstzeiten der Woche als Momentaufnahme.

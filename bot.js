@@ -18743,12 +18743,12 @@ var require_eventsource_stream = __commonJS({
       }
       return true;
     }
-    function isFieldName(line2, length, field2) {
+    function isFieldName(line, length, field2) {
       if (length !== field2.length) {
         return false;
       }
       for (let i = 0; i < length; i++) {
-        if (line2[i] !== field2[i]) {
+        if (line[i] !== field2[i]) {
           return false;
         }
       }
@@ -18859,25 +18859,25 @@ var require_eventsource_stream = __commonJS({
        * @param {Buffer} line
        * @param {EventStreamEvent} event
        */
-      parseLine(line2, event) {
-        if (line2.length === 0) {
+      parseLine(line, event) {
+        if (line.length === 0) {
           return;
         }
-        const colonPosition = line2.indexOf(COLON);
+        const colonPosition = line.indexOf(COLON);
         if (colonPosition === 0) {
           return;
         }
-        let fieldLength = line2.length;
-        let valueStart = line2.length;
+        let fieldLength = line.length;
+        let valueStart = line.length;
         if (colonPosition !== -1) {
           fieldLength = colonPosition;
           valueStart = colonPosition + 1;
-          if (line2[valueStart] === SPACE) {
+          if (line[valueStart] === SPACE) {
             ++valueStart;
           }
         }
-        if (isFieldName(line2, fieldLength, DATA)) {
-          const value = line2.toString("utf8", valueStart);
+        if (isFieldName(line, fieldLength, DATA)) {
+          const value = line.toString("utf8", valueStart);
           if (event.data === void 0) {
             event.data = value;
           } else {
@@ -18886,20 +18886,20 @@ ${value}`;
           }
           return;
         }
-        if (isFieldName(line2, fieldLength, RETRY)) {
-          if (isASCIINumberBytes(line2, valueStart)) {
-            event.retry = line2.toString("utf8", valueStart);
+        if (isFieldName(line, fieldLength, RETRY)) {
+          if (isASCIINumberBytes(line, valueStart)) {
+            event.retry = line.toString("utf8", valueStart);
           }
           return;
         }
-        if (isFieldName(line2, fieldLength, ID)) {
-          if (isValidLastEventIdBytes(line2, valueStart)) {
-            event.id = line2.toString("utf8", valueStart);
+        if (isFieldName(line, fieldLength, ID)) {
+          if (isValidLastEventIdBytes(line, valueStart)) {
+            event.id = line.toString("utf8", valueStart);
           }
           return;
         }
-        if (isFieldName(line2, fieldLength, EVENT)) {
-          const value = line2.toString("utf8", valueStart);
+        if (isFieldName(line, fieldLength, EVENT)) {
+          const value = line.toString("utf8", valueStart);
           if (value.length > 0) {
             event.event = value;
           }
@@ -50737,13 +50737,13 @@ var require_Message = __commonJS({
        * @param {APIMessage} [rawData] Raw data passed through the WebSocket about this message
        * @returns {boolean}
        */
-      equals(message, rawData) {
+      equals(message, rawData2) {
         if (!message) return false;
         const embedUpdate = !message.author && !message.attachments;
         if (embedUpdate) return this.id === message.id && this.embeds.length === message.embeds.length;
         let equal = this.id === message.id && this.author.id === message.author.id && this.content === message.content && this.nonce === message.nonce && this.tts === message.tts && this.attachments.size === message.attachments.size && this.embeds.length === message.embeds.length && this.attachments.every((attachment) => message.attachments.has(attachment.id)) && this.embeds.every((embed, index) => embed.equals(message.embeds[index]));
-        if (equal && rawData) {
-          equal = this.mentions.everyone === message.mentions.everyone && this.createdTimestamp === Date.parse(rawData.timestamp) && this.editedTimestamp === Date.parse(rawData.edited_timestamp);
+        if (equal && rawData2) {
+          equal = this.mentions.everyone === message.mentions.everyone && this.createdTimestamp === Date.parse(rawData2.timestamp) && this.editedTimestamp === Date.parse(rawData2.edited_timestamp);
         }
         return equal;
       }
@@ -69849,9 +69849,9 @@ var require_GuildMemberManager = __commonJS({
        *    .then(pruned => console.log(`I just pruned ${pruned} people!`))
        *    .catch(console.error);
        */
-      async prune({ days: days2, dry = false, count: compute_prune_count, roles: roles2 = [], reason } = {}) {
-        if (typeof days2 !== "number") throw new DiscordjsTypeError2(ErrorCodes2.PruneDaysType);
-        const query = { days: days2 };
+      async prune({ days, dry = false, count: compute_prune_count, roles: roles2 = [], reason } = {}) {
+        if (typeof days !== "number") throw new DiscordjsTypeError2(ErrorCodes2.PruneDaysType);
+        const query = { days };
         const resolvedRoles = [];
         for (const role of roles2) {
           const resolvedRole = this.guild.roles.resolveId(role);
@@ -70236,10 +70236,10 @@ var require_GuildScheduledEventManager = __commonJS({
           query
         });
         return data.reduce(
-          (coll, rawData) => coll.set(rawData.user.id, {
-            guildScheduledEventId: rawData.guild_scheduled_event_id,
-            user: this.client.users._add(rawData.user),
-            member: rawData.member ? this.guild.members._add({ ...rawData.member, user: rawData.user }) : null
+          (coll, rawData2) => coll.set(rawData2.user.id, {
+            guildScheduledEventId: rawData2.guild_scheduled_event_id,
+            user: this.client.users._add(rawData2.user),
+            member: rawData2.member ? this.guild.members._add({ ...rawData2.member, user: rawData2.user }) : null
           }),
           new Collection2()
         );
@@ -80400,11 +80400,11 @@ var DEFAULT_CAD_CONFIG = {
 function accountAge(created, now = Date.now()) {
   const t2 = created ? new Date(created).getTime() : NaN;
   if (!Number.isFinite(t2)) return "\u2014";
-  const days2 = Math.max(0, Math.floor((now - t2) / 864e5));
-  if (days2 === 0) return "heute erstellt";
-  if (days2 < 60) return `${days2} ${days2 === 1 ? "Tag" : "Tage"}`;
-  if (days2 < 730) return `${Math.floor(days2 / 30)} Monate`;
-  return `${Math.floor(days2 / 365)} Jahre`;
+  const days = Math.max(0, Math.floor((now - t2) / 864e5));
+  if (days === 0) return "heute erstellt";
+  if (days < 60) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
+  if (days < 730) return `${Math.floor(days / 30)} Monate`;
+  return `${Math.floor(days / 365)} Jahre`;
 }
 function renderWelcomeText(text2, m, now = Date.now()) {
   const vars = {
@@ -80611,9 +80611,9 @@ function isoWeek(d) {
   t2.setUTCDate(t2.getUTCDate() + 4 - (t2.getUTCDay() || 7));
   return Math.ceil(((t2.getTime() - Date.UTC(t2.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
-function periodLabel(period2, start2) {
+function periodLabel(period, start2) {
   const s = new Date(start2);
-  if (period2 === "WEEKLY") {
+  if (period === "WEEKLY") {
     const e = new Date(s);
     e.setUTCDate(e.getUTCDate() + 6);
     return `KW ${isoWeek(s)} (${dd(s).slice(0, 6)}\u2013${dd(e)})`;
@@ -81221,10 +81221,10 @@ function aiCheck(answers, durationSec) {
     const cv = Math.sqrt(lens.reduce((a, b2) => a + (b2 - mean) ** 2, 0) / lens.length) / mean;
     if (cv < 0.35 && mean >= 12) hits.push({ points: 10, reason: "Sehr gleichf\xF6rmige, lange S\xE4tze" });
   }
-  const long2 = filled.filter((t2) => t2.length >= 100);
-  if (long2.length >= 3 && long2.every((t2) => /[.!?]$/.test(t2)) && s.length >= 6 && s.every((x) => /^[\p{Lu}„"(\d]/u.test(x))) hits.push({ points: 8, reason: "Durchgehend saubere Gro\xDF-/Kleinschreibung und Zeichensetzung" });
+  const long = filled.filter((t2) => t2.length >= 100);
+  if (long.length >= 3 && long.every((t2) => /[.!?]$/.test(t2)) && s.length >= 6 && s.every((x) => /^[\p{Lu}„"(\d]/u.test(x))) hits.push({ points: 8, reason: "Durchgehend saubere Gro\xDF-/Kleinschreibung und Zeichensetzung" });
   let score = hits.reduce((n, h) => n + h.points, 0);
-  if (CASUAL.test(all) || long2.length && long2.every((t2) => t2 === t2.toLowerCase())) score -= 15;
+  if (CASUAL.test(all) || long.length && long.every((t2) => t2 === t2.toLowerCase())) score -= 15;
   score = Math.max(0, Math.min(100, score));
   return {
     score,
@@ -81797,11 +81797,12 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
       };
     }
     case "duty.changed": {
+      if (typeof p.shiftId === "string" && p.shiftId) return shiftLogEmbed(p);
       const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
-      const who2 = `${p.callsign ? `${plain2(p.callsign)} \xB7 ` : ""}${plain2(p.name)}`;
+      const who3 = `${p.callsign ? `${plain2(p.callsign)} \xB7 ` : ""}${plain2(p.name)}`;
       const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
       return {
-        title: clip2(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who2} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
+        title: clip2(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who3} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
         color: DUTY_DE[st]?.color ?? COLORS.neutral,
         description: clip2([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain2(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain2(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
       };
@@ -81890,8 +81891,8 @@ function applicationEmbeds(p, kind2) {
 ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
   let sections = qa.map((q2, i) => section3(q2, i));
-  const who2 = p.discordName ? `${plain2(p.discordName)}s ` : "";
-  const title = clip2(kind2 === "p" ? `\u{1F4CB} ${who2}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who2}Bewerbung \u201E${plain2(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
+  const who3 = p.discordName ? `${plain2(p.discordName)}s ` : "";
+  const title = clip2(kind2 === "p" ? `\u{1F4CB} ${who3}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who3}Bewerbung \u201E${plain2(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
   if (size(sections) > room) {
@@ -81933,6 +81934,34 @@ var LEAVE_EVENTS = {
   extension_denied: { text: "\u274C Verl\xE4ngerung abgelehnt", color: COLORS.danger }
 };
 var unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1e3);
+function shiftDuration(sec) {
+  let rest = Math.max(0, Math.round(sec));
+  const parts = [];
+  for (const [size, unit] of [[86400, "day"], [3600, "hour"], [60, "minute"], [1, "second"]]) {
+    const v = Math.floor(rest / size);
+    rest %= size;
+    if (v) parts.push(`${v} ${unit}${v === 1 ? "" : "s"}`);
+  }
+  return parts.slice(0, 3).join(", ") || "0 seconds";
+}
+function shiftLogEmbed(p) {
+  const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
+  const t2 = (v, style) => `<t:${unixOf(v)}:${style}>`;
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const [event, color3] = prev === "OFF_DUTY" ? ["Shift Started", COLORS.success] : st === "OFF_DUTY" ? ["Shift Ended", COLORS.danger] : st === "BREAK" ? ["Break Started", COLORS.warning] : prev === "BREAK" ? ["Break Ended", COLORS.info] : ["Shift Updated", COLORS.info];
+  const kind2 = p.shiftType ? plain2(p.shiftType) : "Dienst";
+  const secs = (v) => shiftDuration(Number(v) || 0);
+  const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)}`];
+  if (event === "Shift Started") lines.push(`**Started**: ${t2(p.shiftStartedAt ?? now, "R")} (${t2(p.shiftStartedAt ?? now, "f")})`);
+  else if (event === "Shift Ended") {
+    lines.push(`**Total Time**: ${secs(p.totalSeconds)}`);
+    if (Number(p.breakSeconds) > 0) lines.push(`**Break Time**: ${secs(p.breakSeconds)}`);
+  } else if (event === "Break Started") lines.push(`**Break Started**: ${t2(now, "R")}`, `**Shift Time**: ${secs(p.totalSeconds)}`);
+  else if (event === "Break Ended") lines.push(`**Break Time**: ${secs(p.previousSeconds)}`);
+  else lines.push(`**Status**: ${DUTY_DE[st]?.label ?? label(st)}`);
+  if (p.setBy) lines.push(`**${event === "Shift Ended" ? "Ended" : "Set"} By**: ${plain2(p.setBy)}`);
+  return { author: { name: clip2(`@${String(p.name ?? "\u2014")}`, 200) }, title: clip2(`${event} \u2022 ${kind2}`, 256), color: color3, description: clip2(lines.join("\n"), 4e3), footer: `Shift ID: ${String(p.shiftId)}` };
+}
 function humanDuration(ms) {
   const H = 36e5, D = 24 * H, W = 7 * D;
   const n = (v, one, many) => `${v} ${v === 1 ? one : many}`;
@@ -83776,8 +83805,8 @@ async function listReply2(c) {
   const params = new URLSearchParams({ pageSize: "25" });
   if (status3) params.set("status", status3);
   if (c.opts.mitglied) params.set("discordId", String(c.opts.mitglied));
-  const days2 = Number(c.opts.tage ?? 0);
-  if (days2 > 0) params.set("from", new Date(Date.now() - days2 * 864e5).toISOString().slice(0, 10));
+  const days = Number(c.opts.tage ?? 0);
+  if (days > 0) params.set("from", new Date(Date.now() - days * 864e5).toISOString().slice(0, 10));
   const name = String(c.opts.vorlage ?? "").trim().toLowerCase();
   if (name) {
     const all = await templates(c, false);
@@ -84102,46 +84131,22 @@ var RADIO_WHITELIST_INTERACTION = {
 };
 
 // apps/bot/src/commands/shifts.ts
-var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var ts3 = (iso, style = "f") => `<t:${Math.floor(new Date(iso).getTime() / 1e3)}:${style}>`;
-var days = (c) => Number(c.opts.days ?? 7);
-var period = (d) => d === 1 ? "letzte 24 Stunden" : `letzte ${d} Tage`;
 async function shiftTypes(c) {
   const cfg2 = await c.api.service("GET", "/bot/shifts").catch(() => null);
   return cfg2?.enabled ? cfg2.types : [];
 }
 var permittedFor = (c, t2) => !t2.permittedRoleIds?.length || !c.memberRoleIds || t2.permittedRoleIds.some((r) => c.memberRoleIds.includes(r));
-var line = (s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \xB7 **${hm(s.minutes - s.breakMinutes)}**${s.shiftType ? ` \xB7 ${plain2(s.shiftType)}` : ""}${s.breaks ? ` \xB7 ${s.breaks}\xD7 Pause (${hm(s.breakMinutes)})` : ""}${s.active ? ` \xB7 ${DUTY_DE[s.status]?.emoji ?? "\u{1F7E2}"} l\xE4uft` : ""}`;
-function logEmbed(title, log, emptyText) {
-  const items = log.items;
-  const current = items.find((s) => s.active);
-  const total = items.reduce((n, s) => n + s.minutes - s.breakMinutes, 0);
-  const fields = [];
-  if (current) fields.push({ name: "Aktuelle Schicht", value: clip2([`${DUTY_DE[current.status]?.emoji ?? "\u{1F7E2}"} **${DUTY_DE[current.status]?.label ?? current.status}** seit ${ts3(current.startedAt, "R")}`, current.shiftType ? `Schicht: **${plain2(current.shiftType)}**` : null, `Dauer: ${hm(current.minutes)}${current.breakMinutes ? ` (davon Pause ${hm(current.breakMinutes)})` : ""}`].filter(Boolean).join("\n"), 1024) });
-  fields.push({ name: `Gesamt (${period(log.days)})`, value: `**${hm(total)}** in ${items.length} ${items.length === 1 ? "Schicht" : "Schichten"}`, inline: true });
-  const lines = items.slice(0, 15).map(line);
-  return {
-    title,
-    color: current ? COLORS.success : COLORS.info,
-    fields,
-    description: clip2(lines.length ? `${lines.join("\n")}${items.length > 15 ? `
-\u2026 und ${items.length - 15} weitere` : ""}` : emptyText, 4e3)
-  };
-}
 var findType = (types, wanted) => {
   const w = wanted.trim().toLowerCase();
   return types.find((x) => x.id === w || x.name.toLowerCase() === w);
-};
-var long = (min) => {
-  const h = Math.floor(min / 60), m = Math.round(min % 60);
-  const parts = [...h ? [`${h} ${h === 1 ? "Stunde" : "Stunden"}`] : [], ...m || !h ? [`${m} ${m === 1 ? "Minute" : "Minuten"}`] : []];
-  return parts.join(", ");
 };
 var pickType = (c, types, wanted) => {
   if (wanted) return findType(types, wanted);
   const usable = types.filter((t2) => permittedFor(c, t2));
   return usable.find((t2) => t2.isDefault) ?? usable[0];
 };
+var STATUS_EN = { ON_DUTY: "On Shift", BREAK: "On Break", TRAINING: "Training", ADMINISTRATIVE: "Administrative" };
 async function manageReply2(c, type, notice) {
   const [log, stats] = await Promise.all([
     c.api.asUser(c.discordId, "GET", "/team/me/shifts?days=1"),
@@ -84149,86 +84154,170 @@ async function manageReply2(c, type, notice) {
   ]);
   const current = log.items.find((s) => s.active);
   const onBreak = current?.status === "BREAK";
-  const st = current ? DUTY_DE[current.status] : void 0;
   const typeName = current ? current.shiftType : type?.name ?? null;
+  const total = stats.seconds ?? stats.minutes * 60;
+  const running = current ? (Date.now() - new Date(current.startedAt).getTime()) / 1e3 - current.breakMinutes * 60 : 0;
   const description = [
-    `**Mitglied**: <@${c.discordId}>`,
-    "",
     ...notice ? [notice, ""] : [],
     ...current ? [
-      "### \u{1F552} Aktuelle Schicht",
-      `**Status**: ${st?.emoji ?? "\u{1F7E2}"} ${st?.label ?? current.status}`,
-      `**Begonnen**: ${ts3(current.startedAt, "R")}`,
-      `**Dauer**: ${long(current.minutes - current.breakMinutes)}`,
-      `**Pausen**: ${current.breaks ? `${current.breaks} (${long(current.breakMinutes)})` : "keine"}`,
+      "### \u{1F552} Current Shift",
+      `**Status**: ${STATUS_EN[current.status] ?? current.status}`,
+      `**Started**: ${ts3(current.startedAt, "R")}`,
+      `**Duration**: ${shiftDuration(running)}`,
+      `**Breaks**: ${current.breaks ? `${current.breaks} (${shiftDuration(current.breakMinutes * 60)})` : "none"}`,
       ""
     ] : [],
-    "### \u{1F4CB} Gesamt\xFCbersicht",
-    `**Anzahl Schichten**: ${stats.count}`,
-    `**Gesamtdauer**: ${long(stats.minutes)}`,
-    `**Durchschnittliche Dauer**: ${long(stats.count ? stats.minutes / stats.count : 0)}`,
-    ...typeName ? ["", `-# Schichtart: ${plain2(typeName)}`] : []
+    "### \u{1F4CB} All Time Information",
+    `**Shift Count**: ${stats.count}`,
+    `**Total Duration**: ${shiftDuration(total)}`,
+    `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
+    "",
+    `-# Shift Type: ${typeName ? plain2(typeName) : "default"}`
   ].join("\n");
   const buttons = [
     { id: `shift:on:${!current && type ? type.id : ""}:${c.discordId}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
-    { id: `shift:break:${c.discordId}`, label: onBreak ? "Pause beenden" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
-    { id: `shift:off:${c.discordId}`, label: "Beenden", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
+    { id: `shift:break:${c.discordId}`, label: onBreak ? "Resume" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
+    { id: `shift:off:${c.discordId}`, label: "End", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
   ];
-  return { ephemeral: false, buttons, embeds: [{ box: true, heading: "small", title: "Schichtverwaltung", description: clip2(description, 3900) }] };
+  return { ephemeral: false, panel: true, buttons, embeds: [{ author: { name: "Shift Management", ...c.userAvatar ? { iconUrl: c.userAvatar } : {} }, title: "", description: clip2(description, 3900) }] };
 }
+var NOTICE = { ON_DUTY: "\u{1F7E2} Your shift is now **active**.", BREAK: "\u{1F7E1} You are now **on break**.", OFF_DUTY: "\u{1F534} Your shift has **ended**." };
 async function switchTo(c, status3, type) {
   let notice;
   try {
     await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...type ? { shiftType: type.id } : {} });
-    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Schicht **${plain2(type.name)}** gestartet.` : `${DUTY_DE[status3].emoji} Jetzt **${DUTY_DE[status3].label}**.`;
+    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Shift **${plain2(type.name)}** started.` : NOTICE[status3];
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status3].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
   return manageReply2(c, type, notice);
 }
+var serverAuthor = (c) => c.guildName ? { author: { name: clip2(c.guildName, 200), ...c.guildIcon ? { iconUrl: c.guildIcon } : {} } } : {};
+var who2 = (u) => u.discordId ? `<@${u.discordId}>` : `**${plain2(u.name)}**`;
 async function active(c) {
   try {
-    const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
-    const on2 = rows.filter((r) => r.dutyStatus !== "OFF_DUTY").sort((a, b2) => (a.onDutySince ?? "").localeCompare(b2.onDutySince ?? ""));
-    const lines = on2.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? "\u2022"} **${plain2(r.callsign ?? r.name)}**${r.callsign ? ` (${plain2(r.name)})` : ""}${r.shiftType ? ` \xB7 ${plain2(r.shiftType)}` : ""}${r.onDutySince ? ` \xB7 seit ${ts3(r.onDutySince, "R")}` : ""}`);
-    const onBreak = on2.filter((r) => r.dutyStatus === "BREAK").length;
+    const rows = await c.api.asUser(c.discordId, "GET", "/team/active-shifts");
+    const lines = rows.slice(0, 30).map((r, i) => `\`${i + 1}.\` ${who2(r)} \u2022 ${shiftDuration(r.seconds)}${r.status === "BREAK" ? " (On Break)" : ""}${r.shiftType ? ` \u2022 ${plain2(r.shiftType)}` : ""}`);
     return { ephemeral: false, embeds: [{
-      title: `\u{1F46E} Laufende Schichten (${on2.length})`,
-      color: on2.length ? COLORS.success : COLORS.neutral,
-      description: clip2(lines.length ? `${lines.join("\n")}${on2.length > 30 ? `
-\u2026 und ${on2.length - 30} weitere` : ""}` : "Gerade ist niemand im Dienst.", 4e3),
-      ...onBreak ? { footer: `${onBreak} davon in der Pause` } : {}
+      ...serverAuthor(c),
+      title: "\u{1F552} Active Shifts",
+      description: clip2(lines.length ? `${lines.join("\n")}${rows.length > 30 ? `
+\u2026 and ${rows.length - 30} more` : ""}` : "There are no active shifts.", 4e3)
     }] };
   } catch (e) {
     return mapError(e);
   }
 }
-var MEDALS = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+var boardPath = (d, type) => `/team/leaderboard${[d ? `days=${d}` : "", type ? `shiftType=${type}` : ""].filter(Boolean).reduce((q2, x, i) => `${q2}${i ? "&" : "?"}${x}`, "")}`;
 async function leaderboard(c) {
   try {
-    const d = days(c);
-    const r = await c.api.asUser(c.discordId, "GET", `/team/leaderboard?days=${d}`);
-    const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${plain2(u.callsign ?? u.name)}**${u.callsign ? ` (${plain2(u.name)})` : ""} \xB7 ${hm(u.minutes)}${u.userId === r.me ? " \u2190 du" : ""}`);
-    const mine = r.users.findIndex((u) => u.userId === r.me);
-    return { ephemeral: false, embeds: [{
-      title: `\u{1F3C6} Rangliste (${period(r.days)})`,
-      color: COLORS.info,
-      description: clip2(lines.length ? `${lines.join("\n")}${r.users.length > 20 ? `
-\u2026 und ${r.users.length - 20} weitere` : ""}` : "Im Zeitraum war niemand im Dienst.", 4e3),
-      ...r.users.length ? { footer: mine >= 0 ? `Dein Platz: ${mine + 1} von ${r.users.length} \xB7 ${hm(r.users[mine].minutes)}` : "Du warst im Zeitraum nicht im Dienst." } : {}
-    }] };
+    const d = c.opts.days ? Number(c.opts.days) : null;
+    const wanted = String(c.opts.type ?? "").trim();
+    const t2 = wanted ? findType(await shiftTypes(c), wanted) : void 0;
+    if (wanted && !t2) return errorReply("Unbekannte Schichtart.");
+    const r = await c.api.asUser(c.discordId, "GET", boardPath(d, t2?.id ?? ""));
+    const lines = r.users.slice(0, 25).map((u, i) => `\`${i + 1}.\` ${who2(u)} \u2022 ${shiftDuration(u.seconds)}`);
+    const footer = `Showing ${t2 ? `Shift Type: ${t2.name}` : "All Shift Types"}${d ? ` \xB7 last ${d === 1 ? "24 hours" : `${d} days`}` : ""}`;
+    return {
+      ephemeral: false,
+      embeds: [{
+        ...serverAuthor(c),
+        title: "Shift Leaderboard",
+        description: clip2(lines.length ? `${lines.join("\n")}${r.users.length > 25 ? `
+\u2026 and ${r.users.length - 25} more` : ""}` : "No shifts yet.", 4e3),
+        footer
+      }],
+      buttons: [{ id: `shift:raw:${d ?? 0}:${t2?.id ?? ""}`, label: "Raw Shift Data", style: "secondary" }]
+    };
   } catch (e) {
     return mapError(e);
   }
 }
-async function adminReply2(c, discordId, d = 7) {
-  if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
-  const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=${d}`);
-  if (!log.member) return errorReply(`<@${discordId}> ist mit keinem Konto im System verkn\xFCpft.`);
-  const current = log.items.find((s) => s.active);
-  const buttons = current ? [{ id: `shift:end:${log.member.userId}:${discordId}`, label: "Schicht beenden", style: "danger", emoji: "\u23F9\uFE0F" }] : [];
-  return { ephemeral: false, embeds: [logEmbed(clip2(`\u{1F552} Schichten von ${plain2(log.member.name)}`, 256), log, "Im Zeitraum keine Schichten.")], ...buttons.length ? { buttons } : {} };
+async function rawData(c, days, type) {
+  const d = Number(days) || null;
+  const r = await c.api.asUser(c.discordId, "GET", boardPath(d, type && /^[a-z0-9-]{1,40}$/.test(type) ? type : ""));
+  const q2 = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const csv = ["Place,Name,Callsign,Discord ID,Shifts,Total Seconds,Total Time", ...r.users.map((u, i) => [i + 1, q2(u.name), q2(u.callsign), q2(u.discordId), u.shifts, u.seconds, q2(shiftDuration(u.seconds))].join(","))].join("\n");
+  return { ephemeral: true, content: `\u{1F4C4} Raw shift data (${r.users.length} ${r.users.length === 1 ? "member" : "members"})`, files: [{ name: "shift-data.csv", data: csv }] };
 }
+var LAST_STATUS = { ENDED: "\u26AB Ended", ON_DUTY: "\u{1F7E2} Active", BREAK: "\u{1F7E1} On Break", TRAINING: "\u{1F7E2} Training", ADMINISTRATIVE: "\u{1F7E2} Administrative" };
+async function adminReply2(c, discordId, notice) {
+  if (!/^\d{15,25}$/.test(discordId)) return errorReply("Bitte ein Mitglied ausw\xE4hlen.");
+  const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=1`);
+  if (!log.member) return errorReply(`<@${discordId}> ist mit keinem Konto im System verkn\xFCpft.`);
+  const userId = log.member.userId;
+  const [stats, name, avatar] = await Promise.all([
+    c.api.asUser(c.discordId, "GET", `/team/${userId}/shift-stats`),
+    c.userNameOf?.(discordId).catch(() => null) ?? null,
+    c.userAvatarOf?.(discordId).catch(() => null) ?? null
+  ]);
+  const current = log.items.find((s) => s.active);
+  const total = stats.seconds ?? stats.minutes * 60;
+  const description = [
+    ...notice ? [notice, ""] : [],
+    "### \u{1F4CB} All Time Information",
+    `**Shift Count**: ${stats.count}`,
+    `**Total Duration**: ${shiftDuration(total)}`,
+    `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
+    ...stats.last ? ["", "### \u{1F552} Last Shift", `**Status**: ${LAST_STATUS[stats.last.status] ?? stats.last.status}`, `**Total Time**: ${shiftDuration(stats.last.seconds)}`, ...stats.last.shiftId ? [`**Shift ID**: \`${stats.last.shiftId}\``] : []] : [],
+    "",
+    `-# Shift Type: ${stats.last?.shiftType ? plain2(stats.last.shiftType) : "default"}`
+  ].join("\n");
+  const ref = `${userId}:${discordId}`;
+  const onBreak = current?.status === "BREAK";
+  return {
+    ephemeral: false,
+    panel: true,
+    embeds: [{ author: { name: clip2(`Shift Management: @${name ?? log.member.name}`, 200), ...avatar ? { iconUrl: avatar } : {} }, title: "", description: clip2(description, 3900) }],
+    select: { id: `shift:act:${ref}`, placeholder: "Shift Actions", options: [
+      { label: "View Shift List", value: "list", description: "View all shifts for this user", emoji: "\u{1F4C3}" },
+      { label: "Modify Shift", value: "modify", description: "Modify a shift: add, remove, or set time", emoji: "\u{1F552}" },
+      { label: "Delete Shift", value: "delete", description: "Delete a shift", emoji: "\u274C" },
+      { label: "Clear User Shifts", value: "clear", description: "Clear all shifts for this user", emoji: "\u{1F5D1}\uFE0F" }
+    ] },
+    buttons: [
+      { id: `shift:as:on:${ref}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
+      { id: `shift:as:break:${ref}`, label: onBreak ? "Resume" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
+      { id: `shift:as:off:${ref}`, label: "End", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
+    ]
+  };
+}
+function parseShiftDuration(input) {
+  const t2 = input.trim().toLowerCase().replace(/\s+/g, "");
+  if (/^\d+$/.test(t2)) return Number(t2) * 60;
+  if (!t2 || !/^(\d+(?:[.,]\d+)?(?:d|h|std|min|m|s))+$/.test(t2)) return null;
+  const unit = { d: 86400, h: 3600, std: 3600, min: 60, m: 60, s: 1 };
+  let sec = 0;
+  for (const [, n, u] of t2.matchAll(/(\d+(?:[.,]\d+)?)(d|h|std|min|m|s)/g)) sec += Number(n.replace(",", ".")) * unit[u];
+  return Number.isFinite(sec) ? Math.round(sec) : null;
+}
+async function shiftList(c, discordId) {
+  const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=3650`);
+  const items = log.items;
+  const lines = items.slice(0, 25).map((s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \u2022 ${shiftDuration(s.seconds ?? (s.minutes - s.breakMinutes) * 60)}${s.shiftType ? ` \u2022 ${plain2(s.shiftType)}` : ""}${s.active ? " \u2022 \u{1F7E2} Active" : ""}
+-# Shift ID: ${s.shiftId ? `\`${s.shiftId}\`` : "\u2014"}`);
+  return { ephemeral: true, embeds: [{
+    title: clip2(`Shift List: ${log.member?.name ?? ""}`, 256),
+    color: COLORS.info,
+    description: clip2(lines.length ? `${lines.join("\n")}${items.length > 25 ? `
+\u2026 and ${items.length - 25} more` : ""}` : "This user has no shifts.", 4e3)
+  }] };
+}
+async function actionModal(c, kind2, userId, discordId) {
+  const stats = await c.api.asUser(c.discordId, "GET", `/team/${userId}/shift-stats`).catch(() => null);
+  const last = stats?.last?.shiftId ?? void 0;
+  const shiftField = { id: "shift", label: "Shift ID", required: true, maxLength: 25, placeholder: "z. B. 1508566299347784460", ...last ? { value: last } : {} };
+  if (kind2 === "delete") return { modal: { id: `shift:del:${userId}:${discordId}`, title: "Delete Shift", fields: [shiftField] } };
+  return { modal: { id: `shift:mod:${userId}:${discordId}`, title: "Modify Shift", fields: [
+    shiftField,
+    { id: "action", label: "Action", kind: "select", required: true, options: [{ label: "Add time", value: "add", default: true }, { label: "Remove time", value: "remove" }, { label: "Set time", value: "set" }] },
+    { id: "duration", label: "Duration", required: true, maxLength: 30, placeholder: "z. B. 1h 30m, 45m, 2h" }
+  ] } };
+}
+var fieldOf = (c, id3) => {
+  const v = c.modal?.values[id3] ?? c.fields?.[id3];
+  return String(Array.isArray(v) ? v[0] ?? "" : v ?? "").trim();
+};
 var SHIFT_COMMANDS = [
   {
     name: "shift",
@@ -84237,17 +84326,19 @@ var SHIFT_COMMANDS = [
       { name: "manage", description: "Deine Schicht verwalten: starten, Pause machen, beenden", options: [{ name: "type", description: "Die Schichtart (leer = Auswahl bzw. Standard)", type: "string", maxLength: 40, autocomplete: true }] },
       { name: "active", description: "Alle, die gerade eine Schicht haben" },
       { name: "admin", description: "Schichten eines Mitglieds verwalten und Infos ansehen", options: [
-        { name: "member", description: "Discord-Mitglied", type: "user", required: true },
-        { name: "days", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }
+        { name: "member", description: "Discord-Mitglied", type: "user", required: true }
       ] },
-      { name: "leaderboard", description: "Alle Mitglieder nach ihrer Zeit im Dienst", options: [{ name: "days", description: "Zeitraum in Tagen (Standard: 7)", type: "integer", min: 1, max: 90 }] }
+      { name: "leaderboard", description: "Alle Mitglieder nach ihrer Zeit im Dienst", options: [
+        { name: "type", description: "Nur diese Schichtart (leer = alle)", type: "string", maxLength: 40, autocomplete: true },
+        { name: "days", description: "Nur die letzten Tage (leer = alle Zeiten)", type: "integer", min: 1, max: 3650 }
+      ] }
     ],
     publicReply: () => true,
     // alles rund um Schichten ist für alle im Channel sichtbar
     async complete(c, option2, value) {
       if (option2 !== "type") return [];
       const v = value.trim().toLowerCase();
-      return (await shiftTypes(c)).filter((t2) => permittedFor(c, t2)).filter((t2) => !v || t2.name.toLowerCase().includes(v) || t2.id.includes(v)).map((t2) => ({ name: t2.name, value: t2.id }));
+      return (await shiftTypes(c)).filter((t2) => c.opts._sub === "leaderboard" || permittedFor(c, t2)).filter((t2) => !v || t2.name.toLowerCase().includes(v) || t2.id.includes(v)).map((t2) => ({ name: t2.name, value: t2.id }));
     },
     async run(c) {
       switch (c.opts._sub) {
@@ -84257,7 +84348,7 @@ var SHIFT_COMMANDS = [
           return leaderboard(c);
         case "admin":
           try {
-            return await adminReply2(c, String(c.opts.member ?? ""), days(c));
+            return await adminReply2(c, String(c.opts.member ?? ""));
           } catch (e) {
             return mapError(e);
           }
@@ -84279,9 +84370,61 @@ var SHIFT_COMMANDS = [
     }
   }
 ];
+async function adminAction(c, args) {
+  const [action] = args;
+  const [userId, discordId] = action === "as" ? args.slice(2) : args.slice(1);
+  if (!userId || !/^[0-9a-f-]{36}$/i.test(userId) || !discordId || !/^\d{15,25}$/.test(discordId)) return errorReply("Unbekannte Aktion.");
+  if (action === "act") {
+    const pick2 = c.values?.[0];
+    if (pick2 === "list") return shiftList(c, discordId);
+    if (pick2 === "modify" || pick2 === "delete") return actionModal(c, pick2, userId, discordId);
+    if (pick2 === "clear") return { ephemeral: true, content: `\u26A0\uFE0F Really delete **all ended shifts** of <@${discordId}>? This cannot be undone.`, buttons: [{ id: `shift:clear:${userId}:${discordId}`, label: "Clear User Shifts", style: "danger", emoji: "\u{1F5D1}\uFE0F" }] };
+    return errorReply("Unbekannte Aktion.");
+  }
+  if (action === "as") {
+    const status3 = { on: "ON_DUTY", break: "BREAK", off: "OFF_DUTY" }[args[1] ?? ""];
+    if (!status3) return errorReply("Unbekannte Aktion.");
+    let next = status3;
+    if (status3 === "BREAK") {
+      const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=1`);
+      if (log.items.find((s) => s.active)?.status === "BREAK") next = "ON_DUTY";
+    }
+    let notice;
+    try {
+      await c.api.asUser(c.discordId, "PUT", `/team/${userId}/status`, { status: next });
+      notice = { ON_DUTY: status3 === "BREAK" ? "\u{1F7E2} Break ended." : "\u{1F7E2} Shift started.", BREAK: "\u{1F7E1} Break started.", OFF_DUTY: "\u{1F534} Shift ended." }[next];
+    } catch (e) {
+      if (!(e instanceof BotApiError && e.status === 409)) return mapError(e);
+      notice = "Status was already set.";
+    }
+    return adminReply2(c, discordId, notice);
+  }
+  if (action === "mod") {
+    const shiftId = fieldOf(c, "shift"), how = fieldOf(c, "action") || "add", sec = parseShiftDuration(fieldOf(c, "duration"));
+    if (!/^\d{1,25}$/.test(shiftId)) return errorReply("Bitte eine g\xFCltige Shift ID angeben.");
+    if (!["add", "remove", "set"].includes(how)) return errorReply("Unbekannte Aktion.");
+    if (sec === null) return errorReply("Ung\xFCltige Dauer \u2013 z. B. `1h 30m`, `45m` oder `2h`.");
+    const r = await c.api.asUser(c.discordId, "PATCH", `/team/shifts/${shiftId}`, { action: how, seconds: sec });
+    return adminReply2(c, discordId, `\u2705 Shift \`${shiftId}\` modified \u2013 new total time: ${shiftDuration(r.seconds)}.`);
+  }
+  if (action === "del") {
+    const shiftId = fieldOf(c, "shift");
+    if (!/^\d{1,25}$/.test(shiftId)) return errorReply("Bitte eine g\xFCltige Shift ID angeben.");
+    await c.api.asUser(c.discordId, "DELETE", `/team/shifts/${shiftId}`);
+    return adminReply2(c, discordId, `\u{1F5D1}\uFE0F Shift \`${shiftId}\` deleted.`);
+  }
+  if (action === "clear") {
+    const r = await c.api.asUser(c.discordId, "DELETE", `/team/${userId}/shifts`);
+    return okReply(`Cleared all ended shifts of <@${discordId}> (${r.deleted} ${r.deleted === 1 ? "entry" : "entries"}). Run \`/shift admin\` again to see the update.`);
+  }
+  return errorReply("Unbekannte Aktion.");
+}
 var SHIFT_INTERACTION = {
   prefix: "shift",
   updatesMessage: (args) => args[0] === "on" || args[0] === "break" || args[0] === "off",
+  opensModal: (args, values) => args[0] === "act" && (values?.[0] === "modify" || values?.[0] === "delete"),
+  // `/shift admin`: Menü, Formulare und Start/Pause/End zeichnen das Panel neu (Listen, Rückfragen und Fehler privat)
+  panel: (args) => ["act", "mod", "del", "as"].includes(args[0] ?? ""),
   async run(c) {
     const [action, userId, discordId] = c.args;
     const owner = action === "on" ? discordId : action === "break" || action === "off" ? userId : void 0;
@@ -84299,6 +84442,20 @@ var SHIFT_INTERACTION = {
       if (action === "off") return await switchTo(c, "OFF_DUTY");
     } catch (e) {
       return mapError(e);
+    }
+    if (action === "raw") {
+      try {
+        return await rawData(c, userId, discordId);
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+    if (["act", "mod", "del", "as", "clear"].includes(action ?? "")) {
+      try {
+        return await adminAction(c, c.args);
+      } catch (e) {
+        return mapError(e);
+      }
     }
     if (action !== "end" || !userId || !/^[0-9a-f-]{36}$/i.test(userId)) return errorReply("Unbekannte Aktion.");
     try {
@@ -84709,8 +84866,8 @@ Im System (Dashboard) ausgeschaltet und daher ohnehin ausgeblendet: ${systemOff.
   ].join("\n");
   return { ephemeral: true, panel: true, embeds: [brand(cfg2, { title: "\u{1F9E9} Module", description: desc })], selects: [select], buttons: [back] };
 }
-function previewReply(cfg2, who2) {
-  const member = { id: who2.id, username: who2.name, displayName: who2.name, server: cfg2.branding.serverName || who2.server, memberCount: who2.memberCount, createdAt: null };
+function previewReply(cfg2, who3) {
+  const member = { id: who3.id, username: who3.name, displayName: who3.name, server: cfg2.branding.serverName || who3.server, memberCount: who3.memberCount, createdAt: null };
   const embeds = [
     brand(cfg2, { title: "\u{1F441}\uFE0F Vorschau: Bot-Nachricht", description: "So erscheinen Meldungen des Bots auf diesem Server (Hauptfarbe, Kopfzeile mit Anzeigename und Logo, Servername unten).", ...cfg2.branding.bannerUrl ? { image: cfg2.branding.bannerUrl } : {} }),
     brand(cfg2, { title: "\u2705 Erfolg", description: "Beispiel einer Erfolgsmeldung." }, "success"),
@@ -85333,7 +85490,7 @@ async function resultsReply(c) {
   const [all, cfg2] = await Promise.all([exams(c), cfgOf2(c)]);
   const done = all.filter((e) => e.me.last || e.me.state === "PASSED" || e.me.state === "PENDING");
   const passed = done.filter((e) => e.me.state === "PASSED");
-  const line2 = (e) => {
+  const line = (e) => {
     const last = e.me.last;
     const pct = e.me.bestPercent !== null ? ` \xB7 bestes Ergebnis ${e.me.bestPercent} %` : "";
     if (e.me.state === "PASSED") return `\u2705 **${plain2(e.title)}** \u2013 bestanden${pct}`;
@@ -85342,7 +85499,7 @@ async function resultsReply(c) {
   };
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F393} Deine Pr\xFCfungsergebnisse",
-    description: clip2(done.length ? done.map(line2).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
+    description: clip2(done.length ? done.map(line).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
     fields: [{ name: "Qualifikationen (bestandene Pr\xFCfungen)", value: clip2(passed.length ? passed.map((e) => `\u2022 ${plain2(e.title)}${e.trainingName ? ` (${plain2(e.trainingName)})` : ""}`).join("\n") : "\u2014", 1024) }],
     footer: "Alle Versuche bleiben im System erhalten; Ergebnisse stehen auch in der Personalakte."
   })] };
@@ -86044,14 +86201,14 @@ function findingsText(list4, max = 3800) {
   const lines = [];
   let len = 0;
   for (const f2 of list4) {
-    const line2 = `${SEVERITY_ICON[f2.severity]} **${f2.area}:** ${f2.text}${f2.fix ? `
+    const line = `${SEVERITY_ICON[f2.severity]} **${f2.area}:** ${f2.text}${f2.fix ? `
   \u21B3 ${f2.fix}` : ""}`;
-    if (len + line2.length > max) {
+    if (len + line.length > max) {
       lines.push(`\u2026 ${list4.length - lines.length} weitere`);
       break;
     }
-    lines.push(line2);
-    len += line2.length + 1;
+    lines.push(line);
+    len += line.length + 1;
   }
   return lines.join("\n") || "\u2705 Keine Auff\xE4lligkeiten.";
 }
@@ -86336,7 +86493,7 @@ async function restorePresence(p, log = console.error) {
 }
 
 // apps/bot/src/commands/index.ts
-var hm2 = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
+var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str3 = (c, k) => String(c.opts[k] ?? "").trim();
 async function resolvePerson(c, term) {
@@ -86501,19 +86658,19 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
       { name: "alle", description: "Alle Beamten anzeigen (nur Schichtleitung)", type: "boolean" }
     ],
     async run(c) {
-      const days2 = Number(c.opts.tage ?? 7);
+      const days = Number(c.opts.tage ?? 7);
       const all = c.opts.alle === true;
       try {
-        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days2}`);
-        const period2 = days2 === 1 ? "letzte 24 Stunden" : `letzte ${days2} Tage`;
+        const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
+        const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
         if (all) {
-          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain2(u.callsign ?? u.name)}** ${u.callsign ? `(${plain2(u.name)}) ` : ""}\u2014 ${hm2(u.minutes)} \xB7 im Dienst ${hm2(u.byStatus.ON_DUTY ?? 0)}`);
-          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period2})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
+          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain2(u.callsign ?? u.name)}** ${u.callsign ? `(${plain2(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
+          return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
         }
         const me = r.users[0];
-        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period2})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
-        const lines = Object.entries(me.byStatus).sort((a, b2) => b2[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm2(m)}`);
-        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period2})`, [`**Gesamt: ${hm2(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
+        if (!me) return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [], "Im Zeitraum warst du nicht im Dienst.")] };
+        const lines = Object.entries(me.byStatus).sort((a, b2) => b2[1] - a[1]).map(([s, m]) => `\u2022 ${label(s)}: ${hm(m)}`);
+        return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Deine Dienststunden (${period})`, [`**Gesamt: ${hm(me.minutes)}** in ${me.sessions} Abschnitt${me.sessions === 1 ? "" : "en"}`, ...lines], "")] };
       } catch (e) {
         return mapError(e);
       }
@@ -86829,9 +86986,9 @@ var schema = external_exports.object({
 var guildIds = (cfg2) => [...new Set((cfg2.DISCORD_GUILD_ID ?? "").split(/[\s,;]+/).filter(Boolean))];
 function parseDotEnv(text2) {
   const out = {};
-  for (const line2 of text2.split(/\r?\n/)) {
-    const m = line2.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (m && !line2.trim().startsWith("#")) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  for (const line of text2.split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !line.trim().startsWith("#")) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
   return out;
 }
@@ -87040,7 +87197,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       const pingRoleIds = Array.isArray(item.payload.pingRoleIds) ? item.payload.pingRoleIds.map(String).filter((r) => /^\d{15,25}$/.test(r)) : [];
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? "")}`.slice(0, 100) : void 0;
-      const authorUserId = (item.type === "leave.requested" || item.type === "leave.extension") && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
+      const authorUserId = (item.type === "leave.requested" || item.type === "leave.extension" || item.type === "duty.changed" && !!item.payload.shiftId) && typeof item.payload.discordId === "string" && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : void 0;
       const replaceKey = item.type === "danger.changed" ? "danger" : void 0;
       const trackKind = { "leave.requested": "l", "leave.extension": "e", "application.submitted": "a", "qualification.submitted": "q" }[item.type];
       const trackKey = trackKind && typeof item.payload.id === "string" && /^[0-9a-f-]{36}$/.test(item.payload.id) ? `msg-${trackKind}-${item.payload.id}` : void 0;
@@ -87229,17 +87386,18 @@ function ghostPingText(m, targets) {
 Da war jemand sehr b\xF6se ! <@${m.authorId}> hat ${targets.length > 1 ? "euch" : "dich"} geghost-pinged mit dieser Nachricht !: "${quoted}"`;
 }
 function createGhostPing(api2, actions, log = console.error) {
-  let cached;
-  const enabled = async () => {
+  const cache = /* @__PURE__ */ new Map();
+  const enabled = async (guildId) => {
+    const cached = cache.get(guildId);
     if (cached && Date.now() - cached.at < CACHE_MS2) return cached.enabled;
-    const r = await api2.service("GET", "/bot/ghost-ping").catch(() => ({ enabled: cached?.enabled ?? true }));
-    cached = { at: Date.now(), enabled: r.enabled !== false };
-    return cached.enabled;
+    const r = await api2.service("GET", `/bot/ghost-ping?guildId=${encodeURIComponent(guildId)}`).catch(() => ({ enabled: cached?.enabled ?? true }));
+    cache.set(guildId, { at: Date.now(), enabled: r.enabled !== false });
+    return r.enabled !== false;
   };
   return {
     async deleted(m) {
       const targets = ghostPingTargets(m);
-      if (!targets.length || !await enabled()) return;
+      if (!targets.length || !await enabled(m.guildId)) return;
       await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`ghost ping message failed: ${e instanceof Error ? e.message : e}`));
     }
   };
@@ -87671,7 +87829,8 @@ var intents = INTENT_STEPS[0];
 var client = makeClient(intents);
 var tickets = createTicketRuntime(() => client, api);
 var toEmbed = (e) => {
-  const b2 = new import_discord8.EmbedBuilder().setTitle(e.title);
+  const b2 = new import_discord8.EmbedBuilder();
+  if (e.title) b2.setTitle(e.title);
   if (e.description) b2.setDescription(e.description);
   if (e.color !== void 0) b2.setColor(e.color);
   if (e.fields?.length) b2.addFields(e.fields.map((f2) => ({ name: f2.name, value: f2.value, inline: f2.inline ?? false })));
@@ -87716,7 +87875,8 @@ ${f2.value}`));
 ];
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
 var toModal2 = (m) => modalOf(m);
-var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] } };
+var filesOf = (r) => r.files?.length ? { files: r.files.map((f2) => ({ attachment: Buffer.from(f2.data, "utf8"), name: f2.name })) } : {};
+var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] }, ...filesOf(r) };
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
@@ -88139,6 +88299,7 @@ function baseCtx(i) {
     memberJoinedAt: joinedAtOf2(i.member),
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
+    ...i.guild ? { guildName: i.guild.name, ...i.guild.iconURL({ size: 64 }) ? { guildIcon: i.guild.iconURL({ size: 64 }) } : {} } : {},
     isGuildAdmin: !!perms && (perms.has(import_discord8.PermissionFlagsBits.ManageGuild) || perms.has(import_discord8.PermissionFlagsBits.Administrator)),
     config: () => api.service("GET", "/bot/config"),
     refreshLive: (kind2, o) => live.refresh(kind2, o),
@@ -88147,6 +88308,7 @@ function baseCtx(i) {
     applyEffects: (effects) => tickets.apply(effects),
     listCategories: (guildId) => tickets.listCategories(guildId),
     userNameOf: (id3) => client.users.fetch(id3).then((u) => u.username, () => null),
+    userAvatarOf: (id3) => client.users.fetch(id3).then((u) => u.displayAvatarURL({ size: 64 }), () => null),
     voiceSupport,
     runtime,
     botProfile,
@@ -88264,7 +88426,7 @@ async function handleComponent(i) {
   if (hit.def.panel?.(hit.args) && (i.isButton() || i.isAnySelectMenu() || i.isModalSubmit() && i.isFromMessage())) {
     await i.deferUpdate();
     const fields2 = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
-    const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...fields2 ? { fields: fields2 } : {}, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
+    const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...fields2 ? { fields: fields2 } : {}, ...i.isModalSubmit() ? { modal: modalValuesOf(i) } : {}, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     const p = replyPayload(reply2);
     if (reply2.panel) await i.editReply(p);
     else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
@@ -88274,7 +88436,10 @@ async function handleComponent(i) {
     await i.deferUpdate();
     const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
     const p = replyPayload(reply2);
-    if (reply2.embeds?.[0]?.box) await i.editReply(p);
+    if (reply2.panel && !reply2.embeds?.[0]?.box && i.message.flags.has(import_discord8.MessageFlags.IsComponentsV2)) {
+      await i.message.delete().catch(() => void 0);
+      await i.followUp(p);
+    } else if (reply2.embeds?.[0]?.box || reply2.panel) await i.editReply(p);
     else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
     return;
   }

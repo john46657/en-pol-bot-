@@ -4,6 +4,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { ShiftsService } from './shifts';
+/** Schicht-ID wie bei Trident: Discord-Snowflake aus dem Beginn der Schicht (Zeitstempel + Zufall), als Text. */
+export declare const newShiftId: (at: Date) => string;
+/** Eckdaten einer Schicht für das Shift-Log: ID, Beginn, Zeit im Dienst und in der Pause (Sekunden). */
+export interface ShiftSummary {
+    shiftId: string;
+    startedAt: Date;
+    workSeconds: number;
+    breakSeconds: number;
+}
 /** Dienststatus wird ausschließlich explizit gesetzt – Online-Status ist niemals Dienststatus. */
 export declare class DutyService {
     private readonly prisma;
@@ -25,6 +34,7 @@ export declare class DutyService {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;
@@ -70,6 +80,7 @@ export declare class DutyService {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;
@@ -83,6 +94,7 @@ export declare class DutyService {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;
@@ -105,22 +117,74 @@ export declare class DutyService {
             sessions: number;
         }[];
     }>;
-    /** Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`): Anzahl und Zeit im Dienst ohne Pausen. */
+    /**
+     * Gesamtwerte aller Schichten eines Benutzers (Discord: `/shift manage`, `/shift admin`): Anzahl und Zeit im Dienst ohne Pausen,
+     * dazu die letzte Schicht (Status, Zeit, Schichtart, ID).
+     */
     shiftStats(userId: string): Promise<{
         count: number;
         minutes: number;
+        seconds: number;
+        last: {
+            shiftId: string | null;
+            status: string;
+            seconds: number;
+            shiftType: string | null;
+        } | null;
     }>;
-    /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
-    leaderboard(days: number, me: string): Promise<{
-        days: number;
+    /** Sitzungen einer Schicht (im Bereich des Servers). */
+    private shiftParts;
+    private static workMs;
+    /**
+     * Schichtleitung (`/shift admin` → Modify Shift): Zeit im Dienst einer Schicht ändern. Mehr Zeit → Beginn der Schicht früher;
+     * weniger Zeit → Dienst-Sitzungen von hinten kürzen (Ende früher, bei laufender Sitzung Beginn später). Pausen bleiben, wie sie sind.
+     */
+    modifyShift(actor: Actor, shiftId: string, action: 'add' | 'remove' | 'set', seconds: number): Promise<{
+        shiftId: string;
+        userId: string;
+        seconds: number;
+    }>;
+    /** Schichtleitung: eine beendete Schicht löschen (laufende erst beenden). */
+    deleteShift(actor: Actor, shiftId: string): Promise<{
+        shiftId: string;
+        deleted: boolean;
+    }>;
+    /** Schichtleitung (Clear User Shifts): alle beendeten Schichten eines Mitglieds löschen, optional nur eine Schichtart. Die laufende bleibt. */
+    clearShifts(actor: Actor, userId: string, shiftType?: string): Promise<{
+        deleted: number;
+    }>;
+    /** Discord-IDs verknüpfter Benutzer (für @Erwähnungen in Discord). */
+    private discordIds;
+    /**
+     * Rangliste (Discord: `/shift leaderboard`, wie Trident): Zeit im Dienst ohne Pausen in Sekunden, Anzahl Schichten.
+     * `days` = null → alle Zeiten; mit `shiftType` nur Sitzungen dieser Schichtart.
+     */
+    leaderboard(days: number | null, me: string, shiftType?: string): Promise<{
+        days: number | null;
+        shiftType: string | null;
         me: string;
         users: {
             userId: string;
             name: string;
             callsign: string | null;
+            discordId: string | null;
+            shifts: number;
+            seconds: number;
             minutes: number;
         }[];
     }>;
+    /** Laufende Schichten (Discord: `/shift active`): Beginn der Schicht, Zeit im Dienst ohne Pausen, Status, Schichtart. */
+    activeShifts(): Promise<{
+        userId: string;
+        name: string;
+        callsign: string | null;
+        discordId: string | null;
+        status: string;
+        shiftId: string | null;
+        shiftType: string | null;
+        startedAt: Date;
+        seconds: number;
+    }[]>;
     /**
      * Schicht-Logs: zusammenhängende Dienst-Sitzungen (Im Dienst ↔ Pause ↔ Schichtwechsel) bis „Außer Dienst“ ergeben eine Schicht.
      * Je Schicht: wer, Schichtart, Beginn/Ende, Dauer, Pausen und wer sie gestartet/beendet hat (aus dem Audit-Log).
@@ -138,6 +202,7 @@ export declare class DutyService {
     } | {
         items: {
             id: string;
+            shiftId: string | null;
             userId: string;
             name: string;
             rank: string | null;
@@ -151,6 +216,7 @@ export declare class DutyService {
             minutes: number;
             breakMinutes: number;
             breaks: number;
+            seconds: number;
             startedBy: string | null;
             endedBy: string | null;
         }[];

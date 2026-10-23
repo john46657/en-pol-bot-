@@ -377,8 +377,10 @@ export declare class BotController {
         username: string;
     }>;
     config(): Promise<import("./discord.service").DiscordChannels>;
-    /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot); ohne Eintrag an. */
-    ghostPing(): Promise<{
+    /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot, je Server gespeichert); ohne Eintrag an. */
+    ghostPing(q: {
+        guildId?: string;
+    }): Promise<{
         enabled: boolean;
     }>;
     guilds(b: z.infer<typeof guildsBody>): Promise<void>;
