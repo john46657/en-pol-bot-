@@ -324,6 +324,8 @@ function outboxButtons(type, p) {
         { id: `quali:reason:${kind}:${id}:ACCEPTED`, label: 'Annehmen mit Grund', style: 'success' },
         { id: `quali:reason:${kind}:${id}:REJECTED`, label: 'Ablehnen mit Grund', style: 'danger' },
         ...(discordId ? [{ id: `quali:history:${discordId}`, label: 'Verlauf', style: 'primary' }, { id: `quali:ticket:${kind}:${id}`, label: 'Ticket mit Bewerber öffnen', emoji: '🎫', style: 'secondary' }] : []),
+        // KI-Bewerbungsprüfung (nur wenn auf dem Server ein KI-Schlüssel hinterlegt ist); Ergebnis nur privat für den Prüfer
+        ...(p.aiReview === true ? [{ id: `quali:ai:${kind}:${id}`, label: 'KI-Prüfung', emoji: '🤖', style: 'secondary' }] : []),
         ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
     ];
 }

@@ -34,6 +34,14 @@ services:
       WEB_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
       STORAGE_DIR: /app/uploads
       BOT_API_TOKEN: ${BOT_API_TOKEN:-}
+      # KI-Bewerbungsprüfung (optional, leer = aus); Schlüssel nur in .env auf dem Server
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      AI_REVIEW_DAILY_LIMIT: ${AI_REVIEW_DAILY_LIMIT:-}
+      AI_REVIEW_MAX_CONCURRENT: ${AI_REVIEW_MAX_CONCURRENT:-}
+      AI_REVIEW_TIMEOUT_MS: ${AI_REVIEW_TIMEOUT_MS:-}
+      AI_REVIEW_MAX_RETRIES: ${AI_REVIEW_MAX_RETRIES:-}
+      AI_REVIEW_MAX_INPUT_CHARS: ${AI_REVIEW_MAX_INPUT_CHARS:-}
     volumes:
       - uploads:/app/uploads
 

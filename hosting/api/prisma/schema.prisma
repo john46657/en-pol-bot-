@@ -700,6 +700,37 @@ model Application {
   @@index([status])
 }
 
+/// KI-Bewerbungsprüfung (Gemini o. Ä.): je Analyse eine Zeile, eindeutig der Bewerbung zugeordnet. Nur Entscheidungshilfe –
+/// ändert nie den Status der Bewerbung. Dashboard und Discord lesen dieselben Zeilen.
+model ApplicationAiReview {
+  id              String    @id @default(uuid()) @db.Uuid
+  /// POLICE (Application) | QUALIFICATION (QualificationApplication)
+  kind            String
+  applicationId   String    @db.Uuid
+  guildId         String?
+  /// RUNNING | DONE | FAILED
+  status          String    @default("RUNNING")
+  /// Fingerabdruck der übermittelten Fragen/Antworten/Regeln – anders als heute = Ergebnis evtl. veraltet
+  inputHash       String
+  provider        String
+  model           String?
+  /// geprüftes Ergebnis (siehe aiReviewResultSchema), nur bei DONE
+  result          Json?
+  /// verständliche Fehlermeldung (ohne Bewerbungstext, ohne Schlüssel)
+  error           String?
+  /// Eingabe wurde wegen der Länge gekürzt
+  truncated       Boolean   @default(false)
+  requestedById   String?   @db.Uuid
+  requestedByName String?
+  /// WEB (Dashboard) | DISCORD (Button)
+  via             String    @default("WEB")
+  createdAt       DateTime  @default(now())
+  finishedAt      DateTime?
+
+  @@index([kind, applicationId, createdAt])
+  @@index([createdAt])
+}
+
 /// Angefangene, noch nicht eingereichte Bewerbung (Fragen per DM oder Link zum Web-Formular) – Anzeige „in Bearbeitung“ im Dashboard
 model ApplicationProgress {
   id          String   @id @default(uuid()) @db.Uuid

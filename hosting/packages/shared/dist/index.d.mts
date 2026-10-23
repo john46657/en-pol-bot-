@@ -1621,8 +1621,12 @@ declare const reportTemplateSchema: z.ZodObject<{
 type ReportTemplate = z.infer<typeof reportTemplateSchema>;
 type ReportField = z.infer<typeof reportFieldSchema>;
 declare const PERIOD_LABEL: Record<ReportTemplate['period'], string>;
-/** Beginn des Zeitraums (Europe/Berlin-nah: lokale Mitternacht des Servers; Woche ab Montag). */
-declare function periodStart(period: ReportTemplate['period'], d?: Date): Date;
+/**
+ * Beginn des Zeitraums als UTC-Mitternacht des Kalendertags in Europe/Berlin (Woche ab Montag).
+ * Früher galt der UTC-Kalendertag – ein Bericht montags um 00:30 deutscher Zeit landete so in der Vorwoche
+ * (und überschrieb dort bei „ein Bericht je Zeitraum“ den vorhandenen). Das Speicherformat bleibt gleich.
+ */
+declare function periodStart(period: ReportTemplate['period'], d?: Date, timeZone?: string): Date;
 /** ISO-Kalenderwoche */
 declare function isoWeek(d: Date): number;
 declare function periodLabel(period: ReportTemplate['period'], start: Date | string): string;
@@ -5520,4 +5524,302 @@ declare function slaState(t: SlaInput, now?: Date): {
     resolveOverdue: boolean;
 };
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseTicketRef, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketNumber, ticketRef, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+/**
+ * KI-Bewerbungsprüfung (echte KI, z. B. Google Gemini): bewertet eine vorhandene Bewerbung anhand der tatsächlich gestellten
+ * Fragen und der im Dashboard hinterlegten RP-Regeln/Auswahlkriterien. Nur Entscheidungshilfe – die KI nimmt nie an, lehnt
+ * nie ab und ändert keinen Status. Hier liegt alles, was API, Bot und Dashboard gemeinsam brauchen: Kriterien, Prompt,
+ * Ergebnis-Schema mit strenger Prüfung und das Entfernen personenbezogener Angaben vor dem Versand.
+ */
+/** Die zehn Prüfkriterien (Reihenfolge = Anzeige). */
+declare const AI_REVIEW_CRITERIA: readonly [{
+    readonly key: "vollstaendigkeit";
+    readonly label: "Vollständigkeit der Bewerbung";
+}, {
+    readonly key: "regelverstaendnis";
+    readonly label: "Verständnis der Roleplay-Regeln";
+}, {
+    readonly key: "antwortqualitaet";
+    readonly label: "Qualität und Nachvollziehbarkeit der Antworten";
+}, {
+    readonly key: "situationsverhalten";
+    readonly label: "Verhalten in beschriebenen Situationen";
+}, {
+    readonly key: "dienstverstaendnis";
+    readonly label: "Verständnis der Aufgaben und Verantwortung im Polizeidienst";
+}, {
+    readonly key: "widersprueche";
+    readonly label: "Widersprüche zwischen Antworten";
+}, {
+    readonly key: "unklare_angaben";
+    readonly label: "Fehlende oder unklare Angaben";
+}, {
+    readonly key: "kommunikation";
+    readonly label: "Verständlichkeit der Kommunikation";
+}, {
+    readonly key: "rueckfragen";
+    readonly label: "Sinnvolle Rückfragen für ein Bewerbungsgespräch";
+}, {
+    readonly key: "auswahlkriterien";
+    readonly label: "Übereinstimmung mit den konfigurierten Auswahlkriterien";
+}];
+type AiReviewCriterion = (typeof AI_REVIEW_CRITERIA)[number]['key'];
+declare const AI_REVIEW_RATINGS: readonly ["gut", "ausreichend", "mangelhaft", "nicht_beurteilbar"];
+type AiReviewRating = (typeof AI_REVIEW_RATINGS)[number];
+declare const AI_REVIEW_RATING_LABEL: Record<AiReviewRating, string>;
+declare const AI_REVIEW_OVERALL: readonly ["stark", "solide", "schwach", "nicht_beurteilbar"];
+type AiReviewOverall = (typeof AI_REVIEW_OVERALL)[number];
+declare const AI_REVIEW_OVERALL_LABEL: Record<AiReviewOverall, string>;
+/** Empfehlung für den nächsten Prüfschritt – nie eine Entscheidung. */
+declare const AI_REVIEW_RECOMMENDATIONS: readonly ["geeignet", "rueckfragen_noetig", "manuelle_pruefung"];
+type AiReviewRecommendation = (typeof AI_REVIEW_RECOMMENDATIONS)[number];
+declare const AI_REVIEW_RECOMMENDATION_LABEL: Record<AiReviewRecommendation, string>;
+declare const AI_REVIEW_DISCLAIMER = "KI-Entscheidungshilfe \u2013 kein Urteil. Der Richtwert ist keine objektive Bewertung und keine Erfolgswahrscheinlichkeit; die Entscheidung trifft immer ein Mensch.";
+/** Geprüftes Ergebnis, wie es gespeichert und angezeigt wird. */
+declare const aiReviewResultSchema: z.ZodObject<{
+    gesamt: z.ZodObject<{
+        einstufung: z.ZodEnum<["stark", "solide", "schwach", "nicht_beurteilbar"]>;
+        /** Richtwert 0–10; null = nicht beurteilbar */
+        punkte: z.ZodEffects<z.ZodNullable<z.ZodNumber>, number | null, unknown>;
+        begruendung: z.ZodEffects<z.ZodString, string, unknown>;
+    }, "strip", z.ZodTypeAny, {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte: number | null;
+        begruendung: string;
+    }, {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte?: unknown;
+        begruendung?: unknown;
+    }>;
+    kriterien: z.ZodArray<z.ZodObject<{
+        kriterium: z.ZodEnum<["kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien", ...("kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien")[]]>;
+        bewertung: z.ZodEnum<["gut", "ausreichend", "mangelhaft", "nicht_beurteilbar"]>;
+        begruendung: z.ZodEffects<z.ZodString, string, unknown>;
+    }, "strip", z.ZodTypeAny, {
+        begruendung: string;
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+    }, {
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+        begruendung?: unknown;
+    }>, "many">;
+    staerken: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    schwaechen: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    fehlende_angaben: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    widersprueche: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    rueckfragen: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    unsicherheiten: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    empfehlung: z.ZodEnum<["geeignet", "rueckfragen_noetig", "manuelle_pruefung"]>;
+    empfehlung_begruendung: z.ZodEffects<z.ZodString, string, unknown>;
+}, "strip", z.ZodTypeAny, {
+    widersprueche: string[];
+    rueckfragen: string[];
+    gesamt: {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte: number | null;
+        begruendung: string;
+    };
+    kriterien: {
+        begruendung: string;
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+    }[];
+    staerken: string[];
+    schwaechen: string[];
+    fehlende_angaben: string[];
+    unsicherheiten: string[];
+    empfehlung: "geeignet" | "rueckfragen_noetig" | "manuelle_pruefung";
+    empfehlung_begruendung: string;
+}, {
+    gesamt: {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte?: unknown;
+        begruendung?: unknown;
+    };
+    kriterien: {
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+        begruendung?: unknown;
+    }[];
+    empfehlung: "geeignet" | "rueckfragen_noetig" | "manuelle_pruefung";
+    widersprueche?: unknown;
+    rueckfragen?: unknown;
+    staerken?: unknown;
+    schwaechen?: unknown;
+    fehlende_angaben?: unknown;
+    unsicherheiten?: unknown;
+    empfehlung_begruendung?: unknown;
+}>;
+type AiReviewResult = z.infer<typeof aiReviewResultSchema>;
+/**
+ * Antworttext der KI prüfen. Ungültiges JSON, fehlende Gesamtbewertung oder Empfehlung → Fehler (nichts wird gespeichert).
+ * Kriterien, die fehlen oder unbekannt sind, werden ausdrücklich als „nicht beurteilbar“ ergänzt bzw. verworfen.
+ */
+declare function parseAiReview(raw: string): {
+    ok: true;
+    result: AiReviewResult;
+} | {
+    ok: false;
+    error: string;
+};
+declare const aiReviewSettingsSchema: z.ZodObject<{
+    /** KI-Prüfung auf diesem Server anbieten */
+    enabled: z.ZodDefault<z.ZodBoolean>;
+    /** Geltende RP-Regeln (Auszug) – ohne Regeln bewertet die KI das Regelverständnis ausdrücklich als „nicht beurteilbar“ */
+    rules: z.ZodDefault<z.ZodString>;
+    /** Auswahlkriterien des Teams – ohne Kriterien „nicht beurteilbar“ */
+    criteria: z.ZodDefault<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    enabled: boolean;
+    rules: string;
+    criteria: string;
+}, {
+    enabled?: boolean | undefined;
+    rules?: string | undefined;
+    criteria?: string | undefined;
+}>;
+type AiReviewSettings = z.infer<typeof aiReviewSettingsSchema>;
+/** Entfernt Kontaktdaten und Kennungen aus Freitext (E-Mail, Telefon, Links, Discord-IDs/Erwähnungen, IP-Adressen). */
+declare function redactPersonalData(s: string): string;
+interface AiReviewInput {
+    /** Name der Bewerbung (z. B. „EN Polizei“, „SEK“) */
+    typeName: string;
+    answers: {
+        question: string;
+        answer: string;
+    }[];
+    settings?: Partial<AiReviewSettings>;
+}
+interface AiReviewPrompt {
+    system: string;
+    user: string;
+    chars: number;
+    truncated: boolean;
+    omitted: number;
+}
+declare const AI_REVIEW_SYSTEM_PROMPT: string;
+/** Baut die Anfrage: nur Fragen + Antworten (ohne Namen/IDs), Kontaktdaten entfernt, Länge begrenzt. */
+declare function buildAiReviewPrompt(input: AiReviewInput, limits?: {
+    maxChars?: number;
+    maxAnswerChars?: number;
+}): AiReviewPrompt;
+/**
+ * Stabiler Text, aus dem der „Fingerabdruck“ einer Bewerbung (Hash) berechnet wird: ändert sich eine Antwort oder eine
+ * hinterlegte Regel, gilt ein gespeichertes Ergebnis als möglicherweise veraltet.
+ */
+declare function aiReviewFingerprintSource(input: AiReviewInput): string;
+/** Antwort-Schema für Gemini (`generationConfig.responseSchema`, OpenAPI-Teilmenge). Geprüft wird trotzdem serverseitig. */
+declare const AI_REVIEW_RESPONSE_SCHEMA: {
+    readonly type: "OBJECT";
+    readonly properties: {
+        readonly gesamt: {
+            readonly type: "OBJECT";
+            readonly properties: {
+                readonly einstufung: {
+                    readonly type: "STRING";
+                    readonly enum: readonly ["stark", "solide", "schwach", "nicht_beurteilbar"];
+                };
+                readonly punkte: {
+                    readonly type: "INTEGER";
+                    readonly nullable: true;
+                };
+                readonly begruendung: {
+                    readonly type: "STRING";
+                };
+            };
+            readonly required: readonly ["einstufung", "punkte", "begruendung"];
+        };
+        readonly kriterien: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "OBJECT";
+                readonly properties: {
+                    readonly kriterium: {
+                        readonly type: "STRING";
+                        readonly enum: readonly ["kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien", ...("kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien")[]];
+                    };
+                    readonly bewertung: {
+                        readonly type: "STRING";
+                        readonly enum: readonly ["gut", "ausreichend", "mangelhaft", "nicht_beurteilbar"];
+                    };
+                    readonly begruendung: {
+                        readonly type: "STRING";
+                    };
+                };
+                readonly required: readonly ["kriterium", "bewertung", "begruendung"];
+            };
+        };
+        readonly staerken: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly schwaechen: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly fehlende_angaben: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly widersprueche: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly rueckfragen: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly unsicherheiten: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly empfehlung: {
+            readonly type: "STRING";
+            readonly enum: readonly ["geeignet", "rueckfragen_noetig", "manuelle_pruefung"];
+        };
+        readonly empfehlung_begruendung: {
+            readonly type: "STRING";
+        };
+    };
+    readonly required: readonly ["gesamt", "kriterien", "staerken", "schwaechen", "fehlende_angaben", "widersprueche", "rueckfragen", "unsicherheiten", "empfehlung", "empfehlung_begruendung"];
+};
+type AiReviewStatus = 'RUNNING' | 'DONE' | 'FAILED';
+interface AiReviewView {
+    id: string;
+    status: AiReviewStatus;
+    result: AiReviewResult | null;
+    error: string | null;
+    provider: string;
+    model: string | null;
+    requestedByName: string | null;
+    via: 'WEB' | 'DISCORD';
+    createdAt: string;
+    finishedAt: string | null;
+    truncated: boolean;
+}
+interface AiReviewState {
+    /** KI-Schlüssel auf dem Server hinterlegt und Prüfung auf diesem Server eingeschaltet */
+    available: boolean;
+    /** Grund, warum nicht verfügbar */
+    reason: string | null;
+    /** neuestes Ergebnis (laufend, fertig oder fehlgeschlagen) */
+    review: AiReviewView | null;
+    /** letztes erfolgreiches Ergebnis (bleibt sichtbar, wenn eine neue Analyse fehlschlägt) */
+    lastDone: AiReviewView | null;
+    /** Bewerbung oder Regeln seit dem letzten erfolgreichen Ergebnis geändert */
+    stale: boolean;
+}
+
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, AI_REVIEW_CRITERIA, AI_REVIEW_DISCLAIMER, AI_REVIEW_OVERALL, AI_REVIEW_OVERALL_LABEL, AI_REVIEW_RATINGS, AI_REVIEW_RATING_LABEL, AI_REVIEW_RECOMMENDATIONS, AI_REVIEW_RECOMMENDATION_LABEL, AI_REVIEW_RESPONSE_SCHEMA, AI_REVIEW_SYSTEM_PROMPT, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AiReviewCriterion, type AiReviewInput, type AiReviewOverall, type AiReviewPrompt, type AiReviewRating, type AiReviewRecommendation, type AiReviewResult, type AiReviewSettings, type AiReviewState, type AiReviewStatus, type AiReviewView, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, aiReviewFingerprintSource, aiReviewResultSchema, aiReviewSettingsSchema, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, buildAiReviewPrompt, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseAiReview, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseTicketRef, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, redactPersonalData, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketNumber, ticketRef, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };

@@ -2,12 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TRAINING_INTERACTION = exports.TRAINING_COMMANDS = void 0;
 exports.parseGermanDate = parseGermanDate;
+exports.checkTrainingTime = checkTrainingTime;
 const format_1 = require("../format");
 const errors_1 = require("./errors");
 /** „08.10.2026 18:30“ (deutsche Zeit) → ISO. Sommer-/Winterzeit über Intl, unabhängig von der Zeitzone des Bot-Servers. */
 function parseGermanDate(text, now = new Date()) {
     const m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?\s*(?:,?\s*(?:um\s*)?(\d{1,2})[:.](\d{2}))?\s*(?:uhr)?\s*$/i.exec(text);
     if (!m)
+        return null;
+    if (m[3] && m[3].length === 3)
         return null;
     const year = m[3] ? (m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])) : now.getFullYear();
     const [d, mo, h, mi] = [Number(m[1]), Number(m[2]), Number(m[4] ?? 18), Number(m[5] ?? 0)];
@@ -17,7 +20,29 @@ function parseGermanDate(text, now = new Date()) {
     // Versatz von Europe/Berlin zu diesem Zeitpunkt
     const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
     const asBerlin = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
-    return new Date(guess - (asBerlin - guess)).toISOString();
+    const iso = new Date(guess - (asBerlin - guess)).toISOString();
+    // ohne Jahr: ein schon vergangener Tag meint das nächste Jahr (im Dezember „05.01.“ → Januar)
+    if (!m[3] && Date.parse(iso) < now.getTime() - 86_400_000)
+        return parseGermanDate(`${d}.${mo}.${year + 1} ${h}:${String(mi).padStart(2, '0')}`, now);
+    return iso;
+}
+/** Zeitpunkt für einen Ausbildungstermin prüfen: Format, gültiges Datum, nicht in der Vergangenheit, höchstens 1 Jahr im Voraus. */
+function checkTrainingTime(text, now = new Date()) {
+    const t = text.trim();
+    if (!t)
+        return { error: 'Bitte angeben, wann die Ausbildung stattfindet – z. B. `08.10.2026 18:30`.' };
+    const startsAt = parseGermanDate(t, now);
+    if (!startsAt) {
+        return { error: /^\s*\d{1,2}\.\d{1,2}\./.test(t)
+                ? `„${t.slice(0, 20)}“ ist kein gültiges Datum bzw. keine gültige Uhrzeit (Tag, Monat und Uhrzeit 00:00–23:59 prüfen). Beispiel: \`08.10.2026 18:30\``
+                : `Den Zeitpunkt „${t.slice(0, 20)}“ verstehe ich nicht. Bitte so angeben: \`TT.MM.JJJJ HH:MM\`, z. B. \`08.10.2026 18:30\` (deutsche Zeit).` };
+    }
+    const at = Date.parse(startsAt);
+    if (at < now.getTime())
+        return { error: `Der Zeitpunkt <t:${Math.floor(at / 1000)}:F> liegt in der Vergangenheit – bitte einen zukünftigen Termin angeben.` };
+    if (at > now.getTime() + 366 * 86_400_000)
+        return { error: 'Der Termin liegt mehr als ein Jahr in der Zukunft – bitte das Jahr prüfen.' };
+    return { startsAt };
 }
 /** /ausbildung: Termin ansetzen (Formular; Ankündigung mit Anmeldung + Thread im aktuellen Kanal) oder anstehende Termine ansehen. */
 exports.TRAINING_COMMANDS = [{
@@ -59,11 +84,15 @@ exports.TRAINING_INTERACTION = {
             }
             if (action === 'new') {
                 const f = c.fields ?? {};
-                const startsAt = parseGermanDate(f.when ?? '');
-                if (!startsAt)
-                    return (0, format_1.errorReply)('Zeitpunkt bitte so angeben: 08.10.2026 18:30');
-                const s = await c.api.asUser(c.discordId, 'POST', '/hr/training-sessions', { title: (f.title ?? '').trim(), startsAt, forRank: f.rank || null, duration: f.duration || null, notes: f.notes || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
-                return (0, format_1.okReply)(`Ausbildung angesetzt (**${s.number}**) – die Ankündigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter „Ausbildungen & Prüfungen“.`);
+                const title = (f.title ?? '').trim();
+                if (title.length < 2)
+                    return (0, format_1.errorReply)('Bitte einen Titel mit mindestens 2 Zeichen angeben, z. B. „Grundausbildung“.');
+                const when = checkTrainingTime(f.when ?? '');
+                if ('error' in when)
+                    return (0, format_1.errorReply)(when.error);
+                const unix = Math.floor(Date.parse(when.startsAt) / 1000);
+                const s = await c.api.asUser(c.discordId, 'POST', '/hr/training-sessions', { title, startsAt: when.startsAt, forRank: f.rank?.trim() || null, duration: f.duration?.trim() || null, notes: f.notes?.trim() || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
+                return (0, format_1.okReply)(`Ausbildung **${(0, format_1.plain)(title)}** angesetzt (**${s.number}**) für <t:${unix}:F> (<t:${unix}:R>)${f.duration?.trim() ? ` · Dauer: ${(0, format_1.plain)(f.duration.trim())}` : ''} – die Ankündigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter „Ausbildungen & Prüfungen“.`);
             }
             return (0, format_1.errorReply)('Unbekannte Aktion.');
         }

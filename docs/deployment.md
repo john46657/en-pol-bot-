@@ -52,7 +52,7 @@ Danach `https://nexus.deine-domain.de` öffnen → als `admin` anmelden.
 |---|---|
 | Status | `docker compose ps` |
 | Logs | `docker compose logs -f api` (oder `web`, `db`) |
-| Update einspielen | `./deploy/update.sh` (Git-Pull, Neubau, Migrationen laufen automatisch) |
+| Update einspielen | `./deploy/update.sh` (sichert zuerst die Datenbank nach `backups/vor-update/`, dann Git-Pull, Neubau, Migrationen laufen automatisch) |
 | Neustart | `docker compose restart api` |
 | Stoppen / Starten | `docker compose down` / `docker compose up -d` |
 
@@ -64,7 +64,14 @@ Kostenlos z. B. mit UptimeRobot: HTTP-Monitor auf `https://nexus.deine-domain.de
 ### Backups
 - **Datenbank:** täglich automatisch nach `./backups/` (14 Tage, 8 Wochen, 6 Monate). **Kopiere die Backups regelmäßig vom Server weg** (ein Backup auf demselben Server schützt nicht vor Serverausfall), z. B. per `rsync` auf deinen Mac oder die Backup-Funktion deines Hosters (Snapshots dazubuchen).
 - **Hochgeladene Dateien:** `docker run --rm -v enrp-nexus_uploads:/d -v $PWD:/b alpine tar czf /b/uploads.tgz -C /d .`
-- **Wiederherstellen:** `./deploy/restore.sh backups/daily/enrp-DATUM.sql.gz` (fragt vorher nach Bestätigung). Probiere eine Wiederherstellung einmal aus, **bevor** du dich auf die Backups verlässt.
+- **Vor jedem Update:** `./deploy/update.sh` legt automatisch `backups/vor-update/enrp-DATUM.sql.gz` an; schlägt das fehl, bricht das Update ab.
+- **Wiederherstellen:** `./deploy/restore.sh backups/daily/enrp-DATUM.sql.gz` (oder eine Datei aus `backups/vor-update/`) (fragt vorher nach Bestätigung). Probiere eine Wiederherstellung einmal aus, **bevor** du dich auf die Backups verlässt.
+
+### KI-Bewerbungsprüfung (optional, Google Gemini)
+1. In [Google AI Studio](https://aistudio.google.com) mit einem Google-Konto anmelden → **Get API key** → Schlüssel erstellen. Für den Test reicht die kostenlose Stufe (kein Abrechnungskonto verknüpfen, dann fallen keine Kosten an).
+2. Auf dem Server im Projektordner `nano .env` und eine Zeile `GEMINI_API_KEY=…` ergänzen (optional `GEMINI_MODEL=…`, Grenzen siehe [applications.md](applications.md#ki-bewerbungsprüfung-google-gemini)). Die `.env` ist per `.gitignore` vom Repository ausgeschlossen – `chmod 600 .env`.
+3. `docker compose up -d api` (übernimmt die neue Umgebung; Daten bleiben erhalten).
+4. Prüfen: Dashboard → *Bewerbungen → Einrichtung → KI-Bewerbungsprüfung* zeigt „✅ KI-Schlüssel hinterlegt“, in Discord `/system integrations`.
 
 ### Aufbewahrung
 Die API räumt täglich alte Sessions, Login-Historie und gelesene Benachrichtigungen auf (einstellbar unter *Admin → Settings*). **Audit-Logs werden nie gelöscht.**

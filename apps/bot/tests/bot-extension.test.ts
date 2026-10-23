@@ -436,12 +436,13 @@ describe('Pflichttest 6: fehlende Discord-Berechtigungen werden verständlich ge
     expect(r.ephemeral).toBe(true);
   });
   it('/system status und integrations', async () => {
-    const { api } = fakeApi({ 'GET /bot/servers/': { disabled: ['sek'] } });
+    const { api } = fakeApi({ 'GET /bot/servers/': { disabled: ['sek'] }, 'GET /bot/ai-review/status': { configured: false, enabled: true, model: 'gemini-3.8-flash', dailyLimit: 50, usedToday: 0 } });
     const { runtime } = fakeRuntime(api, { [ADMIN]: member(ADMIN, { manageGuild: true }) });
     expect(text(await byName('system')!.run(ctx(runtime, api, ADMIN, G1, { opts: { _sub: 'status' } })))).toContain('verbunden');
     const i = text(await byName('system')!.run(ctx(runtime, api, ADMIN, G1, { opts: { _sub: 'integrations' } })));
     expect(i).toContain('Roblox');
     expect(i).toContain('ausgeschaltet: sek');
+    expect(i).toContain('kein GEMINI_API_KEY'); // nur ob eingerichtet – nie der Schlüssel
   });
   it('Wiederholung nur bei vorübergehenden Fehlern', async () => {
     let n = 0;

@@ -37,6 +37,9 @@ describe('Backups', () => {
     const admin = (await login(app, 'bk_admin')).agent;
     const off = (await login(app, 'bk_off')).agent;
     expect((await off.post('/api/v1/backups/data')).status).toBe(403);
+    // gespeicherte KI-Prüfung (fiktive Bewerbung) gehört zum Backup
+    const app1 = await prisma.application.create({ data: { number: `BK-AI-${Date.now()}`, answers: { motivation: 'fiktiv' }, robloxUsername: 'BkFiktiv' } });
+    const ai = await prisma.applicationAiReview.create({ data: { kind: 'POLICE', applicationId: app1.id, status: 'DONE', inputHash: 'h', provider: 'gemini', model: 'm', result: { empfehlung: 'geeignet' } } });
     const made = await admin.post('/api/v1/backups/data');
     expect(made.status).toBe(201);
     expect(made.body.rows).toBeGreaterThan(0);
@@ -51,6 +54,8 @@ describe('Backups', () => {
     expect(res.status).toBe(200);
     expect(res.body.safety).toMatch(/^vor-wiederherstellung-/);
     expect(await prisma.person.findFirst({ where: { robloxUsername: 'Bk_After_Backup' } })).toBeNull();
+    expect(await prisma.applicationAiReview.findUnique({ where: { id: ai.id } })).toMatchObject({ applicationId: app1.id, status: 'DONE', result: { empfehlung: 'geeignet' } });
+    expect(await prisma.application.findUnique({ where: { id: app1.id } })).not.toBeNull();
     expect((await admin.get('/api/v1/auth/me')).status).toBe(200); // Sitzung bleibt
     // hochgeladene Datei ohne Bestätigung / kaputt
     expect((await admin.post('/api/v1/backups/data-upload/restore').attach('file', Buffer.from('kaputt'), 'x.json.gz').field('confirm', 'WIEDERHERSTELLEN')).status).toBe(400);

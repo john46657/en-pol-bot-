@@ -4,6 +4,7 @@ exports.DUTY_REPORT_INTERACTION = exports.DUTY_REPORT_COMMANDS = void 0;
 const shared_1 = require("@enrp/shared");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
+const api_1 = require("../api");
 const STATUS_DE = { SUBMITTED: '🕓 eingereicht', REVIEWED: '✅ geprüft', RETURNED: '↩️ zur Nachbesserung' };
 /** Filter für `/dienstbericht liste` (wie im Dashboard). */
 const LIST_STATUS = { offen: 'SUBMITTED', zurueckgegeben: 'RETURNED', geprueft: 'REVIEWED', alle: '' };
@@ -15,7 +16,7 @@ const sweep = () => { for (const [k, v] of drafts)
         drafts.delete(k); };
 const PAGE = 5;
 const pages = (t) => Math.max(1, Math.ceil(t.fields.length / PAGE));
-const hint = (f) => (f.type === 'select' && f.options.length ? `z. B. ${f.options.join(' / ')}` : f.type === 'number' ? 'Zahl' : f.placeholder).slice(0, 100);
+const hint = (f) => (f.type === 'select' && f.options.length ? `z. B. ${f.options.join(' / ')}` : f.type === 'number' ? 'Zahl ab 0, z. B. 3' : f.placeholder).slice(0, 100);
 function modal(t, mode, id, page, values) {
     const n = pages(t);
     return {
@@ -188,12 +189,22 @@ exports.DUTY_REPORT_INTERACTION = {
             drafts.set(k, d);
             if (page + 1 < pages(t))
                 return { ephemeral: true, content: `Seite ${page + 1} von ${pages(t)} gespeichert.`, buttons: [{ id: `drep:next:${mode}:${id}:${page + 1}`, label: `Weiter (${page + 2}/${pages(t)})`, emoji: '➡️', style: 'primary' }] };
-            drafts.delete(k);
+            // Entwurf erst nach dem erfolgreichen Speichern verwerfen – bei ungültigen Eingaben (z. B. negative Zahl) bleibt alles erhalten
+            const fix = (e) => {
+                const r = (0, errors_1.mapError)(e);
+                return e instanceof api_1.BotApiError && e.status === 400 ? { ...r, buttons: [{ id: `drep:next:${mode}:${id}:0`, label: 'Eingaben korrigieren', emoji: '✏️', style: 'primary' }] } : r;
+            };
             if (mode === 'e') {
-                const r = await c.api.asUser(c.discordId, 'PATCH', `/duty-reports/${id}`, { values: d.values });
+                const r = await c.api.asUser(c.discordId, 'PATCH', `/duty-reports/${id}`, { values: d.values }).catch((e) => fix(e));
+                if (!('number' in r))
+                    return r;
+                drafts.delete(k);
                 return (0, format_1.okReply)(`Bericht **${r.number}** aktualisiert – auch im Dashboard und in Discord.`);
             }
-            const r = await c.api.asUser(c.discordId, 'POST', '/duty-reports', { templateId: id, values: d.values, source: 'DISCORD', guildId: c.guildId ?? null });
+            const r = await c.api.asUser(c.discordId, 'POST', '/duty-reports', { templateId: id, values: d.values, source: 'DISCORD', guildId: c.guildId ?? null }).catch((e) => fix(e));
+            if (!('number' in r))
+                return r;
+            drafts.delete(k);
             return (0, format_1.okReply)(r.merged ? `Für diesen Zeitraum gab es schon deinen Bericht **${r.number}** – er wurde aktualisiert.` : `Bericht **${r.number}** eingereicht. Du findest ihn auch im Dashboard; mit „Bearbeiten“ kannst du ihn ändern.`);
         }
         catch (e) {
