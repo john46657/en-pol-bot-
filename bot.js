@@ -87225,17 +87225,18 @@ function ghostPingText(m, targets) {
 Da war jemand sehr b\xF6se ! <@${m.authorId}> hat ${targets.length > 1 ? "euch" : "dich"} geghost-pinged mit dieser Nachricht !: "${quoted}"`;
 }
 function createGhostPing(api2, actions, log = console.error) {
-  let cached;
-  const enabled = async () => {
+  const cache = /* @__PURE__ */ new Map();
+  const enabled = async (guildId) => {
+    const cached = cache.get(guildId);
     if (cached && Date.now() - cached.at < CACHE_MS2) return cached.enabled;
-    const r = await api2.service("GET", "/bot/ghost-ping").catch(() => ({ enabled: cached?.enabled ?? true }));
-    cached = { at: Date.now(), enabled: r.enabled !== false };
-    return cached.enabled;
+    const r = await api2.service("GET", `/bot/ghost-ping?guildId=${encodeURIComponent(guildId)}`).catch(() => ({ enabled: cached?.enabled ?? true }));
+    cache.set(guildId, { at: Date.now(), enabled: r.enabled !== false });
+    return r.enabled !== false;
   };
   return {
     async deleted(m) {
       const targets = ghostPingTargets(m);
-      if (!targets.length || !await enabled()) return;
+      if (!targets.length || !await enabled(m.guildId)) return;
       await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`ghost ping message failed: ${e instanceof Error ? e.message : e}`));
     }
   };
