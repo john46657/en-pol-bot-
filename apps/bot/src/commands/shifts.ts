@@ -97,31 +97,47 @@ async function switchTo(c: Ctx, status: 'ON_DUTY' | 'BREAK' | 'OFF_DUTY', type?:
   return manageReply(c, type, notice);
 }
 
+/** Kopfzeile wie bei Trident: Server-Name mit Icon. */
+const serverAuthor = (c: Ctx) => (c.guildName ? { author: { name: clip(c.guildName, 200), ...(c.guildIcon ? { iconUrl: c.guildIcon } : {}) } } : {});
+const who = (u: { discordId: string | null; name: string }) => (u.discordId ? `<@${u.discordId}>` : `**${plain(u.name)}**`);
+
+interface ActiveRow { userId: string; name: string; discordId: string | null; status: string; shiftType: string | null; startedAt: string; seconds: number }
+/** `/shift active` wie Trident: „Active Shifts“ mit Mitglied, Dauer ohne Pausen, Pause und Schichtart. */
 async function active(c: Ctx): Promise<Reply> {
   try {
-    const rows = await c.api.asUser<OverviewRow[]>(c.discordId, 'GET', '/team/overview');
-    const on = rows.filter((r) => r.dutyStatus !== 'OFF_DUTY').sort((a, b) => (a.onDutySince ?? '').localeCompare(b.onDutySince ?? ''));
-    const lines = on.slice(0, 30).map((r) => `${DUTY_DE[r.dutyStatus]?.emoji ?? '•'} **${plain(r.callsign ?? r.name)}**${r.callsign ? ` (${plain(r.name)})` : ''}${r.shiftType ? ` · ${plain(r.shiftType)}` : ''}${r.onDutySince ? ` · seit ${ts(r.onDutySince, 'R')}` : ''}`);
-    const onBreak = on.filter((r) => r.dutyStatus === 'BREAK').length;
-    return { ephemeral: false, embeds: [{ title: `👮 Laufende Schichten (${on.length})`, color: on.length ? COLORS.success : COLORS.neutral,
-      description: clip(lines.length ? `${lines.join('\n')}${on.length > 30 ? `\n… und ${on.length - 30} weitere` : ''}` : 'Gerade ist niemand im Dienst.', 4000),
-      ...(onBreak ? { footer: `${onBreak} davon in der Pause` } : {}) }] };
+    const rows = await c.api.asUser<ActiveRow[]>(c.discordId, 'GET', '/team/active-shifts');
+    const lines = rows.slice(0, 30).map((r, i) => `\`${i + 1}.\` ${who(r)} • ${shiftDuration(r.seconds)}${r.status === 'BREAK' ? ' (On Break)' : ''}${r.shiftType ? ` • ${plain(r.shiftType)}` : ''}`);
+    return { ephemeral: false, embeds: [{ ...serverAuthor(c), title: '🕒 Active Shifts',
+      description: clip(lines.length ? `${lines.join('\n')}${rows.length > 30 ? `\n… and ${rows.length - 30} more` : ''}` : 'There are no active shifts.', 4000) }] };
   } catch (e) { return mapError(e); }
 }
 
-interface BoardRow { userId: string; name: string; callsign: string | null; minutes: number }
-const MEDALS = ['🥇', '🥈', '🥉'];
-/** `/shift leaderboard`: alle nach Zeit im Dienst (ohne Pausen), eigene Platzierung unten. */
+interface BoardRow { userId: string; name: string; callsign: string | null; discordId: string | null; shifts: number; seconds: number }
+interface Board { days: number | null; shiftType: string | null; me: string; users: BoardRow[] }
+const boardPath = (d: number | null, type: string) => `/team/leaderboard${[d ? `days=${d}` : '', type ? `shiftType=${type}` : ''].filter(Boolean).reduce((q, x, i) => `${q}${i ? '&' : '?'}${x}`, '')}`;
+/** `/shift leaderboard` wie Trident: alle nach Zeit im Dienst (ohne Pausen), Standard alle Zeiten; Button „Raw Shift Data“ (CSV). */
 async function leaderboard(c: Ctx): Promise<Reply> {
   try {
-    const d = days(c);
-    const r = await c.api.asUser<{ days: number; me: string; users: BoardRow[] }>(c.discordId, 'GET', `/team/leaderboard?days=${d}`);
-    const lines = r.users.slice(0, 20).map((u, i) => `${MEDALS[i] ?? `\`${i + 1}.\``} **${plain(u.callsign ?? u.name)}**${u.callsign ? ` (${plain(u.name)})` : ''} · ${hm(u.minutes)}${u.userId === r.me ? ' ← du' : ''}`);
-    const mine = r.users.findIndex((u) => u.userId === r.me);
-    return { ephemeral: false, embeds: [{ title: `🏆 Rangliste (${period(r.days)})`, color: COLORS.info,
-      description: clip(lines.length ? `${lines.join('\n')}${r.users.length > 20 ? `\n… und ${r.users.length - 20} weitere` : ''}` : 'Im Zeitraum war niemand im Dienst.', 4000),
-      ...(r.users.length ? { footer: mine >= 0 ? `Dein Platz: ${mine + 1} von ${r.users.length} · ${hm(r.users[mine]!.minutes)}` : 'Du warst im Zeitraum nicht im Dienst.' } : {}) }] };
+    const d = c.opts.days ? Number(c.opts.days) : null;
+    const wanted = String(c.opts.type ?? '').trim();
+    const t = wanted ? findType(await shiftTypes(c), wanted) : undefined;
+    if (wanted && !t) return errorReply('Unbekannte Schichtart.');
+    const r = await c.api.asUser<Board>(c.discordId, 'GET', boardPath(d, t?.id ?? ''));
+    const lines = r.users.slice(0, 25).map((u, i) => `\`${i + 1}.\` ${who(u)} • ${shiftDuration(u.seconds)}`);
+    const footer = `Showing ${t ? `Shift Type: ${t.name}` : 'All Shift Types'}${d ? ` · last ${d === 1 ? '24 hours' : `${d} days`}` : ''}`;
+    return { ephemeral: false, embeds: [{ ...serverAuthor(c), title: 'Shift Leaderboard',
+      description: clip(lines.length ? `${lines.join('\n')}${r.users.length > 25 ? `\n… and ${r.users.length - 25} more` : ''}` : 'No shifts yet.', 4000), footer }],
+      buttons: [{ id: `shift:raw:${d ?? 0}:${t?.id ?? ''}`, label: 'Raw Shift Data', style: 'secondary' }] };
   } catch (e) { return mapError(e); }
+}
+
+/** „Raw Shift Data“: komplette Rangliste als CSV (nur für den Klickenden). */
+async function rawData(c: Ctx, days: string | undefined, type: string | undefined): Promise<Reply> {
+  const d = Number(days) || null;
+  const r = await c.api.asUser<Board>(c.discordId, 'GET', boardPath(d, type && /^[a-z0-9-]{1,40}$/.test(type) ? type : ''));
+  const q = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = ['Place,Name,Callsign,Discord ID,Shifts,Total Seconds,Total Time', ...r.users.map((u, i) => [i + 1, q(u.name), q(u.callsign), q(u.discordId), u.shifts, u.seconds, q(shiftDuration(u.seconds))].join(','))].join('\n');
+  return { ephemeral: true, content: `📄 Raw shift data (${r.users.length} ${r.users.length === 1 ? 'member' : 'members'})`, files: [{ name: 'shift-data.csv', data: csv }] };
 }
 
 /** Leitung: Schichten eines Mitglieds; läuft eine, gibt es „Schicht beenden“. */
@@ -144,13 +160,16 @@ export const SHIFT_COMMANDS: CommandDef[] = [
         { name: 'member', description: 'Discord-Mitglied', type: 'user', required: true },
         { name: 'days', description: 'Zeitraum in Tagen (Standard: 7)', type: 'integer', min: 1, max: 90 },
       ] },
-      { name: 'leaderboard', description: 'Alle Mitglieder nach ihrer Zeit im Dienst', options: [{ name: 'days', description: 'Zeitraum in Tagen (Standard: 7)', type: 'integer', min: 1, max: 90 }] },
+      { name: 'leaderboard', description: 'Alle Mitglieder nach ihrer Zeit im Dienst', options: [
+        { name: 'type', description: 'Nur diese Schichtart (leer = alle)', type: 'string', maxLength: 40, autocomplete: true },
+        { name: 'days', description: 'Nur die letzten Tage (leer = alle Zeiten)', type: 'integer', min: 1, max: 3650 },
+      ] },
     ],
     publicReply: () => true, // alles rund um Schichten ist für alle im Channel sichtbar
     async complete(c, option, value) {
       if (option !== 'type') return [];
       const v = value.trim().toLowerCase();
-      return (await shiftTypes(c)).filter((t) => permittedFor(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
+      return (await shiftTypes(c)).filter((t) => c.opts._sub === 'leaderboard' || permittedFor(c, t)).filter((t) => !v || t.name.toLowerCase().includes(v) || t.id.includes(v)).map((t) => ({ name: t.name, value: t.id }));
     },
     async run(c): Promise<Reply> {
       switch (c.opts._sub) {
@@ -197,6 +216,7 @@ export const SHIFT_INTERACTION: InteractionDef = {
       }
       if (action === 'off') return await switchTo(c, 'OFF_DUTY');
     } catch (e) { return mapError(e); }
+    if (action === 'raw') { try { return await rawData(c, userId, discordId); } catch (e) { return mapError(e); } }
     if (action !== 'end' || !userId || !/^[0-9a-f-]{36}$/i.test(userId)) return errorReply('Unbekannte Aktion.');
     try {
       await c.api.asUser(c.discordId, 'PUT', `/team/${userId}/status`, { status: 'OFF_DUTY' });

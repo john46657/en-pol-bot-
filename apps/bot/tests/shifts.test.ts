@@ -123,25 +123,34 @@ describe('/shift', () => {
     expect(r.buttons?.[0]?.id).toBe(`shift:on:buero:${ME}`);
     expect(text(await def.run({ ...member([]), opts: { _sub: 'manage', type: 'sek' } }))).toContain('fehlt dir die passende Rolle');
   });
-  it('leaderboard ranks by time on duty and shows your place', async () => {
-    const { api, calls } = fakeApi({ 'GET /team/leaderboard': { days: 30, me: 'b', users: [{ userId: 'a', name: 'Max', callsign: 'ADAM-1', minutes: 300 }, { userId: 'b', name: 'Eva', callsign: null, minutes: 120 }] } });
-    const r = await run(api, 'leaderboard', { days: 30 });
-    expect(calls[0]!.path).toBe('/team/leaderboard?days=30');
-    expect(text(r)).toContain('🥇 **ADAM-1** (Max) · 5 h 00 min');
-    expect(text(r)).toContain('Eva** · 2 h 00 min ← du');
-    expect(r.embeds?.[0]?.footer).toContain('Dein Platz: 2 von 2');
+  it('leaderboard like Trident: server header, @members with time, all time by default, Raw Shift Data as CSV', async () => {
+    const OTHER_D = '223456789012345678';
+    const board = { days: null, shiftType: null, me: 'b', users: [{ userId: 'a', name: 'Lorenzo', callsign: 'ADAM-1', discordId: OTHER_D, shifts: 2, seconds: 13 * 3600 + 33 * 60 + 52 }, { userId: 'b', name: 'Eva', callsign: null, discordId: null, shifts: 1, seconds: 1 }] };
+    const { api, calls } = fakeApi({ 'GET /team/leaderboard': board, 'GET /bot/shifts': types });
+    const r = await byName('shift')!.run({ discordId: ME, api, opts: { _sub: 'leaderboard' }, guildName: 'ENRP | Polizei', guildIcon: 'https://cdn.example/icon.png' } as Ctx);
+    expect(calls[0]!.path).toBe('/team/leaderboard');
+    expect(r.embeds?.[0]).toMatchObject({ title: 'Shift Leaderboard', author: { name: 'ENRP | Polizei', iconUrl: 'https://cdn.example/icon.png' }, footer: 'Showing All Shift Types' });
+    expect(r.embeds?.[0]?.description).toBe(`\`1.\` <@${OTHER_D}> • 13 hours, 33 minutes, 52 seconds\n\`2.\` **Eva** • 1 second`);
+    expect(r.buttons).toEqual([{ id: 'shift:raw:0:', label: 'Raw Shift Data', style: 'secondary' }]);
+    const sek = await run(api, 'leaderboard', { type: 'SEK', days: 30 });
+    expect(calls.at(-1)!.path).toBe('/team/leaderboard?days=30&shiftType=sek');
+    expect(sek.embeds?.[0]?.footer).toBe('Showing Shift Type: SEK · last 30 days');
+    const raw = await click(api, 'shift:raw:0:');
+    expect(raw.ephemeral).toBe(true);
+    expect(raw.files?.[0]?.name).toBe('shift-data.csv');
+    expect(raw.files?.[0]?.data.split('\n')[1]).toBe(`1,"Lorenzo","ADAM-1","${OTHER_D}",2,48832,"13 hours, 33 minutes, 52 seconds"`);
   });
-  it('active lists who is on shift', async () => {
-    const { api } = fakeApi({ 'GET /team/overview': [
-      { userId: 'a', name: 'Max', callsign: 'ADAM-1', dutyStatus: 'ON_DUTY', onDutySince: '2026-10-17T10:00:00Z', shiftType: 'SEK' },
-      { userId: 'b', name: 'Eva', callsign: null, dutyStatus: 'BREAK', onDutySince: '2026-10-17T11:00:00Z', shiftType: null },
-      { userId: 'c', name: 'Tom', callsign: null, dutyStatus: 'OFF_DUTY', onDutySince: null, shiftType: null },
+  it('active like Trident: server header, @members with shift time; empty text', async () => {
+    const OTHER_D = '223456789012345678';
+    const { api } = fakeApi({ 'GET /team/active-shifts': [
+      { userId: 'a', name: 'Max', discordId: OTHER_D, status: 'ON_DUTY', shiftType: 'SEK', startedAt: '2026-10-17T10:00:00Z', seconds: 3725 },
+      { userId: 'b', name: 'Eva', discordId: null, status: 'BREAK', shiftType: null, startedAt: '2026-10-17T11:00:00Z', seconds: 60 },
     ] });
-    const r = await run(api, 'active');
-    expect(r.embeds?.[0]?.title).toContain('(2)');
-    expect(text(r)).toContain('ADAM-1');
-    expect(text(r)).not.toContain('Tom');
-    expect(r.embeds?.[0]?.footer).toContain('1 davon in der Pause');
+    const r = await byName('shift')!.run({ discordId: ME, api, opts: { _sub: 'active' }, guildName: 'ENRP | Polizei' } as Ctx);
+    expect(r.embeds?.[0]).toMatchObject({ title: '🕒 Active Shifts', author: { name: 'ENRP | Polizei' } });
+    expect(r.embeds?.[0]?.description).toBe(`\`1.\` <@${OTHER_D}> • 1 hour, 2 minutes, 5 seconds • SEK\n\`2.\` **Eva** • 1 minute (On Break)`);
+    const empty = fakeApi({ 'GET /team/active-shifts': [] });
+    expect((await run(empty.api, 'active')).embeds?.[0]?.description).toBe('There are no active shifts.');
   });
   it('admin shows a member and can end the running shift', async () => {
     const { api, calls } = fakeApi({ 'GET /team/shifts': { days: 7, member: { userId: UID, name: 'Max' }, items: [shift()] }, [`PUT /team/${UID}/status`]: {} });

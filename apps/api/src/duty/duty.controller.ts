@@ -8,6 +8,8 @@ import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 
 const hoursQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7) });
+/** Rangliste: ohne `days` alle Zeiten (wie Trident), optional nur eine Schichtart. */
+const boardQuery = z.object({ days: z.coerce.number().int().min(1).max(3650).optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional() });
 const logQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(7), userId: z.string().uuid().optional(), shiftType: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), discordId: z.string().regex(/^\d{15,25}$/).optional() });
 /** Vom Bot: Discord-Rollen des Aufrufers auf dem Server (für die erlaubten Rollen einer Schichtart); sonst gespeicherte Mitgliedschaften. */
 const discordRolesOf = (r: { headers: Record<string, string | string[] | undefined> }) => {
@@ -37,7 +39,10 @@ export class DutyController {
   myShiftStats(@CurrentActor() a: Actor) { return this.d.shiftStats(a.userId!); }
   /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
   @Get('leaderboard') @RequirePermission('team.view')
-  leaderboard(@CurrentActor() a: Actor, @Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.leaderboard(f.days, a.userId!); }
+  leaderboard(@CurrentActor() a: Actor, @Query(zodBody(boardQuery)) f: z.infer<typeof boardQuery>) { return this.d.leaderboard(f.days ?? null, a.userId!, f.shiftType); }
+  /** Laufende Schichten mit Beginn, Dauer ohne Pausen und Discord-ID (Discord: `/shift active`). */
+  @Get('active-shifts') @RequirePermission('team.view')
+  activeShifts() { return this.d.activeShifts(); }
   /** Dienststunden aller Beamten (Schichtleitung). */
   @Get('hours') @RequirePermission('team.manage')
   hours(@Query(zodBody(hoursQuery)) f: z.infer<typeof hoursQuery>) { return this.d.hours(f.days); }

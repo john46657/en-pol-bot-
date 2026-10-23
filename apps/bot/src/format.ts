@@ -23,6 +23,8 @@ export interface Reply {
   update?: { embeds?: EmbedData[]; buttons?: ButtonSpec[] };
   /** Bei Interaktionen mit `panel`: die Nachricht mit dem Button/Menü/Formular durch diese Antwort ersetzen (Assistenten, Prüfungsseiten). */
   panel?: boolean;
+  /** Dateien als Anhang (z. B. „Raw Shift Data“ als CSV). */
+  files?: { name: string; data: string }[];
 }
 
 export const COLORS = { info: 0x3b82f6, success: 0x22c55e, warning: 0xf59e0b, danger: 0xef4444, neutral: 0x64748b } as const;

@@ -211,12 +211,56 @@ export class DutyService {
     return { count, minutes: Math.round(ms / 60_000), seconds: Math.round(ms / 1000) };
   }
 
-  /** Rangliste: Zeit im Dienst ohne Pausen, nur Name/Rufzeichen (keine Aufschlüsselung wie bei `hours`). */
-  async leaderboard(days: number, me: string) {
-    const { users } = await this.hours(days);
-    const rows = users.map((u) => ({ userId: u.userId, name: u.name, callsign: u.callsign, minutes: u.minutes - (u.byStatus.BREAK ?? 0) }))
-      .filter((u) => u.minutes > 0).sort((a, b) => b.minutes - a.minutes);
-    return { days, me, users: rows };
+  /** Discord-IDs verknüpfter Benutzer (für @Erwähnungen in Discord). */
+  private async discordIds(userIds: string[]) {
+    const links = await this.prisma.discordLink.findMany({ where: { userId: { in: [...new Set(userIds)] } }, select: { userId: true, discordId: true } });
+    return new Map(links.map((l) => [l.userId, l.discordId]));
+  }
+
+  /**
+   * Rangliste (Discord: `/shift leaderboard`, wie Trident): Zeit im Dienst ohne Pausen in Sekunden, Anzahl Schichten.
+   * `days` = null → alle Zeiten; mit `shiftType` nur Sitzungen dieser Schichtart.
+   */
+  async leaderboard(days: number | null, me: string, shiftType?: string) {
+    const now = Date.now();
+    const since = days ? now - days * 86_400_000 : null;
+    const sessions = await this.prisma.dutySession.findMany({
+      where: { ...recordWhere(), ...(shiftType ? { shiftType } : {}), ...(since ? { OR: [{ endedAt: null }, { endedAt: { gt: new Date(since) } }] } : {}) },
+      select: { userId: true, status: true, startedAt: true, endedAt: true, user: { select: { displayName: true, personnel: { ...onePersonnel(), select: { callsign: true } } } } },
+      orderBy: [{ userId: 'asc' }, { startedAt: 'asc' }],
+    });
+    const rows = new Map<string, { userId: string; name: string; callsign: string | null; ms: number; shifts: number; prevEnd: number | null }>();
+    for (const s of sessions) {
+      const r = rows.get(s.userId) ?? { userId: s.userId, name: s.user.displayName, callsign: s.user.personnel[0]?.callsign ?? null, ms: 0, shifts: 0, prevEnd: null };
+      // nahtloser Statuswechsel (Im Dienst ↔ Pause) gehört zur selben Schicht
+      if (r.prevEnd !== s.startedAt.getTime()) r.shifts++;
+      r.prevEnd = s.endedAt?.getTime() ?? null;
+      if (s.status !== 'BREAK') r.ms += Math.max(0, (s.endedAt?.getTime() ?? now) - Math.max(s.startedAt.getTime(), since ?? 0));
+      rows.set(s.userId, r);
+    }
+    const discord = await this.discordIds([...rows.keys()]);
+    const users = [...rows.values()].map((r) => ({ userId: r.userId, name: r.name, callsign: r.callsign, discordId: discord.get(r.userId) ?? null, shifts: r.shifts, seconds: Math.round(r.ms / 1000), minutes: Math.round(r.ms / 60_000) }))
+      .filter((u) => u.seconds > 0).sort((a, b) => b.seconds - a.seconds);
+    return { days, shiftType: shiftType ?? null, me, users };
+  }
+
+  /** Laufende Schichten (Discord: `/shift active`): Beginn der Schicht, Zeit im Dienst ohne Pausen, Status, Schichtart. */
+  async activeShifts() {
+    const open = await this.prisma.dutySession.findMany({
+      where: { endedAt: null, ...recordWhere() },
+      include: { user: { select: { displayName: true, personnel: { ...onePersonnel(), select: { callsign: true } } } } },
+    });
+    const ids = open.map((o) => o.shiftId).filter((x): x is string => !!x);
+    const parts = ids.length ? await this.prisma.dutySession.findMany({ where: { shiftId: { in: ids } }, select: { shiftId: true, status: true, startedAt: true, endedAt: true } }) : [];
+    const [cfg, discord] = await Promise.all([this.shifts.config(), this.discordIds(open.map((o) => o.userId))]);
+    const now = Date.now();
+    return open.map((o) => {
+      const mine = o.shiftId ? parts.filter((p) => p.shiftId === o.shiftId) : [o];
+      const startedAt = new Date(Math.min(...mine.map((p) => p.startedAt.getTime())));
+      const seconds = Math.round(mine.filter((p) => p.status !== 'BREAK').reduce((n, p) => n + (p.endedAt?.getTime() ?? now) - p.startedAt.getTime(), 0) / 1000);
+      return { userId: o.userId, name: o.user.displayName, callsign: o.callsign ?? o.user.personnel[0]?.callsign ?? null, discordId: discord.get(o.userId) ?? null,
+        status: o.status, shiftId: o.shiftId, shiftType: cfg.types.find((t) => t.id === o.shiftType)?.name ?? null, startedAt, seconds };
+    }).sort((a, b) => b.seconds - a.seconds);
   }
 
   /**

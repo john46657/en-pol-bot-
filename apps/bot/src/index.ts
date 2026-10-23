@@ -121,10 +121,11 @@ const toBox = (list: EmbedData[], buttons?: ButtonSpec[], ping?: string) => [
 /** Auswahlmenüs als eigene Reihen über den Buttons. */
 const toComponents = (buttons?: ButtonSpec[], select?: SelectSpec, selects: SelectSpec[] = []) => componentsOf(buttons, [...(select ? [select] : []), ...selects]);
 const toModal = (m: ModalSpec) => modalOf(m);
+const filesOf = (r: Reply) => (r.files?.length ? { files: r.files.map((f) => ({ attachment: Buffer.from(f.data, 'utf8'), name: f.name })) } : {});
 const replyPayload = (r: Reply) => (r.embeds?.[0]?.box
   // Kasten wie bei Trident: Buttons darunter, außerhalb des Kastens
   ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: MessageFlags.IsComponentsV2 as const, allowedMentions: { parse: [] as never[] } }
-  : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] } });
+  : { content: r.content ?? '', embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] as never[] }, ...filesOf(r) });
 
 const TICKET_PREFIX = 'ticket-';
 const ticketName = (userName: string, userId: string) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || userId}`;
@@ -497,6 +498,7 @@ function baseCtx(i: ChatInputCommandInteraction | AutocompleteInteraction | Butt
   return {
     discordId: i.user.id, interactionId: i.id, api, platform, userName: i.user.username, userAvatar: i.user.displayAvatarURL({ size: 64 }), memberJoinedAt: joinedAtOf(i.member),
     guildId: i.guildId ?? undefined, channelId: i.channelId ?? undefined,
+    ...(i.guild ? { guildName: i.guild.name, ...(i.guild.iconURL({ size: 64 }) ? { guildIcon: i.guild.iconURL({ size: 64 })! } : {}) } : {}),
     isGuildAdmin: !!perms && (perms.has(PermissionFlagsBits.ManageGuild) || perms.has(PermissionFlagsBits.Administrator)),
     config: () => api.service<DiscordConfig>('GET', '/bot/config'),
     refreshLive: (kind, o) => live.refresh(kind, o),

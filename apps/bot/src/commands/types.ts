@@ -47,6 +47,8 @@ export interface Ctx {
   userName?: string;
   /** Profilbild des Aufrufers (Kopfzeile wie bei Trident). */
   userAvatar?: string;
+  /** Name und Icon des Servers (Kopfzeile wie bei Trident, z. B. `/shift leaderboard`). */
+  guildName?: string; guildIcon?: string;
   /** Selbst aktualisierende Nachrichten sofort neu zeichnen; mit `channelId` dorthin (um)ziehen. */
   refreshLive?: (kind: LiveKind, o?: { channelId?: string; force?: boolean }) => Promise<{ channelId: string; messageId?: string } | null>;
   /** Discord-Rollen des Aufrufers auf diesem Server (Ticket-Voraussetzungen). */
