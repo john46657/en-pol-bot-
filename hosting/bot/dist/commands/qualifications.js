@@ -8,7 +8,6 @@ const shared_1 = require("@enrp/shared");
 const api_1 = require("../api");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
-const ai_review_1 = require("./ai-review");
 /** Pseudo-Einheit für die normale Bewerbung bei EN Polizei (kann nicht mit konfigurierten Einheiten kollidieren). */
 exports.POLICE = '@polizei';
 const POLICE_NAME = 'Bewerbung – EN Polizei';
@@ -348,13 +347,6 @@ exports.QUALI_INTERACTION = {
                 if (!d || !reason)
                     return (0, format_1.errorReply)('Bitte einen Grund angeben.');
                 return await decide(c, d, reason);
-            }
-            if (action === 'ai' || action === 'aiforce') {
-                // KI-Bewerbungsprüfung: nur Entscheidungshilfe, Antwort nur für den klickenden Prüfer
-                const [kind, id] = rest;
-                if (!(0, ai_review_1.isAiKind)(kind) || !id || !/^[0-9a-f-]{36}$/i.test(id))
-                    return (0, format_1.errorReply)('Unbekannte Aktion.');
-                return await (0, ai_review_1.runAiReview)(c, kind, id, action === 'aiforce');
             }
             if (action === 'history') {
                 const id = rest[0] ?? '';

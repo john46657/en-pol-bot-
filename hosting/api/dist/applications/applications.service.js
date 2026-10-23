@@ -32,7 +32,6 @@ const roblox_service_1 = require("../persons/roblox.service");
 const shared_2 = require("@enrp/shared");
 const discord_access_service_1 = require("../authz/discord-access.service");
 const discord_live_service_1 = require("../discord/discord-live.service");
-const ai_provider_1 = require("./ai-review/ai-provider");
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
 exports.DEFAULT_FORM = [
     { key: 'experience', label: 'Welche Erfahrung hast du im Polizei-Roleplay (auch auf anderen Servern)?', required: true, maxLength: 2000 },
@@ -126,7 +125,6 @@ let ApplicationsService = class ApplicationsService {
             answers: form.filter((f) => answers[f.key]).map((f) => ({ question: f.label, answer: answers[f.key] })),
             durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: (0, web_url_1.webUrl)(`/applications/${a.id}`),
             ...(police.settings.staffThreads ? { thread: true } : {}),
-            ...((0, ai_provider_1.aiConfig)().apiKey ? { aiReview: true } : {}), // Button „KI-Prüfung“ (Schlüssel wird nie mitgeschickt)
         }, { always: !!police.channelId });
         const roles = (0, decision_1.submitRoles)(police.settings);
         if (meta.discordId && (roles.add.length || roles.remove.length))
@@ -312,7 +310,6 @@ let ApplicationsService = class ApplicationsService {
         const a = await this.get(id);
         await this.prisma.$transaction(async (tx) => {
             await tx.hireQueue.deleteMany({ where: { applicationId: id } });
-            await tx.applicationAiReview.deleteMany({ where: { kind: 'POLICE', applicationId: id } }); // KI-Prüfungen gehören zur Bewerbung
             await tx.application.delete({ where: { id } });
             await this.audit.record(actor, { action: 'application.delete', module: 'applications', entityType: 'Application', entityId: id, before: { number: a.number, status: a.status, robloxUsername: a.robloxUsername, discordId: a.discordId, discordName: a.discordName } }, tx);
         });

@@ -58,18 +58,15 @@ async function diagnose(c) {
 async function integrations(c) {
     const rt = c.runtime;
     const s = rt.status();
-    const [api, roblox, cfg, mods, ai] = await Promise.all([
+    const [api, roblox, cfg, mods] = await Promise.all([
         rt.apiHealth(), rt.robloxReachable(), rt.guildConfig.get(c.guildId).catch(() => null),
         (0, safety_1.withRetry)(() => c.api.service('GET', `/bot/servers/${c.guildId}/modules`)).catch(() => null),
-        c.api.service('GET', `/bot/ai-review/status?guildId=${c.guildId}`).catch(() => null),
     ]);
     const lines = [
         `${s.ready ? '🟢' : '🔴'} **Discord Gateway** – ${s.ready ? `verbunden, ${s.wsPing} ms` : 'nicht verbunden'}`,
         `${api.reachable && api.authOk !== false ? '🟢' : '🔴'} **EN-Polizei-API** – ${api.reachable ? `erreichbar (${api.ms} ms), Bot-Zugang ${api.authOk === false ? 'abgelehnt' : api.authOk ? 'angenommen' : 'nicht geprüft'}` : 'nicht erreichbar'}`,
         `${roblox ? '🟢' : '🟠'} **Roblox (öffentliche Users-API)** – ${roblox ? 'erreichbar' : 'nicht erreichbar – Roblox-Namenssuche/-Prüfung im Bot eingeschränkt'}`,
         `${mods ? '🟢' : '🟠'} **Module dieses Servers (System)** – ${mods ? (mods.disabled.length ? `ausgeschaltet: ${mods.disabled.join(', ')}` : 'alle an') : 'nicht abrufbar'}`,
-        // KI-Bewerbungsprüfung: nur ob ein Schlüssel hinterlegt ist (nie der Schlüssel selbst)
-        ai ? `${ai.configured && ai.enabled ? '🟢' : '⚪'} **KI-Bewerbungsprüfung (Gemini)** – ${!ai.configured ? 'kein GEMINI_API_KEY auf dem Server hinterlegt' : !ai.enabled ? 'für diesen Server ausgeschaltet' : `eingerichtet, Modell ${ai.model}, ${ai.usedToday}/${ai.dailyLimit} Analysen in 24 h`}` : '🟠 **KI-Bewerbungsprüfung** – Status nicht abrufbar',
     ];
     return { ephemeral: true, embeds: [(0, branding_1.brand)(cfg, {
                 title: '🔌 Integrationen',

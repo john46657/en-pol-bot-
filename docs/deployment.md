@@ -67,12 +67,6 @@ Kostenlos z. B. mit UptimeRobot: HTTP-Monitor auf `https://nexus.deine-domain.de
 - **Vor jedem Update:** `./deploy/update.sh` legt automatisch `backups/vor-update/enrp-DATUM.sql.gz` an; schlägt das fehl, bricht das Update ab.
 - **Wiederherstellen:** `./deploy/restore.sh backups/daily/enrp-DATUM.sql.gz` (oder eine Datei aus `backups/vor-update/`) (fragt vorher nach Bestätigung). Probiere eine Wiederherstellung einmal aus, **bevor** du dich auf die Backups verlässt.
 
-### KI-Bewerbungsprüfung (optional, Google Gemini)
-1. In [Google AI Studio](https://aistudio.google.com) mit einem Google-Konto anmelden → **Get API key** → Schlüssel erstellen. Für den Test reicht die kostenlose Stufe (kein Abrechnungskonto verknüpfen, dann fallen keine Kosten an).
-2. Auf dem Server im Projektordner `nano .env` und eine Zeile `GEMINI_API_KEY=…` ergänzen (optional `GEMINI_MODEL=…`, Grenzen siehe [applications.md](applications.md#ki-bewerbungsprüfung-google-gemini)). Die `.env` ist per `.gitignore` vom Repository ausgeschlossen – `chmod 600 .env`.
-3. `docker compose up -d api` (übernimmt die neue Umgebung; Daten bleiben erhalten).
-4. Prüfen: Dashboard → *Bewerbungen → Einrichtung → KI-Bewerbungsprüfung* zeigt „✅ KI-Schlüssel hinterlegt“, in Discord `/system integrations`.
-
 ### Aufbewahrung
 Die API räumt täglich alte Sessions, Login-Historie und gelesene Benachrichtigungen auf (einstellbar unter *Admin → Settings*). **Audit-Logs werden nie gelöscht.**
 

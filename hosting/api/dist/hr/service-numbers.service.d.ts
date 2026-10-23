@@ -297,7 +297,7 @@ export declare class ServiceNumbersService implements OnModuleInit {
     /** Nummer freigeben / als ehemalig markieren / sperren / entsperren / reservieren. */
     setStatus(actor: Actor, display: string, to: 'FREE' | 'FORMER' | 'BLOCKED' | 'UNBLOCK' | 'RESERVED', reason?: string, userId?: string): Promise<{
         display: string;
-        status: "BLOCKED" | "FREE" | "RESERVED" | "FORMER";
+        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
     }>;
     /** Discord nach Vergabe: Nickname, DM (je nach Einstellung). */
     private afterAssign;
