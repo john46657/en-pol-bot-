@@ -5,6 +5,7 @@ exports.personEmbed = personEmbed;
 exports.listEmbed = listEmbed;
 exports.renderOutbox = renderOutbox;
 exports.applicationEmbeds = applicationEmbeds;
+exports.shiftDuration = shiftDuration;
 exports.humanDuration = humanDuration;
 exports.leaveDecisionText = leaveDecisionText;
 exports.leaveDirectEmbed = leaveDirectEmbed;
@@ -98,6 +99,8 @@ function renderOutbox(type, p) {
                 description: (0, exports.clip)(`${String(p.text ?? '')}${p.reason ? `\n\n**Hinweis:** ${(0, exports.plain)(p.reason)}` : ''}`, 4000) || undefined };
         }
         case 'duty.changed': {
+            if (typeof p.shiftId === 'string' && p.shiftId)
+                return shiftLogEmbed(p);
             const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
             const who = `${p.callsign ? `${(0, exports.plain)(p.callsign)} · ` : ''}${(0, exports.plain)(p.name)}`;
             const mins = typeof p.previousMinutes === 'number' && prev !== 'OFF_DUTY' ? ` – ${(0, exports.fmtDuration)(p.previousMinutes * 60)}` : '';
@@ -210,6 +213,48 @@ const LEAVE_EVENTS = {
     extended: { text: '🕒 Abmeldung verlängert', color: exports.COLORS.info }, extension_denied: { text: '❌ Verlängerung abgelehnt', color: exports.COLORS.danger },
 };
 const unixOf = (v) => Math.floor(new Date(String(v)).getTime() / 1000);
+/** Dauer wie bei Trident: „1 second“, „2 hours, 5 minutes“ (höchstens drei Teile). */
+function shiftDuration(sec) {
+    let rest = Math.max(0, Math.round(sec));
+    const parts = [];
+    for (const [size, unit] of [[86_400, 'day'], [3_600, 'hour'], [60, 'minute'], [1, 'second']]) {
+        const v = Math.floor(rest / size);
+        rest %= size;
+        if (v)
+            parts.push(`${v} ${unit}${v === 1 ? '' : 's'}`);
+    }
+    return parts.slice(0, 3).join(', ') || '0 seconds';
+}
+/**
+ * Shift-Log wie bei Trident: oben @Mitglied mit Profilbild (setzt der Bot), Titel „Shift Started • Schichtart“,
+ * Mitglied + Beginn bzw. Gesamtzeit, unten die Shift-ID (gleich für Beginn, Pausen und Ende einer Schicht).
+ */
+function shiftLogEmbed(p) {
+    const st = String(p.status), prev = String(p.previous ?? 'OFF_DUTY');
+    const t = (v, style) => `<t:${unixOf(v)}:${style}>`;
+    const now = new Date().toISOString();
+    const [event, color] = prev === 'OFF_DUTY' ? ['Shift Started', exports.COLORS.success] : st === 'OFF_DUTY' ? ['Shift Ended', exports.COLORS.danger]
+        : st === 'BREAK' ? ['Break Started', exports.COLORS.warning] : prev === 'BREAK' ? ['Break Ended', exports.COLORS.info] : ['Shift Updated', exports.COLORS.info];
+    const kind = p.shiftType ? (0, exports.plain)(p.shiftType) : 'Dienst';
+    const secs = (v) => shiftDuration(Number(v) || 0);
+    const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : (0, exports.plain)(p.name)}`];
+    if (event === 'Shift Started')
+        lines.push(`**Started**: ${t(p.shiftStartedAt ?? now, 'R')} (${t(p.shiftStartedAt ?? now, 'f')})`);
+    else if (event === 'Shift Ended') {
+        lines.push(`**Total Time**: ${secs(p.totalSeconds)}`);
+        if (Number(p.breakSeconds) > 0)
+            lines.push(`**Break Time**: ${secs(p.breakSeconds)}`);
+    }
+    else if (event === 'Break Started')
+        lines.push(`**Break Started**: ${t(now, 'R')}`, `**Shift Time**: ${secs(p.totalSeconds)}`);
+    else if (event === 'Break Ended')
+        lines.push(`**Break Time**: ${secs(p.previousSeconds)}`);
+    else
+        lines.push(`**Status**: ${exports.DUTY_DE[st]?.label ?? (0, exports.label)(st)}`);
+    if (p.setBy)
+        lines.push(`**${event === 'Shift Ended' ? 'Ended' : 'Set'} By**: ${(0, exports.plain)(p.setBy)}`);
+    return { author: { name: (0, exports.clip)(`@${String(p.name ?? '—')}`, 200) }, title: (0, exports.clip)(`${event} • ${kind}`, 256), color, description: (0, exports.clip)(lines.join('\n'), 4000), footer: `Shift ID: ${String(p.shiftId)}` };
+}
 /** Dauer menschenlesbar: „6 Stunden“, „1 Tag“, „2 Wochen“, „1 Woche, 2 Tage“. */
 function humanDuration(ms) {
     const H = 3_600_000, D = 24 * H, W = 7 * D;
@@ -324,8 +369,6 @@ function outboxButtons(type, p) {
         { id: `quali:reason:${kind}:${id}:ACCEPTED`, label: 'Annehmen mit Grund', style: 'success' },
         { id: `quali:reason:${kind}:${id}:REJECTED`, label: 'Ablehnen mit Grund', style: 'danger' },
         ...(discordId ? [{ id: `quali:history:${discordId}`, label: 'Verlauf', style: 'primary' }, { id: `quali:ticket:${kind}:${id}`, label: 'Ticket mit Bewerber öffnen', emoji: '🎫', style: 'secondary' }] : []),
-        // KI-Bewerbungsprüfung (nur wenn auf dem Server ein KI-Schlüssel hinterlegt ist); Ergebnis nur privat für den Prüfer
-        ...(p.aiReview === true ? [{ id: `quali:ai:${kind}:${id}`, label: 'KI-Prüfung', emoji: '🤖', style: 'secondary' }] : []),
         ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }] : []),
     ];
 }

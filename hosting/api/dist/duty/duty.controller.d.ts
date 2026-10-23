@@ -8,6 +8,17 @@ declare const hoursQuery: z.ZodObject<{
 }, {
     days?: number | undefined;
 }>;
+/** Rangliste: ohne `days` alle Zeiten (wie Trident), optional nur eine Schichtart. */
+declare const boardQuery: z.ZodObject<{
+    days: z.ZodOptional<z.ZodNumber>;
+    shiftType: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    shiftType?: string | undefined;
+    days?: number | undefined;
+}, {
+    shiftType?: string | undefined;
+    days?: number | undefined;
+}>;
 declare const logQuery: z.ZodObject<{
     days: z.ZodDefault<z.ZodNumber>;
     userId: z.ZodOptional<z.ZodString>;
@@ -23,6 +34,23 @@ declare const logQuery: z.ZodObject<{
     shiftType?: string | undefined;
     discordId?: string | undefined;
     days?: number | undefined;
+}>;
+declare const modifyBody: z.ZodObject<{
+    action: z.ZodEnum<["add", "remove", "set"]>;
+    seconds: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    action: "remove" | "add" | "set";
+    seconds: number;
+}, {
+    action: "remove" | "add" | "set";
+    seconds: number;
+}>;
+declare const clearQuery: z.ZodObject<{
+    shiftType: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    shiftType?: string | undefined;
+}, {
+    shiftType?: string | undefined;
 }>;
 declare const body: z.ZodObject<{
     status: z.ZodEnum<["OFF_DUTY", "ON_DUTY", "BREAK", "TRAINING", "ADMINISTRATIVE"]>;
@@ -60,6 +88,7 @@ export declare class DutyController {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;
@@ -99,6 +128,7 @@ export declare class DutyController {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;
@@ -127,6 +157,7 @@ export declare class DutyController {
     } | {
         items: {
             id: string;
+            shiftId: string | null;
             userId: string;
             name: string;
             rank: string | null;
@@ -140,6 +171,7 @@ export declare class DutyController {
             minutes: number;
             breakMinutes: number;
             breaks: number;
+            seconds: number;
             startedBy: string | null;
             endedBy: string | null;
         }[];
@@ -154,18 +186,41 @@ export declare class DutyController {
     myShiftStats(a: Actor): Promise<{
         count: number;
         minutes: number;
+        seconds: number;
+        last: {
+            shiftId: string | null;
+            status: string;
+            seconds: number;
+            shiftType: string | null;
+        } | null;
     }>;
     /** Rangliste nach Zeit im Dienst (ohne Pausen) – für alle sichtbar (Discord: `/shift leaderboard`). */
-    leaderboard(a: Actor, f: z.infer<typeof hoursQuery>): Promise<{
-        days: number;
+    leaderboard(a: Actor, f: z.infer<typeof boardQuery>): Promise<{
+        days: number | null;
+        shiftType: string | null;
         me: string;
         users: {
             userId: string;
             name: string;
             callsign: string | null;
+            discordId: string | null;
+            shifts: number;
+            seconds: number;
             minutes: number;
         }[];
     }>;
+    /** Laufende Schichten mit Beginn, Dauer ohne Pausen und Discord-ID (Discord: `/shift active`). */
+    activeShifts(): Promise<{
+        userId: string;
+        name: string;
+        callsign: string | null;
+        discordId: string | null;
+        status: string;
+        shiftId: string | null;
+        shiftType: string | null;
+        startedAt: Date;
+        seconds: number;
+    }[]>;
     /** Dienststunden aller Beamten (Schichtleitung). */
     hours(f: z.infer<typeof hoursQuery>): Promise<{
         days: number;
@@ -189,6 +244,7 @@ export declare class DutyController {
     } | {
         items: {
             id: string;
+            shiftId: string | null;
             userId: string;
             name: string;
             rank: string | null;
@@ -202,6 +258,7 @@ export declare class DutyController {
             minutes: number;
             breakMinutes: number;
             breaks: number;
+            seconds: number;
             startedBy: string | null;
             endedBy: string | null;
         }[];
@@ -227,12 +284,39 @@ export declare class DutyController {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;
         remindedAt: Date | null;
     } | {
         status: string;
+    }>;
+    /** Schichtleitung (`/shift admin`): Gesamtwerte und letzte Schicht eines Mitglieds. */
+    statsFor(userId: string): Promise<{
+        count: number;
+        minutes: number;
+        seconds: number;
+        last: {
+            shiftId: string | null;
+            status: string;
+            seconds: number;
+            shiftType: string | null;
+        } | null;
+    }>;
+    /** Schicht ändern: Zeit hinzufügen, abziehen oder setzen (Sekunden, ohne Pausen). */
+    modifyShift(a: Actor, shiftId: string, b: z.infer<typeof modifyBody>): Promise<{
+        shiftId: string;
+        userId: string;
+        seconds: number;
+    }>;
+    deleteShift(a: Actor, shiftId: string): Promise<{
+        shiftId: string;
+        deleted: boolean;
+    }>;
+    /** Alle beendeten Schichten eines Mitglieds löschen (optional nur eine Schichtart). */
+    clearShifts(a: Actor, userId: string, q: z.infer<typeof clearQuery>): Promise<{
+        deleted: number;
     }>;
     /** Muss NACH `me/status` stehen, sonst würde `:userId` den Pfad `me` verschlucken. */
     setFor(a: Actor, userId: string, b: z.infer<typeof body>): Promise<{
@@ -243,6 +327,7 @@ export declare class DutyController {
         unitId: string | null;
         callsign: string | null;
         shiftType: string | null;
+        shiftId: string | null;
         startedAt: Date;
         endedAt: Date | null;
         lastActivityAt: Date | null;

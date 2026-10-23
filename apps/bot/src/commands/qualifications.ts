@@ -3,7 +3,6 @@ import { BotApiError, type Api } from '../api';
 import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply, type SelectSpec } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
-import { isAiKind, runAiReview } from './ai-review';
 import type { DiscordConfig, Platform } from '../platform';
 
 // ---------------- Bewerbungen per Direktnachricht: Polizei-Bewerbung (/bewerbung, /bewerbungspanel) und Qualifikationen (SEK, Flugstaffel, Ausbilder … über /qualipanel) ----------------
@@ -319,12 +318,6 @@ export const QUALI_INTERACTION: InteractionDef = {
         const reason = (c.fields?.reason ?? '').trim();
         if (!d || !reason) return errorReply('Bitte einen Grund angeben.');
         return await decide(c, d, reason);
-      }
-      if (action === 'ai' || action === 'aiforce') {
-        // KI-Bewerbungsprüfung: nur Entscheidungshilfe, Antwort nur für den klickenden Prüfer
-        const [kind, id] = rest;
-        if (!isAiKind(kind) || !id || !/^[0-9a-f-]{36}$/i.test(id)) return errorReply('Unbekannte Aktion.');
-        return await runAiReview(c, kind, id, action === 'aiforce');
       }
       if (action === 'history') {
         const id = rest[0] ?? '';

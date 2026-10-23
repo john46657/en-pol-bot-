@@ -13,12 +13,10 @@ const applications_controller_1 = require("./applications.controller");
 const applications_service_1 = require("./applications.service");
 const applications_analytics_service_1 = require("./applications-analytics.service");
 const application_progress_1 = require("./application-progress");
-const ai_review_service_1 = require("./ai-review/ai-review.service");
-const ai_review_controller_1 = require("./ai-review/ai-review.controller");
 let ApplicationsModule = class ApplicationsModule {
 };
 exports.ApplicationsModule = ApplicationsModule;
 exports.ApplicationsModule = ApplicationsModule = __decorate([
-    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [applications_controller_1.ApplicationsController, application_progress_1.BotApplicationProgressController, ai_review_controller_1.PoliceAiReviewController, ai_review_controller_1.QualificationAiReviewController, ai_review_controller_1.AiReviewSettingsController, ai_review_controller_1.BotAiReviewController], providers: [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService, ai_review_service_1.AiReviewService], exports: [applications_service_1.ApplicationsService, ai_review_service_1.AiReviewService] })
+    (0, common_1.Module)({ imports: [persons_module_1.PersonsModule], controllers: [applications_controller_1.ApplicationsController, application_progress_1.BotApplicationProgressController], providers: [applications_service_1.ApplicationsService, applications_analytics_service_1.ApplicationsAnalyticsService], exports: [applications_service_1.ApplicationsService] })
 ], ApplicationsModule);
 //# sourceMappingURL=applications.module.js.map
