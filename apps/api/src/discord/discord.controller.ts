@@ -40,7 +40,7 @@ const voiceBody = z.object({ channels: z.array(z.object({
   id: sf, guildId: sf, name: z.string().max(100), parentId: sf.nullable(), parentName: z.string().max(100).nullable(), position: z.number().int(),
   members: z.array(z.object({ id: sf, displayName: z.string().max(100), avatar, selfMute: z.boolean(), selfDeaf: z.boolean(), serverMute: z.boolean(), serverDeaf: z.boolean(), video: z.boolean(), streaming: z.boolean(), since: z.string().datetime().nullable() })).max(500),
 })).max(500) });
-const openQ = z.object({ discordId: z.string().regex(/^\d{15,25}$/) });
+const openQ = z.object({ discordId: z.string().regex(/^\d{15,25}$/), guildId: z.string().regex(/^\d{15,25}$/).optional() });
 const application = z.object({ guildId: z.string().regex(/^\d{15,25}$/).optional(), robloxUsername: z.string().trim().min(1).max(64), robloxUserId: z.string().max(20).optional(), discordId: z.string().regex(/^\d{15,25}$/), discordName: z.string().trim().max(100).optional(), durationSec: z.number().int().min(0).max(86_400).optional(), joinedAt: z.coerce.date().optional(), answers: z.record(z.string(), z.union([z.string().max(5000), z.array(z.string().max(100)).max(25)])) });
 
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
@@ -101,7 +101,7 @@ export class BotController {
 
   /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
   @BotService() @Get('application/open')
-  openApplication(@Query(zodBody(openQ)) q: z.infer<typeof openQ>) { return this.applications.openForDiscord(q.discordId); }
+  openApplication(@Query(zodBody(openQ)) q: z.infer<typeof openQ>) { return this.applications.openForDiscord(q.discordId, q.guildId); }
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('application') @HttpCode(201)
   submitApplication(@Body(zodBody(application)) b: z.infer<typeof application>) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt, guildId: b.guildId }); }
 }

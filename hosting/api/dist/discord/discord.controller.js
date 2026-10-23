@@ -52,7 +52,7 @@ const voiceBody = zod_1.z.object({ channels: zod_1.z.array(zod_1.z.object({
         id: sf, guildId: sf, name: zod_1.z.string().max(100), parentId: sf.nullable(), parentName: zod_1.z.string().max(100).nullable(), position: zod_1.z.number().int(),
         members: zod_1.z.array(zod_1.z.object({ id: sf, displayName: zod_1.z.string().max(100), avatar, selfMute: zod_1.z.boolean(), selfDeaf: zod_1.z.boolean(), serverMute: zod_1.z.boolean(), serverDeaf: zod_1.z.boolean(), video: zod_1.z.boolean(), streaming: zod_1.z.boolean(), since: zod_1.z.string().datetime().nullable() })).max(500),
     })).max(500) });
-const openQ = zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/) });
+const openQ = zod_1.z.object({ discordId: zod_1.z.string().regex(/^\d{15,25}$/), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const application = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), robloxUsername: zod_1.z.string().trim().min(1).max(64), robloxUserId: zod_1.z.string().max(20).optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/), discordName: zod_1.z.string().trim().max(100).optional(), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
 /** Web-Seite: eigenes Konto verknüpfen. Authentifiziert per Session; Bot-Zugang ist hier nicht erlaubt. */
 let DiscordController = class DiscordController {
@@ -165,7 +165,7 @@ let BotController = class BotController {
     async getState(key) { return { value: await this.d.getState(key) }; }
     async setState(key, b) { await this.d.setState(key, b.value); }
     /** Bewerbung aus Discord. Eigener Dienstweg (mit Bot-Token), damit das öffentliche Rate-Limit pro IP nicht alle Discord-Bewerber gemeinsam trifft. */
-    openApplication(q) { return this.applications.openForDiscord(q.discordId); }
+    openApplication(q) { return this.applications.openForDiscord(q.discordId, q.guildId); }
     submitApplication(b) { return this.applications.submit({ robloxUsername: b.robloxUsername, robloxUserId: b.robloxUserId, answers: b.answers }, { discordId: b.discordId, discordName: b.discordName, durationSec: b.durationSec, joinedAt: b.joinedAt, guildId: b.guildId }); }
 };
 exports.BotController = BotController;

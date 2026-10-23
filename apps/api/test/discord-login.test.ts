@@ -143,6 +143,23 @@ describe('login with Discord', () => {
     await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] } });
   });
 
+  it('team roles are set per server: the server value applies to that server, the shared value stays untouched', async () => {
+    const admin = (await login(app, 'dl_admin')).agent;
+    const TEAM = '777777777777777778';
+    await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [] } });
+    // ohne eigene Einstellung zeigt der Server den Grundwert
+    expect((await admin.get('/api/v1/admin/settings').set('X-Guild-Id', GUILD)).body.settings['auth.discord'].teamRoleIds).toEqual([]);
+    expect((await admin.put('/api/v1/admin/settings/auth.discord').set('X-Guild-Id', GUILD).send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [TEAM] } })).status).toBe(200);
+    expect((await prisma.systemSetting.findUniqueOrThrow({ where: { key: `auth.discord@${GUILD}` } })).value).toMatchObject({ teamRoleIds: [TEAM] });
+    expect((await admin.get('/api/v1/admin/settings')).body.settings['auth.discord'].teamRoleIds).toEqual([]);
+    discord.members.set(discord.user.id, [ROLE_POLICE]);
+    expect((await discordLogin()).location).toMatch(/discord=no_team_role$/);
+    discord.members.set(discord.user.id, [TEAM]);
+    expect((await (await discordLogin()).agent.get('/api/v1/auth/me')).status).toBe(200);
+    await prisma.systemSetting.deleteMany({ where: { key: `auth.discord@${GUILD}` } });
+    discord.members.set(discord.user.id, []);
+  });
+
   it('Discord admins of a server always get in (without team role) and become Server-Administrator only there', async () => {
     const admin = (await login(app, 'dl_admin')).agent;
     await admin.put('/api/v1/admin/settings/auth.discord').send({ value: { signup: true, requireGuild: true, roleMap: [], teamRoleIds: ['777777777777777777'] } });

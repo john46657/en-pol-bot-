@@ -89,10 +89,12 @@ async function loadFlow(api, key, guildId) {
     const unit = (await getConfig(api, guildId)).units.find((u) => u.key === key);
     return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f) => ({ text: f.label, key: f.key, field: field(f) })) } : null;
 }
-async function openApplication(api, key, discordId) {
+/** Offene Bewerbung – je Server (eine Bewerbung auf einem anderen Server sperrt nicht). */
+async function openApplication(api, key, discordId, guildId) {
+    const g = guildId ? `&guildId=${guildId}` : '';
     return key === exports.POLICE
-        ? api.service('GET', `/bot/application/open?discordId=${discordId}`)
-        : api.service('GET', `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}`);
+        ? api.service('GET', `/bot/application/open?discordId=${discordId}${g}`)
+        : api.service('GET', `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key)}${g}`);
 }
 async function submitSession(api, s, userId, userName, robloxLookup, now = Date.now()) {
     const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1000)), ...(s.joinedAt ? { joinedAt: s.joinedAt } : {}), ...(s.guildId ? { guildId: s.guildId } : {}) };
@@ -124,7 +126,7 @@ async function offer(c, key) {
     const ban = await c.api.service('GET', `/bot/application-bans/check?discordId=${c.discordId}&scope=${encodeURIComponent(flow.key === exports.POLICE ? 'police' : flow.key)}&name=${encodeURIComponent(flow.key === exports.POLICE ? 'die Polizei-Bewerbung' : flow.appName)}${c.guildId ? `&guildId=${c.guildId}` : ''}`).catch(() => null);
     if (ban?.banned)
         return (0, format_1.errorReply)(`⛔ ${ban.message ?? 'Du bist für diese Bewerbung gesperrt.'}`);
-    const open = await openApplication(c.api, flow.key, c.discordId);
+    const open = await openApplication(c.api, flow.key, c.discordId, c.guildId);
     if (open.open)
         return (0, format_1.errorReply)(`Du hast für **${(0, format_1.plain)(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
     // Bewerbungsart „Web“: persönlicher Link zum Formular im Browser statt Fragen per DM
@@ -453,7 +455,7 @@ exports.QUALI_INTERACTION = {
                 return (0, format_1.errorReply)('Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.');
             if (!flow.enabled)
                 return (0, format_1.errorReply)(`Bewerbungen für **${(0, format_1.plain)(flow.name)}** sind derzeit geschlossen.`);
-            const open = await openApplication(c.api, flow.key, c.discordId);
+            const open = await openApplication(c.api, flow.key, c.discordId, c.guildId ?? guildOf.get(c.discordId));
             if (open.open)
                 return (0, format_1.errorReply)(`Du hast für **${(0, format_1.plain)(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
             if (!c.platform)

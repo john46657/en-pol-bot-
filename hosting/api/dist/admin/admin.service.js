@@ -82,6 +82,12 @@ let AdminService = class AdminService {
             if (guild_context_1.PER_SERVER_SETTING_KEYS.includes(r.key))
                 settings[`${r.key}@${g}`] = r.value;
         }
+        // Discord-Anmeldung: ohne eigene Einstellung gilt für den Server der Grundwert – den anzeigen (ohne `@Server` = nicht eigen)
+        if (!('auth.discord' in settings)) {
+            const base = valid((await (0, guild_context_1.runInGuild)(null, async () => await this.prisma.systemSetting.findMany({ where: { key: 'auth.discord' } }))));
+            if (base[0])
+                settings['auth.discord'] = base[0].value;
+        }
         return { settings, allowedKeys: keys, serverScoped: guild_context_1.PER_SERVER_SETTING_KEYS };
     }
     /** `key@<guildId>`: Server-eigener Wert (nur für Einstellungen, die je Server getrennt sein dürfen). */

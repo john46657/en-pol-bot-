@@ -141,8 +141,8 @@ export class QualificationsService {
   }
 
   /** Für den Bot: läuft für diese Discord-ID schon eine offene Bewerbung (je Einheit)? */
-  async openFor(discordId: string, unit?: string) {
-    const open = await this.prisma.qualificationApplication.findFirst({ where: { discordId, status: 'OPEN', ...(unit ? { unit } : {}) }, select: { number: true, unitName: true } });
+  async openFor(discordId: string, unit?: string, guildId?: string | null) {
+    const open = await this.prisma.qualificationApplication.findFirst({ where: { discordId, status: 'OPEN', ...(unit ? { unit } : {}), ...(guildId ? { guildId } : {}) }, select: { number: true, unitName: true } });
     return { open: !!open, number: open?.number ?? null, unitName: open?.unitName ?? null };
   }
 
@@ -168,8 +168,9 @@ export class QualificationsService {
       r.roleIds.forEach((x) => grantRoleIds.add(x));
     }
     await this.bans.assertAllowed({ discordId: d.discordId }, unit.key, unit.name, d.guildId ?? null);
-    if ((await this.openFor(d.discordId, unit.key)).open) throw new AppError('CONFLICT', `Für ${unit.name} gibt es schon eine offene Bewerbung.`);
-    const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
+    // offene Bewerbung und Wartezeit gelten je Server
+    if ((await this.openFor(d.discordId, unit.key, d.guildId)).open) throw new AppError('CONFLICT', `Für ${unit.name} gibt es schon eine offene Bewerbung.`);
+    const last = await this.prisma.qualificationApplication.findFirst({ where: { discordId: d.discordId, unit: unit.key, ...(d.guildId ? { guildId: d.guildId } : {}) }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
     const wait = cooldownLeft(unit.settings, last?.createdAt);
     if (wait) throw new AppError('CONFLICT', `Du kannst dich für ${unit.name} erst in ${formatMinutes(wait)} erneut bewerben.`);
     const user = await this.discord.resolveUser(d.discordId);

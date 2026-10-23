@@ -96,7 +96,8 @@ export declare class ApplicationsService {
     /** Wie bei Appy: entschiedene Bewerbung in den Channel für angenommene/abgelehnte Bewerbungen posten (nur ohne Original-Nachricht in Discord). */
     private archive;
     /** Für den Bot: hat dieses Discord-Konto schon eine offene Bewerbung? */
-    openForDiscord(discordId: string): Promise<{
+    /** Offene Bewerbung dieser Discord-ID – mit `guildId` nur auf diesem Server. */
+    openForDiscord(discordId: string, guildId?: string | null): Promise<{
         open: boolean;
         number: string | null;
     }>;

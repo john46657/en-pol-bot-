@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { NotifyService } from '../notifications/notify.service';
+import { runInGuild } from '../common/guild-context';
 
 /** Ein Teammitglied, wie der Bot es auf Discord sieht (nur Team-Informationen, keine Voice-Daten). */
 export interface LiveMember { id: string; guildId: string; username: string; displayName: string; avatar: string | null; status: 'online' | 'idle' | 'dnd' | 'offline' | 'unknown'; roleIds: string[]; joinedAt: string | null }
@@ -30,9 +31,11 @@ export class DiscordLiveService {
 
   /** Welche Discord-Rollen machen jemanden zum Teammitglied? Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen. */
   async teamRoleIds(): Promise<string[]> {
-    const login = (await this.prisma.systemSetting.findUnique({ where: { key: 'auth.discord' } }))?.value as { teamRoleIds?: string[]; roleMap?: { discordRoleId: string }[] } | undefined;
+    // Grundwert und Einstellungen aller Server (`auth.discord@<Server>`) – Rollen-IDs sind je Server eindeutig
+    const rows = await runInGuild(null, async () => await this.prisma.systemSetting.findMany({ where: { OR: [{ key: 'auth.discord' }, { key: { startsWith: 'auth.discord@' } }] } }));
+    const logins = rows.map((r) => r.value as { teamRoleIds?: string[]; roleMap?: { discordRoleId: string }[] } | null);
     const linked = await this.prisma.role.findMany({ where: { active: true, discordRoleIds: { isEmpty: false } }, select: { discordRoleIds: true } });
-    return [...new Set([...(login?.teamRoleIds ?? []), ...(login?.roleMap ?? []).map((m) => m.discordRoleId), ...linked.flatMap((r) => r.discordRoleIds)])];
+    return [...new Set([...logins.flatMap((l) => [...(l?.teamRoleIds ?? []), ...(l?.roleMap ?? []).map((m) => m.discordRoleId)]), ...linked.flatMap((r) => r.discordRoleIds)])];
   }
 
   setMembers(list: LiveMember[]) {

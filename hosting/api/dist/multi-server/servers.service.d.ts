@@ -26,6 +26,12 @@ export declare class ServersService implements OnModuleInit {
      * Server als EIGENE Kopie (danach unabhängig). Server, die später dazukommen, starten mit Standardwerten.
      */
     splitSettings(): Promise<void>;
+    /**
+     * Einmalig: Discord-Anmeldung (Teamrollen, Rollen-Zuordnung …), Zeitzone und Datumsformat gelten jetzt je Server. Jeder
+     * bestehende Server bekommt den bisherigen gemeinsamen Wert als eigene Kopie – bei der Anmeldung nur mit Rollen, die zu
+     * diesem Server gehören (soweit der Bot sie gemeldet hat).
+     */
+    splitLaterSettings(): Promise<void>;
     load(serverId: string): Promise<{
         guildId: string;
         id: string;

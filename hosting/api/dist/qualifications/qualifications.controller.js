@@ -28,7 +28,7 @@ const list = zod_1.z.object({ unit: zod_1.z.string().max(24).optional(), status:
 const decision = zod_1.z.object({ status: zod_1.z.enum(['ACCEPTED', 'REJECTED']), reason: zod_1.z.string().trim().max(1000).optional() });
 const historyQ = zod_1.z.object({ discordId });
 const submit = zod_1.z.object({ guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), durationSec: zod_1.z.number().int().min(0).max(86_400).optional(), joinedAt: zod_1.z.coerce.date().optional(), answers: zod_1.z.array(zod_1.z.object({ question: zod_1.z.string().max(300), answer: zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)]).nullable() })).min(1).max(50) });
-const openQ = zod_1.z.object({ discordId, unit: zod_1.z.string().max(24).optional() });
+const openQ = zod_1.z.object({ discordId, unit: zod_1.z.string().max(24).optional(), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional() });
 const webLink = zod_1.z.object({ unit: zod_1.z.string().max(24), discordId, discordName: zod_1.z.string().trim().min(1).max(100), guildId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), joinedAt: zod_1.z.coerce.date().optional() });
 const token = zod_1.z.string().regex(/^[\w-]{60,2000}$/, 'Ungültiger Bewerbungslink.');
 const webSubmit = zod_1.z.object({ robloxUsername: zod_1.z.string().trim().max(64).optional(), answers: zod_1.z.record(zod_1.z.string(), zod_1.z.union([zod_1.z.string().max(5000), zod_1.z.array(zod_1.z.string().max(100)).max(25)])) });
@@ -181,7 +181,7 @@ let BotQualificationsController = class BotQualificationsController {
         this.web = web;
     }
     config(q) { return this.q.config(q.guildId); }
-    open(f) { return this.q.openFor(f.discordId, f.unit); }
+    open(f) { return this.q.openFor(f.discordId, f.unit, f.guildId); }
     submit(b) { return this.q.submit(b); }
     /** Bewerbungsart „Web“: persönlicher, signierter Link zum Formular im Browser. */
     webLink(b) { return this.web.link(b); }

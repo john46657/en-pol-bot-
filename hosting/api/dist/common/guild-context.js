@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inDashboardRequest = exports.inRequest = exports.runInGuild = exports.currentRequestId = exports.targetGuild = exports.currentGuild = void 0;
+exports.unscoped = exports.onePersonnel = exports.recordWhere = exports.recordSpace = exports.settingsGuild = exports.registeredSpaces = exports.scopedKey = exports.LATER_PER_SERVER_KEYS = exports.PER_SERVER_SETTING_KEYS = exports.SERVER_SCOPED_SETTINGS = exports.GuildContextMiddleware = exports.inDashboardRequest = exports.inRequest = exports.runInGuild = exports.currentRequestId = exports.targetGuild = exports.currentGuild = void 0;
 exports.setServerLinkResolvers = setServerLinkResolvers;
 const node_async_hooks_1 = require("node:async_hooks");
 const common_1 = require("@nestjs/common");
@@ -65,8 +65,10 @@ exports.PER_SERVER_SETTING_KEYS = [
     ...exports.SERVER_SCOPED_SETTINGS, 'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
     'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
     'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
-    'messagebuilder.channels',
+    'messagebuilder.channels', 'auth.discord', 'org.timezone', 'org.dateFormat',
 ];
+/** Erst später je Server getrennt: bestehende Server bekommen einmalig den bisherigen gemeinsamen Wert als eigene Kopie. */
+exports.LATER_PER_SERVER_KEYS = ['auth.discord', 'org.timezone', 'org.dateFormat'];
 const scopedKey = (key, guildId) => { const g = (0, exports.settingsGuild)(guildId); return g && exports.SERVER_SCOPED_SETTINGS.includes(key) ? `${key}@${g}` : key; };
 exports.scopedKey = scopedKey;
 // ---- Server-Verbund (Administration → Server-Verbund; gesetzt vom ServerLinksService) ----

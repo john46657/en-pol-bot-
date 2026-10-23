@@ -25,6 +25,8 @@ export declare const SERVER_SCOPED_SETTINGS: readonly ["team.structure", "team.r
  * Hintergrund-Aufgaben ohne Server gilt der Grundwert. Anmeldung, Backups, Server-Verbund und Bot-Zustand bleiben global.
  */
 export declare const PER_SERVER_SETTING_KEYS: readonly string[];
+/** Erst später je Server getrennt: bestehende Server bekommen einmalig den bisherigen gemeinsamen Wert als eigene Kopie. */
+export declare const LATER_PER_SERVER_KEYS: readonly string[];
 export declare const scopedKey: (key: string, guildId: string | null) => string;
 export declare function setServerLinkResolvers(settings: (guildId: string) => string, space: (guildId: string) => string | null, known?: () => Promise<ReadonlySet<string> | null>): void;
 /**

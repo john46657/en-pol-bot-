@@ -4,6 +4,7 @@ import { AuditService } from '../audit/audit.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { loadEnv } from '../config/env';
 import { initServerRoles } from '../multi-server/server-roles';
+import { runInGuild, settingsGuild } from '../common/guild-context';
 
 const API = 'https://discord.com/api/v10';
 /** Wie lange ein Abgleich gilt, bevor die Discord-Rollen erneut geprüft werden. */
@@ -18,6 +19,12 @@ const SWEEP_MS = 5 * 60_000;
  */
 export interface DiscordLoginSettings { signup: boolean; requireGuild: boolean; roleMap: { discordRoleId: string; role: string }[]; teamRoleIds: string[]; guildAdmins: boolean }
 export const DEFAULT_DISCORD_LOGIN: DiscordLoginSettings = { signup: true, requireGuild: true, roleMap: [], teamRoleIds: [], guildAdmins: true };
+/**
+ * Anmelde-Einstellungen JE SERVER (`auth.discord@<Server>`): Teamrollen, Rollen-Zuordnung, Discord-Admins und Registrierung
+ * gelten nur für den eigenen Server. `base` = gemeinsamer Grundwert (Server ohne eigene Einstellung, „Nur Mitglieder“).
+ */
+export interface LoginPolicy { base: DiscordLoginSettings; byGuild: Record<string, DiscordLoginSettings> }
+const KEY = 'auth.discord';
 /**
  * `roles` = alle Discord-Rollen (Zugangsprüfung), `byGuild` = Rollen je geprüftem Server (Mitglied), `checked` = geprüfte Server,
  * `admin` = Server, auf denen die Person das Discord-Recht „Administrator“ hat oder Besitzer ist.
@@ -56,10 +63,35 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
 
   isOwnerId(discordId: string) { return (this.env.ADMIN_DISCORD_IDS ?? '').split(/[\s,;]+/).includes(discordId); }
 
+  /** Gemeinsamer Grundwert – unabhängig vom gewählten Server der Anfrage. */
   async settings(): Promise<DiscordLoginSettings> {
-    const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'auth.discord' } }))?.value as Partial<DiscordLoginSettings> | undefined;
+    const v = (await runInGuild(null, async () => await this.prisma.systemSetting.findUnique({ where: { key: KEY } })))?.value as Partial<DiscordLoginSettings> | undefined;
     return { ...DEFAULT_DISCORD_LOGIN, ...(v ?? {}) };
   }
+
+  /** Einstellungen der angegebenen Server: eigener Wert des Servers (bzw. seiner Gruppe), sonst der Grundwert. */
+  async policy(guildIds: string[]): Promise<LoginPolicy> {
+    const base = await this.settings();
+    const keys = new Map(guildIds.map((g) => [g, `${KEY}@${settingsGuild(g) ?? g}`]));
+    const rows = keys.size ? await runInGuild(null, async () => await this.prisma.systemSetting.findMany({ where: { key: { in: [...new Set(keys.values())] } } })) : [];
+    const byGuild: Record<string, DiscordLoginSettings> = {};
+    for (const [g, k] of keys) {
+      const own = rows.find((r) => r.key === k)?.value as Partial<DiscordLoginSettings> | undefined;
+      // „Nur Mitglieder“ betrifft die Anmeldung vor jeder Server-Zuordnung → immer der Grundwert
+      byGuild[g] = own ? { ...DEFAULT_DISCORD_LOGIN, ...own, requireGuild: base.requireGuild } : base;
+    }
+    return { base, byGuild };
+  }
+
+  /** Server, auf denen die Mitgliedschaft Zugang gibt (Teamrolle des Servers, Discord-Admin des Servers oder keine Teamrollen dort). */
+  grantingGuilds(member: { byGuild: Record<string, string[]>; admin?: string[] }, p: LoginPolicy): string[] {
+    return Object.entries(member.byGuild).filter(([g, roles]) => {
+      const s = p.byGuild[g] ?? p.base;
+      return (s.guildAdmins && !!member.admin?.includes(g)) || !s.teamRoleIds.length || roles.some((r) => s.teamRoleIds.includes(r));
+    }).map(([g]) => g);
+  }
+  /** Sind irgendwo Teamrollen Pflicht? Dann kommt ohne Server-Mitgliedschaft niemand rein. */
+  teamRolesRequired(p: LoginPolicy) { return !!p.base.teamRoleIds.length || Object.values(p.byGuild).some((s) => s.teamRoleIds.length > 0); }
 
   /** Mitglied auf einem der Server des Bots (bzw. der eingestellten Server)? `null` = nein, `unknown` = nicht prüfbar. */
   async membership(discordId: string): Promise<Membership> {
@@ -159,11 +191,9 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Darf diese Mitgliedschaft ins Dashboard? (Besitzer aus ADMIN_DISCORD_IDS prüft der Aufrufer vorab.) */
-  verdict(member: { roles: string[]; admin?: string[] } | null, s: DiscordLoginSettings): AccessVerdict {
-    if ((s.requireGuild || s.teamRoleIds.length) && member === null) return 'not_member';
-    if (s.guildAdmins && member?.admin?.length) return 'ok'; // Discord-Administrator eines Servers: immer Zugang
-    if (s.teamRoleIds.length && !member!.roles.some((r) => s.teamRoleIds.includes(r))) return 'no_team_role';
-    return 'ok';
+  verdict(member: { byGuild: Record<string, string[]>; admin?: string[] } | null, p: LoginPolicy): AccessVerdict {
+    if (member === null) return p.base.requireGuild || this.teamRolesRequired(p) ? 'not_member' : 'ok';
+    return this.grantingGuilds(member, p).length ? 'ok' : 'no_team_role';
   }
 
   /**
@@ -191,11 +221,12 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
    * (`UserRole.guildIds`) – eine Discord-Rolle auf Server A verleiht nie Rechte auf Server B. Nur die in `byGuild`/`checked`
    * geprüften Server werden geändert; Rollen ohne Discord-Verknüpfung und „System Administrator“ bleiben unangetastet.
    */
-  async syncRoles(userId: string, byGuild: Record<string, string[]>, s?: DiscordLoginSettings, checked: string[] = Object.keys(byGuild), adminGuilds: string[] = []) {
-    const settings = s ?? (await this.settings());
-    const admins = settings.guildAdmins ? adminGuilds.filter((g) => checked.includes(g)) : [];
+  async syncRoles(userId: string, byGuild: Record<string, string[]>, p?: LoginPolicy, checked: string[] = Object.keys(byGuild), adminGuilds: string[] = []) {
+    const policy = p ?? (await this.policy(checked));
+    const conf = (g: string) => policy.byGuild[g] ?? policy.base; // Zuordnungen gelten nur auf ihrem Server
+    const admins = adminGuilds.filter((g) => checked.includes(g) && conf(g).guildAdmins);
     if (admins.length) await this.ensureServerAdminRoles(admins);
-    const names = [...new Set([...settings.roleMap.map((m) => m.role), SERVER_ADMIN_ROLE])];
+    const names = [...new Set([...checked.flatMap((g) => conf(g).roleMap.map((m) => m.role)), SERVER_ADMIN_ROLE])];
     // nur Rollen der geprüften Server – serverübergreifende Vorlagen werden nicht über Discord vergeben
     const roles = await this.prisma.role.findMany({
       // auch Rollen, die der Benutzer noch über Discord hat, deren Verknüpfung aber entfernt wurde – sonst bliebe die Zuweisung für immer
@@ -210,7 +241,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       if (r.name === SERVER_ADMIN_ROLE && admins.includes(g)) return true;
       return r.discordRoleIds.some((d) => have.includes(d))
         || r.discordMappings.some((m) => m.server.guildId === g && have.includes(m.discordRoleId))
-        || settings.roleMap.some((m) => m.role === r.name && have.includes(m.discordRoleId));
+        || conf(g).roleMap.some((m) => m.role === r.name && have.includes(m.discordRoleId));
     });
     const current = await this.prisma.userRole.findMany({ where: { userId, roleId: { in: roles.map((r) => r.id) } } });
     const changes: { name: string; before: string[]; after: string[] }[] = [];
@@ -299,8 +330,8 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
     if (!link || this.isOwnerId(link.discordId)) return true; // Passwort-Konten und Besitzer: kein Discord-Zwang
     const member = await this.membership(link.discordId);
     if (member === 'unknown') return this.checked.get(userId)?.ok ?? true; // Discord nicht erreichbar → letzter Stand
-    const s = await this.settings();
-    const verdict = this.verdict(member, s);
+    const p = await this.policy(member ? member.checked : []);
+    const verdict = this.verdict(member, p);
     if (verdict !== 'ok') {
       const r = await this.prisma.session.updateMany({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } }, data: { revokedAt: new Date() } });
       if (r.count) {
@@ -310,7 +341,7 @@ export class DiscordAccessService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
     await this.recordMemberships(userId, member!.byGuild, member!.checked);
-    await this.syncRoles(userId, member!.byGuild, s, member!.checked, member!.admin);
+    await this.syncRoles(userId, member!.byGuild, p, member!.checked, member!.admin);
     return true;
   }
 

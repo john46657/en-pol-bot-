@@ -76,12 +76,15 @@ declare const submit: z.ZodObject<{
 declare const openQ: z.ZodObject<{
     discordId: z.ZodString;
     unit: z.ZodOptional<z.ZodString>;
+    guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     discordId: string;
     unit?: string | undefined;
+    guildId?: string | undefined;
 }, {
     discordId: string;
     unit?: string | undefined;
+    guildId?: string | undefined;
 }>;
 declare const webLink: z.ZodObject<{
     unit: z.ZodString;
