@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
 import { useAuth } from './auth';
 import { pendingBody, queueSave } from './autosave';
+import { accentHex, useStudio } from './studio';
 
 /** Persönliche Einstellungen (nur für einen selbst, je Benutzer in der Datenbank – auf jedem Gerät gleich). */
 export interface Preferences {
@@ -97,16 +98,31 @@ export function usePrefs() {
     queueSave('me:layouts', { method: 'PUT', path: '/me/layouts', body: { layouts: l }, guildId: null, label: 'Dashboard-Layout' });
   }, [qc, user?.id]);
 
-  return { prefs, layouts, update, setLayouts, loading: q.isLoading, ready: !!stored };
+  // own = nur selbst gewählte Werte (ohne Standardwerte), z. B. ob ein eigenes Datumsformat gesetzt ist
+  return { prefs, own: stored?.preferences ?? {}, layouts, update, setLayouts, loading: q.isLoading, ready: !!stored };
 }
 
 // ---- Darstellung anwenden ----
+/**
+ * Persönliches Design + Vorgaben der Organisation (Akzentfarbe, Datumsformat) anwenden – in jeder Oberfläche
+ * (Dashboard, MDT, Leitstelle), damit sie auch bei direktem Aufruf gleich aussehen.
+ */
+export function useAppearance() {
+  const studio = useStudio();
+  const { prefs, own } = usePrefs();
+  // Datumsformat: eigenes, sonst das der Organisation (Einstellungen → Organisation)
+  useApplyPrefs({ ...prefs, dateFormat: own.dateFormat ?? studio.data?.org?.dateFormat ?? prefs.dateFormat }, accentHex(studio.data?.theme?.accent));
+}
 let dateCfg: { format: Preferences['dateFormat']; tz?: string; lang: string } = { format: 'DD.MM.YYYY', lang: 'de' };
 /** Datum/Uhrzeit im persönlichen Format und in der persönlichen Zeitzone. */
 export function formatDate(iso: string | Date, withTime = true) {
   const d = typeof iso === 'string' ? new Date(iso) : iso;
   if (Number.isNaN(d.getTime())) return '—';
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: dateCfg.tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(d).map((p) => [p.type, p.value]));
+  const opts = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false } as const;
+  // ungültige Zeitzone (alter Wert) → Zeitzone des Geräts statt Absturz der ganzen Seite
+  let fmt: Intl.DateTimeFormat;
+  try { fmt = new Intl.DateTimeFormat('en-GB', { ...opts, timeZone: dateCfg.tz }); } catch { fmt = new Intl.DateTimeFormat('en-GB', opts); }
+  const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
   const date = dateCfg.format === 'YYYY-MM-DD' ? `${parts.year}-${parts.month}-${parts.day}` : dateCfg.format === 'MM/DD/YYYY' ? `${parts.month}/${parts.day}/${parts.year}` : `${parts.day}.${parts.month}.${parts.year}`;
   return withTime ? `${date} ${parts.hour}:${parts.minute}` : date;
 }

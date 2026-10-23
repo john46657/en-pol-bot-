@@ -4,10 +4,12 @@ import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useGuilds, useServer } from '../../lib/guilds';
 import { useSettings } from '../../lib/settings';
+import { DEFAULT_TIME_ZONE, timeZones } from '@enrp/shared';
 import { ChannelPicker, ChannelsPicker, RolePicker, ServersPicker, TagListEditor } from '../../components/DiscordPickers';
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, SkeletonRows } from '../../components/ui';
 
-const TEXT = [['org.name', 'Name der Organisation'], ['org.serverName', 'Servername'], ['org.timezone', 'Zeitzone (IANA)']] as const;
+const TEXT = [['org.name', 'Name der Organisation', 'EN Polizei'], ['org.serverName', 'Servername', 'z. B. Emden RP']] as const;
+const TIMEZONES = timeZones();
 const CHANNELS = [['dispatch', '📡 Leitstellen-Kanal (neue/zugewiesene Einsätze)'], ['announcements', '📢 Ankündigungs-Kanal'], ['applications', 'Bewerbungs-Kanal (Polizei-Bewerbungen mit Antworten + Annehmen/Ablehnen-Buttons – nur für Staff!)'], ['danger', 'Gefahrenstatus-Kanal (Stufenänderungen)'], ['qualifications', 'Qualifikations-Kanal (Anträge aus /qualipanel mit Annehmen/Ablehnen-Buttons)'], ['duty', 'Dienst-Kanal (Nachricht bei jeder Dienststatus-Änderung)'],
   ['teamlist', 'Teamlisten-Kanal (aktualisiert sich selbst, ein Kanal)'], ['tickets', 'Support-Ticket-Kategorie (eine Kategorie)'], ['staffRole', 'Staff-Rolle (sieht Support-Tickets)'], ['radioRole', 'Funk-Rolle (wird mit der Funk-Whitelist vergeben)'], ['dutyRole', 'Im-Dienst-Rolle(n) (im Dienst vergeben, sonst entzogen; mehrere Server: je eine ID, kommagetrennt)'], ['breakRole', 'Pausen-Rolle(n) (optional)'], ['trainingRole', 'Ausbildungs-Rolle(n) (optional)'], ['adminDutyRole', 'Verwaltungsdienst-Rolle(n) (optional)'], ['guildId', 'Server – optional (für Discord-Anmeldung/Mitgliedschaft)']] as const;
 /** Rollen-Felder (Auswahl als Rolle) und Felder mit genau einer ID. */
@@ -50,8 +52,10 @@ export function Settings() {
       {msg && <p role="status" className="mb-3 rounded border border-line bg-panel p-2 text-sm">{msg}</p>}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Organisation">
-          <div className="space-y-3">{TEXT.map(([k, label]) => <Field key={k} label={`${label}${isServerValue(k) ? ` (nur ${serverName})` : ''}`}>{(id) => <Input id={id} value={val(k)} disabled={!manage} maxLength={100} onChange={(e) => edit(k, e.target.value, (v) => { if (v.trim().length >= (k === 'org.timezone' ? 3 : 1)) put(k, v.trim(), label); return true; })} />}</Field>)}
-            <Field label="Datumsformat">{(id) => <Select id={id} disabled={!manage} value={val('org.dateFormat') || 'DD.MM.YYYY'} onChange={(e) => put('org.dateFormat', e.target.value, 'Datumsformat')}>{['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'].map((f) => <option key={f}>{f}</option>)}</Select>}</Field></div>
+          <div className="space-y-3">{TEXT.map(([k, label, placeholder]) => <Field key={k} label={`${label}${isServerValue(k) ? ` (nur ${serverName})` : ''}`}>{(id) => <Input id={id} value={val(k)} placeholder={placeholder} disabled={!manage} maxLength={100} onChange={(e) => edit(k, e.target.value, (v) => { if (v.trim()) put(k, v.trim(), label); return true; })} />}</Field>)}
+            {/* Auswahl statt Freitext: halbe Eingaben („Eur“) wären sonst als ungültige Zeitzone gespeichert worden */}
+            <Field label="Zeitzone (Berichte, Transkripte, Wochen-Reset)">{(id) => { const tz = val('org.timezone') || DEFAULT_TIME_ZONE; return <Select id={id} disabled={!manage} value={tz} onChange={(e) => put('org.timezone', e.target.value, 'Zeitzone')}>{[...new Set([tz, ...TIMEZONES])].map((z) => <option key={z}>{z}</option>)}</Select>; }}</Field>
+            <Field label="Datumsformat (Standard für alle ohne eigenes)">{(id) => <Select id={id} disabled={!manage} value={val('org.dateFormat') || 'DD.MM.YYYY'} onChange={(e) => put('org.dateFormat', e.target.value, 'Datumsformat')}>{['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'].map((f) => <option key={f}>{f}</option>)}</Select>}</Field></div>
         </Card>
         <Card title="Datenaufbewahrung" actions={manage && <Button variant="secondary" size="sm" onClick={() => retention.mutate()} disabled={retention.isPending}>Jetzt ausführen</Button>}>
           <p className="mb-3 text-xs text-muted">Audit-Logs werden bei der Bereinigung nie gelöscht.</p>

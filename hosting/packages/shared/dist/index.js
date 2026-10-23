@@ -53,6 +53,7 @@ __export(index_exports, {
   DEFAULT_MDT_CONFIG: () => DEFAULT_MDT_CONFIG,
   DEFAULT_RADIO_ROLE_RULES: () => DEFAULT_RADIO_ROLE_RULES,
   DEFAULT_TICKET_REF_PREFIX: () => DEFAULT_TICKET_REF_PREFIX,
+  DEFAULT_TIME_ZONE: () => DEFAULT_TIME_ZONE,
   DEFAULT_VERIFY_CONFIG: () => DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG: () => DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS: () => DISCORD_LIMITS,
@@ -245,6 +246,7 @@ __export(index_exports, {
   isRadioRoleOnly: () => isRadioRoleOnly,
   isRobloxField: () => isRobloxField,
   isSupportOpen: () => isSupportOpen,
+  isTimeZone: () => isTimeZone,
   isValidEmoji: () => isValidEmoji,
   isValidRobloxUserId: () => isValidRobloxUserId,
   isoWeek: () => isoWeek,
@@ -329,6 +331,7 @@ __export(index_exports, {
   ticketChannelName: () => ticketChannelName,
   ticketNumber: () => ticketNumber,
   ticketRef: () => ticketRef,
+  timeZones: () => timeZones,
   toDiscordPayload: () => toDiscordPayload,
   toPartialEmoji: () => toPartialEmoji,
   triggerMatches: () => triggerMatches,
@@ -3662,6 +3665,27 @@ function formatReminderDuration(ms) {
   const parts = [d && `${d} ${d === 1 ? "Tag" : "Tage"}`, h && `${h} ${h === 1 ? "Stunde" : "Stunden"}`, m && `${m} ${m === 1 ? "Minute" : "Minuten"}`].filter(Boolean);
   return parts.join(" ") || "0 Minuten";
 }
+
+// src/timezones.ts
+var DEFAULT_TIME_ZONE = "Europe/Berlin";
+function isTimeZone(tz) {
+  if (typeof tz !== "string" || !tz.trim()) return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+function timeZones() {
+  const common = ["Europe/Berlin", "Europe/Vienna", "Europe/Zurich", "Europe/London", "UTC", "America/New_York", "America/Chicago", "America/Los_Angeles"];
+  let all = [];
+  try {
+    all = Intl.supportedValuesOf("timeZone");
+  } catch {
+  }
+  return [.../* @__PURE__ */ new Set([...common, ...all])];
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AI_CHECK_HINT,
@@ -3697,6 +3721,7 @@ function formatReminderDuration(ms) {
   DEFAULT_MDT_CONFIG,
   DEFAULT_RADIO_ROLE_RULES,
   DEFAULT_TICKET_REF_PREFIX,
+  DEFAULT_TIME_ZONE,
   DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS,
@@ -3889,6 +3914,7 @@ function formatReminderDuration(ms) {
   isRadioRoleOnly,
   isRobloxField,
   isSupportOpen,
+  isTimeZone,
   isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
@@ -3973,6 +3999,7 @@ function formatReminderDuration(ms) {
   ticketChannelName,
   ticketNumber,
   ticketRef,
+  timeZones,
   toDiscordPayload,
   toPartialEmoji,
   triggerMatches,

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, BarChart3, BookOpen, Car, ClipboardList, FileText, Fingerprint, LayoutDashboard, Map as MapIcon, Menu, Monitor, Phone, Radio, RadioTower, RefreshCw, ScrollText, Settings, Siren, Smartphone, Tablet, Truck, Users, UsersRound, X, type LucideIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { useAppearance } from '../../lib/prefs';
 import { useCadConfig, useCadLive, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
 import { MiniMap } from './MiniMap';
 import { onRealtime } from '../../lib/realtime';
@@ -78,6 +79,7 @@ const cadTitle = (path: string) => CAD_NAV.flatMap((g) => g.items).filter((i) =>
  */
 export function CadLayout() {
   const { user, can } = useAuth();
+  useAppearance();
   const loc = useLocation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);

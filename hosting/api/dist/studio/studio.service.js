@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StudioService = exports.ACCENTS = void 0;
 const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
+const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
 const errors_1 = require("../common/errors");
 const custom_fields_1 = require("./custom-fields");
@@ -30,14 +31,17 @@ let StudioService = class StudioService {
         return v !== undefined && v !== null && typeof v === typeof fallback && Array.isArray(v) === Array.isArray(fallback) ? v : fallback;
     }
     async config() {
-        const [customFields, accent, name, customAccents] = await Promise.all([
+        const [customFields, accent, name, customAccents, dateFormat, timezone] = await Promise.all([
             this.setting('studio.customFields', { persons: [], vehicles: [] }),
             this.setting('theme.accent', 'blue'),
             this.setting('org.name', 'EN Polizei'),
             this.setting('theme.customAccents', []),
+            this.setting('org.dateFormat', 'DD.MM.YYYY'),
+            this.setting('org.timezone', shared_1.DEFAULT_TIME_ZONE),
         ]);
         const list = (x) => (Array.isArray(x) ? x : []);
-        return { org: { name }, theme: { accent, customAccents: list(customAccents).filter((a) => typeof a?.name === 'string' && typeof a?.hex === 'string') }, customFields: { ...customFields, persons: list(customFields.persons), vehicles: list(customFields.vehicles) } };
+        // Datumsformat/Zeitzone der Organisation: Standard für alle, die persönlich nichts gewählt haben
+        return { org: { name, dateFormat, timezone: (0, shared_1.isTimeZone)(timezone) ? timezone : shared_1.DEFAULT_TIME_ZONE }, theme: { accent, customAccents: list(customAccents).filter((a) => typeof a?.name === 'string' && typeof a?.hex === 'string') }, customFields: { ...customFields, persons: list(customFields.persons), vehicles: list(customFields.vehicles) } };
     }
     async defs(entity) {
         const d = (await this.setting('studio.customFields', { persons: [], vehicles: [] }))[entity];

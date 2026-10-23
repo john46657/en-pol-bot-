@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminService = exports.SETTING_SCHEMAS = void 0;
 const common_1 = require("@nestjs/common");
 const zod_1 = require("zod");
+const shared_1 = require("@enrp/shared");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
@@ -27,7 +28,7 @@ const idList = () => zod_1.z.string().regex(/^\d{15,25}(\s*,\s*\d{15,25})*$/).op
 exports.SETTING_SCHEMAS = {
     'org.name': zod_1.z.string().min(1).max(100),
     'org.serverName': zod_1.z.string().min(1).max(100),
-    'org.timezone': zod_1.z.string().min(3).max(64),
+    'org.timezone': zod_1.z.string().min(3).max(64).refine(shared_1.isTimeZone, 'Unbekannte Zeitzone – bitte aus der Liste wählen (z. B. Europe/Berlin).'),
     'org.dateFormat': zod_1.z.enum(['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']),
     'retention.sessionDays': zod_1.z.number().int().min(1).max(365),
     'retention.loginHistoryDays': zod_1.z.number().int().min(30).max(3650),

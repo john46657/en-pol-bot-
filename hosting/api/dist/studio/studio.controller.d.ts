@@ -6,6 +6,8 @@ export declare class StudioController {
     config(): Promise<{
         org: {
             name: string;
+            dateFormat: string;
+            timezone: string;
         };
         theme: {
             accent: string;

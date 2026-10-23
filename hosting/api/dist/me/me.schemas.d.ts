@@ -34,7 +34,8 @@ export declare const preferencesSchema: z.ZodObject<{
     fontSize: z.ZodOptional<z.ZodNumber>;
     density: z.ZodOptional<z.ZodEnum<["compact", "comfortable"]>>;
     language: z.ZodOptional<z.ZodEnum<["de", "en"]>>;
-    timezone: z.ZodOptional<z.ZodString>;
+    /** Ungültige Zeitzone (alter Wert) wird verworfen statt das Speichern aller Einstellungen zu blockieren. */
+    timezone: z.ZodEffects<z.ZodOptional<z.ZodString>, string | undefined, unknown>;
     dateFormat: z.ZodOptional<z.ZodEnum<["DD.MM.YYYY", "YYYY-MM-DD", "MM/DD/YYYY"]>>;
     notifications: z.ZodOptional<z.ZodObject<{
         muted: z.ZodArray<z.ZodString, "many">;
@@ -310,7 +311,7 @@ export declare const preferencesSchema: z.ZodObject<{
     } | undefined;
 }, {
     theme?: "system" | "dark" | "light" | undefined;
-    timezone?: string | undefined;
+    timezone?: unknown;
     notifications?: {
         muted: string[];
         toasts?: boolean | undefined;

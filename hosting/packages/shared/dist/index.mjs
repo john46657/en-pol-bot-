@@ -3314,6 +3314,27 @@ function formatReminderDuration(ms) {
   const parts = [d && `${d} ${d === 1 ? "Tag" : "Tage"}`, h && `${h} ${h === 1 ? "Stunde" : "Stunden"}`, m && `${m} ${m === 1 ? "Minute" : "Minuten"}`].filter(Boolean);
   return parts.join(" ") || "0 Minuten";
 }
+
+// src/timezones.ts
+var DEFAULT_TIME_ZONE = "Europe/Berlin";
+function isTimeZone(tz) {
+  if (typeof tz !== "string" || !tz.trim()) return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+function timeZones() {
+  const common = ["Europe/Berlin", "Europe/Vienna", "Europe/Zurich", "Europe/London", "UTC", "America/New_York", "America/Chicago", "America/Los_Angeles"];
+  let all = [];
+  try {
+    all = Intl.supportedValuesOf("timeZone");
+  } catch {
+  }
+  return [.../* @__PURE__ */ new Set([...common, ...all])];
+}
 export {
   AI_CHECK_HINT,
   AI_CHECK_LEVEL_LABEL,
@@ -3348,6 +3369,7 @@ export {
   DEFAULT_MDT_CONFIG,
   DEFAULT_RADIO_ROLE_RULES,
   DEFAULT_TICKET_REF_PREFIX,
+  DEFAULT_TIME_ZONE,
   DEFAULT_VERIFY_CONFIG,
   DEFAULT_WELCOME_CONFIG,
   DISCORD_LIMITS,
@@ -3540,6 +3562,7 @@ export {
   isRadioRoleOnly,
   isRobloxField,
   isSupportOpen,
+  isTimeZone,
   isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
@@ -3624,6 +3647,7 @@ export {
   ticketChannelName,
   ticketNumber,
   ticketRef,
+  timeZones,
   toDiscordPayload,
   toPartialEmoji,
   triggerMatches,
