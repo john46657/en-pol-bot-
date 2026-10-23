@@ -5,9 +5,9 @@ import { createGhostPing, ghostPingTargets, ghostPingText, type DeletedMessage }
 const AUTHOR = '111111111111111111', VICTIM = '222222222222222222', OTHER = '333333333333333333', BOT = '444444444444444444', CH = '555555555555555555';
 const msg = (p: Partial<DeletedMessage> = {}): DeletedMessage => ({ guildId: '666666666666666666', channelId: CH, authorId: AUTHOR, authorBot: false, content: `<@${VICTIM}>`, createdAt: new Date(), mentions: [{ id: VICTIM, bot: false }], ...p });
 
-function setup(enabled: boolean | 'error' = true) {
+function setup(enabled: boolean | 'error' | ((path: string) => boolean) = true) {
   const posts: { channelId: string; content: string; mentionUserIds: string[] }[] = [];
-  const api: Api = { async asUser() { throw new Error('unused'); }, async service() { if (enabled === 'error') throw new Error('down'); return { enabled } as never; } };
+  const api: Api = { async asUser() { throw new Error('unused'); }, async service(_m, path) { if (enabled === 'error') throw new Error('down'); return { enabled: typeof enabled === 'function' ? enabled(path) : enabled } as never; } };
   return { g: createGhostPing(api, { async post(channelId, m) { posts.push({ channelId, ...m }); } }, () => undefined), posts };
 }
 
@@ -38,5 +38,13 @@ describe('ghost ping', () => {
     const down = setup('error');
     await down.g.deleted(msg());
     expect(down.posts).toHaveLength(1);
+  });
+
+  it('reads the setting of the server the message was deleted on', async () => {
+    const { g, posts } = setup((path) => !path.includes('guildId=777777777777777777'));
+    await g.deleted(msg({ guildId: '777777777777777777' }));
+    expect(posts).toEqual([]);
+    await g.deleted(msg());
+    expect(posts).toHaveLength(1);
   });
 });

@@ -262,6 +262,9 @@ describe('Server von Grund auf getrennt', () => {
     const onA = (await gadmin.get('/api/v1/admin/settings').set('X-Guild-Id', A)).body.settings as Record<string, unknown>;
     expect(onA['org.name']).toBe('Polizei Alpha');
     expect(onA['discord.ghostPing']).toEqual({ enabled: false });
+    // der Bot liest den Wert des Servers, auf dem die Nachricht gelöscht wurde
+    expect((await http().get(`/api/v1/bot/ghost-ping?guildId=${A}`).set({ Authorization: `Bot ${TOKEN}` })).body).toEqual({ enabled: false });
+    expect((await http().get(`/api/v1/bot/ghost-ping?guildId=${B}`).set({ Authorization: `Bot ${TOKEN}` })).body).toEqual({ enabled: true });
     // aus dem Kontext von B den Wert von A schreiben: verboten
     expect((await gadmin.put(`/api/v1/admin/settings/${encodeURIComponent(`org.name@${A}`)}`).set('X-Guild-Id', B).send({ value: 'gekapert' })).status).toBe(403);
     expect(await prisma.systemSetting.findUnique({ where: { key: `org.name@${A}` } })).toMatchObject({ value: 'Polizei Alpha' });
