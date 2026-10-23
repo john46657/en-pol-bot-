@@ -1,11 +1,19 @@
 import { NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 export declare const currentGuild: () => string | null;
+/**
+ * Server, den eine Anfrage per `?guildId=` (oder im Body) ansprechen darf. Server sind getrennt: im Kontext eines
+ * gewählten Servers nur dieser – ein anderer wird abgelehnt (sonst könnte ein Server-Admin per Parameter Daten und
+ * Einstellungen fremder Server lesen/ändern). Ohne Kontext („Alle Server“, Bot-Dienstweg) gilt der angegebene.
+ */
+export declare const targetGuild: (requested?: string | null) => string | null;
 /** Request-ID der laufenden Anfrage (Korrelations-ID für Audit/Fehlersuche), außerhalb von Anfragen undefiniert. */
 export declare const currentRequestId: () => string | undefined;
 export declare const runInGuild: <T>(guildId: string | null, fn: () => T) => T;
 /** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
 export declare const inRequest: () => boolean;
+/** Anfrage aus dem Dashboard (Sitzung), nicht vom Bot und keine Hintergrund-Aufgabe? */
+export declare const inDashboardRequest: () => boolean;
 export declare class GuildContextMiddleware implements NestMiddleware {
     use(req: Request, _res: Response, next: NextFunction): void;
 }

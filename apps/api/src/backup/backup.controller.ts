@@ -9,6 +9,7 @@ import { BotService, CurrentActor, RequirePermission } from '../authz/decorators
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
 import { AppError } from '../common/errors';
+import { targetGuild } from '../common/guild-context';
 
 const sf = z.string().regex(/^\d{15,25}$/);
 const fileName = z.string().regex(/^[a-z-]+-\d{8}-\d{6}\.json\.gz$/);
@@ -18,33 +19,35 @@ const fileName = z.string().regex(/^[a-z-]+-\d{8}-\d{6}\.json\.gz$/);
 @Controller('backups')
 export class BackupController {
   constructor(private readonly s: BackupService) {}
-  @Get('config') @RequirePermission('settings.manage') config() { return this.s.config(); }
-  @Put('config') @RequirePermission('settings.manage') saveConfig(@CurrentActor() a: Actor, @Body(zodBody(backupConfigSchema)) b: BackupConfig) { return this.s.saveConfig(a, b); }
+  @Get('config') @RequirePermission('settings.manage') async config(@CurrentActor() a: Actor) { await this.s.requireGlobal(a); return this.s.config(); }
+  @Put('config') @RequirePermission('settings.manage') async saveConfig(@CurrentActor() a: Actor, @Body(zodBody(backupConfigSchema)) b: BackupConfig) { await this.s.requireGlobal(a); return this.s.saveConfig(a, b); }
 
-  @Get('data') @RequirePermission('settings.manage') listData() { return this.s.listData(); }
-  @Post('data') @RequirePermission('settings.manage') createData(@CurrentActor() a: Actor) { return this.s.createData(a, 'manuell'); }
+  @Get('data') @RequirePermission('settings.manage') async listData(@CurrentActor() a: Actor) { await this.s.requireGlobal(a); return this.s.listData(); }
+  @Post('data') @RequirePermission('settings.manage') async createData(@CurrentActor() a: Actor) { await this.s.requireGlobal(a); return this.s.createData(a, 'manuell'); }
   @Get('data/:name') @RequirePermission('settings.manage')
-  async download(@Param('name', zodBody(fileName)) name: string, @Res() res: Response) {
+  async download(@CurrentActor() a: Actor, @Param('name', zodBody(fileName)) name: string, @Res() res: Response) {
+    await this.s.requireGlobal(a);
     const buf = await this.s.readData(name);
     res.setHeader('content-type', 'application/gzip');
     res.setHeader('content-disposition', `attachment; filename="en-polizei-${name}"`);
     res.send(buf);
   }
-  @Delete('data/:name') @HttpCode(204) @RequirePermission('settings.manage') deleteData(@CurrentActor() a: Actor, @Param('name', zodBody(fileName)) name: string) { return this.s.deleteData(a, name); }
+  @Delete('data/:name') @HttpCode(204) @RequirePermission('settings.manage') async deleteData(@CurrentActor() a: Actor, @Param('name', zodBody(fileName)) name: string) { await this.s.requireGlobal(a); return this.s.deleteData(a, name); }
   @Post('data/:name/restore') @HttpCode(200) @RequirePermission('settings.manage')
-  restore(@CurrentActor() a: Actor, @Param('name', zodBody(fileName)) name: string, @Body(zodBody(z.object({ confirm: z.literal('WIEDERHERSTELLEN') }))) _b: unknown) { return this.s.restoreData(a, { name }); }
+  async restore(@CurrentActor() a: Actor, @Param('name', zodBody(fileName)) name: string, @Body(zodBody(z.object({ confirm: z.literal('WIEDERHERSTELLEN') }))) _b: unknown) { await this.s.requireGlobal(a); return this.s.restoreData(a, { name }); }
   @Post('data-upload/restore') @HttpCode(200) @RequirePermission('settings.manage') @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 500 * 1024 * 1024, files: 1 } }))
-  restoreUpload(@CurrentActor() a: Actor, @UploadedFile() file: Express.Multer.File | undefined, @Body('confirm') confirm: string) {
+  async restoreUpload(@CurrentActor() a: Actor, @UploadedFile() file: Express.Multer.File | undefined, @Body('confirm') confirm: string) {
+    await this.s.requireGlobal(a);
     if (confirm !== 'WIEDERHERSTELLEN') throw new AppError('VALIDATION_FAILED', 'Zum Bestätigen „WIEDERHERSTELLEN“ eingeben.');
     return this.s.restoreData(a, { buffer: file?.buffer });
   }
 
-  @Get('discord') @RequirePermission('settings.manage') listDiscord(@Query(zodBody(z.object({ guildId: sf.optional() }))) q: { guildId?: string }) { return this.s.listDiscord(q.guildId); }
+  @Get('discord') @RequirePermission('settings.manage') listDiscord(@Query(zodBody(z.object({ guildId: sf.optional() }))) q: { guildId?: string }) { return this.s.listDiscord(targetGuild(q.guildId) ?? undefined); }
   @Get('discord/:id') @RequirePermission('settings.manage') getDiscord(@Param('id', ParseUUIDPipe) id: string) { return this.s.getDiscord(id); }
-  @Post('discord') @RequirePermission('settings.manage') createDiscord(@CurrentActor() a: Actor, @Body(zodBody(z.object({ guildId: sf, name: z.string().trim().max(80).optional() }))) b: { guildId: string; name?: string }) { return this.s.createDiscord(a, b.guildId, b.name); }
+  @Post('discord') @RequirePermission('settings.manage') createDiscord(@CurrentActor() a: Actor, @Body(zodBody(z.object({ guildId: sf, name: z.string().trim().max(80).optional() }))) b: { guildId: string; name?: string }) { return this.s.createDiscord(a, targetGuild(b.guildId)!, b.name); }
   @Delete('discord/:id') @HttpCode(204) @RequirePermission('settings.manage') deleteDiscord(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.deleteDiscord(a, id); }
   @Post('discord/:id/restore') @HttpCode(200) @RequirePermission('settings.manage')
-  restoreDiscord(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ guildId: sf.optional(), parts: z.array(z.enum(BACKUP_PARTS)).min(1), confirm: z.literal('WIEDERHERSTELLEN') }))) b: { guildId?: string; parts: (typeof BACKUP_PARTS)[number][] }) { return this.s.restoreDiscord(a, id, b); }
+  restoreDiscord(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ guildId: sf.optional(), parts: z.array(z.enum(BACKUP_PARTS)).min(1), confirm: z.literal('WIEDERHERSTELLEN') }))) b: { guildId?: string; parts: (typeof BACKUP_PARTS)[number][] }) { return this.s.restoreDiscord(a, id, { ...b, guildId: targetGuild(b.guildId) ?? undefined }); }
 }
 
 /** Dienstweg des Bots: gelesene Serverdaten abliefern, Backup zum Wiederherstellen holen, Ergebnis melden. */

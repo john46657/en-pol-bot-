@@ -28,13 +28,13 @@ export declare class ApplicationBansService {
         discordId?: string | null;
         robloxUserId?: string | null;
     }, scope: string, guildId: string | null): Promise<{
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         createdById: string | null;
         createdAt: Date;
         reason: string;
         expiresAt: Date | null;
-        guildId: string | null;
         name: string;
         discordId: string | null;
         createdByName: string | null;
@@ -61,13 +61,13 @@ export declare class ApplicationBansService {
     }>;
     /** Sperrliste des gewählten Servers (ohne Server: die übergreifenden). */
     list(includeInactive: boolean): Promise<{
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         createdById: string | null;
         createdAt: Date;
         reason: string;
         expiresAt: Date | null;
-        guildId: string | null;
         name: string;
         discordId: string | null;
         createdByName: string | null;
@@ -76,13 +76,13 @@ export declare class ApplicationBansService {
         liftedById: string | null;
     }[]>;
     create(actor: Actor, d: BanInput): Promise<{
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         createdById: string | null;
         createdAt: Date;
         reason: string;
         expiresAt: Date | null;
-        guildId: string | null;
         name: string;
         discordId: string | null;
         createdByName: string | null;
@@ -91,13 +91,13 @@ export declare class ApplicationBansService {
         liftedById: string | null;
     }>;
     lift(actor: Actor, id: string): Promise<{
+        guildId: string | null;
         id: string;
         robloxUserId: string | null;
         createdById: string | null;
         createdAt: Date;
         reason: string;
         expiresAt: Date | null;
-        guildId: string | null;
         name: string;
         discordId: string | null;
         createdByName: string | null;

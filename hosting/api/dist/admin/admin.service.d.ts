@@ -180,8 +180,8 @@ export declare const SETTING_SCHEMAS: {
         trainingRole: z.ZodOptional<z.ZodString>;
         adminDutyRole: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        tickets?: string | undefined;
         guildId?: string | undefined;
+        tickets?: string | undefined;
         qualifications?: string | undefined;
         wanted?: string | undefined;
         dispatch?: string | undefined;
@@ -199,8 +199,8 @@ export declare const SETTING_SCHEMAS: {
         trainingRole?: string | undefined;
         adminDutyRole?: string | undefined;
     }, {
-        tickets?: string | undefined;
         guildId?: string | undefined;
+        tickets?: string | undefined;
         qualifications?: string | undefined;
         wanted?: string | undefined;
         dispatch?: string | undefined;

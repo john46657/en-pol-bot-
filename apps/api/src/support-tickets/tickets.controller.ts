@@ -1,4 +1,4 @@
-import { currentGuild } from '../common/guild-context';
+import { targetGuild } from '../common/guild-context';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -93,10 +93,10 @@ export class SupportTicketsController {
   @Post('forms/preview') @HttpCode(200) @RequirePermission('ticket.settings') previewForm(@Body(zodBody(previewQ)) b: z.infer<typeof previewQ>) { return this.s.previewForm(b.fields, b.values); }
 
   // ---- Tickets ----
-  @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, guildId: q.guildId ?? currentGuild() ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
+  @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, guildId: targetGuild(q.guildId) ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
   @Post() @RequirePermission('ticket.create') async create(@CurrentUser() u: AuthUser, @Body(zodBody(openQ)) b: z.infer<typeof openQ>) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
   @Get('stats') @RequirePermission('ticket.view') stats(@CurrentUser() u: AuthUser) { return this.s.stats(u.id); }
-  @Get('overview') @RequirePermission('ticket.view') overview(@CurrentUser() u: AuthUser, @Query(zodBody(z.object({ guildId: snowflake.optional() }))) q: { guildId?: string }) { return this.s.overview(u.id, q.guildId ?? currentGuild() ?? undefined); }
+  @Get('overview') @RequirePermission('ticket.view') overview(@CurrentUser() u: AuthUser, @Query(zodBody(z.object({ guildId: snowflake.optional() }))) q: { guildId?: string }) { return this.s.overview(u.id, targetGuild(q.guildId) ?? undefined); }
   @Get('audit') @RequirePermission('ticket.audit') auditLog(@Query(zodBody(auditQ)) q: z.infer<typeof auditQ>) { return this.s.auditLog(q); }
   /** Transkript-Seite /transcript/EMD-000123: Versionen (Mitarbeiter mit Zugriff oder der Ersteller selbst – Prüfung im Service). */
   @Get('transcripts/ref/:ref') @ServiceAuthorized() @Throttle(TRANSCRIPT_RATE)

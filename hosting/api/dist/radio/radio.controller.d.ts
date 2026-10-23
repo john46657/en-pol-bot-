@@ -568,19 +568,19 @@ export declare class RadioWhitelistController {
         }[];
         requests: {
             decidedByName: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
             reason: string;
-            guildId: string | null;
             discordId: string;
             discordName: string | null;
             department: string | null;
             rank: string | null;
             decidedAt: Date | null;
+            answers: import("@prisma/client/runtime/library").JsonValue | null;
             decidedById: string | null;
             decisionReason: string | null;
-            answers: import("@prisma/client/runtime/library").JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -922,19 +922,19 @@ export declare class RadioWhitelistController {
     requests(q: Z<typeof requestsQ>): Promise<{
         items: {
             decidedByName: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
             reason: string;
-            guildId: string | null;
             discordId: string;
             discordName: string | null;
             department: string | null;
             rank: string | null;
             decidedAt: Date | null;
+            answers: import("@prisma/client/runtime/library").JsonValue | null;
             decidedById: string | null;
             decisionReason: string | null;
-            answers: import("@prisma/client/runtime/library").JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -944,19 +944,19 @@ export declare class RadioWhitelistController {
     }>;
     decide(a: Actor, id: string, b: Z<typeof decideB>): Promise<{
         decidedByName: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         reason: string;
-        guildId: string | null;
         discordId: string;
         discordName: string | null;
         department: string | null;
         rank: string | null;
         decidedAt: Date | null;
+        answers: import("@prisma/client/runtime/library").JsonValue | null;
         decidedById: string | null;
         decisionReason: string | null;
-        answers: import("@prisma/client/runtime/library").JsonValue | null;
         grantExpiresAt: Date | null;
         grantId: string | null;
     }>;
@@ -1128,16 +1128,16 @@ declare const botRequestB: z.ZodObject<{
     reason: z.ZodString;
     answers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    reason: string;
     guildId: string | null;
+    reason: string;
     discordId: string;
     discordName: string | null;
     department: string | null;
     rank: string | null;
     answers?: Record<string, string> | undefined;
 }, {
-    reason: string;
     guildId: string | null;
+    reason: string;
     discordId: string;
     discordName?: string | null | undefined;
     department?: string | null | undefined;

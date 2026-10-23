@@ -58,11 +58,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
         messageId: string;
     }>>>;
 }, "strip", z.ZodTypeAny, {
+    guildId: string | null;
     id: string;
     color: string;
     title: string;
     description: string;
-    guildId: string | null;
     name: string;
     channelId: string | null;
     content: string;
@@ -91,10 +91,10 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
 }, {
     id: string;
     name: string;
+    guildId?: string | null | undefined;
     color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    guildId?: string | null | undefined;
     channelId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
@@ -120,11 +120,11 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     timestampAt?: string | null | undefined;
     pingRoles?: boolean | undefined;
 }>, {
+    guildId: string | null;
     id: string;
     color: string;
     title: string;
     description: string;
-    guildId: string | null;
     name: string;
     channelId: string | null;
     content: string;
@@ -153,10 +153,10 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
 }, {
     id: string;
     name: string;
+    guildId?: string | null | undefined;
     color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    guildId?: string | null | undefined;
     channelId?: string | null | undefined;
     content?: string | undefined;
     footer?: string | undefined;
@@ -193,11 +193,11 @@ export declare class EmbedsService {
     save(actor: Actor, e: Omit<EmbedDoc, 'posted'> & {
         posted?: unknown;
     }): Promise<{
+        guildId: string | null;
         id: string;
         color: string;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         channelId: string | null;
         content: string;
@@ -225,11 +225,11 @@ export declare class EmbedsService {
         pingRoles: boolean;
     }>;
     duplicate(actor: Actor, id: string): Promise<{
+        guildId: string | null;
         id: string;
         color: string;
         title: string;
         description: string;
-        guildId: string | null;
         name: string;
         channelId: string | null;
         content: string;

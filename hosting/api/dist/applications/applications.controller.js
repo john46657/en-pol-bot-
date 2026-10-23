@@ -52,19 +52,19 @@ let ApplicationsController = class ApplicationsController {
     }
     form(q) { return this.a.form(q.guildId); }
     submit(b) { return this.a.submit(b); }
-    list(q) { return this.a.list(q, q.status, q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined, q.order); } // Server getrennt: gewählter Server
+    list(q) { return this.a.list(q, q.status, (0, guild_context_1.targetGuild)(q.guildId) ?? undefined, q.order); } // Server getrennt: gewählter Server
     /** Statistik (Filter: Name, Status, Prüfer; Zeitraum in Tagen, verglichen mit der Vorperiode). Server getrennt wie die Liste. */
     analytics(q) { return this.stats.overview({ ...q, guildId: (0, guild_context_1.currentGuild)() }); }
     history(q) { return this.a.history(q.discordId); }
     /** Alle Bewerbungen (Polizei + Einheiten mit qualifications.view) in einer Liste, mit Profilbildern. */
     async inbox(a, q) {
         const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
-        return this.a.inbox({ ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined }, { police: true, quali });
+        return this.a.inbox({ ...q, guildId: (0, guild_context_1.targetGuild)(q.guildId) ?? undefined }, { police: true, quali });
     }
     /** Angefangene, noch nicht eingereichte Bewerbungen („in Bearbeitung“) – Filter wie die Liste. */
     async inProgress(a, q) {
         const quali = !!a.userId && await this.perms.has(a.userId, 'qualifications.view');
-        return this.a.inProgress({ ...q, guildId: q.guildId ?? (0, guild_context_1.currentGuild)() ?? undefined }, { quali });
+        return this.a.inProgress({ ...q, guildId: (0, guild_context_1.targetGuild)(q.guildId) ?? undefined }, { quali });
     }
     remove(a, id) { return this.a.remove(a, id); }
     get(id) { return this.a.get(id); }

@@ -11,6 +11,13 @@ export declare const GUILD_SCOPED_MODELS: Set<string>;
 /** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
 export declare const RELATION_SCOPED_MODELS: Record<string, string>;
 /**
+ * Daten mit Discord-Server (`guildId`), deren Listen die Dienste selbst nach Server filtern. Zusätzlich hier: Einzelabrufe
+ * (per ID/Nummer) aus dem Dashboard liefern nur Einträge des gewählten Servers – fremde gelten als „nicht gefunden“.
+ * Einträge ohne Server (alt, Web-Bewerbung) bleiben sichtbar. Bot-Anfragen bleiben unberührt (z. B. Bewerbungs-Kanal
+ * auf einem anderen Server, Entscheidungen per DM).
+ */
+export declare const DASHBOARD_GUILD_OWNED_MODELS: Set<string>;
+/**
  * Prisma-Erweiterung: Für die Modelle oben sieht und ändert jede Anfrage nur Daten des gewählten Discord-Servers
  * (Header `x-guild-id` bzw. Discord-Server der Bot-Interaktion). Ohne Server (Hintergrund-Aufgaben, „Alle Server“) gibt es keinen Filter.
  * Neue Einträge bekommen automatisch den Bereich des Servers.

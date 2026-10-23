@@ -9,7 +9,7 @@ import { oauthSettingsSchema, RobloxOAuthFailure, RobloxOAuthService, type OAuth
 import { BotService, CurrentActor, Public, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
-import { currentGuild } from '../common/guild-context';
+import { targetGuild } from '../common/guild-context';
 import { AppError } from '../common/errors';
 
 const sf = z.string().regex(/^\d{15,25}$/);
@@ -28,11 +28,11 @@ export class VerificationController {
   @Put('oauth') @RequirePermission('settings.manage')
   saveOauth(@CurrentActor() a: Actor, @Body(zodBody(oauthSettingsSchema)) b: OAuthSettings) { return this.oauth.save(a, b); }
   @Get('config') @RequirePermission('settings.view')
-  config(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.config(q.guildId ?? currentGuild()); }
+  config(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.config(targetGuild(q.guildId)); }
   @Put('config') @RequirePermission('settings.manage')
-  save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(verifyConfigSchema)) b: VerifyConfig) { return this.s.save(a, b, q.guildId ?? currentGuild()); }
+  save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(verifyConfigSchema)) b: VerifyConfig) { return this.s.save(a, b, targetGuild(q.guildId)); }
   @Post('panel') @HttpCode(200) @RequirePermission('settings.manage')
-  panel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.postPanel(a, q.guildId ?? currentGuild() ?? null); }
+  panel(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.postPanel(a, targetGuild(q.guildId)); }
   @Get('links') @RequirePermission('settings.view')
   list(@Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(q); }
   @Delete('links/:discordId') @RequirePermission('settings.manage')

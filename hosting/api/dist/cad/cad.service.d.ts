@@ -149,6 +149,7 @@ export declare class CadService {
         })[];
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -169,7 +170,6 @@ export declare class CadService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }[]>;
     getIncident(id: string, actor?: CadActor): Promise<{
@@ -196,12 +196,12 @@ export declare class CadService {
             [k: string]: string;
         };
         log: {
+            guildId: string | null;
             id: string;
             createdAt: Date;
             authorId: string | null;
             incidentId: string;
             unitId: string | null;
-            guildId: string | null;
             kind: string;
             text: string;
         }[];
@@ -221,6 +221,7 @@ export declare class CadService {
         })[];
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -241,7 +242,6 @@ export declare class CadService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     private validateIncident;
@@ -250,6 +250,7 @@ export declare class CadService {
     }): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -270,7 +271,6 @@ export declare class CadService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     /** Zonen mit automatischer Aktion: Einsatz liegt in der Zone → Hinweis in der Chronik („warn“) bzw. zusätzlich Leitstellenmeldung („notify“). */
@@ -278,6 +278,7 @@ export declare class CadService {
     updateIncident(actor: CadActor, id: string, d: Partial<IncidentInput>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -298,7 +299,6 @@ export declare class CadService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     /** Abschließen und Wiederöffnen eines abgeschlossenen Einsatzes brauchen cad.close_incident. */
@@ -306,6 +306,7 @@ export declare class CadService {
     setStatus(actor: CadActor, id: string, status: string, note?: string): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -326,7 +327,6 @@ export declare class CadService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     addNote(actor: CadActor, id: string, text: string): Promise<void>;
@@ -384,6 +384,7 @@ export declare class CadService {
         })[];
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -393,7 +394,6 @@ export declare class CadService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -405,6 +405,7 @@ export declare class CadService {
     createUnit(actor: CadActor, d: UnitInput): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -414,7 +415,6 @@ export declare class CadService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -425,6 +425,7 @@ export declare class CadService {
     updateUnit(actor: CadActor, id: string, d: Partial<UnitInput>): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -434,7 +435,6 @@ export declare class CadService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -449,6 +449,7 @@ export declare class CadService {
     setUnitStatus(actor: CadActor, id: string, status: string, memberRoleIds?: string[]): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -458,7 +459,6 @@ export declare class CadService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -498,12 +498,12 @@ export declare class CadService {
             operational: boolean;
             incidents: {
                 log: {
+                    guildId: string | null;
                     id: string;
                     createdAt: Date;
                     authorId: string | null;
                     incidentId: string;
                     unitId: string | null;
-                    guildId: string | null;
                     kind: string;
                     text: string;
                 }[];
@@ -523,6 +523,7 @@ export declare class CadService {
                 })[];
                 number: string;
                 serverId: string | null;
+                guildId: string | null;
                 id: string;
                 status: string;
                 createdAt: Date;
@@ -543,18 +544,17 @@ export declare class CadService {
                 mapZ: number | null;
                 involved: string | null;
                 requiredUnits: string | null;
-                guildId: string | null;
                 restrictRoleIds: string[];
             }[];
         }[];
         radio: {
+            guildId: string | null;
             id: string;
             createdAt: Date;
             authorId: string | null;
             incidentId: string | null;
             unitId: string | null;
             callsign: string | null;
-            guildId: string | null;
             discordId: string | null;
             text: string;
         }[];
@@ -572,6 +572,7 @@ export declare class CadService {
         }[];
         history: never[] | {
             number: string;
+            guildId: string | null;
             status: string;
             createdAt: Date;
             type: string | null;
@@ -580,7 +581,6 @@ export declare class CadService {
             source: string;
             dispatcherId: string | null;
             closedAt: Date;
-            guildId: string | null;
             units: string[];
             unitTypes: string[];
         }[];
@@ -729,6 +729,7 @@ export declare class CadService {
     incidentFromCall(actor: CadActor, callId: string, d: Partial<IncidentInput>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -749,7 +750,6 @@ export declare class CadService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     /** Einheit direkt zu einem Notruf: legt bei Bedarf den Einsatz an. */
@@ -762,13 +762,13 @@ export declare class CadService {
     }): Promise<{
         authorName: string | null;
         incidentNumber: string | null;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         authorId: string | null;
         incidentId: string | null;
         unitId: string | null;
         callsign: string | null;
-        guildId: string | null;
         discordId: string | null;
         text: string;
     }[]>;
@@ -790,13 +790,13 @@ export declare class CadService {
         callsign?: string | null;
     }, memberRoleIds?: string[]): Promise<{
         incidentNumber: string | null;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         authorId: string | null;
         incidentId: string | null;
         unitId: string | null;
         callsign: string | null;
-        guildId: string | null;
         discordId: string | null;
         text: string;
     }>;
@@ -950,6 +950,7 @@ export declare class CadService {
             })[];
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -970,7 +971,6 @@ export declare class CadService {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         }[];
         units: {
@@ -1023,6 +1023,7 @@ export declare class CadService {
             })[];
             serverId: string | null;
             vehicle: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             notes: string | null;
@@ -1032,7 +1033,6 @@ export declare class CadService {
             callsign: string;
             mapX: number | null;
             mapZ: number | null;
-            guildId: string | null;
             name: string | null;
             icon: string | null;
             discordRoleId: string | null;
@@ -1071,13 +1071,13 @@ export declare class CadService {
         radio: {
             authorName: string | null;
             incidentNumber: string | null;
+            guildId: string | null;
             id: string;
             createdAt: Date;
             authorId: string | null;
             incidentId: string | null;
             unitId: string | null;
             callsign: string | null;
-            guildId: string | null;
             discordId: string | null;
             text: string;
         }[];
@@ -1123,6 +1123,7 @@ export declare class CadService {
             })[];
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -1143,7 +1144,6 @@ export declare class CadService {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         }[];
         calls: {
@@ -1224,6 +1224,7 @@ export declare class CadService {
             })[];
             serverId: string | null;
             vehicle: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             notes: string | null;
@@ -1233,7 +1234,6 @@ export declare class CadService {
             callsign: string;
             mapX: number | null;
             mapZ: number | null;
-            guildId: string | null;
             name: string | null;
             icon: string | null;
             discordRoleId: string | null;

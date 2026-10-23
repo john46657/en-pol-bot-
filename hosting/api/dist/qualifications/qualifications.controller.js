@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebApplyController = exports.BotQualificationsController = exports.QualificationsController = void 0;
+const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
@@ -41,14 +42,14 @@ let QualificationsController = class QualificationsController {
     }
     /** Panels, Einheiten und die Fragen der Polizei-Bewerbung (`policeForm`). */
     /** `?guildId=` – Einstellungen eines Servers (ohne eigene: die gemeinsamen, `own: false`). */
-    config(q) { return this.q.setup(q.guildId); }
-    save(a, q, b) { return this.q.saveConfig(a, b, q.guildId); }
+    config(q) { return this.q.setup((0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
+    save(a, q, b) { return this.q.saveConfig(a, b, (0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
     /** Eigene Einstellungen eines Servers entfernen (zurück zur gemeinsamen Grundeinstellung). */
-    reset(a, q) { return this.q.resetGuild(a, q.guildId); }
+    reset(a, q) { return this.q.resetGuild(a, (0, guild_context_1.targetGuild)(q.guildId)); }
     /** Bewerbungs-Panel („Jetzt bewerben“) direkt aus dem Dashboard in den eingestellten Kanal senden. */
-    sendPanel(a, q, b) { return this.q.sendPolicePanel(a, b.mode, q.guildId); }
+    sendPanel(a, q, b) { return this.q.sendPolicePanel(a, b.mode, (0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
     /** Qualifikations-Panel (Auswahl der Einheiten) direkt aus dem Dashboard senden. */
-    sendQualiPanel(a, q, b) { return this.q.sendQualiPanel(a, b.mode, q.guildId); }
+    sendQualiPanel(a, q, b) { return this.q.sendQualiPanel(a, b.mode, (0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
     list(f) { return this.q.list(f); }
     history(q) { return this.q.history(q.discordId); }
     get(id) { return this.q.get(id); }

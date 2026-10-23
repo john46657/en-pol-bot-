@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, Eye, RotateCcw, Trash2 } from 'lucide-react';
 import { BACKUP_PART_LABEL, BACKUP_PARTS, type BackupConfig, type BackupPart, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
 import { api } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
 import { useGuilds, useServer } from '../../lib/guilds';
 import { Toggle } from '../../components/ApplicationSettings';
@@ -20,7 +21,9 @@ const CONFIRM = 'WIEDERHERSTELLEN';
 export function Backups() {
   const [tab, setTab] = useState('Discord-Server');
   const qc = useQueryClient();
-  const cfg = useQuery({ queryKey: ['backup-config'], queryFn: () => api<BackupConfig>('/backups/config') });
+  // Daten-Backups und der Backup-Plan betreffen alle Server – nur für globale Systemadministratoren
+  const global = !!useAuth().user?.globalAdmin;
+  const cfg = useQuery({ queryKey: ['backup-config'], queryFn: () => api<BackupConfig>('/backups/config'), enabled: global });
   const saveCfg = useMutation({ mutationFn: (c: BackupConfig) => api<BackupConfig>('/backups/config', { method: 'PUT', body: c }), onSuccess: (r) => qc.setQueryData(['backup-config'], r) });
   const c = cfg.data;
   return (
@@ -35,8 +38,9 @@ export function Backups() {
           {saveCfg.error && <span role="alert" className="text-danger">{errText(saveCfg.error)}</span>}
         </div>
       )}
-      <Tabs tabs={['Discord-Server', 'Dashboard-Daten']} active={tab} onChange={setTab} />
-      <div className="mt-3">{tab === 'Discord-Server' ? <DiscordBackups /> : <DataBackups />}</div>
+      {global ? <Tabs tabs={['Discord-Server', 'Dashboard-Daten']} active={tab} onChange={setTab} />
+        : <p className="mb-2 text-xs text-muted">Hier sicherst du den gewählten Discord-Server. Dashboard-Daten (alle Server) sichern nur globale Systemadministratoren.</p>}
+      <div className="mt-3">{tab === 'Discord-Server' || !global ? <DiscordBackups /> : <DataBackups />}</div>
     </>
   );
 }
@@ -51,17 +55,18 @@ function DiscordBackups() {
   const [restore, setRestore] = useState<DiscordBackup>();
   const [del, setDel] = useState<string>();
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
-  useEffect(() => { if (!guildId) setGuildId(server || guilds.data?.[0]?.id || ''); }, [server, guilds.data, guildId]);
+  useEffect(() => { if (server && guildId !== server) setGuildId(server); else if (!guildId) setGuildId(guilds.data?.[0]?.id || ''); }, [server, guilds.data, guildId]);
   const q = useQuery({ queryKey: ['discord-backups'], queryFn: () => api<DiscordBackup[]>('/backups/discord'), refetchInterval: (x) => (x.state.data?.some((b) => b.status === 'PENDING') ? 3000 : 15_000) });
   const create = useMutation({ mutationFn: () => api('/backups/discord', { body: { guildId, ...(name.trim() ? { name: name.trim() } : {}) } }), onSuccess: () => { setName(''); setMsg({ ok: true, text: 'Backup wird erstellt – der Bot liest den Server gerade aus.' }); void qc.invalidateQueries({ queryKey: ['discord-backups'] }); }, onError: (e) => setMsg({ ok: false, text: errText(e) }) });
   const remove = useMutation({ mutationFn: (id: string) => api(`/backups/discord/${id}`, { method: 'DELETE' }), onSuccess: () => { setDel(undefined); void qc.invalidateQueries({ queryKey: ['discord-backups'] }); } });
   const gName = (id: string) => guilds.data?.find((g) => g.id === id)?.name ?? id;
+  const choices = (guilds.data ?? []).filter((g) => !server || g.id === server);
   return (
     <div className="grid gap-3">
       <Card title="Neues Backup">
         <p className="mb-2 text-xs text-muted">Gesichert werden Rollen (mit Farben und Rechten), Kategorien, Kanäle mit ihren Rechten und die Servereinstellungen. Nachrichten werden nicht gesichert.</p>
         <div className="grid gap-2 sm:grid-cols-[14rem_minmax(0,1fr)_auto]">
-          <Select aria-label="Server" value={guildId} onChange={(e) => setGuildId(e.target.value)}>{(guilds.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>
+          <Select aria-label="Server" value={guildId} onChange={(e) => setGuildId(e.target.value)}>{choices.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>
           <Input aria-label="Name des Backups" maxLength={80} placeholder="Name (optional), z. B. „Vor Umbau“" value={name} onChange={(e) => setName(e.target.value)} />
           <Button disabled={!guildId || create.isPending} onClick={() => create.mutate()}>💾 Backup erstellen</Button>
         </div>
@@ -117,6 +122,7 @@ function BackupView({ id, onClose }: { id: string; onClose: () => void }) {
 
 function DiscordRestore({ backup, onClose, onDone }: { backup: DiscordBackup; onClose: () => void; onDone: (t: string) => void }) {
   const guilds = useGuilds();
+  const [server] = useServer();
   const [target, setTarget] = useState(backup.guildId);
   const [parts, setParts] = useState<BackupPart[]>(['roles', 'channels']);
   const [confirm, setConfirm] = useState('');
@@ -125,7 +131,7 @@ function DiscordRestore({ backup, onClose, onDone }: { backup: DiscordBackup; on
     <Modal open title={`„${backup.name}“ wiederherstellen`} onClose={onClose}>
       <div className="grid gap-3 text-sm">
         <p className="rounded-md border border-warning/40 bg-warning/10 p-2 text-xs">Sicher wiederherstellen: Vorhandene Rollen und Kanäle mit gleichem Namen werden angepasst, fehlende neu angelegt. <b>Es wird nichts gelöscht.</b> Der Bot braucht „Rollen verwalten“, „Kanäle verwalten“ und „Server verwalten“; Rollen über der Bot-Rolle kann er nicht ändern.</p>
-        <label className="grid gap-1">Ziel-Server<Select aria-label="Ziel-Server" value={target} onChange={(e) => setTarget(e.target.value)}>{(guilds.data ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}{g.id === backup.guildId ? ' (Original)' : ''}</option>)}</Select></label>
+        <label className="grid gap-1">Ziel-Server<Select aria-label="Ziel-Server" value={target} onChange={(e) => setTarget(e.target.value)}>{(guilds.data ?? []).filter((g) => !server || g.id === server).map((g) => <option key={g.id} value={g.id}>{g.name}{g.id === backup.guildId ? ' (Original)' : ''}</option>)}</Select></label>
         <fieldset className="grid gap-1"><legend className="mb-1 text-xs font-medium text-muted">Was wiederherstellen?</legend>
           {BACKUP_PARTS.map((p) => <label key={p} className="flex items-center gap-2"><input type="checkbox" checked={parts.includes(p)} onChange={(e) => setParts(e.target.checked ? [...parts, p] : parts.filter((x) => x !== p))} />{BACKUP_PART_LABEL[p]}</label>)}
         </fieldset>

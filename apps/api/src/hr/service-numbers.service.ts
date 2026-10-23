@@ -18,7 +18,7 @@ const isUnique = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestErr
  * Dienstnummern: Nummernkreise, atomare Vergabe (Unique-Constraints + Wiederholung – nie doppelt),
  * manuelle Vergabe/Änderung/Freigabe/Sperre, Historie und die Automatik nach angenommener Bewerbung.
  */
-import { onePersonnel } from '../common/guild-context';
+import { currentGuild, onePersonnel } from '../common/guild-context';
 @Injectable()
 export class ServiceNumbersService implements OnModuleInit {
   constructor(private readonly core: HrCoreService, private readonly people: HrPeopleService, private readonly perms: PermissionService, private readonly discord: DiscordAccessService, private readonly live: DiscordLiveService, private readonly backup: BackupService) {}
@@ -375,7 +375,9 @@ export class ServiceNumbersService implements OnModuleInit {
     if (!m?.createProfile) return { created: 0, skipped: 0 };
     const rank = m.rankId ? await this.prisma.hrRank.findUnique({ where: { id: m.rankId } }) : null;
     const dept = m.department ? (await this.core.config()).departments.find((d) => d.name === m.department) : null;
-    const apps = await this.prisma.application.findMany({ where: { status: 'ACCEPTED' }, orderBy: { createdAt: 'asc' }, select: { id: true, number: true, discordId: true, discordName: true, robloxUsername: true } });
+    // nur Bewerbungen dieses Servers – sonst bekämen Angenommene eines anderen Servers hier eine Personalakte
+    const g = currentGuild();
+    const apps = await this.prisma.application.findMany({ where: { status: 'ACCEPTED', ...(g ? { guildId: g } : {}) }, orderBy: { createdAt: 'asc' }, select: { id: true, number: true, discordId: true, discordName: true, robloxUsername: true } });
     let created = 0, skipped = 0;
     for (const a of apps) {
       if (!a.discordId) { skipped++; continue; }

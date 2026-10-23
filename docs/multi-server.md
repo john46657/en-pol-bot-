@@ -89,6 +89,11 @@ Wo die Prüfung greift:
 - Die Routen unter `/servers/:serverId/…` sind mit `@ServiceAuthorized()` markiert. Sie prüfen gegen den Server **aus dem Pfad**, ein Header kann ihn nicht übersteuern. Der Test „route authorization coverage“ verlangt diese ausdrückliche Markierung.
 - Verweigerungen werden protokolliert: `SecurityEvent` plus `AuditLog` mit `result = DENIED`, höchstens einmal pro Minute je Benutzer, Recht und Server.
 
+Kein Zugriff auf fremde Server über Parameter oder IDs:
+- Im Kontext eines Servers (Header `X-Guild-Id`) darf eine Anfrage keinen anderen Server per `?guildId=` oder im Body ansprechen (`targetGuild()` in `common/guild-context.ts`, sonst `403`, `details.reason = FOREIGN_SERVER`). Betrifft Bewerbungen, Tickets, Qualifikationen, Willkommen, Verifizierung, Sprach-Support und Discord-Backups.
+- Einzelabrufe aus dem Dashboard (per ID/Nummer) von Bewerbungen, Qualifikations-Bewerbungen, Support-Tickets, Abmeldungen, Dienstberichten, Funk-Anträgen, Sprach-Support-Fällen, Formular-Einsendungen, Ausbildungsterminen und Discord-Backups liefern nur Einträge des gewählten Servers, fremde gelten als „nicht gefunden“ (`DASHBOARD_GUILD_OWNED_MODELS` in `prisma/server-scope.ts`). Bot-Anfragen bleiben unberührt (z. B. Bewerbungs-Kanal auf einem anderen Server).
+- **Daten-Backups** und der Backup-Plan enthalten alle Server samt Konten und sind nur für **globale** Systemadministratoren. Server-Administratoren sichern nur ihren eigenen Discord-Server.
+
 Globaler Systemadministrator ≠ Serveradministrator:
 - **Global** ist nur, wer die serverübergreifende Rolle „System Administrator“ **manuell** hat (oder in `ADMIN_DISCORD_IDS` steht). Nur globale Administratoren dürfen Server registrieren, freischalten, deaktivieren und archivieren.
 - Ein **Serveradministrator** hat seine Rechte über eine Rolle mit `guildId` und damit nur auf diesem Server.

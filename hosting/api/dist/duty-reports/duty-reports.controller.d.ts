@@ -9,16 +9,16 @@ declare const create: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     source: z.ZodOptional<z.ZodEnum<["WEB", "DISCORD"]>>;
 }, "strip", z.ZodTypeAny, {
-    values: Record<string, string | number>;
     templateId: string;
-    source?: "DISCORD" | "WEB" | undefined;
+    values: Record<string, string | number>;
     guildId?: string | null | undefined;
+    source?: "DISCORD" | "WEB" | undefined;
     periodStart?: string | undefined;
 }, {
-    values: Record<string, string | number>;
     templateId: string;
-    source?: "DISCORD" | "WEB" | undefined;
+    values: Record<string, string | number>;
     guildId?: string | null | undefined;
+    source?: "DISCORD" | "WEB" | undefined;
     periodStart?: string | undefined;
 }>;
 declare const edit: z.ZodObject<{
@@ -170,6 +170,7 @@ export declare class DutyReportsController {
             };
         } & {
             number: string;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -177,15 +178,14 @@ export declare class DutyReportsController {
             version: number;
             authorId: string;
             source: string;
-            guildId: string | null;
             reviewedById: string | null;
             reviewedAt: Date | null;
             reviewNote: string | null;
-            values: import("@prisma/client/runtime/library").JsonValue;
             templateId: string;
             templateName: string;
             period: string;
             periodStart: Date;
+            values: import("@prisma/client/runtime/library").JsonValue;
             editedById: string | null;
         })[];
         total: number;
@@ -232,6 +232,7 @@ export declare class DutyReportsController {
             displayName: string;
         };
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -239,20 +240,20 @@ export declare class DutyReportsController {
         version: number;
         authorId: string;
         source: string;
-        guildId: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        values: import("@prisma/client/runtime/library").JsonValue;
         templateId: string;
         templateName: string;
         period: string;
         periodStart: Date;
+        values: import("@prisma/client/runtime/library").JsonValue;
         editedById: string | null;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         merged: boolean;
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -260,19 +261,19 @@ export declare class DutyReportsController {
         version: number;
         authorId: string;
         source: string;
-        guildId: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        values: import("@prisma/client/runtime/library").JsonValue;
         templateId: string;
         templateName: string;
         period: string;
         periodStart: Date;
+        values: import("@prisma/client/runtime/library").JsonValue;
         editedById: string | null;
     }>;
     edit(a: Actor, id: string, b: z.infer<typeof edit>): Promise<{
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -280,19 +281,19 @@ export declare class DutyReportsController {
         version: number;
         authorId: string;
         source: string;
-        guildId: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        values: import("@prisma/client/runtime/library").JsonValue;
         templateId: string;
         templateName: string;
         period: string;
         periodStart: Date;
+        values: import("@prisma/client/runtime/library").JsonValue;
         editedById: string | null;
     }>;
     review(a: Actor, id: string, b: z.infer<typeof reviewBody>): Promise<{
         number: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -300,15 +301,14 @@ export declare class DutyReportsController {
         version: number;
         authorId: string;
         source: string;
-        guildId: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        values: import("@prisma/client/runtime/library").JsonValue;
         templateId: string;
         templateName: string;
         period: string;
         periodStart: Date;
+        values: import("@prisma/client/runtime/library").JsonValue;
         editedById: string | null;
     }>;
     remove(a: Actor, id: string): Promise<void>;

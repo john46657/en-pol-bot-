@@ -23,6 +23,7 @@ const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
 const guild_context_1 = require("../common/guild-context");
 const audit_service_1 = require("../audit/audit.service");
+const permission_service_1 = require("../authz/permission.service");
 const discord_service_1 = require("../discord/discord.service");
 const errors_1 = require("../common/errors");
 const env_1 = require("../config/env");
@@ -92,13 +93,23 @@ let BackupService = class BackupService {
     prisma;
     audit;
     discord;
+    perms;
     log = new common_1.Logger('Backup');
     dir = node_path_1.default.resolve((0, env_1.loadEnv)().STORAGE_DIR, 'backups');
     timer;
-    constructor(prisma, audit, discord) {
+    constructor(prisma, audit, discord, perms) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
+        this.perms = perms;
+    }
+    /**
+     * Daten-Backups enthalten ALLE Server samt Konten – nur für globale Systemadministratoren. Ein Server-Administrator
+     * (settings.manage nur auf seinem Server) darf sie weder sehen noch einspielen.
+     */
+    async requireGlobal(actor) {
+        if (!actor.userId || !(await this.perms.isOwner(actor.userId)))
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Daten-Backups enthalten alle Server – das dürfen nur globale Systemadministratoren.');
     }
     onModuleInit() {
         if (process.env.NODE_ENV === 'test')
@@ -294,6 +305,6 @@ let BackupService = class BackupService {
 exports.BackupService = BackupService;
 exports.BackupService = BackupService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, permission_service_1.PermissionService])
 ], BackupService);
 //# sourceMappingURL=backup.service.js.map

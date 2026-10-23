@@ -177,19 +177,19 @@ export declare class RadioWhitelistService {
         }[];
         requests: {
             decidedByName: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
             reason: string;
-            guildId: string | null;
             discordId: string;
             discordName: string | null;
             department: string | null;
             rank: string | null;
             decidedAt: Date | null;
+            answers: Prisma.JsonValue | null;
             decidedById: string | null;
             decisionReason: string | null;
-            answers: Prisma.JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -593,19 +593,19 @@ export declare class RadioWhitelistService {
     }): Promise<{
         items: {
             decidedByName: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
             reason: string;
-            guildId: string | null;
             discordId: string;
             discordName: string | null;
             department: string | null;
             rank: string | null;
             decidedAt: Date | null;
+            answers: Prisma.JsonValue | null;
             decidedById: string | null;
             decisionReason: string | null;
-            answers: Prisma.JsonValue | null;
             grantExpiresAt: Date | null;
             grantId: string | null;
         }[];
@@ -633,19 +633,19 @@ export declare class RadioWhitelistService {
         expiresAt?: Date | null;
     }): Promise<{
         decidedByName: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         reason: string;
-        guildId: string | null;
         discordId: string;
         discordName: string | null;
         department: string | null;
         rank: string | null;
         decidedAt: Date | null;
+        answers: Prisma.JsonValue | null;
         decidedById: string | null;
         decisionReason: string | null;
-        answers: Prisma.JsonValue | null;
         grantExpiresAt: Date | null;
         grantId: string | null;
     }>;

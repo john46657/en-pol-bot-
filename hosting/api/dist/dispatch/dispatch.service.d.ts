@@ -22,6 +22,7 @@ export declare class DispatchService {
     } & {
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -31,7 +32,6 @@ export declare class DispatchService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -47,6 +47,7 @@ export declare class DispatchService {
     }): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -56,7 +57,6 @@ export declare class DispatchService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -67,6 +67,7 @@ export declare class DispatchService {
     setUnitStatus(actor: Actor, id: string, status: UnitStatus): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -76,7 +77,6 @@ export declare class DispatchService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -93,6 +93,7 @@ export declare class DispatchService {
     } & {
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -102,7 +103,6 @@ export declare class DispatchService {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -125,6 +125,7 @@ export declare class DispatchService {
         } & {
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -145,7 +146,6 @@ export declare class DispatchService {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         })[];
         total: number;
@@ -158,6 +158,7 @@ export declare class DispatchService {
                 unit: {
                     serverId: string | null;
                     vehicle: string | null;
+                    guildId: string | null;
                     id: string;
                     status: string;
                     notes: string | null;
@@ -167,7 +168,6 @@ export declare class DispatchService {
                     callsign: string;
                     mapX: number | null;
                     mapZ: number | null;
-                    guildId: string | null;
                     name: string | null;
                     icon: string | null;
                     discordRoleId: string | null;
@@ -184,6 +184,7 @@ export declare class DispatchService {
         } & {
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -204,7 +205,6 @@ export declare class DispatchService {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         };
         links: {
@@ -237,6 +237,7 @@ export declare class DispatchService {
     }): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -257,7 +258,6 @@ export declare class DispatchService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     attach(tx: Tx, incidentId: string, personIds: string[] | undefined, vehicleIds: string[] | undefined, actor: Actor): Promise<void>;
@@ -274,6 +274,7 @@ export declare class DispatchService {
     }): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -294,12 +295,12 @@ export declare class DispatchService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     setStatus(actor: Actor, id: string, to: DispatchStatus, note?: string): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -320,7 +321,6 @@ export declare class DispatchService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     assignUnit(actor: Actor, id: string, unitId: string): Promise<{
@@ -333,6 +333,7 @@ export declare class DispatchService {
     } & {
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -353,7 +354,6 @@ export declare class DispatchService {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
 }

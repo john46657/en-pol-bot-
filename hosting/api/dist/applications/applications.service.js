@@ -254,7 +254,7 @@ let ApplicationsService = class ApplicationsService {
             wantPolice ? this.prisma.application.count({ where: pWhere }) : 0,
             wantQuali ? this.prisma.qualificationApplication.findMany({ where: qWhere, orderBy: order, take }) : [],
             wantQuali ? this.prisma.qualificationApplication.count({ where: qWhere }) : 0,
-            allowed.quali ? this.prisma.qualificationApplication.groupBy({ by: ['unit', 'unitName'], orderBy: { unitName: 'asc' } }) : [],
+            allowed.quali ? this.prisma.qualificationApplication.groupBy({ by: ['unit', 'unitName'], where: guild, orderBy: { unitName: 'asc' } }) : [],
             this.police(f.guildId ?? null).then((p) => p.name),
         ]);
         const forms = new Map();

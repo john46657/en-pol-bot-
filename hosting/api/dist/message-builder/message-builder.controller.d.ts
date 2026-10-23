@@ -511,18 +511,18 @@ export declare class MessageBuilderController {
         position: number;
     }[]>;
     createCategory(a: Actor, b: z.infer<typeof categorySchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        guildId: string | null;
         name: string;
         position: number;
     }>;
     updateCategory(a: Actor, id: string, b: z.infer<typeof categorySchema>): Promise<{
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        guildId: string | null;
         name: string;
         position: number;
     }>;

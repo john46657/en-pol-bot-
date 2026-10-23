@@ -461,10 +461,10 @@ export declare const categorySchema: z.ZodObject<{
     formMode: z.ZodDefault<z.ZodEnum<["CHANNEL", "MODAL"]>>;
     escalateUnassignedMinutes: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
+    guildId: string | null;
     color: number;
     description: string;
     active: boolean;
-    guildId: string | null;
     name: string;
     position: number;
     questions: {
@@ -481,6 +481,7 @@ export declare const categorySchema: z.ZodObject<{
         min?: number | undefined;
         max?: number | undefined;
     }[];
+    departmentId: string | null;
     emoji: string | null;
     staffRoleIds: string[];
     accessRoleNames: string[];
@@ -531,7 +532,6 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes: number;
     staffAlertMinutes: number;
     closeRequestCloses: boolean;
-    departmentId: string | null;
     confidential: boolean;
     formMode: "CHANNEL" | "MODAL";
     escalateUnassignedMinutes: number;
@@ -539,10 +539,10 @@ export declare const categorySchema: z.ZodObject<{
     escalationPriorityId?: string | null | undefined;
 }, {
     name: string;
+    guildId?: string | null | undefined;
     color?: number | undefined;
     description?: string | undefined;
     active?: boolean | undefined;
-    guildId?: string | null | undefined;
     position?: number | undefined;
     questions?: {
         id: string;
@@ -558,6 +558,7 @@ export declare const categorySchema: z.ZodObject<{
         min?: number | undefined;
         max?: number | undefined;
     }[] | undefined;
+    departmentId?: string | null | undefined;
     emoji?: string | null | undefined;
     staffRoleIds?: string[] | undefined;
     accessRoleNames?: string[] | undefined;
@@ -610,7 +611,6 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes?: number | undefined;
     staffAlertMinutes?: number | undefined;
     closeRequestCloses?: boolean | undefined;
-    departmentId?: string | null | undefined;
     confidential?: boolean | undefined;
     formMode?: "CHANNEL" | "MODAL" | undefined;
     escalateUnassignedMinutes?: number | undefined;
@@ -638,10 +638,10 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     showLoad: z.ZodDefault<z.ZodBoolean>;
     position: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
+    guildId: string | null;
     color: number;
     title: string;
     description: string;
-    guildId: string | null;
     name: string;
     position: number;
     channelId: string | null;
@@ -660,10 +660,10 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     showLoad: boolean;
 }, {
     name: string;
+    guildId?: string | null | undefined;
     color?: number | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    guildId?: string | null | undefined;
     position?: number | undefined;
     channelId?: string | null | undefined;
     emoji?: string | null | undefined;
@@ -680,10 +680,10 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
 }>, {
+    guildId: string | null;
     color: number;
     title: string;
     description: string;
-    guildId: string | null;
     name: string;
     position: number;
     channelId: string | null;
@@ -702,10 +702,10 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     showLoad: boolean;
 }, {
     name: string;
+    guildId?: string | null | undefined;
     color?: number | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    guildId?: string | null | undefined;
     position?: number | undefined;
     channelId?: string | null | undefined;
     emoji?: string | null | undefined;
@@ -827,21 +827,21 @@ export declare const departmentSchema: z.ZodObject<{
     active: boolean;
     name: string;
     position: number;
+    notifyChannelId: string | null;
     emoji: string | null;
     staffRoleIds: string[];
     leadRoleIds: string[];
     accessRoleNames: string[];
-    notifyChannelId: string | null;
 }, {
     name: string;
     description?: string | undefined;
     active?: boolean | undefined;
     position?: number | undefined;
+    notifyChannelId?: string | null | undefined;
     emoji?: string | null | undefined;
     staffRoleIds?: string[] | undefined;
     leadRoleIds?: string[] | undefined;
     accessRoleNames?: string[] | undefined;
-    notifyChannelId?: string | null | undefined;
 }>;
 export type DepartmentInput = z.infer<typeof departmentSchema>;
 /** Ereignisse mit einstellbaren Benachrichtigungen. */

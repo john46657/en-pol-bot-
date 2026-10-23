@@ -120,6 +120,7 @@ export declare class IncidentsController {
         } & {
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -140,7 +141,6 @@ export declare class IncidentsController {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         })[];
         total: number;
@@ -153,6 +153,7 @@ export declare class IncidentsController {
                 unit: {
                     serverId: string | null;
                     vehicle: string | null;
+                    guildId: string | null;
                     id: string;
                     status: string;
                     notes: string | null;
@@ -162,7 +163,6 @@ export declare class IncidentsController {
                     callsign: string;
                     mapX: number | null;
                     mapZ: number | null;
-                    guildId: string | null;
                     name: string | null;
                     icon: string | null;
                     discordRoleId: string | null;
@@ -179,6 +179,7 @@ export declare class IncidentsController {
         } & {
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -199,7 +200,6 @@ export declare class IncidentsController {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         };
         links: {
@@ -225,6 +225,7 @@ export declare class IncidentsController {
     create(a: Actor, b: z.infer<typeof create>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -245,12 +246,12 @@ export declare class IncidentsController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -271,7 +272,6 @@ export declare class IncidentsController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     attach(a: Actor, id: string, b: z.infer<typeof attach>): Promise<void>;
@@ -287,6 +287,7 @@ export declare class DispatchController {
     } & {
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -296,7 +297,6 @@ export declare class DispatchController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -307,6 +307,7 @@ export declare class DispatchController {
     createUnit(a: Actor, b: z.infer<typeof unit>): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -316,7 +317,6 @@ export declare class DispatchController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -329,6 +329,7 @@ export declare class DispatchController {
     }): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -338,7 +339,6 @@ export declare class DispatchController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -356,6 +356,7 @@ export declare class DispatchController {
     } & {
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -365,7 +366,6 @@ export declare class DispatchController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -385,6 +385,7 @@ export declare class DispatchController {
     } & {
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -405,12 +406,12 @@ export declare class DispatchController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     setStatus(a: Actor, id: string, b: z.infer<typeof status>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -431,12 +432,12 @@ export declare class DispatchController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     close(a: Actor, id: string): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -457,7 +458,6 @@ export declare class DispatchController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
 }

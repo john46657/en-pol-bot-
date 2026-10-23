@@ -7,6 +7,7 @@ import { backupConfigSchema, BACKUP_PARTS, type BackupConfig, type BackupPart, t
 import { PrismaService } from '../prisma/prisma.service';
 import { unscoped } from '../common/guild-context';
 import { AuditService, type Actor } from '../audit/audit.service';
+import { PermissionService } from '../authz/permission.service';
 import { DiscordService } from '../discord/discord.service';
 import { AppError } from '../common/errors';
 import { loadEnv } from '../config/env';
@@ -76,7 +77,15 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
   private readonly log = new Logger('Backup');
   private readonly dir = path.resolve(loadEnv().STORAGE_DIR, 'backups');
   private timer?: NodeJS.Timeout;
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly perms: PermissionService) {}
+
+  /**
+   * Daten-Backups enthalten ALLE Server samt Konten – nur für globale Systemadministratoren. Ein Server-Administrator
+   * (settings.manage nur auf seinem Server) darf sie weder sehen noch einspielen.
+   */
+  async requireGlobal(actor: Actor) {
+    if (!actor.userId || !(await this.perms.isOwner(actor.userId))) throw new AppError('PERMISSION_DENIED', 'Daten-Backups enthalten alle Server – das dürfen nur globale Systemadministratoren.');
+  }
 
   onModuleInit() {
     if (process.env.NODE_ENV === 'test') return;

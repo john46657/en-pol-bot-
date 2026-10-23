@@ -1,26 +1,40 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+import { AppError } from './errors';
 
 /**
  * Gewählter Discord-Server der Anfrage (Header `X-Guild-Id`, gesetzt von der Server-Auswahl im Dashboard bzw. vom Bot).
  * Server laufen getrennt: serverbezogene Rollen gelten nur dort, Teamliste/Voice/Einstellungen zeigen nur diesen Server.
  * Ohne Header = „Alle Server“ (nur serverübergreifende Rollen).
  */
-const store = new AsyncLocalStorage<{ guildId: string | null; request?: boolean; spaces?: Promise<ReadonlySet<string> | null>; requestId?: string }>();
+const store = new AsyncLocalStorage<{ guildId: string | null; request?: boolean; bot?: boolean; spaces?: Promise<ReadonlySet<string> | null>; requestId?: string }>();
 export const currentGuild = (): string | null => store.getStore()?.guildId ?? null;
+/**
+ * Server, den eine Anfrage per `?guildId=` (oder im Body) ansprechen darf. Server sind getrennt: im Kontext eines
+ * gewählten Servers nur dieser – ein anderer wird abgelehnt (sonst könnte ein Server-Admin per Parameter Daten und
+ * Einstellungen fremder Server lesen/ändern). Ohne Kontext („Alle Server“, Bot-Dienstweg) gilt der angegebene.
+ */
+export const targetGuild = (requested?: string | null): string | null => {
+  const g = currentGuild();
+  if (g && requested && requested !== g) throw new AppError('PERMISSION_DENIED', 'Server sind getrennt – wechsle oben zum Server, um seine Daten zu bearbeiten.', { reason: 'FOREIGN_SERVER' });
+  return g ?? requested ?? null;
+};
 /** Request-ID der laufenden Anfrage (Korrelations-ID für Audit/Fehlersuche), außerhalb von Anfragen undefiniert. */
 export const currentRequestId = (): string | undefined => store.getStore()?.requestId;
 export const runInGuild = <T>(guildId: string | null, fn: () => T): T => store.run({ guildId }, fn);
 /** Läuft gerade eine Anfrage aus Dashboard/Bot (nicht: Hintergrund-Aufgabe, `runInGuild`/`unscoped`)? */
 export const inRequest = (): boolean => store.getStore()?.request === true;
+/** Anfrage aus dem Dashboard (Sitzung), nicht vom Bot und keine Hintergrund-Aufgabe? */
+export const inDashboardRequest = (): boolean => { const s = store.getStore(); return s?.request === true && !s.bot; };
 
 @Injectable()
 export class GuildContextMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
     const h = req.headers['x-guild-id'];
     const guildId = typeof h === 'string' && /^\d{15,25}$/.test(h) ? h : null;
-    store.run({ guildId, request: true, requestId: (req as Request & { requestId?: string }).requestId }, next);
+    const bot = typeof req.headers.authorization === 'string' && req.headers.authorization.startsWith('Bot ');
+    store.run({ guildId, request: true, bot, requestId: (req as Request & { requestId?: string }).requestId }, next);
   }
 }
 

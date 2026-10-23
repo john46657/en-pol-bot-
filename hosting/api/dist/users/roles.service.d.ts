@@ -41,6 +41,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -48,7 +49,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -84,6 +84,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -91,7 +92,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -106,6 +106,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -113,7 +114,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -130,6 +130,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -137,7 +138,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -153,6 +153,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -160,7 +161,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -179,6 +179,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -186,7 +187,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];
@@ -202,6 +202,7 @@ export declare class RolesService {
             effect: string;
         }[];
     } & {
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -209,7 +210,6 @@ export declare class RolesService {
         description: string | null;
         priority: number;
         active: boolean;
-        guildId: string | null;
         name: string;
         icon: string | null;
         discordRoleIds: string[];

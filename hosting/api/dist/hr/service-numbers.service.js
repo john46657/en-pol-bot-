@@ -452,7 +452,9 @@ let ServiceNumbersService = class ServiceNumbersService {
             return { created: 0, skipped: 0 };
         const rank = m.rankId ? await this.prisma.hrRank.findUnique({ where: { id: m.rankId } }) : null;
         const dept = m.department ? (await this.core.config()).departments.find((d) => d.name === m.department) : null;
-        const apps = await this.prisma.application.findMany({ where: { status: 'ACCEPTED' }, orderBy: { createdAt: 'asc' }, select: { id: true, number: true, discordId: true, discordName: true, robloxUsername: true } });
+        // nur Bewerbungen dieses Servers – sonst bekämen Angenommene eines anderen Servers hier eine Personalakte
+        const g = (0, guild_context_1.currentGuild)();
+        const apps = await this.prisma.application.findMany({ where: { status: 'ACCEPTED', ...(g ? { guildId: g } : {}) }, orderBy: { createdAt: 'asc' }, select: { id: true, number: true, discordId: true, discordName: true, robloxUsername: true } });
         let created = 0, skipped = 0;
         for (const a of apps) {
             if (!a.discordId) {

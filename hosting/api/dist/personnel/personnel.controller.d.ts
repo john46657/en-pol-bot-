@@ -122,9 +122,9 @@ export declare class PersonnelController {
             results: {
                 id: string;
                 createdAt: Date;
+                passed: boolean;
                 enrollmentId: string;
                 score: number;
-                passed: boolean;
                 gradedById: string | null;
             }[];
         } & {
@@ -134,6 +134,7 @@ export declare class PersonnelController {
             courseId: string;
         })[];
         records: {
+            details: string | null;
             id: string;
             status: string | null;
             createdById: string;
@@ -145,7 +146,6 @@ export declare class PersonnelController {
             attachments: string[];
             data: import("@prisma/client/runtime/library").JsonValue | null;
             summary: string;
-            details: string | null;
             deletedAt: Date | null;
         }[];
     } & {
@@ -213,6 +213,7 @@ export declare class PersonnelController {
         customChecks: import("@prisma/client/runtime/library").JsonValue;
     }>;
     record(a: Actor, id: string, b: z.infer<typeof record>): Promise<{
+        details: string | null;
         id: string;
         status: string | null;
         createdById: string;
@@ -224,7 +225,6 @@ export declare class PersonnelController {
         attachments: string[];
         data: import("@prisma/client/runtime/library").JsonValue | null;
         summary: string;
-        details: string | null;
         deletedAt: Date | null;
     }>;
 }

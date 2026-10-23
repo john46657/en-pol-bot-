@@ -9,12 +9,12 @@ declare const list: z.ZodObject<{
     guildId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     unit?: string | undefined;
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     guildId?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
 }, {
     unit?: string | undefined;
-    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
     guildId?: string | undefined;
+    status?: "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "OPEN" | undefined;
 }>;
 declare const decision: z.ZodObject<{
     status: z.ZodEnum<["ACCEPTED", "REJECTED"]>;
@@ -157,13 +157,13 @@ export declare class QualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -200,13 +200,13 @@ export declare class QualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -256,13 +256,13 @@ export declare class QualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -299,13 +299,13 @@ export declare class QualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -356,13 +356,13 @@ export declare class QualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -399,13 +399,13 @@ export declare class QualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -449,20 +449,20 @@ export declare class QualificationsController {
         decidedByName: string | null;
         number: string;
         unit: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         userId: string | null;
-        guildId: string | null;
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
         unitName: string;
     }[]>;
     history(q: z.infer<typeof historyQ>): import("@prisma/client").Prisma.PrismaPromise<{
@@ -476,20 +476,20 @@ export declare class QualificationsController {
     get(id: string): Promise<{
         number: string;
         unit: string;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
         userId: string | null;
-        guildId: string | null;
         discordId: string;
         discordName: string;
         decidedAt: Date | null;
         joinedAt: Date | null;
-        decidedById: string | null;
-        decisionReason: string | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         grantRoleIds: string[];
+        decidedById: string | null;
         durationSec: number | null;
+        decisionReason: string | null;
         unitName: string;
     }>;
     /** Auch vom Bot (Button im Team-Channel) mit den Rechten des klickenden Benutzers – oder seiner Manager-Rolle der Einheit. */
@@ -523,13 +523,13 @@ export declare class BotQualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {
@@ -566,13 +566,13 @@ export declare class BotQualificationsController {
             enabled: boolean;
             settings: {
                 mode: "DM" | "WEB";
-                cooldownMinutes: number;
                 messages: {
                     denied: string;
                     accepted: string;
                     confirmation: string;
                     completion: string;
                 };
+                cooldownMinutes: number;
                 roles: {
                     denied: string[];
                     required: {

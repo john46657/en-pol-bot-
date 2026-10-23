@@ -75,13 +75,13 @@ declare const unitBody: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     callsign: string;
     vehicle?: any;
+    guildId?: any;
     status?: string | undefined;
     notes?: any;
     color?: any;
     type?: any;
     mapX?: any;
     mapZ?: any;
-    guildId?: any;
     name?: any;
     icon?: any;
     discordRoleId?: any;
@@ -91,13 +91,13 @@ declare const unitBody: z.ZodObject<{
 }, {
     callsign: string;
     vehicle?: any;
+    guildId?: any;
     status?: string | undefined;
     notes?: any;
     color?: any;
     type?: any;
     mapX?: any;
     mapZ?: any;
-    guildId?: any;
     name?: any;
     icon?: any;
     discordRoleId?: any;
@@ -316,6 +316,7 @@ export declare class CadController {
             })[];
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -336,7 +337,6 @@ export declare class CadController {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         }[];
         units: {
@@ -389,6 +389,7 @@ export declare class CadController {
             })[];
             serverId: string | null;
             vehicle: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             notes: string | null;
@@ -398,7 +399,6 @@ export declare class CadController {
             callsign: string;
             mapX: number | null;
             mapZ: number | null;
-            guildId: string | null;
             name: string | null;
             icon: string | null;
             discordRoleId: string | null;
@@ -437,13 +437,13 @@ export declare class CadController {
         radio: {
             authorName: string | null;
             incidentNumber: string | null;
+            guildId: string | null;
             id: string;
             createdAt: Date;
             authorId: string | null;
             incidentId: string | null;
             unitId: string | null;
             callsign: string | null;
-            guildId: string | null;
             discordId: string | null;
             text: string;
         }[];
@@ -488,6 +488,7 @@ export declare class CadController {
             })[];
             number: string;
             serverId: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             createdAt: Date;
@@ -508,7 +509,6 @@ export declare class CadController {
             mapZ: number | null;
             involved: string | null;
             requiredUnits: string | null;
-            guildId: string | null;
             restrictRoleIds: string[];
         }[];
         calls: {
@@ -589,6 +589,7 @@ export declare class CadController {
             })[];
             serverId: string | null;
             vehicle: string | null;
+            guildId: string | null;
             id: string;
             status: string;
             notes: string | null;
@@ -598,7 +599,6 @@ export declare class CadController {
             callsign: string;
             mapX: number | null;
             mapZ: number | null;
-            guildId: string | null;
             name: string | null;
             icon: string | null;
             discordRoleId: string | null;
@@ -672,6 +672,7 @@ export declare class CadController {
         })[];
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -692,7 +693,6 @@ export declare class CadController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }[]>;
     incident(a: CadActor & {
@@ -721,12 +721,12 @@ export declare class CadController {
             [k: string]: string;
         };
         log: {
+            guildId: string | null;
             id: string;
             createdAt: Date;
             authorId: string | null;
             incidentId: string;
             unitId: string | null;
-            guildId: string | null;
             kind: string;
             text: string;
         }[];
@@ -746,6 +746,7 @@ export declare class CadController {
         })[];
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -766,12 +767,12 @@ export declare class CadController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     createIncident(a: CadActor, b: z.infer<typeof incidentBody>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -792,12 +793,12 @@ export declare class CadController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     updateIncident(a: CadActor, id: string, b: Partial<z.infer<typeof incidentBody>>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -818,7 +819,6 @@ export declare class CadController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     status(a: CadActor & {
@@ -826,6 +826,7 @@ export declare class CadController {
     }, id: string, b: z.infer<typeof statusBody>): Promise<{
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -846,7 +847,6 @@ export declare class CadController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     }>;
     note(a: CadActor, id: string, b: {
@@ -912,6 +912,7 @@ export declare class CadController {
         })[];
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -921,7 +922,6 @@ export declare class CadController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -932,6 +932,7 @@ export declare class CadController {
     createUnit(a: CadActor, b: z.infer<typeof unitBody>): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -941,7 +942,6 @@ export declare class CadController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -952,6 +952,7 @@ export declare class CadController {
     updateUnit(a: CadActor, id: string, b: Partial<z.infer<typeof unitBody>>): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -961,7 +962,6 @@ export declare class CadController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -978,6 +978,7 @@ export declare class CadController {
     }): Promise<{
         serverId: string | null;
         vehicle: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         notes: string | null;
@@ -987,7 +988,6 @@ export declare class CadController {
         callsign: string;
         mapX: number | null;
         mapZ: number | null;
-        guildId: string | null;
         name: string | null;
         icon: string | null;
         discordRoleId: string | null;
@@ -1018,12 +1018,12 @@ export declare class CadController {
             operational: boolean;
             incidents: {
                 log: {
+                    guildId: string | null;
                     id: string;
                     createdAt: Date;
                     authorId: string | null;
                     incidentId: string;
                     unitId: string | null;
-                    guildId: string | null;
                     kind: string;
                     text: string;
                 }[];
@@ -1043,6 +1043,7 @@ export declare class CadController {
                 })[];
                 number: string;
                 serverId: string | null;
+                guildId: string | null;
                 id: string;
                 status: string;
                 createdAt: Date;
@@ -1063,18 +1064,17 @@ export declare class CadController {
                 mapZ: number | null;
                 involved: string | null;
                 requiredUnits: string | null;
-                guildId: string | null;
                 restrictRoleIds: string[];
             }[];
         }[];
         radio: {
+            guildId: string | null;
             id: string;
             createdAt: Date;
             authorId: string | null;
             incidentId: string | null;
             unitId: string | null;
             callsign: string | null;
-            guildId: string | null;
             discordId: string | null;
             text: string;
         }[];
@@ -1092,6 +1092,7 @@ export declare class CadController {
         }[];
         history: never[] | {
             number: string;
+            guildId: string | null;
             status: string;
             createdAt: Date;
             type: string | null;
@@ -1100,7 +1101,6 @@ export declare class CadController {
             source: string;
             dispatcherId: string | null;
             closedAt: Date;
-            guildId: string | null;
             units: string[];
             unitTypes: string[];
         }[];
@@ -1199,11 +1199,11 @@ export declare class CadController {
         snapshot: import("./cad-handover.service").HandoverSnapshot;
         createdByName: string | null;
         acknowledgedByName: string | null;
+        guildId: string | null;
         id: string;
         notes: string;
         createdById: string | null;
         createdAt: Date;
-        guildId: string | null;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;
         ackNote: string | null;
@@ -1214,11 +1214,11 @@ export declare class CadController {
             snapshot: import("./cad-handover.service").HandoverSnapshot;
             createdByName: string | null;
             acknowledgedByName: string | null;
+            guildId: string | null;
             id: string;
             notes: string;
             createdById: string | null;
             createdAt: Date;
-            guildId: string | null;
             acknowledgedById: string | null;
             acknowledgedAt: Date | null;
             ackNote: string | null;
@@ -1227,11 +1227,11 @@ export declare class CadController {
     createHandover(a: CadActor, b: {
         notes: string;
     }): Promise<{
+        guildId: string | null;
         id: string;
         notes: string;
         createdById: string | null;
         createdAt: Date;
-        guildId: string | null;
         snapshot: import("@prisma/client/runtime/library").JsonValue;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;
@@ -1240,11 +1240,11 @@ export declare class CadController {
     ackHandover(a: CadActor, id: string, b: {
         note?: string | null;
     }): Promise<{
+        guildId: string | null;
         id: string;
         notes: string;
         createdById: string | null;
         createdAt: Date;
-        guildId: string | null;
         snapshot: import("@prisma/client/runtime/library").JsonValue;
         acknowledgedById: string | null;
         acknowledgedAt: Date | null;
@@ -1372,6 +1372,7 @@ export declare class CadController {
     } | {
         number: string;
         serverId: string | null;
+        guildId: string | null;
         id: string;
         status: string;
         createdAt: Date;
@@ -1392,7 +1393,6 @@ export declare class CadController {
         mapZ: number | null;
         involved: string | null;
         requiredUnits: string | null;
-        guildId: string | null;
         restrictRoleIds: string[];
     } | {
         incidentId: string;
@@ -1460,13 +1460,13 @@ export declare class CadController {
     }): Promise<{
         authorName: string | null;
         incidentNumber: string | null;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         authorId: string | null;
         incidentId: string | null;
         unitId: string | null;
         callsign: string | null;
-        guildId: string | null;
         discordId: string | null;
         text: string;
     }[]>;
@@ -1484,13 +1484,13 @@ export declare class CadController {
         roles: string[];
     }, b: z.infer<typeof radioBody>): Promise<{
         incidentNumber: string | null;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         authorId: string | null;
         incidentId: string | null;
         unitId: string | null;
         callsign: string | null;
-        guildId: string | null;
         discordId: string | null;
         text: string;
     }>;

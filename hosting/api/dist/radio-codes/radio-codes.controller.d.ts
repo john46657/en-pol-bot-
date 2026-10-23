@@ -10,15 +10,15 @@ declare const create: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     code: string;
     meaning: string;
+    guildId?: string | null | undefined;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    guildId?: string | null | undefined;
 }, {
     code: string;
     meaning: string;
+    guildId?: string | null | undefined;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    guildId?: string | null | undefined;
 }>;
 declare const update: z.ZodObject<{
     code: z.ZodOptional<z.ZodString>;
@@ -26,14 +26,14 @@ declare const update: z.ZodObject<{
     category: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
+    code?: string | undefined;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    code?: string | undefined;
     meaning?: string | undefined;
 }, {
+    code?: string | undefined;
     category?: string | null | undefined;
     description?: string | null | undefined;
-    code?: string | undefined;
     meaning?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
@@ -79,13 +79,13 @@ export declare class RadioCodesController {
     private readonly s;
     constructor(s: RadioCodesService);
     list(q: z.infer<typeof listQ>): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -121,13 +121,13 @@ export declare class RadioCodesController {
         queued: boolean;
     }>;
     create(a: Actor, b: z.infer<typeof create>): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }>;
@@ -135,24 +135,24 @@ export declare class RadioCodesController {
         added: number;
     }>;
     reorder(a: Actor, b: z.infer<typeof order>): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
     update(a: Actor, id: string, b: z.infer<typeof update>): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }>;

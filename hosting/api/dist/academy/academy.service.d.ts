@@ -63,9 +63,9 @@ export declare class AcademyService {
             result: {
                 id: string;
                 createdAt: Date;
+                passed: boolean;
                 enrollmentId: string;
                 score: number;
-                passed: boolean;
                 gradedById: string | null;
             } | null;
             id: string;
@@ -116,9 +116,9 @@ export declare class AcademyService {
     grade(actor: Actor, enrollmentId: string, score: number): Promise<{
         id: string;
         createdAt: Date;
+        passed: boolean;
         enrollmentId: string;
         score: number;
-        passed: boolean;
         gradedById: string | null;
     }>;
 }

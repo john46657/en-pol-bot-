@@ -6,7 +6,7 @@ import { roomsSchema, VoiceSupportService } from './voice-support.service';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
-import { currentGuild } from '../common/guild-context';
+import { targetGuild } from '../common/guild-context';
 
 const sf = z.string().regex(/^\d{15,25}$/);
 const guildQ = z.object({ guildId: sf.optional() });
@@ -25,11 +25,11 @@ const staff = z.object({ discordId: sf, name: z.string().trim().min(1).max(100),
 export class VoiceSupportController {
   constructor(private readonly s: VoiceSupportService) {}
   @Get('rooms') @RequirePermission('ticket.view')
-  rooms(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.rooms(q.guildId ?? currentGuild()); }
+  rooms(@Query(zodBody(guildQ)) q: z.infer<typeof guildQ>) { return this.s.rooms(targetGuild(q.guildId)); }
   @Put('rooms') @RequirePermission('ticket.settings')
-  save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(roomsSchema)) b: VoiceSupportRoom[]) { return this.s.saveRooms(a, b, q.guildId ?? currentGuild()); }
+  save(@CurrentActor() a: Actor, @Query(zodBody(guildQ)) q: z.infer<typeof guildQ>, @Body(zodBody(roomsSchema)) b: VoiceSupportRoom[]) { return this.s.saveRooms(a, b, targetGuild(q.guildId)); }
   @Get('cases') @RequirePermission('ticket.view')
-  cases(@Query(zodBody(casesQ)) q: z.infer<typeof casesQ>) { return this.s.cases({ guildId: q.guildId ?? currentGuild(), status: q.status }); }
+  cases(@Query(zodBody(casesQ)) q: z.infer<typeof casesQ>) { return this.s.cases({ guildId: targetGuild(q.guildId), status: q.status }); }
   /** Übernehmen / Ablehnen / Nachricht / Schließen aus dem Dashboard (Recht ticket.claim). */
   @Post('cases/:id/action') @HttpCode(200) @RequirePermission('ticket.claim')
   action(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(webAction)) b: z.infer<typeof webAction>) { return this.s.webAction(a, id, b); }

@@ -623,8 +623,8 @@ export declare class HrExamService {
         voidReason: string | null;
         personnelId: string;
         examId: string;
-        score: number | null;
         passed: boolean | null;
+        score: number | null;
         maxScore: number | null;
         gradedAt: Date | null;
         submittedAt: Date | null;

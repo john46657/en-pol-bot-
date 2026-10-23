@@ -76,13 +76,13 @@ export declare class RadioCodesService {
     /** Nach Änderungen: schon gepostete Liste automatisch nachziehen (falls eingestellt). */
     private autoUpdate;
     list(q?: string, guildId?: string | null): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
@@ -91,36 +91,36 @@ export declare class RadioCodesService {
     /** (gemeinsame Codes haben guildId = null – dafür greift der Datenbank-Index nicht, daher selbst prüfen) */
     private assertFree;
     create(actor: Actor, d: Required<Pick<RadioCodeInput, 'code' | 'meaning'>> & RadioCodeInput): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }>;
     update(actor: Actor, id: string, d: RadioCodeInput): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }>;
     remove(actor: Actor, id: string): Promise<void>;
     reorder(actor: Actor, ids: string[]): Promise<{
+        code: string;
+        guildId: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         category: string | null;
         description: string | null;
-        code: string;
-        guildId: string | null;
         position: number;
         meaning: string;
     }[]>;
