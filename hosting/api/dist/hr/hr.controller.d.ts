@@ -1987,14 +1987,14 @@ declare const listQ: z.ZodObject<{
     rank: z.ZodOptional<z.ZodString>;
     limit: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    status?: "ACTIVE" | "FREE" | "RESERVED" | "BLOCKED" | "FORMER" | undefined;
+    status?: "ACTIVE" | "BLOCKED" | "FREE" | "RESERVED" | "FORMER" | undefined;
     department?: string | undefined;
     rank?: string | undefined;
     rangeId?: string | undefined;
     limit?: number | undefined;
     q?: string | undefined;
 }, {
-    status?: "ACTIVE" | "FREE" | "RESERVED" | "BLOCKED" | "FORMER" | undefined;
+    status?: "ACTIVE" | "BLOCKED" | "FREE" | "RESERVED" | "FORMER" | undefined;
     department?: string | undefined;
     rank?: string | undefined;
     rangeId?: string | undefined;
@@ -2367,19 +2367,19 @@ export declare class ServiceNumbersController {
         as: 'FREE' | 'FORMER';
     }): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "BLOCKED" | "FREE" | "RESERVED" | "FORMER";
     }>;
     block(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "BLOCKED" | "FREE" | "RESERVED" | "FORMER";
     }>;
     unblock(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "BLOCKED" | "FREE" | "RESERVED" | "FORMER";
     }>;
     reserve(a: Actor, b: z.infer<typeof status>): Promise<{
         display: string;
-        status: "FREE" | "RESERVED" | "BLOCKED" | "FORMER";
+        status: "BLOCKED" | "FREE" | "RESERVED" | "FORMER";
     }>;
 }
 declare const sessionBody: z.ZodObject<{

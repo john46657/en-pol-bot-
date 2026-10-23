@@ -36,6 +36,8 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['GET', /^\/sek\/(me|members|reports)$/], ['POST', /^\/sek\/(members|members\/remove|reports)$/],
   ['POST', new RegExp(`^/qualifications/applications/${UUID}/decision$`)], ['GET', new RegExp(`^/qualifications/applications/${UUID}$`)], ['GET', /^\/qualifications\/history$/],
   ['POST', new RegExp(`^/applications/${UUID}/discord-decision$`)], ['GET', new RegExp(`^/applications/${UUID}$`)], ['GET', /^\/applications\/history$/],
+  // KI-Bewerbungsprüfung per Discord-Button (gleiche Rechte wie im Dashboard, Ergebnis nur privat für den Prüfer)
+  ['GET', new RegExp(`^/(applications|qualifications/applications)/${UUID}/ai-review$`)], ['POST', new RegExp(`^/(applications|qualifications/applications)/${UUID}/ai-review$`)],
   ['POST', /^\/communication\/channels\/(TEAM|DISPATCH)\/messages$/],
   ['GET', /^\/leave$/], ['POST', /^\/leave$/], ['POST', new RegExp(`^/leave/${UUID}/(decision|cancel|extend|extension-decision)$`)],
   ['GET', /^\/cad\/(units|incidents|calls|config)$/], ['GET', /^\/fleet\/vehicles$/], ['POST', /^\/cad\/radio$/], ['POST', new RegExp(`^/cad/units/${UUID}/(status|feedback)$`)],

@@ -20,6 +20,7 @@ import { RobloxService } from '../persons/roblox.service';
 import { formatMinutes } from '@enrp/shared';
 import { DiscordAccessService } from '../authz/discord-access.service';
 import { DiscordLiveService } from '../discord/discord-live.service';
+import { aiConfig } from './ai-review/ai-provider';
 
 export type { FormField };
 /** Die Beschriftungen sind zugleich die Fragen, die der Discord-Bot per Direktnachricht stellt. */
@@ -93,6 +94,7 @@ export class ApplicationsService {
       answers: form.filter((f) => answers[f.key]).map((f) => ({ question: f.label, answer: answers[f.key] })),
       durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: webUrl(`/applications/${a.id}`),
       ...(police.settings.staffThreads ? { thread: true } : {}),
+      ...(aiConfig().apiKey ? { aiReview: true } : {}), // Button „KI-Prüfung“ (Schlüssel wird nie mitgeschickt)
     }, { always: !!police.channelId });
     const roles = submitRoles(police.settings);
     if (meta.discordId && (roles.add.length || roles.remove.length)) await this.discord.enqueue('applications', 'member.roles', { discordId: meta.discordId, ...roles, reason: `Bewerbung ${a.number}` }, { always: true });
@@ -280,6 +282,7 @@ export class ApplicationsService {
     const a = await this.get(id);
     await this.prisma.$transaction(async (tx) => {
       await tx.hireQueue.deleteMany({ where: { applicationId: id } });
+      await tx.applicationAiReview.deleteMany({ where: { kind: 'POLICE', applicationId: id } }); // KI-Prüfungen gehören zur Bewerbung
       await tx.application.delete({ where: { id } });
       await this.audit.record(actor, { action: 'application.delete', module: 'applications', entityType: 'Application', entityId: id, before: { number: a.number, status: a.status, robloxUsername: a.robloxUsername, discordId: a.discordId, discordName: a.discordName } }, tx);
     });

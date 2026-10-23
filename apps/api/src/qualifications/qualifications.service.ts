@@ -1,4 +1,5 @@
 import { ApplicationBansService } from '../application-bans/application-bans.service';
+import { aiConfig } from '../applications/ai-review/ai-provider';
 import { hireEvents } from '../common/hire-events';
 import { settingsGuild } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
@@ -184,6 +185,7 @@ export class QualificationsService {
       id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers, pingRoleIds: unit.pingRoleIds, guildName: d.guildId ? (await this.discord.guilds()).find((g) => g.id === d.guildId)?.name ?? null : null,
       durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: webUrl(`/qualifications?id=${a.id}`),
       ...(unit.channelId ? { channelId: unit.channelId } : {}), ...(unit.settings.staffThreads ? { thread: true } : {}),
+      ...(aiConfig().apiKey ? { aiReview: true } : {}), // Button „KI-Prüfung“ (Schlüssel wird nie mitgeschickt)
     }, { always: !!unit.channelId });
     const roles = submitRoles(unit.settings);
     if (roles.add.length || roles.remove.length) await this.discord.enqueue('qualifications', 'member.roles', { discordId: d.discordId, ...roles, reason: `Bewerbung ${a.number}` }, { always: true });
@@ -207,6 +209,7 @@ export class QualificationsService {
   async remove(actor: Actor, id: string) {
     const a = await this.get(id);
     await this.prisma.$transaction(async (tx) => {
+      await tx.applicationAiReview.deleteMany({ where: { kind: 'QUALIFICATION', applicationId: id } }); // KI-Prüfungen gehören zur Bewerbung
       await tx.qualificationApplication.delete({ where: { id } });
       await this.audit.record(actor, { action: 'qualifications.application.delete', module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { number: a.number, unit: a.unitName, status: a.status, discordId: a.discordId, discordName: a.discordName } }, tx);
     });
