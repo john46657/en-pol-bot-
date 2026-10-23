@@ -47,6 +47,8 @@ export interface Ctx {
   userName?: string;
   /** Profilbild des Aufrufers (Kopfzeile wie bei Trident). */
   userAvatar?: string;
+  /** Name und Icon des Servers (Kopfzeile wie bei Trident, z. B. `/shift leaderboard`). */
+  guildName?: string; guildIcon?: string;
   /** Selbst aktualisierende Nachrichten sofort neu zeichnen; mit `channelId` dorthin (um)ziehen. */
   refreshLive?: (kind: LiveKind, o?: { channelId?: string; force?: boolean }) => Promise<{ channelId: string; messageId?: string } | null>;
   /** Discord-Rollen des Aufrufers auf diesem Server (Ticket-Voraussetzungen). */
@@ -59,6 +61,8 @@ export interface Ctx {
   memberJoinedAt?: string;
   /** Discord-Benutzername zu einer ID (z. B. Ticket für ein anderes Mitglied). */
   userNameOf?: (userId: string) => Promise<string | null>;
+  /** Profilbild zu einer Discord-ID (z. B. Kopfzeile von `/shift admin`). */
+  userAvatarOf?: (userId: string) => Promise<string | null>;
   /** Roblox-Namenssuche (öffentliche Roblox-API; in Tests ersetzbar). */
   robloxLookup?: (username: string) => Promise<{ id: number; name: string; displayName: string } | null>;
   /** Roblox-Verifizierung: Rollen/Nickname eines Mitglieds auf einem Server setzen; liefert Hinweise, was nicht ging. */

@@ -121,7 +121,7 @@ function ReminderCard({ value, manage, busy, onSave }: { value: ShiftReminder; m
 }
 
 interface ShiftLogItem {
-  id: string; userId: string; name: string; rank: string | null; callsign: string | null; shiftType: string | null; shiftTypeNames: string[];
+  id: string; shiftId: string | null; userId: string; name: string; rank: string | null; callsign: string | null; shiftType: string | null; shiftTypeNames: string[];
   startedAt: string; endedAt: string | null; active: boolean; status: string; minutes: number; breakMinutes: number; breaks: number; startedBy: string | null; endedBy: string | null;
 }
 /** 95 → „1 Std. 35 Min.“ */
@@ -152,7 +152,7 @@ function ShiftLog({ types }: { types: ShiftType[] }) {
               <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-2">Beamter</th><th>Schichtart</th><th>Beginn</th><th>Ende</th><th>Dauer</th><th>Pausen</th></tr></thead>
               <tbody>{items.map((x) => (
                 <tr key={x.id} className="border-b border-line/60 align-top last:border-0">
-                  <td className="p-2"><span className="font-medium">{x.name}</span>{x.callsign && <span className="ml-1 text-xs text-muted">{x.callsign}</span>}{x.rank && <span className="block text-xs text-muted">{x.rank}</span>}</td>
+                  <td className="p-2"><span className="font-medium">{x.name}</span>{x.callsign && <span className="ml-1 text-xs text-muted">{x.callsign}</span>}{x.rank && <span className="block text-xs text-muted">{x.rank}</span>}{x.shiftId && <span className="block font-mono text-xs text-muted" title="Shift ID">ID {x.shiftId}</span>}</td>
                   <td className="py-2">{x.shiftTypeNames.length ? x.shiftTypeNames.join(' → ') : '—'}</td>
                   <td className="py-2 whitespace-nowrap">{fmt(x.startedAt)}{by(x.startedBy, x.name)}</td>
                   <td className="py-2 whitespace-nowrap">{x.active ? <StatusBadge status={x.status} /> : <>{fmt(x.endedAt)}{by(x.endedBy, x.name)}</>}</td>

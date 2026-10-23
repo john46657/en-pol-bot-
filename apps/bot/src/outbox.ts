@@ -159,7 +159,7 @@ export async function pollOnce(api: Api, send: Sender, log: (m: string) => void 
       const avatarUserId = /\.(submitted|archived)$/.test(item.type) && /^(qualification|application)\./.test(item.type) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
       // Staff-Thread je Bewerbung (wie bei Appy)
       const thread = item.payload.thread === true && /\.submitted$/.test(item.type) ? `Bewerbung ${String(item.payload.number ?? '')}`.slice(0, 100) : undefined;
-      const authorUserId = (item.type === 'leave.requested' || item.type === 'leave.extension') && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
+      const authorUserId = (item.type === 'leave.requested' || item.type === 'leave.extension' || (item.type === 'duty.changed' && !!item.payload.shiftId)) && typeof item.payload.discordId === 'string' && /^\d{15,25}$/.test(item.payload.discordId) ? item.payload.discordId : undefined;
       // Gefahrenstatus: vorherige Meldung im Kanal löschen, damit nur der aktuelle Status dort steht
       const replaceKey = item.type === 'danger.changed' ? 'danger' : undefined;
       // Anträge/Bewerbungen mit Entscheidungs-Buttons: Ort merken, damit eine Entscheidung im Dashboard die Nachricht anpassen kann

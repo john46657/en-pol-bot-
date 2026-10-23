@@ -48,20 +48,21 @@ describe('Shifts module', () => {
     const off = (await login(app, 'sl_off')).agent;
     // per Discord-Button ohne Auswahl → Standard-Schicht
     expect((await http().put('/api/v1/team/me/status').set(bot(OFF_D)).send({ status: 'ON_DUTY' })).status).toBe(200);
-    expect(await lastOutbox('duty.changed')).toMatchObject({ discordId: OFF_D, status: 'ON_DUTY', shiftType: 'Im Dienst', channelId: CH.log, roles: { add: [R.shift], remove: expect.arrayContaining([R.brk, R.shift2]) } });
+    const started = await lastOutbox('duty.changed');
+    expect(started).toMatchObject({ discordId: OFF_D, status: 'ON_DUTY', shiftType: 'Im Dienst', channelId: CH.log, shiftId: expect.stringMatching(/^\d{17,20}$/), totalSeconds: 0, roles: { add: [R.shift], remove: expect.arrayContaining([R.brk, R.shift2]) } });
     expect((await off.put('/api/v1/team/me/status').send({ status: 'BREAK' })).status).toBe(200);
-    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'BREAK', shiftType: 'Im Dienst', roles: { add: [R.brk], remove: expect.arrayContaining([R.shift, R.shift2]) } });
+    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'BREAK', shiftType: 'Im Dienst', shiftId: started!.shiftId, roles: { add: [R.brk], remove: expect.arrayContaining([R.shift, R.shift2]) } });
     // Schicht wechseln, ohne den Dienst zu verlassen
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(200);
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(409);
     const sek = await lastOutbox('duty.changed');
-    expect(sek).toMatchObject({ shiftType: 'SEK Einsatz', roles: { add: [R.shift2] } });
+    expect(sek).toMatchObject({ shiftType: 'SEK Einsatz', shiftId: started!.shiftId, roles: { add: [R.shift2] } });
     expect(sek!.channelId).toBeUndefined(); // ohne eigenen Log-Channel → normaler Dienst-Channel
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'gibtsnicht' })).status).toBe(404);
     const team = (await off.get('/api/v1/team/overview')).body as { name: string; shiftType: string | null }[];
     expect(team.find((t) => t.name === 'sl_off')?.shiftType).toBe('SEK Einsatz');
     expect((await off.put('/api/v1/team/me/status').send({ status: 'OFF_DUTY' })).status).toBe(200);
-    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'OFF_DUTY', roles: { add: [], remove: expect.arrayContaining([R.shift, R.brk, R.shift2]) } });
+    expect(await lastOutbox('duty.changed')).toMatchObject({ status: 'OFF_DUTY', shiftId: started!.shiftId, shiftStartedAt: expect.any(String), totalSeconds: expect.any(Number), roles: { add: [], remove: expect.arrayContaining([R.shift, R.brk, R.shift2]) } });
     // Modul aus → keine Schicht-Auswahl möglich
     await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
     expect((await off.put('/api/v1/team/me/status').send({ status: 'ON_DUTY', shiftType: 'sek' })).status).toBe(400);
@@ -101,6 +102,50 @@ describe('Shifts module', () => {
     expect((await http().put(`/api/v1/team/${offId}/status`).set(bot(LEAD_D)).send({ status: 'OFF_DUTY' })).status).toBe(200);
     expect((await lead.get('/api/v1/team/shifts?shiftType=sek')).body.items.filter((x: { name: string }) => x.name === 'sl_off')).toHaveLength(1);
     await (await login(app, 'sl_admin')).agent.put('/api/v1/shifts/config').send({ enabled: false, types: [] });
+  });
+
+  it('leaderboard, active shifts, stats and admin actions (modify, delete, clear) – team.manage only for changes', async () => {
+    const lead = (await login(app, 'sl_lead')).agent;
+    const off = (await login(app, 'sl_off')).agent;
+    const offId = (await prisma.user.findFirstOrThrow({ where: { username: 'sl_off' } })).id;
+    await prisma.dutySession.deleteMany({ where: { userId: offId } });
+    // zwei beendete Schichten: 1 h (mit 30 min Pause dazwischen) und 2 h; eine laufende (10 min)
+    const t = (min: number) => new Date(Date.now() - min * 60_000);
+    await prisma.dutySession.createMany({ data: [
+      { userId: offId, status: 'ON_DUTY', shiftId: '100', startedAt: t(600), endedAt: t(570) },
+      { userId: offId, status: 'BREAK', shiftId: '100', startedAt: t(570), endedAt: t(540) },
+      { userId: offId, status: 'ON_DUTY', shiftId: '100', startedAt: t(540), endedAt: t(510) },
+      { userId: offId, status: 'ON_DUTY', shiftId: '200', startedAt: t(300), endedAt: t(180) },
+      { userId: offId, status: 'ON_DUTY', shiftId: '300', startedAt: t(10) },
+    ] });
+    const board = (await http().get('/api/v1/team/leaderboard').set(bot(OFF_D))).body;
+    expect(board.days).toBeNull();
+    const row = board.users.find((u: { userId: string }) => u.userId === offId);
+    expect(row).toMatchObject({ discordId: OFF_D, shifts: 3 });
+    expect(Math.round(row.seconds / 60)).toBe(190);
+    const active = (await http().get('/api/v1/team/active-shifts').set(bot(OFF_D))).body as { userId: string; discordId: string; seconds: number; shiftId: string }[];
+    expect(active.find((a) => a.userId === offId)).toMatchObject({ discordId: OFF_D, shiftId: '300' });
+    const stats = (await lead.get(`/api/v1/team/${offId}/shift-stats`)).body;
+    expect(stats).toMatchObject({ count: 3, last: { shiftId: '300', status: 'ON_DUTY' } });
+    expect((await off.get(`/api/v1/team/${offId}/shift-stats`)).status).toBe(403);
+    expect((await http().get(`/api/v1/team/${offId}/shift-stats`).set(bot(LEAD_D))).body.count).toBe(3);
+    // Modify: +30 min, −90 min (über die Pause hinweg nur Dienstzeit), auf 45 min setzen
+    expect((await off.patch('/api/v1/team/shifts/100').send({ action: 'add', seconds: 1800 })).status).toBe(403);
+    expect((await lead.patch('/api/v1/team/shifts/100').send({ action: 'add', seconds: 1800 })).body.seconds).toBe(5400);
+    expect((await lead.patch('/api/v1/team/shifts/100').send({ action: 'remove', seconds: 5400 })).body.seconds).toBe(0);
+    expect((await lead.patch('/api/v1/team/shifts/100').send({ action: 'set', seconds: 2700 })).body.seconds).toBe(2700);
+    const list = (await lead.get(`/api/v1/team/shifts?userId=${offId}&days=30`)).body.items as { shiftId: string; seconds: number; breaks: number }[];
+    expect(list.find((x) => x.shiftId === '100')).toMatchObject({ seconds: 2700, breaks: 1 });
+    expect(list).toHaveLength(3); // Schicht bleibt trotz Lücken eine Schicht (gleiche ID)
+    // Delete: laufende nicht, beendete ja; unbekannt 404
+    expect((await lead.delete('/api/v1/team/shifts/300')).status).toBe(409);
+    expect((await lead.delete('/api/v1/team/shifts/200')).status).toBe(200);
+    expect((await lead.delete('/api/v1/team/shifts/200')).status).toBe(404);
+    // Clear: alle beendeten, die laufende bleibt
+    expect((await lead.delete(`/api/v1/team/${offId}/shifts`)).body.deleted).toBe(3);
+    expect(await prisma.dutySession.findMany({ where: { userId: offId } })).toMatchObject([{ shiftId: '300', endedAt: null }]);
+    expect(await prisma.auditLog.count({ where: { action: { in: ['duty.shift.update', 'duty.shift.delete', 'duty.shifts.reset'] } } })).toBe(5);
+    await lead.put(`/api/v1/team/${offId}/status`).send({ status: 'OFF_DUTY' });
   });
 });
 
