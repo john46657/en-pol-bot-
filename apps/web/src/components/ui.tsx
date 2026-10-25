@@ -139,7 +139,8 @@ export function EmptyState({ text, hint, action }: { text: string; hint?: string
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const e = error instanceof ApiError ? error : undefined;
-  if (e?.status === 403) return <Forbidden module={(e.details as { reason?: string } | undefined)?.reason === 'MODULE_DISABLED' ? '' : undefined} />;
+  const reason = (e?.details as { reason?: string } | undefined)?.reason;
+  if (e?.status === 403) return <Forbidden module={reason === 'MODULE_DISABLED' ? '' : undefined} serverDisabled={reason === 'SERVER_DISABLED'} />;
   return (
     <div role="alert" className="flex flex-col items-center gap-2 py-10 text-center">
       <AlertTriangle className="text-danger" aria-hidden />
@@ -154,7 +155,15 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
  * 403-Seite. `module` gesetzt = die Seite gehört zu einem auf diesem Server ausgeschalteten Modul (Name, '' = unbekannt) –
  * dann hilft keine weitere Berechtigung, sondern nur das Einschalten des Moduls (`manage`: Link zur Modulverwaltung).
  */
-export function Forbidden({ module, manage }: { module?: string; manage?: boolean }) {
+export function Forbidden({ module, manage, serverDisabled }: { module?: string; manage?: boolean; serverDisabled?: boolean }) {
+  if (serverDisabled) return (
+    <div role="alert" className="mx-auto max-w-md py-16 text-center">
+      <p className="text-5xl font-bold text-muted">403</p>
+      <h1 className="mt-2 text-lg font-semibold">Server nicht freigeschaltet</h1>
+      <p className="mt-1 text-sm text-muted">Dieser Discord-Server ist noch nicht freigeschaltet – bis dahin geht nur das Grundsystem (Einstellungen, Benutzer & Rollen). {manage ? 'Schalte ihn in der Server-Verwaltung frei.' : 'Ein Systemadministrator muss ihn freischalten.'}</p>
+      {manage && <Link to="/admin/multi-server" className="mt-4 inline-block rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-fg">Server verwalten</Link>}
+    </div>
+  );
   if (module !== undefined) return (
     <div role="alert" className="mx-auto max-w-md py-16 text-center">
       <p className="text-5xl font-bold text-muted">403</p>

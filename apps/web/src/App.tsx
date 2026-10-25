@@ -134,6 +134,7 @@ function GuardForbidden({ need }: { need: (string | undefined)[] }) {
   const off = new Set(user?.modulesOff ?? []);
   const missing = need.filter((p): p is string => !!p && !can(p));
   const modules = missing.flatMap((p) => p.split('|').map(moduleOfPermission));
+  if (modules.length && user?.serverDisabled && modules.every((m) => m !== 'core')) return <Forbidden serverDisabled manage={!!user.globalAdmin} />;
   if (!modules.length || !modules.every((m) => off.has(m))) return <Forbidden />;
   const names = [...new Set(modules)].map((m) => moduleDef(m)?.name ?? m);
   return <Forbidden module={names.join(', ')} manage={can('modules.manage')} />;
