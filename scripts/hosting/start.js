@@ -78,6 +78,11 @@ function migrateEnv() {
       if (/-pooler\./.test(u.hostname)) { u.hostname = u.hostname.replace('-pooler.', '.'); url = u.toString(); log('Migrationen über die direkte Neon-Verbindung (ohne „-pooler“).'); }
     } catch { /* ungültige URL → Prisma meldet den Fehler selbst */ }
   }
+  // Neon legt die Datenbank nach Leerlauf schlafen; das Aufwachen dauert oft länger als Prismas 5 s → P1001.
+  try {
+    const u = new URL(url);
+    if (!u.searchParams.has('connect_timeout')) { u.searchParams.set('connect_timeout', '30'); url = u.toString(); }
+  } catch { /* ungültige URL → Prisma meldet den Fehler selbst */ }
   return { ...process.env, DATABASE_URL: url, PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK: '1' };
 }
 
