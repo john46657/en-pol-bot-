@@ -5,7 +5,7 @@ import { initAutosave, resetAutosave } from './autosave';
 import { useRealtimeEvent } from './realtime';
 import { allServersChosen, getServer, setServer, subscribeServer } from './server';
 
-export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[]; globalAdmin?: boolean }
+export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[]; globalAdmin?: boolean; /** Auf dem gewählten Server ausgeschaltete Module. */ modulesOff?: string[] }
 interface AuthCtx { user: Profile | null; loading: boolean; can: (p: string) => boolean; login: (u: string, p: string) => Promise<{ ticket: string } | void>; loginTwoFactor: (ticket: string, code: string) => Promise<void>; logout: () => Promise<void> }
 const Ctx = createContext<AuthCtx | null>(null);
 

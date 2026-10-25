@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router';
+import { moduleDef, moduleOfPermission } from '@enrp/shared';
 import { useAuth } from './lib/auth';
 import { AppShell } from './components/AppShell';
 import { Forbidden, SkeletonRows } from './components/ui';
@@ -97,7 +98,7 @@ function WantedHitsRedirect() {
 
 function AnalyticsGate() {
   const { can } = useAuth();
-  return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <Forbidden />;
+  return can('analytics.view') || (can('applications.view') && can('dashboard.applications.view')) ? <Analytics /> : <GuardForbidden need={['analytics.view']} />;
 }
 
 /** UI-seitige Routenprüfung (Komfort). Das Backend erzwingt dieselben Rechte unabhängig davon. */
@@ -127,6 +128,17 @@ function loginNext(here: string) {
   } catch { return null; }
 }
 
+/** Fehlt ein Recht nur, weil sein Modul auf diesem Server aus ist, sagt die 403-Seite das (statt „keine Berechtigung“). */
+function GuardForbidden({ need }: { need: (string | undefined)[] }) {
+  const { user, can } = useAuth();
+  const off = new Set(user?.modulesOff ?? []);
+  const missing = need.filter((p): p is string => !!p && !can(p));
+  const modules = missing.flatMap((p) => p.split('|').map(moduleOfPermission));
+  if (!modules.length || !modules.every((m) => off.has(m))) return <Forbidden />;
+  const names = [...new Set(modules)].map((m) => moduleDef(m)?.name ?? m);
+  return <Forbidden module={names.join(', ')} manage={can('modules.manage')} />;
+}
+
 function Guard({ perm, area, children }: { perm?: string; area?: string; children: ReactNode }) {
   const { user, loading, can } = useAuth();
   const loc = useLocation();
@@ -135,7 +147,7 @@ function Guard({ perm, area, children }: { perm?: string; area?: string; childre
   // nach „Mit Discord anmelden“: zur ursprünglich aufgerufenen Seite zurück (z. B. Transkript-Link aus Discord)
   const next = loginNext(loc.pathname);
   if (next) return <Navigate to={next} replace />;
-  if ((perm && !can(perm)) || (area && !can(area))) return <Forbidden />;
+  if ((perm && !can(perm)) || (area && !can(area))) return <GuardForbidden need={[perm, area]} />;
   return <ErrorBoundary resetKey={loc.pathname}><Suspense fallback={<SkeletonRows />}>{children}</Suspense></ErrorBoundary>;
 }
 
