@@ -3,7 +3,7 @@ import { PRIORITY_LABEL, STATUS_LABEL, statusLabel } from '@enrp/shared';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 import { AlertTriangle, Inbox, X, type LucideIcon } from 'lucide-react';
-import { useInRouterContext, useLocation } from 'react-router';
+import { Link, useInRouterContext, useLocation } from 'react-router';
 import { isActive, NAV } from '../nav';
 import { ApiError } from '../lib/api';
 import { formatDate } from '../lib/prefs';
@@ -139,7 +139,7 @@ export function EmptyState({ text, hint, action }: { text: string; hint?: string
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const e = error instanceof ApiError ? error : undefined;
-  if (e?.status === 403) return <Forbidden />;
+  if (e?.status === 403) return <Forbidden module={(e.details as { reason?: string } | undefined)?.reason === 'MODULE_DISABLED' ? '' : undefined} />;
   return (
     <div role="alert" className="flex flex-col items-center gap-2 py-10 text-center">
       <AlertTriangle className="text-danger" aria-hidden />
@@ -150,7 +150,19 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   );
 }
 
-export function Forbidden() {
+/**
+ * 403-Seite. `module` gesetzt = die Seite gehört zu einem auf diesem Server ausgeschalteten Modul (Name, '' = unbekannt) –
+ * dann hilft keine weitere Berechtigung, sondern nur das Einschalten des Moduls (`manage`: Link zur Modulverwaltung).
+ */
+export function Forbidden({ module, manage }: { module?: string; manage?: boolean }) {
+  if (module !== undefined) return (
+    <div role="alert" className="mx-auto max-w-md py-16 text-center">
+      <p className="text-5xl font-bold text-muted">403</p>
+      <h1 className="mt-2 text-lg font-semibold">Modul ausgeschaltet</h1>
+      <p className="mt-1 text-sm text-muted">{module ? `Das Modul „${module}“` : 'Das Modul dieser Seite'} ist auf diesem Server ausgeschaltet. {manage ? 'Du kannst es in der Server-Verwaltung einschalten.' : 'Wende dich an einen Administrator, falls du es brauchst.'}</p>
+      {manage && <Link to="/admin/multi-server" className="mt-4 inline-block rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-fg">Module verwalten</Link>}
+    </div>
+  );
   return (
     <div role="alert" className="mx-auto max-w-md py-16 text-center">
       <p className="text-5xl font-bold text-muted">403</p>

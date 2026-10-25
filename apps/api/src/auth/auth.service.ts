@@ -121,11 +121,15 @@ export class AuthService {
     // Server, die man wählen darf: registriert, nicht archiviert, bestätigte Mitgliedschaft (globale Systemadministratoren: alle)
     const owner = await this.perms.isOwner(userId);
     const servers = await this.prisma.discordServer.findMany({ where: { archivedAt: null, ...(owner ? {} : { memberships: { some: { userId, status: 'MEMBER' } } }) }, select: { guildId: true }, orderBy: { name: 'asc' } });
+    // Auf dem gewählten Server ausgeschaltete Module: damit die Oberfläche „Modul aus“ statt „Kein Zugriff“ zeigen kann
+    const guild = currentGuild();
+    const current = guild ? await this.authz.server(guild) : null;
+    const modulesOff = current ? [...(await this.authz.disabledModules(current.id))] : [];
     return {
       id: u.id, username: u.username, displayName: u.displayName, robloxUserId: u.robloxUserId, robloxUsername: u.robloxUsername,
       // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
       roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.authz.effective(userId), lastLogin: u.lastLogin,
-      twoFactor: !!u.totpEnabledAt, guildId: currentGuild(), servers: servers.map((s) => s.guildId), globalAdmin: owner,
+      twoFactor: !!u.totpEnabledAt, guildId: currentGuild(), servers: servers.map((s) => s.guildId), globalAdmin: owner, modulesOff,
     };
   }
 
