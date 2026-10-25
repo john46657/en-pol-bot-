@@ -130,6 +130,8 @@ export class AuthService {
       // Rollen, die im gewählten Server gelten; `servers` = Server, auf denen man eigene Server-Rollen hat
       roles: u.roles.filter((r) => active.has(r.roleId)).map((r) => r.role.name), permissions: await this.authz.effective(userId), lastLogin: u.lastLogin,
       twoFactor: !!u.totpEnabledAt, guildId: currentGuild(), servers: servers.map((s) => s.guildId), globalAdmin: owner, modulesOff,
+      // nicht freigeschalteter (z. B. vom Bot nur entdeckter) Server: alle Module außer dem Grundsystem gesperrt
+      serverDisabled: !!current && (current.status === 'DISABLED' || !!current.archivedAt),
     };
   }
 
