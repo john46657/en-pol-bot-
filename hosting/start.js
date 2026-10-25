@@ -57,7 +57,7 @@ if (!process.env.COOKIE_SECURE) {
 
 function runNode(label, args, env = process.env, tries = 1) {
   for (let i = 1; ; i++) {
-    const r = spawnSync(process.execPath, args, { cwd: root, env, stdio: 'inherit' });
+    const r = spawnSync(process.execPath, args, { cwd: root, env: typeof env === 'function' ? env(i, tries) : env, stdio: 'inherit' });
     if (r.status === 0) return;
     if (i >= tries) die(`${label} ist fehlgeschlagen (Exit ${r.status}). Prüfe DATABASE_URL und die Logs oben.`);
     log(`${label} fehlgeschlagen – neuer Versuch ${i + 1}/${tries} in 10 Sekunden …`);
@@ -70,9 +70,13 @@ function runNode(label, args, env = process.env, tries = 1) {
  * hängt die Prisma-Sperre (pg_advisory_lock) → Fehler P1002 „timed out“. Daher: DIRECT_DATABASE_URL, sonst
  * bei Neon automatisch die Adresse ohne „-pooler“; die Sperre ist unnötig, weil hier nur ein Server migriert.
  */
-function migrateEnv() {
+function migrateEnv(attempt, tries) {
   let url = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '';
-  if (!process.env.DIRECT_DATABASE_URL) {
+  // Letzter Versuch über die ursprüngliche Adresse: ohne Sperre klappt das auch über den Pooler, falls die direkte nicht erreichbar ist.
+  const last = attempt >= tries && tries > 1;
+  if (last) log('Letzter Versuch über die ursprüngliche DATABASE_URL.');
+  if (last) url = process.env.DATABASE_URL || url;
+  else if (!process.env.DIRECT_DATABASE_URL) {
     try {
       const u = new URL(url);
       if (/-pooler\./.test(u.hostname)) { u.hostname = u.hostname.replace('-pooler.', '.'); url = u.toString(); log('Migrationen über die direkte Neon-Verbindung (ohne „-pooler“).'); }
@@ -81,7 +85,7 @@ function migrateEnv() {
   // Neon legt die Datenbank nach Leerlauf schlafen; das Aufwachen dauert oft länger als Prismas 5 s → P1001.
   try {
     const u = new URL(url);
-    if (!u.searchParams.has('connect_timeout')) { u.searchParams.set('connect_timeout', '30'); url = u.toString(); }
+    if (!u.searchParams.has('connect_timeout')) { u.searchParams.set('connect_timeout', '30'); url = u.toString(); log('Warte bis zu 30 s auf die Datenbank (Neon-Aufwachzeit).'); }
   } catch { /* ungültige URL → Prisma meldet den Fehler selbst */ }
   return { ...process.env, DATABASE_URL: url, PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK: '1' };
 }
@@ -101,7 +105,7 @@ function migrateEnv() {
 }
 
 log('Datenbank-Migrationen …');
-runNode('prisma migrate deploy', [require.resolve('prisma/build/index.js'), 'migrate', 'deploy', '--schema', path.join(root, 'api/prisma/schema.prisma')], migrateEnv(), 3);
+runNode('prisma migrate deploy', [require.resolve('prisma/build/index.js'), 'migrate', 'deploy', '--schema', path.join(root, 'api/prisma/schema.prisma')], migrateEnv, 3);
 log('Erster Administrator (nur falls noch kein Benutzer existiert) …');
 runNode('seed', [path.join(root, 'api/dist/seed/run.js')]);
 
