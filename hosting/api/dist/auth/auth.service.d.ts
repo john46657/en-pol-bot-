@@ -33,6 +33,8 @@ export declare class AuthService {
             guildId: string | null;
             servers: string[];
             globalAdmin: boolean;
+            modulesOff: string[];
+            serverDisabled: boolean;
         };
     } | {
         twoFactorRequired: true;
@@ -59,6 +61,8 @@ export declare class AuthService {
             guildId: string | null;
             servers: string[];
             globalAdmin: boolean;
+            modulesOff: string[];
+            serverDisabled: boolean;
         };
     }>;
     /** Neue Session nach erfolgreicher Anmeldung (Passwort oder Discord). */
@@ -85,6 +89,8 @@ export declare class AuthService {
             guildId: string | null;
             servers: string[];
             globalAdmin: boolean;
+            modulesOff: string[];
+            serverDisabled: boolean;
         };
     }>;
     logout(actor: Actor, sessionId: string): Promise<void>;
@@ -118,6 +124,8 @@ export declare class AuthService {
         guildId: string | null;
         servers: string[];
         globalAdmin: boolean;
+        modulesOff: string[];
+        serverDisabled: boolean;
     }>;
     /**
      * Server-Übersicht nach dem Login (Kacheln): Server, die man öffnen darf (registriert, Mitglied bzw. globaler

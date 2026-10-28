@@ -78,6 +78,8 @@ export declare class DiscordOAuthService {
             guildId: string | null;
             servers: string[];
             globalAdmin: boolean;
+            modulesOff: string[];
+            serverDisabled: boolean;
         };
         kind: "login";
         guildId?: undefined;

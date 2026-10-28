@@ -46,7 +46,7 @@ export const SERVER_SCOPED_SETTINGS = ['team.structure', 'team.rankOrder', 'dash
  * Hintergrund-Aufgaben ohne Server gilt der Grundwert. Anmeldung, Backups, Server-Verbund und Bot-Zustand bleiben global.
  */
 export const PER_SERVER_SETTING_KEYS: readonly string[] = [
-  ...SERVER_SCOPED_SETTINGS, 'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels', 'discord.ghostPing',
+  ...SERVER_SCOPED_SETTINGS, 'org.serverName', 'studio.customFields', 'application.form', 'qualifications.config', 'discord.channels',
   'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
   'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
   'messagebuilder.channels', 'auth.discord', 'org.timezone', 'org.dateFormat',

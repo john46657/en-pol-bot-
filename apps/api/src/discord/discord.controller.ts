@@ -11,7 +11,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BotService, CurrentActor, RequirePermission } from '../authz/decorators';
 import type { Actor } from '../audit/audit.service';
 import { zodBody } from '../common/zod.pipe';
-import { runInGuild } from '../common/guild-context';
 import { ServersService } from '../multi-server/servers.service';
 
 const sf = z.string().regex(/^\d{15,25}$/);
@@ -69,11 +68,6 @@ export class BotController {
   @BotService() @Throttle({ default: { limit: rate, ttl: 60_000 } }) @Post('link') @HttpCode(200)
   redeem(@Body(zodBody(redeem)) b: z.infer<typeof redeem>) { return this.d.redeem(b.code, b.discordId); }
   @BotService() @Get('config') config() { return this.d.channels(); }
-  /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot, je Server gespeichert); ohne Eintrag an. */
-  @BotService() @Get('ghost-ping') async ghostPing(@Query(zodBody(z.object({ guildId: sf.optional() }))) q: { guildId?: string }) {
-    const v = (await runInGuild(q.guildId ?? null, async () => await this.prisma.systemSetting.findUnique({ where: { key: 'discord.ghostPing' } })))?.value as { enabled?: boolean } | undefined;
-    return { enabled: v?.enabled !== false };
-  }
   @BotService() @Put('guilds') @HttpCode(204) async guilds(@Body(zodBody(guildsBody)) b: z.infer<typeof guildsBody>) { await this.d.saveGuilds(b.guilds); await this.servers.syncFromBot(b.guilds); }
   @BotService() @Get('outbox') outbox(@Query(zodBody(outboxQ)) q: z.infer<typeof outboxQ>) { return this.d.pending(q.limit); }
   @BotService() @Post('outbox/:id/ack') @HttpCode(204)
