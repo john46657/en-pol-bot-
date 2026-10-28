@@ -25,7 +25,6 @@ const duty_service_1 = require("../duty/duty.service");
 const prisma_service_1 = require("../prisma/prisma.service");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
-const guild_context_1 = require("../common/guild-context");
 const servers_service_1 = require("../multi-server/servers.service");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 /** Liste, aus der ungültige Einträge entfernt werden – ein einzelner unerwarteter Kanal/Rolle darf nicht die ganze Meldung verwerfen. */
@@ -142,11 +141,6 @@ let BotController = class BotController {
     }
     redeem(b) { return this.d.redeem(b.code, b.discordId); }
     config() { return this.d.channels(); }
-    /** Ghost-Ping-Meldung an/aus (Einstellungen → Discord-Bot, je Server gespeichert); ohne Eintrag an. */
-    async ghostPing(q) {
-        const v = (await (0, guild_context_1.runInGuild)(q.guildId ?? null, async () => await this.prisma.systemSetting.findUnique({ where: { key: 'discord.ghostPing' } })))?.value;
-        return { enabled: v?.enabled !== false };
-    }
     async guilds(b) { await this.d.saveGuilds(b.guilds); await this.servers.syncFromBot(b.guilds); }
     outbox(q) { return this.d.pending(q.limit); }
     ack(id, b) { return this.d.ack(id, b.ok, b.error); }
@@ -186,14 +180,6 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BotController.prototype, "config", null);
-__decorate([
-    (0, decorators_1.BotService)(),
-    (0, common_1.Get)('ghost-ping'),
-    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ guildId: sf.optional() })))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], BotController.prototype, "ghostPing", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Put)('guilds'),

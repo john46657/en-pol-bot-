@@ -22,7 +22,6 @@ import { startOutboxLoop } from './outbox';
 import type { DiscordConfig, Platform } from './platform';
 import { robloxCheck, robloxLookup } from './roblox';
 import { createWelcome, type MemberEvent } from './welcome';
-import { createGhostPing } from './ghost-ping';
 import { captureGuild, restoreGuild } from './backup';
 import { createVoiceSupport } from './voice-support';
 import { createVerify, type VerifyActions } from './verify';
@@ -222,14 +221,6 @@ const welcome = createWelcome(api, {
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, 'EN Polizei: Willkommen');
   },
 }, console.error, async (guildId, kind) => setupWelcome(await guildConfig.get(guildId), kind));
-/** Ghost-Ping: gelöschte Nachricht mit @Erwähnung → Hinweis im selben Kanal (nur die Erwähnten werden benachrichtigt). */
-const ghostPing = createGhostPing(api, {
-  async post(channelId, m) {
-    const ch = await client.channels.fetch(channelId);
-    if (!ch?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
-  },
-});
 /** Roblox-Verifizierung: Rollen und Nickname setzen (nur was nötig ist); liefert verständliche Hinweise, was nicht ging. */
 async function applyVerify(guildId: string, userId: string, a: VerifyActions): Promise<string[]> {
   const guild = await client.guilds.fetch(guildId);
@@ -690,12 +681,6 @@ function wire(c: Client) {
     if (rolesChanged || o.displayName !== n.displayName) staffLists.changed();
     // Funk-Whitelist: Rollenänderung sofort melden (o kann ein Teil-Objekt ohne Rollen sein → dann ohne Vorher-Stand)
     if (rolesChanged && !n.user.bot) void radioRoles.memberChanged(n.guild.id, n.id, n.displayName, [...n.roles.cache.keys()], o.partial ? undefined : [...o.roles.cache.keys()]).catch((x) => console.error('radio whitelist (roles) failed:', x instanceof Error ? x.message : x));
-  });
-
-  // Ghost-Ping: nur Nachrichten aus dem Cache (Erwähnungen bekannt); Teil-Nachrichten ohne Daten werden übergangen
-  c.on('messageDelete', (m) => {
-    if (m.partial || !m.inGuild() || !m.author) return;
-    void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? '', createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
   });
 
   // Direktnachrichten: Antworten auf Bewerbungsfragen (Bewerbung bei EN Polizei und Qualifikationen)

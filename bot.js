@@ -82159,8 +82159,9 @@ async function loadFlow(api2, key4, guildId) {
   const unit = (await getConfig(api2, guildId)).units.find((u) => u.key === key4);
   return unit ? { key: unit.key, name: unit.name, appName: unit.name, enabled: unit.enabled !== false, settings: unit.settings ?? {}, questions: unit.questions.map(asField).map((f2) => ({ text: f2.label, key: f2.key, field: field(f2) })) } : null;
 }
-async function openApplication(api2, key4, discordId) {
-  return key4 === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key4)}`);
+async function openApplication(api2, key4, discordId, guildId) {
+  const g = guildId ? `&guildId=${guildId}` : "";
+  return key4 === POLICE ? api2.service("GET", `/bot/application/open?discordId=${discordId}${g}`) : api2.service("GET", `/bot/qualifications/open?discordId=${discordId}&unit=${encodeURIComponent(key4)}${g}`);
 }
 async function submitSession(api2, s, userId, userName, robloxLookup2, now = Date.now()) {
   const meta = { durationSec: Math.max(0, Math.round((now - s.startedAt) / 1e3)), ...s.joinedAt ? { joinedAt: s.joinedAt } : {}, ...s.guildId ? { guildId: s.guildId } : {} };
@@ -82187,7 +82188,7 @@ async function offer(c, key4) {
   if (blocked) return errorReply(blocked);
   const ban = await c.api.service("GET", `/bot/application-bans/check?discordId=${c.discordId}&scope=${encodeURIComponent(flow.key === POLICE ? "police" : flow.key)}&name=${encodeURIComponent(flow.key === POLICE ? "die Polizei-Bewerbung" : flow.appName)}${c.guildId ? `&guildId=${c.guildId}` : ""}`).catch(() => null);
   if (ban?.banned) return errorReply(`\u26D4 ${ban.message ?? "Du bist f\xFCr diese Bewerbung gesperrt."}`);
-  const open = await openApplication(c.api, flow.key, c.discordId);
+  const open = await openApplication(c.api, flow.key, c.discordId, c.guildId);
   if (open.open) return errorReply(`Du hast f\xFCr **${plain2(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (flow.settings.mode === "WEB") {
     const link = await c.api.service("POST", "/bot/qualifications/web-link", { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...c.guildId ? { guildId: c.guildId } : {}, ...c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {} });
@@ -82480,7 +82481,7 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
       const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
       if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
       if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain2(flow.name)}** sind derzeit geschlossen.`);
-      const open = await openApplication(c.api, flow.key, c.discordId);
+      const open = await openApplication(c.api, flow.key, c.discordId, c.guildId ?? guildOf.get(c.discordId));
       if (open.open) return errorReply(`Du hast f\xFCr **${plain2(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
       if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
       const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
@@ -87211,37 +87212,6 @@ function createWelcome(api2, actions, log = console.error, local) {
   };
 }
 
-// apps/bot/src/ghost-ping.ts
-var GHOST_PING_WINDOW_MS = 15 * 6e4;
-var CACHE_MS2 = 6e4;
-function ghostPingTargets(m, now = Date.now()) {
-  if (m.authorBot || now - m.createdAt.getTime() > GHOST_PING_WINDOW_MS) return [];
-  return [...new Set(m.mentions.filter((u) => !u.bot && u.id !== m.authorId).map((u) => u.id))];
-}
-function ghostPingText(m, targets) {
-  const raw = m.content.trim() || targets.map((t2) => `<@${t2}>`).join(" ");
-  const quoted = raw.replace(/@(everyone|here)/g, "@\u200B$1").slice(0, 1500);
-  return `${targets.map((t2) => `<@${t2}>`).join(", ")},
-Da war jemand sehr b\xF6se ! <@${m.authorId}> hat ${targets.length > 1 ? "euch" : "dich"} geghost-pinged mit dieser Nachricht !: "${quoted}"`;
-}
-function createGhostPing(api2, actions, log = console.error) {
-  const cache = /* @__PURE__ */ new Map();
-  const enabled = async (guildId) => {
-    const cached = cache.get(guildId);
-    if (cached && Date.now() - cached.at < CACHE_MS2) return cached.enabled;
-    const r = await api2.service("GET", `/bot/ghost-ping?guildId=${encodeURIComponent(guildId)}`).catch(() => ({ enabled: cached?.enabled ?? true }));
-    cache.set(guildId, { at: Date.now(), enabled: r.enabled !== false });
-    return r.enabled !== false;
-  };
-  return {
-    async deleted(m) {
-      const targets = ghostPingTargets(m);
-      if (!targets.length || !await enabled(m.guildId)) return;
-      await actions.post(m.channelId, { content: ghostPingText(m, targets), mentionUserIds: targets }).catch((e) => log(`ghost ping message failed: ${e instanceof Error ? e.message : e}`));
-    }
-  };
-}
-
 // apps/bot/src/backup.ts
 var import_discord7 = __toESM(require_src());
 var TYPE = {
@@ -87379,12 +87349,12 @@ async function restoreGuild(guild, data, parts) {
 }
 
 // apps/bot/src/verify.ts
-var CACHE_MS3 = 3e4;
+var CACHE_MS2 = 3e4;
 function createVerify(api2, ops, log = console.error) {
   const cache = /* @__PURE__ */ new Map();
   const config2 = async (guildId) => {
     const hit = cache.get(guildId);
-    if (hit && Date.now() - hit.at < CACHE_MS3) return hit.cfg;
+    if (hit && Date.now() - hit.at < CACHE_MS2) return hit.cfg;
     const cfg2 = await api2.service("GET", `/bot/verify/config?guildId=${guildId}`);
     cache.set(guildId, { at: Date.now(), cfg: cfg2 });
     return cfg2;
@@ -87814,13 +87784,6 @@ var welcome = createWelcome(api, {
     if (ids.length) await (await guild.members.fetch(userId)).roles.add(ids, "EN Polizei: Willkommen");
   }
 }, console.error, async (guildId, kind2) => setupWelcome(await guildConfig.get(guildId), kind2));
-var ghostPing = createGhostPing(api, {
-  async post(channelId, m) {
-    const ch2 = await client.channels.fetch(channelId);
-    if (!ch2?.isSendable()) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
-    await ch2.send({ content: m.content, allowedMentions: { parse: [], users: m.mentionUserIds } });
-  }
-});
 async function applyVerify(guildId, userId, a) {
   const guild = await client.guilds.fetch(guildId);
   const member = await guild.members.fetch(userId);
@@ -88320,10 +88283,6 @@ function wire(c) {
     const rolesChanged = o.roles.cache.size !== n.roles.cache.size || ![...o.roles.cache.keys()].every((r) => n.roles.cache.has(r));
     if (rolesChanged || o.displayName !== n.displayName) staffLists.changed();
     if (rolesChanged && !n.user.bot) void radioRoles.memberChanged(n.guild.id, n.id, n.displayName, [...n.roles.cache.keys()], o.partial ? void 0 : [...o.roles.cache.keys()]).catch((x) => console.error("radio whitelist (roles) failed:", x instanceof Error ? x.message : x));
-  });
-  c.on("messageDelete", (m) => {
-    if (m.partial || !m.inGuild() || !m.author) return;
-    void ghostPing.deleted({ guildId: m.guildId, channelId: m.channelId, authorId: m.author.id, authorBot: m.author.bot, content: m.content ?? "", createdAt: m.createdAt, mentions: [...m.mentions.users.values()].map((u) => ({ id: u.id, bot: u.bot })) });
   });
   c.on("messageCreate", (m) => {
     if (m.inGuild()) {
