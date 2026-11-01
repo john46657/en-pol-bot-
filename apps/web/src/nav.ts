@@ -1,5 +1,5 @@
 import { moduleOfPermission, OFF_MODULES } from '@enrp/shared';
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { Activity, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -79,6 +79,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/logging', label: 'Logging (Discord)', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/backups', label: 'Backups', perm: 'settings.manage', area: 'dashboard.settings.view' },
   ]),
+  { path: '/admin/system', label: 'Systemstatus', icon: Activity, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration', keywords: 'diagnose verbindung bot datenbank ki backup integrationen' },
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Account', keywords: 'design profil 2fa favoriten' },
 ];
