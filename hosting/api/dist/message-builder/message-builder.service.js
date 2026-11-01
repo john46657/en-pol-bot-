@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageBuilderService = exports.channelsConfigSchema = exports.categorySchema = exports.copyDocSchema = exports.updateDocSchema = exports.createDocSchema = exports.docKind = exports.sf = void 0;
+exports.MessageBuilderService = exports.templateExportQuery = exports.templateImportSchema = exports.channelsConfigSchema = exports.categorySchema = exports.copyDocSchema = exports.updateDocSchema = exports.createDocSchema = exports.docKind = exports.sf = void 0;
 exports.requireGuild = requireGuild;
 const common_1 = require("@nestjs/common");
 const zod_1 = require("zod");
@@ -39,8 +39,9 @@ exports.updateDocSchema = zod_1.z.object({
 exports.copyDocSchema = zod_1.z.object({ kind: exports.docKind, name: zod_1.z.string().trim().min(1).max(100).optional(), categoryId: zod_1.z.string().uuid().nullable().optional() });
 exports.categorySchema = zod_1.z.object({ name: zod_1.z.string().trim().min(1, 'Name fehlt.').max(60), position: zod_1.z.number().int().min(0).max(1000).optional() });
 exports.channelsConfigSchema = zod_1.z.object({ channelIds: zod_1.z.array(exports.sf).max(200) });
+exports.templateImportSchema = shared_1.mbTemplateExportSchema;
+exports.templateExportQuery = zod_1.z.object({ ids: zod_1.z.string().max(4000).optional() });
 const CHANNELS_KEY = 'messagebuilder.channels'; // je Server (server-scope.ts leitet auf `…@<Server>` um)
-const DEFAULT_CATEGORIES = ['Allgemein', 'Polizei', 'Leitstelle', 'Dienstantritt', 'Dienstende', 'Einsatzmeldung', 'Personalinformation', 'Ankündigung', 'Wartung', 'Sonstiges'];
 /** Message Builder arbeitet immer für genau einen Discord-Server (oben links gewählt). */
 function requireGuild() {
     const g = (0, guild_context_1.currentGuild)();
@@ -90,7 +91,7 @@ let MessageBuilderService = class MessageBuilderService {
         const data = this.dataOf(d.data);
         return {
             id: d.id, kind: d.kind, name: d.name, categoryId: d.categoryId, channelId: d.channelId, version: d.version, createdById: d.createdById,
-            createdAt: d.createdAt, updatedAt: d.updatedAt, messageCount: data.messages.length, ...(withData ? { data } : {}),
+            createdAt: d.createdAt, updatedAt: d.updatedAt, messageCount: data.messages.length, sourceTemplateId: d.sourceTemplateId, ...(withData ? { data } : {}),
         };
     }
     // ───────────── Entwürfe & Vorlagen ─────────────
@@ -108,13 +109,13 @@ let MessageBuilderService = class MessageBuilderService {
         await this.assertDoc(actor, d, 'read');
         return this.view(d);
     }
-    async create(actor, b) {
+    async create(actor, b, sourceTemplateId = null) {
         await this.assertDoc(actor, { kind: b.kind, createdById: actor.userId }, 'create');
         if (b.categoryId)
             await this.assertCategory(b.categoryId);
         const data = b.data ?? shared_1.mbDocumentDataSchema.parse({ messages: [{ id: 'm1' }] });
         const d = await this.prisma.$transaction(async (tx) => {
-            const d = await tx.messageBuilderDocument.create({ data: { guildId: requireGuild(), kind: b.kind, name: b.name, categoryId: b.categoryId, data: data, createdById: actor.userId, updatedById: actor.userId } });
+            const d = await tx.messageBuilderDocument.create({ data: { guildId: requireGuild(), kind: b.kind, name: b.name, categoryId: b.categoryId, data: data, createdById: actor.userId, updatedById: actor.userId, sourceTemplateId } });
             await this.audit.record(actor, { action: b.kind === 'TEMPLATE' ? 'messagebuilder.template_create' : 'messagebuilder.draft_create', module: 'messagebuilder', entityType: 'MessageBuilderDocument', entityId: d.id, after: { name: d.name } }, tx);
             return d;
         });
@@ -145,7 +146,9 @@ let MessageBuilderService = class MessageBuilderService {
         const src = await this.load(id);
         await this.assertDoc(actor, src, 'read');
         const suffix = src.kind === b.kind ? ' (Kopie)' : '';
-        return this.create(actor, { kind: b.kind, name: (b.name ?? `${src.name}${suffix}`).slice(0, 100), categoryId: b.categoryId === undefined ? src.categoryId : b.categoryId, data: this.dataOf(src.data) });
+        // Vorlage → Entwurf: Herkunft merken („verwendete Vorlage“ in der Historie); Entwurf → Entwurf behält sie
+        const source = src.kind === 'TEMPLATE' ? src.id : src.sourceTemplateId;
+        return this.create(actor, { kind: b.kind, name: (b.name ?? `${src.name}${suffix}`).slice(0, 100), categoryId: b.categoryId === undefined ? src.categoryId : b.categoryId, data: this.dataOf(src.data) }, b.kind === 'DRAFT' ? source : null);
     }
     /** Löschen = archivieren (bleibt in der Datenbank und in Backups erhalten). */
     async remove(actor, id) {
@@ -164,8 +167,74 @@ let MessageBuilderService = class MessageBuilderService {
         const rows = await list();
         if (rows.length)
             return rows;
-        await this.prisma.messageBuilderCategory.createMany({ data: DEFAULT_CATEGORIES.map((name, position) => ({ guildId, name, position })), skipDuplicates: true });
+        await this.prisma.messageBuilderCategory.createMany({ data: shared_1.MB_DEFAULT_CATEGORIES.map((name, position) => ({ guildId, name, position })), skipDuplicates: true });
+        // Ganz neuer Server (noch nie Vorlagen): neutrale Beispielvorlagen dazu – nichts Bestehendes wird verändert
+        if (!(await this.prisma.messageBuilderDocument.count({ where: { guildId, kind: 'TEMPLATE' } })))
+            await this.addExamples(null);
         return list();
+    }
+    // ───────────── Beispielvorlagen, Import/Export ─────────────
+    /**
+     * Beispielvorlagen ergänzen: nur Vorlagen, deren Name es (auch archiviert) noch nicht gibt; fehlende Kategorien werden
+     * angelegt. Bestehende Vorlagen und Nachrichten werden nie überschrieben.
+     */
+    async addExamples(actor) {
+        const guildId = requireGuild();
+        const existing = new Set((await this.prisma.messageBuilderDocument.findMany({ where: { guildId, kind: 'TEMPLATE' }, select: { name: true } })).map((d) => d.name));
+        const todo = shared_1.MB_EXAMPLE_TEMPLATES.filter((t) => !existing.has(t.name));
+        if (!todo.length)
+            return { added: [], skipped: shared_1.MB_EXAMPLE_TEMPLATES.map((t) => t.name) };
+        const cats = await this.categoryIdsFor(todo.map((t) => t.category), true);
+        await this.prisma.$transaction(async (tx) => {
+            for (const t of todo) {
+                const d = await tx.messageBuilderDocument.create({ data: { guildId, kind: 'TEMPLATE', name: t.name, categoryId: cats.get(t.category) ?? null, data: t.data, createdById: actor?.userId ?? null, updatedById: actor?.userId ?? null } });
+                if (actor)
+                    await this.audit.record(actor, { action: 'messagebuilder.template_create', module: 'messagebuilder', entityType: 'MessageBuilderDocument', entityId: d.id, after: { name: d.name, example: true } }, tx);
+            }
+        });
+        return { added: todo.map((t) => t.name), skipped: shared_1.MB_EXAMPLE_TEMPLATES.filter((t) => existing.has(t.name)).map((t) => t.name) };
+    }
+    /** Kategorie-IDs nach Name; fehlende werden (falls erlaubt) angelegt. */
+    async categoryIdsFor(names, create) {
+        const guildId = requireGuild();
+        const wanted = [...new Set(names.filter((n) => !!n))];
+        const have = await this.prisma.messageBuilderCategory.findMany({ where: { guildId }, select: { id: true, name: true, position: true } });
+        const map = new Map(have.map((c) => [c.name, c.id]));
+        let pos = Math.max(-1, ...have.map((c) => c.position));
+        for (const n of wanted) {
+            if (map.has(n) || !create)
+                continue;
+            const c = await this.prisma.messageBuilderCategory.create({ data: { guildId, name: n, position: ++pos } });
+            map.set(n, c.id);
+        }
+        return map;
+    }
+    /** Vorlagen exportieren (alle oder ausgewählte) im Austauschformat. */
+    async exportTemplates(ids) {
+        const guildId = requireGuild();
+        const rows = await this.prisma.messageBuilderDocument.findMany({ where: { guildId, kind: 'TEMPLATE', archivedAt: null, ...(ids?.length ? { id: { in: ids } } : {}) }, include: { category: true }, orderBy: { name: 'asc' } });
+        return { format: shared_1.MB_TEMPLATE_EXPORT_FORMAT, version: 1, exportedAt: new Date().toISOString(), templates: rows.map((r) => ({ name: r.name, category: r.category?.name ?? null, data: this.dataOf(r.data) })) };
+    }
+    /** Vorlagen importieren: immer als neue Vorlagen (gleicher Name → „(Import)“), nie überschreiben. */
+    async importTemplates(actor, b) {
+        const guildId = requireGuild();
+        await this.perms.assert(actor.userId, 'messagebuilder.templates_create');
+        const mayCreateCats = await this.perms.has(actor.userId, 'messagebuilder.templates_edit');
+        const cats = await this.categoryIdsFor(b.templates.map((t) => t.category), mayCreateCats);
+        const names = new Set((await this.prisma.messageBuilderDocument.findMany({ where: { guildId, kind: 'TEMPLATE', archivedAt: null }, select: { name: true } })).map((d) => d.name));
+        const created = [];
+        await this.prisma.$transaction(async (tx) => {
+            for (const t of b.templates) {
+                let name = t.name;
+                for (let k = 1; names.has(name); k++)
+                    name = `${t.name} (Import${k > 1 ? ` ${k}` : ''})`.slice(0, 100);
+                names.add(name);
+                const d = await tx.messageBuilderDocument.create({ data: { guildId, kind: 'TEMPLATE', name, categoryId: (t.category && cats.get(t.category)) || null, data: t.data, createdById: actor.userId, updatedById: actor.userId } });
+                created.push({ id: d.id, name });
+            }
+            await this.audit.record(actor, { action: 'messagebuilder.template_import', module: 'messagebuilder', entityType: 'MessageBuilderDocument', entityId: created[0]?.id, after: { count: created.length, names: created.map((c) => c.name) } }, tx);
+        });
+        return { created };
     }
     async assertCategory(id) {
         if (!(await this.prisma.messageBuilderCategory.findFirst({ where: { id, guildId: requireGuild() } })))
@@ -228,7 +297,7 @@ let MessageBuilderService = class MessageBuilderService {
      * Kanäle und Rollen anderer Server sind hier nie wählbar.
      */
     async serverInfo(guildId = (0, guild_context_1.currentGuild)()) {
-        const none = { guild: null, channels: [], roles: [], configured: !!guildId };
+        const none = { guild: null, channels: [], threads: [], roles: [], configured: !!guildId };
         if (!guildId)
             return { ...none, problem: 'no_server' };
         const g = (await this.discord.guilds()).find((x) => x.id === guildId);
@@ -237,10 +306,13 @@ let MessageBuilderService = class MessageBuilderService {
             return { ...none, problem: 'no_report' };
         const allowed = await this.allowedChannelIds(guildId);
         const cats = new Map(g.channels.filter((c) => c.type === 'category').map((c) => [c.id, c]));
-        const channels = g.channels.filter((c) => c.type === 'text')
+        const forums = new Map((g.forums ?? []).map((f) => [f.id, f]));
+        const channels = g.channels.filter((c) => c.type === 'text' || forums.has(c.id))
             .sort((a, b) => (cats.get(a.parentId ?? '')?.position ?? -1) - (cats.get(b.parentId ?? '')?.position ?? -1) || a.position - b.position)
-            .map((c) => ({ id: c.id, name: c.name, category: (c.parentId && cats.get(c.parentId)?.name) || null, position: c.position, bot: c.bot ?? null, allowed: !allowed.length || allowed.includes(c.id) }));
-        return { guild: { id: g.id, name: g.name, icon: g.icon }, channels, roles: [...g.roles].sort((a, b) => b.position - a.position), configured: true, restricted: allowed.length > 0 };
+            .map((c) => ({ id: c.id, name: c.name, type: forums.has(c.id) ? 'forum' : 'text', category: (c.parentId && cats.get(c.parentId)?.name) || null, position: c.position, bot: c.bot ?? forums.get(c.id)?.bot ?? null, allowed: !allowed.length || allowed.includes(c.id) }));
+        const known = new Set(channels.map((c) => c.id));
+        const threads = (g.threads ?? []).filter((t) => known.has(t.parentId)).map((t) => ({ id: t.id, name: t.name, parentId: t.parentId }));
+        return { guild: { id: g.id, name: g.name, icon: g.icon }, channels, threads, roles: [...g.roles].sort((a, b) => b.position - a.position), configured: true, restricted: allowed.length > 0 };
     }
     async names(ids) {
         const list = [...new Set(ids.filter((x) => !!x))];

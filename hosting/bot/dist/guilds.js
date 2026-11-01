@@ -19,6 +19,10 @@ function guildInfo(g) {
         channels: [...g.channels.cache.values()].filter((c) => !c.isThread()).slice(0, 500)
             .map((c) => { const bot = kind(c.type) === 'text' ? botPerms(g, c) : undefined; return { id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: 'parentId' in c ? c.parentId ?? null : null, position: 'rawPosition' in c ? c.rawPosition : 0, ...(bot ? { bot } : {}) }; }),
         // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
+        forums: [...g.channels.cache.values()].filter((c) => c.type === discord_js_1.ChannelType.GuildForum || c.type === discord_js_1.ChannelType.GuildMedia).slice(0, 100)
+            .map((c) => { const bot = botPerms(g, c); const p = 'permissionsFor' in c && g.members?.me ? c.permissionsFor(g.members.me) : null; return { id: c.id, ...(bot ? { bot: { ...bot, createThreads: !!p?.has(discord_js_1.PermissionFlagsBits.SendMessages) } } : {}) }; }),
+        threads: [...g.channels.cache.values()].filter((c) => c.isThread() && !c.archived && !!c.parentId).slice(0, 300)
+            .map((c) => ({ id: c.id, name: c.name.slice(0, 100), parentId: c.parentId })),
         roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250)
             .map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position })),
     };
@@ -33,7 +37,7 @@ function startGuildDirectory(client, api, log = console.log) {
     // mehrere Änderungen kurz hintereinander nur einmal melden
     const soon = () => { clearTimeout(timer); timer = setTimeout(() => void push(), 5_000); timer.unref?.(); };
     const c = client();
-    for (const ev of ['guildCreate', 'guildDelete', 'guildUpdate', 'channelCreate', 'channelDelete', 'channelUpdate', 'roleCreate', 'roleDelete', 'roleUpdate'])
+    for (const ev of ['guildCreate', 'guildDelete', 'guildUpdate', 'channelCreate', 'channelDelete', 'channelUpdate', 'roleCreate', 'roleDelete', 'roleUpdate', 'threadCreate', 'threadDelete', 'threadUpdate'])
         c.on(ev, soon);
     // eigene Rollen des Bots geändert → Kanalrechte neu melden
     c.on('guildMemberUpdate', (_old, m) => { if (m.id === c.user?.id)

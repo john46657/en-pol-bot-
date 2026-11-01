@@ -20,6 +20,7 @@ const zod_1 = require("zod");
 const decorators_1 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const message_builder_service_1 = require("./message-builder.service");
+const message_builder_messages_service_1 = require("./message-builder-messages.service");
 const message_builder_send_service_1 = require("./message-builder-send.service");
 const kindQuery = zod_1.z.object({ kind: message_builder_service_1.docKind });
 const sendRate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
@@ -30,9 +31,11 @@ const sendRate = process.env.NODE_ENV === 'test' ? 10_000 : 20;
 let MessageBuilderController = class MessageBuilderController {
     s;
     send;
-    constructor(s, send) {
+    msgs;
+    constructor(s, send, msgs) {
         this.s = s;
         this.send = send;
+        this.msgs = msgs;
     }
     server() { return this.s.serverInfo(); }
     list(a, q) { return this.s.list(a, q.kind); }
@@ -41,6 +44,9 @@ let MessageBuilderController = class MessageBuilderController {
     update(a, id, b) { return this.s.update(a, id, b); }
     copy(a, id, b) { return this.s.copy(a, id, b); }
     remove(a, id) { return this.s.remove(a, id); }
+    exportTemplates(q) { return this.s.exportTemplates(q.ids?.split(',').filter((x) => /^[0-9a-f-]{36}$/.test(x))); }
+    importTemplates(a, b) { return this.s.importTemplates(a, b); }
+    examples(a) { return this.s.addExamples(a); }
     categories() { return this.s.categories(); }
     createCategory(a, b) { return this.s.createCategory(a, b); }
     updateCategory(a, id, b) { return this.s.updateCategory(a, id, b); }
@@ -50,8 +56,19 @@ let MessageBuilderController = class MessageBuilderController {
     doSend(a, u, b) { return this.send.send(a, u.displayName, b); }
     history(q) { return this.send.history(q); }
     sendStatus(a, id) { return this.send.get(a, id); }
+    sendToDraft(a, id) { return this.send.toDraft(a, id); }
+    // Gespeicherte Discord-Nachrichten: Links, laden per Link, bearbeiten
+    messages(a, q) { return this.msgs.list(a, q); }
+    message(a, id) { return this.msgs.get(a, id); }
+    loadMessage(a, u, b) { return this.msgs.loadByLink(a, u.displayName, b); }
+    reloadMessage(a, id) { return this.msgs.reload(a, id); }
+    renameMessage(a, id, b) { return this.msgs.rename(a, id, b); }
+    removeMessage(a, id) { return this.msgs.remove(a, id); }
+    editMessage(a, u, id, b) { return this.msgs.edit(a, u.displayName, id, b); }
     webhooks() { return this.send.listWebhooks(); }
     createWebhook(a, b) { return this.send.createWebhook(a, b); }
+    updateWebhook(a, id, b) { return this.send.updateWebhook(a, id, b); }
+    testWebhook(a, id) { return this.send.testWebhook(a, id); }
     removeWebhook(a, id) { return this.send.removeWebhook(a, id); }
 };
 exports.MessageBuilderController = MessageBuilderController;
@@ -119,6 +136,31 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], MessageBuilderController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)('templates/export'),
+    (0, decorators_1.RequirePermission)('messagebuilder.view'),
+    __param(0, (0, common_1.Query)((0, zod_pipe_1.zodBody)(message_builder_service_1.templateExportQuery))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "exportTemplates", null);
+__decorate([
+    (0, common_1.Post)('templates/import'),
+    (0, decorators_1.RequirePermission)('messagebuilder.templates_create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(message_builder_service_1.templateImportSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "importTemplates", null);
+__decorate([
+    (0, common_1.Post)('templates/examples'),
+    (0, decorators_1.RequirePermission)('messagebuilder.templates_create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "examples", null);
 __decorate([
     (0, common_1.Get)('categories'),
     (0, decorators_1.RequirePermission)('messagebuilder.view'),
@@ -200,6 +242,84 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MessageBuilderController.prototype, "sendStatus", null);
 __decorate([
+    (0, common_1.Post)('sends/:id/draft'),
+    (0, decorators_1.RequirePermission)('messagebuilder.create'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "sendToDraft", null);
+__decorate([
+    (0, common_1.Get)('messages'),
+    (0, decorators_1.RequirePermission)('messagebuilder.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(message_builder_messages_service_1.messagesQuery))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "messages", null);
+__decorate([
+    (0, common_1.Get)('messages/:id'),
+    (0, decorators_1.RequirePermission)('messagebuilder.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "message", null);
+__decorate([
+    (0, common_1.Post)('messages/load'),
+    (0, decorators_1.RequirePermission)('messagebuilder.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(message_builder_messages_service_1.loadLinkSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "loadMessage", null);
+__decorate([
+    (0, common_1.Post)('messages/:id/reload'),
+    (0, decorators_1.RequirePermission)('messagebuilder.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "reloadMessage", null);
+__decorate([
+    (0, common_1.Put)('messages/:id'),
+    (0, decorators_1.RequirePermission)('messagebuilder.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(message_builder_messages_service_1.renameSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "renameMessage", null);
+__decorate([
+    (0, common_1.Delete)('messages/:id'),
+    (0, common_1.HttpCode)(204),
+    (0, decorators_1.RequirePermission)('messagebuilder.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "removeMessage", null);
+__decorate([
+    (0, common_1.Post)('messages/:id/edit'),
+    (0, throttler_1.Throttle)({ default: { limit: sendRate, ttl: 60_000 } }),
+    (0, decorators_1.RequirePermission)('messagebuilder.edit'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(3, (0, common_1.Body)((0, zod_pipe_1.zodBody)(message_builder_messages_service_1.editSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "editMessage", null);
+__decorate([
     (0, common_1.Get)('webhooks'),
     (0, decorators_1.RequirePermission)('messagebuilder.webhooks'),
     __metadata("design:type", Function),
@@ -216,6 +336,27 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MessageBuilderController.prototype, "createWebhook", null);
 __decorate([
+    (0, common_1.Put)('webhooks/:id'),
+    (0, decorators_1.RequirePermission)('messagebuilder.webhooks'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(message_builder_send_service_1.webhookUpdateSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "updateWebhook", null);
+__decorate([
+    (0, common_1.Post)('webhooks/:id/test'),
+    (0, common_1.HttpCode)(200),
+    (0, throttler_1.Throttle)({ default: { limit: sendRate, ttl: 60_000 } }),
+    (0, decorators_1.RequirePermission)('messagebuilder.webhooks'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MessageBuilderController.prototype, "testWebhook", null);
+__decorate([
     (0, common_1.Delete)('webhooks/:id'),
     (0, common_1.HttpCode)(204),
     (0, decorators_1.RequirePermission)('messagebuilder.webhooks'),
@@ -228,20 +369,42 @@ __decorate([
 exports.MessageBuilderController = MessageBuilderController = __decorate([
     (0, swagger_1.ApiTags)('message-builder'),
     (0, common_1.Controller)('message-builder'),
-    __metadata("design:paramtypes", [message_builder_service_1.MessageBuilderService, message_builder_send_service_1.MessageBuilderSendService])
+    __metadata("design:paramtypes", [message_builder_service_1.MessageBuilderService, message_builder_send_service_1.MessageBuilderSendService, message_builder_messages_service_1.MessageBuilderMessagesService])
 ], MessageBuilderController);
 /** Nur für den Bot: Versandaufträge abholen und Ergebnisse je Nachricht melden, Aktionen interaktiver Komponenten auflösen. */
 let BotMessageBuilderController = class BotMessageBuilderController {
     send;
-    constructor(send) {
+    msgs;
+    constructor(send, msgs) {
         this.send = send;
+        this.msgs = msgs;
     }
+    target(id) { return this.msgs.botTarget(id); }
+    async loaded(id, b) { await this.msgs.loaded(id, b); }
     start(id) { return this.send.start(id); }
     async item(id, position, b) { await this.send.itemResult(id, position, b); }
     async finish(id, b) { await this.send.finish(id, b); }
     interaction(b) { return this.send.interaction(b); }
 };
 exports.BotMessageBuilderController = BotMessageBuilderController;
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('messages/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], BotMessageBuilderController.prototype, "target", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Post)('messages/:id/loaded'),
+    (0, common_1.HttpCode)(204),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(message_builder_messages_service_1.loadedSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, void 0]),
+    __metadata("design:returntype", Promise)
+], BotMessageBuilderController.prototype, "loaded", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Post)('sends/:id/start'),
@@ -284,6 +447,6 @@ __decorate([
 exports.BotMessageBuilderController = BotMessageBuilderController = __decorate([
     (0, swagger_1.ApiTags)('bot'),
     (0, common_1.Controller)('bot/message-builder'),
-    __metadata("design:paramtypes", [message_builder_send_service_1.MessageBuilderSendService])
+    __metadata("design:paramtypes", [message_builder_send_service_1.MessageBuilderSendService, message_builder_messages_service_1.MessageBuilderMessagesService])
 ], BotMessageBuilderController);
 //# sourceMappingURL=message-builder.controller.js.map

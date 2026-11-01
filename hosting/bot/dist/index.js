@@ -21,6 +21,7 @@ const backup_1 = require("./backup");
 const voice_support_1 = require("./voice-support");
 const verify_1 = require("./verify");
 const message_builder_1 = require("./message-builder");
+const message_builder_discord_1 = require("./message-builder-discord");
 const format_2 = require("./format");
 const reminders_1 = require("./commands/reminders");
 const shared_1 = require("@enrp/shared");
@@ -1010,30 +1011,13 @@ function wireReady(client0) {
                 return true;
             }
             if (type === 'mb.send') {
-                // Discord Message Builder: Gruppe in Reihenfolge senden, Status je Nachricht ans System melden
-                await (0, message_builder_1.runMbSend)(api, String(p.sendId ?? ''), {
-                    async missingPerms(guildId, channelId, payloads) {
-                        const ch = await client.channels.fetch(channelId).catch(() => null);
-                        if (!ch || ch.isDMBased() || !ch.isSendable() || !('permissionsFor' in ch))
-                            throw new Error('Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.');
-                        if (!guildId || ch.guildId !== guildId)
-                            throw new Error('Der Kanal gehört nicht zu dem Discord-Server, für den die Nachricht gebaut wurde.');
-                        const perms = ch.permissionsFor(client.user);
-                        const need = [
-                            [discord_js_1.PermissionFlagsBits.ViewChannel, 'Kanal ansehen', true],
-                            [discord_js_1.PermissionFlagsBits.SendMessages, 'Nachrichten senden', true],
-                            [discord_js_1.PermissionFlagsBits.EmbedLinks, 'Links einbetten', payloads.some((x) => x.embeds.length)],
-                            [discord_js_1.PermissionFlagsBits.MentionEveryone, '@everyone, @here und alle Rollen erwähnen', payloads.some((x) => x.allowed_mentions.parse.includes('everyone') && /@(everyone|here)/.test(x.content ?? ''))],
-                        ];
-                        return need.filter(([flag, , used]) => used && !perms?.has(flag)).map(([, name]) => name);
-                    },
-                    async send(channelId, x) {
-                        const ch = await client.channels.fetch(channelId);
-                        if (!ch?.isSendable())
-                            throw new Error('Der Kanal ist nicht beschreibbar.');
-                        return ch.send({ ...(x.content ? { content: x.content } : {}), embeds: x.embeds, components: x.components, allowedMentions: { parse: x.allowed_mentions.parse } });
-                    },
-                });
+                // Embed Builder: Gruppe in Reihenfolge senden bzw. eigene Nachricht bearbeiten, Status je Nachricht ans System melden
+                await (0, message_builder_1.runMbSend)(api, String(p.sendId ?? ''), (0, message_builder_discord_1.mbDiscord)(client));
+                return true;
+            }
+            if (type === 'mb.fetch') {
+                // Embed Builder: Nachricht per Link laden (nur lesen; ob sie bearbeitet werden darf, entscheidet die API)
+                await (0, message_builder_1.runMbFetch)(api, String(p.id ?? ''), (0, message_builder_discord_1.mbFetchDiscord)(client));
                 return true;
             }
             if (type === 'bot.radio.rolesync') {

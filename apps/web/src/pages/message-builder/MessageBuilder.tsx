@@ -7,7 +7,7 @@ import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useServer } from '../../lib/guilds';
 import { errText } from '../../lib/tickets';
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 import { MessageEditor, type EditorCtx, type ServerChannel, type ServerRole, type ServerThread } from './MessageEditor';
 import { downloadJson, JsonEditor, pickJsonFile, type JsonState } from './JsonEditor';
 import { SavedMessages } from './SavedMessages';

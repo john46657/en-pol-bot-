@@ -23,6 +23,9 @@ describe('server directory for the dashboard', () => {
       id: '1', name: 'EN Polizei', icon: 'https://cdn.discordapp.com/icons/1/a.png',
       channels: [{ id: '10', name: 'tickets', type: 'category', parentId: null, position: 0 }, { id: '11', name: 'support', type: 'text', parentId: '10', position: 1 }, { id: '12', name: 'funk', type: 'voice', parentId: null, position: 2 }],
       roles: [{ id: '20', name: 'Polizei', color: 0x3b82f6, position: 2 }],
+      // Threads stehen nicht bei den Kanälen, sondern getrennt (Embed Builder: Ziel-Thread)
+      forums: [],
+      threads: [{ id: '13', name: 'faden', parentId: '11' }],
     });
   });
 });

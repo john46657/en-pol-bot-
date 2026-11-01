@@ -33,10 +33,22 @@ export declare class WebhookClient {
         guildId: string | null;
         channelId: string | null;
         name: string | null;
+        avatar: string | null;
+    }>;
+    /** Namen des Webhooks in Discord ändern (mit Token möglich; Kanal ändern geht nur mit Bot-Rechten und wird hier nicht angeboten). */
+    rename(url: string, name: string): Promise<{
+        name: string;
+    }>;
+    /** Vom Webhook gesendete Nachricht bearbeiten (im Thread: `thread_id`). */
+    edit(url: string, messageId: string, body: Record<string, unknown>, threadId?: string | null): Promise<{
+        messageId: string;
     }>;
     /** Nachricht senden (`wait=true` → Discord liefert die Nachricht samt ID; `with_components=true` → Link-Buttons erlaubt). */
-    execute(url: string, body: Record<string, unknown>): Promise<{
+    execute(url: string, body: Record<string, unknown>, opts?: {
+        threadId?: string | null;
+    }): Promise<{
         messageId: string;
+        channelId: string | null;
     }>;
 }
 export {};

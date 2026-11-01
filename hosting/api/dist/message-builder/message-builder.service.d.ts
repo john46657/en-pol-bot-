@@ -121,6 +121,7 @@ export declare const createDocSchema: z.ZodObject<{
                         roleId?: string | undefined;
                         mode?: "remove" | "add" | "toggle" | undefined;
                     }>]>>;
+                    keepCustomId: z.ZodDefault<z.ZodString>;
                 }, "strip", z.ZodTypeAny, {
                     label: string;
                     kind: "action" | "link";
@@ -137,6 +138,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }, {
                     id: string;
                     label?: string | undefined;
@@ -153,6 +155,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 type: "buttons";
@@ -173,6 +176,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             }, {
                 type: "buttons";
@@ -193,6 +197,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             }>, z.ZodObject<{
                 id: z.ZodString;
@@ -253,6 +258,9 @@ export declare const createDocSchema: z.ZodObject<{
                     emoji?: string | undefined;
                     description?: string | undefined;
                 }>, "many">>;
+                minValues: z.ZodDefault<z.ZodNumber>;
+                maxValues: z.ZodDefault<z.ZodNumber>;
+                keepCustomId: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 options: {
                     label: string;
@@ -272,6 +280,9 @@ export declare const createDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             }, {
                 type: "select";
                 id: string;
@@ -291,6 +302,9 @@ export declare const createDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             }>]>, "many">>;
             mentions: z.ZodDefault<z.ZodObject<{
                 users: z.ZodDefault<z.ZodBoolean>;
@@ -349,6 +363,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -369,6 +384,9 @@ export declare const createDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -419,6 +437,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -439,6 +458,9 @@ export declare const createDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -501,6 +523,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -521,6 +544,9 @@ export declare const createDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -577,6 +603,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -597,6 +624,9 @@ export declare const createDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -658,6 +688,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -678,6 +709,9 @@ export declare const createDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -739,6 +773,7 @@ export declare const createDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -759,6 +794,9 @@ export declare const createDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -887,6 +925,7 @@ export declare const updateDocSchema: z.ZodObject<{
                         roleId?: string | undefined;
                         mode?: "remove" | "add" | "toggle" | undefined;
                     }>]>>;
+                    keepCustomId: z.ZodDefault<z.ZodString>;
                 }, "strip", z.ZodTypeAny, {
                     label: string;
                     kind: "action" | "link";
@@ -903,6 +942,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }, {
                     id: string;
                     label?: string | undefined;
@@ -919,6 +959,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 type: "buttons";
@@ -939,6 +980,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             }, {
                 type: "buttons";
@@ -959,6 +1001,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             }>, z.ZodObject<{
                 id: z.ZodString;
@@ -1019,6 +1062,9 @@ export declare const updateDocSchema: z.ZodObject<{
                     emoji?: string | undefined;
                     description?: string | undefined;
                 }>, "many">>;
+                minValues: z.ZodDefault<z.ZodNumber>;
+                maxValues: z.ZodDefault<z.ZodNumber>;
+                keepCustomId: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 options: {
                     label: string;
@@ -1038,6 +1084,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             }, {
                 type: "select";
                 id: string;
@@ -1057,6 +1106,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             }>]>, "many">>;
             mentions: z.ZodDefault<z.ZodObject<{
                 users: z.ZodDefault<z.ZodBoolean>;
@@ -1115,6 +1167,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -1135,6 +1188,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -1185,6 +1241,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -1205,6 +1262,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -1267,6 +1327,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -1287,6 +1348,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -1343,6 +1407,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -1363,6 +1428,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -1426,6 +1494,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -1446,6 +1515,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -1507,6 +1579,7 @@ export declare const updateDocSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -1527,6 +1600,9 @@ export declare const updateDocSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -1572,16 +1648,1012 @@ export declare const channelsConfigSchema: z.ZodObject<{
 }, {
     channelIds: string[];
 }>;
+export declare const templateImportSchema: z.ZodObject<{
+    format: z.ZodLiteral<"enpol-embed-builder-templates">;
+    version: z.ZodLiteral<1>;
+    templates: z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        category: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        data: z.ZodObject<{
+            messages: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                content: z.ZodDefault<z.ZodString>;
+                embeds: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                    id: z.ZodString;
+                    title: z.ZodDefault<z.ZodString>;
+                    url: z.ZodDefault<z.ZodString>;
+                    description: z.ZodDefault<z.ZodString>;
+                    color: z.ZodDefault<z.ZodString>;
+                    authorName: z.ZodDefault<z.ZodString>;
+                    authorUrl: z.ZodDefault<z.ZodString>;
+                    authorIconUrl: z.ZodDefault<z.ZodString>;
+                    thumbnailUrl: z.ZodDefault<z.ZodString>;
+                    imageUrl: z.ZodDefault<z.ZodString>;
+                    footerText: z.ZodDefault<z.ZodString>;
+                    footerIconUrl: z.ZodDefault<z.ZodString>;
+                    timestamp: z.ZodDefault<z.ZodEnum<["none", "send", "custom"]>>;
+                    timestampAt: z.ZodDefault<z.ZodString>;
+                    fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                        id: z.ZodString;
+                        name: z.ZodDefault<z.ZodString>;
+                        value: z.ZodDefault<z.ZodString>;
+                        inline: z.ZodDefault<z.ZodBoolean>;
+                    }, "strip", z.ZodTypeAny, {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }, {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }>, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }, {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }>, "many">>;
+                rows: z.ZodDefault<z.ZodArray<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                    id: z.ZodString;
+                    type: z.ZodLiteral<"buttons">;
+                    buttons: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                        id: z.ZodString;
+                        kind: z.ZodDefault<z.ZodEnum<["link", "action"]>>;
+                        label: z.ZodDefault<z.ZodString>;
+                        emoji: z.ZodDefault<z.ZodString>;
+                        style: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+                        url: z.ZodDefault<z.ZodString>;
+                        disabled: z.ZodDefault<z.ZodBoolean>;
+                        action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                            type: z.ZodLiteral<"reply">;
+                            text: z.ZodDefault<z.ZodString>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "reply";
+                            text: string;
+                        }, {
+                            type: "reply";
+                            text?: string | undefined;
+                        }>, z.ZodObject<{
+                            type: z.ZodLiteral<"role">;
+                            roleId: z.ZodDefault<z.ZodString>;
+                            mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        }, {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        }>]>>;
+                        keepCustomId: z.ZodDefault<z.ZodString>;
+                    }, "strip", z.ZodTypeAny, {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }, {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }>, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                }, {
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                }>, z.ZodObject<{
+                    id: z.ZodString;
+                    type: z.ZodLiteral<"select">;
+                    placeholder: z.ZodDefault<z.ZodString>;
+                    disabled: z.ZodDefault<z.ZodBoolean>;
+                    options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                        id: z.ZodString;
+                        label: z.ZodDefault<z.ZodString>;
+                        description: z.ZodDefault<z.ZodString>;
+                        emoji: z.ZodDefault<z.ZodString>;
+                        action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                            type: z.ZodLiteral<"reply">;
+                            text: z.ZodDefault<z.ZodString>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "reply";
+                            text: string;
+                        }, {
+                            type: "reply";
+                            text?: string | undefined;
+                        }>, z.ZodObject<{
+                            type: z.ZodLiteral<"role">;
+                            roleId: z.ZodDefault<z.ZodString>;
+                            mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        }, {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        }>]>>;
+                    }, "strip", z.ZodTypeAny, {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }, {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }>, "many">>;
+                    minValues: z.ZodDefault<z.ZodNumber>;
+                    maxValues: z.ZodDefault<z.ZodNumber>;
+                    keepCustomId: z.ZodDefault<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                }, {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                }>]>, "many">>;
+                mentions: z.ZodDefault<z.ZodObject<{
+                    users: z.ZodDefault<z.ZodBoolean>;
+                    roles: z.ZodDefault<z.ZodBoolean>;
+                    everyone: z.ZodDefault<z.ZodBoolean>;
+                }, "strip", z.ZodTypeAny, {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                }, {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                }>>;
+            }, "strip", z.ZodTypeAny, {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }, {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }>, "many">>;
+            webhookProfile: z.ZodDefault<z.ZodObject<{
+                username: z.ZodDefault<z.ZodString>;
+                avatarUrl: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                username: string;
+                avatarUrl: string;
+            }, {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        }, {
+            messages?: {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }[] | undefined;
+            webhookProfile?: {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            } | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        category: string | null;
+        name: string;
+        data: {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        };
+    }, {
+        name: string;
+        data: {
+            messages?: {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }[] | undefined;
+            webhookProfile?: {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            } | undefined;
+        };
+        category?: string | null | undefined;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    format: "enpol-embed-builder-templates";
+    version: 1;
+    templates: {
+        category: string | null;
+        name: string;
+        data: {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        };
+    }[];
+}, {
+    format: "enpol-embed-builder-templates";
+    version: 1;
+    templates: {
+        name: string;
+        data: {
+            messages?: {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }[] | undefined;
+            webhookProfile?: {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            } | undefined;
+        };
+        category?: string | null | undefined;
+    }[];
+}>;
+export declare const templateExportQuery: z.ZodObject<{
+    ids: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    ids?: string | undefined;
+}, {
+    ids?: string | undefined;
+}>;
 /** Message Builder arbeitet immer für genau einen Discord-Server (oben links gewählt). */
 export declare function requireGuild(): string;
 export type Kind = z.infer<typeof docKind>;
+/** Zielkanal: Textkanal (auch Ankündigungskanal) oder Forum (Senden = neuer Beitrag bzw. in bestehenden Beitrag). */
 export interface MbChannel {
     id: string;
     name: string;
+    type: 'text' | 'forum';
     category: string | null;
     position: number;
     bot: MbChannelBotPerms | null;
     allowed: boolean;
+}
+/** Aktiver Thread bzw. Forum-Beitrag (meldet der Bot; archivierte Threads sind nicht dabei, per ID aber erreichbar). */
+export interface MbThread {
+    id: string;
+    name: string;
+    parentId: string;
 }
 /** Discord Message Builder: Entwürfe, Vorlagen, Kategorien und erlaubte Kanäle. Versand: MessageBuilderSendService. */
 export declare class MessageBuilderService {
@@ -1644,6 +2716,7 @@ export declare class MessageBuilderService {
                         style: "danger" | "secondary" | "success" | "primary";
                         url: string;
                         disabled: boolean;
+                        keepCustomId: string;
                     }[];
                 } | {
                     options: {
@@ -1664,6 +2737,9 @@ export declare class MessageBuilderService {
                     id: string;
                     placeholder: string;
                     disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
                 })[];
                 mentions: {
                     roles: boolean;
@@ -1686,6 +2762,7 @@ export declare class MessageBuilderService {
         createdAt: Date;
         updatedAt: Date;
         messageCount: number;
+        sourceTemplateId: string | null;
     }[]>;
     get(actor: Actor, id: string): Promise<{
         data?: {
@@ -1733,6 +2810,7 @@ export declare class MessageBuilderService {
                         style: "danger" | "secondary" | "success" | "primary";
                         url: string;
                         disabled: boolean;
+                        keepCustomId: string;
                     }[];
                 } | {
                     options: {
@@ -1753,6 +2831,9 @@ export declare class MessageBuilderService {
                     id: string;
                     placeholder: string;
                     disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
                 })[];
                 mentions: {
                     roles: boolean;
@@ -1775,8 +2856,9 @@ export declare class MessageBuilderService {
         createdAt: Date;
         updatedAt: Date;
         messageCount: number;
+        sourceTemplateId: string | null;
     }>;
-    create(actor: Actor, b: z.infer<typeof createDocSchema>): Promise<{
+    create(actor: Actor, b: z.infer<typeof createDocSchema>, sourceTemplateId?: string | null): Promise<{
         data?: {
             messages: {
                 id: string;
@@ -1822,6 +2904,7 @@ export declare class MessageBuilderService {
                         style: "danger" | "secondary" | "success" | "primary";
                         url: string;
                         disabled: boolean;
+                        keepCustomId: string;
                     }[];
                 } | {
                     options: {
@@ -1842,6 +2925,9 @@ export declare class MessageBuilderService {
                     id: string;
                     placeholder: string;
                     disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
                 })[];
                 mentions: {
                     roles: boolean;
@@ -1864,6 +2950,7 @@ export declare class MessageBuilderService {
         createdAt: Date;
         updatedAt: Date;
         messageCount: number;
+        sourceTemplateId: string | null;
     }>;
     /** Autosave: gilt nur, wenn niemand zwischendurch gespeichert hat (sonst 409 mit aktuellem Stand). */
     update(actor: Actor, id: string, b: z.infer<typeof updateDocSchema>): Promise<{
@@ -1912,6 +2999,7 @@ export declare class MessageBuilderService {
                         style: "danger" | "secondary" | "success" | "primary";
                         url: string;
                         disabled: boolean;
+                        keepCustomId: string;
                     }[];
                 } | {
                     options: {
@@ -1932,6 +3020,9 @@ export declare class MessageBuilderService {
                     id: string;
                     placeholder: string;
                     disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
                 })[];
                 mentions: {
                     roles: boolean;
@@ -1954,6 +3045,7 @@ export declare class MessageBuilderService {
         createdAt: Date;
         updatedAt: Date;
         messageCount: number;
+        sourceTemplateId: string | null;
     }>;
     /** Kopie anlegen: Vorlage duplizieren, Entwurf als Vorlage speichern, Vorlage als neuen Entwurf laden. */
     copy(actor: Actor, id: string, b: z.infer<typeof copyDocSchema>): Promise<{
@@ -2002,6 +3094,7 @@ export declare class MessageBuilderService {
                         style: "danger" | "secondary" | "success" | "primary";
                         url: string;
                         disabled: boolean;
+                        keepCustomId: string;
                     }[];
                 } | {
                     options: {
@@ -2022,6 +3115,9 @@ export declare class MessageBuilderService {
                     id: string;
                     placeholder: string;
                     disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
                 })[];
                 mentions: {
                     roles: boolean;
@@ -2044,6 +3140,7 @@ export declare class MessageBuilderService {
         createdAt: Date;
         updatedAt: Date;
         messageCount: number;
+        sourceTemplateId: string | null;
     }>;
     /** Löschen = archivieren (bleibt in der Datenbank und in Backups erhalten). */
     remove(actor: Actor, id: string): Promise<void>;
@@ -2053,6 +3150,114 @@ export declare class MessageBuilderService {
         name: string;
         position: number;
     }[]>;
+    /**
+     * Beispielvorlagen ergänzen: nur Vorlagen, deren Name es (auch archiviert) noch nicht gibt; fehlende Kategorien werden
+     * angelegt. Bestehende Vorlagen und Nachrichten werden nie überschrieben.
+     */
+    addExamples(actor: Actor | null): Promise<{
+        added: string[];
+        skipped: string[];
+    }>;
+    /** Kategorie-IDs nach Name; fehlende werden (falls erlaubt) angelegt. */
+    private categoryIdsFor;
+    /** Vorlagen exportieren (alle oder ausgewählte) im Austauschformat. */
+    exportTemplates(ids?: string[]): Promise<{
+        format: string;
+        version: 1;
+        exportedAt: string;
+        templates: {
+            name: string;
+            category: string | null;
+            data: {
+                messages: {
+                    id: string;
+                    content: string;
+                    embeds: {
+                        title: string;
+                        id: string;
+                        color: string;
+                        timestamp: "send" | "custom" | "none";
+                        fields: {
+                            value: string;
+                            id: string;
+                            name: string;
+                            inline: boolean;
+                        }[];
+                        description: string;
+                        url: string;
+                        authorName: string;
+                        authorUrl: string;
+                        authorIconUrl: string;
+                        thumbnailUrl: string;
+                        imageUrl: string;
+                        footerText: string;
+                        footerIconUrl: string;
+                        timestampAt: string;
+                    }[];
+                    rows: ({
+                        type: "buttons";
+                        id: string;
+                        buttons: {
+                            label: string;
+                            kind: "action" | "link";
+                            action: {
+                                type: "reply";
+                                text: string;
+                            } | {
+                                type: "role";
+                                roleId: string;
+                                mode: "remove" | "add" | "toggle";
+                            };
+                            id: string;
+                            emoji: string;
+                            style: "danger" | "secondary" | "success" | "primary";
+                            url: string;
+                            disabled: boolean;
+                            keepCustomId: string;
+                        }[];
+                    } | {
+                        options: {
+                            label: string;
+                            action: {
+                                type: "reply";
+                                text: string;
+                            } | {
+                                type: "role";
+                                roleId: string;
+                                mode: "remove" | "add" | "toggle";
+                            };
+                            id: string;
+                            emoji: string;
+                            description: string;
+                        }[];
+                        type: "select";
+                        id: string;
+                        placeholder: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                        minValues: number;
+                        maxValues: number;
+                    })[];
+                    mentions: {
+                        roles: boolean;
+                        users: boolean;
+                        everyone: boolean;
+                    };
+                }[];
+                webhookProfile: {
+                    username: string;
+                    avatarUrl: string;
+                };
+            };
+        }[];
+    }>;
+    /** Vorlagen importieren: immer als neue Vorlagen (gleicher Name → „(Import)“), nie überschreiben. */
+    importTemplates(actor: Actor, b: z.infer<typeof templateImportSchema>): Promise<{
+        created: {
+            id: string;
+            name: string;
+        }[];
+    }>;
     private assertCategory;
     createCategory(actor: Actor, b: z.infer<typeof categorySchema>): Promise<{
         guildId: string | null;
@@ -2084,6 +3289,7 @@ export declare class MessageBuilderService {
         problem: "no_server";
         guild: null;
         channels: MbChannel[];
+        threads: MbThread[];
         roles: {
             id: string;
             name: string;
@@ -2096,6 +3302,7 @@ export declare class MessageBuilderService {
         problem: "no_report";
         guild: null;
         channels: MbChannel[];
+        threads: MbThread[];
         roles: {
             id: string;
             name: string;
@@ -2111,6 +3318,7 @@ export declare class MessageBuilderService {
             icon: string | null;
         };
         channels: MbChannel[];
+        threads: MbThread[];
         roles: {
             id: string;
             name: string;

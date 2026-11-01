@@ -12,11 +12,12 @@ const message_builder_controller_1 = require("./message-builder.controller");
 const message_builder_service_1 = require("./message-builder.service");
 const message_builder_send_service_1 = require("./message-builder-send.service");
 const webhook_client_1 = require("./webhook-client");
-/** Discord Message Builder (Discohook-artiger Editor): Entwürfe, Vorlagen, Versand über den Bot, optional Webhooks, Historie. */
+const message_builder_messages_service_1 = require("./message-builder-messages.service");
+/** Embed Builder (Discohook-artiger Editor): Entwürfe, Vorlagen, JSON, Versand über den Bot, optional Webhooks, Historie, gesendete Nachrichten bearbeiten. */
 let MessageBuilderModule = class MessageBuilderModule {
 };
 exports.MessageBuilderModule = MessageBuilderModule;
 exports.MessageBuilderModule = MessageBuilderModule = __decorate([
-    (0, common_1.Module)({ controllers: [message_builder_controller_1.MessageBuilderController, message_builder_controller_1.BotMessageBuilderController], providers: [message_builder_service_1.MessageBuilderService, message_builder_send_service_1.MessageBuilderSendService, webhook_client_1.WebhookClient], exports: [message_builder_send_service_1.MessageBuilderSendService] })
+    (0, common_1.Module)({ controllers: [message_builder_controller_1.MessageBuilderController, message_builder_controller_1.BotMessageBuilderController], providers: [message_builder_service_1.MessageBuilderService, message_builder_send_service_1.MessageBuilderSendService, message_builder_messages_service_1.MessageBuilderMessagesService, webhook_client_1.WebhookClient], exports: [message_builder_send_service_1.MessageBuilderSendService] })
 ], MessageBuilderModule);
 //# sourceMappingURL=message-builder.module.js.map

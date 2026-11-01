@@ -40,7 +40,7 @@ exports.DATA_TABLES = [
 exports.GUILD_TABLES = [
     'Unit', 'Incident', 'LeaveRequest', 'Application', 'ApplicationBan', 'QualificationApplication', 'TicketPanel', 'TicketCategory', 'ErlcServer',
     'CadIncidentLog', 'CadRadioMessage', 'PanelSubmission', 'DutyReport', 'HrTrainingSession', 'CadHandover', 'CadIncidentStat',
-    'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook',
+    'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook', 'MessageBuilderMessage',
 ];
 /**
  * Einmalige Rück-Umstellung vom Ein-Server-Betrieb auf getrennte Discord-Server (eine Website, je Server eigene Akten).

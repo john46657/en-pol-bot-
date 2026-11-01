@@ -112,7 +112,9 @@ __export(index_exports, {
   MAX_FORM_QUESTIONS: () => MAX_FORM_QUESTIONS,
   MB_BUTTON_STYLES: () => MB_BUTTON_STYLES,
   MB_DEFAULT_CATEGORIES: () => MB_DEFAULT_CATEGORIES,
+  MB_EXAMPLE_TEMPLATES: () => MB_EXAMPLE_TEMPLATES,
   MB_LIMITS: () => MB_LIMITS,
+  MB_TEMPLATE_EXPORT_FORMAT: () => MB_TEMPLATE_EXPORT_FORMAT,
   MODULES: () => MODULES,
   MODULE_KEYS: () => MODULE_KEYS,
   MUSIC_TRACKS: () => MUSIC_TRACKS,
@@ -204,6 +206,7 @@ __export(index_exports, {
   commandsForServer: () => commandsForServer,
   conditionMatches: () => conditionMatches,
   csvCell: () => csvCell,
+  customIdsOf: () => customIdsOf,
   dangerLevelOf: () => dangerLevelOf,
   defaultTicketButtons: () => defaultTicketButtons,
   departmentSchema: () => departmentSchema,
@@ -264,6 +267,7 @@ __export(index_exports, {
   isValidEmoji: () => isValidEmoji,
   isValidRobloxUserId: () => isValidRobloxUserId,
   isoWeek: () => isoWeek,
+  lineCol: () => lineCol,
   loadLevel: () => loadLevel,
   localMidnight: () => localMidnight,
   localTime: () => localTime,
@@ -279,11 +283,16 @@ __export(index_exports, {
   mbDocumentDataSchema: () => mbDocumentDataSchema,
   mbEmbedSchema: () => mbEmbedSchema,
   mbFieldSchema: () => mbFieldSchema,
+  mbFromDiscordJson: () => mbFromDiscordJson,
   mbId: () => mbId,
   mbMessageSchema: () => mbMessageSchema,
+  mbParseJsonText: () => mbParseJsonText,
   mbRowSchema: () => mbRowSchema,
   mbSelectOptionSchema: () => mbSelectOptionSchema,
   mbSummary: () => mbSummary,
+  mbTemplateExportSchema: () => mbTemplateExportSchema,
+  mbToDiscordJson: () => mbToDiscordJson,
+  mbToDiscordJsonText: () => mbToDiscordJsonText,
   mdtConfigSchema: () => mdtConfigSchema,
   median: () => median,
   missingBotPerms: () => missingBotPerms,
@@ -302,6 +311,7 @@ __export(index_exports, {
   parseBool: () => parseBool,
   parseCsv: () => parseCsv,
   parseFormDate: () => parseFormDate,
+  parseJsonWithPosition: () => parseJsonWithPosition,
   parsePlayer: () => parsePlayer,
   parseQuestions: () => parseQuestions,
   parseReminderDuration: () => parseReminderDuration,
@@ -436,9 +446,10 @@ var PERMISSION_CATALOG = {
   /**
    * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
-   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben, edit = eigene gesendete Discord-Nachrichten laden und
+   * bearbeiten, edit_others = auch Nachrichten anderer Nutzer (und per Link geladene) bearbeiten.
    */
-  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles", "edit", "edit_others"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -998,13 +1009,13 @@ function postalPosition(text) {
   const p = postal ? ERLC_POSTALS[postal] : void 0;
   return postal && p ? { postal, x: p[0], z: p[1] } : null;
 }
-var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z10]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z10 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
+var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z11]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z11 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
 function postalMatchRate(m, samples) {
   const labels = postalLabels(m.width, m.height);
   const known = samples.filter((s) => ERLC_POSTALS[s[2]]);
   if (!known.length) return 0;
-  const hits = known.filter(([x, z10, k]) => {
-    const px = m.originX + x * m.scale, py = m.originY + z10 * m.scale;
+  const hits = known.filter(([x, z11, k]) => {
+    const px = m.originX + x * m.scale, py = m.originY + z11 * m.scale;
     let best = labels[0], d = Infinity;
     for (const l of labels) {
       const dd2 = (l.px - px) ** 2 + (l.py - py) ** 2;
@@ -1027,9 +1038,9 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
     const scale = pts2.reduce((a, p) => a + (p.x - mx) * (p.lx - mlx) + (p.z - mz) * (p.ly - mly), 0) / den;
     return { scale, originX: mlx - scale * mx, originY: mly - scale * mz };
   };
-  let pts = samples.flatMap(([x, z10, k]) => {
+  let pts = samples.flatMap(([x, z11, k]) => {
     const l = labels.get(k);
-    return l && Number.isFinite(x) && Number.isFinite(z10) ? [{ x, z: z10, lx: l.px, ly: l.py, k }] : [];
+    return l && Number.isFinite(x) && Number.isFinite(z11) ? [{ x, z: z11, lx: l.px, ly: l.py, k }] : [];
   });
   const enough = (p) => p.length >= 20 && new Set(p.map((q) => q.k)).size >= 6 && Math.max(...p.map((q) => q.x)) - Math.min(...p.map((q) => q.x)) >= 1e3 && Math.max(...p.map((q) => q.z)) - Math.min(...p.map((q) => q.z)) >= 1e3;
   if (!enough(pts)) return null;
@@ -1047,8 +1058,8 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
   const out = { scale: r(f.scale, 4), originX: r(f.originX), originY: r(f.originY) };
   return { ...out, n: pts.length, postals: new Set(pts.map((p) => p.k)).size, match: postalMatchRate({ width, height, ...out }, samples) };
 }
-var gameToPixel = (m, x, z10) => ({ px: m.originX + x * m.scale, py: m.originY + z10 * m.scale });
-var onErlcMap = (x, z10) => typeof x === "number" && typeof z10 === "number" && Number.isFinite(x) && Number.isFinite(z10) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z10) <= ERLC_MAP_SIZE / 2;
+var gameToPixel = (m, x, z11) => ({ px: m.originX + x * m.scale, py: m.originY + z11 * m.scale });
+var onErlcMap = (x, z11) => typeof x === "number" && typeof z11 === "number" && Number.isFinite(x) && Number.isFinite(z11) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z11) <= ERLC_MAP_SIZE / 2;
 function poiForPlace(place, pois) {
   const norm2 = (v) => v.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
   const p = place ? norm2(place) : "";
@@ -1087,10 +1098,10 @@ function fitExact(pairs) {
     const worst = Math.max(...from.map((f, i) => Math.abs(a * f + b - to[i])));
     return worst <= 60 && a > 0 ? { a, b } : null;
   };
-  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z10 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
-  return x && z10 ? { ax: x.a, bx: x.b, az: z10.a, bz: z10.b, n: pairs.length } : null;
+  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z11 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
+  return x && z11 ? { ax: x.a, bx: x.b, az: z11.a, bz: z11.b, n: pairs.length } : null;
 }
-var applyCallCalibration = (c, x, z10) => ({ x: c.ax * x + c.bx, z: c.az * z10 + c.bz });
+var applyCallCalibration = (c, x, z11) => ({ x: c.ax * x + c.bx, z: c.az * z11 + c.bz });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -1916,7 +1927,7 @@ var MODULES = [
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
-  { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
+  { key: "message_builder", name: "Embed Builder", description: "Discord-Nachrichten und Embeds bauen (JSON-Editor, Vorlagen), \xFCber den Bot oder Webhooks senden, gesendete Nachrichten bearbeiten, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
@@ -2940,12 +2951,27 @@ var mbButtonSchema = import_zod9.z.object({
   style: import_zod9.z.enum(MB_BUTTON_STYLES).default("primary"),
   url: str(4e3),
   disabled: import_zod9.z.boolean().default(false),
-  action: mbActionSchema.default({ type: "reply", text: "" })
+  action: mbActionSchema.default({ type: "reply", text: "" }),
+  /**
+   * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+   * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+   */
+  keepCustomId: str(100)
 });
 var mbSelectOptionSchema = import_zod9.z.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
 var mbRowSchema = import_zod9.z.discriminatedUnion("type", [
   import_zod9.z.object({ id: id2, type: import_zod9.z.literal("buttons"), buttons: import_zod9.z.array(mbButtonSchema).max(25).default([]) }),
-  import_zod9.z.object({ id: id2, type: import_zod9.z.literal("select"), placeholder: str(500), disabled: import_zod9.z.boolean().default(false), options: import_zod9.z.array(mbSelectOptionSchema).max(50).default([]) })
+  import_zod9.z.object({
+    id: id2,
+    type: import_zod9.z.literal("select"),
+    placeholder: str(500),
+    disabled: import_zod9.z.boolean().default(false),
+    options: import_zod9.z.array(mbSelectOptionSchema).max(50).default([]),
+    /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
+    minValues: import_zod9.z.number().int().min(0).max(25).default(1),
+    maxValues: import_zod9.z.number().int().min(1).max(25).default(1),
+    keepCustomId: str(100)
+  })
 ]);
 var mbFieldSchema = import_zod9.z.object({ id: id2, name: str(2e3), value: str(4e3), inline: import_zod9.z.boolean().default(false) });
 var mbEmbedSchema = import_zod9.z.object({
@@ -3059,6 +3085,10 @@ function validateMbMessage(m, idx, o = {}) {
   });
   if (total > DISCORD_LIMITS.embedTotal) add("error", "Embeds", ["embeds"], `Alle Embeds zusammen: ${total}/${DISCORD_LIMITS.embedTotal} Zeichen.`);
   if (m.rows.length > DISCORD_LIMITS.actionRows) add("error", "Komponenten", ["rows"], `H\xF6chstens ${DISCORD_LIMITS.actionRows} Komponenten-Reihen je Nachricht.`);
+  const kept = (cid, where, path) => {
+    if (!o.keptCustomIds?.includes(cid)) add("error", where, path, "\xDCbernommene custom_id ist nur beim Bearbeiten der geladenen Discord-Nachricht erlaubt \u2013 eine Aktion festlegen.");
+    if (o.target === "webhook") add("error", where, path, "\xDCber einen Webhook sind keine interaktiven Komponenten m\xF6glich.");
+  };
   const action = (a, where, path) => {
     if (a.type === "reply") {
       if (!a.text.trim()) add("error", where, [...path, "text"], "Aktion \u201EAntwort\u201C: Antworttext fehlt.");
@@ -3083,6 +3113,8 @@ function validateMbMessage(m, idx, o = {}) {
         if (b.kind === "link") {
           if (!b.url) add("error", bw, p("buttons", bi, "url"), "Link-Button braucht eine URL.");
           else url(b.url, bw, p("buttons", bi, "url"), "Link", DISCORD_LIMITS.linkUrl);
+        } else if (b.keepCustomId) {
+          kept(b.keepCustomId, bw, p("buttons", bi));
         } else {
           if (o.target === "webhook") add("error", bw, p("buttons", bi), "\xDCber einen Webhook sind nur Link-Buttons m\xF6glich \u2013 f\xFCr Aktions-Buttons \xFCber den Bot senden.");
           action(b.action, bw, p("buttons", bi, "action"));
@@ -3093,13 +3125,20 @@ function validateMbMessage(m, idx, o = {}) {
       if (!r.options.length) add("error", w, p("options"), "Das Auswahlmen\xFC braucht mindestens eine Option.");
       if (r.options.length > DISCORD_LIMITS.selectOptions) add("error", w, p("options"), `H\xF6chstens ${DISCORD_LIMITS.selectOptions} Optionen.`);
       if (len(r.placeholder) > DISCORD_LIMITS.selectPlaceholder) add("error", w, p("placeholder"), `Platzhalter: ${len(r.placeholder)}/${DISCORD_LIMITS.selectPlaceholder} Zeichen.`);
+      if (r.minValues > r.maxValues) add("error", w, p("minValues"), `Mindestanzahl (${r.minValues}) ist gr\xF6\xDFer als die H\xF6chstanzahl (${r.maxValues}).`);
+      if (r.options.length && r.maxValues > r.options.length) add("error", w, p("maxValues"), `H\xF6chstanzahl (${r.maxValues}) ist gr\xF6\xDFer als die Zahl der Optionen (${r.options.length}).`);
+      if (r.keepCustomId) kept(r.keepCustomId, w, p());
+      const values = /* @__PURE__ */ new Set();
       r.options.forEach((op, oi) => {
         const ow = `${w} \u203A Option ${oi + 1}`;
         if (!op.label.trim()) add("error", ow, p("options", oi, "label"), "Option braucht eine Beschriftung.");
         if (len(op.label) > DISCORD_LIMITS.optionLabel) add("error", ow, p("options", oi, "label"), `Beschriftung: ${len(op.label)}/${DISCORD_LIMITS.optionLabel} Zeichen.`);
         if (len(op.description) > DISCORD_LIMITS.optionDescription) add("error", ow, p("options", oi, "description"), `Beschreibung: ${len(op.description)}/${DISCORD_LIMITS.optionDescription} Zeichen.`);
         if (op.emoji && !isValidEmoji(op.emoji.trim())) add("error", ow, p("options", oi, "emoji"), "Emoji: ein Unicode-Emoji oder ein Server-Emoji wie <:name:123\u2026>.");
-        action(op.action, ow, p("options", oi, "action"));
+        if (values.has(op.id)) add("error", ow, p("options", oi), "Zwei Optionen haben denselben Wert.");
+        values.add(op.id);
+        if (len(op.id) > DISCORD_LIMITS.optionValue) add("error", ow, p("options", oi), `Wert: h\xF6chstens ${DISCORD_LIMITS.optionValue} Zeichen.`);
+        if (!r.keepCustomId) action(op.action, ow, p("options", oi, "action"));
       });
     }
   });
@@ -3150,18 +3189,18 @@ function toDiscordPayload(m, o = {}) {
         const emoji2 = toPartialEmoji(b.emoji);
         const common = { ...b.label ? { label: b.label } : {}, ...emoji2 ? { emoji: emoji2 } : {}, ...b.disabled ? { disabled: true } : {} };
         if (b.kind === "link") return b.url ? [{ type: 2, style: 5, url: b.url, ...common }] : [];
-        const cid = o.customIdOf?.(b.id);
+        const cid = b.keepCustomId || o.customIdOf?.(b.id);
         return cid ? [{ type: 2, style: STYLE_NUM[b.style], custom_id: cid, ...common }] : [];
       });
       if (buttons.length) components.push({ type: 1, components: buttons });
     } else {
-      const cid = o.customIdOf?.(r.id);
+      const cid = r.keepCustomId || o.customIdOf?.(r.id);
       if (!cid || !r.options.length) continue;
       components.push({ type: 1, components: [{
         type: 3,
         custom_id: cid,
-        min_values: 1,
-        max_values: 1,
+        min_values: Math.min(r.minValues, r.options.length),
+        max_values: Math.max(1, Math.min(r.maxValues, r.options.length)),
         ...r.placeholder ? { placeholder: r.placeholder } : {},
         ...r.disabled ? { disabled: true } : {},
         options: r.options.map((op) => {
@@ -3184,9 +3223,9 @@ function mbSummary(m) {
   return parts.join(" \xB7 ") || "leer";
 }
 function interactiveComponents(m) {
-  return m.rows.flatMap((r) => r.type === "buttons" ? r.buttons.filter((b) => b.kind === "action").map((b) => ({ componentId: b.id, kind: "button", action: b.action })) : [{ componentId: r.id, kind: "select", options: Object.fromEntries(r.options.map((op) => [op.id, op.action])) }]);
+  return m.rows.flatMap((r) => r.type === "buttons" ? r.buttons.filter((b) => b.kind === "action" && !b.keepCustomId).map((b) => ({ componentId: b.id, kind: "button", action: b.action })) : r.keepCustomId ? [] : [{ componentId: r.id, kind: "select", options: Object.fromEntries(r.options.map((op) => [op.id, op.action])) }]);
 }
-var MB_DEFAULT_CATEGORIES = ["Allgemein", "Polizei", "Leitstelle", "Dienstantritt", "Dienstende", "Einsatzmeldung", "Personalinformation", "Ank\xFCndigung", "Wartung", "Sonstiges"];
+var MB_DEFAULT_CATEGORIES = ["Ank\xFCndigungen", "Dienstanweisungen", "Bewerbungen", "Tickets", "Ausbildung", "Informationen", "Berichte", "Sonstiges"];
 function missingBotPerms(p, d) {
   const miss = [];
   if (!p.view) miss.push("Kanal ansehen");
@@ -3199,6 +3238,11 @@ var DISCORD_ERRORS = {
   10003: "Den Kanal gibt es nicht (mehr).",
   10008: "Die Nachricht gibt es nicht (mehr).",
   10015: "Den Webhook gibt es nicht mehr \u2013 in den Webhook-Einstellungen entfernen oder neu anlegen.",
+  10017: "Den Thread gibt es nicht (mehr).",
+  50005: "Diese Nachricht stammt von jemand anderem und kann nicht bearbeitet werden.",
+  50083: "Der Thread ist archiviert \u2013 erst wieder \xF6ffnen.",
+  220001: "Forum-Beitr\xE4ge brauchen einen Titel (Thread-Name).",
+  220003: "In diesem Forum muss ein Tag gew\xE4hlt werden \u2013 bitte in einen bestehenden Beitrag senden.",
   20016: "Langsamer Modus im Kanal aktiv \u2013 sp\xE4ter erneut senden.",
   40005: "Die Nachricht ist zu gro\xDF.",
   50001: "Der Bot hat keinen Zugriff auf diesen Kanal.",
@@ -3217,6 +3261,483 @@ function describeDiscordError(e) {
   if (e.status && e.status >= 500) return "Discord ist gerade nicht erreichbar (Serverfehler) \u2013 sp\xE4ter erneut versuchen.";
   return detail || "Unbekannter Discord-Fehler.";
 }
+
+// src/message-builder-json.ts
+var import_zod10 = require("zod");
+function lineCol(text, offset) {
+  let line = 1, col = 1;
+  for (let i = 0; i < Math.min(offset, text.length); i++) {
+    if (text[i] === "\n") {
+      line++;
+      col = 1;
+    } else col++;
+  }
+  return { line, column: col };
+}
+function parseJsonWithPosition(text) {
+  let i = 0;
+  class Fail extends Error {
+    constructor(msg, at) {
+      super(msg);
+      this.at = at;
+    }
+    at;
+  }
+  const fail = (msg, at = i) => {
+    throw new Fail(msg, at);
+  };
+  const ws = () => {
+    while (i < text.length && " 	\n\r".includes(text[i])) i++;
+  };
+  const show = (c) => c === void 0 ? "Ende des Textes" : c === "\n" ? "Zeilenumbruch" : `\u201E${c}\u201C`;
+  const value = (depth) => {
+    if (depth > 64) fail("Zu tief verschachtelt.");
+    ws();
+    const c = text[i];
+    if (c === "{") return object(depth);
+    if (c === "[") return array(depth);
+    if (c === '"') return string();
+    if (c === "-" || c !== void 0 && c >= "0" && c <= "9") return number();
+    for (const [word, v] of [["true", true], ["false", false], ["null", null]]) {
+      if (text.startsWith(word, i)) {
+        i += word.length;
+        return v;
+      }
+    }
+    if (c === "'") fail('Zeichenketten brauchen doppelte Anf\xFChrungszeichen (") statt einfacher.');
+    if (c === void 0) fail("Unerwartetes Ende \u2013 ein Wert fehlt.");
+    return fail(`Unerwartetes Zeichen ${show(c)} \u2013 erwartet wird ein Wert (Text in "\u2026", Zahl, true/false/null, {\u2026} oder [\u2026]).`);
+  };
+  const object = (depth) => {
+    const out = {};
+    i++;
+    ws();
+    if (text[i] === "}") {
+      i++;
+      return out;
+    }
+    for (; ; ) {
+      ws();
+      if (text[i] === "}") fail("Komma vor \u201E}\u201C ist in JSON nicht erlaubt.");
+      if (text[i] !== '"') fail(`Erwartet wird ein Schl\xFCssel in doppelten Anf\xFChrungszeichen, gefunden ${show(text[i])}.`);
+      const key3 = string();
+      ws();
+      if (text[i] !== ":") fail(`Nach dem Schl\xFCssel "${key3}" fehlt ein Doppelpunkt.`);
+      i++;
+      out[key3] = value(depth + 1);
+      ws();
+      if (text[i] === ",") {
+        i++;
+        continue;
+      }
+      if (text[i] === "}") {
+        i++;
+        return out;
+      }
+      fail(`Erwartet wird \u201E,\u201C oder \u201E}\u201C, gefunden ${show(text[i])}.`);
+    }
+  };
+  const array = (depth) => {
+    const out = [];
+    i++;
+    ws();
+    if (text[i] === "]") {
+      i++;
+      return out;
+    }
+    for (; ; ) {
+      ws();
+      if (text[i] === "]") fail("Komma vor \u201E]\u201C ist in JSON nicht erlaubt.");
+      out.push(value(depth + 1));
+      ws();
+      if (text[i] === ",") {
+        i++;
+        continue;
+      }
+      if (text[i] === "]") {
+        i++;
+        return out;
+      }
+      fail(`Erwartet wird \u201E,\u201C oder \u201E]\u201C, gefunden ${show(text[i])}.`);
+    }
+  };
+  const string = () => {
+    const start = i;
+    i++;
+    let out = "";
+    for (; ; ) {
+      const c = text[i];
+      if (c === void 0) fail('Zeichenkette wird nicht geschlossen (fehlendes ").', start);
+      if (c === '"') {
+        i++;
+        return out;
+      }
+      if (c === "\n" || c === "\r") fail("Zeilenumbruch in einer Zeichenkette \u2013 daf\xFCr \\n schreiben.");
+      if (c === "\\") {
+        const e = text[i + 1];
+        const map = { '"': '"', "\\": "\\", "/": "/", b: "\b", f: "\f", n: "\n", r: "\r", t: "	" };
+        if (e !== void 0 && map[e] !== void 0) {
+          out += map[e];
+          i += 2;
+          continue;
+        }
+        if (e === "u" && /^[0-9a-fA-F]{4}$/.test(text.slice(i + 2, i + 6))) {
+          out += String.fromCharCode(parseInt(text.slice(i + 2, i + 6), 16));
+          i += 6;
+          continue;
+        }
+        fail("Ung\xFCltige Escape-Sequenz in der Zeichenkette.");
+      }
+      out += c;
+      i++;
+    }
+  };
+  const number = () => {
+    const m = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/.exec(text.slice(i));
+    if (!m) return fail("Ung\xFCltige Zahl.");
+    i += m[0].length;
+    return Number(m[0]);
+  };
+  try {
+    const v = value(0);
+    ws();
+    if (i < text.length) fail(`Nach dem Ende des JSON folgt noch ${show(text[i])}.`);
+    return { ok: true, value: v };
+  } catch (e) {
+    if (!(e instanceof Fail)) throw e;
+    return { ok: false, error: { message: e.message, offset: e.at, ...lineCol(text, e.at) } };
+  }
+}
+var emojiIn = import_zod10.z.object({ id: import_zod10.z.string().regex(/^\d{15,25}$/).nullish(), name: import_zod10.z.string().max(100).nullish(), animated: import_zod10.z.boolean().optional() }).nullish();
+var linkButtonIn = import_zod10.z.object({ type: import_zod10.z.literal(2), style: import_zod10.z.literal(5), label: import_zod10.z.string().optional(), emoji: emojiIn, url: import_zod10.z.string(), disabled: import_zod10.z.boolean().optional() });
+var actionButtonIn = import_zod10.z.object({ type: import_zod10.z.literal(2), style: import_zod10.z.union([import_zod10.z.literal(1), import_zod10.z.literal(2), import_zod10.z.literal(3), import_zod10.z.literal(4)]), label: import_zod10.z.string().optional(), emoji: emojiIn, custom_id: import_zod10.z.string().min(1).max(100), disabled: import_zod10.z.boolean().optional() });
+var selectIn = import_zod10.z.object({
+  type: import_zod10.z.literal(3),
+  custom_id: import_zod10.z.string().min(1).max(100),
+  placeholder: import_zod10.z.string().optional(),
+  disabled: import_zod10.z.boolean().optional(),
+  min_values: import_zod10.z.number().int().min(0).max(25).optional(),
+  max_values: import_zod10.z.number().int().min(1).max(25).optional(),
+  options: import_zod10.z.array(import_zod10.z.object({ label: import_zod10.z.string(), value: import_zod10.z.string().min(1).max(100), description: import_zod10.z.string().nullish(), emoji: emojiIn, default: import_zod10.z.boolean().optional() })).max(25)
+});
+var rowIn = import_zod10.z.object({ type: import_zod10.z.literal(1), components: import_zod10.z.array(import_zod10.z.unknown()).min(1).max(5) });
+var embedIn = import_zod10.z.object({
+  title: import_zod10.z.string().nullish(),
+  url: import_zod10.z.string().nullish(),
+  description: import_zod10.z.string().nullish(),
+  color: import_zod10.z.number().int().min(0).max(16777215).nullish(),
+  timestamp: import_zod10.z.string().nullish(),
+  author: import_zod10.z.object({ name: import_zod10.z.string(), url: import_zod10.z.string().nullish(), icon_url: import_zod10.z.string().nullish() }).nullish(),
+  footer: import_zod10.z.object({ text: import_zod10.z.string(), icon_url: import_zod10.z.string().nullish() }).nullish(),
+  thumbnail: import_zod10.z.object({ url: import_zod10.z.string() }).nullish(),
+  image: import_zod10.z.object({ url: import_zod10.z.string() }).nullish(),
+  fields: import_zod10.z.array(import_zod10.z.object({ name: import_zod10.z.string(), value: import_zod10.z.string(), inline: import_zod10.z.boolean().nullish() })).nullish()
+});
+var messageIn = import_zod10.z.object({
+  content: import_zod10.z.string().nullish(),
+  embeds: import_zod10.z.array(embedIn).nullish(),
+  components: import_zod10.z.array(rowIn).nullish(),
+  allowed_mentions: import_zod10.z.object({ parse: import_zod10.z.array(import_zod10.z.enum(["users", "roles", "everyone"])).optional() }).nullish()
+});
+var pathStr = (p) => p.reduce((s, k) => typeof k === "number" ? `${s}[${k}]` : s ? `${s}.${k}` : k, "");
+var emojiStr = (e) => !e ? "" : e.id ? `<${e.animated ? "a" : ""}:${e.name ?? "emoji"}:${e.id}>` : e.name ?? "";
+var ID_OK = /^[\w:.-]{1,64}$/;
+function previousComponents(d) {
+  const buttons = /* @__PURE__ */ new Map(), selects = /* @__PURE__ */ new Map();
+  for (const m of d?.messages ?? []) for (const r of m.rows) {
+    if (r.type === "select") selects.set(r.id, r);
+    else for (const b of r.buttons) buttons.set(b.id, b);
+  }
+  return { buttons, selects };
+}
+function messageFromJson(raw, base, o, prev, notes) {
+  const p = messageIn.safeParse(raw);
+  if (!p.success) {
+    const iss = p.error.issues[0];
+    throw { message: zodText(iss), path: pathStr([...base, ...iss.path]) };
+  }
+  const j = p.data;
+  const embeds = (j.embeds ?? []).map((e) => {
+    const ts = e.timestamp ?? "";
+    if (ts && Number.isNaN(Date.parse(ts))) throw { message: "Zeitstempel: kein g\xFCltiges ISO-8601-Datum (z. B. 2026-11-01T12:00:00.000Z).", path: pathStr([...base, "embeds", (j.embeds ?? []).indexOf(e), "timestamp"]) };
+    const isSend = !!ts && !!o.sendNow && new Date(ts).toISOString() === o.sendNow.toISOString();
+    return {
+      id: mbId(),
+      title: e.title ?? "",
+      url: e.url ?? "",
+      description: e.description ?? "",
+      color: e.color === null || e.color === void 0 ? "" : `#${e.color.toString(16).padStart(6, "0")}`,
+      authorName: e.author?.name ?? "",
+      authorUrl: e.author?.url ?? "",
+      authorIconUrl: e.author?.icon_url ?? "",
+      thumbnailUrl: e.thumbnail?.url ?? "",
+      imageUrl: e.image?.url ?? "",
+      footerText: e.footer?.text ?? "",
+      footerIconUrl: e.footer?.icon_url ?? "",
+      timestamp: !ts ? "none" : isSend ? "send" : "custom",
+      timestampAt: ts && !isSend ? new Date(ts).toISOString() : "",
+      fields: (e.fields ?? []).map((f) => ({ id: mbId(), name: f.name, value: f.value, inline: !!f.inline }))
+    };
+  });
+  const rows = (j.components ?? []).map((row, ri) => {
+    const comps = row.components;
+    const first = comps[0];
+    const rp = [...base, "components", ri, "components"];
+    if (first?.type === 3) {
+      if (comps.length !== 1) throw { message: "Ein Auswahlmen\xFC muss allein in seiner Reihe stehen.", path: pathStr(rp) };
+      const s = selectIn.safeParse(first);
+      if (!s.success) {
+        const iss = s.error.issues[0];
+        throw { message: zodText(iss), path: pathStr([...rp, 0, ...iss.path]) };
+      }
+      const old = prev.selects.get(s.data.custom_id);
+      const known = !!old || ID_OK.test(s.data.custom_id) && !s.data.custom_id.includes(":");
+      const keep = !old && o.foreignCustomIds === "keep";
+      if (!old && !keep) notes.push(`Auswahlmen\xFC \u201E${s.data.placeholder || s.data.custom_id}\u201C: Aktionen der Optionen festlegen.`);
+      const options = s.data.options.map((op) => {
+        if (op.value.length > 64) throw { message: "Optionswert: h\xF6chstens 64 Zeichen.", path: pathStr([...rp, 0, "options", s.data.options.indexOf(op), "value"]) };
+        const was = old?.options.find((x) => x.id === op.value);
+        return { id: op.value, label: op.label, description: op.description ?? "", emoji: emojiStr(op.emoji), action: was?.action ?? { type: "reply", text: "" } };
+      });
+      return {
+        id: old ? old.id : keep || !known ? mbId() : s.data.custom_id,
+        type: "select",
+        placeholder: s.data.placeholder ?? "",
+        disabled: !!s.data.disabled,
+        options,
+        minValues: s.data.min_values ?? 1,
+        maxValues: s.data.max_values ?? 1,
+        keepCustomId: keep ? s.data.custom_id : ""
+      };
+    }
+    const buttons = comps.map((c, ci) => {
+      const t2 = c;
+      if (t2?.type !== 2) throw { message: `Komponente vom Typ ${String(t2?.type)} wird nicht unterst\xFCtzt (nur Buttons = 2 und Text-Auswahlmen\xFCs = 3).`, path: pathStr([...rp, ci, "type"]) };
+      if (t2.style === 5) {
+        const l = linkButtonIn.safeParse(c);
+        if (!l.success) {
+          const iss = l.error.issues[0];
+          throw { message: zodText(iss), path: pathStr([...rp, ci, ...iss.path]) };
+        }
+        return { id: mbId(), kind: "link", label: l.data.label ?? "", emoji: emojiStr(l.data.emoji), style: "primary", url: l.data.url, disabled: !!l.data.disabled, action: { type: "reply", text: "" }, keepCustomId: "" };
+      }
+      const a = actionButtonIn.safeParse(c);
+      if (!a.success) {
+        const iss = a.error.issues[0];
+        const msg = t2.style === 6 ? "Premium-Buttons (Stil 6) werden nicht unterst\xFCtzt." : zodText(iss);
+        throw { message: msg, path: pathStr([...rp, ci, ...t2.style === 6 ? ["style"] : iss.path]) };
+      }
+      const style = ["primary", "secondary", "success", "danger"][a.data.style - 1];
+      const old = prev.buttons.get(a.data.custom_id);
+      const keep = !old && o.foreignCustomIds === "keep";
+      if (!old && !keep) notes.push(`Button \u201E${a.data.label || a.data.custom_id}\u201C: Aktion festlegen.`);
+      const ownId = ID_OK.test(a.data.custom_id) && !a.data.custom_id.includes(":");
+      return {
+        id: old ? old.id : !keep && ownId ? a.data.custom_id : mbId(),
+        kind: "action",
+        label: a.data.label ?? "",
+        emoji: emojiStr(a.data.emoji),
+        style,
+        url: "",
+        disabled: !!a.data.disabled,
+        action: old?.action ?? { type: "reply", text: "" },
+        keepCustomId: keep ? a.data.custom_id : ""
+      };
+    });
+    return { id: mbId(), type: "buttons", buttons };
+  });
+  const parse = j.allowed_mentions?.parse;
+  return {
+    id: mbId(),
+    content: j.content ?? "",
+    embeds,
+    rows,
+    mentions: parse ? { users: parse.includes("users"), roles: parse.includes("roles"), everyone: parse.includes("everyone") } : { users: true, roles: false, everyone: false }
+  };
+}
+function zodText(iss) {
+  if (iss.code === "invalid_type") return iss.received === "undefined" ? "Pflichtangabe fehlt." : `Falscher Typ: erwartet ${typeName(iss.expected)}, gefunden ${typeName(iss.received)}.`;
+  if (iss.code === "invalid_literal") return `Ung\xFCltiger Wert \u2013 erwartet ${JSON.stringify(iss.expected)}.`;
+  if (iss.code === "too_big") return `Zu gro\xDF/zu lang (h\xF6chstens ${String(iss.maximum)}).`;
+  if (iss.code === "too_small") return `Zu klein/zu kurz (mindestens ${String(iss.minimum)}).`;
+  if (iss.code === "invalid_enum_value") return `Ung\xFCltiger Wert \u2013 erlaubt: ${iss.options.join(", ")}.`;
+  if (iss.code === "invalid_union") return "Ung\xFCltiger Wert.";
+  return iss.message;
+}
+var typeName = (t2) => ({ string: "Text", number: "Zahl", integer: "ganze Zahl", boolean: "true/false", object: "Objekt {\u2026}", array: "Liste [\u2026]", null: "null", undefined: "nichts" })[t2] ?? t2;
+function mbFromDiscordJson(value, o = {}) {
+  const notes = [];
+  const prev = previousComponents(o.previous);
+  try {
+    let list2;
+    let webhook;
+    if (Array.isArray(value)) list2 = value.map((raw, k) => ({ raw, path: [k] }));
+    else if (value && typeof value === "object" && Array.isArray(value.messages)) {
+      const v = value;
+      list2 = v.messages.map((m, k) => {
+        const data2 = m && typeof m === "object" && "data" in m && m.data && typeof m.data === "object" ? m.data : null;
+        return data2 ? { raw: data2, path: ["messages", k, "data"] } : { raw: m, path: ["messages", k] };
+      });
+      webhook = v.webhook && typeof v.webhook === "object" ? v.webhook : void 0;
+      const d0 = list2[0]?.raw;
+      if (!webhook && d0 && (typeof d0.username === "string" || typeof d0.avatar_url === "string")) webhook = d0;
+    } else if (value && typeof value === "object") {
+      list2 = [{ raw: value, path: [] }];
+      const v = value;
+      if (typeof v.username === "string" || typeof v.avatar_url === "string") webhook = v;
+    } else return { ok: false, error: { message: 'Erwartet wird ein Objekt {\u2026} (eine Nachricht oder { "messages": [ \u2026 ] }).', path: "" } };
+    if (!list2.length) return { ok: false, error: { message: "Keine Nachricht enthalten.", path: "messages" } };
+    if (list2.length > 10) return { ok: false, error: { message: "H\xF6chstens 10 Nachrichten je Gruppe.", path: "messages" } };
+    const messages = list2.map((x) => messageFromJson(x.raw, x.path, o, prev, notes));
+    const data = mbDocumentDataSchema.safeParse({
+      messages,
+      webhookProfile: { username: typeof webhook?.username === "string" ? webhook.username : o.previous?.webhookProfile.username ?? "", avatarUrl: typeof webhook?.avatar_url === "string" ? webhook.avatar_url : o.previous?.webhookProfile.avatarUrl ?? "" }
+    });
+    if (!data.success) {
+      const iss = data.error.issues[0];
+      return { ok: false, error: { message: zodText(iss), path: pathStr(iss.path) } };
+    }
+    return { ok: true, data: data.data, notes };
+  } catch (e) {
+    if (e && typeof e === "object" && "path" in e && "message" in e) return { ok: false, error: e };
+    throw e;
+  }
+}
+function mbParseJsonText(text, o = {}) {
+  if (!text.trim()) return { ok: false, error: { message: "Das JSON ist leer.", path: "", offset: 0, line: 1, column: 1 } };
+  const p = parseJsonWithPosition(text);
+  if (!p.ok) return { ok: false, error: { ...p.error, path: "" } };
+  return mbFromDiscordJson(p.value, o);
+}
+function mbToDiscordJson(d, now = /* @__PURE__ */ new Date()) {
+  const messages = d.messages.map((m) => {
+    const ids = /* @__PURE__ */ new Set();
+    for (const r of m.rows) {
+      if (r.type === "select") ids.add(r.id);
+      else for (const b of r.buttons) if (b.kind === "action") ids.add(b.id);
+    }
+    const p = toDiscordPayload(m, { now, customIdOf: (cid) => ids.has(cid) ? cid : void 0 });
+    return { ...p.content ? { content: p.content } : {}, embeds: p.embeds, components: p.components, allowed_mentions: p.allowed_mentions };
+  });
+  const w = d.webhookProfile;
+  return { messages, ...w.username || w.avatarUrl ? { webhook: { ...w.username ? { username: w.username } : {}, ...w.avatarUrl ? { avatar_url: w.avatarUrl } : {} } } : {} };
+}
+var mbToDiscordJsonText = (d, now) => JSON.stringify(mbToDiscordJson(d, now), null, 2);
+function customIdsOf(components) {
+  const out = [];
+  const walk = (x) => {
+    if (Array.isArray(x)) {
+      x.forEach(walk);
+      return;
+    }
+    if (x && typeof x === "object") {
+      const o = x;
+      if (typeof o.custom_id === "string") out.push(o.custom_id);
+      if (o.components) walk(o.components);
+    }
+  };
+  walk(components);
+  return out;
+}
+var MB_TEMPLATE_EXPORT_FORMAT = "enpol-embed-builder-templates";
+var mbTemplateExportSchema = import_zod10.z.object({
+  format: import_zod10.z.literal(MB_TEMPLATE_EXPORT_FORMAT),
+  version: import_zod10.z.literal(1),
+  templates: import_zod10.z.array(import_zod10.z.object({ name: import_zod10.z.string().trim().min(1).max(100), category: import_zod10.z.string().trim().max(60).nullable().default(null), data: mbDocumentDataSchema })).min(1).max(200)
+});
+
+// src/message-builder-examples.ts
+var BLUE = "#1e3a8a";
+var doc = (messages) => mbDocumentDataSchema.parse({ messages });
+var footer = { footerText: "EN | POLIZEI", timestamp: "send" };
+var MB_EXAMPLE_TEMPLATES = [
+  {
+    name: "Willkommen",
+    category: "Informationen",
+    data: doc([{ id: "ex-welcome", content: "", embeds: [{
+      id: "ex-welcome-e",
+      color: BLUE,
+      title: "\u{1F44B} Willkommen bei EN | POLIZEI",
+      description: "Sch\xF6n, dass du da bist! Bitte lies dir zuerst das **Regelwerk** durch und melde dich bei Fragen im Support.",
+      fields: [
+        { id: "ex-w-f1", name: "\u{1F4DC} Regelwerk", value: "Pflichtlekt\xFCre f\xFCr alle Mitglieder.", inline: true },
+        { id: "ex-w-f2", name: "\u{1F4DD} Bewerbung", value: "Infos im Bewerbungskanal.", inline: true },
+        { id: "ex-w-f3", name: "\u{1F3AB} Support", value: "Ticket \xFCber das Ticket-Panel.", inline: true }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Dienstbeginn",
+    category: "Dienstanweisungen",
+    data: doc([{ id: "ex-duty", content: "", embeds: [{
+      id: "ex-duty-e",
+      color: "#22c55e",
+      title: "\u{1F693} Dienstbeginn",
+      description: "Der Dienst beginnt. Bitte meldet euch im Funk an und \xFCbernehmt eure Einheit.",
+      fields: [
+        { id: "ex-d-f1", name: "Treffpunkt", value: "Polizeirevier", inline: true },
+        { id: "ex-d-f2", name: "Uhrzeit", value: "20:00 Uhr (anpassen)", inline: true },
+        { id: "ex-d-f3", name: "Hinweis", value: "Ausr\xFCstung und Fahrzeug vor Dienstantritt pr\xFCfen.", inline: false }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Bewerbungsinformationen",
+    category: "Bewerbungen",
+    data: doc([{ id: "ex-apply", content: "", embeds: [{
+      id: "ex-apply-e",
+      color: BLUE,
+      title: "\u{1F4DD} Bewerbung bei EN | POLIZEI",
+      description: "Du m\xF6chtest Teil des Teams werden? So l\xE4uft die Bewerbung ab:",
+      fields: [
+        { id: "ex-a-f1", name: "1. Voraussetzungen", value: "Mindestalter und Regelwerk beachten.", inline: false },
+        { id: "ex-a-f2", name: "2. Bewerbung", value: "\xDCber das Bewerbungs-Panel einreichen.", inline: false },
+        { id: "ex-a-f3", name: "3. R\xFCckmeldung", value: "Du erh\xE4ltst eine Nachricht, sobald entschieden wurde.", inline: false }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Ticket-Er\xF6ffnung",
+    category: "Tickets",
+    data: doc([{ id: "ex-ticket", content: "", embeds: [{
+      id: "ex-ticket-e",
+      color: "#0ea5e9",
+      title: "\u{1F3AB} Support-Ticket",
+      description: "Du brauchst Hilfe? \xD6ffne \xFCber das Ticket-Panel ein Ticket. Ein Teammitglied meldet sich so schnell wie m\xF6glich.\n\n-# Bitte keine Ticket-Anfragen per Direktnachricht.",
+      ...footer
+    }] }])
+  },
+  {
+    name: "Ausbildungsank\xFCndigung",
+    category: "Ausbildung",
+    data: doc([{ id: "ex-training", content: "", embeds: [{
+      id: "ex-training-e",
+      color: "#a855f7",
+      title: "\u{1F393} Ausbildung",
+      description: "Eine neue Ausbildung findet statt. Interessierte melden sich bitte bei der Ausbildungsleitung.",
+      fields: [
+        { id: "ex-t-f1", name: "Thema", value: "Grundausbildung", inline: true },
+        { id: "ex-t-f2", name: "Datum", value: "Datum (anpassen)", inline: true },
+        { id: "ex-t-f3", name: "Ort", value: "Polizeiakademie", inline: true }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Regelwerk-Hinweis",
+    category: "Ank\xFCndigungen",
+    data: doc([{ id: "ex-rules", content: "", embeds: [{
+      id: "ex-rules-e",
+      color: "#f59e0b",
+      title: "\u26A0\uFE0F Hinweis zum Regelwerk",
+      description: "Bitte beachtet das aktuelle Regelwerk. Verst\xF6\xDFe k\xF6nnen zu Verwarnungen f\xFChren.\n\n> Respektvoller Umgang ist f\xFCr alle Pflicht.",
+      ...footer
+    }] }])
+  }
+];
 
 // src/radio-whitelist.ts
 var RADIO_GRANT_STATUSES = ["PENDING", "ACTIVE", "DISABLED", "SUSPENDED", "EXPIRED", "REVOKED"];
@@ -3914,7 +4435,9 @@ function timeZones() {
   MAX_FORM_QUESTIONS,
   MB_BUTTON_STYLES,
   MB_DEFAULT_CATEGORIES,
+  MB_EXAMPLE_TEMPLATES,
   MB_LIMITS,
+  MB_TEMPLATE_EXPORT_FORMAT,
   MODULES,
   MODULE_KEYS,
   MUSIC_TRACKS,
@@ -4006,6 +4529,7 @@ function timeZones() {
   commandsForServer,
   conditionMatches,
   csvCell,
+  customIdsOf,
   dangerLevelOf,
   defaultTicketButtons,
   departmentSchema,
@@ -4066,6 +4590,7 @@ function timeZones() {
   isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
+  lineCol,
   loadLevel,
   localMidnight,
   localTime,
@@ -4081,11 +4606,16 @@ function timeZones() {
   mbDocumentDataSchema,
   mbEmbedSchema,
   mbFieldSchema,
+  mbFromDiscordJson,
   mbId,
   mbMessageSchema,
+  mbParseJsonText,
   mbRowSchema,
   mbSelectOptionSchema,
   mbSummary,
+  mbTemplateExportSchema,
+  mbToDiscordJson,
+  mbToDiscordJsonText,
   mdtConfigSchema,
   median,
   missingBotPerms,
@@ -4104,6 +4634,7 @@ function timeZones() {
   parseBool,
   parseCsv,
   parseFormDate,
+  parseJsonWithPosition,
   parsePlayer,
   parseQuestions,
   parseReminderDuration,

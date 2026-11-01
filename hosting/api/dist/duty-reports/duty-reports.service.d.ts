@@ -123,8 +123,8 @@ export declare class DutyReportsService {
             reviewedById: string | null;
             reviewedAt: Date | null;
             reviewNote: string | null;
-            templateId: string;
             templateName: string;
+            templateId: string;
             period: string;
             periodStart: Date;
             values: Prisma.JsonValue;
@@ -185,8 +185,8 @@ export declare class DutyReportsService {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: Prisma.JsonValue;
@@ -222,8 +222,8 @@ export declare class DutyReportsService {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: Prisma.JsonValue;
@@ -245,8 +245,8 @@ export declare class DutyReportsService {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: Prisma.JsonValue;
@@ -272,8 +272,8 @@ export declare class DutyReportsService {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: Prisma.JsonValue;
