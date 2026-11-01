@@ -679,7 +679,7 @@ declare const CAD_EVENTS: readonly ["incident.created", "incident.status", "inci
 type CadEvent = (typeof CAD_EVENTS)[number];
 declare const CAD_EVENT_LABELS: Record<CadEvent, string>;
 /**
- * Rückmeldungen einer Einheit aus dem MDT bzw. Discord (`/cad rueckmeldung`). Sie landen in der Einsatzchronik;
+ * Rückmeldungen einer Einheit aus dem MDT. Sie landen in der Einsatzchronik;
  * `unitStatus` wird nur gesetzt, wenn es diesen Einheitenstatus in den CAD-Einstellungen gibt. Den Einsatz selbst ändern sie nie.
  */
 declare const CAD_FEEDBACK: readonly [{
@@ -6725,7 +6725,7 @@ declare function parseCsv(text: string): {
 };
 
 /**
- * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot (/bewerbungspanel, /qualipanel) gleich gebaut.
+ * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot gleich gebaut.
  * Einheiten mit `panel: 'apply'` stehen im Bewerbungs-Panel neben der Polizei-Bewerbung, alle anderen im Qualifikations-Panel.
  */
 /** Schlüssel der Polizei-Bewerbung im Auswahlmenü bzw. am Button (`quali:pick:@polizei`). */

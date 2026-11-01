@@ -655,7 +655,7 @@ export declare const unitSchema: z.ZodObject<{
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
 }>;
-/** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
+/** Texte des Panels für die normale Bewerbung bei EN Polizei (Bewerbungs-Panel); die Fragen sind das Bewerbungsformular (`application.form`). */
 export declare const policeSchema: z.ZodObject<{
     name: z.ZodDefault<z.ZodString>;
     /** Channel für neue Bewerbungen (sonst der Applications-Channel aus den Einstellungen). */

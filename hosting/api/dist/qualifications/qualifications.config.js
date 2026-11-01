@@ -69,7 +69,7 @@ exports.unitSchema = zod_1.z.object({
     /** In welchem Panel die Einheit steht: Qualifikations-Panel oder (als weitere Bewerbungsart) Bewerbungs-Panel. */
     panel: zod_1.z.enum(['quali', 'apply']).default('quali'),
 });
-/** Texte des Panels für die normale Bewerbung bei EN Polizei (/bewerbungspanel); die Fragen sind das Bewerbungsformular (`application.form`). */
+/** Texte des Panels für die normale Bewerbung bei EN Polizei (Bewerbungs-Panel); die Fragen sind das Bewerbungsformular (`application.form`). */
 exports.policeSchema = zod_1.z.object({
     ...requirements,
     name: zod_1.z.string().trim().min(2).max(60).default('Polizeianwärter'),

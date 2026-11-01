@@ -24,8 +24,6 @@ const str = (c, k) => String(c.opts[k] ?? '').trim();
 const choices = (m) => Object.keys(m).map((k) => ({ name: k.replace('_', ' '), value: k }));
 const needGuildAdmin = (c) => (!c.guildId ? (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.') : !c.isGuildAdmin ? (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.') : null);
 // ---------------- Gefahrenstatus ----------------
-/** Alte Eingaben (grün/gelb/rot) weiter verstehen; sonst entscheidet die API anhand der eingestellten Stufen. */
-const LEGACY = { gruen: 'STATUS_1', 'grün': 'STATUS_1', gelb: 'STATUS_2', rot: 'STATUS_4' };
 async function setDanger(c, level, reason) {
     try {
         const s = await c.api.asUser(c.discordId, 'PUT', '/danger-level', { level, ...(reason ? { reason } : {}) });
@@ -45,42 +43,6 @@ const DUTY_BUTTONS = [
 // ---------------- Funk-Freigabe ----------------
 const RADIO = { hinzufuegen: 'add', entfernen: 'remove', pruefen: 'check', liste: 'list' };
 exports.FEATURE_COMMANDS = [
-    {
-        name: 'gefahrenstatus', description: 'Gefahrenstatus anzeigen, setzen oder als Panel posten',
-        options: [
-            { name: 'aktion', description: 'Was möchtest du tun? (Standard: anzeigen)', type: 'string', choices: [{ name: 'anzeigen', value: 'anzeigen' }, { name: 'setzen', value: 'setzen' }, { name: 'panel hier posten', value: 'panel' }] },
-            { name: 'stufe', description: 'Neue Stufe (bei „setzen“), z. B. Status 2', type: 'string', maxLength: 40 },
-            { name: 'grund', description: 'Grund (optional, bei „setzen“)', type: 'string', maxLength: 200 },
-        ],
-        async run(c) {
-            const action = str(c, 'aktion') || 'anzeigen';
-            if (action === 'setzen') {
-                const level = str(c, 'stufe');
-                return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str(c, 'grund') || undefined) : (0, format_1.errorReply)('Bitte eine Stufe angeben (z. B. „Status 2“).');
-            }
-            if (action === 'panel') {
-                const denied = needGuildAdmin(c);
-                if (denied)
-                    return denied;
-                if (!c.channelId || !c.refreshLive)
-                    return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
-                try {
-                    await c.api.asUser(c.discordId, 'GET', '/danger-level'); // nur verknüpfte Benutzer mit Leserecht richten das Panel ein
-                    await c.refreshLive('danger', { channelId: c.channelId, force: true });
-                    return (0, format_1.okReply)('Gefahrenstatus-Panel gepostet. Es aktualisiert sich selbst; ein älteres Panel wird nicht mehr bearbeitet.');
-                }
-                catch (e) {
-                    return (0, errors_1.mapError)(e);
-                }
-            }
-            try {
-                return { ephemeral: true, embeds: [(0, format_1.dangerEmbed)(await c.api.asUser(c.discordId, 'GET', '/danger-level'))] };
-            }
-            catch (e) {
-                return (0, errors_1.mapError)(e);
-            }
-        },
-    },
     {
         name: 'teamliste', description: 'Richtet die selbst aktualisierende Teamliste ein bzw. aktualisiert sie sofort',
         async run(c) {

@@ -38338,12 +38338,12 @@ var require_ClientApplication = __commonJS({
         }
         if ("integration_types_config" in data) {
           this.integrationTypesConfig = Object.fromEntries(
-            Object.entries(data.integration_types_config).map(([key4, config2]) => {
+            Object.entries(data.integration_types_config).map(([key4, config]) => {
               let oauth2InstallParams = null;
-              if (config2.oauth2_install_params) {
+              if (config.oauth2_install_params) {
                 oauth2InstallParams = {
-                  scopes: config2.oauth2_install_params.scopes,
-                  permissions: new PermissionsBitField3(config2.oauth2_install_params.permissions).freeze()
+                  scopes: config.oauth2_install_params.scopes,
+                  permissions: new PermissionsBitField3(config.oauth2_install_params.permissions).freeze()
                 };
               }
               const context = {
@@ -80647,35 +80647,18 @@ var MODULES = [
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var OFF_MODULES = MODULES.filter((m) => m.off).map((m) => m.key);
 var BOT_COMMAND_MODULES = {
-  cad: "cad",
-  bericht: "reports",
   dienstbericht: "reports",
-  person: "mdt",
-  kennzeichen: "mdt",
-  fahndungen: "mdt",
-  fahndung: "mdt",
   shift: "shift_logs",
   dienst: "shift_logs",
   dienststunden: "shift_logs",
   team: "shift_logs",
   dienstpanel: "shift_logs",
   teamliste: "shift_logs",
-  einheiten: "dispatch",
-  einheitstatus: "dispatch",
-  einsaetze: "dispatch",
-  einsatz: "dispatch",
-  einsatzinfo: "dispatch",
-  einsatzstatus: "dispatch",
-  einsatzzuweisen: "dispatch",
-  beschwerde: "investigations",
   abmeldung: "personnel",
   leave: "personnel",
   ausbildung: "personnel",
   verwarnen: "personnel",
   teamchance: "applications",
-  bewerbung: "applications",
-  bewerbungspanel: "applications",
-  qualipanel: "applications",
   support: "support",
   ticket: "support",
   funkcode: "communication",
@@ -81259,37 +81242,6 @@ var MB_EXAMPLE_TEMPLATES = [
     }] }])
   }
 ];
-var POLICE_APPLICATION_KEY = "@polizei";
-var clip = (s, max) => s.length > max ? `${s.slice(0, max - 1)}\u2026` : s;
-var plain = (s) => s.replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
-var optionOf = (u) => ({
-  label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100),
-  value: u.key,
-  ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {}
-});
-var section = (u) => `**__${plain(u.name)}:__**
-${u.description}`;
-var panelUnits = (units, kind2) => units.filter((u) => (u.panel ?? "quali") === kind2);
-function qualiPanelParts(cfg2) {
-  const units = panelUnits(cfg2.units, "quali");
-  return {
-    title: clip(cfg2.title, 256),
-    description: clip([cfg2.intro, ...units.map(section)].filter(Boolean).join("\n\n"), 4e3),
-    select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: units.slice(0, 25).map(optionOf) }
-  };
-}
-function applyPanelParts(cfg2) {
-  const p = cfg2.police ?? { title: "\u{1F4CB} Bewerbung bei EN Polizei", description: "" };
-  const extra = panelUnits(cfg2.units, "apply");
-  const title = clip(p.title, 256);
-  if (!extra.length) return { title, ...p.description ? { description: clip(p.description, 4e3) } : {}, button: { id: `quali:pick:${POLICE_APPLICATION_KEY}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" } };
-  const police = { key: POLICE_APPLICATION_KEY, name: p.name || "Polizei", enabled: p.enabled };
-  return {
-    title,
-    description: clip([p.description, ...extra.map(section)].filter(Boolean).join("\n\n"), 4e3),
-    select: { id: "quali:pick", placeholder: "Wof\xFCr m\xF6chtest du dich bewerben?", options: [police, ...extra].slice(0, 25).map(optionOf) }
-  };
-}
 var AI_CHECK_LEVEL_LABEL = { LOW: "gering", MEDIUM: "mittel", HIGH: "hoch" };
 var GIVEAWAYS = [
   [/\bals (eine? )?(ki|künstliche intelligenz|sprachmodell|ai)\b/i, "\u201Eals KI/Sprachmodell\u201C"],
@@ -81788,103 +81740,78 @@ var HttpApi = class {
 // apps/bot/src/format.ts
 var COLORS = { info: 3900150, success: 2278750, warning: 16096779, danger: 15680580, neutral: 6583435 };
 var PRIORITY_COLOR = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
-var clip2 = (s, max) => {
+var clip = (s, max) => {
   const t2 = String(s ?? "\u2014");
   return t2.length > max ? `${t2.slice(0, max - 1)}\u2026` : t2;
 };
 var label = (s) => String(s ?? "\u2014").replace(/_/g, " ");
-var plain2 = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
+var plain = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
 var errorReply = (text) => ({ content: `\u274C ${text}`, ephemeral: true });
 var okReply = (text) => ({ content: `\u2705 ${text}`, ephemeral: true });
-function personEmbed(p, extra = {}) {
-  return {
-    title: clip2(`\u{1F464} ${p.robloxUsername}`, 256),
-    color: extra.wanted ? COLORS.warning : COLORS.info,
-    fields: [
-      { name: "Roblox-ID", value: clip2(p.robloxUserId ?? "unbekannt", 1024), inline: true },
-      { name: "Status", value: label(p.status), inline: true },
-      ...extra.tickets !== void 0 ? [{ name: "Tickets", value: String(extra.tickets), inline: true }] : [],
-      ...p.aliases?.length ? [{ name: "Aliase", value: clip2(p.aliases.map(plain2).join(", "), 1024) }] : [],
-      ...p.notes ? [{ name: "Notizen", value: clip2(plain2(p.notes), 1024) }] : []
-    ],
-    footer: extra.wanted ? "\u26A0\uFE0F Mit Fahndungseintrag verkn\xFCpft (ggf. erledigt) \u2014 Status im System pr\xFCfen" : void 0
-  };
-}
-var vehicleEmbed = (v) => ({
-  title: clip2(`\u{1F697} ${v.plate}`, 256),
-  color: COLORS.info,
-  fields: [
-    { name: "Modell", value: clip2(plain2(v.model), 1024), inline: true },
-    { name: "Farbe", value: clip2(plain2(v.color), 1024), inline: true },
-    { name: "Halter", value: clip2(plain2(v.owner?.robloxUsername), 1024), inline: true },
-    { name: "Status", value: label(v.status), inline: true }
-  ]
-});
-var incidentLine = (i) => `**${i.number}** \xB7 ${plain2(i.title)} \u2014 ${label(i.priority)} / ${label(i.status)}${i.location ? ` \xB7 ${plain2(i.location)}` : ""}`;
 function listEmbed(title, lines, empty) {
-  return { title: clip2(title, 256), description: clip2(lines.length ? lines.join("\n") : empty, 4e3), color: COLORS.info };
+  return { title: clip(title, 256), description: clip(lines.length ? lines.join("\n") : empty, 4e3), color: COLORS.info };
 }
 function renderOutbox(type, p) {
   switch (type) {
     case "workflow.message": {
       const color3 = typeof p.color === "string" && /^#[0-9a-f]{6}$/i.test(p.color) ? parseInt(p.color.slice(1), 16) : COLORS.info;
-      return { title: clip2(plain2(p.title), 256), ...p.text ? { description: clip2(plain2(p.text), 4e3) } : {}, color: color3, footer: clip2(`Workflow: ${String(p.workflow ?? "")}`, 200) };
+      return { title: clip(plain(p.title), 256), ...p.text ? { description: clip(plain(p.text), 4e3) } : {}, color: color3, footer: clip(`Workflow: ${String(p.workflow ?? "")}`, 200) };
     }
     case "incident.created":
-      return { title: `\u{1F6A8} Neuer Einsatz: ${clip2(plain2(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Nummer", value: String(p.number), inline: true }, { name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "Ort", value: clip2(plain2(p.location ?? "unbekannt"), 1024), inline: true }] };
+      return { title: `\u{1F6A8} Neuer Einsatz: ${clip(plain(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Nummer", value: String(p.number), inline: true }, { name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
     case "incident.assigned":
-      return { title: `\u{1F4FB} ${plain2(p.callsign)} \u2192 ${p.number}`, description: clip2(plain2(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip2(plain2(p.location ?? "unbekannt"), 1024), inline: true }] };
+      return { title: `\u{1F4FB} ${plain(p.callsign)} \u2192 ${p.number}`, description: clip(plain(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
     case "wanted.created":
       return {
         title: `\u{1F6A8} Neue Fahndung (${p.kind === "vehicle" ? "Fahrzeug" : "Person"})`,
-        description: `**${clip2(plain2(p.subject), 200)}**
-${clip2(plain2(p.reason), 1500)}${p.description ? `
+        description: `**${clip(plain(p.subject), 200)}**
+${clip(plain(p.reason), 1500)}${p.description ? `
 
-${clip2(plain2(p.description), 2e3)}` : ""}`,
+${clip(plain(p.description), 2e3)}` : ""}`,
         color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger,
-        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip2(plain2(p.createdBy), 200), inline: true }] : []]
+        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip(plain(p.createdBy), 200), inline: true }] : []]
       };
     case "wanted.status": {
       const st = { CLEARED: ["\u2705 Fahndung aufgehoben", COLORS.success], CANCELLED: ["\u26AA Fahndung abgebrochen", COLORS.info], ACTIVE: ["\u{1F6A8} Fahndung wieder aktiv", COLORS.danger], EXPIRED: ["\u231B Fahndung abgelaufen", COLORS.info] };
       const [title, color3] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
-      return { title, description: `**${clip2(plain2(p.subject), 200)}** \u2013 ${clip2(plain2(p.reason), 1e3)}${p.note ? `
-**Grund:** ${clip2(plain2(p.note), 1e3)}` : ""}`, color: color3, ...p.by ? { footer: `von ${clip2(plain2(p.by), 100)}` } : {} };
+      return { title, description: `**${clip(plain(p.subject), 200)}** \u2013 ${clip(plain(p.reason), 1e3)}${p.note ? `
+**Grund:** ${clip(plain(p.note), 1e3)}` : ""}`, color: color3, ...p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {} };
     }
     case "teamchance.changed":
       return p.open ? {
-        title: `\u{1F4E3} ${clip2(plain2(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
-        description: clip2(plain2(p.description ?? ""), 3500) || void 0,
+        title: `\u{1F4E3} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
+        description: clip(plain(p.description ?? ""), 3500) || void 0,
         color: COLORS.success,
         fields: [...p.closesAt ? [{ name: "Bewerbungsschluss", value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1e3)}:f>`, inline: true }] : [], ...Number(p.slots) > 0 ? [{ name: "Pl\xE4tze", value: String(p.slots), inline: true }] : []]
-      } : { title: `\u{1F512} ${clip2(plain2(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
+      } : { title: `\u{1F512} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
     case "announcement":
-      return { title: "\u{1F4E2} Ank\xFCndigung", description: clip2(plain2(p.body), 4e3), color: COLORS.warning, footer: `von ${clip2(p.author, 100)}` };
+      return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case "danger.changed": {
       return {
         box: true,
-        title: clip2(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
-        description: clip2(`${String(p.text ?? "")}${p.reason ? `
+        title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
+        description: clip(`${String(p.text ?? "")}${p.reason ? `
 
-**Hinweis:** ${plain2(p.reason)}` : ""}`, 4e3) || void 0
+**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0
       };
     }
     case "duty.changed": {
       if (typeof p.shiftId === "string" && p.shiftId) return shiftLogEmbed(p);
       const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
-      const who3 = `${p.callsign ? `${plain2(p.callsign)} \xB7 ` : ""}${plain2(p.name)}`;
+      const who3 = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
       const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
       return {
-        title: clip2(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who3} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
+        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who3} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
         color: DUTY_DE[st]?.color ?? COLORS.neutral,
-        description: clip2([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain2(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain2(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
       };
     }
     case "leave.requested":
       return {
         title: "Abmeldeantrag",
         color: COLORS.warning,
-        description: clip2(`${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)} m\xF6chte sich abmelden.`, 4e3),
-        fields: [{ name: "Grund", value: clip2(plain2(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte sich abmelden.`, 4e3),
+        fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
         footer: `ID: ${String(p.number)}`
       };
     case "leave.extension": {
@@ -81892,9 +81819,9 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
       return {
         title: "Verl\xE4ngerungsantrag",
         color: COLORS.warning,
-        description: clip2(`${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)} m\xF6chte die Abmeldung verl\xE4ngern.`, 4e3),
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte die Abmeldung verl\xE4ngern.`, 4e3),
         fields: [
-          { name: "Grund", value: clip2(plain2(p.extensionReason), 1024) },
+          { name: "Grund", value: clip(plain(p.extensionReason), 1024) },
           { name: "Zus\xE4tzliche Dauer", value: Number.isFinite(add) && add > 0 ? humanDuration(add) : "\u2014" },
           { name: "Ende", value: `bisher <t:${unixOf(p.endsAt)}:f> \u2192 neu <t:${unixOf(p.newEndsAt)}:f>` }
         ],
@@ -81906,27 +81833,27 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
       const by = p.event === "approved" ? "Angenommen von" : p.event === "denied" ? "Abgelehnt von" : p.event === "extended" ? "Verl\xE4ngert von" : "Entschieden von";
       const t2 = (v, style = "f") => `<t:${unixOf(v)}:${style}>`;
       return {
-        author: { name: clip2(`@${String(p.name ?? "\u2014")}`, 200) },
+        author: { name: clip(`@${String(p.name ?? "\u2014")}`, 200) },
         title: ev.text,
         color: ev.color,
         footer: `ID: ${String(p.number)}`,
-        description: clip2([
+        description: clip([
           p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null,
           `**Beginn**: ${t2(p.startsAt)}`,
           `**Ende**: ${t2(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t2(p.previousEndsAt)})` : ""}`,
           `**Dauer**: ${leaveSpan(p)}`,
-          `**Grund**: ${plain2(p.reason)}`,
-          p.extendReason ? `**Grund der Verl\xE4ngerung**: ${plain2(p.extendReason)}` : null,
-          p.decidedByName ? `**${by}**: ${plain2(p.decidedByName)}` : null,
-          p.decisionReason ? `**Begr\xFCndung**: ${plain2(p.decisionReason)}` : null
+          `**Grund**: ${plain(p.reason)}`,
+          p.extendReason ? `**Grund der Verl\xE4ngerung**: ${plain(p.extendReason)}` : null,
+          p.decidedByName ? `**${by}**: ${plain(p.decidedByName)}` : null,
+          p.decisionReason ? `**Begr\xFCndung**: ${plain(p.decisionReason)}` : null
         ].filter(Boolean).join("\n"), 4e3)
       };
     }
     case "sek.report":
-      return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip2(plain2(p.description), 3500), fields: [
-        { name: "Einsatzart", value: clip2(plain2(p.missionType), 200), inline: true },
+      return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
+        { name: "Einsatzart", value: clip(plain(p.missionType), 200), inline: true },
         { name: "Datum", value: new Date(String(p.occurredAt)).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }), inline: true },
-        { name: "Beamter", value: clip2(plain2(p.author), 200), inline: true }
+        { name: "Beamter", value: clip(plain(p.author), 200), inline: true }
       ] };
     default:
       return null;
@@ -81941,7 +81868,7 @@ var BUDGET = 4800;
 var AI_ICON = { LOW: "\u{1F7E2}", MEDIUM: "\u{1F7E1}", HIGH: "\u{1F534}" };
 function aiLines(qa, durationSec) {
   const r = aiCheck(qa.map((q2) => ({ answer: String(q2.answer ?? "") })), durationSec);
-  return [`KI-Check: ${AI_ICON[r.level]} ${AI_CHECK_LEVEL_LABEL[r.level]} (\`${r.score} %\`)`, ...r.level === "LOW" ? [] : r.reasons.slice(0, 2).map((x) => `\u203A ${clip2(plain2(x), 160)}`)];
+  return [`KI-Check: ${AI_ICON[r.level]} ${AI_CHECK_LEVEL_LABEL[r.level]} (\`${r.score} %\`)`, ...r.level === "LOW" ? [] : r.reasons.slice(0, 2).map((x) => `\u203A ${clip(plain(x), 160)}`)];
 }
 function applicationEmbeds(p, kind2) {
   const qa = Array.isArray(p.answers) ? p.answers : [];
@@ -81949,28 +81876,28 @@ function applicationEmbeds(p, kind2) {
   const joined = unix(p.joinedAt), submitted = unix(p.createdAt);
   const stats = [
     "**Bewerber-Infos**",
-    ...id3 ? [`Discord-ID: \`${id3}\``, `Benutzername: \`${plain2(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id3}>`] : ["Quelle: Web-Formular (kein Discord)"],
-    ...kind2 === "p" ? [`Roblox: \`${plain2(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain2(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
+    ...id3 ? [`Discord-ID: \`${id3}\``, `Benutzername: \`${plain(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id3}>`] : ["Quelle: Web-Formular (kein Discord)"],
+    ...kind2 === "p" ? [`Roblox: \`${plain(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
     ...typeof p.durationSec === "number" ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : [],
     ...aiLines(qa, typeof p.durationSec === "number" ? p.durationSec : null),
     ...joined ? [`Server beigetreten: <t:${joined}:R>`] : [],
     ...submitted ? [`Eingereicht: <t:${submitted}:R>`] : [],
-    ...p.guildName ? [`Server: \`${plain2(p.guildName)}\``] : []
+    ...p.guildName ? [`Server: \`${plain(p.guildName)}\``] : []
   ].join("\n");
-  const section3 = (q2, i, max) => {
-    const a = plain2(q2.answer) || "\u2014";
-    return `**${i + 1}. ${clip2(plain2(q2.question), 200)}**
+  const section2 = (q2, i, max) => {
+    const a = plain(q2.answer) || "\u2014";
+    return `**${i + 1}. ${clip(plain(q2.question), 200)}**
 ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
-  let sections = qa.map((q2, i) => section3(q2, i));
-  const who3 = p.discordName ? `${plain2(p.discordName)}s ` : "";
-  const title = clip2(kind2 === "p" ? `\u{1F4CB} ${who3}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who3}Bewerbung \u201E${plain2(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
+  let sections = qa.map((q2, i) => section2(q2, i));
+  const who3 = p.discordName ? `${plain(p.discordName)}s ` : "";
+  const title = clip(kind2 === "p" ? `\u{1F4CB} ${who3}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who3}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
   if (size(sections) > room) {
-    const questions = qa.reduce((n, q2, i) => n + section3({ question: q2.question, answer: "" }, i).length + 15, 0);
+    const questions = qa.reduce((n, q2, i) => n + section2({ question: q2.question, answer: "" }, i).length + 15, 0);
     const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
-    sections = qa.map((q2, i) => section3(q2, i, per));
+    sections = qa.map((q2, i) => section2(q2, i, per));
   }
   if (size(sections) > room) {
     const kept = [];
@@ -81990,7 +81917,7 @@ ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` :
     }
     cur = cur ? `${cur}
 
-${piece}` : clip2(piece, 4e3);
+${piece}` : clip(piece, 4e3);
   }
   embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
   return embeds.slice(0, 10);
@@ -82021,9 +81948,9 @@ function shiftLogEmbed(p) {
   const t2 = (v, style) => `<t:${unixOf(v)}:${style}>`;
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const [event, color3] = prev === "OFF_DUTY" ? ["Shift Started", COLORS.success] : st === "OFF_DUTY" ? ["Shift Ended", COLORS.danger] : st === "BREAK" ? ["Break Started", COLORS.warning] : prev === "BREAK" ? ["Break Ended", COLORS.info] : ["Shift Updated", COLORS.info];
-  const kind2 = p.shiftType ? plain2(p.shiftType) : "Dienst";
+  const kind2 = p.shiftType ? plain(p.shiftType) : "Dienst";
   const secs = (v) => shiftDuration(Number(v) || 0);
-  const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)}`];
+  const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)}`];
   if (event === "Shift Started") lines.push(`**Started**: ${t2(p.shiftStartedAt ?? now, "R")} (${t2(p.shiftStartedAt ?? now, "f")})`);
   else if (event === "Shift Ended") {
     lines.push(`**Total Time**: ${secs(p.totalSeconds)}`);
@@ -82031,8 +81958,8 @@ function shiftLogEmbed(p) {
   } else if (event === "Break Started") lines.push(`**Break Started**: ${t2(now, "R")}`, `**Shift Time**: ${secs(p.totalSeconds)}`);
   else if (event === "Break Ended") lines.push(`**Break Time**: ${secs(p.previousSeconds)}`);
   else lines.push(`**Status**: ${DUTY_DE[st]?.label ?? label(st)}`);
-  if (p.setBy) lines.push(`**${event === "Shift Ended" ? "Ended" : "Set"} By**: ${plain2(p.setBy)}`);
-  return { author: { name: clip2(`@${String(p.name ?? "\u2014")}`, 200) }, title: clip2(`${event} \u2022 ${kind2}`, 256), color: color3, description: clip2(lines.join("\n"), 4e3), footer: `Shift ID: ${String(p.shiftId)}` };
+  if (p.setBy) lines.push(`**${event === "Shift Ended" ? "Ended" : "Set"} By**: ${plain(p.setBy)}`);
+  return { author: { name: clip(`@${String(p.name ?? "\u2014")}`, 200) }, title: clip(`${event} \u2022 ${kind2}`, 256), color: color3, description: clip(lines.join("\n"), 4e3), footer: `Shift ID: ${String(p.shiftId)}` };
 }
 function humanDuration(ms) {
   const H = 36e5, D = 24 * H, W = 7 * D;
@@ -82051,10 +81978,10 @@ function humanDuration(ms) {
   return parts.join(", ");
 }
 var leaveSpan = (p) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
-var guildAuthor = (p) => p.guildName ? { name: clip2(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
+var guildAuthor = (p) => p.guildName ? { name: clip(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
 function leaveDirectEmbed(type, p) {
   const author = guildAuthor(p);
-  const server = plain2(p.guildName ?? "dem Server");
+  const server = plain(p.guildName ?? "dem Server");
   const end = unixOf(p.endsAt);
   const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
   if (type === "leave.pending") return {
@@ -82071,19 +81998,19 @@ Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
     color: COLORS.success,
     description: `Deine Abmeldung endet ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
 Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
-    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip2(plain2(p.decisionReason), 1024) }] } : {}
+    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
   return {
     ...base,
     title: "Abmeldung abgelehnt",
     color: COLORS.danger,
     description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
-    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip2(plain2(p.decisionReason), 1024) }] } : {}
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
 }
 function leaveExtensionDirectEmbed(p) {
   const author = guildAuthor(p);
-  const server = plain2(p.guildName ?? "dem Server");
+  const server = plain(p.guildName ?? "dem Server");
   const end = unixOf(p.endsAt);
   const add = humanDuration(Number(p.extensionMinutes) * 6e4);
   const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
@@ -82099,7 +82026,7 @@ Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
     title: "Verl\xE4ngerung abgelehnt",
     color: COLORS.danger,
     description: `Deine Abmeldung wird nicht verl\xE4ngert und endet weiterhin ungef\xE4hr <t:${end}:F> (<t:${end}:R>).`,
-    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip2(plain2(p.decisionReason), 1024) }] } : {}
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
 }
 function renderOutboxEmbeds(type, p) {
@@ -82109,8 +82036,8 @@ function renderOutboxEmbeds(type, p) {
     const accepted = p.status === "ACCEPTED";
     const embeds = applicationEmbeds(p, type === "application.archived" ? "p" : "q").map((e2) => ({ ...e2, color: accepted ? COLORS.success : COLORS.danger }));
     const last = embeds[embeds.length - 1];
-    last.fields = [{ name: "Entscheidung", value: clip2(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"}${p.decidedByName ? ` von ${plain2(p.decidedByName)}` : ""}${p.reason ? `
-**Grund:** ${plain2(p.reason)}` : ""}`, 1024) }];
+    last.fields = [{ name: "Entscheidung", value: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"}${p.decidedByName ? ` von ${plain(p.decidedByName)}` : ""}${p.reason ? `
+**Grund:** ${plain(p.reason)}` : ""}`, 1024) }];
     return embeds;
   }
   if (type === "academy.course") return [academyCourseEmbed(p)];
@@ -82121,11 +82048,11 @@ function academyCourseEmbed(p) {
   const when = typeof p.when === "string" && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1e3) : null;
   const fields = [
     ...when ? [{ name: "\u{1F552} Termin", value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : [],
-    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip2(plain2(p.location), 1024), inline: true }] : [],
+    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip(plain(p.location), 1024), inline: true }] : [],
     { name: "\u{1F3AF} Bestehensgrenze", value: `${Number(p.passScore) || 0} Punkte`, inline: true },
-    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip2(plain2(p.instructorName), 1024), inline: true }] : []
+    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip(plain(p.instructorName), 1024), inline: true }] : []
   ];
-  return { title: clip2(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip2(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
+  return { title: clip(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
 }
 function outboxButtons(type, p) {
   if (type === "leave.requested" && typeof p.id === "string") return [
@@ -82153,36 +82080,20 @@ function outboxButtons(type, p) {
 }
 var reasonText = (p) => p.reason ? `
 
-**Begr\xFCndung:** ${clip2(plain2(p.reason), 1e3)}` : "";
+**Begr\xFCndung:** ${clip(plain(p.reason), 1e3)}` : "";
 function qualificationDecisionText(p) {
-  if (typeof p.message === "string" && p.message.trim()) return clip2(p.message, 2e3);
-  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain2(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain2(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
+  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
 }
 function applicationDecisionText(p) {
-  if (typeof p.message === "string" && p.message.trim()) return clip2(p.message, 2e3);
+  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
   return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.${reasonText(p)}` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.${reasonText(p)}`;
 }
-var hexColor2 = (v, fallback) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : fallback;
-function dangerEmbed(s) {
-  const d = s.def;
-  const current = d ? `**Aktuell:** ${d.emoji} ${plain2(d.name)}${d.title ? ` \u2013 ${plain2(d.title)}` : ""}${s.reason ? `
-${clip2(plain2(s.reason), 300)}` : ""}` : "";
-  const when = s.at ? `
-<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:f>` : "";
-  return {
-    title: clip2(s.panel?.title ?? "Gefahrenstatus", 256),
-    color: hexColor2(d?.color, COLORS.danger),
-    description: clip2(`${s.panel?.text ?? ""}${current ? `
-
-${current}` : ""}${when}`, 4e3),
-    ...s.setByName ? { footer: `Gesetzt von ${clip2(s.setByName, 100)}` } : {}
-  };
-}
 function dangerPanel(s) {
-  return { box: true, heading: true, title: clip2(s.panel?.title ?? "Gefahrenstatus", 256), description: clip2(s.panel?.text ?? "", 4e3) || void 0, ...s.at ? { stamp: s.at } : {} };
+  return { box: true, heading: true, title: clip(s.panel?.title ?? "Gefahrenstatus", 256), description: clip(s.panel?.text ?? "", 4e3) || void 0, ...s.at ? { stamp: s.at } : {} };
 }
 function dangerButtons(s) {
-  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip2(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
+  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
 }
 var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
 var DUTY_DE = {
@@ -82199,7 +82110,7 @@ function teamlistEmbed(members, rankOrder) {
   const fields = [];
   for (const rank of [...known2, ...rest]) {
     const people = members.filter((m) => rankOf(m) === rank).sort((a, b2) => (a.callsign ?? "~").localeCompare(b2.callsign ?? "~"));
-    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain2(m.callsign)}** ` : ""}${plain2(m.name)}${m.unit ? ` \xB7 ${plain2(m.unit)}` : ""}`);
+    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain(m.callsign)}** ` : ""}${plain(m.name)}${m.unit ? ` \xB7 ${plain(m.unit)}` : ""}`);
     let chunk = "";
     let part = 0;
     for (const l of lines) {
@@ -82287,23 +82198,23 @@ var questionMessage = (s) => {
   const i = s.answers.length;
   const q2 = s.questions[i];
   const f2 = q2.field;
-  const head = `**${i + 1}/${s.questions.length}.** ${plain2(q2.text)}`;
+  const head = `**${i + 1}/${s.questions.length}.** ${plain(q2.text)}`;
   if (f2.type === "ROBLOX") {
-    return { embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: clip2(`${head}
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat \u2013 ich pr\xFCfe, ob es das Konto gibt.${f2.required ? "" : ` Optional \u2013 \u201E${SKIP}\u201C zum \xDCberspringen.`}_`, 4e3) } };
   }
   if (f2.type === "TEXT") {
     const hints = [f2.minLength ? `mindestens ${f2.minLength} Zeichen` : "", !f2.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
-    return { embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: clip2(`${head}
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) } };
   }
   return {
-    embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: clip2(`${head}
+    embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f2.required ? "" : " Optional."}_`, 4e3) },
-    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip2(o.label, 100), value: String(j) })) },
+    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
     buttons: f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }]
   };
 };
@@ -82339,22 +82250,21 @@ async function submitSession(api2, s, userId, userName, robloxLookup2, now = Dat
   }
   return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
-var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
 async function offer(c, key4) {
   const running = sessions.get(c.discordId);
-  if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain2(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
+  if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
   const flow = await loadFlow(c.api, key4, c.guildId);
   if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
-  if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain2(flow.name)}** sind derzeit geschlossen.`);
+  if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
   const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
   if (blocked) return errorReply(blocked);
   const ban = await c.api.service("GET", `/bot/application-bans/check?discordId=${c.discordId}&scope=${encodeURIComponent(flow.key === POLICE ? "police" : flow.key)}&name=${encodeURIComponent(flow.key === POLICE ? "die Polizei-Bewerbung" : flow.appName)}${c.guildId ? `&guildId=${c.guildId}` : ""}`).catch(() => null);
   if (ban?.banned) return errorReply(`\u26D4 ${ban.message ?? "Du bist f\xFCr diese Bewerbung gesperrt."}`);
   const open = await openApplication(c.api, flow.key, c.discordId, c.guildId);
-  if (open.open) return errorReply(`Du hast f\xFCr **${plain2(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+  if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (flow.settings.mode === "WEB") {
     const link = await c.api.service("POST", "/bot/qualifications/web-link", { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...c.guildId ? { guildId: c.guildId } : {}, ...c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {} });
-    return { ephemeral: true, embeds: [{ title: clip2(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung f\xFCllst du im **Browser** aus. Der Link gilt nur f\xFCr dich und ist **${link.timeLimit}** g\xFCltig \u2013 teile ihn mit niemandem.` }], buttons: [{ id: "quali:web", label: "Bewerbung \xF6ffnen", style: "secondary", url: link.url }] };
+    return { ephemeral: true, embeds: [{ title: clip(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung f\xFCllst du im **Browser** aus. Der Link gilt nur f\xFCr dich und ist **${link.timeLimit}** g\xFCltig \u2013 teile ihn mit niemandem.` }], buttons: [{ id: "quali:web", label: "Bewerbung \xF6ffnen", style: "secondary", url: link.url }] };
   }
   if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
   if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
@@ -82362,7 +82272,7 @@ async function offer(c, key4) {
   let dm;
   try {
     dm = await c.platform.sendDm(c.discordId, {
-      embed: { title: clip2(flow.name, 256), color: COLORS.info, description: clip2(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { "{questionCount}": String(flow.questions.length), "{timeLimit}": formatMinutes(Math.round(limitMs(flow.settings) / 6e4)), "{applicationName}": flow.appName }), 4e3) },
+      embed: { title: clip(flow.name, 256), color: COLORS.info, description: clip(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { "{questionCount}": String(flow.questions.length), "{timeLimit}": formatMinutes(Math.round(limitMs(flow.settings) / 6e4)), "{applicationName}": flow.appName }), 4e3) },
       buttons: [{ id: `quali:start:${flow.key}`, label: "Bewerbung starten", style: "success" }, { id: "quali:cancel", label: "Abbrechen", style: "danger" }]
     });
   } catch {
@@ -82370,61 +82280,12 @@ async function offer(c, key4) {
   }
   return { ephemeral: true, embeds: [{ title: "Bewerbung gestartet", description: "Die Bewerbung wurde in deinen **Direktnachrichten** gestartet!", color: COLORS.success }], buttons: [{ id: "quali:link", label: "Zur Bewerbung", style: "secondary", url: `https://discord.com/channels/@me/${dm.channelId}/${dm.messageId}` }] };
 }
-var panelPost = (p) => ({ embed: { title: p.title, color: COLORS.info, ...p.description ? { description: p.description } : {} }, ...p.button ? { buttons: [p.button] } : {}, ...p.select ? { select: p.select } : {} });
-var QUALI_COMMANDS = [
-  {
-    name: "bewerbung",
-    description: "Bewirb dich bei EN Polizei (Fragen per Direktnachricht)",
-    async run(c) {
-      try {
-        return await offer(c, POLICE);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "bewerbungspanel",
-    description: "Postet das Bewerbungs-Panel (\u201EJetzt bewerben\u201C) in diesen Kanal",
-    async run(c) {
-      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
-      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        const cfg2 = await getConfig(c.api, c.guildId).catch(() => void 0);
-        const panel = cfg2?.police ? panelPost(applyPanelParts(cfg2)) : { embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] };
-        await c.platform.postPanel({ channelId: c.channelId, ...panel });
-      } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-      return okReply("Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).");
-    }
-  },
-  {
-    name: "qualipanel",
-    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Kanal",
-    async run(c) {
-      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
-      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        const cfg2 = await getConfig(c.api, c.guildId);
-        await c.platform.postPanel({ channelId: c.channelId, ...panelPost(qualiPanelParts(cfg2)) });
-        const ch2 = await c.config?.().catch(() => void 0);
-        return okReply(`Qualifikations-Panel gepostet.${ch2?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
-      } catch (e) {
-        if (e instanceof BotApiError) return mapError(e);
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-    }
-  }
-];
 async function handleDirectMessage(a) {
   const now = a.now ?? Date.now();
   const s = sessions.get(a.userId);
-  const say = (description, color3 = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip2(s.unitName, 256) : "Bewerbung", description, color: color3 }, buttons });
+  const say = (description, color3 = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip(s.unitName, 256) : "Bewerbung", description, color: color3 }, buttons });
   if (!s) {
-    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).", COLORS.neutral);
+    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das Bewerbungs- oder Qualifikations-Panel auf dem Server.", COLORS.neutral);
     return;
   }
   if (s.expiresAt <= now) {
@@ -82460,17 +82321,17 @@ async function handleDirectMessage(a) {
     if (q2.field.type === "ROBLOX" && a.robloxCheck) {
       const rb = await a.robloxCheck(r.text).catch(() => void 0);
       if (rb === null) {
-        await say(`\u274C Den Roblox-Benutzer **${plain2(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
+        await say(`\u274C Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
         return;
       }
       if (rb) {
         s.pendingRoblox = rb.name;
         const i = s.answers.length;
         await a.sendDm(a.userId, {
-          embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
+          embed: { title: clip(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
 
-**${plain2(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
-${plain2(rb.displayName)}` : ""}
+**${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
+${plain(rb.displayName)}` : ""}
 
 _Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Namen schreiben._`, ...rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {} },
           buttons: [{ id: `quali:rb:${i}:yes`, label: "Ja, das bin ich", style: "success" }, { id: `quali:rb:${i}:no`, label: "Anderer Name", style: "secondary" }]
@@ -82483,7 +82344,7 @@ _Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Nam
   await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
 }
 async function proceed(o, s) {
-  const say = (description, color3 = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip2(s.unitName, 256), description, color: color3 }, buttons });
+  const say = (description, color3 = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color: color3 }, buttons });
   if (s.answers.length < s.questions.length) {
     report(o.api, o.userId, o.userName, s);
     await o.sendDm(o.userId, questionMessage(s));
@@ -82492,7 +82353,7 @@ async function proceed(o, s) {
   try {
     const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
     sessions.delete(o.userId);
-    await say(clip2(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { "{number}": number, "{applicationName}": s.appName }), 4e3), COLORS.success);
+    await say(clip(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { "{number}": number, "{applicationName}": s.appName }), 4e3), COLORS.success);
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
       sessions.delete(o.userId);
@@ -82525,11 +82386,11 @@ async function decide(c, d, reason) {
   const path3 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
   const r = await c.api.asUser(c.discordId, "POST", path3, { status: d.status, ...reason ? { reason } : {} });
   const accepted = d.status === "ACCEPTED";
-  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain2(r.unitName)})` : ""}`;
+  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain(r.unitName)})` : ""}`;
   return {
     ...okReply(`${what} ${accepted ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${accepted && d.kind === "q" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`),
-    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip2(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain2(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`, 1024) }
+    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024) }
   };
 }
 var STATUS_DE = { OPEN: "\u{1F7E1} offen", SUBMITTED: "\u{1F7E1} eingereicht", SCREENING: "\u{1F7E1} in Pr\xFCfung", INTERVIEW: "\u{1F7E1} Gespr\xE4ch", PENDING_DECISION: "\u{1F7E1} Entscheidung offen", ACCEPTED: "\u2705 angenommen", REJECTED: "\u274C abgelehnt", WITHDRAWN: "\u21A9\uFE0F zur\xFCckgezogen" };
@@ -82557,9 +82418,9 @@ var QUALI_INTERACTION = {
         const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id3}`), get(`/applications/history?discordId=${id3}`)]);
         if (!quali && !police) return errorReply("Du hast keine Berechtigung, Bewerbungen anzusehen.");
         const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b2) => Date.parse(b2.createdAt) - Date.parse(a.createdAt));
-        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain2(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
-  \u21B3 ${clip2(plain2(r.decisionReason), 150)}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip2(`<@${id3}>
+        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
+  \u21B3 ${clip(plain(r.decisionReason), 150)}` : ""}`);
+        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip(`<@${id3}>
 
 ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
       }
@@ -82586,7 +82447,7 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         const q2 = s2.questions[i];
         if (rest[1] !== "yes") {
           s2.pendingRoblox = void 0;
-          return { ...okReply("Okay."), update: { embeds: [{ title: clip2(s2.unitName, 256), color: COLORS.neutral, description: clip2(`**${i + 1}/${s2.questions.length}.** ${plain2(q2.text)}
+          return { ...okReply("Okay."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.neutral, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
 
 Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4e3) }] } };
         }
@@ -82596,9 +82457,9 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
         s2.answers.push(name);
         const platform2 = c.platform;
         await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
-        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip2(s2.unitName, 256), color: COLORS.success, description: clip2(`**${i + 1}/${s2.questions.length}.** ${plain2(q2.text)}
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
 
-\u2705 ${plain2(name)}`, 4e3) }] } };
+\u2705 ${plain(name)}`, 4e3) }] } };
       }
       if (action === "ans" || action === "skip") {
         const s2 = sessions.get(c.discordId);
@@ -82619,9 +82480,9 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
         s2.answers.push(value);
         const platform2 = c.platform;
         await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
-        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip2(s2.unitName, 256), color: COLORS.success, description: clip2(`**${i + 1}/${s2.questions.length}.** ${plain2(q2.text)}
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
 
-\u2705 ${plain2(answerText(value))}`, 4e3) }] } };
+\u2705 ${plain(answerText(value))}`, 4e3) }] } };
       }
       if (action === "cancel") {
         const running2 = sessions.get(c.discordId);
@@ -82637,14 +82498,14 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
       if (action !== "start") return errorReply("Unbekannte Aktion.");
       const running = sessions.get(c.discordId);
       if (running && running.expiresAt > Date.now()) {
-        if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain2(running.questions[running.answers.length].text)}`);
-        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain2(running.unitName)}**). Beende oder brich sie zuerst ab.`);
+        if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length].text)}`);
+        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**). Beende oder brich sie zuerst ab.`);
       }
       const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
       if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
-      if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain2(flow.name)}** sind derzeit geschlossen.`);
+      if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
       const open = await openApplication(c.api, flow.key, c.discordId, c.guildId ?? guildOf.get(c.discordId));
-      if (open.open) return errorReply(`Du hast f\xFCr **${plain2(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+      if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
       if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
       const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
       if (blocked) return errorReply(blocked);
@@ -82667,7 +82528,7 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
 async function openApplicantTicket(platform2, cfg2, a) {
   const t2 = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
   if (!t2.existing) {
-    await platform2.postPanel({ channelId: t2.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain2(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
+    await platform2.postPanel({ channelId: t2.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
   }
   return t2;
 }
@@ -82676,7 +82537,7 @@ async function openApplicantTicket(platform2, cfg2, a) {
 var UUID = /^[0-9a-f-]{36}$/;
 var emojiOf = (e) => e && e.length <= 64 ? e : void 0;
 function fail(e) {
-  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip2(e.message, 500));
+  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip(e.message, 500));
   return mapError(e);
 }
 async function run(c, r, text) {
@@ -82702,7 +82563,7 @@ async function answer(c, id3, questionId, values) {
   try {
     const r = await c.api.service("POST", `/bot/support-tickets/${id3}/answer`, { discordId: c.discordId, questionId, values });
     if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip2(plain2(r.answer), 1e3), color: COLORS.success }] } };
+    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip(plain(r.answer), 1e3), color: COLORS.success }] } };
   } catch (e) {
     return fail(e);
   }
@@ -82765,7 +82626,7 @@ var TICKET_INTERACTION = {
         case "formsub": {
           const step = Number(rest[0]) || 0;
           const r = await c.api.service("POST", `/bot/support-tickets/form/${id3}/submit`, { discordId: c.discordId, step, values: c.modal?.values ?? {}, files: c.modal?.files ?? {} });
-          if ("errors" in r) return { ephemeral: true, embeds: [{ title: "\u26A0\uFE0F Bitte pr\xFCfe deine Angaben", description: clip2(r.errors.map((e) => `\u2022 **${plain2(e.field)}:** ${plain2(e.message)}`).join("\n"), 3500), color: COLORS.warning }], buttons: [{ id: `tk:formstep:${id3}:${r.step}`, label: "Erneut ausf\xFCllen", emoji: "\u270F\uFE0F", style: "primary" }] };
+          if ("errors" in r) return { ephemeral: true, embeds: [{ title: "\u26A0\uFE0F Bitte pr\xFCfe deine Angaben", description: clip(r.errors.map((e) => `\u2022 **${plain(e.field)}:** ${plain(e.message)}`).join("\n"), 3500), color: COLORS.warning }], buttons: [{ id: `tk:formstep:${id3}:${r.step}`, label: "Erneut ausf\xFCllen", emoji: "\u270F\uFE0F", style: "primary" }] };
           if ("next" in r) return { ephemeral: true, embeds: [{ title: `\u2705 Schritt ${r.next}/${r.steps} gespeichert`, description: "Weiter geht es mit dem n\xE4chsten Teil des Formulars.", color: COLORS.success }], buttons: [{ id: `tk:formstep:${id3}:${r.next}`, label: `Weiter (Schritt ${r.next + 1}/${r.steps})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
           if (r.existing) return okReply(`Dein Ticket **${r.ticket.ref}** wurde bereits erstellt.`);
           if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
@@ -82813,7 +82674,7 @@ var TICKET_INTERACTION = {
             ...o.source === "BOTH" ? [{ id: `tk:closem:${id3}`, label: "Eigener Grund", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
             ...o.mode === "OPTIONAL" ? [{ id: `tk:closen:${id3}`, label: "Ohne Grund schlie\xDFen", style: "secondary" }] : []
           ];
-          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id3}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip2(r, 100), value: clip2(r, 100) })) }, buttons };
+          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id3}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip(r, 100), value: clip(r, 100) })) }, buttons };
         }
         case "closem":
           return { modal: { id: `tk:closemodal:${id3}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: true, maxLength: 500 }] } };
@@ -82846,7 +82707,7 @@ var TICKET_INTERACTION = {
             selects: [
               { id: `tk:fwu:${id3}`, placeholder: "An Teammitglied \u2026", kind: "user", min: 1, max: 1, options: [] },
               { id: `tk:fwr:${id3}`, placeholder: "An Team-Rolle \u2026", kind: "role", min: 1, max: 1, options: [] },
-              ...o.categories.length ? [{ id: `tk:fwc:${id3}`, placeholder: "An Kategorie \u2026", options: o.categories.slice(0, 25).map((x) => ({ label: clip2(x.name, 100), value: x.id, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} })) }] : []
+              ...o.categories.length ? [{ id: `tk:fwc:${id3}`, placeholder: "An Kategorie \u2026", options: o.categories.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} })) }] : []
             ]
           };
         }
@@ -82972,7 +82833,7 @@ var TICKET_INTERACTION = {
     }
   }
 };
-var pick = (id3, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id: id3, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip2(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
+var pick = (id3, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id: id3, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
 var TICKET_COMMAND = {
   name: "support",
   description: "Ein Support-Ticket \xF6ffnen (Team: auch f\xFCr ein anderes Mitglied)",
@@ -82985,7 +82846,7 @@ var TICKET_COMMAND = {
       const roles2 = c.memberRoleIds ?? [];
       const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles2.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
       if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
-      const options2 = cats.slice(0, 25).map((x) => ({ label: clip2(x.name, 100), value: x.id, ...x.description ? { description: clip2(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
+      const options2 = cats.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...x.description ? { description: clip(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
       if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ["open", "cmd", cats[0].id] });
       return {
         ephemeral: true,
@@ -83099,7 +82960,7 @@ var TICKET_ADMIN_COMMAND = {
 // apps/bot/src/voice-support.ts
 var ROOMS_MS = 6e4;
 var note = (text) => ({ content: text, ephemeral: true });
-var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip2(e.message, 500)) : mapError(e);
+var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip(e.message, 500)) : mapError(e);
 function createVoiceSupport(api2, ops, log = console.error) {
   const rooms = /* @__PURE__ */ new Map();
   const roomsOf = async (guildId) => {
@@ -83146,7 +83007,7 @@ function createVoiceSupport(api2, ops, log = console.error) {
     try {
       if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
       else {
-        channelId = await ops.createVoice({ guildId: c.guildId, name: clip2(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
+        channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
         created = true;
       }
     } catch (e) {
@@ -83286,7 +83147,7 @@ function currentBlock(r) {
     `**Beginn**: ${ts(r.startsAt, "f")}`,
     `**Ende**: ${ts(r.endsAt, "f")} (${ts(r.endsAt, "R")})`,
     `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`,
-    `**Grund**: ${clip2(plain2(r.reason), 800)}`,
+    `**Grund**: ${clip(plain(r.reason), 800)}`,
     ...r.extensionMinutes ? [`**Verl\xE4ngerung**: \u23F3 +${humanDuration(r.extensionMinutes * 6e4)} beantragt \u2013 wartet auf die Leitung`] : [],
     `-# ID: ${r.number}`
   ].join("\n");
@@ -83340,32 +83201,32 @@ async function adminHistory(c, discordId) {
   if (!items.length) return okReply("Noch keine Abmeldungen.");
   const blocks = items.slice(0, 15).map((r) => {
     const st = leaveState(r);
-    return clip2([
+    return clip([
       `\`${r.number}\`${st ? ` ${st}` : ""}`,
       `- **Beginn:** ${ts(r.startsAt, "f")}`,
       `- **Ende:** ${ts(r.status === "ENDED" && r.endedAt ? r.endedAt : r.endsAt, "f")}`,
-      `- **Grund:** ${clip2(plain2(r.reason), 300)}`,
-      ...r.decisionReason ? [`- **Entscheidung:** ${clip2(plain2(r.decisionReason), 200)}`] : []
+      `- **Grund:** ${clip(plain(r.reason), 300)}`,
+      ...r.decisionReason ? [`- **Entscheidung:** ${clip(plain(r.decisionReason), 200)}`] : []
     ].join("\n"), 900);
   });
-  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip2(blocks.join("\n\n"), 3900) }] };
+  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip(blocks.join("\n\n"), 3900) }] };
 }
 var LIST_VIEWS = { offen: ["PENDING", "Offene Antr\xE4ge"], aktiv: ["ACTIVE", "Gerade abgemeldet"], geplant: ["UPCOMING", "Bevorstehend"], kalender: ["CALENDAR", "N\xE4chste 4 Wochen"], alle: ["ALL", "Alle Abmeldungen"] };
-var who = (r) => r.discordId ? `<@${r.discordId}>` : `**${plain2(r.name)}**`;
+var who = (r) => r.discordId ? `<@${r.discordId}>` : `**${plain(r.name)}**`;
 async function listReply(c, view) {
   const [status3, title] = LIST_VIEWS[view] ?? LIST_VIEWS.offen;
   const { all, items } = await c.api.asUser(c.discordId, "GET", `/leave?status=${status3}`);
   const rows = status3 === "PENDING" ? [...items].reverse() : status3 === "CALENDAR" || status3 === "UPCOMING" ? [...items].sort((a, b2) => a.startsAt.localeCompare(b2.startsAt)) : items;
   const lines = rows.slice(0, 20).map((r) => `\`${r.number}\` ${all ? `${who(r)} \xB7 ` : ""}${ts(r.startsAt, "d")} \u2013 ${ts(r.endsAt, "d")} [${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}]${status3 === "ACTIVE" ? ` \xB7 bis ${ts(r.endsAt, "R")}` : ""}${status3 === "ALL" || status3 === "CALENDAR" ? ` ${leaveState(r)}` : ""}
-> ${clip2(plain2(r.reason), 120)}`);
+> ${clip(plain(r.reason), 120)}`);
   const embed = {
     title: `\u{1F4C5} ${all ? title : `Deine Abmeldungen \u2013 ${title}`} (${items.length})`,
     color: status3 === "PENDING" && items.length ? COLORS.warning : COLORS.info,
-    description: clip2(lines.length ? `${lines.join("\n")}${rows.length > 20 ? `
+    description: clip(lines.length ? `${lines.join("\n")}${rows.length > 20 ? `
 \u2026 und ${rows.length - 20} weitere (im Dashboard)` : ""}` : "Keine Eintr\xE4ge.", 4e3)
   };
   if (status3 !== "PENDING" || !all || !rows.length) return { ephemeral: true, embeds: [embed] };
-  return { ephemeral: true, embeds: [embed], select: { id: "leave:pick", placeholder: "Antrag zum Entscheiden w\xE4hlen \u2026", options: rows.slice(0, 25).map((r) => ({ label: clip2(`${r.number} \xB7 ${r.name}`, 100), value: r.id, description: clip2(`${fmt(r.startsAt)} \u2013 ${fmt(r.endsAt)} \xB7 ${r.reason}`, 100) })) } };
+  return { ephemeral: true, embeds: [embed], select: { id: "leave:pick", placeholder: "Antrag zum Entscheiden w\xE4hlen \u2026", options: rows.slice(0, 25).map((r) => ({ label: clip(`${r.number} \xB7 ${r.name}`, 100), value: r.id, description: clip(`${fmt(r.startsAt)} \u2013 ${fmt(r.endsAt)} \xB7 ${r.reason}`, 100) })) } };
 }
 async function pickReply(c, id3) {
   const { items } = await c.api.asUser(c.discordId, "GET", "/leave?status=PENDING");
@@ -83377,9 +83238,9 @@ async function pickReply(c, id3) {
       title: "Abmeldeantrag",
       color: COLORS.warning,
       footer: `ID: ${r.number}`,
-      description: `${who(r)}${r.discordId ? ` (${plain2(r.name)})` : ""}
+      description: `${who(r)}${r.discordId ? ` (${plain(r.name)})` : ""}
 **${ts(r.startsAt, "f")}** bis **${ts(r.endsAt, "f")}** (${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())})`,
-      fields: [{ name: "Grund", value: clip2(plain2(r.reason), 1024) }]
+      fields: [{ name: "Grund", value: clip(plain(r.reason), 1024) }]
     }],
     buttons: [{ id: `leave:decide:${r.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2705" }, { id: `leave:reason:${r.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u274C" }]
   };
@@ -83438,14 +83299,14 @@ async function decide2(c, id3, status3, reason) {
     return {
       ephemeral: true,
       embeds: [ok ? { title: "Abmeldung angenommen", color: COLORS.success, description: `Diese Abmeldung endet ungef\xE4hr ${ts(r.endsAt)}.
-Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Abmeldung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain2(r.name)} wurde abgelehnt. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Abmeldung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} wurde abgelehnt. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
       // wie Trident: über dem Antrag „Angenommen von @… am …“, statt der Buttons ein ausgegrautes „Angenommen“
       decided: {
         color: ok ? COLORS.success : COLORS.danger,
         note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am ${now}`,
         badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
-        text: clip2(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain2(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`, 1024)
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
       }
     };
   } catch (e) {
@@ -83458,14 +83319,14 @@ async function decideExtension(c, id3, status3, reason) {
     const ok = status3 === "APPROVED";
     return {
       ephemeral: true,
-      embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain2(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
-Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Verl\xE4ngerung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain2(r.name)} endet weiterhin ungef\xE4hr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+      embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Verl\xE4ngerung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} endet weiterhin ungef\xE4hr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
       decided: {
         color: ok ? COLORS.success : COLORS.danger,
         note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am <t:${Math.floor(Date.now() / 1e3)}:f>`,
         badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
-        text: clip2(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`, 1024)
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
       }
     };
   } catch (e) {
@@ -83568,7 +83429,7 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
     if (action === "cancel") {
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/cancel`);
-        if (r.discordId && r.discordId !== c.discordId) return okReply(`Abmeldung **${r.number}** von ${plain2(r.name)} ${r.status === "ENDED" ? "beendet" : "abgesagt"}.`);
+        if (r.discordId && r.discordId !== c.discordId) return okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${r.status === "ENDED" ? "beendet" : "abgesagt"}.`);
         return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
       } catch (e) {
         return mapError(e);
@@ -83587,79 +83448,6 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
 };
 
 // apps/bot/src/commands/cad.ts
-var lbl = (list3, key4) => {
-  const o = list3.find((x) => x.key === key4);
-  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key4;
-};
-var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
-var config = (c) => c.api.asUser(c.discordId, "GET", "/cad/config");
-async function myUnit(c, callsign) {
-  const units = await c.api.asUser(c.discordId, "GET", "/cad/units");
-  if (callsign) return units.find((u) => norm(u.callsign) === norm(callsign)) ?? null;
-  return units.find((u) => u.crew.some((m) => m.discordId === c.discordId)) ?? null;
-}
-var CAD_COMMANDS = [{
-  name: "cad",
-  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Eins\xE4tze",
-  subcommands: [
-    { name: "status", description: "Status deiner Einheit an die Leitstelle melden", options: [
-      { name: "status", description: "z. B. Verf\xFCgbar, Unterwegs, Am Einsatzort", type: "string", required: true, maxLength: 40 },
-      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
-    ] },
-    { name: "funk", description: "Funkmeldung an die Leitstelle (landet in der Einsatzchronik)", options: [
-      { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
-      { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
-    ] },
-    { name: "rueckmeldung", description: "R\xFCckmeldung deiner Einheit zum Einsatz an die Leitstelle (Chronik)", options: [
-      { name: "art", description: "Was meldest du?", type: "string", required: true, choices: CAD_FEEDBACK.map((x) => ({ name: x.label, value: x.key })) },
-      { name: "notiz", description: "Zusatz, z. B. \u201E2 Verd\xE4chtige fl\xFCchtig Richtung Norden\u201C", type: "string", maxLength: 500 },
-      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
-    ] },
-    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" },
-    { name: "fahrzeuge", description: "Gerade in ER:LC gemeldete Polizeifahrzeuge (Besitzer, Einheit)" }
-  ],
-  async run(c) {
-    try {
-      const sub = String(c.opts._sub ?? "");
-      if (sub === "status") {
-        const cfg2 = await config(c);
-        const want = String(c.opts.status ?? "");
-        const st = cfg2.unitStatuses.find((s) => norm(s.key) === norm(want) || norm(s.label) === norm(want));
-        if (!st) return errorReply(`Unbekannter Status. M\xF6glich: ${cfg2.unitStatuses.map((s) => `\`${s.label}\``).join(", ")}`);
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
-        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
-        await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/status`, { status: st.key });
-        return okReply(`**${plain2(unit.callsign)}** ist jetzt ${lbl(cfg2.unitStatuses, st.key)}.`);
-      }
-      if (sub === "rueckmeldung") {
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
-        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
-        const r = await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/feedback`, { kind: String(c.opts.art ?? ""), ...c.opts.notiz ? { note: String(c.opts.notiz) } : {} });
-        const fb = CAD_FEEDBACK.find((x) => x.key === c.opts.art);
-        return okReply(`${fb ? `${fb.emoji} ${fb.label}` : "R\xFCckmeldung"} \u2013 **${plain2(r.callsign)}** \xB7 Einsatz **${plain2(r.number)}** an die Leitstelle gemeldet.`);
-      }
-      if (sub === "funk") {
-        const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
-        return okReply(`\u{1F4FB} ${r.callsign ? `**${plain2(r.callsign)}**: ` : ""}\u201E${plain2(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain2(r.incidentNumber)}**` : ""}.`);
-      }
-      if (sub === "einsaetze") {
-        const [cfg2, list3] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
-        const lines = list3.map((i) => `**${plain2(i.number)}** \xB7 ${clip2(plain2(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip2(plain2(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
-   \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain2(u.unit.callsign)).join(", ")}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list3.length})`, description: clip2(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
-      }
-      if (sub === "fahrzeuge") {
-        const r = await c.api.asUser(c.discordId, "GET", "/fleet/vehicles");
-        const lines = r.items.slice(0, 30).map((v) => `\u{1F693} **${clip2(plain2(v.api.name), 60)}**${v.api.plate ? ` \xB7 ${plain2(v.api.plate)}` : ""}${v.internal.internalCode ? ` \xB7 ${plain2(v.internal.internalCode)}` : ""}
-   \u21B3 Besitzer ${plain2(v.api.owner)}${v.ownerOnline ? "" : " (nicht im Spiel)"}${v.internal.unit ? ` \xB7 Einheit ${plain2(v.internal.unit.callsign)}` : ""}${v.stale ? " \xB7 \u26A0\uFE0F veraltet" : ""}`);
-        return { ephemeral: true, embeds: [{ title: `\u{1F693} Polizeifahrzeuge (${r.items.length})`, description: clip2(lines.join("\n") || "Gerade meldet ER:LC keine Polizeifahrzeuge.", 4e3), color: COLORS.info, footer: "Fahrer: nicht verf\xFCgbar \u2013 ER:LC meldet nur den Besitzer." }] };
-      }
-      return errorReply("Unbekannter Unterbefehl.");
-    } catch (e) {
-      return mapError(e);
-    }
-  }
-}];
 var CAD_INTERACTION = {
   prefix: "cad",
   async run(c) {
@@ -83677,12 +83465,12 @@ var CAD_INTERACTION = {
         }
         if (action === "incident") {
           const r = await c.api.asUser(c.discordId, "POST", `/cad/calls/${id3}/incident`, {});
-          return okReply(`Einsatz **${plain2(r.number)}** aus dem Notruf erstellt.`);
+          return okReply(`Einsatz **${plain(r.number)}** aus dem Notruf erstellt.`);
         }
         if (action === "units") {
           const units = (await c.api.asUser(c.discordId, "GET", "/cad/units")).filter((u) => u.operational && !["OFF_DUTY", "UNAVAILABLE"].includes(u.status));
           if (!units.length) return errorReply("Gerade ist keine Einheit verf\xFCgbar.");
-          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id3}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip2(u.callsign, 100), value: u.id, ...u.current ? { description: clip2(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip2(u.name, 100) } : {} })) } };
+          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id3}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip(u.callsign, 100), value: u.id, ...u.current ? { description: clip(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip(u.name, 100) } : {} })) } };
         }
       }
       if (kind2 === "assign") {
@@ -83698,44 +83486,44 @@ var CAD_INTERACTION = {
   }
 };
 var hex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
-var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip2(plain2(value), 1024), inline }];
+var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip(plain(value), 1024), inline }];
 function renderCadOutbox(type, p) {
-  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip2(plain2(p.title ?? ""), 180)}`;
+  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip(plain(p.title ?? ""), 180)}`;
   const base = [...f("Stichwort", p.keyword), ...f("Einsatzart", p.type), ...f("Priorit\xE4t", p.priority), ...f("Status", p.status), ...f("Ort", p.location)];
   switch (type) {
     case "cad.incident.created":
-      return { title: clip2(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip2(plain2(p.description), 1500) : void 0, fields: base };
+      return { title: clip(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip(plain(p.description), 1500) : void 0, fields: base };
     case "cad.incident.status":
-      return { title: clip2(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain2(p.previous ?? "\u2014")}** \u2192 **${plain2(p.status)}**${p.note ? `
-${clip2(plain2(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
+      return { title: clip(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain(p.previous ?? "\u2014")}** \u2192 **${plain(p.status)}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
     case "cad.incident.assigned":
-      return { title: clip2(`\u{1F4FB} ${plain2(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
     case "cad.incident.closed":
-      return { title: clip2(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
+      return { title: clip(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
     case "cad.incident.feedback":
-      return { title: clip2(`\u{1F4DF} ${plain2(p.callsign)}: ${plain2(p.feedback)}`, 256), color: COLORS.info, description: clip2(`**${head}**${p.note ? `
-${clip2(plain2(p.note), 500)}` : ""}`, 1500), fields: [...f("Ort", p.location)] };
+      return { title: clip(`\u{1F4DF} ${plain(p.callsign)}: ${plain(p.feedback)}`, 256), color: COLORS.info, description: clip(`**${head}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, 1500), fields: [...f("Ort", p.location)] };
     case "cad.incident.support":
-      return { title: clip2(`\u{1F198} Unterst\xFCtzung ben\xF6tigt: ${plain2(p.callsign)}`, 256), color: COLORS.danger, description: clip2(`**${head}**${p.note ? `
-${clip2(plain2(p.note), 500)}` : ""}`, 1500), fields: [...f("Priorit\xE4t", p.priority), ...f("Ort", p.location)] };
+      return { title: clip(`\u{1F198} Unterst\xFCtzung ben\xF6tigt: ${plain(p.callsign)}`, 256), color: COLORS.danger, description: clip(`**${head}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, 1500), fields: [...f("Priorit\xE4t", p.priority), ...f("Ort", p.location)] };
     case "cad.handover": {
-      const list3 = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain2(x)}`).join("\n") : "";
+      const list3 = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain(x)}`).join("\n") : "";
       return {
         title: "\u{1F501} Schicht\xFCbergabe der Leitstelle",
         color: COLORS.info,
-        description: clip2(`${p.notes ? `${plain2(p.notes)}
+        description: clip(`${p.notes ? `${plain(p.notes)}
 
 ` : ""}${list3 ? `**Offene Eins\xE4tze**
 ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         fields: [...f("Offene Eins\xE4tze", p.openIncidents), ...f("Einheiten im Einsatz", p.activeUnits), ...f("Offene Notrufe", p.openCalls)],
-        ...p.by ? { footer: `von ${clip2(String(p.by), 100)}` } : {}
+        ...p.by ? { footer: `von ${clip(String(p.by), 100)}` } : {}
       };
     }
     case "cad.call.received":
       return {
-        title: clip2(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
+        title: clip(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
         color: COLORS.danger,
-        description: p.description ? clip2(plain2(p.description), 1500) : void 0,
+        description: p.description ? clip(plain(p.description), 1500) : void 0,
         fields: [...f("Ort", p.location), ...f("Team", p.team), ...p.startedAt ? [{ name: "Zeit", value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1e3)}:t>`, inline: true }] : [], { name: "Status", value: "Offen", inline: true }, ...f("Server", p.server)]
       };
     case "cad.wanted.hit":
@@ -83745,13 +83533,13 @@ ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         title: confirmed ? "\u{1F6A8} FAHNDUNGSTREFFER" : "\u26A0\uFE0F M\xD6GLICHER FAHNDUNGSTREFFER",
         color: confirmed ? COLORS.danger : COLORS.warning,
         fields: [
-          { name: "Spieler", value: clip2(plain2(p.playerName), 256), inline: true },
-          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain2(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
+          { name: "Spieler", value: clip(plain(p.playerName), 256), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
           ...f("Fahndung", p.wantedNumber),
-          { name: "Grund", value: clip2(plain2(p.reason), 1024), inline: false },
+          { name: "Grund", value: clip(plain(p.reason), 1024), inline: false },
           ...f("Priorit\xE4t", p.priority),
           ...p.detectedAt ? [{ name: "Erkannt am", value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1e3)}:f>`, inline: true }] : [],
-          { name: "Identifikation", value: confirmed ? "Best\xE4tigt (Roblox-ID stimmt \xFCberein)" : `Manuelle Pr\xFCfung erforderlich${p.matchLabel ? ` \u2013 ${plain2(p.matchLabel)}` : ""}`, inline: false },
+          { name: "Identifikation", value: confirmed ? "Best\xE4tigt (Roblox-ID stimmt \xFCberein)" : `Manuelle Pr\xFCfung erforderlich${p.matchLabel ? ` \u2013 ${plain(p.matchLabel)}` : ""}`, inline: false },
           ...f("Server", p.server)
         ],
         footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
@@ -83762,9 +83550,9 @@ ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         title: "\u{1F6A8} IM SPIEL GESUCHT",
         color: COLORS.danger,
         fields: [
-          { name: "Spieler", value: clip2(plain2(p.playerName), 256), inline: true },
-          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain2(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
-          { name: "Grund", value: clip2(plain2(p.reason), 1024), inline: false },
+          { name: "Spieler", value: clip(plain(p.playerName), 256), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
+          { name: "Grund", value: clip(plain(p.reason), 1024), inline: false },
           ...f("Priorit\xE4t", p.priority),
           ...p.detectedAt ? [{ name: "Erkannt am", value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1e3)}:f>`, inline: true }] : [],
           ...f("Server", p.server)
@@ -83772,9 +83560,9 @@ ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
       };
     case "cad.announcement":
-      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip2(plain2(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip2(String(p.from), 100)}` } : {} };
+      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
     case "cad.radio":
-      return { title: clip2(`\u{1F4FB} ${plain2(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip2(plain2(p.text), 1500)}\u201C`, color: COLORS.neutral };
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip(plain(p.text), 1500)}\u201C`, color: COLORS.neutral };
     default:
       return null;
   }
@@ -83967,7 +83755,7 @@ function modal(t2, mode, id3, page, values) {
 async function showReport(c, idOrNumber) {
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${encodeURIComponent(idOrNumber.trim())}`);
   const t2 = r.template;
-  const head = [`**${r.number}** \xB7 ${STATUS_DE2[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain2(r.author.displayName)}` : null, r.reviewerName ? `**Gepr\xFCft von:** ${plain2(r.reviewerName)}` : null, r.status === "RETURNED" && r.reviewNote ? `**Nachbessern:** ${plain2(r.reviewNote)}` : null].filter(Boolean).join("\n");
+  const head = [`**${r.number}** \xB7 ${STATUS_DE2[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain(r.author.displayName)}` : null, r.reviewerName ? `**Gepr\xFCft von:** ${plain(r.reviewerName)}` : null, r.status === "RETURNED" && r.reviewNote ? `**Nachbessern:** ${plain(r.reviewNote)}` : null].filter(Boolean).join("\n");
   const buttons = [
     ...r.canEdit ? [{ id: `drep:edit:${r.id}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
     ...r.canReview && r.status !== "REVIEWED" ? [{ id: `drep:rev:${r.id}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
@@ -83996,12 +83784,12 @@ async function listReply2(c) {
   if (name) {
     const all = await templates(c, false);
     const t2 = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
-    if (!t2) return errorReply(`Keine Vorlage \u201E${plain2(name)}\u201C gefunden.`);
+    if (!t2) return errorReply(`Keine Vorlage \u201E${plain(name)}\u201C gefunden.`);
     params.set("templateId", t2.id);
   }
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports?${params}`);
   const label2 = statusKey in LIST_STATUS ? { offen: "Offen", zurueckgegeben: "Zur Nachbesserung", geprueft: "Gepr\xFCft", alle: "Alle" }[statusKey] : "Offen";
-  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain2(x.author.displayName)} \xB7 ` : ""}${plain2(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status3 ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
+  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain(x.author.displayName)} \xB7 ` : ""}${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status3 ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
   const embed = listEmbed(`\u{1F5D3}\uFE0F ${r.seeAll ? "Berichte" : "Deine Berichte"} \u2013 ${label2} (${r.total})`, lines, "Keine Berichte gefunden.");
   if (r.total > r.items.length) embed.footer = `${r.total - r.items.length} weitere \u2013 Filter eingrenzen oder im Dashboard ansehen`;
   if (!r.items.length) return { ephemeral: true, embeds: [embed] };
@@ -84050,7 +83838,7 @@ var DUTY_REPORT_COMMANDS = [{
       const sub = String(c.opts._sub ?? "ausfuellen");
       if (sub === "meine") {
         const r = await c.api.asUser(c.discordId, "GET", "/duty-reports?mine=true&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain2(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : x.status === "RETURNED" ? " \u21A9\uFE0F nachbessern" : ""}`), "Noch keine Berichte.")] };
+        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : x.status === "RETURNED" ? " \u21A9\uFE0F nachbessern" : ""}`), "Noch keine Berichte.")] };
       }
       if (sub === "anzeigen") return await showReport(c, String(c.opts.nummer ?? ""));
       if (sub === "liste") return await listReply2(c);
@@ -84198,7 +83986,7 @@ var TRAINING_INTERACTION = {
         if ("error" in when) return errorReply(when.error);
         const unix2 = Math.floor(Date.parse(when.startsAt) / 1e3);
         const s = await c.api.asUser(c.discordId, "POST", "/hr/training-sessions", { title, startsAt: when.startsAt, forRank: f2.rank?.trim() || null, duration: f2.duration?.trim() || null, notes: f2.notes?.trim() || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
-        return okReply(`Ausbildung **${plain2(title)}** angesetzt (**${s.number}**) f\xFCr <t:${unix2}:F> (<t:${unix2}:R>)${f2.duration?.trim() ? ` \xB7 Dauer: ${plain2(f2.duration.trim())}` : ""} \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
+        return okReply(`Ausbildung **${plain(title)}** angesetzt (**${s.number}**) f\xFCr <t:${unix2}:F> (<t:${unix2}:R>)${f2.duration?.trim() ? ` \xB7 Dauer: ${plain(f2.duration.trim())}` : ""} \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
       }
       return errorReply("Unbekannte Aktion.");
     } catch (e) {
@@ -84245,8 +84033,8 @@ async function decide3(c, id3, decision, reason) {
     const ok = decision === "APPROVE";
     return {
       ...okReply(ok ? "\u2705 Antrag genehmigt \u2013 das Mitglied wurde per Direktnachricht informiert." : "\u274C Antrag abgelehnt \u2013 das Mitglied wurde per Direktnachricht informiert."),
-      decided: { color: ok ? COLORS.success : COLORS.danger, text: `${ok ? "\u2705 Genehmigt" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain2(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`.slice(0, 1024) }
+      decided: { color: ok ? COLORS.success : COLORS.danger, text: `${ok ? "\u2705 Genehmigt" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`.slice(0, 1024) }
     };
   } catch (e) {
     return apiError(e);
@@ -84308,7 +84096,7 @@ var RADIO_WHITELIST_INTERACTION = {
         ...Object.keys(answers).length ? { answers } : {}
       });
       return okReply(`\u{1F4E8} Dein Antrag auf Funkfreigabe ist eingegangen. Du bekommst eine Direktnachricht, sobald eine F\xFChrungskraft entschieden hat.
-> ${plain2(reason).slice(0, 300)}`);
+> ${plain(reason).slice(0, 300)}`);
     } catch (e) {
       return apiError(e);
     }
@@ -84357,36 +84145,36 @@ async function manageReply2(c, type, notice) {
     `**Total Duration**: ${shiftDuration(total)}`,
     `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
     "",
-    `-# Shift Type: ${typeName ? plain2(typeName) : "default"}`
+    `-# Shift Type: ${typeName ? plain(typeName) : "default"}`
   ].join("\n");
   const buttons = [
     { id: `shift:on:${!current && type ? type.id : ""}:${c.discordId}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
     { id: `shift:break:${c.discordId}`, label: onBreak ? "Resume" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
     { id: `shift:off:${c.discordId}`, label: "End", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
   ];
-  return { ephemeral: false, panel: true, buttons, embeds: [{ author: { name: "Shift Management", ...c.userAvatar ? { iconUrl: c.userAvatar } : {} }, title: "", description: clip2(description, 3900) }] };
+  return { ephemeral: false, panel: true, buttons, embeds: [{ author: { name: "Shift Management", ...c.userAvatar ? { iconUrl: c.userAvatar } : {} }, title: "", description: clip(description, 3900) }] };
 }
 var NOTICE = { ON_DUTY: "\u{1F7E2} Your shift is now **active**.", BREAK: "\u{1F7E1} You are now **on break**.", OFF_DUTY: "\u{1F534} Your shift has **ended**." };
 async function switchTo(c, status3, type) {
   let notice;
   try {
     await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...type ? { shiftType: type.id } : {} });
-    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Shift **${plain2(type.name)}** started.` : NOTICE[status3];
+    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Shift **${plain(type.name)}** started.` : NOTICE[status3];
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status3].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
   return manageReply2(c, type, notice);
 }
-var serverAuthor = (c) => c.guildName ? { author: { name: clip2(c.guildName, 200), ...c.guildIcon ? { iconUrl: c.guildIcon } : {} } } : {};
-var who2 = (u) => u.discordId ? `<@${u.discordId}>` : `**${plain2(u.name)}**`;
+var serverAuthor = (c) => c.guildName ? { author: { name: clip(c.guildName, 200), ...c.guildIcon ? { iconUrl: c.guildIcon } : {} } } : {};
+var who2 = (u) => u.discordId ? `<@${u.discordId}>` : `**${plain(u.name)}**`;
 async function active(c) {
   try {
     const rows = await c.api.asUser(c.discordId, "GET", "/team/active-shifts");
-    const lines = rows.slice(0, 30).map((r, i) => `\`${i + 1}.\` ${who2(r)} \u2022 ${shiftDuration(r.seconds)}${r.status === "BREAK" ? " (On Break)" : ""}${r.shiftType ? ` \u2022 ${plain2(r.shiftType)}` : ""}`);
+    const lines = rows.slice(0, 30).map((r, i) => `\`${i + 1}.\` ${who2(r)} \u2022 ${shiftDuration(r.seconds)}${r.status === "BREAK" ? " (On Break)" : ""}${r.shiftType ? ` \u2022 ${plain(r.shiftType)}` : ""}`);
     return { ephemeral: false, embeds: [{
       ...serverAuthor(c),
       title: "\u{1F552} Active Shifts",
-      description: clip2(lines.length ? `${lines.join("\n")}${rows.length > 30 ? `
+      description: clip(lines.length ? `${lines.join("\n")}${rows.length > 30 ? `
 \u2026 and ${rows.length - 30} more` : ""}` : "There are no active shifts.", 4e3)
     }] };
   } catch (e) {
@@ -84408,7 +84196,7 @@ async function leaderboard(c) {
       embeds: [{
         ...serverAuthor(c),
         title: "Shift Leaderboard",
-        description: clip2(lines.length ? `${lines.join("\n")}${r.users.length > 25 ? `
+        description: clip(lines.length ? `${lines.join("\n")}${r.users.length > 25 ? `
 \u2026 and ${r.users.length - 25} more` : ""}` : "No shifts yet.", 4e3),
         footer: footer2
       }],
@@ -84446,14 +84234,14 @@ async function adminReply2(c, discordId, notice) {
     `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
     ...stats.last ? ["", "### \u{1F552} Last Shift", `**Status**: ${LAST_STATUS[stats.last.status] ?? stats.last.status}`, `**Total Time**: ${shiftDuration(stats.last.seconds)}`, ...stats.last.shiftId ? [`**Shift ID**: \`${stats.last.shiftId}\``] : []] : [],
     "",
-    `-# Shift Type: ${stats.last?.shiftType ? plain2(stats.last.shiftType) : "default"}`
+    `-# Shift Type: ${stats.last?.shiftType ? plain(stats.last.shiftType) : "default"}`
   ].join("\n");
   const ref = `${userId}:${discordId}`;
   const onBreak = current?.status === "BREAK";
   return {
     ephemeral: false,
     panel: true,
-    embeds: [{ author: { name: clip2(`Shift Management: @${name ?? log.member.name}`, 200), ...avatar ? { iconUrl: avatar } : {} }, title: "", description: clip2(description, 3900) }],
+    embeds: [{ author: { name: clip(`Shift Management: @${name ?? log.member.name}`, 200), ...avatar ? { iconUrl: avatar } : {} }, title: "", description: clip(description, 3900) }],
     select: { id: `shift:act:${ref}`, placeholder: "Shift Actions", options: [
       { label: "View Shift List", value: "list", description: "View all shifts for this user", emoji: "\u{1F4C3}" },
       { label: "Modify Shift", value: "modify", description: "Modify a shift: add, remove, or set time", emoji: "\u{1F552}" },
@@ -84479,12 +84267,12 @@ function parseShiftDuration(input) {
 async function shiftList(c, discordId) {
   const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=3650`);
   const items = log.items;
-  const lines = items.slice(0, 25).map((s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \u2022 ${shiftDuration(s.seconds ?? (s.minutes - s.breakMinutes) * 60)}${s.shiftType ? ` \u2022 ${plain2(s.shiftType)}` : ""}${s.active ? " \u2022 \u{1F7E2} Active" : ""}
+  const lines = items.slice(0, 25).map((s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \u2022 ${shiftDuration(s.seconds ?? (s.minutes - s.breakMinutes) * 60)}${s.shiftType ? ` \u2022 ${plain(s.shiftType)}` : ""}${s.active ? " \u2022 \u{1F7E2} Active" : ""}
 -# Shift ID: ${s.shiftId ? `\`${s.shiftId}\`` : "\u2014"}`);
   return { ephemeral: true, embeds: [{
-    title: clip2(`Shift List: ${log.member?.name ?? ""}`, 256),
+    title: clip(`Shift List: ${log.member?.name ?? ""}`, 256),
     color: COLORS.info,
-    description: clip2(lines.length ? `${lines.join("\n")}${items.length > 25 ? `
+    description: clip(lines.length ? `${lines.join("\n")}${items.length > 25 ? `
 \u2026 and ${items.length - 25} more` : ""}` : "This user has no shifts.", 4e3)
   }] };
 }
@@ -84542,8 +84330,8 @@ var SHIFT_COMMANDS = [
           try {
             const types = await shiftTypes(c);
             const t2 = pickType(c, types, wanted || void 0);
-            if (t2 && !permittedFor(c, t2)) return errorReply(`F\xFCr die Schichtart **${plain2(t2.name)}** fehlt dir die passende Rolle.`);
-            if (wanted && !t2) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain2(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
+            if (t2 && !permittedFor(c, t2)) return errorReply(`F\xFCr die Schichtart **${plain(t2.name)}** fehlt dir die passende Rolle.`);
+            if (wanted && !t2) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
             return await manageReply2(c, t2);
           } catch (e) {
             return mapError(e);
@@ -84717,7 +84505,7 @@ var LEVEL_LABEL = { admin: "Serveradministrator", leadership: "Polizeif\xFChrung
 var SETUP_CHANNELS = ["welcome", "log", "exams"];
 var CHANNEL_LABEL = { welcome: "Begr\xFC\xDFung", log: "Bot-Meldungen (Admins)", exams: "Pr\xFCfungs-Ank\xFCndigungen" };
 var TOGGLE_MODULES = MODULES.filter((m) => !("system" in m && m.system)).map((m) => ({ key: m.key, name: m.name }));
-var section2 = (s) => s.default({}).catch(() => s.parse({}));
+var section = (s) => s.default({}).catch(() => s.parse({}));
 var SECTION_SCHEMAS = {
   branding: external_exports.object({
     serverName: external_exports.string().trim().max(100).nullable().default(null),
@@ -84745,12 +84533,12 @@ var guildConfigSchema = external_exports.object({
   /** Zählt bei jedem Speichern hoch (erkennt gleichzeitige Änderungen, z. B. während einer geplanten Wiederherstellung). */
   revision: external_exports.number().int().min(0).default(0),
   setupDone: external_exports.boolean().default(false),
-  branding: section2(SECTION_SCHEMAS.branding),
-  colors: section2(SECTION_SCHEMAS.colors),
-  welcome: section2(SECTION_SCHEMAS.welcome),
-  channels: section2(SECTION_SCHEMAS.channels),
-  roles: section2(SECTION_SCHEMAS.roles),
-  modules: section2(SECTION_SCHEMAS.modules),
+  branding: section(SECTION_SCHEMAS.branding),
+  colors: section(SECTION_SCHEMAS.colors),
+  welcome: section(SECTION_SCHEMAS.welcome),
+  channels: section(SECTION_SCHEMAS.channels),
+  roles: section(SECTION_SCHEMAS.roles),
+  modules: section(SECTION_SCHEMAS.modules),
   updatedAt: external_exports.string().nullable().default(null),
   updatedBy: sf5.nullable().default(null)
 }).passthrough();
@@ -84999,7 +84787,7 @@ function homePanel(cfg2, note2) {
       next ? `\u27A1\uFE0F N\xE4chster Schritt: **${next.label}**` : cfg2.setupDone ? "\u{1F389} Einrichtung abgeschlossen." : "\u{1F44D} Alles eingerichtet \u2013 mit **Fertig** abschlie\xDFen."
     ].join("\n"),
     fields: [
-      { name: "Servername / Anzeigename", value: `${plain2(cfg2.branding.serverName ?? "\u2014")} / ${plain2(cfg2.branding.displayName ?? "\u2014")}`, inline: true },
+      { name: "Servername / Anzeigename", value: `${plain(cfg2.branding.serverName ?? "\u2014")} / ${plain(cfg2.branding.displayName ?? "\u2014")}`, inline: true },
       { name: "Farben", value: `${cfg2.colors.primary} \xB7 ${cfg2.colors.success} \xB7 ${cfg2.colors.warning} \xB7 ${cfg2.colors.danger}${cfg2.branding.applyToAll ? " (alle Antworten)" : ""}`, inline: true },
       { name: "Begr\xFC\xDFung / Abschied", value: `${on(cfg2.welcome.enabled)} / ${on(cfg2.welcome.goodbyeEnabled)}`, inline: true },
       { name: "Kan\xE4le", value: SETUP_CHANNELS.map((k) => `${CHANNEL_LABEL[k]}: ${ch(cfg2.channels[k])}`).join("\n") },
@@ -85378,13 +85166,13 @@ var BACKUP_INTERACTION = {
       if (action === "apply") {
         if ((c.fields?.confirm ?? "").trim() !== "WIEDERHERSTELLEN") return errorReply("Nicht best\xE4tigt \u2013 bitte genau WIEDERHERSTELLEN eingeben. Es wurde nichts ver\xE4ndert.");
         PLANS.delete(token);
-        const { safety, config: config2 } = await rt.backups.apply(held.plan, { by: c.discordId });
+        const { safety, config } = await rt.backups.apply(held.plan, { by: c.discordId });
         await rt.reregister(c.guildId).catch(() => void 0);
-        const nick = await rt.setNickname(c.guildId, config2.branding.displayName).catch(() => null);
-        return { ephemeral: true, panel: true, embeds: [brand(config2, { title: "\u2705 Wiederherstellung abgeschlossen", description: [
+        const nick = await rt.setNickname(c.guildId, config.branding.displayName).catch(() => null);
+        return { ephemeral: true, panel: true, embeds: [brand(config, { title: "\u2705 Wiederherstellung abgeschlossen", description: [
           `Eingespielt: \`${held.plan.name}\` (${held.plan.changes.length} \xC4nderungen).`,
           `Vorheriger Stand gesichert als \`${safety.name}\` (${safety.locations.join(" + ")}) \u2013 damit l\xE4sst sich der Schritt r\xFCckg\xE4ngig machen.`,
-          ...nick ? [`\u26A0\uFE0F Anzeigename: ${plain2(nick)}`] : [],
+          ...nick ? [`\u26A0\uFE0F Anzeigename: ${plain(nick)}`] : [],
           "Pr\xFCfe jetzt mit `/system diagnose`, ob alle Kan\xE4le und Rollen passen."
         ].join("\n") }, "success")] };
       }
@@ -85489,14 +85277,14 @@ function questionReply(v, idx, cfg2, note2) {
   if (q2.type === "MATCH") lines.push("", ...q2.options.map((o, p) => `**${p + 1})** ${o.text}`), "", ...q2.matches.map((m, p) => `**${LETTERS[p]})** ${m.text}`));
   const answered = v.questions.filter((x) => isAnswered(x, v.answers?.[x.id])).length;
   const embed = b(cfg2, {
-    title: clip2(`\u{1F4DD} ${v.title} \u2013 Frage ${i + 1}/${n}${flagged ? " \u{1F6A9}" : ""}`, 256),
-    description: clip2(`${note2 ? `${note2}
+    title: clip(`\u{1F4DD} ${v.title} \u2013 Frage ${i + 1}/${n}${flagged ? " \u{1F6A9}" : ""}`, 256),
+    description: clip(`${note2 ? `${note2}
 
 ` : ""}${lines.join("\n")}`, 4e3),
     fields: [
       { name: "Typ", value: `${EXAM_QUESTION_TYPE_LABEL[q2.type]} \u2013 ${EXAM_QUESTION_TYPE_HINT[q2.type]}`.slice(0, 1024) },
       { name: "Bewertung", value: criteriaText(q2) },
-      { name: "Deine Antwort", value: clip2(plain2(answerText2(q2, a)), 1024) },
+      { name: "Deine Antwort", value: clip(plain(answerText2(q2, a)), 1024) },
       { name: "Fortschritt", value: `${answered}/${n} beantwortet${v.deadline ? ` \xB7 Abgabe sp\xE4testens ${t(v.deadline)}` : ""}`, inline: true }
     ],
     ...q2.image && /^https:\/\//.test(q2.image) ? { image: q2.image } : {},
@@ -85510,7 +85298,7 @@ function questionReply(v, idx, cfg2, note2) {
     placeholder: q2.type === "MULTI" ? "Antworten w\xE4hlen (mehrere m\xF6glich) \u2026" : "Antwort w\xE4hlen \u2026",
     min: q2.type === "MULTI" ? 0 : 1,
     max: q2.type === "MULTI" ? q2.options.length : 1,
-    options: q2.options.map((o, p) => ({ label: clip2(`${LETTERS[p]}) ${o.text}`, 100), value: String(o.i) })),
+    options: q2.options.map((o, p) => ({ label: clip(`${LETTERS[p]}) ${o.text}`, 100), value: String(o.i) })),
     defaults: list2(a)
   });
   else if (q2.type === "YESNO") buttons.push({ id: `exam:yn:${base}:ja`, label: "Ja", style: list2(a)[0] === "ja" ? "success" : "secondary" }, { id: `exam:yn:${base}:nein`, label: "Nein", style: list2(a)[0] === "nein" ? "success" : "secondary" });
@@ -85528,7 +85316,7 @@ function answerModal(v, idx) {
   if (!q2) return errorReply("Frage nicht gefunden.");
   const a = list2(v.answers?.[q2.id]);
   const id3 = `exam:m:${v.id}:${idx}`;
-  const title = clip2(`Frage ${idx + 1}`, 45);
+  const title = clip(`Frage ${idx + 1}`, 45);
   switch (q2.type) {
     case "TEXT":
       return { modal: { id: id3, title, fields: [{ id: "a", label: "Deine Antwort", paragraph: true, required: true, maxLength: 4e3, value: a[0] ?? "" }] } };
@@ -85550,7 +85338,7 @@ function answerModal(v, idx) {
       }).filter(Boolean).join(", ") }] } };
       return { modal: { id: id3, title, fields: q2.options.map((o, row) => {
         const m = q2.matches.findIndex((x) => String(x.i) === a[o.i]);
-        return { id: `r${row}`, label: clip2(`${row + 1}) ${o.text} \u2192 Buchstabe`, 45), required: true, maxLength: 1, value: m >= 0 ? LETTERS[m] : "" };
+        return { id: `r${row}`, label: clip(`${row + 1}) ${o.text} \u2192 Buchstabe`, 45), required: true, maxLength: 1, value: m >= 0 ? LETTERS[m] : "" };
       }) } };
     }
     default:
@@ -85609,7 +85397,7 @@ function reviewReply(v, cfg2) {
   const open = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => !isAnswered(q2, v.answers?.[q2.id]));
   const flagged = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => v.flagged.includes(q2.id));
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: `\u{1F4E4} Abgabe: ${clip2(v.title, 200)}`,
+    title: `\u{1F4E4} Abgabe: ${clip(v.title, 200)}`,
     description: [
       `Beantwortet: **${v.questions.length - open.length}/${v.questions.length}**`,
       open.length ? `Offen: ${open.map(({ i }) => `Frage ${i + 1}`).join(", ")}` : "\u2705 Alle Fragen beantwortet.",
@@ -85623,18 +85411,18 @@ function reviewReply(v, cfg2) {
   ] };
 }
 function resultReply(v, cfg2, note2) {
-  if (v.status === "VOIDED") return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u{1F4DD} ${clip2(v.title, 200)} \u2013 annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain2(v.voided.reason)}` : ""}. Er z\xE4hlt nicht als Versuch.` }, "warning")] };
-  if (v.status === "SUBMITTED" || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u23F3 ${clip2(v.title, 200)} \u2013 abgegeben`, description: `${note2 ? `${note2}
+  if (v.status === "VOIDED") return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u{1F4DD} ${clip(v.title, 200)} \u2013 annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain(v.voided.reason)}` : ""}. Er z\xE4hlt nicht als Versuch.` }, "warning")] };
+  if (v.status === "SUBMITTED" || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u23F3 ${clip(v.title, 200)} \u2013 abgegeben`, description: `${note2 ? `${note2}
 
 ` : ""}Deine Antworten sind gespeichert. Einige Fragen bewertet ein Pr\xFCfer \u2013 du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
   const r = v.result;
   const head = r.passed ? "\u2705 Bestanden" : "\u274C Nicht bestanden";
   const score = r.percent !== void 0 && r.percent !== null ? ` \u2013 **${r.percent} %** (${pts(r.score)} von ${pts(r.maxScore)} Punkten, n\xF6tig: ${v.passPercent} %)` : "";
-  const review = v.reviewMode !== "NONE" ? v.questions.slice(0, 20).map((q2, i) => `${q2.earned !== void 0 ? q2.earned >= q2.points ? "\u2705" : q2.earned > 0 ? "\u{1F7E1}" : "\u274C" : q2.correctAnswer === void 0 ? "\u2022" : q2.correctAnswer ? "\u2705" : "\u274C"} Frage ${i + 1}${q2.earned !== void 0 ? ` (${pts(q2.earned)}/${pts(q2.points)})` : ""}${v.reviewMode === "SOLUTIONS" && q2.correct ? ` \u2013 L\xF6sung: ${clip2(solutionText(q2), 120)}` : ""}`) : [];
+  const review = v.reviewMode !== "NONE" ? v.questions.slice(0, 20).map((q2, i) => `${q2.earned !== void 0 ? q2.earned >= q2.points ? "\u2705" : q2.earned > 0 ? "\u{1F7E1}" : "\u274C" : q2.correctAnswer === void 0 ? "\u2022" : q2.correctAnswer ? "\u2705" : "\u274C"} Frage ${i + 1}${q2.earned !== void 0 ? ` (${pts(q2.earned)}/${pts(q2.points)})` : ""}${v.reviewMode === "SOLUTIONS" && q2.correct ? ` \u2013 L\xF6sung: ${clip(solutionText(q2), 120)}` : ""}`) : [];
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: `\u{1F4DD} ${clip2(v.title, 200)}`,
-    description: clip2([note2, `**${head}**${score}`, r.feedback ? `
-\u{1F4AC} R\xFCckmeldung: ${plain2(r.feedback)}` : "", review.length ? `
+    title: `\u{1F4DD} ${clip(v.title, 200)}`,
+    description: clip([note2, `**${head}**${score}`, r.feedback ? `
+\u{1F4AC} R\xFCckmeldung: ${plain(r.feedback)}` : "", review.length ? `
 **Einsicht (${EXAM_REVIEW_LABEL[v.reviewMode]}):**
 ${review.join("\n")}` : "", r.passed ? "\nDas Ergebnis ist in deiner Personalakte dokumentiert." : ""].filter(Boolean).join("\n"), 4e3)
   }, r.passed ? "success" : "danger")] };
@@ -85649,14 +85437,14 @@ function examDetail(e, cfg2) {
     { name: "\u23F1\uFE0F Zeit", value: e.timeLimitMin ? `${e.timeLimitMin} Min.` : "ohne Limit", inline: true },
     { name: "\u{1F501} Versuche", value: `${e.me.attemptsUsed}/${e.maxAttempts} genutzt${e.retryHours ? ` \xB7 ${e.retryHours} h Wartezeit` : ""}`, inline: true },
     { name: "\u{1F441}\uFE0F Einsicht", value: EXAM_REVIEW_LABEL[e.reviewMode] ?? "\u2014", inline: true },
-    ...e.trainingName ? [{ name: "\u{1F393} Ausbildung", value: plain2(e.trainingName), inline: true }] : [],
-    ...e.requiredExamTitle ? [{ name: "\u{1F512} Voraussetzung", value: plain2(e.requiredExamTitle), inline: true }] : [],
-    { name: "Status", value: `${STATE_ICON[e.me.state]} ${STATE_LABEL[e.me.state]}${e.me.reason ? ` \u2013 ${plain2(e.me.reason)}` : ""}` }
+    ...e.trainingName ? [{ name: "\u{1F393} Ausbildung", value: plain(e.trainingName), inline: true }] : [],
+    ...e.requiredExamTitle ? [{ name: "\u{1F512} Voraussetzung", value: plain(e.requiredExamTitle), inline: true }] : [],
+    { name: "Status", value: `${STATE_ICON[e.me.state]} ${STATE_LABEL[e.me.state]}${e.me.reason ? ` \u2013 ${plain(e.me.reason)}` : ""}` }
   ];
   const can = e.me.state === "AVAILABLE" || e.me.state === "IN_PROGRESS";
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: clip2(`\u{1F4DD} ${e.title}`, 256),
-    description: clip2([e.description, e.instructions ? `**Hinweise:**
+    title: clip(`\u{1F4DD} ${e.title}`, 256),
+    description: clip([e.description, e.instructions ? `**Hinweise:**
 ${e.instructions}` : "", "Bewertet wird automatisch nach den hinterlegten Kriterien (Punkte je Frage, ggf. Teilpunkte); Freitext ohne Stichworte bewertet ein Pr\xFCfer. Die Kriterien stehen bei jeder Frage."].filter(Boolean).join("\n\n"), 4e3),
     fields
   })], buttons: can ? [{ id: `exam:start:${e.id}`, label: e.me.state === "IN_PROGRESS" ? "Fortsetzen" : "Pr\xFCfung starten", emoji: "\u25B6\uFE0F", style: "success" }] : [] };
@@ -85667,8 +85455,8 @@ async function listReply3(c) {
   if (!mine.length) return { ephemeral: true, embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: "F\xFCr dich sind gerade keine Pr\xFCfungen freigegeben." })] };
   return {
     ephemeral: true,
-    embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: clip2(mine.map((e) => `${STATE_ICON[e.me.state]} **${plain2(e.title)}**${e.category ? ` \xB7 ${plain2(e.category)}` : ""} \u2013 ${STATE_LABEL[e.me.state]}`).join("\n"), 4e3), footer: "Pr\xFCfung ausw\xE4hlen, um Kriterien und Start zu sehen." })],
-    select: { id: "exam:open", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: mine.slice(0, 25).map((e) => ({ label: clip2(e.title, 100), value: e.id, description: clip2(STATE_LABEL[e.me.state], 100), emoji: STATE_ICON[e.me.state] })) }
+    embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: clip(mine.map((e) => `${STATE_ICON[e.me.state]} **${plain(e.title)}**${e.category ? ` \xB7 ${plain(e.category)}` : ""} \u2013 ${STATE_LABEL[e.me.state]}`).join("\n"), 4e3), footer: "Pr\xFCfung ausw\xE4hlen, um Kriterien und Start zu sehen." })],
+    select: { id: "exam:open", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: mine.slice(0, 25).map((e) => ({ label: clip(e.title, 100), value: e.id, description: clip(STATE_LABEL[e.me.state], 100), emoji: STATE_ICON[e.me.state] })) }
   };
 }
 async function resultsReply(c) {
@@ -85678,14 +85466,14 @@ async function resultsReply(c) {
   const line = (e) => {
     const last = e.me.last;
     const pct = e.me.bestPercent !== null ? ` \xB7 bestes Ergebnis ${e.me.bestPercent} %` : "";
-    if (e.me.state === "PASSED") return `\u2705 **${plain2(e.title)}** \u2013 bestanden${pct}`;
-    if (e.me.state === "PENDING") return `\u23F3 **${plain2(e.title)}** \u2013 wird bewertet`;
-    return `${last?.passed === false ? "\u274C" : "\u2022"} **${plain2(e.title)}** \u2013 ${last?.passed === false ? "nicht bestanden" : last?.status ?? "\u2014"}${pct} \xB7 Versuche ${e.me.attemptsUsed}/${e.maxAttempts}${last?.at ? ` \xB7 zuletzt ${t(last.at)}` : ""}`;
+    if (e.me.state === "PASSED") return `\u2705 **${plain(e.title)}** \u2013 bestanden${pct}`;
+    if (e.me.state === "PENDING") return `\u23F3 **${plain(e.title)}** \u2013 wird bewertet`;
+    return `${last?.passed === false ? "\u274C" : "\u2022"} **${plain(e.title)}** \u2013 ${last?.passed === false ? "nicht bestanden" : last?.status ?? "\u2014"}${pct} \xB7 Versuche ${e.me.attemptsUsed}/${e.maxAttempts}${last?.at ? ` \xB7 zuletzt ${t(last.at)}` : ""}`;
   };
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F393} Deine Pr\xFCfungsergebnisse",
-    description: clip2(done.length ? done.map(line).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
-    fields: [{ name: "Qualifikationen (bestandene Pr\xFCfungen)", value: clip2(passed.length ? passed.map((e) => `\u2022 ${plain2(e.title)}${e.trainingName ? ` (${plain2(e.trainingName)})` : ""}`).join("\n") : "\u2014", 1024) }],
+    description: clip(done.length ? done.map(line).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
+    fields: [{ name: "Qualifikationen (bestandene Pr\xFCfungen)", value: clip(passed.length ? passed.map((e) => `\u2022 ${plain(e.title)}${e.trainingName ? ` (${plain(e.trainingName)})` : ""}`).join("\n") : "\u2014", 1024) }],
     footer: "Alle Versuche bleiben im System erhalten; Ergebnisse stehen auch in der Personalakte."
   })] };
 }
@@ -85693,8 +85481,8 @@ async function trainingsReply(c) {
   const [list3, cfg2] = await Promise.all([withRetry(() => c.api.asUser(c.discordId, "GET", "/hr/trainings")), cfgOf2(c)]);
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F393} Ausbildungen",
-    description: clip2(list3.length ? list3.slice(0, 25).map((x) => `**${plain2(x.name)}** \u2013 ${x.passed} bestanden${x.modules?.length ? ` \xB7 ${x.modules.length} Module: ${clip2(x.modules.map(plain2).join(", "), 200)}` : ""}${x.description ? `
-${clip2(plain2(x.description), 200)}` : ""}`).join("\n") : "Es sind keine Ausbildungen angelegt.", 4e3),
+    description: clip(list3.length ? list3.slice(0, 25).map((x) => `**${plain(x.name)}** \u2013 ${x.passed} bestanden${x.modules?.length ? ` \xB7 ${x.modules.length} Module: ${clip(x.modules.map(plain).join(", "), 200)}` : ""}${x.description ? `
+${clip(plain(x.description), 200)}` : ""}`).join("\n") : "Es sind keine Ausbildungen angelegt.", 4e3),
     footer: "Termine: /ausbildung termine \xB7 Pr\xFCfungen: /pruefung liste"
   })] };
 }
@@ -85704,8 +85492,8 @@ async function manageReply3(c) {
   if (!staff2.length) return errorReply("Du bist f\xFCr keine Pr\xFCfung als Pr\xFCfer eingetragen (im System: Recht `exam.grade`/`exam.manage` oder Pr\xFCfer der Pr\xFCfung).");
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F5C2}\uFE0F Pr\xFCfungen verwalten",
-    description: clip2(staff2.map((e) => `${e.active ? "\u{1F7E2}" : "\u23F8\uFE0F"} **${plain2(e.title)}** \u2013 ${e.stats ? `${e.stats.participants} Teiln., ${e.stats.passed} bestanden${e.stats.passRate !== null ? ` (${e.stats.passRate} %)` : ""}${e.stats.pending ? ` \xB7 \u23F3 ${e.stats.pending} zu bewerten` : ""}` : "keine Daten"}`).join("\n"), 4e3)
-  })], select: { id: "exam:adm", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: staff2.slice(0, 25).map((e) => ({ label: clip2(e.title, 100), value: e.id, description: e.active ? "aktiv" : "nicht freigegeben" })) } };
+    description: clip(staff2.map((e) => `${e.active ? "\u{1F7E2}" : "\u23F8\uFE0F"} **${plain(e.title)}** \u2013 ${e.stats ? `${e.stats.participants} Teiln., ${e.stats.passed} bestanden${e.stats.passRate !== null ? ` (${e.stats.passRate} %)` : ""}${e.stats.pending ? ` \xB7 \u23F3 ${e.stats.pending} zu bewerten` : ""}` : "keine Daten"}`).join("\n"), 4e3)
+  })], select: { id: "exam:adm", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: staff2.slice(0, 25).map((e) => ({ label: clip(e.title, 100), value: e.id, description: e.active ? "aktiv" : "nicht freigegeben" })) } };
 }
 function adminDetail(e, cfg2) {
   const s = e.stats;
@@ -85713,7 +85501,7 @@ function adminDetail(e, cfg2) {
   if (s?.pending) buttons.push({ id: `exam:pend:${e.id}`, label: `Zu bewerten (${s.pending})`, emoji: "\u23F3", style: "primary" });
   if (e.canEdit) buttons.push({ id: `exam:post:${e.id}`, label: "In Discord ank\xFCndigen", emoji: "\u{1F4E2}", style: "secondary", disabled: !e.active }, { id: `exam:toggle:${e.id}`, label: e.active ? "Deaktivieren \u2026" : "Aktivieren \u2026", emoji: e.active ? "\u23F8\uFE0F" : "\u25B6\uFE0F", style: "secondary" });
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: clip2(`\u{1F5C2}\uFE0F ${e.title}`, 256),
+    title: clip(`\u{1F5C2}\uFE0F ${e.title}`, 256),
     fields: [
       { name: "Status", value: e.active ? "\u{1F7E2} aktiv" : "\u23F8\uFE0F nicht freigegeben", inline: true },
       { name: "Fragen", value: `${e.questionsPerAttempt}/${e.questionTotal}`, inline: true },
@@ -85733,20 +85521,20 @@ async function pendingReply(c, examId) {
   return {
     ephemeral: true,
     panel: true,
-    embeds: [b(cfg2, { title: `\u23F3 Zu bewerten (${open.length})`, description: clip2(open.slice(0, 25).map((r) => `\u2022 **${plain2(r.personnel.user.displayName)}** \u2013 ${plain2(r.exam.title)} \xB7 abgegeben ${t(r.submittedAt)}`).join("\n"), 4e3) })],
-    select: { id: "exam:g", placeholder: "Versuch zum Bewerten ausw\xE4hlen \u2026", options: open.slice(0, 25).map((r) => ({ label: clip2(`${r.personnel.user.displayName} \u2013 ${r.exam.title}`, 100), value: r.id, description: clip2(`abgegeben ${r.submittedAt ? new Date(r.submittedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }) : "\u2014"}`, 100) })) }
+    embeds: [b(cfg2, { title: `\u23F3 Zu bewerten (${open.length})`, description: clip(open.slice(0, 25).map((r) => `\u2022 **${plain(r.personnel.user.displayName)}** \u2013 ${plain(r.exam.title)} \xB7 abgegeben ${t(r.submittedAt)}`).join("\n"), 4e3) })],
+    select: { id: "exam:g", placeholder: "Versuch zum Bewerten ausw\xE4hlen \u2026", options: open.slice(0, 25).map((r) => ({ label: clip(`${r.personnel.user.displayName} \u2013 ${r.exam.title}`, 100), value: r.id, description: clip(`abgegeben ${r.submittedAt ? new Date(r.submittedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }) : "\u2014"}`, 100) })) }
   };
 }
 function gradingReply(v, cfg2) {
   const fields = v.questions.slice(0, 20).map((q2, i) => ({
-    name: clip2(`Frage ${i + 1} \xB7 max ${pts(q2.points)} P. \xB7 ${q2.auto === null || q2.auto === void 0 ? "\u270D\uFE0F manuell" : `automatisch ${pts(q2.auto)} P.`}`, 256),
-    value: clip2(`${plain2(q2.type === "GAP" ? gapText(q2.text) : q2.text)}
-**Antwort:** ${plain2(answerText2(q2, v.answers?.[q2.id]))}
-**Kriterium:** ${plain2(solutionText(q2))}${q2.partial ? " (Teilpunkte)" : ""}`, 1024)
+    name: clip(`Frage ${i + 1} \xB7 max ${pts(q2.points)} P. \xB7 ${q2.auto === null || q2.auto === void 0 ? "\u270D\uFE0F manuell" : `automatisch ${pts(q2.auto)} P.`}`, 256),
+    value: clip(`${plain(q2.type === "GAP" ? gapText(q2.text) : q2.text)}
+**Antwort:** ${plain(answerText2(q2, v.answers?.[q2.id]))}
+**Kriterium:** ${plain(solutionText(q2))}${q2.partial ? " (Teilpunkte)" : ""}`, 1024)
   }));
   const manual = v.questions.filter((q2) => q2.auto === null || q2.auto === void 0).length;
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: clip2(`\u270D\uFE0F ${v.title} \u2013 ${v.name}`, 256),
+    title: clip(`\u270D\uFE0F ${v.title} \u2013 ${v.name}`, 256),
     description: `Status: **${v.status === "SUBMITTED" ? "wartet auf Bewertung" : v.status === "GRADED" ? "bewertet" : v.status}** \xB7 Bestanden ab ${v.passPercent} %${v.result?.percent !== void 0 && v.result?.percent !== null ? ` \xB7 aktuell ${v.result.percent} %` : ""}
 ${manual ? `${manual} Frage(n) ohne automatische Bewertung \u2013 Punkte im Formular vergeben.` : "Alle Fragen sind automatisch bewertbar \u2013 optional R\xFCckmeldung geben."}${v.questions.length > 20 ? `
 \u2026 ${v.questions.length - 20} weitere Fragen im Dashboard` : ""}`,
@@ -85760,7 +85548,7 @@ function gradeModal(v) {
   const manual = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => q2.auto === null || q2.auto === void 0);
   if (manual.length > 4) return errorReply(`${manual.length} Fragen m\xFCssen von Hand bewertet werden \u2013 das passt nicht in ein Discord-Formular (h\xF6chstens 4). Bitte im Dashboard bewerten.`);
   return { modal: { id: `exam:gm:${v.id}`, title: "Versuch bewerten", fields: [
-    ...manual.map(({ q: q2, i }) => ({ id: `s${i}`, label: clip2(`Frage ${i + 1}: Punkte (0\u2013${pts(q2.points)})`, 45), required: true, maxLength: 6, placeholder: "0" })),
+    ...manual.map(({ q: q2, i }) => ({ id: `s${i}`, label: clip(`Frage ${i + 1}: Punkte (0\u2013${pts(q2.points)})`, 45), required: true, maxLength: 6, placeholder: "0" })),
     { id: "feedback", label: "R\xFCckmeldung an die Person (optional)", paragraph: true, maxLength: 2e3 }
   ] } };
 }
@@ -85826,7 +85614,7 @@ var EXAM_INTERACTION = {
         case "start": {
           const v = await c.api.asUser(c.discordId, "POST", `/hr/exams/${target}/start`);
           const first = v.questions.findIndex((q2) => !isAnswered(q2, v.answers?.[q2.id]));
-          return questionReply(v, first < 0 ? 0 : first, cfg2, v.instructions ? `**Hinweise:** ${clip2(v.instructions, 800)}` : void 0);
+          return questionReply(v, first < 0 ? 0 : first, cfg2, v.instructions ? `**Hinweise:** ${clip(v.instructions, 800)}` : void 0);
         }
         case "q": {
           const v = await viewOf(c, target);
@@ -85874,11 +85662,11 @@ var EXAM_INTERACTION = {
           const r = await c.api.asUser(c.discordId, "GET", `/hr/exams/${target}/results`);
           const hard = r.questions.filter((q2) => q2.asked && q2.correctRate !== null).sort((a, z) => a.correctRate - z.correctRate).slice(0, 5);
           return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-            title: clip2(`\u{1F4CA} Auswertung: ${r.exam.title}`, 256),
-            description: clip2(r.people.slice(0, 20).map((p) => `${p.passed ? "\u2705" : p.pending ? "\u23F3" : "\u274C"} **${plain2(p.name)}**${p.rank ? ` (${plain2(p.rank)})` : ""} \u2013 ${p.bestPercent !== null ? `${p.bestPercent} %` : "\u2014"} \xB7 ${p.attempts} Versuch(e)`).join("\n") || "Noch keine Versuche.", 4e3),
+            title: clip(`\u{1F4CA} Auswertung: ${r.exam.title}`, 256),
+            description: clip(r.people.slice(0, 20).map((p) => `${p.passed ? "\u2705" : p.pending ? "\u23F3" : "\u274C"} **${plain(p.name)}**${p.rank ? ` (${plain(p.rank)})` : ""} \u2013 ${p.bestPercent !== null ? `${p.bestPercent} %` : "\u2014"} \xB7 ${p.attempts} Versuch(e)`).join("\n") || "Noch keine Versuche.", 4e3),
             fields: [
               { name: "Kennzahlen", value: `${r.stats.participants} Teilnehmende \xB7 ${r.stats.attempts} Versuche \xB7 ${r.stats.passed} bestanden${r.stats.passRate !== null ? ` (${r.stats.passRate} %)` : ""} \xB7 \xD8 ${r.stats.avgPercent ?? "\u2014"} %${r.stats.avgMinutes !== null ? ` \xB7 \xD8 ${r.stats.avgMinutes} Min.` : ""} \xB7 ${r.stats.voided} annulliert` },
-              ...hard.length ? [{ name: "Schwierigste Fragen", value: clip2(hard.map((q2) => `\u2022 ${q2.correctRate} % richtig \u2013 ${plain2(q2.text)}`).join("\n"), 1024) }] : []
+              ...hard.length ? [{ name: "Schwierigste Fragen", value: clip(hard.map((q2) => `\u2022 ${q2.correctRate} % richtig \u2013 ${plain(q2.text)}`).join("\n"), 1024) }] : []
             ]
           })], buttons: [{ id: `exam:pend:${target}`, label: `Zu bewerten (${r.stats.pending})`, emoji: "\u23F3", style: "primary", disabled: !r.stats.pending }] };
         }
@@ -85896,7 +85684,7 @@ var EXAM_INTERACTION = {
           return {
             ephemeral: true,
             panel: true,
-            embeds: [b(cfg2, { title: e.active ? "\u23F8\uFE0F Pr\xFCfung deaktivieren?" : "\u25B6\uFE0F Pr\xFCfung aktivieren?", description: e.active ? `**${plain2(e.title)}** wird nicht mehr zum Ablegen angeboten. Laufende und fr\xFChere Versuche, Ergebnisse und Fragen **bleiben vollst\xE4ndig erhalten**.` : `**${plain2(e.title)}** wird wieder zum Ablegen angeboten.` }, "warning")],
+            embeds: [b(cfg2, { title: e.active ? "\u23F8\uFE0F Pr\xFCfung deaktivieren?" : "\u25B6\uFE0F Pr\xFCfung aktivieren?", description: e.active ? `**${plain(e.title)}** wird nicht mehr zum Ablegen angeboten. Laufende und fr\xFChere Versuche, Ergebnisse und Fragen **bleiben vollst\xE4ndig erhalten**.` : `**${plain(e.title)}** wird wieder zum Ablegen angeboten.` }, "warning")],
             buttons: [{ id: `exam:togglec:${target}:${e.active ? 0 : 1}`, label: e.active ? "Ja, deaktivieren" : "Ja, aktivieren", style: e.active ? "danger" : "success" }, { id: `exam:admv:${target}`, label: "Abbrechen", style: "secondary" }]
           };
         }
@@ -85905,7 +85693,7 @@ var EXAM_INTERACTION = {
           const body2 = examBodyWithActive(detail, rawIdx === "1");
           if (!body2) return errorReply("Die Pr\xFCfung konnte nicht vollst\xE4ndig gelesen werden \u2013 zur Sicherheit wurde nichts ge\xE4ndert. Bitte im Dashboard \xE4ndern.");
           await c.api.asUser(c.discordId, "PUT", `/hr/exams/${target}`, body2);
-          return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: rawIdx === "1" ? "\u25B6\uFE0F Aktiviert" : "\u23F8\uFE0F Deaktiviert", description: `${plain2(String(detail.title ?? ""))} \u2013 alle Versuche und Ergebnisse bleiben erhalten.` }, "success")] };
+          return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: rawIdx === "1" ? "\u25B6\uFE0F Aktiviert" : "\u23F8\uFE0F Deaktiviert", description: `${plain(String(detail.title ?? ""))} \u2013 alle Versuche und Ergebnisse bleiben erhalten.` }, "success")] };
         }
         case "g":
           return gradingReply(await viewOf(c, target), cfg2);
@@ -85967,7 +85755,7 @@ var REMINDER_COMMANDS = [{
     if (dm && channelId && c.platform) {
       try {
         await c.platform.sendDm(c.discordId, { embed: { title: "\u23F0 Erinnerung gespeichert", description: `Ich schreibe dir hier ${formatReminderDuration(d.ms)} nach dem Speichern:
-> ${clip2(plain2(text), 300)}`, color: COLORS.info } });
+> ${clip(plain(text), 300)}`, color: COLORS.info } });
       } catch {
         dm = false;
         note2 = "\n\u26A0\uFE0F Ich kann dir keine Direktnachricht schicken (DMs geschlossen?) \u2013 die Erinnerung kommt deshalb **hier im Kanal**.";
@@ -85976,7 +85764,7 @@ var REMINDER_COMMANDS = [{
     try {
       const r = await c.api.service("POST", "/bot/reminders", { discordId: c.discordId, guildId: c.guildId ?? null, channelId, text, dm, delayMs: d.ms });
       return okReply(`${r.duplicate ? "Diese Erinnerung hast du gerade schon gespeichert. " : ""}Ich erinnere dich ${ts5(r.dueAt)} (${ts5(r.dueAt, "f")}) ${r.dm ? "per **Direktnachricht**" : "hier im **Kanal**"}:
-> ${clip2(plain2(text), 300)}${note2}
+> ${clip(plain(text), 300)}${note2}
 -# \xDCbersicht und l\xF6schen: \`/erinnerungen\``);
     } catch (e) {
       return apiError2(e);
@@ -85989,10 +85777,10 @@ var REMINDER_COMMANDS = [{
     try {
       const list3 = await c.api.service("GET", `/bot/reminders?discordId=${c.discordId}`);
       if (!list3.length) return okReply("Du hast keine offenen Erinnerungen. Neue mit `/remind-me`.");
-      const lines = list3.map((r, i) => `**${i + 1}.** ${ts5(r.dueAt)} \xB7 ${r.dm ? "DM" : "Kanal"} \u2013 ${clip2(plain2(r.text), 120)}`);
+      const lines = list3.map((r, i) => `**${i + 1}.** ${ts5(r.dueAt)} \xB7 ${r.dm ? "DM" : "Kanal"} \u2013 ${clip(plain(r.text), 120)}`);
       return {
         ephemeral: true,
-        embeds: [{ title: `\u23F0 Deine Erinnerungen (${list3.length})`, color: COLORS.info, description: clip2(lines.join("\n"), 4e3) }],
+        embeds: [{ title: `\u23F0 Deine Erinnerungen (${list3.length})`, color: COLORS.info, description: clip(lines.join("\n"), 4e3) }],
         buttons: list3.slice(0, 20).map((r, i) => ({ id: `remind:cancel:${r.id}`, label: `${i + 1} l\xF6schen`, style: "danger" }))
       };
     } catch (e) {
@@ -86009,7 +85797,7 @@ function reminderMessage(p) {
     embed: {
       title: "\u23F0 Erinnerung",
       color: COLORS.warning,
-      description: clip2(`${plain2(p.text) || "\u2014"}${late2}`, 4e3),
+      description: clip(`${plain(p.text) || "\u2014"}${late2}`, 4e3),
       fields: typeof p.createdAt === "string" ? [{ name: "Gespeichert", value: ts5(p.createdAt), inline: true }] : [],
       footer: "Sp\xE4ter noch einmal erinnern:"
     },
@@ -86052,7 +85840,7 @@ var REMINDER_INTERACTION = {
         const r = await c.api.service("POST", `/bot/reminders/${id3}/snooze`, { discordId: c.discordId, fire, minutes });
         return {
           ...okReply(`Verschoben \u2013 ich erinnere dich ${ts5(r.dueAt)} (${ts5(r.dueAt, "f")}) erneut.`),
-          update: { embeds: [{ title: "\u23F0 Erinnerung (verschoben)", color: COLORS.neutral, description: clip2(`${plain2(r.text)}
+          update: { embeds: [{ title: "\u23F0 Erinnerung (verschoben)", color: COLORS.neutral, description: clip(`${plain(r.text)}
 
 N\xE4chste Erinnerung ${ts5(r.dueAt)}.`, 4e3) }], buttons: [] }
         };
@@ -86072,12 +85860,11 @@ N\xE4chste Erinnerung ${ts5(r.dueAt)}.`, 4e3) }], buttons: [] }
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
 var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
-var LEGACY = { gruen: "STATUS_1", "gr\xFCn": "STATUS_1", gelb: "STATUS_2", rot: "STATUS_4" };
 async function setDanger(c, level, reason) {
   try {
     const s = await c.api.asUser(c.discordId, "PUT", "/danger-level", { level, ...reason ? { reason } : {} });
     await c.refreshLive?.("danger").catch(() => void 0);
-    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain2(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain2(s.def.title)}` : ""}`);
+    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain(s.def.title)}` : ""}`);
   } catch (e) {
     return mapError(e);
   }
@@ -86090,39 +85877,6 @@ var DUTY_BUTTONS = [
 ];
 var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
 var FEATURE_COMMANDS = [
-  {
-    name: "gefahrenstatus",
-    description: "Gefahrenstatus anzeigen, setzen oder als Panel posten",
-    options: [
-      { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: anzeigen)", type: "string", choices: [{ name: "anzeigen", value: "anzeigen" }, { name: "setzen", value: "setzen" }, { name: "panel hier posten", value: "panel" }] },
-      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C), z. B. Status 2", type: "string", maxLength: 40 },
-      { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
-    ],
-    async run(c) {
-      const action = str2(c, "aktion") || "anzeigen";
-      if (action === "setzen") {
-        const level = str2(c, "stufe");
-        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str2(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
-      }
-      if (action === "panel") {
-        const denied = needGuildAdmin(c);
-        if (denied) return denied;
-        if (!c.channelId || !c.refreshLive) return errorReply("Panel kann hier nicht gepostet werden.");
-        try {
-          await c.api.asUser(c.discordId, "GET", "/danger-level");
-          await c.refreshLive("danger", { channelId: c.channelId, force: true });
-          return okReply("Gefahrenstatus-Panel gepostet. Es aktualisiert sich selbst; ein \xE4lteres Panel wird nicht mehr bearbeitet.");
-        } catch (e) {
-          return mapError(e);
-        }
-      }
-      try {
-        return { ephemeral: true, embeds: [dangerEmbed(await c.api.asUser(c.discordId, "GET", "/danger-level"))] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
   {
     name: "teamliste",
     description: "Richtet die selbst aktualisierende Teamliste ein bzw. aktualisiert sie sofort",
@@ -86153,13 +85907,13 @@ var FEATURE_COMMANDS = [
       try {
         if (action === "list") {
           const rows = await c.api.asUser(c.discordId, "GET", "/radio-whitelist");
-          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain2(r2.callsign)}** ` : ""}${plain2(r2.displayName)}`), "Noch niemand freigegeben.")] };
+          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}`), "Noch niemand freigegeben.")] };
         }
         const target = str2(c, "mitglied");
         if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
         if (action === "check") {
           const r2 = await c.api.asUser(c.discordId, "GET", `/radio-whitelist/check?discordId=${target}`);
-          return r2.whitelisted ? okReply(`**${plain2(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain2(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
+          return r2.whitelisted ? okReply(`**${plain(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
         }
         const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/radio-whitelist" : "/radio-whitelist/remove", { discordId: target });
         let note2 = "";
@@ -86172,7 +85926,7 @@ var FEATURE_COMMANDS = [
             note2 = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
           }
         }
-        return okReply(`**${plain2(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
+        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder steht nicht auf der Liste).");
         return mapError(e);
@@ -86202,10 +85956,10 @@ var FEATURE_COMMANDS = [
     async run(c) {
       if (!c.robloxLookup) return errorReply("Roblox-Suche ist nicht verf\xFCgbar.");
       const u = await c.robloxLookup(str2(c, "name"));
-      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain2(str2(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
-      return { ephemeral: true, embeds: [{ title: clip2(`\u{1F3AE} ${plain2(u.name)}`, 256), color: COLORS.info, fields: [
+      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str2(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
+      return { ephemeral: true, embeds: [{ title: clip(`\u{1F3AE} ${plain(u.name)}`, 256), color: COLORS.info, fields: [
         { name: "Roblox-ID", value: String(u.id), inline: true },
-        { name: "Anzeigename", value: clip2(plain2(u.displayName), 1024), inline: true },
+        { name: "Anzeigename", value: clip(plain(u.displayName), 1024), inline: true },
         { name: "Profil", value: `https://www.roblox.com/users/${u.id}/profile` }
       ] }] };
     }
@@ -86218,7 +85972,7 @@ async function shiftTypes2(c) {
 async function shiftPicker(c) {
   const types = (await shiftTypes2(c))?.filter((t2) => permittedFor(c, t2));
   if (!types || types.length < 2) return null;
-  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t2) => ({ label: clip2(t2.name, 100), value: t2.id, ...t2.isDefault ? { description: "Standard" } : {} })) } };
+  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t2) => ({ label: clip(t2.name, 100), value: t2.id, ...t2.isDefault ? { description: "Standard" } : {} })) } };
 }
 var INTERACTIONS = [
   {
@@ -86242,7 +85996,7 @@ var INTERACTIONS = [
       try {
         const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...shiftType ? { shiftType } : {} });
         const name = shiftType ? (await shiftTypes2(c))?.find((t2) => t2.id === (r.shiftType ?? shiftType))?.name : void 0;
-        return okReply(`${DUTY_DE[status3].emoji} Du bist jetzt **${DUTY_DE[status3].label}**${name ? ` (Schicht: **${plain2(name)}**)` : ""}.`);
+        return okReply(`${DUTY_DE[status3].emoji} Du bist jetzt **${DUTY_DE[status3].label}**${name ? ` (Schicht: **${plain(name)}**)` : ""}.`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status3].label}**.`);
         return mapError(e);
@@ -86546,7 +86300,7 @@ function toPresenceData(p) {
   if (p.activity === "benutzerdefiniert") return { status: p.status, activities: [{ name: "Custom Status", type, state: p.text }] };
   return { status: p.status, activities: [{ name: p.text, type, ...p.url ? { url: p.url } : {} }] };
 }
-var presenceText = (p) => `${STATUSES[p.status]}${p.activity !== "keine" && p.text ? ` \xB7 ${ACTIVITY_LABEL[p.activity]}${p.activity === "benutzerdefiniert" ? ":" : ""} ${plain2(p.text)}` : ""}`;
+var presenceText = (p) => `${STATUSES[p.status]}${p.activity !== "keine" && p.text ? ` \xB7 ${ACTIVITY_LABEL[p.activity]}${p.activity === "benutzerdefiniert" ? ":" : ""} ${plain(p.text)}` : ""}`;
 function discordErrorText2(e, what) {
   const x = e;
   const raw = JSON.stringify(x?.rawError?.errors ?? "") + (x?.message ?? "");
@@ -86574,7 +86328,7 @@ async function setName(c, p, scope) {
     } catch (e) {
       return errorReply(discordErrorText2(e, "die Namens\xE4nderung"));
     }
-    return okReply(r2.nick ? `Der Bot hei\xDFt auf diesem Server jetzt **${plain2(r2.nick)}**.` : "Der Name des Bots auf diesem Server wurde zur\xFCckgesetzt (globaler Name).");
+    return okReply(r2.nick ? `Der Bot hei\xDFt auf diesem Server jetzt **${plain(r2.nick)}**.` : "Der Name des Bots auf diesem Server wurde zur\xFCckgesetzt (globaler Name).");
   }
   const r = checkUsername(input);
   if (r.error) return errorReply(r.error);
@@ -86583,7 +86337,7 @@ async function setName(c, p, scope) {
   } catch (e) {
     return errorReply(discordErrorText2(e, "die Namens\xE4nderung"));
   }
-  return okReply(`Der globale Name des Bots ist jetzt **${plain2(r.name)}** (gilt auf allen Servern, au\xDFer wo ein eigener Server-Name gesetzt ist).`);
+  return okReply(`Der globale Name des Bots ist jetzt **${plain(r.name)}** (gilt auf allen Servern, au\xDFer wo ein eigener Server-Name gesetzt ist).`);
 }
 async function setAvatar(c, p, scope) {
   const reset = c.opts.zuruecksetzen === true;
@@ -86678,28 +86432,9 @@ async function restorePresence(p, log = console.error) {
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str3 = (c, k) => String(c.opts[k] ?? "").trim();
-async function resolvePerson(c, term) {
-  const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
-  const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
-  if (exact.length === 1) return { person: exact[0] };
-  if (exact.length === 0 && page.items.length === 0) {
-    return { reply: errorReply(`Keine Person zu \u201E${plain2(term)}\u201C gefunden.`) };
-  }
-  const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain2(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
-  return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
-}
 var DUTY = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
-var UNIT = { verfuegbar: "AVAILABLE", beschaeftigt: "BUSY", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", nicht_verfuegbar: "UNAVAILABLE", ausser_dienst: "OFF_DUTY" };
-var PRIO = { niedrig: "LOW", mittel: "MEDIUM", hoch: "HIGH", dringend: "URGENT", kritisch: "CRITICAL" };
 var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
-var INC_STATUS = { bestaetigt: "ACKNOWLEDGED", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", in_bearbeitung: "PROCESSING", abschluss: "CLEARING", abgebrochen: "CANCELLED", geschlossen: "CLOSED" };
-var REPORT = { patrouille: "PATROL", vorfall: "INCIDENT", verkehr: "TRAFFIC", festnahme: "ARREST", zitation: "CITATION", kollision: "COLLISION", ermittlung: "INVESTIGATION", allgemein: "GENERAL" };
 var CHANNEL = { team: "TEAM", dispatch: "DISPATCH" };
-async function resolveIncident(c, number) {
-  const page = await c.api.asUser(c.discordId, "GET", `/incidents?q=${q(number)}&pageSize=10`);
-  const hit = page.items.find((i) => String(i.number).toLowerCase() === number.toLowerCase()) ?? (page.items.length === 1 ? page.items[0] : void 0);
-  return hit ? { incident: hit } : { reply: errorReply(page.items.length ? "Nicht eindeutig \u2013 bitte die vollst\xE4ndige Einsatznummer angeben (z. B. I-2026-ABC123)." : `Einsatz \u201E${plain2(number)}\u201C nicht gefunden.`) };
-}
 var COMMANDS = [
   {
     name: "funkcode",
@@ -86709,11 +86444,11 @@ var COMMANDS = [
       try {
         const term = str3(c, "suche");
         const rows = await c.api.asUser(c.discordId, "GET", `/radio-codes${term ? `?q=${q(term)}` : ""}`);
-        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain2(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
+        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
         const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : void 0;
-        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain2(exact.code)}`, description: `**${plain2(exact.meaning)}**${exact.description ? `
-${plain2(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain2(exact.category) : void 0 }] };
-        const lines = rows.slice(0, 40).map((r) => `\`${plain2(r.code)}\` \u2013 ${plain2(r.meaning)}`);
+        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain(exact.code)}`, description: `**${plain(exact.meaning)}**${exact.description ? `
+${plain(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain(exact.category) : void 0 }] };
+        const lines = rows.slice(0, 40).map((r) => `\`${plain(r.code)}\` \u2013 ${plain(r.meaning)}`);
         return { ephemeral: true, embeds: [{ title: "\u{1F4E1} Funk-Codes", description: lines.join("\n").slice(0, 4e3), color: 3900150, footer: rows.length > 40 ? `${rows.length - 40} weitere \u2013 Suche eingrenzen` : void 0 }] };
       } catch (e) {
         return mapError(e);
@@ -86727,11 +86462,11 @@ ${plain2(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? p
       try {
         const s = await c.api.service("GET", `/bot/teamchance${c.guildId ? `?guildId=${c.guildId}` : ""}`);
         const when = (iso) => iso ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:f>` : null;
-        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain2(s.title)} \u2013 offen`, description: `${plain2(s.description)}
+        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain(s.title)} \u2013 offen`, description: `${plain(s.description)}
 
-Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
+Bewerben: \xFCber das Bewerbungs-Panel auf dem Server`.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
         const why = s.reason === "not_started" && s.opensAt ? `Startet ${when(s.opensAt)}.` : s.reason === "full" ? "Alle Pl\xE4tze sind vergeben." : "Derzeit ist keine Team-Chance offen.";
-        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain2(s.title)}`, description: why, color: 15680580 }] };
+        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain(s.title)}`, description: why, color: 15680580 }] };
       } catch (e) {
         return mapError(e);
       }
@@ -86755,62 +86490,17 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     description: "Zeigt alle Befehle",
     async run() {
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
-        { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
-        { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
-        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`" },
-        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Konto", value: "`/dashboard` `/panel` `/benachrichtigungen`" },
+        { name: "Abfragen", value: "`/team`" },
+        { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`" },
+        { name: "Erfassen", value: "`/dienstbericht` `/dienstbericht liste`" },
+        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/funkfreigabe` `/teamliste` `/dienstpanel` `/teamchance` `/roblox`" },
         { name: "Ausbildung & Pr\xFCfungen", value: "`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` \xB7 Ausbilder: `/pruefung verwalten` `/pruefung bewerten`" },
         { name: "Administration", value: "`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Team im Ticket-Kanal: `/ticket` (claim, unclaim, schliessen, anfrage, weiterleiten, hinzufuegen, entfernen, umbenennen, erinnern, notiz, automatik, oeffnen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
-        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel \xB7 `/remind-me` (Erinnerung, z. B. `in: 30m`) \xB7 `/erinnerungen`" },
+        { name: "F\xFCr alle", value: "Bewerbung \xFCber das Bewerbungs-Panel (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel \xB7 `/remind-me` (Erinnerung, z. B. `in: 30m`) \xB7 `/erinnerungen`" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
-    }
-  },
-  {
-    name: "person",
-    description: "Sucht eine Person (Roblox-Name oder -ID)",
-    options: [{ name: "suche", description: "Name oder Roblox-ID", type: "string", required: true, maxLength: 64 }],
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str3(c, "suche"))}&pageSize=5`);
-        if (!page.items.length) return errorReply("Keine Person gefunden.");
-        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str3(c, "suche").toLowerCase())) {
-          return { ephemeral: true, embeds: [listEmbed(`\u{1F465} ${page.total} Treffer`, page.items.map((p) => `\u2022 **${plain2(p.robloxUsername)}** (${p.robloxUserId ?? "ohne ID"})`), "")] };
-        }
-        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str3(c, "suche").toLowerCase()) ?? page.items[0];
-        const ov = await c.api.asUser(c.discordId, "GET", `/persons/${hit.id}`);
-        const wanted = ov.links.some((l) => l.entityType === "Wanted");
-        return { ephemeral: true, embeds: [personEmbed(ov.person, { tickets: ov.tickets.length, wanted })] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "kennzeichen",
-    description: "Sucht ein Fahrzeug nach Kennzeichen",
-    options: [{ name: "kennzeichen", description: "z. B. LC 1001", type: "string", required: true, maxLength: 16 }],
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str3(c, "kennzeichen"))}&pageSize=5`);
-        return page.items.length ? { ephemeral: true, embeds: page.items.map(vehicleEmbed) } : errorReply("Kein Fahrzeug gefunden.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "fahndungen",
-    description: "Zeigt aktive Fahndungen",
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", "/wanted?pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F534} Aktive Fahndungen (${page.total})`, page.items.map((w) => `\u2022 **${plain2(w.reason)}** \u2014 ${label(w.priority)}${w.personId ? "" : " (Fahrzeug)"}`), "Keine aktiven Fahndungen.")] };
-      } catch (e) {
-        return mapError(e);
-      }
     }
   },
   {
@@ -86846,7 +86536,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
         const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
         if (all) {
-          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain2(u.callsign ?? u.name)}** ${u.callsign ? `(${plain2(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
+          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
           return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
         }
         const me = r.users[0];
@@ -86859,243 +86549,14 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     }
   },
   {
-    name: "einheiten",
-    description: "Zeigt alle Einheiten und ihren Status",
-    async run(c) {
-      try {
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        return { ephemeral: true, embeds: [listEmbed("\u{1F4FB} Einheiten", units.map((u) => `\u2022 **${plain2(u.callsign)}** \u2014 ${label(u.status)}`), "Keine Einheiten angelegt.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einheitstatus",
-    description: "\xC4ndert den Status einer Einheit",
-    options: [
-      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
-    ],
-    async run(c) {
-      const status3 = UNIT[str3(c, "status")];
-      if (!status3) return errorReply("Unbekannter Status.");
-      try {
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
-        if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status: status3 });
-        return okReply(`**${plain2(unit.callsign)}** \u2192 ${label(status3)}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsaetze",
-    description: "Zeigt offene Eins\xE4tze",
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", "/incidents?active=true&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F6A8} Offene Eins\xE4tze (${page.total})`, page.items.map(incidentLine), "Keine offenen Eins\xE4tze.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatz",
-    description: "Legt einen neuen Einsatz an",
-    options: [
-      { name: "titel", description: "Kurzbeschreibung", type: "string", required: true, maxLength: 200 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) },
-      { name: "ort", description: "Einsatzort", type: "string", maxLength: 200 }
-    ],
-    async run(c) {
-      const title = str3(c, "titel");
-      if (title.length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const prio = PRIO[str3(c, "prioritaet")] ?? "MEDIUM";
-        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str3(c, "ort") || void 0 });
-        return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "profil",
-    description: "Zeigt dein verkn\xFCpftes Konto und deine Rollen",
-    async run(c) {
-      try {
-        const me = await c.api.asUser(c.discordId, "GET", "/auth/me");
-        return { ephemeral: true, embeds: [{ title: `\u{1FAAA} ${plain2(me.displayName)}`, color: COLORS.info, fields: [
-          { name: "Benutzer", value: `@${plain2(me.username)}`, inline: true },
-          { name: "Roblox-ID", value: String(me.robloxUserId ?? "nicht hinterlegt"), inline: true },
-          { name: "Rollen", value: clip2(me.roles.map(plain2).join(", ") || "keine", 1024) },
-          { name: "Berechtigungen", value: `${me.permissions.length} aktiv`, inline: true }
-        ] }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "entverknuepfen",
-    description: "L\xF6st die Verkn\xFCpfung deines Discord-Kontos",
-    async run(c) {
-      try {
-        await c.api.asUser(c.discordId, "DELETE", "/discord/link");
-        return okReply("Verkn\xFCpfung gel\xF6st. Im Dashboard (Chat-Symbol oben rechts) kannst du sie jederzeit neu herstellen.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
     name: "team",
     description: "Zeigt, wer im Dienst ist",
     async run(c) {
       try {
         const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
         const on2 = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
-        const lines = on2.slice(0, 25).map((r) => `\u2022 **${plain2(r.callsign ?? "\u2014")}** ${plain2(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain2(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
+        const lines = on2.slice(0, 25).map((r) => `\u2022 **${plain(r.callsign ?? "\u2014")}** ${plain(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
         return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on2.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzinfo",
-    description: "Zeigt Details zu einem Einsatz",
-    options: [{ name: "nummer", description: "Einsatznummer, z. B. I-2026-ABC123", type: "string", required: true, maxLength: 32 }],
-    async run(c) {
-      try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
-        if (!incident) return reply;
-        const d = await c.api.asUser(c.discordId, "GET", `/incidents/${incident.id}`);
-        const i = d.incident;
-        const units = (i.units ?? []).filter((u) => !u.clearedAt).map((u) => plain2(u.unit.callsign)).join(", ") || "keine";
-        return { ephemeral: true, embeds: [{ title: clip2(`\u{1F6A8} ${i.number} \u2014 ${plain2(i.title)}`, 256), color: COLORS.info, description: i.description ? clip2(plain2(i.description), 1500) : void 0, fields: [
-          { name: "Priorit\xE4t", value: label(i.priority), inline: true },
-          { name: "Status", value: label(i.status), inline: true },
-          { name: "Ort", value: clip2(plain2(i.location), 1024), inline: true },
-          { name: "Einheiten", value: clip2(units, 1024) },
-          { name: "Verlauf", value: clip2(d.timeline.slice(0, 5).map((t2) => `\u2022 ${plain2(t2.summary)}`).join("\n") || "\u2014", 1024) }
-        ] }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzstatus",
-    description: "\xC4ndert den Status eines Einsatzes",
-    options: [
-      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
-    ],
-    async run(c) {
-      const status3 = INC_STATUS[str3(c, "status")];
-      if (!status3) return errorReply("Unbekannter Status.");
-      try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
-        if (!incident) return reply;
-        if (status3 === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
-        else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status: status3 });
-        return okReply(`**${incident.number}** \u2192 ${label(status3)}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzzuweisen",
-    description: "Weist eine Einheit einem Einsatz zu",
-    options: [
-      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 }
-    ],
-    async run(c) {
-      try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
-        if (!incident) return reply;
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
-        if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/assign`, { unitId: unit.id });
-        return okReply(`**${plain2(unit.callsign)}** wurde **${incident.number}** zugewiesen.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "bericht",
-    description: "Schreibt einen Polizeibericht (Entwurf oder direkt einreichen)",
-    options: [
-      { name: "titel", description: "Titel", type: "string", required: true, maxLength: 200 },
-      { name: "text", description: "Berichtstext", type: "string", required: true, maxLength: 4e3 },
-      { name: "typ", description: "Berichtstyp (Standard: allgemein)", type: "string", choices: choices2(REPORT) },
-      { name: "einreichen", description: "Direkt zur Pr\xFCfung einreichen", type: "boolean" }
-    ],
-    async run(c) {
-      if (str3(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const type = REPORT[str3(c, "typ")] ?? "GENERAL";
-        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str3(c, "titel"), content: { body: str3(c, "text") } });
-        if (c.opts.einreichen === true) {
-          await c.api.asUser(c.discordId, "POST", `/reports/${r.id}/submit`);
-          return okReply(`Bericht **${r.number}** angelegt und **eingereicht**.`);
-        }
-        return okReply(`Bericht **${r.number}** als **Entwurf** gespeichert (im Web bearbeiten/einreichen).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "beschwerde",
-    description: "Erfasst eine Beschwerde",
-    options: [
-      { name: "kategorie", description: "z. B. Verhalten", type: "string", required: true, maxLength: 64 },
-      { name: "beschreibung", description: "Was ist passiert? (mind. 10 Zeichen)", type: "string", required: true, maxLength: 4e3 },
-      { name: "person", description: "Betroffene Person (Roblox-Name oder -ID)", type: "string", maxLength: 64 }
-    ],
-    async run(c) {
-      if (str3(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
-      if (str3(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
-      try {
-        let subjectId;
-        if (str3(c, "person")) {
-          const r = await resolvePerson(c, str3(c, "person"));
-          if (!r.person) return r.reply;
-          subjectId = r.person.id;
-        }
-        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str3(c, "kategorie"), description: str3(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
-        return okReply(`Beschwerde **${res.number}** erfasst.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "fahndung",
-    description: "Schreibt eine Person zur Fahndung aus",
-    options: [
-      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
-      { name: "grund", description: "Fahndungsgrund", type: "string", required: true, maxLength: 500 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) }
-    ],
-    async run(c) {
-      if (str3(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const { person, reply } = await resolvePerson(c, str3(c, "person"));
-        if (!person) return reply;
-        const priority = PRIO[str3(c, "prioritaet")] ?? "MEDIUM";
-        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str3(c, "grund"), priority });
-        return okReply(`**${plain2(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
       } catch (e) {
         return mapError(e);
       }
@@ -87125,16 +86586,14 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     async run(c) {
       try {
         const r = await c.api.asUser(c.discordId, "GET", "/notifications?filter=unread&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F514} Ungelesen (${r.unread})`, r.items.map((n) => `\u2022 ${plain2(n.title)}`), "Keine ungelesenen Benachrichtigungen.")] };
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F514} Ungelesen (${r.unread})`, r.items.map((n) => `\u2022 ${plain(n.title)}`), "Keine ungelesenen Benachrichtigungen.")] };
       } catch (e) {
         return mapError(e);
       }
     }
   },
   ...FEATURE_COMMANDS,
-  ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
-  ...CAD_COMMANDS,
   ...DUTY_REPORT_COMMANDS,
   ...WARNING_COMMANDS,
   ...RADIO_WHITELIST_COMMANDS,
@@ -87480,7 +86939,7 @@ function welcomeEmbed(def, m, now = Date.now(), bannerFile) {
 }
 function createWelcome(api2, actions, log = console.error, local) {
   const cache = /* @__PURE__ */ new Map();
-  const config2 = async (guildId) => {
+  const config = async (guildId) => {
     const hit = cache.get(guildId);
     if (hit && Date.now() - hit.at < CACHE_MS) return hit.cfg;
     const cfg2 = await api2.service("GET", `/bot/welcome?guildId=${guildId}`);
@@ -87515,7 +86974,7 @@ function createWelcome(api2, actions, log = console.error, local) {
   return {
     async joined(m) {
       if (m.bot) return;
-      const cfg2 = await config2(m.guildId).catch((e) => {
+      const cfg2 = await config(m.guildId).catch((e) => {
         log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`);
         return null;
       });
@@ -87528,7 +86987,7 @@ function createWelcome(api2, actions, log = console.error, local) {
     },
     async left(m) {
       if (m.bot) return;
-      const cfg2 = await config2(m.guildId).catch((e) => {
+      const cfg2 = await config(m.guildId).catch((e) => {
         log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`);
         return null;
       });
@@ -87540,7 +86999,7 @@ function createWelcome(api2, actions, log = console.error, local) {
     /** Test aus dem Dashboard: Nachricht bzw. DM wie beim echten Beitritt/Austritt – auch wenn sie ausgeschaltet ist, ohne Rollen/Aktionen. */
     async test(kind2, m) {
       cache.delete(m.guildId);
-      const cfg2 = await config2(m.guildId);
+      const cfg2 = await config(m.guildId);
       if (kind2 === "dm") {
         await actions.dm(m.id, renderWelcomeText(cfg2.dm.message, m).slice(0, 2e3));
         return;
@@ -87695,7 +87154,7 @@ async function restoreGuild(guild, data, parts) {
 var CACHE_MS2 = 3e4;
 function createVerify(api2, ops, log = console.error) {
   const cache = /* @__PURE__ */ new Map();
-  const config2 = async (guildId) => {
+  const config = async (guildId) => {
     const hit = cache.get(guildId);
     if (hit && Date.now() - hit.at < CACHE_MS2) return hit.cfg;
     const cfg2 = await api2.service("GET", `/bot/verify/config?guildId=${guildId}`);
@@ -87712,7 +87171,7 @@ function createVerify(api2, ops, log = console.error) {
     /** Beitritt: Verifizierte bekommen sofort Rollen + Nickname, alle anderen die „nicht verifiziert“-Rollen. */
     async joined(m) {
       if (m.bot) return;
-      const cfg2 = await config2(m.guildId).catch((e) => {
+      const cfg2 = await config(m.guildId).catch((e) => {
         log(`verify config not loaded: ${e instanceof Error ? e.message : e}`);
         return null;
       });
@@ -88026,8 +87485,8 @@ var BotBackupService = class {
     const cur = await this.store.get(plan.guildId, { fresh: true });
     if (cur.revision !== plan.currentRevision) throw new Error("Die Einstellungen wurden seit der Pr\xFCfung ge\xE4ndert \u2013 bitte neu planen.");
     const { meta: safety } = await this.create(plan.guildId, { reason: "vor-wiederherstellung", by: o.by, guildName: o.guildName ?? null });
-    const config2 = await this.store.replace(plan.guildId, parseGuildConfig(again.contents.guildConfig), { by: o.by, expectRevision: plan.currentRevision });
-    return { safety, config: config2 };
+    const config = await this.store.replace(plan.guildId, parseGuildConfig(again.contents.guildConfig), { by: o.by, expectRevision: plan.currentRevision });
+    return { safety, config };
   }
 };
 
