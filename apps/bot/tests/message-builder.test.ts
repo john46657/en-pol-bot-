@@ -87,7 +87,7 @@ describe('Message Builder im Bot – Buttons/Menüs', () => {
   it('Antwort nur für die Person', async () => {
     const { c, calls } = ctx({ type: 'reply', text: 'Nur für dich' }, { values: ['o1'] });
     expect(await MB_INTERACTION.run(c as never)).toEqual({ ephemeral: true, content: 'Nur für dich' });
-    expect(calls[0]).toEqual({ path: '/bot/message-builder/interactions', body: { actionId: ID, guildId: '480000000000000001', discordId: '485000000000000001', value: 'o1' } });
+    expect(calls[0]).toEqual({ path: '/bot/message-builder/interactions', body: { actionId: ID, guildId: '480000000000000001', discordId: '485000000000000001', values: ['o1'], value: 'o1' } });
   });
   it('Rolle umschalten; Fehler verständlich; veraltete Aktion', async () => {
     const changes: unknown[] = [];
