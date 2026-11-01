@@ -47,8 +47,14 @@ describe('Backups', () => {
     // nach dem Backup angelegt → nach dem Wiederherstellen weg
     await admin.post('/api/v1/persons').send({ robloxUsername: 'Bk_After_Backup' });
     expect((await admin.post(`/api/v1/backups/data/${made.body.name}/restore`).send({})).status).toBe(400); // Bestätigung fehlt
-    const res = await admin.post(`/api/v1/backups/data/${made.body.name}/restore`).send({ confirm: 'WIEDERHERSTELLEN' });
+    // Backup-Center 2.0: neuere Daten werden nicht unbemerkt überschrieben – erst nach ausdrücklicher Bestätigung
+    const blocked = await admin.post(`/api/v1/backups/data/${made.body.name}/restore`).send({ confirm: 'WIEDERHERSTELLEN' });
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.details.reason).toBe('NEWER_DATA');
+    expect(await prisma.person.findFirst({ where: { robloxUsername: 'Bk_After_Backup' } })).not.toBeNull();
+    const res = await admin.post(`/api/v1/backups/data/${made.body.name}/restore`).send({ confirm: 'WIEDERHERSTELLEN', acknowledgeNewer: true });
     expect(res.status).toBe(200);
+    expect(res.body.check.ok).toBe(true);
     expect(res.body.safety).toMatch(/^vor-wiederherstellung-/);
     expect(await prisma.person.findFirst({ where: { robloxUsername: 'Bk_After_Backup' } })).toBeNull();
     expect((await admin.get('/api/v1/auth/me')).status).toBe(200); // Sitzung bleibt

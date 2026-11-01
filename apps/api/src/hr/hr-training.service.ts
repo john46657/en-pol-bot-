@@ -5,6 +5,7 @@ import { PermissionService } from '../authz/permission.service';
 import type { Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { HrCoreService } from './hr-core.service';
+import { QualificationRegistryService } from './qualification-registry.service';
 
 export const trainingSchema = z.object({
   name: z.string().trim().min(1).max(100), description: z.string().max(3000).nullable().default(null), requirements: z.string().max(1000).nullable().default(null),
@@ -25,7 +26,7 @@ const certNo = () => `Z-${new Date().getUTCFullYear()}-${Array.from({ length: 6 
 /** Ausbildungen (mit Fortschritt und Zertifikat). Prüfungen: hr-exam.service.ts */
 @Injectable()
 export class HrTrainingService {
-  constructor(private readonly core: HrCoreService, private readonly perms: PermissionService) {}
+  constructor(private readonly core: HrCoreService, private readonly perms: PermissionService, private readonly quals: QualificationRegistryService) {}
   private get prisma() { return this.core.prisma; }
 
   // ---------------- Ausbildungen ----------------
@@ -79,6 +80,8 @@ export class HrTrainingService {
       await this.core.audit.record(actor, { action: 'training.progress', module: 'training', entityType: 'HrTrainingProgress', entityId: r.id, before, after: r }, tx);
       return r;
     });
+    // Qualifikationsregister: mit dieser Ausbildung verknüpfte Qualifikationen (ohne autoGrant zur Bestätigung)
+    if (passed && before?.status !== 'PASSED') await this.quals.fromAchievement('TRAINING', { trainingId: t.id }, p.id, row.id, actor.userId).catch(() => []);
     if (passed && before?.status !== 'PASSED') await this.core.notify('training.passed', { memberUserId: p.userId, title: `🎓 Ausbildung bestanden: ${t.name}`, entityType: 'Personnel', entityId: p.id, publicText: `**${p.user.displayName}** hat die Ausbildung **${t.name}** bestanden.`, dmText: `Glückwunsch! Du hast die Ausbildung **${t.name}** bestanden.${row.certificateNo ? `\nZertifikat: ${row.certificateNo}` : ''}`, color: 0x22c55e });
     return row;
   }

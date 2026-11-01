@@ -6,6 +6,8 @@ import { TeamChanceModule } from './teamchance/teamchance.module';
 import { CadModule } from './cad/cad.module';
 import { MdtModule } from './mdt/mdt.module';
 import { FleetModule } from './fleet/fleet.module';
+import { HelpModule } from './help/help.module';
+import { OrgModule } from './org/org.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, DiscoveryModule } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -70,7 +72,7 @@ import { HrModule } from './hr/hr.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : 300 }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
-    DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, PersonsModule, VehiclesModule, TicketsModule,
+    DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, HelpModule, OrgModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, WantedModule,
     PersonnelModule, DutyModule, RemindersModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerLinksModule, MultiServerModule, MultiServerRestoreModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule,
   ],

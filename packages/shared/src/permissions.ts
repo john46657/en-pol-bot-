@@ -16,15 +16,17 @@ export const PERMISSION_CATALOG = {
   complaints: ['view', 'create', 'assign', 'investigate', 'resolve', 'close'],
   wanted: ['view', 'create', 'edit', 'activate', 'clear'],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
-  personnel: ['view', 'view_sensitive', 'create', 'edit', 'delete', 'promote', 'discipline'],
+  personnel: ['view', 'view_sensitive', 'create', 'edit', 'delete', 'promote', 'discipline', 'view_unit', 'notes_view', 'notes_create', 'notes_confidential', 'documents'],
+  /** Qualifikationsregister (Personalakte 2.0): view = ansehen, grant = vergeben/bestätigen, revoke = ruhen lassen/entziehen, manage = Katalog verwalten */
+  qualification: ['view', 'grant', 'revoke', 'manage'],
   /** Beförderungssystem */
   promotion: ['view', 'create', 'edit', 'review', 'approve', 'reject', 'execute', 'manage_ranks', 'manage_requirements', 'view_history', 'manage_settings', 'manage'],
   /** Versetzungen zwischen Abteilungen */
   transfer: ['view', 'create', 'approve', 'reject'],
   /** Ausbildungen und Zertifikate */
-  training: ['view', 'create', 'manage'],
+  training: ['view', 'create', 'manage', 'materials'],
   /** Prüfungen */
-  exam: ['view', 'create', 'manage', 'grade'],
+  exam: ['view', 'create', 'manage', 'grade', 'conduct', 'results'],
   warning: ['view', 'create', 'manage'],
   awards: ['view', 'create', 'manage'],
   /** Dienstnummern-System */
@@ -56,6 +58,12 @@ export const PERMISSION_CATALOG = {
   roles: ['view', 'manage'],
   /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
   servers: ['view', 'manage'],
+  /** Organigramm: view = ansehen, edit = Einheiten bearbeiten/Personen zuordnen, hierarchy = Struktur (übergeordnete Einheit, Führung) ändern */
+  org: ['view', 'edit', 'hierarchy'],
+  /** Backup-Center: Daten-Backups enthalten alle Server – zusätzlich nur für globale Systemadministratoren. */
+  backup: ['view', 'create', 'download', 'verify', 'archive', 'restore', 'settings'],
+  /** Hilfe-Center (Wissensdatenbank): view = veröffentlichte Artikel lesen, manage = Artikel/Kategorien bearbeiten (auch Entwürfe) */
+  help: ['view', 'manage'],
   /** Module je Server an/aus und deren Einstellungen */
   modules: ['view', 'manage'],
   /**

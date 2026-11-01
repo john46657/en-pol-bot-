@@ -8,12 +8,17 @@ import { HrRequestsService } from './hr-requests.service';
 import { HrTrainingService } from './hr-training.service';
 import { HrExamService } from './hr-exam.service';
 import { ServiceNumbersService } from './service-numbers.service';
+import { OrgModule } from '../org/org.module';
+import { PersonnelFileController, QualificationRegistryController, TrainingExtController } from './hr-ext.controller';
+import { PersonnelFileService } from './personnel-file.service';
+import { QualificationRegistryService } from './qualification-registry.service';
+import { TrainingExtService } from './training-ext.service';
 
 /** Personal- & Verwaltungssystem: Personalakte, Ränge/Beförderungen, Versetzungen, Ausbildungen/Prüfungen, Dienstnummern. */
 @Module({
-  imports: [BackupModule],
-  controllers: [HrController, HrExamController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, BotTrainingSessionsController, ServiceNumbersController],
-  providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrExamService, HrTrainingSessionsService, ServiceNumbersService],
-  exports: [HrCoreService, ServiceNumbersService],
+  imports: [BackupModule, OrgModule],
+  controllers: [HrController, HrExamController, HrRequestsController, HrTrainingController, HrTrainingSessionsController, BotTrainingSessionsController, ServiceNumbersController, PersonnelFileController, QualificationRegistryController, TrainingExtController],
+  providers: [HrCoreService, HrPeopleService, HrRequestsService, HrTrainingService, HrExamService, HrTrainingSessionsService, ServiceNumbersService, QualificationRegistryService, PersonnelFileService, TrainingExtService],
+  exports: [HrCoreService, ServiceNumbersService, QualificationRegistryService, PersonnelFileService],
 })
 export class HrModule {}

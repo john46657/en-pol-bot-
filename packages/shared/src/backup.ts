@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { backupScheduleSchema } from './extension4';
 
 /** Rechte-Überschreibung eines Kanals: `id` = Rolle (im Backup) oder Mitglied. */
 export interface BackupOverwrite { id: string; type: 'role' | 'member'; allow: string; deny: string }
@@ -24,5 +25,13 @@ export const backupConfigSchema = z.object({
   discordAuto: z.boolean().default(false),
   /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
   keep: z.number().int().min(1).max(60).default(14),
+  /** Backup-Center 2.0: Zeitplan der automatischen Daten-Backups (Standard: stündlich wie bisher) */
+  schedule: backupScheduleSchema.default({}),
+  /** Umfang der automatischen Backups */
+  autoScope: z.enum(['FULL', 'DATABASE']).default('DATABASE'),
+  /** Backups verschlüsseln (AES-256-GCM), sofern BACKUP_ENCRYPTION_KEY gesetzt ist */
+  encrypt: z.boolean().default(true),
+  /** Statusmeldung (Erfolg/Fehler) an Systemadministratoren: Dashboard + optional privater Discord-Kanal */
+  statusChannelId: z.string().regex(/^\d{15,25}$/).nullable().default(null),
 });
 export type BackupConfig = z.infer<typeof backupConfigSchema>;

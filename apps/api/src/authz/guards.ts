@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { BOT_SERVICE_KEY, DISCORD_MANAGER_KEY, PERMISSION_KEY, PUBLIC_KEY } from './decorators';
+import { ANY_PERMISSION_KEY, BOT_SERVICE_KEY, DISCORD_MANAGER_KEY, PERMISSION_KEY, PUBLIC_KEY } from './decorators';
 import { DiscordService } from '../discord/discord.service';
 import { DiscordAccessService } from './discord-access.service';
 import { AuthorizationService } from './authorization.service';
@@ -44,6 +44,8 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
   ['GET', /^\/duty-reports(\/templates)?$/], ['GET', new RegExp(`^/duty-reports/templates/${UUID}/prefill$`)], ['GET', /^\/duty-reports\/[A-Za-z0-9-]{1,40}$/],
   ['POST', /^\/duty-reports$/], ['PATCH', new RegExp(`^/duty-reports/${UUID}$`)], ['POST', new RegExp(`^/duty-reports/${UUID}/review$`)],
+  // Erweiterungspaket 4.0: Personal-Auskunft, Organigramm, Hilfe-Center, Qualifikationen (Rechte prüft die API)
+  ['GET', /^\/personnel-file\/lookup$/], ['GET', /^\/org\/summary$/], ['GET', /^\/help\/articles$/], ['GET', /^\/help\/articles\/[a-z0-9-]{1,80}$/], ['GET', /^\/qualification-registry\/mine$/],
   ['POST', /^\/support-tickets$/], ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
 ];
 
@@ -121,8 +123,20 @@ export class PermissionGuard implements CanActivate {
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     if (ctx.getType() !== 'http') return true;
     const required = this.reflector.getAllAndOverride<string[]>(PERMISSION_KEY, [ctx.getHandler(), ctx.getClass()]);
+    const any = this.reflector.getAllAndOverride<string[]>(ANY_PERMISSION_KEY, [ctx.getHandler(), ctx.getClass()]);
+    if (any?.length) {
+      const req = ctx.switchToHttp().getRequest<AppRequest>();
+      if (!req.user) throw new AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
+      for (const p of any) if ((await this.authz.authorize(req.user.id, currentGuild(), p)).allowed) return required?.length ? this.checkAll(req, required, ctx) : true;
+      // keine erlaubt → wie gewohnt verweigern (inkl. Protokoll)
+      await this.authz.assert(req.user.id, currentGuild(), any[0]!, {}, { requestId: req.requestId, ip: req.ip });
+    }
     if (!required?.length) return true;
     const req = ctx.switchToHttp().getRequest<AppRequest>();
+    return this.checkAll(req, required, ctx);
+  }
+
+  private async checkAll(req: AppRequest, required: string[], ctx: ExecutionContext): Promise<boolean> {
     if (!req.user) throw new AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
     const manager = this.reflector.getAllAndOverride<'police' | 'quali' | undefined>(DISCORD_MANAGER_KEY, [ctx.getHandler(), ctx.getClass()]);
     for (const p of required) {

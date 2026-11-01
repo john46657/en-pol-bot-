@@ -18,6 +18,9 @@ export const BotService = () => SetMetadata(BOT_SERVICE_KEY, true);
 export const ServiceAuthorized = () => SetMetadata(SERVICE_AUTHORIZED_KEY, true);
 /** Alle genannten Permissions werden benötigt. */
 export const RequirePermission = (...p: PermissionKey[]) => SetMetadata(PERMISSION_KEY, p);
+export const ANY_PERMISSION_KEY = 'anyPermissions';
+/** Mindestens EINE der genannten Permissions wird benötigt (z. B. `personnel.view` ODER `personnel.view_unit`; die Feinprüfung macht der Service). */
+export const RequireAnyPermission = (...p: PermissionKey[]) => SetMetadata(ANY_PERMISSION_KEY, p);
 export const DISCORD_MANAGER_KEY = 'discordManager';
 /**
  * Discord-Buttons an Bewerbungen: wer im Discord eine der eingestellten Manager-Rollen (Setup → Role Config) hat, darf die

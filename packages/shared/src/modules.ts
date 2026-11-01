@@ -7,14 +7,15 @@
 export interface ModuleDef { key: string; name: string; description: string; system?: boolean; off?: boolean; dependsOn?: string[]; permissionPrefixes: string[] }
 
 export const MODULES = [
-  { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules'] },
+  { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules', 'backup', 'help'] },
   { key: 'cad', name: 'CAD-Leitstelle', description: 'Einsätze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge', permissionPrefixes: ['cad', 'fleet'] },
   { key: 'mdt', name: 'MDT', description: 'Personen, Fahrzeuge, Haftbefehle, Bußgelder', permissionPrefixes: ['persons', 'vehicles', 'wanted', 'tickets'] },
   { key: 'dispatch', name: 'Dispatch', description: 'Einsatzverwaltung und Einheiten-Board', permissionPrefixes: ['dispatch', 'incidents'] },
   { key: 'reports', name: 'Berichte', description: 'Einsatzberichte, Tages-/Wochenberichte', permissionPrefixes: ['reports', 'dutyreports'] },
   { key: 'shift_logs', name: 'Shift Logs', description: 'Dienststatus, Schichten, Dienstzeiten, Wochenranglisten', permissionPrefixes: ['team'] },
   { key: 'investigations', name: 'Beschwerden', description: 'Beschwerden', permissionPrefixes: ['complaints'] },
-  { key: 'personnel', name: 'Personal', description: 'Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern', permissionPrefixes: ['personnel', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'leave'] },
+  { key: 'personnel', name: 'Personal', description: 'Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern', permissionPrefixes: ['personnel', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'leave', 'qualification'] },
+  { key: 'org', name: 'Organigramm', description: 'Organisationsstruktur: Führung, Abteilungen, Dienstgruppen, Zuständigkeiten', permissionPrefixes: ['org'] },
   { key: 'applications', name: 'Bewerbungen', description: 'Bewerbungen, Qualifikationen, Academy, Team-Chance', permissionPrefixes: ['applications', 'qualifications', 'academy', 'teamchance'] },
   { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },
@@ -58,6 +59,7 @@ export function moduleDependencyError(key: string, enabled: boolean, state: Reco
 export const BOT_COMMAND_MODULES: Record<string, string> = {
   dienstbericht: 'reports',
   shift: 'shift_logs', dienst: 'shift_logs', dienststunden: 'shift_logs', team: 'shift_logs', dienstpanel: 'shift_logs', teamliste: 'shift_logs',
+  personal: 'personnel', organigramm: 'org',
   abmeldung: 'personnel', leave: 'personnel', ausbildung: 'personnel', verwarnen: 'personnel',
   teamchance: 'applications',
   support: 'support', ticket: 'support',
