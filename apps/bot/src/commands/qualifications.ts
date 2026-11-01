@@ -1,11 +1,11 @@
-import { applyPanelParts, checkAnswer, DEFAULT_APPLICATION_MESSAGES, qualiPanelParts, type ApplicationPanelParts, formatMinutes, normalizeField, renderApplicationText, rolesMatch, type Field, type FormField } from '@enrp/shared';
+import { checkAnswer, DEFAULT_APPLICATION_MESSAGES, qualiPanelParts, formatMinutes, normalizeField, renderApplicationText, rolesMatch, type Field, type FormField } from '@enrp/shared';
 import { BotApiError, type Api } from '../api';
 import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply, type SelectSpec } from '../format';
-import type { CommandDef, Ctx, InteractionDef } from './types';
+import type { Ctx, InteractionDef } from './types';
 import { mapError } from './errors';
 import type { DiscordConfig, Platform } from '../platform';
 
-// ---------------- Bewerbungen per Direktnachricht: Polizei-Bewerbung (/bewerbung, /bewerbungspanel) und Qualifikationen (SEK, Flugstaffel, Ausbilder … über /qualipanel) ----------------
+// ---------------- Bewerbungen per Direktnachricht: Polizei-Bewerbung und Qualifikationen (SEK, Flugstaffel, Ausbilder …) über die Panels aus dem Dashboard ----------------
 /** Einstellungen je Bewerbung (Dashboard → Setup): Texte, Rollen-Voraussetzungen, Manager-Rollen, Zeitlimit. */
 export interface AppSettings {
   messages?: { confirmation?: string; completion?: string };
@@ -124,10 +124,7 @@ async function submitSession(api: Api, s: Session, userId: string, userName: str
   return (await api.service<{ number: string }>('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
 
-/** Fallback, falls das System die Panel-Texte nicht liefert (Texte: Web → Qualifications → Setup). */
-const POLICE_PANEL: EmbedData = { title: '📋 Bewerbung bei EN Polizei', color: COLORS.info, description: 'Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.' };
-
-/** Schritt 1 (Panel-Auswahl, Button oder /bewerbung): Bestätigung per DM mit Start/Abbrechen, im Channel „Zur Bewerbung“. */
+/** Schritt 1 (Panel-Auswahl oder Button): Bestätigung per DM mit Start/Abbrechen, im Channel „Zur Bewerbung“. */
 async function offer(c: Ctx, key: string | undefined): Promise<Reply> {
   const running = sessions.get(c.discordId);
   if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
@@ -165,53 +162,13 @@ export function panelEmbed(cfg: QualiConfig): EmbedData {
   const p = qualiPanelParts(cfg);
   return { title: p.title, color: COLORS.info, description: p.description };
 }
-/** Panel-Bausteine (gemeinsam mit dem Dashboard) → Nachricht für `postPanel`. */
-const panelPost = (p: ApplicationPanelParts) => ({ embed: { title: p.title, color: COLORS.info, ...(p.description ? { description: p.description } : {}) }, ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) });
-
-export const QUALI_COMMANDS: CommandDef[] = [
-  {
-    name: 'bewerbung', description: 'Bewirb dich bei EN Polizei (Fragen per Direktnachricht)',
-    async run(c) { try { return await offer(c, POLICE); } catch (e) { return mapError(e); } },
-  },
-  {
-    name: 'bewerbungspanel', description: 'Postet das Bewerbungs-Panel („Jetzt bewerben“) in diesen Kanal',
-    async run(c) {
-      if (!c.guildId) return errorReply('Das geht nur auf einem Server, nicht per Direktnachricht.');
-      if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
-      if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
-      try {
-        const cfg = await getConfig(c.api, c.guildId).catch(() => undefined);
-        const panel = cfg?.police ? panelPost(applyPanelParts(cfg)) : { embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' as const }] };
-        await c.platform.postPanel({ channelId: c.channelId, ...panel });
-      } catch { return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).'); }
-      return okReply('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).');
-    },
-  },
-  {
-    name: 'qualipanel', description: 'Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …) in diesen Kanal',
-    async run(c) {
-      if (!c.guildId) return errorReply('Das geht nur auf einem Server, nicht per Direktnachricht.');
-      if (!c.isGuildAdmin) return errorReply('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
-      if (!c.channelId || !c.platform) return errorReply('Panel kann hier nicht gepostet werden.');
-      try {
-        const cfg = await getConfig(c.api, c.guildId);
-        await c.platform.postPanel({ channelId: c.channelId, ...panelPost(qualiPanelParts(cfg)) });
-        const ch = await c.config?.().catch(() => undefined);
-        return okReply(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
-      } catch (e) {
-        if (e instanceof BotApiError) return mapError(e);
-        return errorReply('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
-      }
-    },
-  },
-];
 
 /** Antwort auf eine Direktnachricht während einer laufenden Bewerbung. */
 export async function handleDirectMessage(a: { userId: string; userName: string; content: string; api: Api; sendDm: SendDm; robloxLookup?: RobloxLookup; robloxCheck?: RobloxCheck; now?: number }): Promise<void> {
   const now = a.now ?? Date.now();
   const s = sessions.get(a.userId);
   const say = (description: string, color: number = COLORS.info, buttons?: ButtonSpec[]) => a.sendDm(a.userId, { embed: { title: s ? clip(s.unitName, 256) : 'Bewerbung', description, color }, buttons });
-  if (!s) { await say('Du hast gerade keine laufende Bewerbung. Starte eine über das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).', COLORS.neutral); return; }
+  if (!s) { await say('Du hast gerade keine laufende Bewerbung. Starte eine über das Bewerbungs- oder Qualifikations-Panel auf dem Server.', COLORS.neutral); return; }
   if (s.expiresAt <= now) {
     sessions.delete(a.userId);
     unreport(a.api, a.userId, s.unit);

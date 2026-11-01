@@ -61,29 +61,8 @@ describe('commands run as the linked user and reply ephemerally', () => {
   it('/verknuepfen is gone – linking happens in the dashboard', () => {
     expect(COMMANDS.some((c) => c.name === 'verknuepfen')).toBe(false);
   });
-  it('/person finds a person, shows tickets and flags wanted links', async () => {
-    const { api, calls } = fakeApi({
-      'GET /persons?q=': { items: [{ id: 'p1', robloxUsername: 'Alex_Racer', robloxUserId: '7000001', status: 'ACTIVE', aliases: [] }], total: 1 },
-      'GET /persons/p1': { person: { id: 'p1', robloxUsername: 'Alex_Racer', robloxUserId: '7000001', status: 'ACTIVE', aliases: ['AR'], notes: '**bold** @everyone' }, tickets: [{}, {}], links: [{ entityType: 'Wanted' }] },
-    });
-    const r = await run('person', { suche: 'alex' }, api);
-    expect(r.ephemeral).toBe(true);
-    expect(calls.every((c) => c.kind === 'user' && c.discordId === '123456789012345678')).toBe(true);
-    const e = r.embeds![0] as { fields: { name: string; value: string }[]; footer?: string };
-    expect(e.fields.find((f) => f.name === 'Tickets')?.value).toBe('2');
-    expect(e.footer).toContain('Fahndung');
-    expect(JSON.stringify(e)).not.toContain('@everyone'); // Pings in Nutzerdaten werden entschärft
-  });
-  it('/person without permission yields a friendly 403 message', async () => {
-    const { api } = fakeApi({ 'GET /persons': new BotApiError(403, 'PERMISSION_DENIED', 'nope') });
-    expect(text(await run('person', { suche: 'x' }, api))).toContain('keine Berechtigung');
-  });
-  it('/kennzeichen and /fahndungen format lists; empty states are explicit', async () => {
-    const a = fakeApi({ 'GET /vehicles': { items: [{ plate: 'LC1001', model: 'Falcon', color: 'Red', status: 'ACTIVE', owner: { robloxUsername: 'Alex' } }], total: 1 } });
-    expect(text(await run('kennzeichen', { kennzeichen: 'LC 1001' }, a.api))).toContain('LC1001');
-    expect(a.calls[0]!.path).toContain('LC%201001');
-    const b = fakeApi({ 'GET /wanted': { items: [], total: 0 } });
-    expect(text(await run('fahndungen', {}, b.api))).toContain('Keine aktiven Fahndungen');
+  it('removed slash commands are no longer registered (features stay reachable via dashboard, panels and buttons)', () => {
+    for (const n of ['profil', 'entverknuepfen', 'einheiten', 'einheitstatus', 'einsaetze', 'einsatz', 'einsatzinfo', 'einsatzstatus', 'einsatzzuweisen', 'cad', 'person', 'kennzeichen', 'fahndungen', 'fahndung', 'bericht', 'beschwerde', 'gefahrenstatus', 'bewerbung', 'bewerbungspanel', 'qualipanel', 'ermittlung', 'beweis']) expect(byName(n), `/${n}`).toBeUndefined();
   });
   it('/dienst maps German choices to duty statuses', async () => {
     const { api, calls } = fakeApi({ 'PUT /team/me/status': {} });
@@ -107,19 +86,6 @@ describe('commands run as the linked user and reply ephemerally', () => {
     expect(team).toContain('**Bea** — 0 h 30 min');
     const none = fakeApi({ 'GET /team/me/hours': { users: [] } });
     expect(text(await run('dienststunden', { tage: 1 }, none.api))).toContain('nicht im Dienst');
-  });
-  it('/einheitstatus resolves the callsign case-insensitively and rejects unknown units', async () => {
-    const { api, calls } = fakeApi({ 'GET /dispatch/units': [{ id: 'u1', callsign: 'ADAM-1', status: 'BUSY' }], 'PUT /dispatch/units/u1/status': {} });
-    expect(text(await run('einheitstatus', { rufzeichen: 'adam-1', status: 'verfuegbar' }, api))).toContain('AVAILABLE');
-    expect(calls.at(-1)).toMatchObject({ path: '/dispatch/units/u1/status', body: { status: 'AVAILABLE' } });
-    expect(text(await run('einheitstatus', { rufzeichen: 'zulu-9', status: 'verfuegbar' }, api))).toContain('nicht gefunden');
-  });
-  it('/einsatz validates input and maps priorities', async () => {
-    const { api, calls } = fakeApi({ 'POST /incidents': { number: 'I-2026-ABC123' } });
-    expect(text(await run('einsatz', { titel: 'x' }, api))).toContain('zu kurz');
-    expect(calls).toHaveLength(0);
-    expect(text(await run('einsatz', { titel: 'Banküberfall', prioritaet: 'kritisch', ort: 'Main St' }, api))).toContain('I-2026-ABC123');
-    expect(calls[0]!.body).toMatchObject({ title: 'Banküberfall', priority: 'CRITICAL', location: 'Main St' });
   });
   it('neutralizes markdown and mass pings, and respects Discord limits', () => {
     expect(plain('@everyone @here **x**')).not.toMatch(/@everyone|@here/);
@@ -232,69 +198,10 @@ describe('Discord registration rules', () => {
 });
 
 describe('extended commands', () => {
-  const INC = { id: 'i1', number: 'I-2026-ABC123', title: 'Bank', priority: 'HIGH', status: 'NEW', location: 'Main' };
-  it('/profil and /entverknuepfen', async () => {
-    const a = fakeApi({ 'GET /auth/me': { displayName: 'Oscar', username: 'officer1', robloxUserId: '9000002', roles: ['Police Member'], permissions: ['a', 'b'], lastLogin: null }, 'DELETE /discord/link': {} });
-    expect(text(await run('profil', {}, a.api))).toContain('Oscar');
-    expect(text(await run('entverknuepfen', {}, a.api))).toContain('Verknüpfung gelöst');
-    expect(a.calls[1]).toMatchObject({ method: 'DELETE', path: '/discord/link' });
-  });
   it('/team lists only people who are on duty', async () => {
     const { api } = fakeApi({ 'GET /team/overview': [{ name: 'Oscar', callsign: 'A-11', dutyStatus: 'ON_DUTY', unit: { callsign: 'ADAM-1' }, currentIncident: { number: 'I-1' } }, { name: 'Dina', callsign: 'D-4', dutyStatus: 'OFF_DUTY' }] });
     const t = text(await run('team', {}, api));
     expect(t).toContain('Oscar'); expect(t).toContain('ADAM-1'); expect(t).not.toContain('Dina'); expect(t).toContain('1 von 2');
-  });
-  it('/einsatzinfo resolves the number and shows details', async () => {
-    const { api } = fakeApi({ 'GET /incidents?q=': { items: [INC], total: 1 }, 'GET /incidents/i1': { incident: { ...INC, units: [{ clearedAt: null, unit: { callsign: 'ADAM-1' } }, { clearedAt: 'x', unit: { callsign: 'OLD-9' } }] }, timeline: [{ summary: 'Incident created' }] } });
-    const r = text(await run('einsatzinfo', { nummer: 'i-2026-abc123' }, api));
-    expect(r).toContain('ADAM-1'); expect(r).not.toContain('OLD-9'); expect(r).toContain('Incident created');
-  });
-  it('/einsatzstatus uses the close endpoint for "geschlossen" and the status endpoint otherwise', async () => {
-    const a = fakeApi({ 'GET /incidents?q=': { items: [INC], total: 1 }, 'POST /dispatch/incidents/i1/close': {}, 'PUT /dispatch/incidents/i1/status': {} });
-    await run('einsatzstatus', { nummer: INC.number, status: 'geschlossen' }, a.api);
-    expect(a.calls.at(-1)).toMatchObject({ method: 'POST', path: '/dispatch/incidents/i1/close' });
-    await run('einsatzstatus', { nummer: INC.number, status: 'vor_ort' }, a.api);
-    expect(a.calls.at(-1)).toMatchObject({ method: 'PUT', path: '/dispatch/incidents/i1/status', body: { status: 'ON_SCENE' } });
-    expect(text(await run('einsatzstatus', { nummer: INC.number, status: 'quatsch' }, a.api))).toContain('Unbekannter Status');
-  });
-  it('/einsatzstatus reports unknown/ambiguous incident numbers instead of guessing', async () => {
-    const none = fakeApi({ 'GET /incidents?q=': { items: [], total: 0 } });
-    expect(text(await run('einsatzstatus', { nummer: 'I-0', status: 'vor_ort' }, none.api))).toContain('nicht gefunden');
-    const many = fakeApi({ 'GET /incidents?q=': { items: [INC, { ...INC, id: 'i2', number: 'I-2026-ABC124' }], total: 2 } });
-    expect(text(await run('einsatzstatus', { nummer: 'I-2026-ABC', status: 'vor_ort' }, many.api))).toContain('Nicht eindeutig');
-    expect(many.calls.some((c) => c.method === 'PUT')).toBe(false);
-  });
-  it('/einsatzzuweisen assigns the unit', async () => {
-    const a = fakeApi({ 'GET /incidents?q=': { items: [INC], total: 1 }, 'GET /dispatch/units': [{ id: 'u1', callsign: 'ADAM-1' }], 'POST /dispatch/incidents/i1/assign': {} });
-    expect(text(await run('einsatzzuweisen', { nummer: INC.number, rufzeichen: 'adam-1' }, a.api))).toContain('zugewiesen');
-    expect(a.calls.at(-1)).toMatchObject({ path: '/dispatch/incidents/i1/assign', body: { unitId: 'u1' } });
-    expect(text(await run('einsatzzuweisen', { nummer: INC.number, rufzeichen: 'zulu' }, a.api))).toContain('Einheit nicht gefunden');
-  });
-  it('/bericht saves a draft or submits it when requested', async () => {
-    const a = fakeApi({ 'POST /reports/r1/submit': {}, 'POST /reports': { id: 'r1', number: 'R-2026-XYZ' } });
-    expect(text(await run('bericht', { titel: 'Nachtstreife', text: 'Alles ruhig', typ: 'patrouille' }, a.api))).toContain('Entwurf');
-    expect(a.calls[0]!.body).toEqual({ type: 'PATROL', title: 'Nachtstreife', content: { body: 'Alles ruhig' } });
-    expect(a.calls.some((c) => c.path.endsWith('/submit'))).toBe(false);
-    expect(text(await run('bericht', { titel: 'Nachtstreife', text: 'x', einreichen: true }, a.api))).toContain('eingereicht');
-    expect(a.calls.at(-1)!.path).toBe('/reports/r1/submit');
-    expect(text(await run('bericht', { titel: 'ab', text: 'x' }, a.api))).toContain('zu kurz');
-  });
-  it('/beschwerde validates, optionally resolves the person, and creates the complaint', async () => {
-    const a = fakeApi({ 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'Bella', robloxUserId: '2' }], total: 1 }, 'POST /complaints': { number: 'C-2026-AAA' } });
-    expect(text(await run('beschwerde', { kategorie: 'Verhalten', beschreibung: 'kurz' }, a.api))).toContain('zu kurz');
-    expect(text(await run('beschwerde', { kategorie: 'Verhalten', beschreibung: 'Der Beamte war unhöflich.', person: 'bella' }, a.api))).toContain('C-2026-AAA');
-    expect(a.calls.at(-1)!.body).toMatchObject({ category: 'Verhalten', subjectId: 'p1' });
-  });
-  it('/fahndung creates a record; /ermittlung and /beweis no longer exist', async () => {
-    const a = fakeApi({ 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'Cody', robloxUserId: '3' }], total: 1 }, 'POST /wanted': {} });
-    expect(byName('ermittlung')).toBeUndefined();
-    expect(byName('beweis')).toBeUndefined();
-    expect(text(await run('fahndung', { person: 'Cody', grund: 'Raub', prioritaet: 'dringend' }, a.api))).toContain('Fahndung');
-    expect(a.calls.at(-1)!.body).toEqual({ personId: 'p1', reason: 'Raub', priority: 'URGENT' });
-  });
-  it('write commands surface permission errors as friendly messages', async () => {
-    const a = fakeApi({ 'GET /persons': { items: [{ id: 'p1', robloxUsername: 'Cody', robloxUserId: '3' }], total: 1 }, 'POST /wanted': new BotApiError(403, 'PERMISSION_DENIED', 'x') });
-    expect(text(await run('fahndung', { person: 'Cody', grund: 'Raub' }, a.api))).toContain('keine Berechtigung');
   });
   it('/funk sends to the mapped channel; /benachrichtigungen lists unread', async () => {
     const a = fakeApi({ 'POST /communication/channels/DISPATCH/messages': {}, 'GET /notifications': { items: [{ title: 'Assigned to I-1' }], unread: 3 } });

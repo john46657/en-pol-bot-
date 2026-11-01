@@ -18,7 +18,7 @@ describe('Modul-Katalog', () => {
   });
   it('Befehle je Server nach Modulen; Bot-Befehle verweisen nur auf bekannte Module', () => {
     for (const m of Object.values(BOT_COMMAND_MODULES)) expect(MODULE_KEYS).toContain(m);
-    const all = [{ name: 'cad' }, { name: 'person' }, { name: 'hilfe' }];
-    expect(commandsForServer(all, ['cad']).map((c) => c.name)).toEqual(['person', 'hilfe']);
+    const all = [{ name: 'dienstbericht' }, { name: 'funk' }, { name: 'hilfe' }];
+    expect(commandsForServer(all, ['reports']).map((c) => c.name)).toEqual(['funk', 'hilfe']);
   });
 });

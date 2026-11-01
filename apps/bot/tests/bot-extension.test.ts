@@ -143,8 +143,8 @@ describe('Pflichttest 2: unterschiedliche Discord-Server haben getrennte Einstel
     expect(backups.verify(s, G2)).toContain('Die Sicherung gehört zu einem anderen Discord-Server.');
   });
   it('Module im Bot je Server ausblenden: nur Befehle verschwinden', () => {
-    const list = visibleCommands(COMMANDS, ['cad', 'personnel']);
-    expect(list.some((c) => c.name === 'cad')).toBe(false);
+    const list = visibleCommands(COMMANDS, ['communication', 'personnel']);
+    expect(list.some((c) => c.name === 'funk')).toBe(false);
     expect(list.some((c) => c.name === 'pruefung')).toBe(false);
     expect(list.some((c) => c.name === 'setup')).toBe(true); // Grundsystem bleibt immer
   });
@@ -454,8 +454,8 @@ describe('Pflichttest 6: fehlende Discord-Berechtigungen werden verständlich ge
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Pflichttest 7: bestehende Bot-Befehle funktionieren weiterhin', () => {
-  // Stand vor der Erweiterung (aus dem unveränderten Code erfasst)
-  const BEFORE = ['funkcode', 'teamchance', 'dashboard', 'panel', 'hilfe', 'person', 'kennzeichen', 'fahndungen', 'dienst', 'dienststunden', 'einheiten', 'einheitstatus', 'einsaetze', 'einsatz', 'profil', 'entverknuepfen', 'team', 'einsatzinfo', 'einsatzstatus', 'einsatzzuweisen', 'bericht', 'beschwerde', 'fahndung', 'funk', 'benachrichtigungen', 'gefahrenstatus', 'teamliste', 'funkfreigabe', 'dienstpanel', 'roblox', 'bewerbung', 'bewerbungspanel', 'qualipanel', 'abmeldung', 'leave', 'cad', 'dienstbericht', 'verwarnen', 'funkantrag', 'funkstatus', 'ausbildung', 'shift', 'support'];
+  // Stand vor der Erweiterung (aus dem unveränderten Code erfasst; ohne die bewusst entfernten Slash-Befehle wie /cad, /person, /bewerbung)
+  const BEFORE = ['funkcode', 'teamchance', 'dashboard', 'panel', 'hilfe', 'dienst', 'dienststunden', 'team', 'funk', 'benachrichtigungen', 'teamliste', 'funkfreigabe', 'dienstpanel', 'roblox', 'abmeldung', 'leave', 'dienstbericht', 'verwarnen', 'funkantrag', 'funkstatus', 'ausbildung', 'shift', 'support'];
   const PREFIXES = ['duty', 'quali', 'rwreq', 'tk', 'vs', 'leave', 'cad', 'verify', 'danger', 'support', 'fpanel', 'ipnl', 'mb', 'drep', 'trn', 'shift'];
   it('alle bisherigen Befehle und Interaktionen sind noch da, neue kollidieren nicht', () => {
     const names = COMMANDS.map((c) => c.name);

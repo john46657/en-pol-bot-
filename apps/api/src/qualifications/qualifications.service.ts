@@ -21,9 +21,9 @@ import { applyPanelParts, formatMinutes, qualiPanelParts, type ApplicationPanelP
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
 export interface Answer { question: string; answer: string | string[] | null }
-/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+/** Bewerbungs-Panel: Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
 export function policePanelMessage(cfg: QualificationConfig): MessageSpec { return panelMessage(applyPanelParts(cfg)); }
-/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten. */
 export function qualiPanelMessage(cfg: QualificationConfig): MessageSpec { return panelMessage(qualiPanelParts(cfg)); }
 function panelMessage(p: ApplicationPanelParts): MessageSpec {
   return { embeds: [{ title: p.title, description: p.description || undefined, color: 0x3b82f6 }], ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) };
