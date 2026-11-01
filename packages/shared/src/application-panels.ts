@@ -1,5 +1,5 @@
 /**
- * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot (/bewerbungspanel, /qualipanel) gleich gebaut.
+ * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot gleich gebaut.
  * Einheiten mit `panel: 'apply'` stehen im Bewerbungs-Panel neben der Polizei-Bewerbung, alle anderen im Qualifikations-Panel.
  */
 

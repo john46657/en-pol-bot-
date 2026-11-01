@@ -9,7 +9,7 @@ import { dutyRoleChanges, pollOnce } from '../src/outbox';
 import type { Platform } from '../src/platform';
 import { robloxLookup } from '../src/roblox';
 import { academyCourseEmbed, applicationEmbeds, outboxButtons, renderOutbox, renderOutboxEmbeds } from '../src/format';
-import { APPLICATION_MS, handleDirectMessage, openApplicantTicket, panelEmbed, resetSessions } from '../src/commands/qualifications';
+import { APPLICATION_MS, handleDirectMessage, openApplicantTicket, panelEmbed, POLICE, resetSessions } from '../src/commands/qualifications';
 
 const ME = '123456789012345678', OTHER = '223456789012345678', GUILD = '323456789012345678', CHANNEL = '423456789012345678';
 type Call = { kind: 'user' | 'service'; method: string; path: string; body?: unknown };
@@ -49,29 +49,14 @@ const STATE = (key: string, extra: Record<string, unknown> = {}) => {
   const levels = [LV('STATUS_1', 'Status 1', 'Geringe Kriminalität.'), LV('STATUS_2', 'Status 2', 'Mittlere Kriminalität.'), LV('STATUS_4', 'Status 4', 'Extreme Kriminalität.')];
   return { level: key, def: levels.find((l) => l.key === key) ?? levels[0], levels, panel: { title: 'Gefahrenstatus', text: '• Drücke den Button', buttonEmoji: '❗' }, ...extra };
 };
-describe('/gefahrenstatus', () => {
-  it('shows and sets the level with the user\'s rights and redraws the panel', async () => {
-    const { api, calls } = fakeApi({ 'GET /danger-level': STATE('STATUS_2', { reason: 'Bankraub', setByName: 'Chief' }), 'PUT /danger-level': (b: { level: string }) => STATE(b.level) });
-    expect(text(await byName('gefahrenstatus')!.run(ctx(api)))).toContain('Status 2');
-    const refreshLive = vi.fn(async () => null);
-    const r = await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'setzen', stufe: 'rot', grund: 'Schüsse' }, refreshLive }));
-    expect(text(r)).toContain('Status 4');
-    expect(calls.at(-1)).toMatchObject({ kind: 'user', method: 'PUT', body: { level: 'STATUS_4', reason: 'Schüsse' } });
-    await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'setzen', stufe: 'Status 2' }, refreshLive }));
-    expect(calls.at(-1)).toMatchObject({ body: { level: 'Status 2' } });
-    expect(refreshLive).toHaveBeenCalledWith('danger');
-  });
-  it('buttons set the level; unknown levels are rejected by the API; posting the panel needs Discord server rights', async () => {
+describe('Gefahrenstatus', () => {
+  it('buttons set the level; unknown levels are rejected by the API', async () => {
     const { api, calls } = fakeApi({ 'PUT /danger-level': (b: { level: string }) => { if (b.level === 'PURPLE') throw new BotApiError(400, 'VALIDATION_FAILED', 'Unbekannte Stufe.'); return STATE(b.level); }, 'GET /danger-level': STATE('STATUS_1') });
     const hit = interactionFor('danger:set:STATUS_1')!;
     expect(text(await hit.def.run({ ...ctx(api), args: hit.args }))).toContain('Status 1');
     expect(text(await hit.def.run({ ...ctx(api), args: ['set', 'PURPLE'] }))).toContain('Unbekannte');
     expect(calls).toHaveLength(2);
-    const refreshLive = vi.fn(async () => ({ channelId: CHANNEL, messageId: 'M' }));
-    expect(text(await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'panel' }, refreshLive })))).toContain('Server verwalten');
-    expect(refreshLive).not.toHaveBeenCalled();
-    expect(text(await byName('gefahrenstatus')!.run(ctx(api, { opts: { aktion: 'panel' }, refreshLive, isGuildAdmin: true })))).toContain('gepostet');
-    expect(refreshLive).toHaveBeenCalledWith('danger', { channelId: CHANNEL, force: true });
+    expect(byName('gefahrenstatus')).toBeUndefined(); // Slash-Befehl entfernt – Stufe per Button bzw. Dashboard
   });
   it('maps an unlinked button user to the linking hint', async () => {
     const { api } = fakeApi({ 'PUT /danger-level': new BotApiError(401, 'UNAUTHENTICATED', 'x', undefined, 'NOT_LINKED') });
@@ -115,25 +100,21 @@ describe('/funkfreigabe', () => {
   });
 });
 
-describe('/bewerbung (Polizei-Bewerbung per Direktnachricht)', () => {
+describe('Polizei-Bewerbung per Direktnachricht', () => {
   beforeEach(() => resetSessions());
   const form = [{ key: 'age', label: 'Wie alt bist du?', required: true, maxLength: 3 }, { key: 'extra', label: 'Noch etwas?', required: false, maxLength: 100 }];
-  it('/bewerbung and the panel button send the confirmation DM; the panel needs server rights', async () => {
+  it('the panel button sends the confirmation DM; /bewerbung and /bewerbungspanel are gone', async () => {
+    expect(byName('bewerbung')).toBeUndefined();
+    expect(byName('bewerbungspanel')).toBeUndefined();
     const { api } = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: false, number: null } });
     const { p, log } = fakePlatform();
-    const r = await byName('bewerbung')!.run(ctx(api, { platform: p }));
-    expect(byName('bewerbung')!.opensModal).toBeFalsy();
+    const hit = interactionFor(`quali:pick:${POLICE}`)!;
+    const r = await hit.def.run({ ...ctx(api, { platform: p }), args: hit.args });
     expect(log).toEqual([`dmEmbed ${ME} Bewerbung – EN Polizei quali:start:@polizei,quali:cancel`]);
     expect(r.buttons?.[0]?.url).toContain('/channels/@me/DM1/M1');
-    expect(text(await byName('bewerbungspanel')!.run(ctx(api, { platform: p })))).toContain('Server verwalten');
-    await byName('bewerbungspanel')!.run(ctx(api, { platform: p, isGuildAdmin: true }));
-    expect(log.at(-1)).toBe(`panel ${CHANNEL} quali:pick:@polizei`);
-    const posted: string[] = [];
-    const withTexts = fakeApi({ 'GET /bot/qualifications': { title: 'Q', intro: '', units: [], police: { title: 'Komm zu uns!', description: 'Jetzt bewerben.' } } });
-    await byName('bewerbungspanel')!.run(ctx(withTexts.api, { platform: { ...p, postPanel: async (a) => { posted.push(a.embed.title); } }, isGuildAdmin: true }));
-    expect(posted).toEqual(['Komm zu uns!']);
+    resetSessions();
     const open = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: true, number: 'APP-9' } });
-    expect(text(await byName('bewerbung')!.run(ctx(open.api, { platform: p })))).toContain('APP-9');
+    expect(text(await hit.def.run({ ...ctx(open.api, { platform: p }), args: hit.args }))).toContain('APP-9');
   });
   it('asks Roblox name + form questions one by one, optional ones can be skipped, then submits', async () => {
     const { api, calls } = fakeApi({ 'GET /applications/form': form, 'GET /bot/application/open': { open: false }, 'POST /bot/application': { number: 'APP-1' } });
@@ -282,12 +263,8 @@ describe('Qualifikationen (Panel → Fragen per DM)', () => {
   beforeEach(() => resetSessions());
   const dmLog = () => { const out: { embed: { title: string; description?: string }; buttons?: { id: string }[]; select?: { id: string; max?: number; options: { label: string; value: string }[] } }[] = []; return { out, sendDm: async (_u: string, m: (typeof out)[number]) => { out.push(m); } }; };
 
-  it('/qualipanel posts embed + select menu (admins only)', async () => {
-    const { api } = fakeApi({ 'GET /bot/qualifications': CFG });
-    const { p, log } = fakePlatform();
-    expect(text(await byName('qualipanel')!.run(ctx(api, { platform: p })))).toContain('Server verwalten');
-    await byName('qualipanel')!.run(ctx(api, { platform: p, isGuildAdmin: true, config: async () => ({}) }));
-    expect(log).toEqual([`panel ${CHANNEL}  select:quali:pick:flugstaffel,sek`]);
+  it('panel embed lists the units; /qualipanel is gone (panel is sent from the dashboard)', () => {
+    expect(byName('qualipanel')).toBeUndefined();
     expect(panelEmbed(CFG).description).toContain('**__Flugstaffel:__**\nAus der Luft!');
   });
 

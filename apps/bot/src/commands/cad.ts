@@ -1,86 +1,12 @@
 import { clip, COLORS, errorReply, okReply, plain, type ButtonSpec, type EmbedData, type Reply } from '../format';
-import type { CommandDef, Ctx, InteractionDef } from './types';
+import type { InteractionDef } from './types';
 import { mapError } from './errors';
-import { CAD_FEEDBACK } from '@enrp/shared';
 
 /**
- * CAD im Discord: `/cad status|funk|einsaetze` und die Buttons unter Notruf-Meldungen.
+ * CAD im Discord: die Buttons unter Notruf-Meldungen und die Meldungen aus dem CAD.
  * Alles läuft mit den Rechten des verknüpften Benutzers; vom SEK/K9-Server nur, was die Server-Verbindung freigibt.
  */
-interface CadOption { key: string; label: string; emoji?: string }
-interface CadConfig { unitStatuses: CadOption[]; incidentStatuses: (CadOption & { closed?: boolean })[]; priorities: CadOption[] }
 interface CadUnit { id: string; callsign: string; name: string | null; status: string; operational: boolean; crew: { discordId: string | null }[]; current: { number: string } | null }
-interface FleetRow { api: { name: string; owner: string; plate: string | null }; ownerOnline: boolean; stale: boolean; internal: { internalCode: string | null; unit: { callsign: string } | null } }
-interface CadIncident { id: string; number: string; title: string; priority: string; status: string; location: string | null; units: { clearedAt: string | null; unit: { callsign: string } }[] }
-
-const lbl = (list: CadOption[], key: string) => { const o = list.find((x) => x.key === key); return o ? `${o.emoji ? `${o.emoji} ` : ''}${o.label}` : key; };
-const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_-]+/g, '');
-const config = (c: Ctx) => c.api.asUser<CadConfig>(c.discordId, 'GET', '/cad/config');
-
-async function myUnit(c: Ctx, callsign?: string): Promise<CadUnit | null> {
-  const units = await c.api.asUser<CadUnit[]>(c.discordId, 'GET', '/cad/units');
-  if (callsign) return units.find((u) => norm(u.callsign) === norm(callsign)) ?? null;
-  return units.find((u) => u.crew.some((m) => m.discordId === c.discordId)) ?? null;
-}
-
-export const CAD_COMMANDS: CommandDef[] = [{
-  name: 'cad', description: 'CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Einsätze',
-  subcommands: [
-    { name: 'status', description: 'Status deiner Einheit an die Leitstelle melden', options: [
-      { name: 'status', description: 'z. B. Verfügbar, Unterwegs, Am Einsatzort', type: 'string', required: true, maxLength: 40 },
-      { name: 'einheit', description: 'Rufname (leer = deine Einheit)', type: 'string', maxLength: 16 },
-    ] },
-    { name: 'funk', description: 'Funkmeldung an die Leitstelle (landet in der Einsatzchronik)', options: [
-      { name: 'text', description: 'z. B. „Am Einsatzort.“', type: 'string', required: true, maxLength: 500 },
-      { name: 'einsatz', description: 'Einsatznummer (leer = aktueller Einsatz deiner Einheit)', type: 'string', maxLength: 32 },
-    ] },
-    { name: 'rueckmeldung', description: 'Rückmeldung deiner Einheit zum Einsatz an die Leitstelle (Chronik)', options: [
-      { name: 'art', description: 'Was meldest du?', type: 'string', required: true, choices: CAD_FEEDBACK.map((x) => ({ name: x.label, value: x.key })) },
-      { name: 'notiz', description: 'Zusatz, z. B. „2 Verdächtige flüchtig Richtung Norden“', type: 'string', maxLength: 500 },
-      { name: 'einheit', description: 'Rufname (leer = deine Einheit)', type: 'string', maxLength: 16 },
-    ] },
-    { name: 'einsaetze', description: 'Aktive Einsätze der Leitstelle' },
-    { name: 'fahrzeuge', description: 'Gerade in ER:LC gemeldete Polizeifahrzeuge (Besitzer, Einheit)' },
-  ],
-  async run(c): Promise<Reply> {
-    try {
-      const sub = String(c.opts._sub ?? '');
-      if (sub === 'status') {
-        const cfg = await config(c);
-        const want = String(c.opts.status ?? '');
-        const st = cfg.unitStatuses.find((s) => norm(s.key) === norm(want) || norm(s.label) === norm(want));
-        if (!st) return errorReply(`Unbekannter Status. Möglich: ${cfg.unitStatuses.map((s) => `\`${s.label}\``).join(', ')}`);
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : undefined);
-        if (!unit) return errorReply(c.opts.einheit ? 'Diese Einheit gibt es nicht.' : 'Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.');
-        await c.api.asUser(c.discordId, 'POST', `/cad/units/${unit.id}/status`, { status: st.key });
-        return okReply(`**${plain(unit.callsign)}** ist jetzt ${lbl(cfg.unitStatuses, st.key)}.`);
-      }
-      if (sub === 'rueckmeldung') {
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : undefined);
-        if (!unit) return errorReply(c.opts.einheit ? 'Diese Einheit gibt es nicht.' : 'Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.');
-        const r = await c.api.asUser<{ number: string; callsign: string }>(c.discordId, 'POST', `/cad/units/${unit.id}/feedback`, { kind: String(c.opts.art ?? ''), ...(c.opts.notiz ? { note: String(c.opts.notiz) } : {}) });
-        const fb = CAD_FEEDBACK.find((x) => x.key === c.opts.art);
-        return okReply(`${fb ? `${fb.emoji} ${fb.label}` : 'Rückmeldung'} – **${plain(r.callsign)}** · Einsatz **${plain(r.number)}** an die Leitstelle gemeldet.`);
-      }
-      if (sub === 'funk') {
-        const r = await c.api.asUser<{ callsign: string | null; incidentNumber: string | null }>(c.discordId, 'POST', '/cad/radio', { text: String(c.opts.text ?? ''), ...(c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {}) });
-        return okReply(`📻 ${r.callsign ? `**${plain(r.callsign)}**: ` : ''}„${plain(c.opts.text)}“ gesendet${r.incidentNumber ? ` – Einsatz **${plain(r.incidentNumber)}**` : ''}.`);
-      }
-      if (sub === 'einsaetze') {
-        const [cfg, list] = await Promise.all([config(c), c.api.asUser<CadIncident[]>(c.discordId, 'GET', '/cad/incidents?active=true&take=20')]);
-        const lines = list.map((i) => `**${plain(i.number)}** · ${clip(plain(i.title), 80)} — ${lbl(cfg.priorities, i.priority)} / ${lbl(cfg.incidentStatuses, i.status)}${i.location ? ` · ${clip(plain(i.location), 60)}` : ''}${i.units.filter((u) => !u.clearedAt).length ? `\n   ↳ ${i.units.filter((u) => !u.clearedAt).map((u) => plain(u.unit.callsign)).join(', ')}` : ''}`);
-        return { ephemeral: true, embeds: [{ title: `🚨 Aktive Einsätze (${list.length})`, description: clip(lines.join('\n') || 'Keine aktiven Einsätze.', 4000), color: COLORS.info }] };
-      }
-      if (sub === 'fahrzeuge') {
-        const r = await c.api.asUser<{ items: FleetRow[] }>(c.discordId, 'GET', '/fleet/vehicles');
-        // ER:LC meldet keinen Fahrer und keine Fahrzeugposition – nur, wer das Fahrzeug gespawnt hat
-        const lines = r.items.slice(0, 30).map((v) => `🚓 **${clip(plain(v.api.name), 60)}**${v.api.plate ? ` · ${plain(v.api.plate)}` : ''}${v.internal.internalCode ? ` · ${plain(v.internal.internalCode)}` : ''}\n   ↳ Besitzer ${plain(v.api.owner)}${v.ownerOnline ? '' : ' (nicht im Spiel)'}${v.internal.unit ? ` · Einheit ${plain(v.internal.unit.callsign)}` : ''}${v.stale ? ' · ⚠️ veraltet' : ''}`);
-        return { ephemeral: true, embeds: [{ title: `🚓 Polizeifahrzeuge (${r.items.length})`, description: clip(lines.join('\n') || 'Gerade meldet ER:LC keine Polizeifahrzeuge.', 4000), color: COLORS.info, footer: 'Fahrer: nicht verfügbar – ER:LC meldet nur den Besitzer.' }] };
-      }
-      return errorReply('Unbekannter Unterbefehl.');
-    } catch (e) { return mapError(e); }
-  },
-}];
 
 /** Buttons unter „Notruf eingegangen“: `cad:call:<id>:claim|incident|close|units`, Auswahl `cad:assign:<id>`. */
 export const CAD_INTERACTION: InteractionDef = {

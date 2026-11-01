@@ -13,7 +13,7 @@ export interface BanInput { discordId?: string | null; roblox?: string | null; n
 
 /**
  * Bewerbungssperren: Wer gesperrt ist, kann die betroffenen Bewerbungen gar nicht erst starten (Discord-Panel,
- * /bewerbung) und wird beim Absenden (Discord und Web /apply) abgewiesen. Erkannt wird per Discord-ID oder Roblox-ID.
+ * Panel) und wird beim Absenden (Discord und Web /apply) abgewiesen. Erkannt wird per Discord-ID oder Roblox-ID.
  * Jeder Discord-Server hat seine eigene Sperrliste; Sperren ohne Server gelten überall.
  */
 @Injectable()
