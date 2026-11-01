@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, BarChart3, BookOpen, Car, ClipboardList, FileText, Fingerprint, LayoutDashboard, Map as MapIcon, Menu, Monitor, Phone, Radio, RadioTower, RefreshCw, ScrollText, Settings, Siren, Smartphone, Tablet, Truck, Users, UsersRound, X, type LucideIcon } from 'lucide-react';
+import { Activity, BarChart3, Car, ClipboardList, FileText, Fingerprint, LayoutDashboard, Map as MapIcon, Menu, Phone, Radio, RadioTower, RefreshCw, ScrollText, Settings, Siren, Smartphone, Tablet, Truck, Users, UsersRound, type LucideIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useAppearance } from '../../lib/prefs';
@@ -12,6 +12,8 @@ import { ConfirmHost, Input, SkeletonRows } from '../../components/ui';
 import { SaveStatus } from '../../components/SaveStatus';
 import { NotificationCenter } from '../../components/NotificationCenter';
 import { Toasts } from '../../components/Toasts';
+import { AppBrand, AppSwitcher, LogoutButton } from '../../components/AppSwitcher';
+import { useStudio } from '../../lib/studio';
 
 interface CadNavItem { to: string; label: string; icon: LucideIcon; perm?: string; end?: boolean; external?: boolean }
 /**
@@ -78,7 +80,7 @@ const cadTitle = (path: string) => CAD_NAV.flatMap((g) => g.items).filter((i) =>
  * „Zum Dashboard“ oben rechts führt zurück, im Dashboard öffnet „Leitstelle“ diese Ansicht.
  */
 export function CadLayout() {
-  const { user, can } = useAuth();
+  const { user } = useAuth();
   useAppearance();
   const loc = useLocation();
   const qc = useQueryClient();
@@ -88,12 +90,8 @@ export function CadLayout() {
   const ov = useQuery({ queryKey: ['cad-overview'], queryFn: () => api<CadOverview>('/cad/overview'), refetchInterval: 5_000 });
   const down = (ov.data?.erlc ?? []).filter((s) => s.status !== 'CONNECTED' && s.status !== 'DISABLED');
   const initials = (user?.displayName ?? '?').split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
-  const brand: ReactNode = (
-    <div className="flex flex-col items-center gap-1 border-b border-line px-3 py-4 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-primary/60 bg-primary/10"><Siren size={28} className="text-primary" aria-hidden /></span>
-      <span className="text-sm font-semibold">CAD-Leitstelle</span>
-    </div>
-  );
+  const studio = useStudio();
+  const brand: ReactNode = <AppBrand app="Leitstelle" icon={Siren} name={studio.data?.org?.name} />;
   const me = (
     <div className="flex items-center gap-2 border-t border-line p-3">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary/20 text-xs font-bold text-primary">{initials}</span>
@@ -116,8 +114,8 @@ export function CadLayout() {
             <SaveStatus />
             <NotificationCenter />
             <button type="button" className="rounded-md p-2 text-muted hover:bg-panel-2 hover:text-fg" aria-label="Aktualisieren" title="Aktualisieren" onClick={() => void qc.invalidateQueries()}><RefreshCw size={16} /></button>
-            <Link to="/mdt" className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs hover:bg-panel-2" title="Polizei-MDT öffnen"><Monitor size={14} aria-hidden /><span className="hidden sm:inline">MDT</span></Link>
-            {can('dashboard.view') && <Link to="/dashboard" className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs hover:bg-panel-2" title="Zurück zum Dashboard"><BookOpen size={14} aria-hidden /><span className="hidden sm:inline">Zum Dashboard</span><X size={14} className="sm:hidden" aria-hidden /></Link>}
+            <AppSwitcher />
+            <LogoutButton />
           </div>
         </header>
         <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">

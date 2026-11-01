@@ -1,12 +1,14 @@
 import { Suspense, useState, type ReactNode } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { NavLink, Outlet, useLocation } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Menu, RefreshCw, Settings, Shield, Siren, Smartphone, Truck, UserCheck, Users, X, type LucideIcon } from 'lucide-react';
+import { Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Menu, RefreshCw, Settings, Shield, Siren, Smartphone, Truck, UserCheck, Users, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { useAppearance } from '../../lib/prefs';
 import { ConfirmHost, SkeletonRows } from '../../components/ui';
 import { SaveStatus } from '../../components/SaveStatus';
 import { NotificationCenter } from '../../components/NotificationCenter';
+import { AppBrand, AppSwitcher, LogoutButton } from '../../components/AppSwitcher';
+import { useStudio } from '../../lib/studio';
 
 interface Item { to: string; label: string; icon: LucideIcon; perm?: string; end?: boolean; external?: boolean }
 /** Menü des MDT (wie ein Streifen-Terminal). Jeder Punkt erscheint nur mit dem passenden Recht. */
@@ -63,18 +65,14 @@ const title = (path: string) => MDT_NAV.flatMap((g) => g.items).filter((i) => !i
  * „Zum Dashboard“ oben rechts führt zurück, im Dashboard öffnet „MDT“ diese Ansicht.
  */
 export function MdtShell() {
-  const { user, can } = useAuth();
+  const { user } = useAuth();
   useAppearance();
   const loc = useLocation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const initials = (user?.displayName ?? '?').split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
-  const brand: ReactNode = (
-    <div className="flex flex-col items-center gap-1 border-b border-line px-3 py-4 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-primary/60 bg-primary/10"><Shield size={28} className="text-primary" aria-hidden /></span>
-      <span className="text-sm font-semibold">Police MDT</span>
-    </div>
-  );
+  const studio = useStudio();
+  const brand: ReactNode = <AppBrand app="MDT" icon={Shield} name={studio.data?.org?.name} />;
   const me = (
     <div className="flex items-center gap-2 border-t border-line p-3">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary/20 text-xs font-bold text-primary">{initials}</span>
@@ -92,12 +90,13 @@ export function MdtShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-panel px-2 sm:px-4">
           <button type="button" className="rounded-md p-2 hover:bg-panel-2 lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></button>
-          <h1 className="truncate text-base font-semibold">{title(loc.pathname)}</h1>
+          <h1 className="min-w-0 truncate text-base font-semibold">{title(loc.pathname)}</h1>
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <SaveStatus />
             <NotificationCenter />
             <button type="button" className="rounded-md p-2 text-muted hover:bg-panel-2 hover:text-fg" aria-label="Aktualisieren" title="Aktualisieren" onClick={() => void qc.invalidateQueries()}><RefreshCw size={16} /></button>
-            {can('dashboard.view') && <Link to="/dashboard" className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs hover:bg-panel-2" title="Zurück zum Dashboard"><BookOpen size={14} aria-hidden /><span className="hidden sm:inline">Zum Dashboard</span><X size={14} className="sm:hidden" aria-hidden /></Link>}
+            <AppSwitcher />
+            <LogoutButton />
           </div>
         </header>
         <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">

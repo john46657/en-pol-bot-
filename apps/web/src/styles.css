@@ -1,12 +1,12 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #0b0e14;
+  --color-bg: #0a0f1a; /* Navy-Grundton */
   /* Höhe der Handy-Schnellleiste unten (inkl. Home-Indikator) */
   --spacing-bottombar: calc(3.5rem + env(safe-area-inset-bottom));
-  --color-panel: #131823;
-  --color-panel-2: #1a2130;
-  --color-line: #263044;
+  --color-panel: #111827; /* Anthrazit-Fläche */
+  --color-panel-2: #172033;
+  --color-line: #243049;
   --color-fg: #e6eaf2;
   --color-muted: #8b97ad;
   --color-primary: #3b82f6;
@@ -15,6 +15,7 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #06b6d4;
+  /* gemeinsames EN-Polizei-Designsystem für Dashboard, MDT und Leitstelle (Markenfarbe primary unverändert) */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
