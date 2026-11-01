@@ -75,7 +75,7 @@ export function Applications() {
 
   return (
     <>
-      <PageHeader title="Bewerbungen" subtitle="Bewerbungen bei EN Polizei über Discord (/bewerbung, /bewerbungspanel) und die Webseite /apply. Einrichtung: Panel-Texte und Fragen." actions={<Link to="/analytics?tab=bewerbungen"><Button variant="secondary">📊 Statistik</Button></Link>} />
+      <PageHeader title="Bewerbungen" subtitle="Bewerbungen bei EN Polizei über das Discord-Panel und die Webseite /apply. Einrichtung: Panel-Texte und Fragen." actions={<Link to="/analytics?tab=bewerbungen"><Button variant="secondary">📊 Statistik</Button></Link>} />
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
       <div className="mt-4">
@@ -92,7 +92,7 @@ export function Applications() {
               </div>
             </div>
             {showProgress && !!progress.data?.length && <InProgress rows={progress.data} />}
-            {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über Discord (/bewerbungspanel) oder die Webseite /apply." /> : (
+            {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} onRetry={() => void list.refetch()} /> : !list.data?.items.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über das Discord-Panel oder die Webseite /apply." /> : (
               <div className="grid gap-2">{list.data.items.map((a) => {
                 const isOpen = expanded.has(a.id);
                 const who = a.discordName ?? a.robloxUsername ?? a.discordId ?? '—';
@@ -227,7 +227,7 @@ function PoliceSetup() {
         <PanelSendBox label="Kanal für das Bewerbungs-Panel" channelId={panelChannel} onChannel={setPanelChannel} posted={config.data?.panelPosted}
           onSend={async (mode) => { await putNow(); return api('/qualifications/police-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); }}
           onSent={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })}
-          hint="Das Panel bekommt den Button „Jetzt bewerben“. Alternativ geht weiterhin /bewerbungspanel direkt in Discord." />
+          hint="Das Panel bekommt den Button „Jetzt bewerben“." />
       </Card>
       <Card title="Weitere Bewerbungsarten im Panel">
         <p className="mb-3 text-sm text-muted">Z. B. Leitstelle oder Feuerwehr: Jede Art hat eigene Fragen, Kanäle und Rollen. Gibt es mindestens eine, zeigt das Bewerbungs-Panel statt des Buttons ein Auswahlmenü (Polizei zuerst). Die Bewerbungen erscheinen hier in der Liste (Filter „Art“).</p>

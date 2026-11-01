@@ -75,7 +75,7 @@ export function Qualifications() {
 
   return (
     <>
-      <PageHeader title="Qualifikationen" subtitle="Bewerbungen für SEK, Flugstaffel, Ausbilder … aus dem Discord-Panel (/qualipanel). Einrichtung: Einheiten, Panel-Texte und Fragen. (Polizei-Bewerbungen: Organisation → Bewerbungen.)" />
+      <PageHeader title="Qualifikationen" subtitle="Bewerbungen für SEK, Flugstaffel, Ausbilder … aus dem Discord-Panel. Einrichtung: Einheiten, Panel-Texte und Fragen. (Polizei-Bewerbungen: Organisation → Bewerbungen.)" />
       {err && <p role="alert" className="mb-3 text-sm text-danger">{err}</p>}
       <Tabs tabs={tabs} active={tab} onChange={(t) => { setTab(t); setMsg(undefined); }} />
       <div className="mt-4">
@@ -91,7 +91,7 @@ export function Qualifications() {
                 <option value="OPEN">Offen</option><option value="ACCEPTED">Angenommen</option><option value="REJECTED">Abgelehnt</option><option value="WITHDRAWN">Zurückgezogen</option><option value="">Alle</option>
               </Select></div>
             </div>
-            {apps.isLoading ? <SkeletonRows /> : apps.error ? <ErrorState error={apps.error} onRetry={() => void apps.refetch()} /> : !shown?.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über das Discord-Panel (/qualipanel)." /> : (
+            {apps.isLoading ? <SkeletonRows /> : apps.error ? <ErrorState error={apps.error} onRetry={() => void apps.refetch()} /> : !shown?.length ? <EmptyState text="Keine Bewerbungen." hint="Bewerbungen kommen über das Discord-Panel." /> : (
               <div className="grid gap-3">{shown.map((a) => (
                 <Card key={a.id} title={<span className="flex flex-wrap items-center gap-2">{a.unitName} · {a.number} <StatusBadge status={a.status} /><GuildTag id={a.guildId} /></span>}>
                   <p className="mb-2 text-sm">Discord: <strong>{a.discordName}</strong> <span className="text-xs text-muted">({a.discordId})</span>{a.linkedName ? <> · Benutzer <strong>{a.linkedName}</strong></> : <span className="text-muted"> · nicht mit einem Benutzer verknüpft</span>}</p>
@@ -118,7 +118,7 @@ export function Qualifications() {
               <PanelSendBox label="Kanal für das Qualifikations-Panel" channelId={panelChannel} onChannel={setPanelChannel} posted={config.data?.qualiPanelPosted}
                 onSend={async (mode) => { await save.mutateAsync(); return api('/qualifications/quali-panel/send', { method: 'POST', query: { guildId: server }, body: { mode } }); }}
                 onSent={() => void qc.invalidateQueries({ queryKey: ['quali-config'] })}
-                hint="Das Panel bekommt das Auswahlmenü mit allen Einheiten. Alternativ geht weiterhin /qualipanel direkt in Discord." />
+                hint="Das Panel bekommt das Auswahlmenü mit allen Einheiten." />
             </Card>
             <UnitsEditor units={units} onChange={setUnits} noun="Einheit" minCount={1} pendingHint="Neue Bewerbungen werden hier gepostet (leer = Qualifikations-Kanal aus den Einstellungen)." />
             <div className="flex flex-wrap items-center gap-2">

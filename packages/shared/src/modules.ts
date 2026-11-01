@@ -56,14 +56,10 @@ export function moduleDependencyError(key: string, enabled: boolean, state: Reco
  * Nicht aufgeführte Befehle gehören zum Grundsystem.
  */
 export const BOT_COMMAND_MODULES: Record<string, string> = {
-  cad: 'cad',
-  bericht: 'reports', dienstbericht: 'reports',
-  person: 'mdt', kennzeichen: 'mdt', fahndungen: 'mdt', fahndung: 'mdt',
+  dienstbericht: 'reports',
   shift: 'shift_logs', dienst: 'shift_logs', dienststunden: 'shift_logs', team: 'shift_logs', dienstpanel: 'shift_logs', teamliste: 'shift_logs',
-  einheiten: 'dispatch', einheitstatus: 'dispatch', einsaetze: 'dispatch', einsatz: 'dispatch', einsatzinfo: 'dispatch', einsatzstatus: 'dispatch', einsatzzuweisen: 'dispatch',
-  beschwerde: 'investigations',
   abmeldung: 'personnel', leave: 'personnel', ausbildung: 'personnel', verwarnen: 'personnel',
-  teamchance: 'applications', bewerbung: 'applications', bewerbungspanel: 'applications', qualipanel: 'applications',
+  teamchance: 'applications',
   support: 'support', ticket: 'support',
   funkcode: 'communication', funk: 'communication', funkantrag: 'communication', funkstatus: 'communication', funkfreigabe: 'communication',
 };

@@ -45,7 +45,7 @@ export const CAD_EVENT_LABELS: Record<CadEvent, string> = {
 };
 
 /**
- * Rückmeldungen einer Einheit aus dem MDT bzw. Discord (`/cad rueckmeldung`). Sie landen in der Einsatzchronik;
+ * Rückmeldungen einer Einheit aus dem MDT. Sie landen in der Einsatzchronik;
  * `unitStatus` wird nur gesetzt, wenn es diesen Einheitenstatus in den CAD-Einstellungen gibt. Den Einsatz selbst ändern sie nie.
  */
 export const CAD_FEEDBACK = [

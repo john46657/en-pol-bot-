@@ -27,39 +27,11 @@ function fakeApi(routes: Record<string, unknown>) {
 }
 const ctx = (api: Api, opts: Ctx['opts'] = {}): Ctx => ({ discordId: ME, opts, api, guildId: GUILD });
 const text = (r: Reply) => `${r.content ?? ''} ${r.embeds?.map((e) => `${e.title} ${e.description ?? ''}`).join(' ') ?? ''}`;
-const CFG = { unitStatuses: [{ key: 'AVAILABLE', label: 'Verfügbar', emoji: '🟢' }, { key: 'ON_SCENE', label: 'Am Einsatzort', emoji: '🟠' }], incidentStatuses: [{ key: 'NEW', label: 'Neu' }], priorities: [{ key: 'HIGH', label: 'Hoch', emoji: '🔴' }] };
 const UNITS = [{ id: UNIT, callsign: 'SEK-01', name: null, status: 'AVAILABLE', operational: true, crew: [{ discordId: ME }], current: null }];
 
 describe('/cad', () => {
-  it('status: by label, for the own unit; unknown status lists the options', async () => {
-    const { api, calls } = fakeApi({ 'GET /cad/config': CFG, 'GET /cad/units': UNITS, [`POST /cad/units/${UNIT}/status`]: {} });
-    const cmd = byName('cad')!;
-    expect(text(await cmd.run(ctx(api, { _sub: 'status', status: 'irgendwas' })))).toContain('Verfügbar');
-    const r = await cmd.run(ctx(api, { _sub: 'status', status: 'am einsatzort' }));
-    expect(text(r)).toContain('SEK-01');
-    expect(calls.at(-1)).toMatchObject({ path: `/cad/units/${UNIT}/status`, body: { status: 'ON_SCENE' } });
-  });
-  it('funk: sends the radio message, server-link errors are explained', async () => {
-    const { api } = fakeApi({ 'POST /cad/radio': { callsign: 'SEK-01', incidentNumber: 'E-2026-00001' } });
-    expect(text(await byName('cad')!.run(ctx(api, { _sub: 'funk', text: 'Am Einsatzort.' })))).toContain('E-2026-00001');
-    const denied = fakeApi({ 'POST /cad/radio': new BotApiError(403, 'PERMISSION_DENIED', 'Dieser Discord-Server ist für diese Aktion nicht mit der Leitstelle verbunden.') });
-    expect(text(await byName('cad')!.run(ctx(denied.api, { _sub: 'funk', text: 'x' })))).toMatch(/nicht|Recht/);
-  });
-  it('rueckmeldung: meldet für die eigene Einheit; ohne Einheit ein Hinweis', async () => {
-    const { api, calls } = fakeApi({ 'GET /cad/units': UNITS, [`POST /cad/units/${UNIT}/feedback`]: { number: 'E-2026-00007', callsign: 'SEK-01' } });
-    const r = await byName('cad')!.run(ctx(api, { _sub: 'rueckmeldung', art: 'support', notiz: 'Schüsse' }));
-    expect(text(r)).toContain('Unterstützung benötigt');
-    expect(text(r)).toContain('E-2026-00007');
-    expect(calls.at(-1)).toMatchObject({ path: `/cad/units/${UNIT}/feedback`, body: { kind: 'support', note: 'Schüsse' } });
-    const none = fakeApi({ 'GET /cad/units': [] });
-    expect(text(await byName('cad')!.run(ctx(none.api, { _sub: 'rueckmeldung', art: 'accepted' })))).toContain('keiner Einheit');
-  });
-  it('fahrzeuge: listet Polizeifahrzeuge mit Besitzer, nie mit Fahrer', async () => {
-    const { api } = fakeApi({ 'GET /fleet/vehicles': { items: [{ api: { name: 'Falcon Interceptor', owner: 'OfcMiller', plate: 'POL-1' }, ownerOnline: true, stale: false, internal: { internalCode: 'EN 1-21', unit: { callsign: 'SEK-01' } } }] } });
-    const r = await byName('cad')!.run(ctx(api, { _sub: 'fahrzeuge' }));
-    expect(text(r)).toContain('Besitzer OfcMiller');
-    expect(text(r)).toContain('Einheit SEK-01');
-    expect(r.embeds?.[0]?.footer).toContain('Fahrer: nicht verfügbar');
+  it('/cad is gone – CAD runs via dashboard/MDT and the Notruf buttons', () => {
+    expect(byName('cad')).toBeUndefined();
   });
   it('Meldungen: Rückmeldung, Unterstützung benötigt und Schichtübergabe', () => {
     expect(renderCadOutbox('cad.incident.support', { number: 'E-1', title: 'Raub', callsign: 'SEK-01', note: 'Schüsse' })?.title).toContain('Unterstützung benötigt: SEK-01');

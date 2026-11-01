@@ -231,7 +231,7 @@ export function CadRadio() {
   const ann = useMutation({ mutationFn: () => api<{ channels: number }>('/cad/announcements', { body: { text: announce } }), onSuccess: (r) => { setAnnounce(''); setMsg(`Leitstellenmeldung an ${r.channels} Kanal/Kanäle gesendet.`); }, onError: (e) => setMsg(errText(e)) });
   return (
     <>
-      <PageHeader title="Funk" subtitle="Funkmeldungen – mit Einsatz landen sie in der Einsatzchronik (auch aus Discord: /cad funk)" />
+      <PageHeader title="Funk" subtitle="Funkmeldungen – mit Einsatz landen sie in der Einsatzchronik" />
       {msg && <p role="status" className="mb-2 text-sm text-muted">{msg}</p>}
       <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2" title="Funkverkehr">
