@@ -22,6 +22,8 @@ export interface EmitInput {
   dedupeKey?: string;
   /** Text der Discord-DM (nur bei Zustimmung des Empfängers). Standard: Titel + Link, ohne `body`. */
   dmText?: string;
+  /** false: keine DM (z. B. wenn der Fachprozess schon selbst eine DM schickt) */
+  dm?: boolean;
 }
 
 /** Wie viele Empfänger höchstens je Ereignis (Schutz vor Massen-Benachrichtigungen). */
@@ -132,7 +134,7 @@ export class NotifyService {
             else throw e;
           }
         }
-        if (d.dm && fresh) dms.push(userId);
+        if (d.dm && fresh && n.dm !== false) dms.push(userId);
       }
       for (const id of created) this.rt.publishToUser(id, 'notification.new', { type: event, title: n.title.slice(0, 200), important: !!def.important });
       if (dms.length) {

@@ -14,10 +14,10 @@ import type { LeaveConfig } from './admin/LeaveSettings';
 
 interface LeaveRow {
   id: string; number: string; userId: string; name: string; startsAt: string; endsAt: string; reason: string; type?: string | null; comment?: string | null; status: string; active: boolean;
-  decidedByName: string | null; decisionReason: string | null; days: number; createdAt: string;
+  decidedByName: string | null; decisionReason: string | null; days: number; createdAt: string; reviewerName?: string | null;
 }
 const TABS = [['PENDING', 'Offen'], ['ACTIVE', 'Gerade abgemeldet'], ['UPCOMING', 'Bevorstehend'], ['CALENDAR', 'Kalender'], ['ALL', 'Alle']] as const;
-const STATUS: Record<string, [string, Tone]> = { PENDING: ['Offen', 'warning'], APPROVED: ['Genehmigt', 'success'], DENIED: ['Abgelehnt', 'danger'], CANCELLED: ['Zurückgezogen', 'neutral'], ENDED: ['Beendet', 'neutral'] };
+const STATUS: Record<string, [string, Tone]> = { PENDING: ['Eingereicht', 'warning'], IN_REVIEW: ['In Prüfung', 'info'], APPROVED: ['Genehmigt', 'success'], DENIED: ['Abgelehnt', 'danger'], CANCELLED: ['Zurückgezogen', 'neutral'], ENDED: ['Beendet', 'neutral'] };
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
 /** Organisation → Leave: Abmeldung beantragen, eigene/alle sehen, annehmen/ablehnen (leave.manage). */
@@ -36,6 +36,7 @@ export function Leave() {
   const list = useQuery({ queryKey: ['leave', status], queryFn: () => api<{ all: boolean; items: LeaveRow[] }>('/leave', { query: { status } }) });
   const refresh = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['leave'] }); };
   const decide = useMutation({ mutationFn: (v: { id: string; status: 'APPROVED' | 'DENIED'; reason?: string }) => api(`/leave/${v.id}/decision`, { method: 'POST', body: { status: v.status, ...(v.reason ? { reason: v.reason } : {}) } }), onSuccess: refresh, onError: (e) => setErr(errText(e)) });
+  const review = useMutation({ mutationFn: (id: string) => api(`/leave/${id}/review`, { method: 'POST' }), onSuccess: refresh, onError: (e) => setErr(errText(e)) });
   const cancel = useMutation({ mutationFn: (id: string) => api(`/leave/${id}/cancel`, { method: 'POST' }), onSuccess: () => { setEnding(undefined); refresh(); }, onError: (e) => { setEnding(undefined); setErr(errText(e)); } });
   const focus = params.get('id');
   const needle = search.trim().toLowerCase();
@@ -58,13 +59,15 @@ export function Leave() {
               <Card key={r.id} className={focus === r.id ? 'ring-2 ring-primary' : undefined}
                 title={<span className="flex flex-wrap items-center gap-2">{r.name} · {r.number} <Badge tone={tone}>{label}</Badge>{r.active && <Badge tone="info">Gerade abgemeldet</Badge>}</span>}
                 actions={<div className="flex flex-wrap gap-2">
-                  {r.status === 'PENDING' && manage && <DecisionButtons busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: r.id, status: s === 'ACCEPTED' ? 'APPROVED' : 'DENIED', reason })} />}
-                  {['PENDING', 'APPROVED'].includes(r.status) && (mine || manage) && <Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => setEnding(r)}>{r.active ? 'Jetzt beenden' : 'Zurückziehen'}</Button>}
+                  {r.status === 'PENDING' && manage && !mine && <Button size="sm" variant="ghost" disabled={review.isPending} onClick={() => review.mutate(r.id)}>In Prüfung nehmen</Button>}
+                  {['PENDING', 'IN_REVIEW'].includes(r.status) && manage && <DecisionButtons busy={decide.isPending} onDecide={(s, reason) => decide.mutate({ id: r.id, status: s === 'ACCEPTED' ? 'APPROVED' : 'DENIED', reason })} />}
+                  {['PENDING', 'IN_REVIEW', 'APPROVED'].includes(r.status) && (mine || manage) && <Button size="sm" variant="secondary" disabled={cancel.isPending} onClick={() => setEnding(r)}>{r.active ? 'Jetzt beenden' : 'Zurückziehen'}</Button>}
                 </div>}>
                 <p className="text-sm"><b>{fmt(r.startsAt)}</b> – <b>{fmt(r.endsAt)}</b> <span className="text-muted">({r.days} {r.days === 1 ? 'Tag' : 'Tage'})</span></p>
                 {r.type && <p className="mt-1 text-xs text-muted">Art: {types.data?.find((t) => t.key === r.type)?.label ?? r.type}</p>}
                 <p className="mt-1 whitespace-pre-wrap text-sm">{r.reason}</p>
                 {r.comment && <p className="mt-1 whitespace-pre-wrap text-xs text-muted">{r.comment}</p>}
+                {r.reviewerName && r.status === 'IN_REVIEW' && <p className="mt-2 text-xs text-muted">Zuständiger Prüfer: {r.reviewerName}</p>}
                 {(r.decidedByName || r.decisionReason) && <p className="mt-2 text-xs text-muted">{r.decidedByName && `Entschieden von ${r.decidedByName}`}{r.decisionReason && ` · ${r.decisionReason}`}</p>}
               </Card>
             );

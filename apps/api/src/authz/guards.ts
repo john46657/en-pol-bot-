@@ -44,6 +44,9 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
   ['GET', /^\/duty-reports(\/templates)?$/], ['GET', new RegExp(`^/duty-reports/templates/${UUID}/prefill$`)], ['GET', /^\/duty-reports\/[A-Za-z0-9-]{1,40}$/],
   ['POST', /^\/duty-reports$/], ['PATCH', new RegExp(`^/duty-reports/${UUID}$`)], ['POST', new RegExp(`^/duty-reports/${UUID}/review$`)],
+  // Verwaltung 3.0: Schichtplan (ansehen, eigene Schichten, an-/abmelden, Änderung melden) – Rechte prüft die API
+  ['GET', /^\/shiftplan(\/mine)?$/], ['GET', new RegExp(`^/shiftplan/${UUID}$`)], ['POST', new RegExp(`^/shiftplan/${UUID}/(signup|withdraw|report)$`)],
+  ['POST', new RegExp(`^/leave/${UUID}/review$`)],
   ['POST', /^\/support-tickets$/], ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
 ];
 

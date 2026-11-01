@@ -41,6 +41,7 @@ const Embeds = lazy(() => import('./pages/admin/Embeds').then((m) => ({ default:
 const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then((m) => ({ default: m.WelcomeSettings })));
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
+const ShiftPlan = lazy(() => import('./pages/ShiftPlan').then((m) => ({ default: m.ShiftPlan })));
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
 const RadioWhitelist = lazy(() => import('./pages/RadioWhitelist').then((m) => ({ default: m.RadioWhitelist })));
@@ -277,6 +278,7 @@ export function App() {
           <Route path="admin/welcome" element={<Guard perm="settings.view" area="dashboard.settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view" area="dashboard.settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />
+          <Route path="shiftplan" element={<Guard perm="shiftplan.view"><ShiftPlan /></Guard>} />
           <Route path="admin/danger-level" element={<Guard perm="settings.manage" area="dashboard.settings.view"><DangerSettingsPage /></Guard>} />
           <Route path="admin/legal-codes" element={<Guard perm="settings.view" area="dashboard.settings.view"><LegalCodes /></Guard>} />
           <Route path="admin/settings" element={<Guard perm="settings.view" area="dashboard.settings.view"><Settings /></Guard>} />

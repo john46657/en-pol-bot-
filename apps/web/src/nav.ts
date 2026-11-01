@@ -1,5 +1,5 @@
 import { moduleOfPermission, OFF_MODULES } from '@enrp/shared';
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { CalendarDays, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -56,6 +56,9 @@ export const NAV: NavItem[] = [
     { path: '/application-bans', label: 'Sperren', perm: 'applications.view', area: 'dashboard.applications.view' },
     { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
     { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
+  ]),
+  grp('Dienstplanung', CalendarDays, 'Organisation', [
+    { path: '/shiftplan', label: 'Schichtplan', perm: 'shiftplan.view' },
   ]),
   grp('Abmeldungen', CalendarOff, 'Organisation', [
     { path: '/leave', label: 'Abmeldungen', perm: 'leave.request' },
