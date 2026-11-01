@@ -16,6 +16,10 @@ export interface DiscordGuildInfo {
   id: string; name: string; icon: string | null;
   channels: { id: string; name: string; type: 'text' | 'category' | 'voice' | 'other'; parentId: string | null; position: number; bot?: { view: boolean; send: boolean; embed: boolean; mentionEveryone?: boolean } }[];
   roles: { id: string; name: string; color: number; position: number }[];
+  /** Forum-Kanäle (stehen zusätzlich als „other“ in `channels`) mit Bot-Rechten; fehlt bei älteren Bot-Versionen */
+  forums?: { id: string; bot?: { view: boolean; send: boolean; embed: boolean; mentionEveryone?: boolean; createThreads?: boolean } }[];
+  /** aktive Threads/Forum-Beiträge; fehlt bei älteren Bot-Versionen */
+  threads?: { id: string; name: string; parentId: string }[];
 }
 const GUILDS_KEY = 'discord.guilds';
 export interface DiscordChannels { guildId?: string; dispatch?: string; wanted?: string; announcements?: string; applications?: string; danger?: string; sek?: string; qualifications?: string; duty?: string; teamlist?: string; tickets?: string; cad?: string; staffRole?: string; radioRole?: string; sekRole?: string; dutyRole?: string; breakRole?: string; trainingRole?: string; adminDutyRole?: string }

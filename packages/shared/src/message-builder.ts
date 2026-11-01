@@ -60,6 +60,11 @@ export const mbButtonSchema = z.object({
   url: str(4000),
   disabled: z.boolean().default(false),
   action: mbActionSchema.default({ type: 'reply', text: '' }),
+  /**
+   * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+   * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+   */
+  keepCustomId: str(100),
 });
 export type MbButton = z.infer<typeof mbButtonSchema>;
 
@@ -68,7 +73,13 @@ export type MbSelectOption = z.infer<typeof mbSelectOptionSchema>;
 
 export const mbRowSchema = z.discriminatedUnion('type', [
   z.object({ id, type: z.literal('buttons'), buttons: z.array(mbButtonSchema).max(25).default([]) }),
-  z.object({ id, type: z.literal('select'), placeholder: str(500), disabled: z.boolean().default(false), options: z.array(mbSelectOptionSchema).max(50).default([]) }),
+  z.object({
+    id, type: z.literal('select'), placeholder: str(500), disabled: z.boolean().default(false), options: z.array(mbSelectOptionSchema).max(50).default([]),
+    /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
+    minValues: z.number().int().min(0).max(25).default(1),
+    maxValues: z.number().int().min(1).max(25).default(1),
+    keepCustomId: str(100),
+  }),
 ]);
 export type MbRow = z.infer<typeof mbRowSchema>;
 
@@ -155,6 +166,8 @@ export interface MbValidateOptions {
   allowRoleActions?: boolean;
   /** Bekannte Rollen des Servers (für Rollen-Aktionen); undefiniert = nicht prüfbar */
   roleIds?: readonly string[];
+  /** custom_ids, die unverändert übernommen werden dürfen (nur beim Bearbeiten geladener Nachrichten); sonst keine. */
+  keptCustomIds?: readonly string[];
 }
 
 export function validateMbMessage(m: MbMessage, idx: number, o: MbValidateOptions = {}): MbIssue[] {
@@ -205,6 +218,10 @@ export function validateMbMessage(m: MbMessage, idx: number, o: MbValidateOption
   });
   if (total > DISCORD_LIMITS.embedTotal) add('error', 'Embeds', ['embeds'], `Alle Embeds zusammen: ${total}/${DISCORD_LIMITS.embedTotal} Zeichen.`);
   if (m.rows.length > DISCORD_LIMITS.actionRows) add('error', 'Komponenten', ['rows'], `Höchstens ${DISCORD_LIMITS.actionRows} Komponenten-Reihen je Nachricht.`);
+  const kept = (cid: string, where: string, path: (string | number)[]) => {
+    if (!o.keptCustomIds?.includes(cid)) add('error', where, path, 'Übernommene custom_id ist nur beim Bearbeiten der geladenen Discord-Nachricht erlaubt – eine Aktion festlegen.');
+    if (o.target === 'webhook') add('error', where, path, 'Über einen Webhook sind keine interaktiven Komponenten möglich.');
+  };
   const action = (a: MbAction, where: string, path: (string | number)[]) => {
     if (a.type === 'reply') {
       if (!a.text.trim()) add('error', where, [...path, 'text'], 'Aktion „Antwort“: Antworttext fehlt.');
@@ -229,6 +246,8 @@ export function validateMbMessage(m: MbMessage, idx: number, o: MbValidateOption
         if (b.kind === 'link') {
           if (!b.url) add('error', bw, p('buttons', bi, 'url'), 'Link-Button braucht eine URL.');
           else url(b.url, bw, p('buttons', bi, 'url'), 'Link', DISCORD_LIMITS.linkUrl);
+        } else if (b.keepCustomId) {
+          kept(b.keepCustomId, bw, p('buttons', bi));
         } else {
           if (o.target === 'webhook') add('error', bw, p('buttons', bi), 'Über einen Webhook sind nur Link-Buttons möglich – für Aktions-Buttons über den Bot senden.');
           action(b.action, bw, p('buttons', bi, 'action'));
@@ -239,13 +258,20 @@ export function validateMbMessage(m: MbMessage, idx: number, o: MbValidateOption
       if (!r.options.length) add('error', w, p('options'), 'Das Auswahlmenü braucht mindestens eine Option.');
       if (r.options.length > DISCORD_LIMITS.selectOptions) add('error', w, p('options'), `Höchstens ${DISCORD_LIMITS.selectOptions} Optionen.`);
       if (len(r.placeholder) > DISCORD_LIMITS.selectPlaceholder) add('error', w, p('placeholder'), `Platzhalter: ${len(r.placeholder)}/${DISCORD_LIMITS.selectPlaceholder} Zeichen.`);
+      if (r.minValues > r.maxValues) add('error', w, p('minValues'), `Mindestanzahl (${r.minValues}) ist größer als die Höchstanzahl (${r.maxValues}).`);
+      if (r.options.length && r.maxValues > r.options.length) add('error', w, p('maxValues'), `Höchstanzahl (${r.maxValues}) ist größer als die Zahl der Optionen (${r.options.length}).`);
+      if (r.keepCustomId) kept(r.keepCustomId, w, p());
+      const values = new Set<string>();
       r.options.forEach((op, oi) => {
         const ow = `${w} › Option ${oi + 1}`;
         if (!op.label.trim()) add('error', ow, p('options', oi, 'label'), 'Option braucht eine Beschriftung.');
         if (len(op.label) > DISCORD_LIMITS.optionLabel) add('error', ow, p('options', oi, 'label'), `Beschriftung: ${len(op.label)}/${DISCORD_LIMITS.optionLabel} Zeichen.`);
         if (len(op.description) > DISCORD_LIMITS.optionDescription) add('error', ow, p('options', oi, 'description'), `Beschreibung: ${len(op.description)}/${DISCORD_LIMITS.optionDescription} Zeichen.`);
         if (op.emoji && !isValidEmoji(op.emoji.trim())) add('error', ow, p('options', oi, 'emoji'), 'Emoji: ein Unicode-Emoji oder ein Server-Emoji wie <:name:123…>.');
-        action(op.action, ow, p('options', oi, 'action'));
+        if (values.has(op.id)) add('error', ow, p('options', oi), 'Zwei Optionen haben denselben Wert.');
+        values.add(op.id);
+        if (len(op.id) > DISCORD_LIMITS.optionValue) add('error', ow, p('options', oi), `Wert: höchstens ${DISCORD_LIMITS.optionValue} Zeichen.`);
+        if (!r.keepCustomId) action(op.action, ow, p('options', oi, 'action'));
       });
     }
   });
@@ -314,15 +340,15 @@ export function toDiscordPayload(m: MbMessage, o: { now?: Date; customIdOf?: (co
         const emoji = toPartialEmoji(b.emoji);
         const common = { ...(b.label ? { label: b.label } : {}), ...(emoji ? { emoji } : {}), ...(b.disabled ? { disabled: true } : {}) };
         if (b.kind === 'link') return b.url ? [{ type: 2, style: 5, url: b.url, ...common }] : [];
-        const cid = o.customIdOf?.(b.id);
+        const cid = b.keepCustomId || o.customIdOf?.(b.id);
         return cid ? [{ type: 2, style: STYLE_NUM[b.style], custom_id: cid, ...common }] : [];
       });
       if (buttons.length) components.push({ type: 1, components: buttons });
     } else {
-      const cid = o.customIdOf?.(r.id);
+      const cid = r.keepCustomId || o.customIdOf?.(r.id);
       if (!cid || !r.options.length) continue;
       components.push({ type: 1, components: [{
-        type: 3, custom_id: cid, min_values: 1, max_values: 1, ...(r.placeholder ? { placeholder: r.placeholder } : {}), ...(r.disabled ? { disabled: true } : {}),
+        type: 3, custom_id: cid, min_values: Math.min(r.minValues, r.options.length), max_values: Math.max(1, Math.min(r.maxValues, r.options.length)), ...(r.placeholder ? { placeholder: r.placeholder } : {}), ...(r.disabled ? { disabled: true } : {}),
         options: r.options.map((op) => { const emoji = toPartialEmoji(op.emoji); return { label: op.label, value: op.id, ...(op.description ? { description: op.description } : {}), ...(emoji ? { emoji } : {}) }; }),
       }] });
     }
@@ -346,14 +372,15 @@ export function mbSummary(m: MbMessage): string {
 export type MbInteractive = { componentId: string; kind: 'button'; action: MbAction } | { componentId: string; kind: 'select'; options: Record<string, MbAction> };
 export function interactiveComponents(m: MbMessage): MbInteractive[] {
   return m.rows.flatMap((r): MbInteractive[] => r.type === 'buttons'
-    ? r.buttons.filter((b) => b.kind === 'action').map((b) => ({ componentId: b.id, kind: 'button', action: b.action }))
-    : [{ componentId: r.id, kind: 'select', options: Object.fromEntries(r.options.map((op) => [op.id, op.action])) }]);
+    ? r.buttons.filter((b) => b.kind === 'action' && !b.keepCustomId).map((b) => ({ componentId: b.id, kind: 'button', action: b.action }))
+    : r.keepCustomId ? [] : [{ componentId: r.id, kind: 'select', options: Object.fromEntries(r.options.map((op) => [op.id, op.action])) }]);
 }
 
-export const MB_DEFAULT_CATEGORIES = ['Allgemein', 'Polizei', 'Leitstelle', 'Dienstantritt', 'Dienstende', 'Einsatzmeldung', 'Personalinformation', 'Ankündigung', 'Wartung', 'Sonstiges'] as const;
+/** Standard-Kategorien für Server, die noch keine Kategorien haben (bestehende Kategorien bleiben unverändert). */
+export const MB_DEFAULT_CATEGORIES = ['Ankündigungen', 'Dienstanweisungen', 'Bewerbungen', 'Tickets', 'Ausbildung', 'Informationen', 'Berichte', 'Sonstiges'] as const;
 
 /** Rechte des Bots im Kanal, die zum Senden gebraucht werden (meldet der Bot im Kanalverzeichnis). */
-export interface MbChannelBotPerms { view: boolean; send: boolean; embed: boolean; mentionEveryone?: boolean; sendInThreads?: boolean }
+export interface MbChannelBotPerms { view: boolean; send: boolean; embed: boolean; mentionEveryone?: boolean; sendInThreads?: boolean; createThreads?: boolean; history?: boolean }
 /** Fehlende Bot-Rechte für eine Nachrichtengruppe (leer = alles da). */
 export function missingBotPerms(p: MbChannelBotPerms, d: MbDocumentData): string[] {
   const miss: string[] = [];
@@ -369,6 +396,11 @@ const DISCORD_ERRORS: Record<number, string> = {
   10003: 'Den Kanal gibt es nicht (mehr).',
   10008: 'Die Nachricht gibt es nicht (mehr).',
   10015: 'Den Webhook gibt es nicht mehr – in den Webhook-Einstellungen entfernen oder neu anlegen.',
+  10017: 'Den Thread gibt es nicht (mehr).',
+  50005: 'Diese Nachricht stammt von jemand anderem und kann nicht bearbeitet werden.',
+  50083: 'Der Thread ist archiviert – erst wieder öffnen.',
+  220001: 'Forum-Beiträge brauchen einen Titel (Thread-Name).',
+  220003: 'In diesem Forum muss ein Tag gewählt werden – bitte in einen bestehenden Beitrag senden.',
   20016: 'Langsamer Modus im Kanal aktiv – später erneut senden.',
   40005: 'Die Nachricht ist zu groß.',
   50001: 'Der Bot hat keinen Zugriff auf diesen Kanal.',
