@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import type { FormRawValue, TicketQuestion } from '@enrp/shared';
 import { Badge, Button, Card, ConfirmDialog, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
 import { duration, errText, label, TRANSCRIPT_STATUS, type TicketDetail as Detail, type TicketOptions } from '../../lib/tickets';
 import { StatusChip } from './SupportTickets';
@@ -16,9 +17,11 @@ const LOG: Record<string, string> = {
   assigned: 'Zugewiesen', department_changed: 'Abteilung geändert', info_requested: 'Rückfrage an den Nutzer', archived: 'Archiviert', transcript_requested: 'Transkript angefordert',
   transcript_failed: 'Transkript fehlgeschlagen', transcript_retry: 'Transkript erneut angestoßen', sla_reminder: 'SLA-Erinnerung', sla_escalated: 'SLA-Eskalation an die Leitung',
   unassigned_escalated: 'Unzugewiesen – an die Leitung gemeldet', routing_warning: 'Zuständigkeit fehlt (Hinweis)', staff_alert: 'Bearbeiter erinnert', close_requested: 'Schließen angefragt',
-  close_request_accepted: 'Schließen bestätigt', close_request_declined: 'Schließen abgelehnt',
+  close_request_accepted: 'Schließen bestätigt', close_request_declined: 'Schließen abgelehnt', close_request_approved: 'Schließen teilweise bestätigt',
+  forwarded: 'Weitergeleitet', reminder_sent: 'Ersteller erinnert', automation_changed: 'Automatik geändert', team_reminder: 'Team-Erinnerung', no_response_reply: 'Automatische Antwort (Team hat nicht reagiert)',
+  capacity_warning: 'Über der Auslastungsgrenze geöffnet',
 };
-type Dialog = null | 'close' | 'rename' | 'access' | 'move' | 'delete' | 'assign' | 'info';
+type Dialog = null | 'close' | 'rename' | 'access' | 'move' | 'delete' | 'assign' | 'info' | 'forward' | 'remind' | 'automation';
 const TRIGGER: Record<string, string> = { close: 'beim Schließen', manual: 'manuell', delete: 'vor dem Löschen', regenerate: 'neu erzeugt' };
 
 /** Ein Support-Ticket: Verlauf, Antworten, interne Notizen, Protokoll, Transkripte und alle Aktionen (jede mit eigenem Recht). */
@@ -58,6 +61,13 @@ export function TicketDetail() {
       {(d.sla.firstOverdue || d.sla.resolveOverdue) && !closed && <p role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">⏰ SLA überschritten: {d.sla.firstOverdue ? 'erste Antwort' : 'Lösung'} war fällig am {fmt(d.sla.firstOverdue ? d.sla.firstDueAt : d.sla.resolveDueAt)}.</p>}
       {act.error && <p role="alert" className="mb-3 text-sm text-danger">{errText(act.error)}</p>}
       {msg && <p role="status" className="mb-3 text-sm text-success">{msg}</p>}
+      {d.closeRequest && !closed && (
+        <div role="status" className="mb-3 flex flex-wrap items-center gap-2 rounded border border-warning/40 bg-warning/10 p-2 text-sm">
+          <span>❓ Schließungsanfrage seit {fmt(d.closeRequest.at)} · bestätigen muss: {({ CREATOR: 'Ersteller', STAFF: 'zuständiger Mitarbeiter', BOTH: 'Ersteller und zuständiger Mitarbeiter', ANY: 'Ersteller oder zuständiger Mitarbeiter' } as Record<string, string>)[d.closeRequest.approvers] ?? d.closeRequest.approvers}{d.closeRequest.approvals.length ? ` · bisher bestätigt: ${d.closeRequest.approvals.map((a) => (a.startsWith('creator:') ? 'Ersteller' : 'Mitarbeiter')).join(', ')}` : ''}</span>
+          {d.closeRequest.approvers !== 'CREATOR' && can('ticket.claim') && <span className="ml-auto flex gap-2"><Button size="sm" disabled={act.isPending} onClick={() => run({ action: 'close_request_answer', accept: true })}>Als Mitarbeiter bestätigen</Button><Button size="sm" variant="secondary" disabled={act.isPending} onClick={() => run({ action: 'close_request_answer', accept: false })}>Ablehnen</Button></span>}
+        </div>
+      )}
+      {!closed && !d.automation.active && <p role="status" className="mb-3 rounded border border-line bg-panel-2 p-2 text-sm">⏸️ Automatik für dieses Ticket {d.automation.disabled ? 'dauerhaft ausgeschaltet' : `pausiert bis ${fmt(d.automation.pausedUntil)}`}.</p>}
       {!deleted && (
         <Card className="mb-4" title="Aktionen">
           <div className="flex flex-wrap items-center gap-2">
@@ -65,6 +75,10 @@ export function TicketDetail() {
             <B show={!closed && can('ticket.claim') && d.claimers.length > 0} onClick={() => run({ action: 'unclaim' })}>↩️ Freigeben</B>
             <B show={!closed && can('ticket.assign')} onClick={() => setDialog('assign')}>🧭 Zuweisen</B>
             <B show={!closed && can('ticket.claim') && !!d.channelId} onClick={() => setDialog('info')}>❔ Rückfrage an Nutzer</B>
+            <B show={!closed && can('ticket.forward')} onClick={() => setDialog('forward')}>📨 Weiterleiten</B>
+            <B show={!closed && can('ticket.remind') && !!d.channelId} onClick={() => setDialog('remind')}>⏰ Ersteller erinnern</B>
+            <B show={!closed && can('ticket.close') && !d.closeRequest} onClick={() => run({ action: 'close_request' })}>❓ Schließen anfragen</B>
+            <B show={!closed && can('ticket.automation')} onClick={() => setDialog('automation')}>⚙️ Automatik</B>
             <B show={!closed && can('ticket.close')} onClick={() => setDialog('close')} danger>🔒 Schließen</B>
             <B show={closed && can('ticket.reopen') && d.category.allowReopen} onClick={() => run({ action: 'reopen' })}>🔓 Wieder öffnen</B>
             <B show={!closed && can('ticket.lock')} onClick={() => run({ action: d.locked ? 'unlock' : 'lock' })}>{d.locked ? '✅ Entsperren' : '⛔ Sperren'}</B>
@@ -88,6 +102,11 @@ export function TicketDetail() {
           {d.answers.length > 0 && (
             <Card title={`Formularangaben${d.formVersion ? ` (Formular-Version ${d.formVersion.version})` : ''}`}>
               <dl className="grid gap-2 text-sm">{d.answers.map((a, i) => <div key={i}><dt className="text-xs text-muted">{a.label}</dt><dd className="whitespace-pre-wrap">{a.value}</dd></div>)}</dl>
+            </Card>
+          )}
+          {d.closeAnswers?.length > 0 && (
+            <Card title="Angaben beim Schließen (nur Team)">
+              <dl className="grid gap-2 text-sm">{d.closeAnswers.map((a, i) => <div key={i}><dt className="text-xs text-muted">{a.label}</dt><dd className="whitespace-pre-wrap">{a.value}</dd></div>)}</dl>
             </Card>
           )}
           <Card title={`Verlauf (${d.messages.length})`}>
@@ -147,6 +166,8 @@ export function TicketDetail() {
               {d.sla.resolveDueAt && !d.closedAt && <><dt className="text-muted">Lösungsziel</dt><dd className={d.sla.resolveOverdue ? 'text-danger' : ''}>{fmt(d.sla.resolveDueAt)}{d.sla.paused && <span className="block text-xs text-muted">ruht – wartet auf den Nutzer</span>}</dd></>}
               {d.waitingSeconds >= 60 && <><dt className="text-muted">Wartezeit Nutzer</dt><dd>{duration(Math.round(d.waitingSeconds / 60))}</dd></>}
               <dt className="text-muted">Letzte Aktivität</dt><dd>{fmt(d.lastActivityAt)}</dd>
+              {d.panel && <><dt className="text-muted">Panel</dt><dd>{d.panel.name}</dd></>}
+              <dt className="text-muted">Automatik</dt><dd>{d.automation.active ? 'aktiv' : d.automation.disabled ? 'aus' : `pausiert bis ${fmt(d.automation.pausedUntil)}`}<span className="block text-xs text-muted">{d.automation.source === 'PANEL' ? 'Werte des Panels' : 'Werte der Kategorie'}{d.automation.autoCloseMinutes ? ` · schließt nach ${duration(d.automation.autoCloseMinutes)} Inaktivität` : ''}</span></dd>
               {d.closedAt && <><dt className="text-muted">Geschlossen</dt><dd>{fmt(d.closedAt)}{d.closedByName ? ` · ${d.closedByName}` : ''}</dd><dt className="text-muted">Grund</dt><dd className="whitespace-pre-wrap">{d.closeReason ?? '—'}</dd></>}
               {d.deleteAt && !deleted && <><dt className="text-muted">Löschung</dt><dd>{fmt(d.deleteAt)}</dd></>}
             </dl>
@@ -159,7 +180,7 @@ export function TicketDetail() {
               </li>
             ))}</ul> : <p className="text-sm text-muted">Nur Ersteller und Team der Kategorie.</p>}
           </Card>
-          {d.rating && <Card title="Bewertung"><p className="text-lg">{'★'.repeat(d.rating.stars)}{'☆'.repeat(5 - d.rating.stars)}</p>{d.rating.comment && <p className="whitespace-pre-wrap text-sm">{d.rating.comment}</p>}<p className="text-xs text-muted">{fmt(d.rating.createdAt)}</p></Card>}
+          {d.rating && <Card title="Bewertung"><p className="text-lg">{(d.rating.scale ?? 5) <= 5 ? `${'★'.repeat(d.rating.stars)}${'☆'.repeat((d.rating.scale ?? 5) - d.rating.stars)}` : ''} <span className="text-sm text-muted">{d.rating.stars}/{d.rating.scale ?? 5}</span></p>{d.rating.comment && <p className="whitespace-pre-wrap text-sm">{d.rating.comment}</p>}{(d.rating.answers ?? []).length > 0 && <dl className="mt-2 grid gap-1 text-sm">{d.rating.answers.map((a, i) => <div key={i}><dt className="text-xs text-muted">{a.label}</dt><dd className="whitespace-pre-wrap">{a.value}</dd></div>)}</dl>}<p className="text-xs text-muted">{fmt(d.rating.createdAt)}</p></Card>}
           {d.transcripts && (
             <Card title="Transkripte" actions={d.transcripts.some((x) => x.status === 'DONE') ? <Link to={`/transcript/${d.ref}`} className="text-sm text-primary underline">Online-Ansicht</Link> : undefined}>
               {d.transcripts.length ? <ul className="grid gap-2 text-sm">{d.transcripts.map((x) => (
@@ -180,7 +201,10 @@ export function TicketDetail() {
           </Card>
         </div>
       </div>
-      {dialog === 'close' && <CloseDialog o={o} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(reason) => run({ action: 'close', ...(reason ? { reason } : {}) })} />}
+      {dialog === 'close' && <CloseDialog o={o} form={d.closeForm ?? []} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(reason, answers) => run({ action: 'close', ...(reason ? { reason } : {}), ...(answers ? { answers } : {}) })} />}
+      {dialog === 'forward' && <ForwardDialog o={o} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(b) => run({ action: 'forward', ...b })} />}
+      {dialog === 'remind' && <TextDialog title="Ersteller erinnern" field="Eigener Text (optional – sonst der Erinnerungstext der Kategorie). Erscheint im Ticket und per DM." allowEmpty busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(text) => run({ action: 'remind', ...(text ? { text } : {}) })} />}
+      {dialog === 'automation' && <AutomationDialog active={d.automation.active} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(b) => run({ action: 'automation', ...b })} />}
       {dialog === 'rename' && <InputDialog title="Kanal umbenennen" field="Neuer Name (Platzhalter erlaubt, z. B. support-{username})" initial={d.name} busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(name) => run({ action: 'rename', name })} />}
       {dialog === 'move' && <InputDialog title="In Discord-Kategorie verschieben" field="Discord-Kategorie-ID (leer = keine Kategorie)" initial="" numeric busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(v) => run({ action: 'move', parentId: v || null })} allowEmpty />}
       {dialog === 'assign' && <InputDialog title="Ticket zuweisen" field="Discord-ID des Teammitglieds (muss ein verknüpftes Konto mit Zugriff haben)" initial="" numeric busy={act.isPending} error={act.error} onClose={() => setDialog(null)} onConfirm={(v) => run({ action: 'assign', targetId: v })} />}
@@ -193,23 +217,39 @@ export function TicketDetail() {
 
 const Err = ({ error }: { error: unknown }) => (error ? <p role="alert" className="text-sm text-danger">{errText(error)}</p> : null);
 
-function CloseDialog({ o, busy, error, onClose, onConfirm }: { o?: TicketOptions; busy: boolean; error: unknown; onClose: () => void; onConfirm: (reason?: string) => void }) {
+/** Eingabe eines Formularfelds im Dashboard (Text, Auswahl, Ja/Nein …); Prüfung macht das System. */
+function FormInput({ q, value, onChange }: { q: TicketQuestion; value: FormRawValue; onChange: (v: FormRawValue) => void }) {
+  const opts = q.type === 'YESNO' ? ['Ja', 'Nein'] : q.type === 'CHECKBOX' ? ['Ja'] : q.options;
+  return (
+    <Field label={`${q.label}${q.required ? ' *' : ''}`} hint={q.description}>{(id) => (q.type === 'SELECT' || q.type === 'YESNO' || q.type === 'CHECKBOX'
+      ? <Select id={id} value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value || null)}><option value="">Auswählen …</option>{opts.map((x) => <option key={x} value={x}>{x}</option>)}</Select>
+      : q.type === 'MULTI' ? <Select id={id} multiple value={Array.isArray(value) ? value : []} onChange={(e) => onChange([...e.target.selectedOptions].map((x) => x.value))}>{opts.map((x) => <option key={x} value={x}>{x}</option>)}</Select>
+      : q.type === 'LONG' ? <Textarea id={id} rows={3} maxLength={q.maxLength ?? 4000} value={typeof value === 'string' ? value : ''} placeholder={q.placeholder} onChange={(e) => onChange(e.target.value)} />
+      : q.type === 'FILE' ? <p id={id} className="text-xs text-muted">Datei-Uploads gibt es nur im Discord-Formular.</p>
+      : <Input id={id} maxLength={q.maxLength ?? 400} value={typeof value === 'string' ? value : ''} placeholder={q.placeholder} onChange={(e) => onChange(e.target.value)} />)}</Field>
+  );
+}
+
+function CloseDialog({ o, form, busy, error, onClose, onConfirm }: { o?: TicketOptions; form: TicketQuestion[]; busy: boolean; error: unknown; onClose: () => void; onConfirm: (reason?: string, answers?: Record<string, FormRawValue>) => void }) {
   const mode = o?.close.mode ?? 'OPTIONAL', source = o?.close.source ?? 'BOTH';
   const [preset, setPreset] = useState('');
   const [custom, setCustom] = useState('');
+  const [answers, setAnswers] = useState<Record<string, FormRawValue>>({});
   const reason = (custom.trim() || preset).trim();
+  const hasReasonField = form.some((q) => q.id === 'reason');
   return (
     <Modal open title="Ticket schließen" onClose={onClose}>
       <div className="grid gap-3">
-        {mode !== 'NONE' && source !== 'CUSTOM' && !!o?.reasons.length && (
+        {form.map((q) => <FormInput key={q.id} q={q} value={answers[q.id]} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />)}
+        {!hasReasonField && mode !== 'NONE' && source !== 'CUSTOM' && !!o?.reasons.length && (
           <Field label="Grund">{(id) => <Select id={id} value={preset} onChange={(e) => setPreset(e.target.value)}><option value="">Auswählen …</option>{o.reasons.map((r) => <option key={r.id} value={r.text}>{r.text}</option>)}</Select>}</Field>
         )}
-        {mode !== 'NONE' && (source !== 'PRESET' || !o?.reasons.length) && (
+        {!hasReasonField && mode !== 'NONE' && (source !== 'PRESET' || !o?.reasons.length) && (
           <Field label={source === 'BOTH' && o?.reasons.length ? 'Oder eigener Grund' : 'Grund'}>{(id) => <Textarea id={id} rows={3} maxLength={500} value={custom} onChange={(e) => setCustom(e.target.value)} />}</Field>
         )}
         {mode === 'REQUIRED' && <p className="text-xs text-muted">Für diese Kategorie ist ein Grund erforderlich.</p>}
         <Err error={error} />
-        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button variant="danger" disabled={busy || (mode === 'REQUIRED' && !reason)} onClick={() => onConfirm(mode === 'NONE' ? undefined : reason || undefined)}>Ticket schließen</Button></div>
+        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button variant="danger" disabled={busy || (mode === 'REQUIRED' && !reason && !hasReasonField)} onClick={() => onConfirm(mode === 'NONE' ? undefined : reason || undefined, form.length ? answers : undefined)}>Ticket schließen</Button></div>
       </div>
     </Modal>
   );
@@ -228,14 +268,14 @@ function InputDialog({ title, field, initial, numeric, allowEmpty, busy, error, 
   );
 }
 
-function TextDialog({ title, field, busy, error, onClose, onConfirm }: { title: string; field: string; busy: boolean; error: unknown; onClose: () => void; onConfirm: (v: string) => void }) {
+function TextDialog({ title, field, allowEmpty, busy, error, onClose, onConfirm }: { title: string; field: string; allowEmpty?: boolean; busy: boolean; error: unknown; onClose: () => void; onConfirm: (v: string) => void }) {
   const [v, setV] = useState('');
   return (
     <Modal open title={title} onClose={onClose}>
       <div className="grid gap-3">
         <Field label={field}>{(id) => <Textarea id={id} rows={4} maxLength={2000} value={v} onChange={(e) => setV(e.target.value)} />}</Field>
         <Err error={error} />
-        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={busy || v.trim().length < 3} onClick={() => onConfirm(v.trim())}>Senden</Button></div>
+        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={busy || (!allowEmpty && v.trim().length < 3)} onClick={() => onConfirm(v.trim())}>Senden</Button></div>
       </div>
     </Modal>
   );
@@ -251,6 +291,45 @@ function AccessDialog({ busy, error, onClose, onConfirm }: { busy: boolean; erro
         <Field label="Dauer">{(id) => <Select id={id} value={v.minutes} onChange={(e) => setV({ ...v, minutes: e.target.value })}><option value="0">Permanent</option><option value="60">1 Stunde</option><option value="1440">24 Stunden</option><option value="10080">7 Tage</option></Select>}</Field>
         <Err error={error} />
         <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={busy || !/^\d{15,25}$/.test(v.targetId)} onClick={() => onConfirm({ action: 'add_access', targetId: v.targetId, kind: v.kind, ...(Number(v.minutes) ? { minutes: Number(v.minutes) } : {}) })}>Hinzufügen</Button></div>
+      </div>
+    </Modal>
+  );
+}
+
+/** Weiterleiten an ein Teammitglied, eine Team-Rolle oder eine andere Kategorie – der Verlauf bleibt vollständig erhalten. */
+function ForwardDialog({ o, busy, error, onClose, onConfirm }: { o?: TicketOptions; busy: boolean; error: unknown; onClose: () => void; onConfirm: (b: Record<string, unknown>) => void }) {
+  const [v, setV] = useState({ target: 'USER', targetId: '', note: '' });
+  const ok = v.target === 'CATEGORY' ? !!v.targetId : /^\d{15,25}$/.test(v.targetId);
+  return (
+    <Modal open title="Ticket weiterleiten" onClose={onClose}>
+      <div className="grid gap-3">
+        <Field label="An">{(id) => <Select id={id} value={v.target} onChange={(e) => setV({ ...v, target: e.target.value, targetId: '' })}><option value="USER">Teammitglied</option><option value="ROLE">Team-Rolle</option><option value="CATEGORY">Andere Kategorie</option></Select>}</Field>
+        {v.target === 'CATEGORY'
+          ? <Field label="Kategorie">{(id) => <Select id={id} value={v.targetId} onChange={(e) => setV({ ...v, targetId: e.target.value })}><option value="">Auswählen …</option>{o?.categories.map((c) => <option key={c.id} value={c.id}>{label(c)}</option>)}</Select>}</Field>
+          : <Field label={v.target === 'USER' ? 'Discord-ID des Teammitglieds (verknüpftes Konto mit Zugriff)' : 'Discord-ID der Rolle'}>{(id) => <Input id={id} inputMode="numeric" value={v.targetId} onChange={(e) => setV({ ...v, targetId: e.target.value.trim() })} placeholder="123456789012345678" />}</Field>}
+        <Field label="Interne Notiz zur Weiterleitung (optional, nie für den Ersteller sichtbar)">{(id) => <Textarea id={id} rows={2} maxLength={1000} value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} />}</Field>
+        <Err error={error} />
+        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button disabled={busy || !ok} onClick={() => onConfirm({ target: v.target, targetId: v.targetId, ...(v.note.trim() ? { note: v.note.trim() } : {}) })}>Weiterleiten</Button></div>
+      </div>
+    </Modal>
+  );
+}
+
+/** Automatik für dieses Ticket: pausieren (Dauer), dauerhaft aus, wieder an – gespeichert, übersteht Neustarts. */
+function AutomationDialog({ active, busy, error, onClose, onConfirm }: { active: boolean; busy: boolean; error: unknown; onClose: () => void; onConfirm: (b: Record<string, unknown>) => void }) {
+  const [minutes, setMinutes] = useState('60');
+  return (
+    <Modal open title="Automatik für dieses Ticket" onClose={onClose}>
+      <div className="grid gap-3">
+        <p className="text-sm text-muted">Betrifft nur dieses Ticket: automatisches Schließen, Erinnerungen, Auto-Claim/-Freigabe und automatische Antworten.</p>
+        <Field label="Pausieren für">{(id) => <Select id={id} value={minutes} onChange={(e) => setMinutes(e.target.value)}><option value="60">1 Stunde</option><option value="240">4 Stunden</option><option value="1440">24 Stunden</option><option value="10080">7 Tage</option><option value="43200">30 Tage</option></Select>}</Field>
+        <Err error={error} />
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
+          {!active && <Button variant="secondary" disabled={busy} onClick={() => onConfirm({ mode: 'enable' })}>▶️ Wieder einschalten</Button>}
+          <Button variant="secondary" disabled={busy} onClick={() => onConfirm({ mode: 'pause', minutes: Number(minutes) })}>⏸️ Pausieren</Button>
+          <Button variant="danger" disabled={busy} onClick={() => onConfirm({ mode: 'disable' })}>⛔ Dauerhaft aus</Button>
+        </div>
       </div>
     </Modal>
   );

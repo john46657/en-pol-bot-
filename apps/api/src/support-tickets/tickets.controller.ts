@@ -13,8 +13,14 @@ import { TicketConfigService } from './config.service';
 import { categorySchema, departmentSchema, panelSchema, prioritySchema, questionSchema, reasonSchema, settingsSchema, statusSchema } from './config.schemas';
 
 const snowflake = z.string().regex(/^\d{15,25}$/);
+const formValues = z.record(z.string().max(40), z.union([z.string().max(4000), z.array(z.string().max(100)).max(25), z.boolean(), z.null()]));
 const actionSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('close'), reason: z.string().trim().max(500).optional() }), z.object({ action: z.literal('close_request') }),
+  z.object({ action: z.literal('close'), reason: z.string().trim().max(500).optional(), answers: formValues.optional() }), z.object({ action: z.literal('close_request') }),
+  z.object({ action: z.literal('close_request_answer'), accept: z.boolean() }),
+  z.object({ action: z.literal('remind'), text: z.string().trim().max(1500).optional() }),
+  // Ziel wird im Service geprüft (Kategorie: UUID, Person/Rolle: Discord-ID)
+  z.object({ action: z.literal('forward'), target: z.enum(['USER', 'ROLE', 'CATEGORY']), targetId: z.string().trim().min(1).max(40), note: z.string().trim().max(1000).optional() }),
+  z.object({ action: z.literal('automation'), mode: z.enum(['pause', 'disable', 'enable']), minutes: z.number().int().min(1).max(60 * 24 * 30).optional() }),
   z.object({ action: z.literal('reopen') }), z.object({ action: z.literal('claim') }), z.object({ action: z.literal('unclaim'), targetId: snowflake.optional() }),
   z.object({ action: z.literal('add_access'), targetId: snowflake, kind: z.enum(['USER', 'ROLE']), minutes: z.number().int().min(1).max(60 * 24 * 30).optional() }),
   z.object({ action: z.literal('remove_access'), targetId: snowflake }),
@@ -39,7 +45,7 @@ const transcriptQ = z.object({
   number: z.coerce.number().int().positive().optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25),
 });
-const ratingQ = z.object({ stars: z.coerce.number().int().min(1).max(5).optional(), categoryId: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25) });
+const ratingQ = z.object({ stars: z.coerce.number().int().min(1).max(10).optional(), categoryId: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(500).default(25) });
 const openQ = z.object({ categoryId: z.string().uuid(), discordId: snowflake, discordName: z.string().trim().max(100).optional(), guildId: snowflake.optional() });
 const actor = (u: AuthUser): Actor & { name: string } => ({ userId: u.id, robloxUserId: u.robloxUserId, name: u.displayName });
 const auditQ = z.object({ ticketId: z.string().uuid().optional(), action: z.string().max(80).optional(), result: z.enum(['SUCCESS', 'DENIED', 'FAILED']).optional(), page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(200).default(50) });
@@ -68,7 +74,8 @@ export class SupportTicketsController {
   @Post('categories/:id/duplicate') @RequirePermission('ticket.settings') dupCategory(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.cfg.duplicateCategory(actor(u), id); }
   @Delete('categories/:id') @HttpCode(204) @RequirePermission('ticket.settings') delCategory(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.cfg.deleteCategory(actor(u), id); }
   @Post('panels') @RequirePermission('ticket.settings') createPanel(@CurrentUser() u: AuthUser, @Body(zodBody(panelSchema)) b: z.infer<typeof panelSchema>) { return this.cfg.savePanel(actor(u), null, b); }
-  @Put('panels/:id') @RequirePermission('ticket.settings') updatePanel(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(panelSchema)) b: z.infer<typeof panelSchema>) { return this.cfg.savePanel(actor(u), id, b); }
+  /** Speichern; wurde das Panel aktiviert/deaktiviert und ist es veröffentlicht, wird die Discord-Nachricht sofort angepasst. */
+  @Put('panels/:id') @RequirePermission('ticket.settings') updatePanel(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(panelSchema)) b: z.infer<typeof panelSchema>) { return this.s.savePanelAndSync(actor(u), id, b); }
   @Post('panels/:id/duplicate') @RequirePermission('ticket.settings') dupPanel(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.cfg.duplicatePanel(actor(u), id); }
   @Delete('panels/:id') @HttpCode(204) @RequirePermission('ticket.settings') delPanel(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.cfg.deletePanel(actor(u), id); }
   @Get('panels/:id/preview') @RequirePermission('ticket.view') preview(@Param('id', ParseUUIDPipe) id: string) { return this.s.panelMessage(id); }
@@ -95,7 +102,7 @@ export class SupportTicketsController {
   // ---- Tickets ----
   @Get() @RequirePermission('ticket.view') list(@CurrentUser() u: AuthUser, @Query(zodBody(listQ)) q: z.infer<typeof listQ>) { return this.s.list(u.id, { ...q, guildId: targetGuild(q.guildId) ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
   @Post() @RequirePermission('ticket.create') async create(@CurrentUser() u: AuthUser, @Body(zodBody(openQ)) b: z.infer<typeof openQ>) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
-  @Get('stats') @RequirePermission('ticket.view') stats(@CurrentUser() u: AuthUser) { return this.s.stats(u.id); }
+  @Get('stats') @RequirePermission('ticket.view') stats(@CurrentUser() u: AuthUser, @Query(zodBody(z.object({ guildId: snowflake.optional() }))) q: { guildId?: string }) { return this.s.stats(u.id, { guildId: targetGuild(q.guildId) ?? undefined }); }
   @Get('overview') @RequirePermission('ticket.view') overview(@CurrentUser() u: AuthUser, @Query(zodBody(z.object({ guildId: snowflake.optional() }))) q: { guildId?: string }) { return this.s.overview(u.id, targetGuild(q.guildId) ?? undefined); }
   @Get('audit') @RequirePermission('ticket.audit') auditLog(@Query(zodBody(auditQ)) q: z.infer<typeof auditQ>) { return this.s.auditLog(q); }
   /** Transkript-Seite /transcript/EMD-000123: Versionen (Mitarbeiter mit Zugriff oder der Ersteller selbst – Prüfung im Service). */
@@ -110,13 +117,16 @@ export class SupportTicketsController {
     const tr = await this.s.transcript(u.id, id, fmt === 'json' ? 'json' : download || fmt === 'txt' ? 'export' : 'view');
     privateHeaders(res);
     const name = `transkript-${tr.ticketNumber}-v${tr.version}`;
-    if (fmt === 'txt') { res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Content-Disposition', `attachment; filename="${name}.txt"`); res.send(tr.text); return; }
+    // Team-Fassung (mit internen Notizen) nur für Mitarbeiter mit Zugriff – der Ersteller bekommt immer die Fassung ohne Notizen
+    const staff = tr.who === 'staff';
+    const html = staff && tr.staffHtml ? tr.staffHtml : tr.html, text = staff && tr.staffText ? tr.staffText : tr.text;
+    if (fmt === 'txt') { res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Content-Disposition', `attachment; filename="${name}.txt"`); res.send(text); return; }
     if (fmt === 'json') { res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.setHeader('Content-Disposition', `attachment; filename="${name}.json"`); res.send(JSON.stringify(tr.data ?? {}, null, 2)); return; }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     // Transkript-HTML in einer Sandbox anzeigen: keine Skripte, kein Zugriff auf das Dashboard
     res.setHeader('Content-Security-Policy', "default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; sandbox");
     res.setHeader('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="${name}.html"`);
-    res.send(tr.html);
+    res.send(html);
   }
   @Delete('transcripts/:id') @RequirePermission('ticket.transcript_delete') async delTranscript(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) { return this.s.deleteTranscript(await this.s.actorFromUser(u), id); }
   @Get('attachments/:key') @RequirePermission('ticket.view')
@@ -165,8 +175,11 @@ export class BotSupportTicketsController {
   @BotService() @Post(':id/answer') @HttpCode(200) answer(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, questionId: z.string().max(40), values: z.array(z.string().max(2000)).max(25).nullable() }))) b: { discordId: string; questionId: string; values: string[] | null }) { return this.s.answer(id, b.discordId, b.questionId, b.values); }
   @BotService() @Post(':id/close-request') @HttpCode(200) closeRequest(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, accept: z.boolean() }))) b: { discordId: string; accept: boolean }) { return this.s.closeRequestAnswer(id, b.discordId, b.accept); }
   @BotService() @Post(':id/creator-add') @HttpCode(200) creatorAdd(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, targetId: snowflake }))) b: { discordId: string; targetId: string }) { return this.s.creatorAdd(id, b.discordId, b.targetId); }
-  @BotService() @Post(':id/creator-close') @HttpCode(200) creatorClose(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, reason: z.string().trim().max(500).optional() }))) b: { discordId: string; reason?: string }) { return this.s.creatorClose(id, b.discordId, b.reason); }
-  @BotService() @Post(':id/rating') @HttpCode(200) rate(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, stars: z.number().int().min(1).max(5) }))) b: { discordId: string; stars: number }) { return this.s.rate(id, b.discordId, b.stars); }
+  @BotService() @Post(':id/creator-close') @HttpCode(200) creatorClose(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, reason: z.string().trim().max(500).optional(), answers: formValues.optional() }))) b: { discordId: string; reason?: string; answers?: z.infer<typeof formValues> }) { return this.s.creatorClose(id, b.discordId, b.reason, b.answers); }
+  @BotService() @Post(':id/rating') @HttpCode(200) rate(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, stars: z.number().int().min(1).max(10), values: formValues.optional() }))) b: { discordId: string; stars: number; values?: z.infer<typeof formValues> }) { return this.s.rate(id, b.discordId, b.stars, b.values); }
+  @BotService() @Get(':id/rating-form') ratingForm(@Param('id', ParseUUIDPipe) id: string, @Query(zodBody(z.object({ discordId: snowflake, stars: z.coerce.number().int().min(1).max(10) }))) q: { discordId: string; stars: number }) { return this.s.ratingForm(id, q.discordId, q.stars); }
+  @BotService() @Get(':id/close-form') closeForm(@Param('id', ParseUUIDPipe) id: string) { return this.s.closeFormModal(id); }
+  @BotService() @Get('by-channel/:channelId') byChannel(@Param('channelId') channelId: string) { if (!/^\d{15,25}$/.test(channelId)) return { id: null }; return this.s.byChannel(channelId); }
   @BotService() @Post(':id/rating-comment') @HttpCode(200) rateComment(@Param('id', ParseUUIDPipe) id: string, @Body(zodBody(z.object({ discordId: snowflake, comment: z.string().trim().min(1).max(1000) }))) b: { discordId: string; comment: string }) { return this.s.rateComment(id, b.discordId, b.comment); }
   @BotService() @Post('messages') @HttpCode(200) message(@Body(zodBody(botMessage)) b: z.infer<typeof botMessage>) { return this.s.message(b); }
   @BotService() @Get('channels') channels() { return this.s.channels(); }

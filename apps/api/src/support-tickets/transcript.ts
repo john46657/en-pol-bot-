@@ -6,7 +6,13 @@ export interface TranscriptData {
   creator: { id: string; name: string }; claimers: { id: string; name: string }[]; participants: string[];
   createdAt: Date; closedAt: Date | null; closedBy: string | null; closeReason: string | null; generatedAt: Date; timezone: string;
   answers: { label: string; value: string }[];
-  entries: ({ kind: 'message'; at: Date; author: string; authorId: string; avatar?: string | null; staff: boolean; bot: boolean; content: string; attachments: { name: string; size: number; contentType?: string; dataUri?: string | null; href?: string | null }[]; embeds: { title?: string; description?: string }[] }
+  /** Team-Fassung: interne Notizen sind enthalten (nie in der Fassung für den Ersteller) */
+  staffView?: boolean;
+  closeAnswers?: { label: string; value: string }[];
+  rating?: { stars: number; scale: number; comment: string | null; answers: { label: string; value: string }[] } | null;
+  /** Übernahmen, Weiterleitungen, Zuweisungen in zeitlicher Reihenfolge */
+  history?: { at: Date; text: string }[];
+  entries: ({ kind: 'note'; at: Date; author: string; text: string } | { kind: 'message'; at: Date; author: string; authorId: string; avatar?: string | null; staff: boolean; bot: boolean; content: string; attachments: { name: string; size: number; contentType?: string; dataUri?: string | null; href?: string | null }[]; embeds: { title?: string; description?: string }[] }
     | { kind: 'event'; at: Date; text: string })[];
 }
 
@@ -30,6 +36,7 @@ export function renderTranscript(d: TranscriptData): string {
   ];
   const entries = d.entries.map((e) => {
     if (e.kind === 'event') return `<div class="event"><span>${esc(e.text)}</span><time>${esc(fmt(e.at))}</time></div>`;
+    if (e.kind === 'note') return `<div class="note"><div class="head"><b>🔒 Interne Notiz · ${esc(e.author)}</b><time>${esc(fmt(e.at))}</time></div><div class="text">${md(e.text)}</div></div>`;
     const initials = esc(e.author.slice(0, 2).toUpperCase());
     const avatar = e.avatar ? `<img class="avatar" src="${esc(e.avatar)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<div class="avatar ph">${initials}</div>`;
     const att = e.attachments.map((a) => (a.dataUri && a.contentType?.startsWith('image/'))
@@ -52,15 +59,20 @@ main{padding:8px 24px 40px}.msg{display:flex;gap:14px;padding:8px 0}.avatar{widt
 code,pre{background:#2b2d31;border-radius:4px;padding:1px 4px;font-family:ui-monospace,Consolas,monospace;font-size:13px}pre{padding:8px;white-space:pre-wrap}
 .mention{background:#3c4270;color:#c9cdfb;border-radius:3px;padding:0 2px}.embed{border-left:4px solid #5865f2;background:#2b2d31;border-radius:4px;padding:8px 12px;margin-top:6px;max-width:560px}
 .img img{max-width:min(420px,100%);max-height:320px;border-radius:6px;margin-top:6px;display:block}.file{margin-top:6px;background:#2b2d31;border:1px solid #3f4147;border-radius:6px;padding:8px 12px;display:inline-block}.file a{color:#00a8fc}
+.note{margin:6px 0 6px 54px;background:#3a2f12;border-left:4px solid #f0b232;border-radius:6px;padding:8px 12px}.note b{color:#f0b232}.staffbar{background:#f0b232;color:#1e1f22;font-weight:600;text-align:center;padding:6px;font-size:13px}
 .event{display:flex;justify-content:space-between;gap:12px;color:#949ba4;font-size:13px;border-top:1px dashed #3f4147;padding:6px 0;margin:4px 0 4px 54px}
 footer{color:#6d6f78;font-size:12px;text-align:center;padding:16px}
 @media print{body{background:#fff;color:#000}header,.answers,.embed,.file,code,pre{background:#f3f3f3}.head b,.head b.staff{color:#000}}
 </style></head><body>
+${d.staffView ? '<div class="staffbar">🔒 Team-Fassung – enthält interne Notizen. Nicht an Ticket-Ersteller weitergeben.</div>' : ''}
 <header><h1>Ticket ${esc(d.ref ?? `#${d.number}`)} – ${esc(d.subject || d.name)}</h1><p>Transkript${d.version ? ` · Version ${d.version}` : ''} · erstellt am ${esc(fmt(d.generatedAt))}</p>
 <div class="info">${info.map(([k, v]) => `<div><span>${esc(k)}</span>${esc(v)}</div>`).join('')}</div></header>
 ${d.answers.length ? `<section class="answers"><h2>📝 Angaben beim Öffnen</h2><dl>${d.answers.map((a) => `<dt>${esc(a.label)}</dt><dd>${md(a.value)}</dd>`).join('')}</dl></section>` : ''}
+${d.closeAnswers?.length ? `<section class="answers"><h2>🔒 Angaben beim Schließen</h2><dl>${d.closeAnswers.map((a) => `<dt>${esc(a.label)}</dt><dd>${md(a.value)}</dd>`).join('')}</dl></section>` : ''}
+${d.history?.length ? `<section class="answers"><h2>👤 Übernahme- und Weiterleitungshistorie</h2><dl>${d.history.map((h) => `<dt>${esc(fmt(h.at))}</dt><dd>${esc(h.text)}</dd>`).join('')}</dl></section>` : ''}
+${d.rating ? `<section class="answers"><h2>⭐ Bewertung: ${d.rating.stars}/${d.rating.scale}</h2><dl>${d.rating.comment ? `<dt>Begründung</dt><dd>${md(d.rating.comment)}</dd>` : ''}${d.rating.answers.map((a) => `<dt>${esc(a.label)}</dt><dd>${md(a.value)}</dd>`).join('')}</dl></section>` : ''}
 <main>${entries || '<p>Keine Nachrichten.</p>'}</main>
-<footer>EN Polizei · Ticket-System · ${d.entries.filter((e) => e.kind === 'message').length} Nachrichten${d.sha256 ? `<br>Integrität (SHA-256 der Transkriptdaten): <code>${esc(d.sha256)}</code>` : ''}</footer>
+<footer>EN Polizei · Ticket-System · ${d.entries.filter((e) => e.kind === 'message').length} Nachrichten${d.staffView ? ` · ${d.entries.filter((e) => e.kind === 'note').length} interne Notizen` : ''}${d.sha256 ? `<br>Integrität (SHA-256 der Transkriptdaten): <code>${esc(d.sha256)}</code>` : ''}</footer>
 </body></html>`;
 }
 
@@ -74,9 +86,16 @@ export function renderTranscriptText(d: TranscriptData): string {
     `Bearbeiter:     ${d.claimers.map((c) => c.name).join(', ') || '—'}`, `Erstellt:       ${fmt(d.createdAt)}`, `Geschlossen:    ${fmt(d.closedAt)}`,
     `Geschlossen von:${d.closedBy ? ` ${d.closedBy}` : ' —'}`, `Grund:          ${d.closeReason ?? '—'}`, `Transkript vom: ${fmt(d.generatedAt)}`,
   ];
-  const answers = d.answers.length ? ['', 'Angaben beim Öffnen', '-'.repeat(60), ...d.answers.flatMap((a) => [`${a.label}:`, `  ${a.value.replace(/\n/g, '\n  ')}`])] : [];
+  const block = (title: string, xs: { label: string; value: string }[] | undefined) => (xs?.length ? ['', title, '-'.repeat(60), ...xs.flatMap((a) => [`${a.label}:`, `  ${a.value.replace(/\n/g, '\n  ')}`])] : []);
+  const answers = [
+    ...(d.staffView ? ['', '*** TEAM-FASSUNG – enthält interne Notizen. Nicht an Ticket-Ersteller weitergeben. ***'] : []),
+    ...block('Angaben beim Öffnen', d.answers), ...block('Angaben beim Schließen', d.closeAnswers),
+    ...(d.history?.length ? ['', 'Übernahme- und Weiterleitungshistorie', '-'.repeat(60), ...d.history.map((h) => `[${fmt(h.at)}] ${h.text}`)] : []),
+    ...(d.rating ? block(`Bewertung: ${d.rating.stars}/${d.rating.scale}`, [...(d.rating.comment ? [{ label: 'Begründung', value: d.rating.comment }] : []), ...d.rating.answers]) : []),
+  ];
   const lines = d.entries.map((e) => (e.kind === 'event'
     ? `[${fmt(e.at)}] -- ${e.text}`
+    : e.kind === 'note' ? `[${fmt(e.at)}] [INTERNE NOTIZ] ${e.author}:\n  ${e.text.replace(/\n/g, '\n  ')}`
     : [`[${fmt(e.at)}] ${e.author}${e.bot ? ' [BOT]' : e.staff ? ' [TEAM]' : ''}:`, ...(e.content ? [`  ${e.content.replace(/\n/g, '\n  ')}`] : []),
       ...e.embeds.filter((x) => x.title || x.description).map((x) => `  [Embed] ${[x.title, x.description].filter(Boolean).join(' – ')}`),
       ...e.attachments.map((a) => `  [Anhang] ${a.name} (${size(a.size)})`)].join('\n')));

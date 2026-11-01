@@ -25,6 +25,12 @@ export const TICKET_ACTIONS = {
   note: { label: 'Notiz', emoji: '🗒️', style: 'secondary', state: 'both', permission: 'ticket.internal_notes' },
   rating: { label: 'Bewertung', emoji: '⭐', style: 'secondary', state: 'closed', permission: 'ticket.rate' },
   delete: { label: 'Löschen', emoji: '🗑️', style: 'danger', state: 'closed', permission: 'ticket.delete' },
+  /** Ticket-Ersteller an eine ausstehende Antwort erinnern (Nachricht im Ticket + DM). */
+  remind: { label: 'Ersteller erinnern', emoji: '⏰', style: 'secondary', state: 'open', permission: 'ticket.remind' },
+  /** Weiterleiten an ein Teammitglied, eine Team-Rolle oder eine andere Kategorie (Verlauf bleibt erhalten). */
+  forward: { label: 'Weiterleiten', emoji: '📨', style: 'secondary', state: 'open', permission: 'ticket.forward' },
+  /** Automatisierungen für dieses Ticket pausieren / dauerhaft ausschalten / wieder einschalten. */
+  automation: { label: 'Automatik', emoji: '⚙️', style: 'secondary', state: 'open', permission: 'ticket.automation' },
 } as const;
 export type TicketAction = keyof typeof TICKET_ACTIONS;
 export const TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS) as TicketAction[];
@@ -36,7 +42,7 @@ export interface TicketButtonConfig { action: TicketAction; label: string; emoji
 export const NO_TICKET_BUTTON: readonly TicketAction[] = ['reopen', 'priority', 'escalate'];
 export const ticketButtonsOf = <T extends { action: string }>(buttons: T[]): T[] => buttons.filter((b) => !NO_TICKET_BUTTON.includes(b.action as TicketAction));
 export const defaultTicketButtons = (): TicketButtonConfig[] =>
-  (['close', 'close_request', 'claim', 'unclaim', 'add_user', 'remove_user', 'transcript', 'note', 'delete'] as TicketAction[])
+  (['close', 'close_request', 'claim', 'unclaim', 'forward', 'remind', 'add_user', 'remove_user', 'transcript', 'note', 'automation', 'delete'] as TicketAction[])
     .map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style as ButtonStyleName, enabled: true }));
 
 export const QUESTION_TYPES = {

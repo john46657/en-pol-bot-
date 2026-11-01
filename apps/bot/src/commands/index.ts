@@ -4,7 +4,7 @@ import { QUALI_COMMANDS } from './qualifications';
 import { LEAVE_COMMANDS } from './leave';
 import { CAD_COMMANDS } from './cad';
 import { shiftPicker } from './features';
-import { TICKET_COMMAND } from './tickets';
+import { TICKET_ADMIN_COMMAND, TICKET_COMMAND } from './tickets';
 import { DUTY_REPORT_COMMANDS } from './duty-reports';
 import { WARNING_COMMANDS } from './warnings';
 import { RADIO_WHITELIST_COMMANDS } from './radio-whitelist';
@@ -107,7 +107,7 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
         { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
         { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`' },
-        { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
+        { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Team im Ticket-Kanal: `/ticket` (claim, unclaim, schliessen, anfrage, weiterleiten, hinzufuegen, entfernen, umbenennen, erinnern, notiz, automatik, oeffnen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
         { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel · `/remind-me` (Erinnerung, z. B. `in: 30m`) · `/erinnerungen`' },
         { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }] }] };
     },
@@ -408,7 +408,7 @@ export const COMMANDS: CommandDef[] = [
   ...RADIO_WHITELIST_COMMANDS,
   ...TRAINING_COMMANDS,
   ...SHIFT_COMMANDS,
-  TICKET_COMMAND,
+  TICKET_COMMAND, TICKET_ADMIN_COMMAND,
   ...SETUP_COMMANDS,
   ...SYSTEM_COMMANDS,
   ...BACKUP_COMMANDS,

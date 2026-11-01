@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ButtonStyleName, ClaimMode, CloseReasonMode, CloseReasonSource, StatusKind, TicketButtonConfig, TicketQuestion, TicketStatusKey } from '@enrp/shared';
+import type { ButtonStyleName, ClaimMode, CloseReasonMode, CloseReasonSource, LoadLevel, StatusKind, TicketAutomation, TicketButtonConfig, TicketQuestion, TicketStatusKey } from '@enrp/shared';
 import { api, ApiError } from './api';
 import { useServer } from './guilds';
 
@@ -21,12 +21,15 @@ export interface TicketCategoryCfg {
   welcomeImageUrl: string | null; capacity: number; creatorCanAddUsers: boolean; claimDiscordCategoryId: string | null; claimLocksChat: boolean;
   autoClaimOnMessage: boolean; autoUnclaimMinutes: number; staffAlertMinutes: number; closeRequestCloses: boolean;
   departmentId: string | null; confidential: boolean; formMode: 'CHANNEL' | 'MODAL'; formVersion?: number; escalateUnassignedMinutes: number; archivedAt?: string | null;
+  extraUserIds: string[]; capacityAction: 'BLOCK' | 'WARN'; closeForm: TicketQuestion[]; ratingForm: TicketQuestion[]; closeRequestApprovers: 'CREATOR' | 'STAFF' | 'BOTH' | 'ANY';
+  automationSource: 'CATEGORY' | 'PANEL'; creatorReminderMinutes: number; creatorReminderMessage: string; teamReminderMinutes: number; noResponseMinutes: number; noResponseMessage: string; closeRequestTimeoutMinutes: number;
 }
 export interface TicketPanelCfg {
   id: string; guildId: string | null; name: string; title: string; description: string; emoji: string | null; color: number; thumbnailUrl: string | null; imageUrl: string | null; bannerUrl: string | null;
   footer: string | null; footerIconUrl: string | null; authorName: string | null; authorIconUrl: string | null; style: 'BUTTONS' | 'DROPDOWN'; placeholder: string;
   channelId: string | null; categoryIds: string[]; allowedRoleIds: string[]; showLoad: boolean; position: number; messageChannelId: string | null; messageId: string | null;
   publishedAt?: string | null; publishError?: string | null;
+  internalNote: string; active: boolean; channelNameFormat: string | null; mentionRoleIds: string[]; maxOpen: number; automation: TicketAutomation;
 }
 export interface TicketSettingsCfg {
   logChannelId: string | null; transcriptChannelId: string | null; closedTitle: string; closedMessage: string; closedColor: number;
@@ -36,6 +39,7 @@ export interface TicketSettingsCfg {
   refPrefix: string; maxOpenPerUser: number; guildId: string | null; confidentialFallbackRoleIds: string[]; leadRoleIds: string[];
   slaReminderMinutes: number; slaEscalateAfterMinutes: number; userMessageNotifyMinutes: number;
   notifications: Record<NotifyEvent, { channel: boolean; dm: boolean; dashboard: boolean }>;
+  ratingScale: number; ratingPublicMinStars: number;
 }
 export const NOTIFY_EVENTS = {
   created: 'Neues Ticket', claimed: 'Ticket übernommen', assigned: 'Zuständigkeit geändert', user_message: 'Neue Nachricht des Nutzers', info_requested: 'Rückfrage an den Nutzer',
@@ -65,21 +69,33 @@ export interface TicketDetail extends Omit<TicketRow, 'category' | 'sla'> {
   notes: { id: string; authorName: string; text: string; createdAt: string }[] | null;
   logs: { id: string; action: string; actorName: string | null; detail: Record<string, unknown>; createdAt: string }[];
   transcripts: TranscriptVersion[] | null;
-  rating: { stars: number; comment: string | null; createdAt: string } | null;
+  rating: { stars: number; scale: number; comment: string | null; answers: { label: string; value: string }[]; createdAt: string } | null;
+  ratingScale: number;
+  closeAnswers: { label: string; value: string }[];
+  closeForm: TicketQuestion[];
+  automation: TicketAutomation & { active: boolean; disabled: boolean; pausedUntil: string | null; source: 'CATEGORY' | 'PANEL' };
+  panel: { id: string; name: string } | null;
+  closeRequest: { at: string; by: string | null; approvals: string[]; approvers: string } | null;
+  closedById: string | null;
   /** Discord-ID → Anzeigename (Bearbeiter, hinzugefügte Benutzer). */
   names: Record<string, string>;
 }
-export interface TicketOptions { closed: boolean; statuses: TicketStatusCfg[]; priorities: TicketPriorityCfg[]; categories: { id: string; name: string; emoji: string | null }[]; departments: { id: string; name: string; emoji: string | null }[]; reasons: TicketReasonCfg[]; close: { mode: CloseReasonMode; source: CloseReasonSource } }
+export interface TicketOptions { closed: boolean; statuses: TicketStatusCfg[]; priorities: TicketPriorityCfg[]; categories: { id: string; name: string; emoji: string | null }[]; departments: { id: string; name: string; emoji: string | null }[]; reasons: TicketReasonCfg[]; close: { mode: CloseReasonMode; source: CloseReasonSource; form?: TicketQuestion[] } }
 export interface TranscriptVersion { id: string; version: number; status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED'; trigger: string; attempts: number; lastError: string | null; createdAt: string; completedAt: string | null; createdByName: string | null; sizeBytes: number; sha256: string | null }
 export const TRANSCRIPT_STATUS: Record<TranscriptVersion['status'], { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
   PENDING: { label: 'wartet', tone: 'neutral' }, RUNNING: { label: 'wird erstellt', tone: 'warning' }, DONE: { label: 'fertig', tone: 'success' }, FAILED: { label: 'fehlgeschlagen', tone: 'danger' },
 };
 export interface TicketOverview { open: number; unassigned: number; inProgress: number; waiting: number; overdue: number; closed: number; archived: number }
-export interface RatingSummary { count: number; average: number | null; positive: number; negative: number; perStaff: { discordId: string; count: number; average: number | null }[]; perCategory: { id: string; name: string; count: number; average: number | null }[] }
+export interface RatingSummary { scale?: number; trend?: { month: string; count: number; average: number | null }[]; count: number; average: number | null; positive: number; negative: number; perStaff: { discordId: string; count: number; average: number | null }[]; perCategory: { id: string; name: string; count: number; average: number | null }[] }
 export interface TicketStats {
   total: number; open: number; closed: number; archived: number; today: number; week: number; month: number; avgFirstResponseMinutes: number | null; avgCloseMinutes: number | null; escalations: number;
-  perCategory: { id: string; name: string; total: number; open: number }[]; perStaff: { discordId: string; tickets: number; closed: number }[]; ratings: RatingSummary; names: Record<string, string>;
+  perCategory: { id: string; name: string; emoji?: string | null; total: number; open: number; capacity?: number; capacityAction?: string; load?: number | null; level?: LoadLevel }[];
+  perStaff: { discordId: string; tickets: number; closed: number; closedBy?: number; avgFirstResponseMinutes?: number | null; medianFirstResponseMinutes?: number | null }[]; ratings: RatingSummary; names: Record<string, string>;
+  inProgress?: number; unassigned?: number; medianFirstResponseMinutes?: number | null; p90FirstResponseMinutes?: number | null; medianCloseMinutes?: number | null; p90CloseMinutes?: number | null;
+  perDay?: { day: string; created: number; closed: number }[]; perWeek?: { week: string; created: number; closed: number }[]; heatmap?: number[][]; timezone?: string;
+  leaderboards?: { handled: Board[]; closed: Board[]; fastest: Board[]; rated: (Board & { count: number })[] };
 }
+export interface Board { discordId: string; value: number }
 
 /** Einstellungen für den gewählten Server (Kategorien/Panels dieses Servers + die für alle Server). */
 export const useTicketConfig = () => {

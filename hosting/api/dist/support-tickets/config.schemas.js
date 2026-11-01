@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_SETTINGS = exports.settingsSchema = exports.reasonSchema = exports.notifySchema = exports.NOTIFY_EVENTS = exports.departmentSchema = exports.prioritySchema = exports.statusSchema = exports.panelSchema = exports.categorySchema = exports.buttonSchema = exports.questionSchema = void 0;
+exports.DEFAULT_SETTINGS = exports.settingsSchema = exports.reasonSchema = exports.notifySchema = exports.NOTIFY_EVENTS = exports.departmentSchema = exports.prioritySchema = exports.statusSchema = exports.panelSchema = exports.categorySchema = exports.automationSchema = exports.buttonSchema = exports.questionSchema = void 0;
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
 const snowflake = zod_1.z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
@@ -27,6 +27,16 @@ exports.buttonSchema = zod_1.z.object({
     action: zod_1.z.enum(shared_1.TICKET_ACTION_KEYS), label: zod_1.z.string().trim().min(1).max(80), emoji: zod_1.z.string().trim().max(64).optional(), style, enabled: zod_1.z.boolean(),
 });
 const guildOpt = optId;
+const minutes = (max = 60 * 24 * 30) => zod_1.z.number().int().min(0).max(max).default(0);
+/** Formular beim Schließen bzw. bei der Bewertung: ein Discord-Formular (höchstens 5 Felder). */
+const smallForm = zod_1.z.array(exports.questionSchema).max(shared_1.FORM_FIELDS_PER_MODAL, `Höchstens ${shared_1.FORM_FIELDS_PER_MODAL} Felder (Discord-Formular).`).default([])
+    .refine((q) => new Set(q.map((x) => x.id)).size === q.length, 'Die IDs der Felder müssen eindeutig sein.');
+/** Standardwerte der Automatisierungen eines Panels. */
+exports.automationSchema = zod_1.z.object({
+    autoCloseMinutes: minutes(60 * 24 * 90), autoCloseWarnMinutes: minutes(), creatorReminderMinutes: minutes(), teamReminderMinutes: minutes(),
+    staffAlertMinutes: minutes(), autoUnclaimMinutes: minutes(), autoClaimOnMessage: zod_1.z.boolean().default(false), closeRequestCloses: zod_1.z.boolean().default(true),
+    closeRequestTimeoutMinutes: minutes(), noResponseMinutes: minutes(),
+}).default({});
 exports.categorySchema = zod_1.z.object({
     /** Discord-Server, auf dem es diese Ticket-Art gibt (leer = alle Server). */
     guildId: guildOpt,
@@ -59,6 +69,14 @@ exports.categorySchema = zod_1.z.object({
     // Premium: Abteilung, Vertraulichkeit, Formular vor dem Erstellen, Eskalation unzugewiesener Tickets
     departmentId: zod_1.z.string().uuid().nullable().optional().transform((v) => v ?? null), confidential: zod_1.z.boolean().default(false),
     formMode: zod_1.z.enum(['CHANNEL', 'MODAL']).default('CHANNEL'), escalateUnassignedMinutes: zod_1.z.number().int().min(0).max(60 * 24 * 30).default(0),
+    // Ticket-System-Erweiterung: Zusatzpersonen, Auslastung, Formulare beim Schließen/Bewerten, Schließungsanfrage, Automatik
+    extraUserIds: ids, capacityAction: enumOf(shared_1.CAPACITY_ACTIONS).default('BLOCK'),
+    closeForm: smallForm, ratingForm: smallForm, closeRequestApprovers: enumOf(shared_1.CLOSE_REQUEST_APPROVERS).default('CREATOR'),
+    automationSource: enumOf(shared_1.AUTOMATION_SOURCES).default('CATEGORY'),
+    creatorReminderMinutes: minutes(), creatorReminderMessage: zod_1.z.string().trim().max(1000).default('⏰ {user}, das Team wartet auf deine Antwort in diesem Ticket.'),
+    teamReminderMinutes: minutes(), noResponseMinutes: minutes(),
+    noResponseMessage: zod_1.z.string().trim().max(1000).default('Danke für deine Geduld, {user}! Das Team ist gerade ausgelastet und meldet sich so schnell wie möglich.'),
+    closeRequestTimeoutMinutes: minutes(),
 });
 exports.panelSchema = zod_1.z.object({
     guildId: guildOpt,
@@ -69,6 +87,9 @@ exports.panelSchema = zod_1.z.object({
     channelId: optId,
     // Discord: höchstens 25 Buttons; Dropdown: je Menü 25 Einträge, bis zu 4 Menüs
     categoryIds: zod_1.z.array(zod_1.z.string().uuid()).max(100).default([]), allowedRoleIds: ids, showLoad: zod_1.z.boolean().default(false), position: zod_1.z.number().int().min(0).max(1000).default(0),
+    internalNote: zod_1.z.string().trim().max(1000).default(''), active: zod_1.z.boolean().default(true),
+    channelNameFormat: zod_1.z.string().trim().max(90).nullish().transform((v) => v || null), mentionRoleIds: ids,
+    maxOpen: zod_1.z.number().int().min(0).max(100).default(0), automation: exports.automationSchema,
 }).refine((p) => p.style !== 'BUTTONS' || p.categoryIds.length <= 25, { message: 'Discord erlaubt höchstens 25 Buttons – nutze bei mehr Kategorien ein Dropdown (bis 100).', path: ['categoryIds'] });
 exports.statusSchema = zod_1.z.object({
     name: zod_1.z.string().trim().min(1).max(60), emoji: zod_1.z.string().trim().max(64).default(''), color: color.default(0x3b82f6), position: zod_1.z.number().int().min(0).max(1000).default(0),
@@ -137,6 +158,11 @@ exports.settingsSchema = zod_1.z.object({
     /** Benachrichtigung „neue Nachricht des Nutzers“ höchstens alle … Minuten je Ticket */
     userMessageNotifyMinutes: zod_1.z.number().int().min(1).max(60 * 24).default(10),
     notifications: exports.notifySchema,
+    // ---- Bewertungen ----
+    /** Bewertungsskala (2–10); 1–5 erscheinen als Sterne, größere Skalen als Zahlen */
+    ratingScale: zod_1.z.number().int().min(shared_1.RATING_SCALE_MIN).max(shared_1.RATING_SCALE_MAX).default(5),
+    /** öffentlichen Bewertungs-Log nur ab dieser Bewertung (0 = alle) – z. B. nur gute Bewertungen öffentlich */
+    ratingPublicMinStars: zod_1.z.number().int().min(0).max(shared_1.RATING_SCALE_MAX).default(0),
 });
 exports.DEFAULT_SETTINGS = exports.settingsSchema.parse({});
 //# sourceMappingURL=config.schemas.js.map

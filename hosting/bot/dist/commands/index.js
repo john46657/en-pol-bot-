@@ -110,7 +110,7 @@ exports.COMMANDS = [
                             { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`' },
                             { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
                             { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`' },
-                            { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
+                            { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Team im Ticket-Kanal: `/ticket` (claim, unclaim, schliessen, anfrage, weiterleiten, hinzufuegen, entfernen, umbenennen, erinnern, notiz, automatik, oeffnen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
                             { name: 'Für alle', value: '`/bewerbung` (auch ohne Verknüpfung; Fragen per Direktnachricht) · SEK/Flugstaffel/Ausbilder über das Qualifikations-Panel · `/remind-me` (Erinnerung, z. B. `in: 30m`) · `/erinnerungen`' },
                             { name: 'Hinweis', value: 'Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur für dich sichtbar.' }
                         ] }] };
@@ -505,7 +505,7 @@ exports.COMMANDS = [
     ...radio_whitelist_1.RADIO_WHITELIST_COMMANDS,
     ...trainings_1.TRAINING_COMMANDS,
     ...shifts_1.SHIFT_COMMANDS,
-    tickets_1.TICKET_COMMAND,
+    tickets_1.TICKET_COMMAND, tickets_1.TICKET_ADMIN_COMMAND,
     ...setup_1.SETUP_COMMANDS,
     ...system_1.SYSTEM_COMMANDS,
     ...backup_1.BACKUP_COMMANDS,

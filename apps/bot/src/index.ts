@@ -437,7 +437,7 @@ function memberEvent(m: { id: string; user: { username: string; bot: boolean; cr
   return { id: m.id, guildId: m.guild.id, bot: m.user.bot, username: m.user.username, displayName: m.displayName ?? m.user.username, server: m.guild.name, memberCount: m.guild.memberCount, createdAt: m.user.createdAt, avatar: m.user.displayAvatarURL({ size: 256 }) };
 }
 
-type OptionHost = Pick<SlashCommandBuilder, 'addStringOption' | 'addIntegerOption' | 'addBooleanOption' | 'addUserOption' | 'addNumberOption' | 'addAttachmentOption'>;
+type OptionHost = Pick<SlashCommandBuilder, 'addStringOption' | 'addIntegerOption' | 'addBooleanOption' | 'addUserOption' | 'addRoleOption' | 'addNumberOption' | 'addAttachmentOption'>;
 function addOptions(b: OptionHost, options: CommandDef['options'] = []) {
   for (const o of options) {
     const common = (x: { setName(n: string): unknown; setDescription(d: string): unknown; setRequired(r: boolean): unknown }) => { x.setName(o.name); x.setDescription(o.description); x.setRequired(!!o.required); };
@@ -445,6 +445,7 @@ function addOptions(b: OptionHost, options: CommandDef['options'] = []) {
     else if (o.type === 'integer') b.addIntegerOption((x) => { common(x); if (o.min !== undefined) x.setMinValue(o.min); if (o.max !== undefined) x.setMaxValue(o.max); return x; });
     else if (o.type === 'boolean') b.addBooleanOption((x) => { common(x); return x; });
     else if (o.type === 'user') b.addUserOption((x) => { common(x); return x; });
+    else if (o.type === 'role') b.addRoleOption((x) => { common(x); return x; });
     else if (o.type === 'attachment') b.addAttachmentOption((x) => { common(x); return x; });
     else b.addNumberOption((x) => { common(x); if (o.min !== undefined) x.setMinValue(o.min); if (o.max !== undefined) x.setMaxValue(o.max); return x; });
   }

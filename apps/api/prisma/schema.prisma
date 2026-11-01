@@ -1138,35 +1138,47 @@ model QualificationApplication {
  * Panel in einem Discord-Channel (Embed + Buttons oder Dropdown mit Ticket-Kategorien).
  */
 model TicketPanel {
-  id               String    @id @default(uuid()) @db.Uuid
-  name             String
-  guildId          String? // Discord-Server (leer = alle Server)
-  title            String    @default("")
-  description      String    @default("")
-  emoji            String?
-  color            Int       @default(3899638)
-  thumbnailUrl     String?
-  imageUrl         String?
-  bannerUrl        String?
-  footer           String?
-  footerIconUrl    String?
-  authorName       String?
-  authorIconUrl    String?
-  style            String    @default("BUTTONS") // BUTTONS | DROPDOWN
-  placeholder      String    @default("Wähle eine Kategorie …")
-  channelId        String? // Ziel-Channel für das Panel
-  categoryIds      String[]  @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
-  allowedRoleIds   String[] // Discord-Rollen, die dieses Panel benutzen dürfen (leer = alle)
+  id                String    @id @default(uuid()) @db.Uuid
+  name              String
+  guildId           String? // Discord-Server (leer = alle Server)
+  title             String    @default("")
+  description       String    @default("")
+  emoji             String?
+  color             Int       @default(3899638)
+  thumbnailUrl      String?
+  imageUrl          String?
+  bannerUrl         String?
+  footer            String?
+  footerIconUrl     String?
+  authorName        String?
+  authorIconUrl     String?
+  style             String    @default("BUTTONS") // BUTTONS | DROPDOWN
+  placeholder       String    @default("Wähle eine Kategorie …")
+  channelId         String? // Ziel-Channel für das Panel
+  categoryIds       String[]  @db.Uuid // verfügbare Ticket-Arten in dieser Reihenfolge
+  allowedRoleIds    String[] // Discord-Rollen, die dieses Panel benutzen dürfen (leer = alle)
   /// Ticketauslastung im Panel anzeigen (offene Tickets je Kategorie)
-  showLoad         Boolean   @default(false)
-  position         Int       @default(0)
-  messageChannelId String?
-  messageId        String?
+  showLoad          Boolean   @default(false)
+  position          Int       @default(0)
+  messageChannelId  String?
+  messageId         String?
   /// letzter Sende-/Aktualisierungsversuch in Discord (Fehlertext, falls fehlgeschlagen)
-  publishedAt      DateTime?
-  publishError     String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  publishedAt       DateTime?
+  publishError      String?
+  /// interne Beschreibung (nur im Dashboard)
+  internalNote      String    @default("")
+  /// deaktiviert: keine neuen Tickets über dieses Panel (veröffentlichte Nachricht zeigt den Hinweis); Tickets bleiben erhalten
+  active            Boolean   @default(true)
+  /// Kanalname-Format für Tickets aus diesem Panel (leer = Format der Kategorie)
+  channelNameFormat String?
+  /// zusätzlich bei neuen Tickets aus diesem Panel erwähnte Team-Rollen
+  mentionRoleIds    String[]
+  /// gleichzeitig offene Tickets je Nutzer über dieses Panel (0 = unbegrenzt)
+  maxOpen           Int       @default(0)
+  /// Standardwerte der Automatisierungen (Kategorien mit automationSource = PANEL übernehmen sie)
+  automation        Json      @default("{}")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 /**
@@ -1231,82 +1243,99 @@ model TicketDraft {
 }
 
 model TicketCategory {
-  id                        String    @id @default(uuid()) @db.Uuid
-  name                      String
-  guildId                   String? // Discord-Server (leer = alle Server)
-  description               String    @default("")
-  emoji                     String?
-  color                     Int       @default(3899638)
-  buttonStyle               String    @default("secondary")
-  position                  Int       @default(0)
-  active                    Boolean   @default(true)
-  discordCategoryId         String? // Discord-Kategorie für neue Ticket-Channels
-  channelNameFormat         String    @default("ticket-{username}")
-  staffRoleIds              String[] // zuständige Discord-Rollen (sehen + schreiben)
-  extraRoleIds              String[] // zusätzliche Discord-Rollen (sehen + schreiben)
-  accessRoleNames           String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
-  requiredRoleIds           String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
-  allowedUserIds            String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
-  maxOpen                   Int       @default(1) // 0 = unbegrenzt
-  cooldownMinutes           Int       @default(0)
-  defaultPriorityId         String?   @db.Uuid
-  questions                 Json      @default("[]")
-  welcomeTitle              String    @default("🎫 {category}")
-  welcomeMessage            String    @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
-  mentionStaff              Boolean   @default(true)
-  mentionText               String    @default("")
-  buttons                   Json      @default("[]")
-  claimMode                 String    @default("SINGLE") // SINGLE | MULTI | PRIMARY
-  claimMessage              String    @default("👤 Bearbeiter: {staff}")
-  claimNotifyStaff          Boolean   @default(false)
-  creatorCanClose           Boolean   @default(true)
-  closeReasonMode           String    @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
-  closeReasonSource         String    @default("BOTH") // PRESET | CUSTOM | BOTH
-  closeRemovesAccess        Boolean   @default(true)
-  allowReopen               Boolean   @default(true)
-  transcriptOnClose         Boolean   @default(true)
-  transcriptChannelId       String?
-  transcriptToUser          Boolean   @default(false)
-  ratingEnabled             Boolean   @default(true)
-  ratingQuestion            String    @default("Wie zufrieden warst du mit dem Support?")
-  autoCloseMinutes          Int       @default(0) // 0 = aus
-  autoCloseWarnMinutes      Int       @default(0) // Warnung so viele Minuten vorher (0 = keine)
-  autoCloseMessage          String    @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
-  deleteAfterMinutes        Int       @default(-1) // -1 = nie, 0 = sofort
-  escalationRoleIds         String[]
-  escalationPriorityId      String?   @db.Uuid
-  escalationMessage         String    @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
+  id                         String    @id @default(uuid()) @db.Uuid
+  name                       String
+  guildId                    String? // Discord-Server (leer = alle Server)
+  description                String    @default("")
+  emoji                      String?
+  color                      Int       @default(3899638)
+  buttonStyle                String    @default("secondary")
+  position                   Int       @default(0)
+  active                     Boolean   @default(true)
+  discordCategoryId          String? // Discord-Kategorie für neue Ticket-Channels
+  channelNameFormat          String    @default("ticket-{username}")
+  staffRoleIds               String[] // zuständige Discord-Rollen (sehen + schreiben)
+  extraRoleIds               String[] // zusätzliche Discord-Rollen (sehen + schreiben)
+  accessRoleNames            String[] // Systemrollen, die diese Tickets im Dashboard sehen (leer = alle mit ticket.view)
+  requiredRoleIds            String[] // Discord-Rollen, die zum Öffnen nötig sind (leer = alle)
+  allowedUserIds             String[] // nur diese Discord-Benutzer dürfen öffnen (leer = alle)
+  maxOpen                    Int       @default(1) // 0 = unbegrenzt
+  cooldownMinutes            Int       @default(0)
+  defaultPriorityId          String?   @db.Uuid
+  questions                  Json      @default("[]")
+  welcomeTitle               String    @default("🎫 {category}")
+  welcomeMessage             String    @default("Hallo {user}!\n\nBeschreibe dein Anliegen so genau wie möglich. Ein Teammitglied kümmert sich schnellstmöglich darum.")
+  mentionStaff               Boolean   @default(true)
+  mentionText                String    @default("")
+  buttons                    Json      @default("[]")
+  claimMode                  String    @default("SINGLE") // SINGLE | MULTI | PRIMARY
+  claimMessage               String    @default("👤 Bearbeiter: {staff}")
+  claimNotifyStaff           Boolean   @default(false)
+  creatorCanClose            Boolean   @default(true)
+  closeReasonMode            String    @default("OPTIONAL") // NONE | OPTIONAL | REQUIRED
+  closeReasonSource          String    @default("BOTH") // PRESET | CUSTOM | BOTH
+  closeRemovesAccess         Boolean   @default(true)
+  allowReopen                Boolean   @default(true)
+  transcriptOnClose          Boolean   @default(true)
+  transcriptChannelId        String?
+  transcriptToUser           Boolean   @default(false)
+  ratingEnabled              Boolean   @default(true)
+  ratingQuestion             String    @default("Wie zufrieden warst du mit dem Support?")
+  autoCloseMinutes           Int       @default(0) // 0 = aus
+  autoCloseWarnMinutes       Int       @default(0) // Warnung so viele Minuten vorher (0 = keine)
+  autoCloseMessage           String    @default("⏰ {user}, dieses Ticket wird bald wegen Inaktivität geschlossen. Schreib eine Nachricht, wenn du noch Hilfe brauchst.")
+  deleteAfterMinutes         Int       @default(-1) // -1 = nie, 0 = sofort
+  escalationRoleIds          String[]
+  escalationPriorityId       String?   @db.Uuid
+  escalationMessage          String    @default("🟠 Dieses Ticket wurde eskaliert. {staff}")
   /// wie GalaxyBot: Bild im Eröffnungs-Embed
-  welcomeImageUrl           String?
+  welcomeImageUrl            String?
   /// Auslastung: ab so vielen offenen Tickets gilt die Kategorie als voll (0 = aus)
-  capacity                  Int       @default(0)
+  capacity                   Int       @default(0)
   /// Ersteller darf weitere Personen hinzufügen
-  creatorCanAddUsers        Boolean   @default(false)
+  creatorCanAddUsers         Boolean   @default(false)
   /// Nach Übernahme in diese Discord-Kategorie verschieben (Claim-Kategorie)
-  claimDiscordCategoryId    String?
+  claimDiscordCategoryId     String?
   /// Nach Übernahme dürfen nur noch Bearbeiter, Ersteller und Zusatzrollen schreiben
-  claimLocksChat            Boolean   @default(false)
+  claimLocksChat             Boolean   @default(false)
   /// Auto-Claim, sobald ein Teammitglied schreibt
-  autoClaimOnMessage        Boolean   @default(false)
+  autoClaimOnMessage         Boolean   @default(false)
   /// Auto-Unclaim nach so vielen Minuten Inaktivität (0 = aus)
-  autoUnclaimMinutes        Int       @default(0)
+  autoUnclaimMinutes         Int       @default(0)
   /// Auto-Team-Alert: Bearbeiter nach so vielen Minuten markieren, nach derselben Zeit freigeben (0 = aus)
-  staffAlertMinutes         Int       @default(0)
+  staffAlertMinutes          Int       @default(0)
   /// Close-Request: bestätigt der Ersteller, wird sofort geschlossen
-  closeRequestCloses        Boolean   @default(true)
+  closeRequestCloses         Boolean   @default(true)
   /// zuständige Abteilung
-  departmentId              String?   @db.Uuid
+  departmentId               String?   @db.Uuid
   /// vertraulich: nie ersatzweise für das allgemeine Team sichtbar, Details nicht in Log-Kanälen
-  confidential              Boolean   @default(false)
+  confidential               Boolean   @default(false)
   /// CHANNEL = Fragen nacheinander im Ticket (bisher) · MODAL = Discord-Formular vor dem Erstellen
-  formMode                  String    @default("CHANNEL")
-  formVersion               Int       @default(1)
+  formMode                   String    @default("CHANNEL")
+  formVersion                Int       @default(1)
   /// unzugewiesene Tickets nach so vielen Minuten an die Leitung melden (0 = aus)
-  escalateUnassignedMinutes Int       @default(0)
+  escalateUnassignedMinutes  Int       @default(0)
+  /// zusätzliche berechtigte Personen (Discord-IDs): sehen und schreiben in jedem Ticket dieser Kategorie
+  extraUserIds               String[]
+  /// bei voller Auslastung: BLOCK = neue Tickets verhindern · WARN = öffnen mit Hinweis
+  capacityAction             String    @default("BLOCK")
+  /// Formular beim Schließen und bei der Bewertung (Felder wie das Eröffnungsformular, höchstens 5)
+  closeForm                  Json      @default("[]")
+  ratingForm                 Json      @default("[]")
+  /// wer eine Schließungsanfrage bestätigen muss: CREATOR | STAFF | BOTH | ANY
+  closeRequestApprovers      String    @default("CREATOR")
+  /// Automatik: CATEGORY = eigene Werte · PANEL = Standardwerte des Panels
+  automationSource           String    @default("CATEGORY")
+  creatorReminderMinutes     Int       @default(0)
+  creatorReminderMessage     String    @default("⏰ {user}, das Team wartet auf deine Antwort in diesem Ticket.")
+  teamReminderMinutes        Int       @default(0)
+  noResponseMinutes          Int       @default(0)
+  noResponseMessage          String    @default("Danke für deine Geduld, {user}! Das Team ist gerade ausgelastet und meldet sich so schnell wie möglich.")
+  closeRequestTimeoutMinutes Int       @default(0)
   /// archiviert: nicht mehr wählbar und ausgeblendet; Tickets bleiben vollständig erhalten
-  archivedAt                DateTime?
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
+  archivedAt                 DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
 }
 
 model TicketStatus {
@@ -1395,10 +1424,25 @@ model SupportTicket {
   resolvedAt            DateTime?
   archivedAt            DateTime?
   userMessageNotifiedAt DateTime?
+  /// Automatisierungen für dieses Ticket: dauerhaft aus bzw. pausiert bis (gespeichert – übersteht Neustarts)
+  automationDisabled    Boolean   @default(false)
+  automationPausedUntil DateTime?
+  /// letzte Nachricht von Ersteller bzw. Team (Erinnerungen)
+  lastCreatorMessageAt  DateTime?
+  lastStaffMessageAt    DateTime?
+  creatorRemindedAt     DateTime?
+  teamRemindedAt        DateTime?
+  noResponseSentAt      DateTime?
+  /// Schließungsanfrage: wer angefragt hat und wer bereits bestätigt hat (Discord-IDs)
+  closeRequestById      String?
+  closeRequestApprovals String[]
+  /// Antworten des Schließformulars
+  closeAnswers          Json      @default("[]")
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   @@index([departmentId])
+  @@index([panelId])
   @@index([closedAt])
   @@index([creatorId, categoryId])
   @@index([statusId])
@@ -1495,6 +1539,9 @@ model TicketTranscript {
   sha256        String?
   /// wohin nach der Erstellung gesendet wird (Kanäle, DM)
   notify        Json      @default("{}")
+  /// Team-Fassung (mit internen Notizen und internen Ereignissen) – nie für den Ersteller
+  staffHtml     String    @default("")
+  staffText     String    @default("")
 
   @@unique([ticketId, version])
   @@index([status, nextAttemptAt])
@@ -1510,6 +1557,9 @@ model TicketRating {
   staffIds   String[]
   stars      Int
   comment    String?
+  /// Skala zum Zeitpunkt der Bewertung (z. B. 5 oder 10) und Antworten des Bewertungsformulars
+  scale      Int      @default(5)
+  answers    Json     @default("[]")
   createdAt  DateTime @default(now())
 }
 

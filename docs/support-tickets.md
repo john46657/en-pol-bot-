@@ -1,6 +1,6 @@
 # Support-Ticket-System
 
-> **Derzeit ausgeschaltet:** Das Modul ist global deaktiviert und ausgeblendet (`off: true` in `packages/shared/src/modules.ts`). Code und Daten bleiben erhalten; Menüpunkt, Rechte (`ticket.*`), API-Zugriffe mit Server und der Befehl `/support` sind gesperrt. Zum Einschalten `off: true` entfernen.
+> **Eingeschaltet** (wieder aktiv seit der Ticket-System-Erweiterung). Je Server lässt sich das Modul unter *Server → Module* weiterhin ausschalten. Neu: [Ticket-System-Erweiterung](#ticket-system-erweiterung-galaxybot-funktionsumfang).
 
 Ein komplett im Dashboard konfigurierbares Ticket-System für den Discord-Bot. **Nichts ist fest eingebaut** – Panels, Kategorien, Fragen, Buttons, Texte, Rollen, Channels, Status, Prioritäten und Schließgründe liegen in der Datenbank und werden unter **Operations → Support Tickets** verwaltet. Der Bot führt nur aus, was das System entscheidet. Rechte und Protokoll prüft bzw. schreibt immer das System.
 
@@ -224,3 +224,119 @@ Ticket-Aktionen, Konfigurationsänderungen, Transkript-Abrufe/-Exporte und abgel
 - „Kontrollkästchen“ erscheint im Discord-Formular als Auswahlmenü mit einer Option.
 - Ticket-Einstellungen gelten – wie bisher – je Discord-Server (gewählter Server im Dashboard bzw. Server der Bot-Anfrage).
 - Echte Discord- und Hosting-Tests wurden nicht durchgeführt; geprüft mit automatisierten Tests (gemockte Discord-Aufrufe) und einem lokalen Durchlauf (API + Web wie im Hosting, Browser).
+
+
+## Ticket-System-Erweiterung (GalaxyBot-Funktionsumfang)
+
+Eigenständige EN | POLIZEI-Umsetzung des Funktionsumfangs von GalaxyBots Ticket-Modul (kein fremder Code, keine fremden Assets). Erweitert das bestehende System – gleiche Tabellen, gleicher Bot, gleiches Dashboard (*Operations → Support-Tickets*). Migration `20261201100000_ticket_suite` ist rein additiv.
+
+### Dashboard – Bereiche
+| Reiter | Inhalt |
+|---|---|
+| **Übersicht** | offen, geschlossen, in Bearbeitung, nicht zugewiesen, Ø erste Antwort, Ø Bearbeitungszeit, Ø Bewertung, Tickets je Kategorie mit Auslastung |
+| **Tickets** | alle Tickets mit Filtern (Status, Kategorie, Abteilung, Priorität, Ersteller, **Bearbeiter (mir / Discord-ID)**, Zeitraum, Suche); Detailansicht mit Verlauf, Notizen, Protokoll, Transkripten |
+| **Transkripte** | Suche/Filter, Öffnen, Download – Team sieht die Team-Fassung (mit Notizen) |
+| **Bewertungen** | Durchschnitt, positiv/negativ, je Mitarbeiter/Kategorie, Verlauf je Monat, alle Einzelbewertungen inkl. Formularantworten |
+| **Statistik** | Gesamt, heute/Woche/Monat, **Tickets pro Tag (30) und Woche (12)**, Ø/**Median/p90** der ersten Antwort und der Bearbeitungszeit, Tickets pro Mitarbeiter, Auslastung je Kategorie, **Aktivitäts-Heatmap** (Wochentag × Stunde, Zeitzone der Organisation), **Ranglisten** (meiste Tickets, meiste geschlossen, schnellste erste Antwort, beste Bewertung ab 3) – alles aus gespeicherten Tickets berechnet |
+| **Panels** | erstellen, bearbeiten, duplizieren, **aktivieren/deaktivieren**, veröffentlichen / in Discord aktualisieren, Kanal wählen; löschen nur ohne Tickets |
+| **Kategorien** | erstellen, bearbeiten, sortieren (↑/↓), aktivieren/deaktivieren, archivieren, Rollen, Zusatzpersonen, Auslastungsgrenzen |
+| **Formulare** | je Kategorie drei Formulare: **beim Öffnen**, **beim Schließen**, **bei der Bewertung**; Felder hinzufügen, Typ, Pflicht, Min./Max. Zeichen, Auswahlmöglichkeiten, Reihenfolge, **Formular testen** |
+| **Automatisierungen** | Standardwerte je Panel, je Kategorie eigene Werte oder Panel-Werte übernehmen |
+| Abteilungen · Status & SLA · Allgemein | wie bisher; *Allgemein → Bewertungen*: Skala, öffentliche Mindestbewertung |
+
+### Panels
+Je Panel: Name, **interne Beschreibung**, Kanal, Embed (Titel, Beschreibung, Farbe, Thumbnail, Bild/Banner, Footer, Autor), Buttons oder Dropdown, **Kanalname-Format** (überschreibt das der Kategorie), **Team-Erwähnung** (Rollen – gepingt werden nur Rollen mit Zugriff auf das Ticket), **gleichzeitige Tickets je Nutzer über dieses Panel**, sichtbar für Rollen, **aktiv/inaktiv**, Automatik-Standardwerte.
+- Deaktivieren sperrt die Auswahl in der bereits veröffentlichten Nachricht sofort (Nachricht wird neu gezeichnet) – das System lehnt Öffnungen über ein deaktiviertes Panel zusätzlich ab.
+- Über ein Panel können nur Kategorien geöffnet werden, die im Panel stehen (manipulierte Interaktionen werden abgelehnt).
+- Panels, über die schon Tickets geöffnet wurden, lassen sich nicht löschen → deaktivieren (Historie bleibt zugeordnet).
+
+### Kategorien
+Neu je Kategorie: **zusätzliche berechtigte Personen** (sehen + schreiben in jedem Ticket), **Auslastungsgrenze** mit Verhalten bei voller Auslastung: *Neue Tickets verhindern* oder *Trotzdem öffnen, mit Hinweis*; **Schließformular**, **Bewertungsformular**, **wer eine Schließungsanfrage bestätigen muss**, Automatik (eigene Werte oder Panel). Inaktive Kategorien sind nicht mehr wählbar; bestehende Tickets funktionieren weiter.
+
+**Auslastung** (Panel mit „Auslastung anzeigen“): 🟢 unter 80 % · 🟡 ab 80 % · 🔴 ab 100 %. Bei *verhindern* ist die Kategorie im Panel ausgegraut („(voll)“) und das System lehnt neue Tickets ab; `ticket.bypass_limits` umgeht das. Bestehende Kategorien mit Kapazität behalten durch die Migration ihr bisheriges Verhalten (*mit Hinweis*).
+
+### Formulare
+Feldtypen u. a.: einzeiliger Text, mehrzeiliger Text, Auswahl (auch Mehrfach, Ja/Nein, Bestätigung), Zahl, Datum, **Datei-Upload** (beim Öffnen). Je Feld: Titel, Beschreibung, Typ, Pflicht, Min./Max. Zeichen, Optionen, Reihenfolge, aktiv.
+- **Öffnen:** wie bisher (Discord-Formular, mehrstufig, versioniert).
+- **Schließen:** Discord-Formular beim Klick auf „Schließen“ bzw. Felder im Dashboard-Dialog (höchstens 5 Felder, Discord-Limit). Feld-ID `reason` wird Schließungsgrund. Antworten: Detailansicht (nur Team) und Team-Transkript.
+- **Bewertung:** Klick auf eine Bewertung in der DM öffnet das Formular; erst mit dem Formular wird gespeichert. Feld-ID `comment` wird Begründung.
+- Alle Eingaben prüft der Server (`validateForm`), unabhängig vom Discord-Formular.
+
+### Ticket-Aktionen in Discord
+Buttons (je Kategorie unter *Buttons am Ticket* ein-/ausschaltbar; für bestehende Kategorien über *Add button* hinzufügen): Schließen, Schließen anfragen, Übernehmen, Freigeben, Hinzufügen, Entfernen, Transkript, Notiz, Löschen, **Ersteller erinnern**, **Weiterleiten**, **Automatik**.
+
+Slash-Befehle im Ticket-Kanal – **`/ticket`**: `claim`, `unclaim`, `schliessen [grund]`, `anfrage`, `weiterleiten (mitglied | rolle | kategorie) [notiz]`, `hinzufuegen mitglied`, `entfernen mitglied`, `umbenennen name`, `erinnern [text]`, `notiz text`, `automatik modus`, `oeffnen mitglied` (Ticket im Auftrag eines Mitglieds). `/support` bleibt zum Öffnen.
+
+Jede Aktion läuft mit den Rechten des verknüpften Kontos und wird **im System** geprüft (der Bot zeigt nur an). Neue Rechte: `ticket.forward` (Weiterleiten), `ticket.remind` (Ersteller erinnern), `ticket.automation` (Automatik je Ticket). Bestehende Rollen bekommen sie per Migration nur, wenn sie das entsprechende bisherige Recht hatten (`change_category`/`assign` → forward, `claim` → remind, `change_status`/`manage` → automation).
+
+**Claiming:** Anzeige im Ticket-Embed, Schutz vor Doppelübernahme (Modus *Nur ein Bearbeiter*: nur die Leitung übernimmt ein bereits übernommenes Ticket), Claim/Unclaim, Speicherung, Protokoll, optional Claim-Kategorie, optional Auto-Claim bei erster Teamantwort.
+
+**Weiterleiten** an ein Teammitglied (muss verknüpft sein, `ticket.claim` und Zugriff haben), eine Team-Rolle (bekommt Zugriff; bei vertraulichen Kategorien nur durch `ticket.manage`) oder eine andere Kategorie (Kanalrechte werden umgestellt, Bearbeiter ohne Zugriff entfernt, Zusatzpersonen angepasst). Verlauf, Antworten, Notizen und Protokoll bleiben vollständig erhalten. Optionaler Begleittext wird als **interne Notiz** gespeichert.
+
+**Ersteller erinnern:** Nachricht im Ticket + DM, höchstens alle 10 Minuten (Schutz vor doppelten Aktionen).
+
+**Private Teamnotizen:** Autor + Zeitstempel, im Dashboard (Recht `ticket.internal_notes`) und in der **Team-Fassung** des Transkripts. Nie im Discord-Kanal, nie in der Fassung für den Ersteller, nie im Log-Kanal.
+
+### Schließungsanfragen
+Kategorie → *Schließungsanfrage bestätigen muss*: Ersteller · zuständiger Mitarbeiter (Bearbeiter, ohne Bearbeiter der anfragende Mitarbeiter) · beide · einer von beiden. Antworten über die Buttons im Ticket bzw. im Dashboard („Als Mitarbeiter bestätigen“). Eine **Ablehnung beendet die Anfrage ohne zu schließen**; sind alle nötigen Bestätigungen da, wird (falls *Schließen nach bestätigter Schließungsanfrage* an ist) geschlossen. Optional: ohne Reaktion nach X Minuten automatisch schließen. Jeder Schritt steht im Protokoll (`close_requested`, `close_request_approved`, `close_request_accepted`, `close_request_declined`).
+
+### Automatisierungen
+Je Panel (Standardwerte) und je Kategorie (eigene Werte oder *Panel übernehmen*): automatisch schließen nach Inaktivität (+ Warnung), **Erinnerung an den Ersteller** (Team hat zuletzt geschrieben, einmal je Team-Nachricht), **Team-Erinnerung** (nicht übernommen, keine Teamantwort), Bearbeiter-Erinnerung → Freigabe, Auto-Unclaim, Auto-Claim bei erster Teamantwort, Schließen nach bestätigter Schließungsanfrage, Schließungsanfrage ohne Reaktion → schließen, **automatische Antwort**, wenn das Team nicht reagiert.
+
+Je Ticket: **pausieren** (Dauer) oder **dauerhaft ausschalten** / wieder einschalten (Button *Automatik*, `/ticket automatik`, Dashboard). Der Zustand liegt in der Datenbank (`automationDisabled`, `automationPausedUntil`) und wird bei jedem Lauf gelesen – ein Neustart schaltet nichts ungewollt wieder ein. Die Automatik läuft jede Minute in der API, auch für mehrere Instanzen nur über Datenbank-Zeitstempel (jede Erinnerung höchstens einmal).
+
+### Transkripte
+Zwei Fassungen je Version: **für den Ersteller / Discord-Dateien** (ohne Notizen, ohne interne Ereignisse, ohne Schließformular) und **Team-Fassung** (mit internen Notizen, allen Ereignissen, Claim-/Weiterleitungshistorie, Schließformular). Enthalten: Ticket-ID, Name, Kategorie, Ersteller, Bearbeiter, Erstellungs-/Schließungszeit, Nachrichtenverlauf mit Zeitstempeln, Anhänge, eingebettete Bilder, Formularantworten, Bewertung, Schließungsinformationen. Welche Fassung jemand bekommt, entscheidet der Server bei jedem Abruf (Mitarbeiter mit Zugriff → Team-Fassung, Ersteller → ohne Notizen, alle anderen → „nicht gefunden“). Der JSON-Export (nur Team) enthält – wie bisher – keine Notizen; Videos/sonstige Dateien erscheinen als Link (nur mit Dashboard-Zugriff abrufbar).
+
+### Bewertungen
+Skala 2–10 (*Allgemein → Bewertungen*; bis 5 als Sterne, darüber als Zahl), optionales Bewertungsformular mit Begründung, interner Bewertungs-Log (alles inkl. Formularantworten), optionaler öffentlicher Log (nur freigegebene Angaben, **nie** Formularantworten, nie vertrauliche Kategorien, erst ab einer Mindestbewertung), Durchschnitt (ältere Bewertungen anderer Skalen werden umgerechnet) und Historie. Eine Bewertung je Ticket, erst nach dem Schließen.
+
+### Ticket-Logs
+Log-Kanal unter *Allgemein*. Protokolliert u. a.: erstellt, übernommen, freigegeben, **weitergeleitet**, Nutzer hinzugefügt/entfernt, umbenannt, **Erinnerung versendet**, **Automatik geändert**, Schließungsanfrage, geschlossen, **Bewertung abgegeben**, Auslastungsgrenze überschritten. Vertrauliche Tickets: nur Ticket-ID und Art des Ereignisses. Keine Notiztexte, Nachrichten oder Formularantworten im Log-Kanal oder Audit.
+
+### Setup (Kurzfassung)
+1. Developer Portal → Bot: *Message Content Intent* (Verlauf/Transkript), optional *Server Members Intent* (Aktion beim Verlassen).
+2. Bot-Rechte auf dem Server (Bot-Rolle **über** den Team-Rollen): siehe Liste unten.
+3. Dashboard → *Server → Module*: „Support-Tickets“ ist an (je Server abschaltbar).
+4. *Support-Tickets → Kategorien*: Kategorien anlegen (Rollen, Discord-Kategorie, Limits, Auslastung, Zusatzpersonen).
+5. *Formulare*: Öffnen-/Schließ-/Bewertungsformular je Kategorie, *Formular testen*.
+6. *Automatisierungen*: Panel-Standardwerte und Kategorie-Werte.
+7. *Panels*: Panel anlegen, Kategorien zuordnen, Kanal wählen, **An Discord senden**.
+8. *Allgemein*: Log-, Transkript-, Bewertungs-Kanäle, Skala.
+9. Rollen & Rechte: `ticket.*` an die Team-Rollen vergeben (Startrollen *Ticket Support* / *Ticket Leitung*).
+10. Bot neu starten, damit `/ticket` registriert wird (Slash-Befehle werden beim Start je Server nach aktiven Modulen registriert; nach dem Ein-/Ausschalten eines Moduls ebenfalls neu).
+
+### Discord-Berechtigungen des Bots
+| Recht | wofür |
+|---|---|
+| Kanäle ansehen, Nachrichtenverlauf lesen | Ticket-Kanäle, Mitschnitt |
+| Nachrichten senden, Links einbetten, Dateien anhängen | Ticket-Nachrichten, Panels, Transkript-Dateien |
+| **Kanäle verwalten** | Ticket-Kanäle anlegen, umbenennen, verschieben, löschen |
+| **Rollen verwalten** (Berechtigungen) | Kanalrechte je Ticket setzen (privat: `@everyone` darf nicht sehen) |
+| Nachrichten verwalten | Ticket-Nachricht aktualisieren |
+| Erwähnen von Rollen | nur ausdrücklich konfigurierte Rollen werden gepingt, nie `@everyone`/`@here` |
+| Privilegierte Intents | *Message Content* (Verlauf), optional *Server Members* |
+
+### Datenbank (Erweiterung)
+| Tabelle | neue Spalten |
+|---|---|
+| `TicketPanel` | `internalNote`, `active`, `channelNameFormat`, `mentionRoleIds`, `maxOpen`, `automation` (JSON) |
+| `TicketCategory` | `extraUserIds`, `capacityAction`, `closeForm`, `ratingForm`, `closeRequestApprovers`, `automationSource`, `creatorReminderMinutes`, `creatorReminderMessage`, `teamReminderMinutes`, `noResponseMinutes`, `noResponseMessage`, `closeRequestTimeoutMinutes` |
+| `SupportTicket` | `automationDisabled`, `automationPausedUntil`, `lastCreatorMessageAt`, `lastStaffMessageAt`, `creatorRemindedAt`, `teamRemindedAt`, `noResponseSentAt`, `closeRequestById`, `closeRequestApprovals`, `closeAnswers`; Index auf `panelId` |
+| `TicketTranscript` | `staffHtml`, `staffText` (Team-Fassung) |
+| `TicketRating` | `scale`, `answers` |
+| `Permission` / `RolePermission` | `ticket.forward`, `ticket.remind`, `ticket.automation` (+ Übernahme für bestehende Rollen) |
+
+Alle Tickets, Nachrichten, Notizen, Formularantworten, Bewertungen, Transkripte und Logs hängen über `ticketId` an genau einem Ticket. Nichts wird gelöscht oder umbenannt; deaktivierte/archivierte Panels und Kategorien behalten ihre Tickets. **Backup vor dem Update:** `deploy/update.sh` sichert die Datenbank (`backups/vor-update/`) vor `prisma migrate deploy`; im Panel-Hosting vorher die Datenbank sichern (Dashboard → Backups bzw. Anbieter).
+
+### Tests
+`apps/api/test/support-tickets-suite.test.ts` (19 Integrationstests gegen PostgreSQL), `apps/bot/tests/ticket-suite.test.ts` (Buttons, Formulare, `/ticket`), `packages/shared/tests/ticket-suite.test.ts` (Auslastung, Automatik, Bestätigungen, Skala, Median/p90, Zeitzonen). Die bisherigen Ticket-Tests laufen unverändert weiter.
+
+### Bekannte Einschränkungen
+- **Nicht gegen echtes Discord getestet** – Discord-Aufrufe sind in den Tests nachgebildet; die API-Tests laufen gegen eine echte PostgreSQL-Datenbank.
+- Discord-Formulare haben höchstens 5 Felder → Schließ- und Bewertungsformular höchstens 5 Felder; Datei-Uploads nur im Formular beim Öffnen.
+- Slash-Befehle können kein Formular nach einer Prüfung zeigen: `/ticket schliessen` bietet bei einem Schließformular einen Button an.
+- „Team-Erwähnung“ des Panels pingt nur Rollen, die das Ticket sehen dürfen (Datenschutz) – andere Rollen werden bewusst nicht benachrichtigt.
+- Erste-Antwort-Zeiten je Mitarbeiter werden dem Hauptbearbeiter zugerechnet (wer tatsächlich zuerst geschrieben hat, wird nicht gespeichert).
+- Videos werden im Transkript nicht eingebettet, sondern verlinkt (Abruf nur mit Dashboard-Zugriff).
+- Wie bisher: Nachrichten, die geschrieben werden, während der Bot offline ist, fehlen im Verlauf.

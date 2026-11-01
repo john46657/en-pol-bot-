@@ -501,6 +501,8 @@ function addOptions(b, options = []) {
             b.addBooleanOption((x) => { common(x); return x; });
         else if (o.type === 'user')
             b.addUserOption((x) => { common(x); return x; });
+        else if (o.type === 'role')
+            b.addRoleOption((x) => { common(x); return x; });
         else if (o.type === 'attachment')
             b.addAttachmentOption((x) => { common(x); return x; });
         else

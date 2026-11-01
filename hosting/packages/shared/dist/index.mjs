@@ -34,7 +34,7 @@ var PERMISSION_CATALOG = {
   academy: ["view", "manage"],
   sek: ["view", "report", "manage"],
   qualifications: ["view", "decide", "delete", "manage"],
-  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits"],
+  ticket: ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits", "forward", "remind", "automation"],
   /**
    * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
    * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
@@ -208,12 +208,18 @@ var TICKET_ACTIONS = {
   escalate: { label: "Eskalieren", emoji: "\u{1F7E0}", style: "danger", state: "open", permission: "ticket.escalate" },
   note: { label: "Notiz", emoji: "\u{1F5D2}\uFE0F", style: "secondary", state: "both", permission: "ticket.internal_notes" },
   rating: { label: "Bewertung", emoji: "\u2B50", style: "secondary", state: "closed", permission: "ticket.rate" },
-  delete: { label: "L\xF6schen", emoji: "\u{1F5D1}\uFE0F", style: "danger", state: "closed", permission: "ticket.delete" }
+  delete: { label: "L\xF6schen", emoji: "\u{1F5D1}\uFE0F", style: "danger", state: "closed", permission: "ticket.delete" },
+  /** Ticket-Ersteller an eine ausstehende Antwort erinnern (Nachricht im Ticket + DM). */
+  remind: { label: "Ersteller erinnern", emoji: "\u23F0", style: "secondary", state: "open", permission: "ticket.remind" },
+  /** Weiterleiten an ein Teammitglied, eine Team-Rolle oder eine andere Kategorie (Verlauf bleibt erhalten). */
+  forward: { label: "Weiterleiten", emoji: "\u{1F4E8}", style: "secondary", state: "open", permission: "ticket.forward" },
+  /** Automatisierungen für dieses Ticket pausieren / dauerhaft ausschalten / wieder einschalten. */
+  automation: { label: "Automatik", emoji: "\u2699\uFE0F", style: "secondary", state: "open", permission: "ticket.automation" }
 };
 var TICKET_ACTION_KEYS = Object.keys(TICKET_ACTIONS);
 var NO_TICKET_BUTTON = ["reopen", "priority", "escalate"];
 var ticketButtonsOf = (buttons) => buttons.filter((b) => !NO_TICKET_BUTTON.includes(b.action));
-var defaultTicketButtons = () => ["close", "close_request", "claim", "unclaim", "add_user", "remove_user", "transcript", "note", "delete"].map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style, enabled: true }));
+var defaultTicketButtons = () => ["close", "close_request", "claim", "unclaim", "forward", "remind", "add_user", "remove_user", "transcript", "note", "automation", "delete"].map((action) => ({ action, label: TICKET_ACTIONS[action].label, emoji: TICKET_ACTIONS[action].emoji, style: TICKET_ACTIONS[action].style, enabled: true }));
 var QUESTION_TYPES = {
   SHORT: "Kurze Antwort",
   LONG: "Lange Antwort",
@@ -1533,7 +1539,7 @@ var MODULES = [
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
   { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
-  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", off: true, permissionPrefixes: ["ticket"] },
+  { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
@@ -1590,6 +1596,7 @@ var BOT_COMMAND_MODULES = {
   bewerbungspanel: "applications",
   qualipanel: "applications",
   support: "support",
+  ticket: "support",
   funkcode: "communication",
   funk: "communication",
   funkantrag: "communication",
@@ -3255,6 +3262,109 @@ function slaState(t2, now = /* @__PURE__ */ new Date()) {
   };
 }
 
+// src/ticket-suite.ts
+var LOAD_WARN_RATIO = 0.8;
+function loadLevel(open, capacity) {
+  if (!capacity || capacity <= 0) return "none";
+  if (open >= capacity) return "full";
+  if (open >= capacity * LOAD_WARN_RATIO) return "warn";
+  return "normal";
+}
+var LOAD_DOT = { none: "\u{1F535}", normal: "\u{1F7E2}", warn: "\u{1F7E1}", full: "\u{1F534}" };
+var LOAD_LABEL = { none: "ohne Grenze", normal: "normal", warn: "stark ausgelastet", full: "voll ausgelastet" };
+var CAPACITY_ACTIONS = { BLOCK: "Neue Tickets verhindern", WARN: "Trotzdem \xF6ffnen, mit Hinweis" };
+var AUTOMATION_KEYS = ["autoCloseMinutes", "autoCloseWarnMinutes", "creatorReminderMinutes", "teamReminderMinutes", "staffAlertMinutes", "autoUnclaimMinutes", "autoClaimOnMessage", "closeRequestCloses", "closeRequestTimeoutMinutes", "noResponseMinutes"];
+var AUTOMATION_LABELS = {
+  autoCloseMinutes: "Automatisch schlie\xDFen nach Inaktivit\xE4t",
+  autoCloseWarnMinutes: "Warnung vor dem automatischen Schlie\xDFen",
+  creatorReminderMinutes: "Erinnerung an den Ersteller",
+  teamReminderMinutes: "Team-Erinnerung (nicht \xFCbernommen)",
+  staffAlertMinutes: "Bearbeiter-Erinnerung, danach Freigabe",
+  autoUnclaimMinutes: "\xDCbernahme automatisch freigeben",
+  autoClaimOnMessage: "Automatisch \xFCbernehmen bei erster Teamantwort",
+  closeRequestCloses: "Schlie\xDFen nach best\xE4tigter Schlie\xDFungsanfrage",
+  closeRequestTimeoutMinutes: "Schlie\xDFungsanfrage ohne Reaktion \u2192 schlie\xDFen",
+  noResponseMinutes: "Automatische Antwort, wenn das Team nicht reagiert"
+};
+var DEFAULT_AUTOMATION = {
+  autoCloseMinutes: 0,
+  autoCloseWarnMinutes: 0,
+  creatorReminderMinutes: 0,
+  teamReminderMinutes: 0,
+  staffAlertMinutes: 0,
+  autoUnclaimMinutes: 0,
+  autoClaimOnMessage: false,
+  closeRequestCloses: true,
+  closeRequestTimeoutMinutes: 0,
+  noResponseMinutes: 0
+};
+var AUTOMATION_SOURCES = { CATEGORY: "Eigene Werte der Kategorie", PANEL: "Standardwerte des Panels \xFCbernehmen" };
+function parseAutomation(raw) {
+  const o = raw && typeof raw === "object" ? raw : {};
+  const out = { ...DEFAULT_AUTOMATION };
+  for (const k of AUTOMATION_KEYS) {
+    const v = o[k];
+    if (typeof DEFAULT_AUTOMATION[k] === "boolean") {
+      if (typeof v === "boolean") out[k] = v;
+    } else if (typeof v === "number" && Number.isFinite(v) && v >= 0) out[k] = Math.floor(v);
+  }
+  return out;
+}
+function effectiveAutomation(cat, panelAutomation) {
+  if (cat.automationSource === "PANEL" && panelAutomation !== void 0 && panelAutomation !== null) return parseAutomation(panelAutomation);
+  return parseAutomation(cat);
+}
+function automationActive(t2, now = /* @__PURE__ */ new Date()) {
+  if (t2.automationDisabled) return false;
+  if (t2.automationPausedUntil && new Date(t2.automationPausedUntil).getTime() > now.getTime()) return false;
+  return true;
+}
+var CLOSE_REQUEST_APPROVERS = { CREATOR: "Ersteller", STAFF: "Zust\xE4ndiger Mitarbeiter", BOTH: "Ersteller und zust\xE4ndiger Mitarbeiter", ANY: "Ersteller oder zust\xE4ndiger Mitarbeiter" };
+function closeRequestComplete(mode, a) {
+  switch (mode) {
+    case "STAFF":
+      return a.staff;
+    case "BOTH":
+      return a.creator && a.staff;
+    case "ANY":
+      return a.creator || a.staff;
+    default:
+      return a.creator;
+  }
+}
+var RATING_SCALE_MIN = 2;
+var RATING_SCALE_MAX = 10;
+var ratingLabel = (n, scale) => scale <= 5 ? "\u2B50".repeat(n) : `${n}/${scale}`;
+var normalizeRating = (stars, scale, to = 5) => Math.round(stars / Math.max(1, scale) * to * 100) / 100;
+var ratingTone = (stars, scale) => {
+  const r = stars / Math.max(1, scale);
+  return r >= 0.7 ? "positive" : r <= 0.4 ? "negative" : "neutral";
+};
+function median(xs) {
+  return percentile(xs, 50);
+}
+function percentile(xs, p) {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const pos = Math.min(100, Math.max(0, p)) / 100 * (s.length - 1);
+  const lo = Math.floor(pos), hi = Math.ceil(pos);
+  return s[lo] + (s[hi] - s[lo]) * (pos - lo);
+}
+function weekdayHour(d, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short", hour: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const wd = parts.find((p) => p.type === "weekday")?.value ?? "Mon";
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0) % 24;
+  return { weekday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(wd), hour };
+}
+var ticketDayKey = (d, timeZone) => new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+function ticketWeekKey(d, timeZone) {
+  const day = ticketDayKey(d, timeZone);
+  const { weekday } = weekdayHour(d, timeZone);
+  const base = /* @__PURE__ */ new Date(`${day}T12:00:00Z`);
+  base.setUTCDate(base.getUTCDate() - weekday);
+  return base.toISOString().slice(0, 10);
+}
+
 // src/reminders.ts
 var REMINDER_MIN_MS = 6e4;
 var REMINDER_MAX_MS = 365 * 864e5;
@@ -3343,6 +3453,9 @@ export {
   APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES,
   AREA_PERMISSIONS,
+  AUTOMATION_KEYS,
+  AUTOMATION_LABELS,
+  AUTOMATION_SOURCES,
   BACKUP_PARTS,
   BACKUP_PART_LABEL,
   BOT_COMMAND_MODULES,
@@ -3356,12 +3469,15 @@ export {
   CAD_LINK_SEND_TYPES,
   CAD_WIDGETS,
   CAD_WIDGET_LABELS,
+  CAPACITY_ACTIONS,
   CLAIM_MODES,
   CLOSE_REASON_MODES,
   CLOSE_REASON_SOURCES,
+  CLOSE_REQUEST_APPROVERS,
   COMPLAINT_STATUSES,
   COMPLAINT_TRANSITIONS,
   DEFAULT_APPLICATION_MESSAGES,
+  DEFAULT_AUTOMATION,
   DEFAULT_CAD_CONFIG,
   DEFAULT_DANGER_CONFIG,
   DEFAULT_FLEET_CONFIG,
@@ -3412,6 +3528,9 @@ export {
   InvalidTransitionError,
   JOIN_LOG_TOLERANCE_MS,
   LEGACY_DANGER,
+  LOAD_DOT,
+  LOAD_LABEL,
+  LOAD_WARN_RATIO,
   LOG_CATEGORIES,
   LOG_DEFAULT_OFF,
   LOG_TYPES,
@@ -3441,6 +3560,8 @@ export {
   RADIO_GRANT_SOURCE_LABEL,
   RADIO_GRANT_STATUSES,
   RADIO_GRANT_STATUS_LABEL,
+  RATING_SCALE_MAX,
+  RATING_SCALE_MIN,
   REMINDER_MAX_MS,
   REMINDER_MAX_PENDING,
   REMINDER_MIN_MS,
@@ -3495,6 +3616,7 @@ export {
   applyPanelParts,
   areaGrantsFor,
   assertTransition,
+  automationActive,
   awardDefSchema,
   backupConfigSchema,
   can,
@@ -3504,6 +3626,7 @@ export {
   checkStatusChange,
   cleanReportValues,
   cloneWithNewIds,
+  closeRequestComplete,
   commandsForServer,
   conditionMatches,
   csvCell,
@@ -3514,6 +3637,7 @@ export {
   diffPresence,
   dnSettingsSchema,
   dutyTimeText,
+  effectiveAutomation,
   effectivePermissions,
   effectiveRadioStatus,
   embedChars,
@@ -3566,6 +3690,7 @@ export {
   isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
+  loadLevel,
   localMidnight,
   localTime,
   logCategoryOf,
@@ -3586,6 +3711,7 @@ export {
   mbSelectOptionSchema,
   mbSummary,
   mdtConfigSchema,
+  median,
   missingBotPerms,
   moduleDef,
   moduleDependencyError,
@@ -3593,10 +3719,12 @@ export {
   newVoiceRoom,
   nextWeekStart,
   normalizeField,
+  normalizeRating,
   notifyRuleSchema,
   onErlcMap,
   panelFieldSchema,
   panelUnits,
+  parseAutomation,
   parseBool,
   parseCsv,
   parseFormDate,
@@ -3604,6 +3732,7 @@ export {
   parseQuestions,
   parseReminderDuration,
   parseTicketRef,
+  percentile,
   periodEnd,
   periodLabel,
   periodStart,
@@ -3621,6 +3750,8 @@ export {
   radioRoleSyncAction,
   rangeSchema,
   rankSchema,
+  ratingLabel,
+  ratingTone,
   renderApplicationText,
   renderPanelTemplate,
   renderStaffList,
@@ -3645,8 +3776,10 @@ export {
   statusPermission,
   ticketButtonsOf,
   ticketChannelName,
+  ticketDayKey,
   ticketNumber,
   ticketRef,
+  ticketWeekKey,
   timeZones,
   toDiscordPayload,
   toPartialEmoji,
@@ -3661,5 +3794,6 @@ export {
   weekLabel,
   weekStartOf,
   weekTotals,
+  weekdayHour,
   withHrDefaults
 };

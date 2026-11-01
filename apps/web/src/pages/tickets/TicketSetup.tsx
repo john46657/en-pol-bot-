@@ -2,8 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, QUESTION_TYPES, NO_TICKET_BUTTON, TICKET_ACTIONS, TICKET_PLACEHOLDERS, TICKET_STATUS_KEYS, defaultTicketButtons, ticketButtonsOf, renderTicketText, ticketChannelName,
-  validateForm, planFormSteps, activeFields, fieldOptions,
-  type ButtonStyleName, type FormRawValue, type MessageSpec, type QuestionType, type TicketAction, type TicketQuestion, type TicketStatusKey, type TicketVars,
+  validateForm, planFormSteps, activeFields, fieldOptions, AUTOMATION_LABELS, AUTOMATION_SOURCES, CAPACITY_ACTIONS, CLOSE_REQUEST_APPROVERS, DEFAULT_AUTOMATION, RATING_SCALE_MAX, RATING_SCALE_MIN, ratingLabel,
+  type TicketAutomation, type ButtonStyleName, type FormRawValue, type MessageSpec, type QuestionType, type TicketAction, type TicketQuestion, type TicketStatusKey, type TicketVars,
 } from '@enrp/shared';
 import { flush, onSaved, useAutosaveDraft } from '../../lib/autosave';
 import { api } from '../../lib/api';
@@ -17,7 +17,7 @@ import {
   RATING_FIELDS, type RatingField,
 } from '../../lib/tickets';
 
-type Section = 'panels' | 'categories' | 'settings' | 'departments' | 'lifecycle';
+type Section = 'panels' | 'categories' | 'settings' | 'departments' | 'lifecycle' | 'forms' | 'automations';
 const STYLES: ButtonStyleName[] = ['primary', 'secondary', 'success', 'danger'];
 const STYLE_LABEL: Record<ButtonStyleName, string> = { primary: 'Blau', secondary: 'Grau', success: 'Grün', danger: 'Rot' };
 /** Für die API: `null` → weglassen (leere Felder werden dort zu „nicht gesetzt“). */
@@ -38,6 +38,8 @@ export function TicketSetup({ section }: { section: Section }) {
       {section === 'settings' && <General c={c} />}
       {section === 'departments' && <Departments c={c} />}
       {section === 'lifecycle' && <Lifecycle c={c} />}
+      {section === 'forms' && <Forms c={c} />}
+      {section === 'automations' && <Automations c={c} />}
       <Placeholders />
     </div>
   );
@@ -87,12 +89,15 @@ function ServerField({ value, onChange }: { value: string | null; onChange: (v: 
 
 // =============================== Panels ===============================
 type PanelDraft = Omit<TicketPanelCfg, 'id' | 'messageChannelId' | 'messageId'> & { id?: string };
-const NEW_PANEL: PanelDraft = { guildId: null, name: 'Neues Panel', title: 'Support', description: 'Wähle unten die passende Kategorie, um ein Ticket zu öffnen.', emoji: '🎫', color: 0x3b82f6, thumbnailUrl: null, imageUrl: null, bannerUrl: null, footer: null, footerIconUrl: null, authorName: null, authorIconUrl: null, style: 'BUTTONS', placeholder: 'Wähle eine Kategorie …', channelId: null, categoryIds: [], allowedRoleIds: [], showLoad: false, position: 0 };
+const NEW_PANEL: PanelDraft = { guildId: null, name: 'Neues Panel', title: 'Support', description: 'Wähle unten die passende Kategorie, um ein Ticket zu öffnen.', emoji: '🎫', color: 0x3b82f6, thumbnailUrl: null, imageUrl: null, bannerUrl: null, footer: null, footerIconUrl: null, authorName: null, authorIconUrl: null, style: 'BUTTONS', placeholder: 'Wähle eine Kategorie …', channelId: null, categoryIds: [], allowedRoleIds: [], showLoad: false, position: 0,
+  internalNote: '', active: true, channelNameFormat: null, mentionRoleIds: [], maxOpen: 0, automation: { ...DEFAULT_AUTOMATION } };
 
 /** Gleiche Darstellung wie der Bot (Embed + Buttons bzw. Menü). */
 function panelPreview(p: PanelDraft, cats: TicketCategoryCfg[]): MessageSpec {
   const list = p.categoryIds.map((id) => cats.find((c) => c.id === id)).filter((c): c is TicketCategoryCfg => !!c && c.active && !c.archivedAt);
-  const embed = { title: [p.emoji, p.title].filter(Boolean).join(' ') || undefined, description: p.description || undefined, color: p.color, thumbnail: p.thumbnailUrl ?? undefined, image: p.bannerUrl ?? p.imageUrl ?? undefined, footer: p.footer ?? undefined, footerIcon: p.footerIconUrl ?? undefined, author: p.authorName ?? undefined, authorIcon: p.authorIconUrl ?? undefined };
+  const embed = { title: [p.emoji, p.title].filter(Boolean).join(' ') || undefined, description: p.description || undefined, color: p.color, thumbnail: p.thumbnailUrl ?? undefined, image: p.bannerUrl ?? p.imageUrl ?? undefined, footer: p.footer ?? undefined, footerIcon: p.footerIconUrl ?? undefined, author: p.authorName ?? undefined, authorIcon: p.authorIconUrl ?? undefined,
+    ...(p.active === false ? { fields: [{ name: '⛔ Derzeit deaktiviert', value: 'Über dieses Panel können gerade keine Tickets geöffnet werden.' }] } : {}) };
+  if (p.active === false) return { embeds: [embed], buttons: list.map((c) => ({ id: c.id, label: c.name, emoji: c.emoji ?? undefined, style: 'secondary' as const, disabled: true })) };
   if (p.style === 'DROPDOWN') {
     const menus = Array.from({ length: Math.ceil(Math.min(list.length, 100) / 25) }, (_, i) => ({ id: `x${i}`, placeholder: list.length > 25 ? `${p.placeholder} (${i * 25 + 1}–${Math.min(list.length, i * 25 + 25)})` : p.placeholder, options: list.slice(i * 25, i * 25 + 25).map((c) => ({ label: c.name, value: c.id, description: c.description || undefined, emoji: c.emoji ?? undefined })) }));
     return { embeds: [embed], select: menus[0] ?? { id: 'x', placeholder: p.placeholder, options: [] }, selects: menus.slice(1) };
@@ -120,7 +125,8 @@ function Panels({ c }: { c: TicketConfig }) {
       {!c.panels.length ? <EmptyState text="Noch keine Panels." hint="Ein Panel ist die Nachricht in Discord mit den Buttons bzw. dem Menü zum Öffnen eines Tickets." /> : (
         <ul className="grid gap-3 md:grid-cols-2">{c.panels.map((p) => (
           <li key={p.id} className="grid gap-2 rounded-md border border-line p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{p.emoji} {p.name} <GuildTag id={p.guildId} /></strong>{p.messageId ? <Badge tone="success">gepostet</Badge> : <Badge>nicht gepostet</Badge>}</div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{p.emoji} {p.name} <GuildTag id={p.guildId} /></strong><span className="flex flex-wrap gap-1">{p.active === false && <Badge tone="warning">deaktiviert</Badge>}{p.messageId ? <Badge tone="success">gepostet</Badge> : <Badge>nicht gepostet</Badge>}</span></div>
+            {p.internalNote && <p className="text-xs">{p.internalNote}</p>}
             <p className="text-xs text-muted">{p.style === 'DROPDOWN' ? 'Dropdown' : 'Buttons'} · {p.categoryIds.length} Kategorien · Kanal {p.channelId ? channelName(p.channelId) : '—'}{p.publishedAt ? ` · zuletzt gesendet ${fmt(p.publishedAt)}` : ''}</p>
             {p.publishError && <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-2 text-xs text-danger">Senden fehlgeschlagen: {p.publishError}</p>}
             {!p.channelId && <div className="grid gap-1 rounded border border-warning/40 bg-warning/10 p-2 text-xs"><span>Wähle zuerst den Kanal, in den das Panel gepostet wird:</span><ChannelPicker ariaLabel={`Kanal für ${p.name}`} kind="text" value={null} onChange={(v) => v && setChannel.mutate({ p, channelId: v })} /></div>}
@@ -128,12 +134,13 @@ function Panels({ c }: { c: TicketConfig }) {
               <Button size="sm" variant="secondary" onClick={() => setEdit(p)}>Bearbeiten</Button>
               <Button size="sm" disabled={publish.isPending || !p.channelId} title={p.channelId ? undefined : 'Zuerst einen Kanal wählen'} onClick={() => { setMsg(undefined); publish.mutate(p.id); }}>{p.messageId ? 'In Discord aktualisieren' : 'An Discord senden'}</Button>
               <Button size="sm" variant="secondary" disabled={dup.isPending} onClick={() => dup.mutate(p.id)}>Duplizieren</Button>
+              <Button size="sm" variant="secondary" disabled={setChannel.isPending} onClick={() => setChannel.mutate({ p: { ...p, active: p.active === false }, channelId: p.channelId })}>{p.active === false ? 'Aktivieren' : 'Deaktivieren'}</Button>
               <Button size="sm" variant="ghost" onClick={() => setDel(p)}>Löschen</Button>
             </div>
           </li>
         ))}</ul>
       )}
-      <ConfirmDialog open={!!del} danger title="Panel löschen?" message={`„${del?.name ?? ''}“ wird gelöscht. Eine bereits in Discord gepostete Nachricht bleibt bestehen, bis du sie dort löschst.`} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
+      <ConfirmDialog open={!!del} danger title="Panel löschen?" message={`„${del?.name ?? ''}“ wird gelöscht. Panels, über die schon Tickets geöffnet wurden, können nicht gelöscht werden – deaktiviere sie stattdessen (Tickets und Statistiken bleiben zugeordnet). Eine bereits in Discord gepostete Nachricht bleibt bestehen, bis du sie dort löschst.`} confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del.id)} onClose={() => setDel(undefined)} />
     </Card>
   );
 }
@@ -162,6 +169,18 @@ function PanelEditor({ draft, c, onDone }: { draft: PanelDraft; c: TicketConfig;
             </div>
             <Roles label="Sichtbar für Discord-Rollen (leer = alle)" value={p.allowedRoleIds} onChange={(v) => set({ allowedRoleIds: v })} />
             <Check label="Ticket-Auslastung anzeigen (offene Tickets pro Kategorie, automatisch aktualisiert)" checked={p.showLoad} onChange={(v) => set({ showLoad: v })} />
+            <Check label="Aktiv (über dieses Panel können Tickets geöffnet werden)" checked={p.active} onChange={(v) => set({ active: v })} hint="Deaktivieren sperrt die Auswahl in der veröffentlichten Nachricht sofort. Bestehende Tickets bleiben unverändert." />
+            <Field label="Beschreibung (intern, nur im Dashboard)">{(id) => <Input id={id} value={p.internalNote} maxLength={1000} onChange={(e) => set({ internalNote: e.target.value })} />}</Field>
+          </Section>
+          <Section title="Tickets aus diesem Panel">
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Kanalname-Format (leer = Format der Kategorie)" hint={p.channelNameFormat ? `Beispiel: ${ticketChannelName(p.channelNameFormat, SAMPLE)}` : 'z. B. ticket-{ticket_id} oder {category}-{username}'}>{(id) => <Input id={id} value={p.channelNameFormat ?? ''} maxLength={90} onChange={(e) => set({ channelNameFormat: e.target.value || null })} />}</Field>
+              <Num label="Gleichzeitig offene Tickets je Nutzer über dieses Panel (0 = unbegrenzt)" value={p.maxOpen} max={100} onChange={(v) => set({ maxOpen: v })} />
+            </div>
+            <Roles label="Team-Erwähnung: diese Rollen bei neuen Tickets pingen (nur Rollen mit Zugriff auf das Ticket werden erwähnt)" value={p.mentionRoleIds} onChange={(v) => set({ mentionRoleIds: v })} />
+          </Section>
+          <Section title="Automatisierungen (Standardwerte für Kategorien mit „Werte des Panels übernehmen“)">
+            <AutomationFields value={p.automation} onChange={(v) => set({ automation: v })} />
           </Section>
           <Section title="Embed">
             <div className="grid gap-3 md:grid-cols-2">
@@ -217,6 +236,9 @@ const NEW_CATEGORY: CatDraft = {
   welcomeImageUrl: null, capacity: 0, creatorCanAddUsers: false, claimDiscordCategoryId: null, claimLocksChat: false,
   autoClaimOnMessage: false, autoUnclaimMinutes: 0, staffAlertMinutes: 0, closeRequestCloses: true,
   departmentId: null, confidential: false, formMode: 'MODAL', escalateUnassignedMinutes: 0,
+  extraUserIds: [], capacityAction: 'BLOCK', closeForm: [], ratingForm: [], closeRequestApprovers: 'CREATOR', automationSource: 'CATEGORY',
+  creatorReminderMinutes: 0, creatorReminderMessage: '⏰ {user}, das Team wartet auf deine Antwort in diesem Ticket.', teamReminderMinutes: 0, noResponseMinutes: 0,
+  noResponseMessage: 'Danke für deine Geduld, {user}! Das Team ist gerade ausgelastet und meldet sich so schnell wie möglich.', closeRequestTimeoutMinutes: 0,
 };
 
 function Categories({ c }: { c: TicketConfig }) {
@@ -319,8 +341,10 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <div className="grid gap-3 md:grid-cols-2">
               <Num label="Max. offene Tickets pro Benutzer (0 = unbegrenzt)" value={d.maxOpen} max={100} onChange={(v) => set({ maxOpen: v })} />
               <Num label="Cooldown zwischen Tickets (Minuten)" value={d.cooldownMinutes} onChange={(v) => set({ cooldownMinutes: v })} />
-              <Num label="Kapazität: voll ab so vielen offenen Tickets (0 = aus)" value={d.capacity} max={1000} onChange={(v) => set({ capacity: v })} hint="Wird in Panels mit „Ticket-Auslastung anzeigen“ angezeigt (🟢 / 🟡 / 🔴)." />
+              <Num label="Auslastungsgrenze: voll ab so vielen offenen Tickets (0 = aus)" value={d.capacity} max={1000} onChange={(v) => set({ capacity: v })} hint="Anzeige im Panel: 🟢 unter 80 % · 🟡 ab 80 % · 🔴 ab 100 %." />
+              <Field label="Bei voller Auslastung">{(id) => <Select id={id} value={d.capacityAction} disabled={!d.capacity} onChange={(e) => set({ capacityAction: e.target.value as CatDraft['capacityAction'] })}>{Object.entries(CAPACITY_ACTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>}</Field>
             </div>
+            <Ids label="Zusätzliche berechtigte Personen (sehen + schreiben in jedem Ticket dieser Kategorie)" value={d.extraUserIds} onChange={(v) => set({ extraUserIds: v })} />
             <Check label="Der Ersteller darf weitere Personen zum Ticket hinzufügen" checked={d.creatorCanAddUsers} onChange={(v) => set({ creatorCanAddUsers: v })} />
             <Names label="Dashboard-Zugriff: Systemrollen (leer = alle mit ticket.view)" value={d.accessRoleNames} onChange={(v) => set({ accessRoleNames: v })} hint="Rollennamen aus „Rollen & Rechte“, durch Kommas getrennt – z. B. Ticket Support" />
           </Section>
@@ -330,6 +354,14 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <QuestionsEditor value={d.questions} onChange={(v) => set({ questions: v })} />
             <FormPreview fields={d.questions} />
             {d.id && <FormVersions id={d.id} />}
+          </Section>
+          <Section title="Formular beim Schließen (optional, höchstens 5 Felder)">
+            <p className="text-xs text-muted">Erscheint beim Schließen als Discord-Formular bzw. im Dashboard. Ein Feld mit der ID <code>reason</code> wird als Schließungsgrund übernommen. Die Antworten sind nur für das Team sichtbar.</p>
+            <QuestionsEditor value={d.closeForm} onChange={(v) => set({ closeForm: v.slice(0, 5) })} />
+          </Section>
+          <Section title="Bewertungsformular (optional, höchstens 5 Felder)">
+            <p className="text-xs text-muted">Öffnet sich nach dem Klick auf eine Bewertung in der DM. Ein Feld mit der ID <code>comment</code> wird als Begründung übernommen.</p>
+            <QuestionsEditor value={d.ratingForm} onChange={(v) => set({ ratingForm: v.slice(0, 5) })} />
           </Section>
           <Section title="Ticket-Nachricht">
             <Field label="Titel">{(id) => <Input id={id} value={d.welcomeTitle} maxLength={256} onChange={(e) => set({ welcomeTitle: e.target.value })} />}</Field>
@@ -355,26 +387,21 @@ function CategoryEditor({ draft, c, onDone }: { draft: CatDraft; c: TicketConfig
             <Check label="Der Ersteller darf sein eigenes Ticket schließen" checked={d.creatorCanClose} onChange={(v) => set({ creatorCanClose: v })} />
             <Check label="Zugriff des Erstellers beim Schließen entfernen" checked={d.closeRemovesAccess} onChange={(v) => set({ closeRemovesAccess: v })} />
             <Check label="Wiedereröffnen erlauben" checked={d.allowReopen} onChange={(v) => set({ allowReopen: v })} />
-            <Check label="Schließanfrage: Ticket sofort schließen, wenn der Ersteller bestätigt (Button „Schließen anfragen“)" checked={d.closeRequestCloses} onChange={(v) => set({ closeRequestCloses: v })} />
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Schließungsanfrage bestätigen muss">{(id) => <Select id={id} value={d.closeRequestApprovers} onChange={(e) => set({ closeRequestApprovers: e.target.value as CatDraft['closeRequestApprovers'] })}>{Object.entries(CLOSE_REQUEST_APPROVERS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>}</Field>
+            </div>
+            <Check label="Schließungsanfrage: Ticket sofort schließen, wenn alle nötigen Bestätigungen da sind (Button „Schließen anfragen“)" checked={d.closeRequestCloses} onChange={(v) => set({ closeRequestCloses: v })} />
             <Num label="Kanal nach dem Schließen löschen (Minuten, -1 = nie, 0 = sofort)" value={d.deleteAfterMinutes} min={-1} onChange={(v) => set({ deleteAfterMinutes: v })} hint="Vor dem Löschen wird ein Transkript gespeichert, falls aktiviert." />
           </Section>
           <Section title="Transkript & Bewertung">
             <Check label="Beim Schließen ein Transkript erstellen" checked={d.transcriptOnClose} onChange={(v) => set({ transcriptOnClose: v })} />
             <Field label="Transkript-Kanal (leer = allgemeiner Transkript-Kanal)">{(id) => <ChannelPicker ariaLabel={id} kind="text" value={d.transcriptChannelId} onChange={(v) => set({ transcriptChannelId: v })} />}</Field>
             <Check label="Transkript per DM an den Ersteller senden" checked={d.transcriptToUser} onChange={(v) => set({ transcriptToUser: v })} />
-            <Check label="Ersteller um eine Bewertung bitten (DM, 1–5 Sterne)" checked={d.ratingEnabled} onChange={(v) => set({ ratingEnabled: v })} />
+            <Check label={`Ersteller um eine Bewertung bitten (DM, Skala 1–${c.settings.ratingScale})`} checked={d.ratingEnabled} onChange={(v) => set({ ratingEnabled: v })} />
             <Field label="Bewertungsfrage">{(id) => <Input id={id} value={d.ratingQuestion} maxLength={300} onChange={(e) => set({ ratingQuestion: e.target.value })} />}</Field>
           </Section>
           <Section title="Automatisierung">
-            <div className="grid gap-3 md:grid-cols-2">
-              <Num label="Automatisch schließen nach Inaktivität (Minuten, 0 = aus)" value={d.autoCloseMinutes} onChange={(v) => set({ autoCloseMinutes: v })} />
-              <Num label="So viele Minuten vorher warnen (0 = keine Warnung)" value={d.autoCloseWarnMinutes} onChange={(v) => set({ autoCloseWarnMinutes: v })} />
-            </div>
-            <Field label="Warnnachricht">{(id) => <Input id={id} value={d.autoCloseMessage} maxLength={1000} onChange={(e) => set({ autoCloseMessage: e.target.value })} />}</Field>
-            <div className="grid gap-3 md:grid-cols-2">
-              <Num label="Auto-Team-Alarm: Bearbeiter nach Inaktivität pingen (Minuten, 0 = aus)" value={d.staffAlertMinutes} onChange={(v) => set({ staffAlertMinutes: v })} hint="Passiert danach noch einmal so lange nichts, wird das Ticket freigegeben." />
-              <Num label="Automatisch freigeben nach Inaktivität (Minuten, 0 = aus)" value={d.autoUnclaimMinutes} onChange={(v) => set({ autoUnclaimMinutes: v })} />
-            </div>
+            <CategoryAutomation d={d} set={set} />
           </Section>
           <Err error={save.error} />
           <div className="flex gap-2">{d.id ? <><span className="self-center text-xs text-muted">Wird automatisch gespeichert.</span><Button onClick={() => void flush().then(onDone)}>Fertig</Button></> : <><Button disabled={save.isPending} onClick={() => save.mutate(undefined)}>Kategorie erstellen</Button><Button variant="secondary" onClick={onDone}>Abbrechen</Button></>}</div>
@@ -582,6 +609,10 @@ function General({ c }: { c: TicketConfig }) {
               <span className="text-xs text-muted">Öffentlich angezeigt:</span>
               {(Object.keys(RATING_FIELDS) as RatingField[]).map((k) => <Check key={k} label={RATING_FIELDS[k]} checked={s.ratingPublicFields.includes(k)} onChange={(v) => set({ ratingPublicFields: v ? [...s.ratingPublicFields, k] : s.ratingPublicFields.filter((x) => x !== k) })} />)}
             </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Num label={`Bewertungsskala (1 bis …, ${RATING_SCALE_MIN}–${RATING_SCALE_MAX})`} value={s.ratingScale} min={RATING_SCALE_MIN} max={RATING_SCALE_MAX} onChange={(v) => set({ ratingScale: Math.min(RATING_SCALE_MAX, v) })} hint={`Buttons in der DM: ${Array.from({ length: Math.min(s.ratingScale, 10) }, (_, i) => ratingLabel(i + 1, s.ratingScale)).join(' · ')}`} />
+              <Num label="Öffentlich erst ab dieser Bewertung (0 = alle)" value={s.ratingPublicMinStars} max={RATING_SCALE_MAX} onChange={(v) => set({ ratingPublicMinStars: v })} hint="Vertrauliche Kategorien erscheinen nie öffentlich; Formularantworten nur im Team-Kanal." />
+            </div>
           </Section>
           <Section title="Wenn der Ersteller den Server verlässt">
             <div className="grid gap-3 md:grid-cols-2">
@@ -705,3 +736,105 @@ function Placeholders() {
     </Card>
   );
 }
+
+// =============================== Automatisierungen ===============================
+const AUTO_NUM: (keyof TicketAutomation)[] = ['autoCloseMinutes', 'autoCloseWarnMinutes', 'creatorReminderMinutes', 'teamReminderMinutes', 'staffAlertMinutes', 'autoUnclaimMinutes', 'noResponseMinutes', 'closeRequestTimeoutMinutes'];
+const AUTO_HINT: Partial<Record<keyof TicketAutomation, string>> = {
+  autoCloseMinutes: 'Minuten ohne Aktivität, 0 = aus', autoCloseWarnMinutes: 'so viele Minuten vor dem Schließen warnen', creatorReminderMinutes: 'nach so vielen Minuten ohne Antwort des Erstellers (einmal je Team-Nachricht)',
+  teamReminderMinutes: 'nicht übernommene Tickets ohne Teamantwort', staffAlertMinutes: 'übernommene Tickets; danach noch einmal so lange → Freigabe', autoUnclaimMinutes: 'Minuten ohne Aktivität',
+  noResponseMinutes: 'automatische Nachricht an den Ersteller, wenn das Team so lange nicht reagiert hat', closeRequestTimeoutMinutes: 'Schließungsanfrage ohne Reaktion → automatisch schließen',
+};
+/** Alle Automatisierungen (Minuten, 0 = aus) – gleiche Felder für Panel-Standardwerte und Kategorien. */
+function AutomationFields({ value, onChange }: { value: TicketAutomation; onChange: (v: TicketAutomation) => void }) {
+  const v = { ...DEFAULT_AUTOMATION, ...value };
+  return (
+    <div className="grid gap-3">
+      <div className="grid gap-3 md:grid-cols-2">{AUTO_NUM.map((k) => <Num key={k} label={`${AUTOMATION_LABELS[k]} (Min.)`} value={v[k] as number} max={60 * 24 * 90} onChange={(n) => onChange({ ...v, [k]: n })} hint={AUTO_HINT[k]} />)}</div>
+      <Check label={AUTOMATION_LABELS.autoClaimOnMessage} checked={v.autoClaimOnMessage} onChange={(b) => onChange({ ...v, autoClaimOnMessage: b })} hint="Nur Teammitglieder mit dem Recht „übernehmen“." />
+      <Check label={AUTOMATION_LABELS.closeRequestCloses} checked={v.closeRequestCloses} onChange={(b) => onChange({ ...v, closeRequestCloses: b })} />
+    </div>
+  );
+}
+const autoOf = (d: Pick<TicketCategoryCfg, keyof TicketAutomation>): TicketAutomation => Object.fromEntries((Object.keys(DEFAULT_AUTOMATION) as (keyof TicketAutomation)[]).map((k) => [k, d[k]])) as unknown as TicketAutomation;
+/** Automatik einer Kategorie: eigene Werte oder die des Panels; dazu die Texte der Erinnerungen. */
+function CategoryAutomation({ d, set }: { d: CatDraft; set: (x: Partial<CatDraft>) => void }) {
+  return (
+    <div className="grid gap-3">
+      <Field label="Werte" hint="„Panel“: Tickets nutzen die Automatik-Standardwerte des Panels, über das sie geöffnet wurden (ohne Panel, z. B. /support: die Werte hier).">{(id) => <Select id={id} value={d.automationSource} onChange={(e) => set({ automationSource: e.target.value as CatDraft['automationSource'] })}>{Object.entries(AUTOMATION_SOURCES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>}</Field>
+      <AutomationFields value={autoOf(d)} onChange={(v) => set(v)} />
+      <Field label="Warnnachricht vor dem automatischen Schließen">{(id) => <Input id={id} value={d.autoCloseMessage} maxLength={1000} onChange={(e) => set({ autoCloseMessage: e.target.value })} />}</Field>
+      <Field label="Erinnerung an den Ersteller (Text)">{(id) => <Input id={id} value={d.creatorReminderMessage} maxLength={1000} onChange={(e) => set({ creatorReminderMessage: e.target.value })} />}</Field>
+      <Field label="Automatische Antwort, wenn das Team nicht reagiert (Text)">{(id) => <Input id={id} value={d.noResponseMessage} maxLength={1000} onChange={(e) => set({ noResponseMessage: e.target.value })} />}</Field>
+      <p className="text-xs text-muted">Jedes Ticket kann seine Automatik im Ticket selbst pausieren oder dauerhaft ausschalten (Button „Automatik“, <code>/ticket automatik</code> oder im Dashboard). Das bleibt auch nach einem Neustart so.</p>
+    </div>
+  );
+}
+const catBody = (x: TicketCategoryCfg) => clean({ ...x, id: undefined, archivedAt: undefined, formVersion: undefined });
+const panelBody = (x: TicketPanelCfg) => clean({ ...x, id: undefined, messageId: undefined });
+
+/** Übersicht aller Automatisierungen: Standardwerte je Panel, Werte bzw. Übernahme je Kategorie. */
+function Automations({ c }: { c: TicketConfig }) {
+  const [panel, setPanel] = useState<TicketPanelCfg>();
+  const [cat, setCat] = useState<TicketCategoryCfg>();
+  const savePanel = useSave((p: TicketPanelCfg) => api(`/support-tickets/panels/${p.id}`, { method: 'PUT', body: panelBody(p) }), () => setPanel(undefined));
+  const saveCat = useSave((x: TicketCategoryCfg) => api(`/support-tickets/categories/${x.id}`, { method: 'PUT', body: catBody(x) }), () => setCat(undefined));
+  const summary = (a: TicketAutomation) => { const on = AUTO_NUM.filter((k) => (a[k] as number) > 0).map((k) => `${AUTOMATION_LABELS[k]}: ${a[k] as number} Min.`); if (a.autoClaimOnMessage) on.push('Auto-Claim'); return on.length ? on.join(' · ') : 'keine'; };
+  return (
+    <div className="grid gap-4">
+      <Card title="Panels – Standardwerte">
+        <Err error={savePanel.error} />
+        {!c.panels.length ? <EmptyState text="Noch keine Panels." /> : <ul className="grid gap-2">{c.panels.map((p) => (
+          <li key={p.id} className="grid gap-2 rounded-md border border-line p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{p.emoji} {p.name}</strong><Button size="sm" variant="secondary" onClick={() => setPanel(panel?.id === p.id ? undefined : { ...p, automation: { ...DEFAULT_AUTOMATION, ...p.automation } })}>{panel?.id === p.id ? 'Schließen' : 'Bearbeiten'}</Button></div>
+            <p className="text-xs text-muted">{summary({ ...DEFAULT_AUTOMATION, ...p.automation })}</p>
+            {panel?.id === p.id && <div className="grid gap-2"><AutomationFields value={panel.automation} onChange={(v) => setPanel({ ...panel, automation: v })} /><div><Button size="sm" disabled={savePanel.isPending} onClick={() => savePanel.mutate(panel)}>Speichern</Button></div></div>}
+          </li>
+        ))}</ul>}
+      </Card>
+      <Card title="Kategorien – eigene Werte oder Panel übernehmen">
+        <Err error={saveCat.error} />
+        <ul className="grid gap-2">{c.categories.filter((x) => !x.archivedAt).map((x) => (
+          <li key={x.id} className="grid gap-2 rounded-md border border-line p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><strong>{label(x)}</strong><span className="flex items-center gap-2"><Badge tone={x.automationSource === 'PANEL' ? 'warning' : 'neutral'}>{x.automationSource === 'PANEL' ? 'Werte des Panels' : 'eigene Werte'}</Badge><Button size="sm" variant="secondary" onClick={() => setCat(cat?.id === x.id ? undefined : x)}>{cat?.id === x.id ? 'Schließen' : 'Bearbeiten'}</Button></span></div>
+            {x.automationSource === 'CATEGORY' && <p className="text-xs text-muted">{summary(autoOf(x))}</p>}
+            {cat?.id === x.id && <div className="grid gap-2"><CategoryAutomation d={cat} set={(v) => setCat({ ...cat, ...v })} /><div><Button size="sm" disabled={saveCat.isPending} onClick={() => saveCat.mutate(cat)}>Speichern</Button></div></div>}
+          </li>
+        ))}</ul>
+      </Card>
+    </div>
+  );
+}
+
+// =============================== Formulare ===============================
+const FORM_KINDS = { questions: 'Beim Öffnen', closeForm: 'Beim Schließen', ratingForm: 'Bei der Bewertung' } as const;
+type FormKind = keyof typeof FORM_KINDS;
+/** Formular-Editor für alle drei Situationen (Öffnen, Schließen, Bewertung) je Kategorie, mit Test ohne Ticket. */
+function Forms({ c }: { c: TicketConfig }) {
+  const cats = c.categories.filter((x) => !x.archivedAt);
+  const [catId, setCatId] = useState(cats[0]?.id ?? '');
+  const [kind, setKind] = useState<FormKind>('questions');
+  const cat = cats.find((x) => x.id === catId);
+  const [fields, setFields] = useState<TicketQuestion[]>(cat?.[kind] ?? []);
+  useEffect(() => setFields(cat?.[kind] ?? []), [catId, kind, cat]);
+  const [saved, setSaved] = useState(false);
+  const save = useSave(() => api(`/support-tickets/categories/${cat!.id}`, { method: 'PUT', body: catBody({ ...cat!, [kind]: fields }) }), () => setSaved(true));
+  if (!cats.length) return <Card title="Formulare"><EmptyState text="Lege zuerst eine Kategorie an." /></Card>;
+  const limit = kind === 'questions' ? 25 : 5;
+  return (
+    <Card title="Formulare">
+      <div className="grid gap-3">
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="Kategorie">{(id) => <Select id={id} value={catId} onChange={(e) => { setCatId(e.target.value); setSaved(false); }}>{cats.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select>}</Field>
+          <Field label="Situation">{(id) => <Select id={id} value={kind} onChange={(e) => { setKind(e.target.value as FormKind); setSaved(false); }}>{Object.entries(FORM_KINDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>}</Field>
+        </div>
+        <p className="text-xs text-muted">{kind === 'questions' ? `Formular beim Öffnen (Modus: ${cat?.formMode === 'MODAL' ? 'Discord-Formular vor dem Erstellen' : 'nacheinander im Ticket-Kanal'}). Änderungen erzeugen eine neue Formular-Version – eingereichte Tickets behalten ihre Angaben.` : kind === 'closeForm' ? 'Discord-Formular beim Schließen (höchstens 5 Felder). Feld-ID „reason“ = Schließungsgrund. Antworten sieht nur das Team.' : 'Discord-Formular nach der Bewertung (höchstens 5 Felder). Feld-ID „comment“ = Begründung.'} Unterstützte Feldtypen u. a.: einzeiliger/mehrzeiliger Text, Auswahl, Datei-Upload{kind === 'questions' ? '' : ' (Datei-Uploads nur beim Öffnen)'}.</p>
+        <QuestionsEditor value={fields} onChange={(v) => { setFields(v.slice(0, limit)); setSaved(false); }} />
+        {fields.length >= limit && <p className="text-xs text-warning">Höchstens {limit} Felder.</p>}
+        <FormPreview fields={fields} />
+        <Err error={save.error} />
+        <div className="flex items-center gap-2"><Button disabled={save.isPending || !cat} onClick={() => save.mutate(undefined)}>Formular speichern</Button>{saved && <span role="status" className="text-sm text-success">Gespeichert.</span>}</div>
+      </div>
+    </Card>
+  );
+}
+
