@@ -28,6 +28,23 @@ export interface DiscordGuildInfo {
         color: number;
         position: number;
     }[];
+    /** Forum-Kanäle (stehen zusätzlich als „other“ in `channels`) mit Bot-Rechten; fehlt bei älteren Bot-Versionen */
+    forums?: {
+        id: string;
+        bot?: {
+            view: boolean;
+            send: boolean;
+            embed: boolean;
+            mentionEveryone?: boolean;
+            createThreads?: boolean;
+        };
+    }[];
+    /** aktive Threads/Forum-Beiträge; fehlt bei älteren Bot-Versionen */
+    threads?: {
+        id: string;
+        name: string;
+        parentId: string;
+    }[];
 }
 export interface DiscordChannels {
     guildId?: string;

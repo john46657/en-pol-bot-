@@ -2626,25 +2626,27 @@ model MessageBuilderCategory {
 
 /// Entwurf oder Vorlage: eine Gruppe aus mehreren Discord-Nachrichten (Inhalt siehe `mbDocumentDataSchema` in @enrp/shared).
 model MessageBuilderDocument {
-  id          String                  @id @default(uuid()) @db.Uuid
+  id               String                  @id @default(uuid()) @db.Uuid
   /// Discord-Server (Message Builder je Server getrennt)
-  guildId     String?
+  guildId          String?
   /// DRAFT | TEMPLATE
-  kind        String
-  name        String
-  categoryId  String?                 @db.Uuid
-  data        Json
+  kind             String
+  name             String
+  categoryId       String?                 @db.Uuid
+  data             Json
   /// zuletzt gewählter Kanal (Komfort beim Senden)
-  channelId   String?
+  channelId        String?
   /// optimistisches Sperren (Autosave aus mehreren Tabs)
-  version     Int                     @default(1)
-  createdById String?                 @db.Uuid
-  updatedById String?                 @db.Uuid
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
+  version          Int                     @default(1)
+  createdById      String?                 @db.Uuid
+  updatedById      String?                 @db.Uuid
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
   /// gelöscht (nach Bestätigung) – bleibt als Archiv erhalten
-  archivedAt  DateTime?
-  category    MessageBuilderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  archivedAt       DateTime?
+  /// Entwurf aus einer Vorlage geladen: Herkunft (für die Historie)
+  sourceTemplateId String?                 @db.Uuid
+  category         MessageBuilderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([kind, archivedAt, updatedAt])
   @@index([guildId])
@@ -2670,6 +2672,17 @@ model MessageBuilderSend {
   createdAt     DateTime                 @default(now())
   startedAt     DateTime?
   finishedAt    DateTime?
+  /// SEND = neue Nachrichten, EDIT = bestehende Discord-Nachricht bearbeiten
+  kind          String                   @default("SEND")
+  /// optionaler Thread bzw. Forum-Beitrag (threadId) oder Titel eines neuen Forum-Beitrags (threadName)
+  threadId      String?
+  threadName    String?
+  /// Inhalt (MbDocumentData) zum erneuten Laden in den Editor
+  data          Json?
+  /// verwendete Vorlage (Name zum Zeitpunkt des Versands)
+  templateName  String?
+  /// EDIT: bearbeitete Nachricht (MessageBuilderMessage)
+  targetId      String?                  @db.Uuid
   items         MessageBuilderSendItem[]
 
   @@index([createdAt])
@@ -2686,6 +2699,8 @@ model MessageBuilderSendItem {
   /// PENDING | SENT | FAILED | SKIPPED | TEST
   status    String             @default("PENDING")
   messageId String?
+  /// Kanal/Thread, in dem die Nachricht gelandet ist (z. B. neuer Forum-Beitrag)
+  channelId String?
   error     String?
   payload   Json?
   sentAt    DateTime?
@@ -2711,18 +2726,64 @@ model MessageBuilderAction {
 
 /// Optionaler Webhook (Versand mit eigenem Namen/Bild). Die URL enthält das Webhook-Token und liegt nur verschlüsselt vor.
 model MessageBuilderWebhook {
-  id          String    @id @default(uuid()) @db.Uuid
-  name        String
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
   /// AES-256-GCM-verschlüsselte Webhook-URL
-  secret      String
+  secret         String
   /// öffentliche Discord-ID des Webhooks
-  webhookId   String
-  channelId   String?
-  guildId     String?
-  createdById String?   @db.Uuid
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  archivedAt  DateTime?
+  webhookId      String
+  channelId      String?
+  guildId        String?
+  createdById    String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  archivedAt     DateTime?
+  /// Standard-Absenderprofil beim Versand (überschreibbar je Nachricht)
+  username       String?
+  avatarUrl      String?
+  /// Name/Avatar-Hash laut Discord (letzter Verbindungstest)
+  discordName    String?
+  discordAvatar  String?
+  lastCheckAt    DateTime?
+  lastCheckOk    Boolean?
+  lastCheckError String?
 
   @@index([guildId])
+}
+
+/// Gespeicherte Discord-Nachricht (über den Embed Builder gesendet oder per Link geladen): Link, Inhalt, Bearbeiten.
+model MessageBuilderMessage {
+  id             String    @id @default(uuid()) @db.Uuid
+  guildId        String?
+  name           String
+  /// Kanal bzw. Thread, in dem die Nachricht liegt
+  channelId      String
+  channelName    String?
+  /// gesetzt, wenn die Nachricht in einem Thread/Forum-Beitrag liegt (Webhooks brauchen das beim Bearbeiten)
+  threadId       String?
+  messageId      String
+  /// BOT | WEBHOOK
+  mode           String
+  webhookId      String?   @db.Uuid
+  sendId         String?   @db.Uuid
+  position       Int?
+  /// Inhalt als MbDocumentData mit genau einer Nachricht
+  data           Json?
+  /// custom_ids fremder Komponenten, die beim Bearbeiten unverändert bleiben dürfen
+  keptCustomIds  Json      @default("[]")
+  /// READY | LOADING | FAILED
+  status         String    @default("READY")
+  error          String?
+  /// Dashboard-Nutzer, der die Nachricht gesendet hat (null = unbekannt, z. B. per Link geladen)
+  sentById       String?   @db.Uuid
+  createdById    String?   @db.Uuid
+  createdByName  String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastEditedAt   DateTime?
+  lastEditedById String?   @db.Uuid
+  archivedAt     DateTime?
+
+  @@index([guildId, createdAt])
+  @@index([messageId])
 }

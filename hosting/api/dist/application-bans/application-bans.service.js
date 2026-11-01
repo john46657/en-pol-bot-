@@ -21,7 +21,7 @@ exports.BAN_ALL = '*';
 exports.BAN_POLICE = 'police';
 /**
  * Bewerbungssperren: Wer gesperrt ist, kann die betroffenen Bewerbungen gar nicht erst starten (Discord-Panel,
- * /bewerbung) und wird beim Absenden (Discord und Web /apply) abgewiesen. Erkannt wird per Discord-ID oder Roblox-ID.
+ * Panel) und wird beim Absenden (Discord und Web /apply) abgewiesen. Erkannt wird per Discord-ID oder Roblox-ID.
  * Jeder Discord-Server hat seine eigene Sperrliste; Sperren ohne Server gelten überall.
  */
 let ApplicationBansService = class ApplicationBansService {

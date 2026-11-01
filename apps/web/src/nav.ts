@@ -72,7 +72,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/form-panels', label: 'Formular-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/welcome', label: 'Willkommen & Abschied', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/message-builder', label: 'Message Builder', perm: 'messagebuilder.view' },
+    { path: '/message-builder', label: 'Embed Builder', perm: 'messagebuilder.view' },
   ]),
   grp('Protokolle', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },

@@ -644,8 +644,8 @@ export declare class SupportTicketsService {
             expiresAt: Date | null;
             kind: string;
             addedById: string | null;
-            ticketId: string;
             targetId: string;
+            ticketId: string;
         }[];
         messages: {
             id: string;
@@ -804,8 +804,8 @@ export declare class SupportTicketsService {
             expiresAt: Date | null;
             kind: string;
             addedById: string | null;
-            ticketId: string;
             targetId: string;
+            ticketId: string;
         }[];
         departments: {
             id: string;

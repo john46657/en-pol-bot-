@@ -6,7 +6,7 @@ export const MODULE_LABELS: Record<string, string> = {
   ticket: '🎫 Support-Tickets', communication: '💬 Kommunikation', analytics: '📊 Statistiken', audit: '📋 Audit-Logs', studio: '🛠️ Studio',
   settings: '⚙️ Bot-Einstellungen', users: '👤 Benutzer', roles: '🛡️ Rollen & Rechte',
   fleet: '🚓 Polizeifahrzeuge', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
-  messagebuilder: '✉️ Message Builder',
+  messagebuilder: '✉️ Embed Builder',
   radiowhitelist: '🎙️ Funk-Whitelist',
 };
 
@@ -31,7 +31,7 @@ export const ACTION_LABELS: Record<string, string> = {
   view_persons: 'Personen abfragen', view_vehicles: 'Fahrzeuge abfragen', manage_map: 'Karte verwalten', view_erlc: 'ER:LC live ansehen', manage_erlc: 'ER:LC verwalten',
   erlc_command: 'ER:LC-Befehle senden', erlc_command_critical: 'kritische ER:LC-Befehle', manage_cross_server: 'Cross-Server verwalten', view_logs: 'Protokolle ansehen', radio: 'Funk-Chronik',
   view_details: 'Details ansehen', manage_catalog: 'Katalog verwalten', templates_create: 'Vorlagen erstellen', templates_edit: 'Vorlagen bearbeiten', templates_delete: 'Vorlagen löschen',
-  channels: 'Kanäle wählen', webhooks: 'Webhooks verwalten', retry: 'erneut versuchen',
+  channels: 'Kanäle wählen', webhooks: 'Webhooks verwalten', retry: 'erneut versuchen', edit_others: 'Nachrichten anderer bearbeiten',
   grant: 'freischalten/verlängern', suspend: 'sperren/entsperren', remove: 'entziehen/entfernen', requests: 'Anträge bearbeiten', roles: 'Rollen(-regeln) bearbeiten',
   integration: 'Integration/Zugangsdaten', logs: 'Änderungsprotokoll ansehen',
 };

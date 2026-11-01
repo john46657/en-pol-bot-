@@ -19,7 +19,7 @@ exports.SERVER_SCOPED_MODELS = new Set([
 /** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */
 exports.GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat', 'ErlcWantedHit',
     // Discord Message Builder: Vorlagen, Entwürfe, Kategorien, Versände, Button-Aktionen, Webhooks je Server
-    'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook']);
+    'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook', 'MessageBuilderMessage']);
 /** Daten, die über eine Beziehung (ER:LC-Server) einem Discord-Server gehören. */
 exports.RELATION_SCOPED_MODELS = { ErlcEmergencyCall: 'server', ErlcCommandLog: 'server', ErlcPlayerPresence: 'server', MessageBuilderSendItem: 'send' };
 /**

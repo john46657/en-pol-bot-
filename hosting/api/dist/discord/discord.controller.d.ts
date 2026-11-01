@@ -31,6 +31,22 @@ declare const guildsBody: z.ZodObject<{
             name: string;
             position: number;
         }[], unknown[]>;
+        /** Embed Builder: Forum-Kanäle und aktive Threads (ältere Bot-Versionen melden sie nicht) */
+        forums: z.ZodOptional<z.ZodEffects<z.ZodArray<z.ZodUnknown, "many">, {
+            id: string;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+                createThreads?: boolean | undefined;
+            } | undefined;
+        }[], unknown[]>>;
+        threads: z.ZodOptional<z.ZodEffects<z.ZodArray<z.ZodUnknown, "many">, {
+            id: string;
+            name: string;
+            parentId: string;
+        }[], unknown[]>>;
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
@@ -54,12 +70,29 @@ declare const guildsBody: z.ZodObject<{
             name: string;
             position: number;
         }[];
+        forums?: {
+            id: string;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+                createThreads?: boolean | undefined;
+            } | undefined;
+        }[] | undefined;
+        threads?: {
+            id: string;
+            name: string;
+            parentId: string;
+        }[] | undefined;
     }, {
         id: string;
         name: string;
         channels: unknown[];
         roles: unknown[];
         icon?: unknown;
+        forums?: unknown[] | undefined;
+        threads?: unknown[] | undefined;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     guilds: {
@@ -85,6 +118,21 @@ declare const guildsBody: z.ZodObject<{
             name: string;
             position: number;
         }[];
+        forums?: {
+            id: string;
+            bot?: {
+                send: boolean;
+                view: boolean;
+                embed: boolean;
+                mentionEveryone?: boolean | undefined;
+                createThreads?: boolean | undefined;
+            } | undefined;
+        }[] | undefined;
+        threads?: {
+            id: string;
+            name: string;
+            parentId: string;
+        }[] | undefined;
     }[];
 }, {
     guilds: {
@@ -93,6 +141,8 @@ declare const guildsBody: z.ZodObject<{
         channels: unknown[];
         roles: unknown[];
         icon?: unknown;
+        forums?: unknown[] | undefined;
+        threads?: unknown[] | undefined;
     }[];
 }>;
 declare const redeem: z.ZodObject<{
@@ -144,8 +194,8 @@ declare const membersBody: z.ZodObject<{
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         roleIds: string[];
-        joinedAt: string | null;
         username: string;
+        joinedAt: string | null;
         displayName: string;
         avatar: string | null;
     }, {
@@ -153,8 +203,8 @@ declare const membersBody: z.ZodObject<{
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         roleIds: string[];
-        joinedAt: string | null;
         username: string;
+        joinedAt: string | null;
         displayName: string;
         avatar: string | null;
     }>, "many">;
@@ -164,8 +214,8 @@ declare const membersBody: z.ZodObject<{
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         roleIds: string[];
-        joinedAt: string | null;
         username: string;
+        joinedAt: string | null;
         displayName: string;
         avatar: string | null;
     }[];
@@ -175,8 +225,8 @@ declare const membersBody: z.ZodObject<{
         id: string;
         status: "unknown" | "online" | "idle" | "dnd" | "offline";
         roleIds: string[];
-        joinedAt: string | null;
         username: string;
+        joinedAt: string | null;
         displayName: string;
         avatar: string | null;
     }[];

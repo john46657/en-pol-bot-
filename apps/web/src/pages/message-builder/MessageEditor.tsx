@@ -8,7 +8,8 @@ import { Toggle } from '../../components/ApplicationSettings';
 const Switch = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => <span className="inline-flex items-center gap-2 text-xs"><Toggle label={label} checked={checked} onChange={onChange} /><span aria-hidden>{label}</span></span>;
 
 export interface ServerRole { id: string; name: string; color: number }
-export interface ServerChannel { id: string; name: string; category: string | null; allowed: boolean; bot: { view: boolean; send: boolean; embed: boolean; mentionEveryone?: boolean } | null }
+export interface ServerChannel { id: string; name: string; type?: 'text' | 'forum'; category: string | null; allowed: boolean; bot: { view: boolean; send: boolean; embed: boolean; mentionEveryone?: boolean; createThreads?: boolean } | null }
+export interface ServerThread { id: string; name: string; parentId: string }
 export interface EditorCtx { roles: ServerRole[]; channels: ServerChannel[]; canRoles: boolean; readOnly: boolean }
 
 const len = (s: string) => [...s].length;
@@ -65,6 +66,10 @@ export function MdTextarea({ value, onChange, max, label, rows = 4, ctx, mention
         {tb('Kleintext', '-#', () => line('-# '))}
         {tb('Zeitstempel (Discord zeigt ihn in der Zeitzone der Lesenden)', '🕒', () => apply(() => [`<t:${Math.floor(Date.now() / 1000)}:F>`]))}
         {tb('Emoji', '😀', () => setEmoji((v) => !v))}
+        {mentions && tb('Benutzer erwähnen (Discord-ID)', '@', () => {
+          const id = window.prompt('Discord-ID der Person (Rechtsklick auf die Person → „ID kopieren“):')?.trim();
+          if (id && /^\d{15,25}$/.test(id)) apply(() => [`<@${id}>`]);
+        })}
         {mentions && ctx.roles.length > 0 && (
           <select aria-label="Rolle erwähnen" disabled={ctx.readOnly} className="max-w-[9rem] rounded border border-line bg-bg px-1 py-0.5 text-xs" value="" onChange={(e) => { const id = e.target.value; if (id) apply(() => [`<@&${id}>`]); }}>
             <option value="">@Rolle …</option>{ctx.roles.map((r) => <option key={r.id} value={r.id}>@{r.name}</option>)}
@@ -227,7 +232,9 @@ function ButtonEditor({ b, onChange, ctx, issue }: { b: MbButton; onChange: (b: 
         <TextIn label="Beschriftung" value={b.label} max={DISCORD_LIMITS.buttonLabel} onChange={(v) => set({ label: v })} ctx={ctx} error={issue(['label'])} />
         <TextIn label="Emoji (optional)" value={b.emoji} placeholder="🚓 oder <:name:id>" onChange={(v) => set({ emoji: v })} ctx={ctx} error={issue(['emoji'])} />
       </div>
-      {b.kind === 'link' ? (
+      {b.kind === 'action' && b.keepCustomId ? (
+        <KeptNote id={b.keepCustomId} onConvert={ctx.readOnly ? undefined : () => set({ keepCustomId: '' })} error={issue([])} />
+      ) : b.kind === 'link' ? (
         <TextIn label="Link-URL" type="url" placeholder="https://" value={b.url} max={DISCORD_LIMITS.linkUrl} onChange={(v) => set({ url: v })} ctx={ctx} error={issue(['url'])} />
       ) : (
         <>
@@ -240,6 +247,17 @@ function ButtonEditor({ b, onChange, ctx, issue }: { b: MbButton; onChange: (b: 
         </>
       )}
       <Switch label="Deaktiviert (ausgegraut)" checked={b.disabled} onChange={(v) => !ctx.readOnly && set({ disabled: v })} />
+    </div>
+  );
+}
+
+/** Komponente aus einer geladenen Discord-Nachricht, deren custom_id unverändert bleibt (z. B. Ticket-Panel eines anderen Moduls). */
+function KeptNote({ id, onConvert, error }: { id: string; onConvert?: () => void; error?: string }) {
+  return (
+    <div className="grid gap-1 rounded border border-dashed border-line bg-panel-2/40 p-2 text-xs">
+      <span>Übernommen aus Discord – die Funktion bleibt unverändert (custom_id <code className="break-all">{id}</code>).</span>
+      {onConvert && <span><button type="button" className="text-primary hover:underline" onClick={onConvert}>Stattdessen eigene Aktion festlegen</button></span>}
+      {error && <span role="alert" className="text-danger">{error}</span>}
     </div>
   );
 }
@@ -267,6 +285,18 @@ function RowsEditor({ rows, onChange, ctx, issues }: { rows: MbRow[]; onChange: 
           ) : (
             <>
               <TextIn label="Platzhalter" value={r.placeholder} max={DISCORD_LIMITS.selectPlaceholder} onChange={(v) => setRow(i, { ...r, placeholder: v })} ctx={ctx} error={issues(['rows', i, 'placeholder'])} />
+              {r.keepCustomId && <KeptNote id={r.keepCustomId} onConvert={ctx.readOnly ? undefined : () => setRow(i, { ...r, keepCustomId: '' })} error={issues(['rows', i])} />}
+              <div className="grid gap-2 sm:grid-cols-3">
+                <label className="grid gap-1 text-xs text-muted">Mindestanzahl
+                  <Input aria-label={`Reihe ${i + 1} Mindestanzahl`} type="number" min={0} max={25} readOnly={ctx.readOnly} value={r.minValues} className={`py-1.5 ${issues(['rows', i, 'minValues']) ? 'border-danger' : ''}`} onChange={(e) => setRow(i, { ...r, minValues: Math.max(0, Math.min(25, Number(e.target.value) || 0)) })} />
+                </label>
+                <label className="grid gap-1 text-xs text-muted">Höchstanzahl
+                  <Input aria-label={`Reihe ${i + 1} Höchstanzahl`} type="number" min={1} max={25} readOnly={ctx.readOnly} value={r.maxValues} className={`py-1.5 ${issues(['rows', i, 'maxValues']) ? 'border-danger' : ''}`} onChange={(e) => setRow(i, { ...r, maxValues: Math.max(1, Math.min(25, Number(e.target.value) || 1)) })} />
+                </label>
+                <span className="self-end pb-1"><Switch label="Pflichtauswahl (mind. 1)" checked={r.minValues >= 1} onChange={(v) => !ctx.readOnly && setRow(i, { ...r, minValues: v ? Math.max(1, r.minValues) : 0 })} /></span>
+              </div>
+              {(issues(['rows', i, 'minValues']) || issues(['rows', i, 'maxValues'])) && <span role="alert" className="text-[11px] text-danger">{issues(['rows', i, 'minValues']) ?? issues(['rows', i, 'maxValues'])}</span>}
+              <p className="text-[11px] text-muted">Mehrfachauswahl: Bei mehreren gewählten Optionen führt der Bot jede Aktion aus. Ohne Pflichtauswahl kann die Auswahl auch wieder geleert werden.</p>
               {r.options.map((o, oi) => (
                 <div key={o.id} className="grid gap-2 rounded border border-line p-2">
                   <div className="flex items-center justify-between gap-2"><span className="text-xs font-medium">Option {oi + 1}</span>
@@ -277,7 +307,7 @@ function RowsEditor({ rows, onChange, ctx, issues }: { rows: MbRow[]; onChange: 
                     <TextIn label="Beschreibung (optional)" value={o.description} max={DISCORD_LIMITS.optionDescription} onChange={(v) => setRow(i, { ...r, options: r.options.map((x, j) => (j === oi ? { ...x, description: v } : x)) })} ctx={ctx} error={issues(['rows', i, 'options', oi, 'description'])} />
                     <TextIn label="Emoji (optional)" value={o.emoji} onChange={(v) => setRow(i, { ...r, options: r.options.map((x, j) => (j === oi ? { ...x, emoji: v } : x)) })} ctx={ctx} error={issues(['rows', i, 'options', oi, 'emoji'])} />
                   </div>
-                  <ActionEditor label={o.label || `Option ${oi + 1}`} a={o.action} ctx={ctx} onChange={(action) => setRow(i, { ...r, options: r.options.map((x, j) => (j === oi ? { ...x, action } : x)) })} issue={(k) => issues(['rows', i, 'options', oi, 'action', k])} />
+                  {!r.keepCustomId && <ActionEditor label={o.label || `Option ${oi + 1}`} a={o.action} ctx={ctx} onChange={(action) => setRow(i, { ...r, options: r.options.map((x, j) => (j === oi ? { ...x, action } : x)) })} issue={(k) => issues(['rows', i, 'options', oi, 'action', k])} />}
                 </div>
               ))}
               {!ctx.readOnly && <Button size="sm" variant="secondary" disabled={r.options.length >= DISCORD_LIMITS.selectOptions} onClick={() => setRow(i, { ...r, options: [...r.options, mbSelectOptionSchema.parse({ id: mbId(), label: `Option ${r.options.length + 1}` })] })}><Plus size={14} />Option hinzufügen</Button>}

@@ -31,7 +31,7 @@ export const DATA_TABLES: [string, string[]][] = [
 export const GUILD_TABLES = [
   'Unit', 'Incident', 'LeaveRequest', 'Application', 'ApplicationBan', 'QualificationApplication', 'TicketPanel', 'TicketCategory', 'ErlcServer',
   'CadIncidentLog', 'CadRadioMessage', 'PanelSubmission', 'DutyReport', 'HrTrainingSession', 'CadHandover', 'CadIncidentStat',
-  'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook',
+  'MessageBuilderCategory', 'MessageBuilderDocument', 'MessageBuilderSend', 'MessageBuilderAction', 'MessageBuilderWebhook', 'MessageBuilderMessage',
 ];
 
 export interface RestoreResult { status: 'nothing' | 'done' | 'postponed'; guildId: string | null; backup?: string; reason?: string; summary?: Record<string, unknown> }

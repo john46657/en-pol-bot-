@@ -47,13 +47,13 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     targetId: z.ZodString;
     note: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    action: "forward";
     targetId: string;
+    action: "forward";
     target: "ROLE" | "CATEGORY" | "USER";
     note?: string | undefined;
 }, {
-    action: "forward";
     targetId: string;
+    action: "forward";
     target: "ROLE" | "CATEGORY" | "USER";
     note?: string | undefined;
 }>, z.ZodObject<{
@@ -96,23 +96,23 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     minutes: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     kind: "ROLE" | "USER";
-    action: "add_access";
     targetId: string;
+    action: "add_access";
     minutes?: number | undefined;
 }, {
     kind: "ROLE" | "USER";
-    action: "add_access";
     targetId: string;
+    action: "add_access";
     minutes?: number | undefined;
 }>, z.ZodObject<{
     action: z.ZodLiteral<"remove_access">;
     targetId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "remove_access";
     targetId: string;
+    action: "remove_access";
 }, {
-    action: "remove_access";
     targetId: string;
+    action: "remove_access";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"priority">;
     priorityId: z.ZodString;
@@ -216,11 +216,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"assign">;
     targetId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    action: "assign";
     targetId: string;
+    action: "assign";
 }, {
-    action: "assign";
     targetId: string;
+    action: "assign";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"department">;
     departmentId: z.ZodString;
@@ -1870,8 +1870,8 @@ export declare class SupportTicketsController {
             expiresAt: Date | null;
             kind: string;
             addedById: string | null;
-            ticketId: string;
             targetId: string;
+            ticketId: string;
         }[];
         messages: {
             id: string;
@@ -2029,8 +2029,8 @@ export declare class SupportTicketsController {
             expiresAt: Date | null;
             kind: string;
             addedById: string | null;
-            ticketId: string;
             targetId: string;
+            ticketId: string;
         }[];
         departments: {
             id: string;

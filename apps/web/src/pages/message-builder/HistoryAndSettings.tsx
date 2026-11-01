@@ -1,46 +1,54 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import { FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { errText } from '../../lib/tickets';
 import { Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Select, SkeletonRows } from '../../components/ui';
-import { MODE_LABEL, messageLink, StatusTag, type SendRecord, type Webhook } from './SendPanel';
+import { MODE_LABEL, messageLink, StatusTag, type SendRecord } from './SendPanel';
 import type { ServerChannel } from './MessageEditor';
 
 export interface Category { id: string; name: string; position: number }
 
 /** Versandhistorie: was wann wohin gesendet wurde, mit Status je Nachricht (fehlgeschlagen ist nie „gesendet“). */
-export function History() {
+export function History({ onOpenDraft }: { onOpenDraft?: (docId: string) => void }) {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
-  const q = useQuery({ queryKey: ['mb-history', page, status], queryFn: () => api<{ items: SendRecord[]; total: number; pageSize: number; guildId: string | null }>('/message-builder/sends', { query: { page, pageSize: 25, status: status || undefined } }), refetchInterval: 10_000 });
+  const [kind, setKind] = useState('');
+  const q = useQuery({ queryKey: ['mb-history', page, status, kind], queryFn: () => api<{ items: SendRecord[]; total: number; pageSize: number; guildId: string | null }>('/message-builder/sends', { query: { page, pageSize: 25, status: status || undefined, kind: kind || undefined } }), refetchInterval: 10_000 });
+  const toDraft = useMutation({ mutationFn: (id: string) => api<{ id: string }>(`/message-builder/sends/${id}/draft`, { method: 'POST' }), onSuccess: (d) => onOpenDraft?.(d.id) });
   if (q.isError) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const pages = q.data ? Math.max(1, Math.ceil(q.data.total / q.data.pageSize)) : 1;
   return (
     <Card title="Versandhistorie" actions={
-      <Select aria-label="Status filtern" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="w-auto py-1 text-xs">
-        <option value="">Alle</option><option value="SENT">Gesendet</option><option value="PARTIAL">Teilweise</option><option value="FAILED">Fehlgeschlagen</option><option value="QUEUED">Wartend</option><option value="TEST">Testläufe</option>
-      </Select>
+      <span className="flex gap-1">
+        <Select aria-label="Art filtern" value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }} className="w-auto py-1 text-xs"><option value="">Versand & Bearbeitung</option><option value="SEND">Nur Versand</option><option value="EDIT">Nur Bearbeitungen</option></Select>
+        <Select aria-label="Status filtern" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="w-auto py-1 text-xs">
+          <option value="">Alle</option><option value="SENT">Gesendet</option><option value="PARTIAL">Teilweise</option><option value="FAILED">Fehlgeschlagen</option><option value="QUEUED">Wartend</option><option value="TEST">Testläufe</option>
+        </Select>
+      </span>
     }>
+      {toDraft.isError && <p role="alert" className="mb-2 text-xs text-danger">{errText(toDraft.error)}</p>}
       {q.isLoading ? <SkeletonRows /> : !q.data?.items.length ? <EmptyState text="Noch nichts gesendet." /> : (
         <div className="table-scroll">
           <table className="w-full text-left text-sm">
-            <thead className="text-xs text-muted"><tr><th className="py-1">Zeitpunkt</th><th>Status</th><th>Weg</th><th>Kanal</th><th>Vorlage/Entwurf</th><th>Von</th><th>Nachrichten</th></tr></thead>
+            <thead className="text-xs text-muted"><tr><th className="py-1">Zeitpunkt</th><th>Status</th><th>Weg</th><th>Kanal</th><th>Nachricht</th><th>Vorlage</th><th>Von</th><th>Nachrichten</th><th /></tr></thead>
             <tbody>
               {q.data.items.map((s) => (
                 <tr key={s.id} className="border-t border-line align-top">
                   <td className="py-1.5">{fmt(s.createdAt)}</td>
                   <td><StatusTag s={s.status} />{s.error && <p className="max-w-xs whitespace-normal text-xs text-danger">{s.error}</p>}</td>
-                  <td>{MODE_LABEL[s.mode] ?? s.mode}</td>
-                  <td>{s.channelName ? `#${s.channelName}` : s.channelId ?? '—'}</td>
+                  <td>{MODE_LABEL[s.mode] ?? s.mode}{s.kind === 'EDIT' && <span className="block text-xs text-muted">Bearbeitung</span>}</td>
+                  <td>{s.channelName ? `#${s.channelName}` : s.channelId ?? '—'}{s.threadName ? <span className="block text-xs text-muted">Beitrag „{s.threadName}“</span> : s.threadId ? <span className="block text-xs text-muted">Thread</span> : null}</td>
                   <td>{s.documentName}</td>
+                  <td>{s.templateName ?? '—'}</td>
                   <td>{s.createdByName}</td>
                   <td className="whitespace-normal">
                     <ol className="grid gap-0.5 text-xs">{s.items.map((i) => {
-                      const link = messageLink(q.data.guildId, s.channelId, i.messageId);
+                      const link = messageLink(q.data.guildId, i.channelId ?? s.channelId, i.messageId);
                       return <li key={i.position} className="flex flex-wrap items-center gap-1">{i.position + 1}. <StatusTag s={i.status} />{link ? <a href={link} target="_blank" rel="noreferrer" className="text-primary hover:underline" title={`Nachrichten-ID ${i.messageId}`}>öffnen</a> : null}{i.error && <span className="text-danger">{i.error}</span>}</li>;
                     })}</ol>
                   </td>
+                  <td>{onOpenDraft && s.hasData && <Button size="sm" variant="ghost" title="Inhalt als neuen Entwurf öffnen" disabled={toDraft.isPending} onClick={() => toDraft.mutate(s.id)}><FolderOpen size={14} />In Editor laden</Button>}</td>
                 </tr>
               ))}
             </tbody>
@@ -109,39 +117,11 @@ function AllowedChannels({ channels }: { channels: ServerChannel[] }) {
   );
 }
 
-function Webhooks() {
-  const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['mb-webhooks'], queryFn: () => api<Webhook[]>('/message-builder/webhooks') });
-  const [name, setName] = useState(''), [url, setUrl] = useState('');
-  const [del, setDel] = useState<Webhook | null>(null);
-  const add = useMutation({ mutationFn: () => api('/message-builder/webhooks', { method: 'POST', body: { name, url } }), onSuccess: () => { setName(''); setUrl(''); void qc.invalidateQueries({ queryKey: ['mb-webhooks'] }); } });
-  const remove = useMutation({ mutationFn: (id: string) => api(`/message-builder/webhooks/${id}`, { method: 'DELETE' }), onSuccess: () => { setDel(null); void qc.invalidateQueries({ queryKey: ['mb-webhooks'] }); } });
-  return (
-    <Card title="Webhooks (optional)">
-      <p className="mb-2 text-xs text-muted">Standard ist immer der Bot. Ein Webhook wird nur benutzt, wenn er beim Senden ausdrücklich gewählt wird. Die URL enthält ein Geheimnis: Sie wird verschlüsselt gespeichert und nie wieder angezeigt. Nur Webhooks des Discord-Servers der EN Polizei werden angenommen.</p>
-      {q.isError ? <ErrorState error={q.error} /> : (
-        <ul className="mb-3 grid gap-1">
-          {(q.data ?? []).map((w) => <li key={w.id} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1 text-sm"><span>{w.name} <span className="text-xs text-muted">{w.channelName ? `#${w.channelName}` : ''} · ID {w.webhookId}{w.readable ? '' : ' · nicht mehr lesbar (Schlüssel geändert)'}</span></span><Button size="sm" variant="ghost" aria-label={`Webhook ${w.name} entfernen`} className="hover:text-danger" onClick={() => setDel(w)}><Trash2 size={14} /></Button></li>)}
-          {!q.data?.length && <li className="text-xs text-muted">Keine Webhooks eingerichtet.</li>}
-        </ul>
-      )}
-      <form className="grid gap-2 sm:grid-cols-[12rem_1fr_auto]" onSubmit={(e) => { e.preventDefault(); add.mutate(); }}>
-        <Input aria-label="Webhook-Name" placeholder="Name (z. B. Leitstelle)" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
-        <Input aria-label="Webhook-URL" type="password" autoComplete="off" placeholder="https://discord.com/api/webhooks/…" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <Button type="submit" disabled={!name.trim() || !url.trim() || add.isPending}>{add.isPending ? 'Prüfe …' : 'Hinzufügen'}</Button>
-      </form>
-      {add.isError && <p role="alert" className="mt-2 text-xs text-danger">{errText(add.error)}</p>}
-      <ConfirmDialog open={!!del} danger title="Webhook entfernen?" message={`„${del?.name}“ wird entfernt und die gespeicherte URL gelöscht. Der Webhook selbst bleibt in Discord bestehen.`} confirmLabel="Entfernen" busy={remove.isPending} onClose={() => setDel(null)} onConfirm={() => del && remove.mutate(del.id)} />
-    </Card>
-  );
-}
-
 export function SettingsTab({ can, categories, channels }: { can: (p: string) => boolean; categories: Category[]; channels: ServerChannel[] }) {
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       {can('messagebuilder.templates_edit') && <Categories categories={categories} />}
       {can('messagebuilder.channels') && <AllowedChannels channels={channels} />}
-      {can('messagebuilder.webhooks') && <div className="xl:col-span-2"><Webhooks /></div>}
     </div>
   );
 }

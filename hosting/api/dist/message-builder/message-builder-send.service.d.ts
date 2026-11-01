@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
-import { type MbAction } from '@enrp/shared';
+import { type MbAction, type MbDocumentData } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { PermissionService } from '../authz/permission.service';
@@ -120,6 +120,7 @@ export declare const sendSchema: z.ZodObject<{
                         roleId?: string | undefined;
                         mode?: "remove" | "add" | "toggle" | undefined;
                     }>]>>;
+                    keepCustomId: z.ZodDefault<z.ZodString>;
                 }, "strip", z.ZodTypeAny, {
                     label: string;
                     kind: "action" | "link";
@@ -136,6 +137,7 @@ export declare const sendSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }, {
                     id: string;
                     label?: string | undefined;
@@ -152,6 +154,7 @@ export declare const sendSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
                 type: "buttons";
@@ -172,6 +175,7 @@ export declare const sendSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             }, {
                 type: "buttons";
@@ -192,6 +196,7 @@ export declare const sendSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             }>, z.ZodObject<{
                 id: z.ZodString;
@@ -252,6 +257,9 @@ export declare const sendSchema: z.ZodObject<{
                     emoji?: string | undefined;
                     description?: string | undefined;
                 }>, "many">>;
+                minValues: z.ZodDefault<z.ZodNumber>;
+                maxValues: z.ZodDefault<z.ZodNumber>;
+                keepCustomId: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 options: {
                     label: string;
@@ -271,6 +279,9 @@ export declare const sendSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             }, {
                 type: "select";
                 id: string;
@@ -290,6 +301,9 @@ export declare const sendSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             }>]>, "many">>;
             mentions: z.ZodDefault<z.ZodObject<{
                 users: z.ZodDefault<z.ZodBoolean>;
@@ -348,6 +362,7 @@ export declare const sendSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -368,6 +383,9 @@ export declare const sendSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -418,6 +436,7 @@ export declare const sendSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -438,6 +457,9 @@ export declare const sendSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -500,6 +522,7 @@ export declare const sendSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -520,6 +543,9 @@ export declare const sendSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -576,6 +602,7 @@ export declare const sendSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -596,6 +623,9 @@ export declare const sendSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -612,6 +642,10 @@ export declare const sendSchema: z.ZodObject<{
     mode: z.ZodEnum<["bot", "webhook", "test"]>;
     channelId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     webhookId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** optional: in einen bestehenden Thread bzw. Forum-Beitrag senden */
+    threadId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** nur Forum: Titel eines neuen Beitrags (die erste Nachricht eröffnet ihn) */
+    threadName: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     /** Bestätigung im Dialog („Jetzt senden“) */
     confirm: z.ZodLiteral<true>;
 }, "strip", z.ZodTypeAny, {
@@ -661,6 +695,7 @@ export declare const sendSchema: z.ZodObject<{
                     style: "danger" | "secondary" | "success" | "primary";
                     url: string;
                     disabled: boolean;
+                    keepCustomId: string;
                 }[];
             } | {
                 options: {
@@ -681,6 +716,9 @@ export declare const sendSchema: z.ZodObject<{
                 id: string;
                 placeholder: string;
                 disabled: boolean;
+                keepCustomId: string;
+                minValues: number;
+                maxValues: number;
             })[];
             mentions: {
                 roles: boolean;
@@ -697,6 +735,8 @@ export declare const sendSchema: z.ZodObject<{
     documentId: string | null;
     mode: "test" | "bot" | "webhook";
     webhookId: string | null;
+    threadId: string | null;
+    threadName: string | null;
     confirm: true;
 }, {
     data: {
@@ -744,6 +784,7 @@ export declare const sendSchema: z.ZodObject<{
                     style?: "danger" | "secondary" | "success" | "primary" | undefined;
                     url?: string | undefined;
                     disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
                 }[] | undefined;
             } | {
                 type: "select";
@@ -764,6 +805,9 @@ export declare const sendSchema: z.ZodObject<{
                 }[] | undefined;
                 placeholder?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
+                minValues?: number | undefined;
+                maxValues?: number | undefined;
             })[] | undefined;
             mentions?: {
                 roles?: boolean | undefined;
@@ -782,18 +826,23 @@ export declare const sendSchema: z.ZodObject<{
     channelId?: string | null | undefined;
     documentId?: string | null | undefined;
     webhookId?: string | null | undefined;
+    threadId?: string | null | undefined;
+    threadName?: string | null | undefined;
 }>;
 export declare const itemResultSchema: z.ZodObject<{
     ok: z.ZodBoolean;
     messageId: z.ZodOptional<z.ZodString>;
     error: z.ZodOptional<z.ZodString>;
+    channelId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     ok: boolean;
     error?: string | undefined;
+    channelId?: string | undefined;
     messageId?: string | undefined;
 }, {
     ok: boolean;
     error?: string | undefined;
+    channelId?: string | undefined;
     messageId?: string | undefined;
 }>;
 export declare const finishSchema: z.ZodObject<{
@@ -806,6 +855,7 @@ export declare const finishSchema: z.ZodObject<{
 export declare const interactionSchema: z.ZodObject<{
     actionId: z.ZodString;
     value: z.ZodOptional<z.ZodString>;
+    values: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     guildId: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     discordId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -813,35 +863,76 @@ export declare const interactionSchema: z.ZodObject<{
     discordId: string;
     actionId: string;
     value?: string | undefined;
+    values?: string[] | undefined;
 }, {
     discordId: string;
     actionId: string;
     guildId?: string | null | undefined;
     value?: string | undefined;
+    values?: string[] | undefined;
 }>;
 export declare const webhookCreateSchema: z.ZodObject<{
     name: z.ZodString;
     url: z.ZodString;
+    username: z.ZodDefault<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
+    avatarUrl: z.ZodDefault<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
+    username: string | null;
+    avatarUrl: string | null;
     url: string;
 }, {
     name: string;
     url: string;
+    username?: string | null | undefined;
+    avatarUrl?: string | null | undefined;
+}>;
+export declare const webhookUpdateSchema: z.ZodObject<{
+    name: z.ZodString;
+    username: z.ZodDefault<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
+    avatarUrl: z.ZodDefault<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
+    /** zusätzlich den Namen des Webhooks in Discord ändern (Discord erlaubt das mit dem Webhook-Token) */
+    discordName: z.ZodDefault<z.ZodNullable<z.ZodEffects<z.ZodString, string, string>>>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    discordName: string | null;
+    username: string | null;
+    avatarUrl: string | null;
+}, {
+    name: string;
+    discordName?: string | null | undefined;
+    username?: string | null | undefined;
+    avatarUrl?: string | null | undefined;
 }>;
 export declare const historyQuery: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     pageSize: z.ZodDefault<z.ZodNumber>;
     status: z.ZodOptional<z.ZodString>;
+    kind: z.ZodOptional<z.ZodEnum<["SEND", "EDIT"]>>;
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
     status?: string | undefined;
+    kind?: "SEND" | "EDIT" | undefined;
 }, {
     status?: string | undefined;
+    kind?: "SEND" | "EDIT" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
 }>;
+/** Ziel einer Bearbeitung (gespeicherte Discord-Nachricht). */
+export interface EditTarget {
+    id: string;
+    guildId: string | null;
+    channelId: string;
+    channelName: string | null;
+    threadId: string | null;
+    messageId: string;
+    mode: string;
+    webhookId: string | null;
+    keptCustomIds: string[];
+    name: string;
+}
 /** Versand der Nachrichtengruppen (Bot über die Outbox, optional Webhook, Testmodus) und Versandhistorie. */
 export declare class MessageBuilderSendService {
     private readonly prisma;
@@ -858,12 +949,18 @@ export declare class MessageBuilderSendService {
         warnings: import("@enrp/shared").MbIssue[];
         guildId: string | null;
         id: string;
+        kind: string;
         documentId: string | null;
         documentName: string;
+        templateName: string | null;
         mode: string;
         channelId: string | null;
         channelName: string | null;
         webhookId: string | null;
+        threadId: string | null;
+        threadName: string | null;
+        targetId: string | null;
+        hasData: boolean;
         status: string;
         error: string | null;
         createdById: string | null;
@@ -876,6 +973,7 @@ export declare class MessageBuilderSendService {
             summary: string;
             status: string;
             messageId: string | null;
+            channelId: string | null;
             error: string | null;
             sentAt: Date | null;
         }[];
@@ -887,34 +985,44 @@ export declare class MessageBuilderSendService {
     /** Bot holt den Auftrag ab: nur einmal (QUEUED → SENDING), sonst wird nichts gesendet (kein doppelter Versand). */
     start(sendId: string): Promise<{
         proceed: false;
-        guildId?: undefined;
-        channelId?: undefined;
-        items?: undefined;
     } | {
-        proceed: true;
-        guildId: string | null;
-        channelId: string | null;
         items: {
             position: number;
             payload: Prisma.JsonValue;
         }[];
+        messageId?: string | undefined;
+        proceed: true;
+        kind: "SEND" | "EDIT";
+        guildId: string | null;
+        channelId: string | null;
+        threadId: string | null;
+        threadName: string | null;
     }>;
     itemResult(sendId: string, position: number, b: z.infer<typeof itemResultSchema>): Promise<void>;
-    /** Abschluss: nicht gesendete Nachrichten → übersprungen; Gesamtstatus aus den Einzelstatus (nie „gesendet“, wenn etwas fehlte). */
-    finish(sendId: string, b: z.infer<typeof finishSchema>): Promise<void>;
-    /** Aufträge, die der Bot nie abgeholt bzw. nie abgeschlossen hat, ehrlich als fehlgeschlagen markieren. */
-    expireStale(now?: number): Promise<void>;
-    private view;
-    /** Einzelner Versand: wer gesendet hat, sieht den Status immer; sonst Recht „Versandhistorie“. */
-    get(actor: Actor, id: string): Promise<{
+    /** Gesendete Nachricht als „gespeicherte Nachricht“ merken (Link, Inhalt) bzw. nach dem Bearbeiten aktualisieren. */
+    private remember;
+    /** Thread/Forum-Angaben prüfen (soweit der Bot Threads gemeldet hat; unbekannte Thread-IDs prüft der Bot beim Senden). */
+    private checkThread;
+    /**
+     * Bearbeitung einer gespeicherten Nachricht einreihen: über den Bot (Outbox, der Bot bearbeitet nur eigene Nachrichten)
+     * bzw. direkt über den Webhook, der sie gesendet hat. Rechte prüft der Aufrufer (MessageBuilderMessagesService).
+     */
+    queueEdit(actor: Actor, userName: string, t: EditTarget, data: MbDocumentData): Promise<{
+        warnings: import("@enrp/shared").MbIssue[];
         guildId: string | null;
         id: string;
+        kind: string;
         documentId: string | null;
         documentName: string;
+        templateName: string | null;
         mode: string;
         channelId: string | null;
         channelName: string | null;
         webhookId: string | null;
+        threadId: string | null;
+        threadName: string | null;
+        targetId: string | null;
+        hasData: boolean;
         status: string;
         error: string | null;
         createdById: string | null;
@@ -927,6 +1035,46 @@ export declare class MessageBuilderSendService {
             summary: string;
             status: string;
             messageId: string | null;
+            channelId: string | null;
+            error: string | null;
+            sentAt: Date | null;
+        }[];
+    }>;
+    private runWebhookEdit;
+    /** Abschluss: nicht gesendete Nachrichten → übersprungen; Gesamtstatus aus den Einzelstatus (nie „gesendet“, wenn etwas fehlte). */
+    finish(sendId: string, b: z.infer<typeof finishSchema>): Promise<void>;
+    /** Aufträge, die der Bot nie abgeholt bzw. nie abgeschlossen hat, ehrlich als fehlgeschlagen markieren. */
+    expireStale(now?: number): Promise<void>;
+    private view;
+    /** Einzelner Versand: wer gesendet hat, sieht den Status immer; sonst Recht „Versandhistorie“. */
+    get(actor: Actor, id: string): Promise<{
+        guildId: string | null;
+        id: string;
+        kind: string;
+        documentId: string | null;
+        documentName: string;
+        templateName: string | null;
+        mode: string;
+        channelId: string | null;
+        channelName: string | null;
+        webhookId: string | null;
+        threadId: string | null;
+        threadName: string | null;
+        targetId: string | null;
+        hasData: boolean;
+        status: string;
+        error: string | null;
+        createdById: string | null;
+        createdByName: string;
+        createdAt: Date;
+        startedAt: Date | null;
+        finishedAt: Date | null;
+        items: {
+            position: number;
+            summary: string;
+            status: string;
+            messageId: string | null;
+            channelId: string | null;
             error: string | null;
             sentAt: Date | null;
         }[];
@@ -934,12 +1082,18 @@ export declare class MessageBuilderSendService {
     history(q: z.infer<typeof historyQuery>): Promise<{
         items: {
             id: string;
+            kind: string;
             documentId: string | null;
             documentName: string;
+            templateName: string | null;
             mode: string;
             channelId: string | null;
             channelName: string | null;
             webhookId: string | null;
+            threadId: string | null;
+            threadName: string | null;
+            targetId: string | null;
+            hasData: boolean;
             status: string;
             error: string | null;
             createdById: string | null;
@@ -952,6 +1106,7 @@ export declare class MessageBuilderSendService {
                 summary: string;
                 status: string;
                 messageId: string | null;
+                channelId: string | null;
                 error: string | null;
                 sentAt: Date | null;
             }[];
@@ -961,8 +1116,106 @@ export declare class MessageBuilderSendService {
         pageSize: number;
         guildId: string;
     }>;
+    /** Inhalt eines früheren Versands wieder als neuen Entwurf öffnen (eigener Versand oder Recht „Versandhistorie“). */
+    toDraft(actor: Actor, id: string): Promise<{
+        data?: {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        } | undefined;
+        id: string;
+        kind: string;
+        name: string;
+        categoryId: string | null;
+        channelId: string | null;
+        version: number;
+        createdById: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        messageCount: number;
+        sourceTemplateId: string | null;
+    }>;
     interaction(b: z.infer<typeof interactionSchema>): Promise<MbAction | {
         type: 'gone';
+    } | {
+        type: 'multi';
+        actions: MbAction[];
     }>;
     listWebhooks(): Promise<{
         id: string;
@@ -970,17 +1223,74 @@ export declare class MessageBuilderSendService {
         webhookId: string;
         channelId: string | null;
         channelName: string | null;
+        channelType: "text" | "forum" | null;
         readable: boolean;
         createdAt: Date;
+        username: string | null;
+        avatarUrl: string | null;
+        discordName: string | null;
+        discordAvatarUrl: string | null;
+        lastCheckAt: Date | null;
+        lastCheckOk: boolean | null;
+        lastCheckError: string | null;
     }[]>;
+    private webhookRow;
+    /** Name/Standardprofil ändern; optional auch den Namen in Discord (geht mit dem Webhook-Token). */
+    updateWebhook(actor: Actor, id: string, b: z.infer<typeof webhookUpdateSchema>): Promise<{
+        id: string;
+        name: string;
+        webhookId: string;
+        channelId: string | null;
+        channelName: string | null;
+        channelType: "text" | "forum" | null;
+        readable: boolean;
+        createdAt: Date;
+        username: string | null;
+        avatarUrl: string | null;
+        discordName: string | null;
+        discordAvatarUrl: string | null;
+        lastCheckAt: Date | null;
+        lastCheckOk: boolean | null;
+        lastCheckError: string | null;
+    }>;
+    /** Verbindung testen: Webhook bei Discord abfragen (ohne etwas zu senden); Name, Avatar und Kanal aktualisieren. */
+    testWebhook(actor: Actor, id: string): Promise<{
+        ok: boolean;
+        error: string | null;
+        webhook: {
+            id: string;
+            name: string;
+            webhookId: string;
+            channelId: string | null;
+            channelName: string | null;
+            channelType: "text" | "forum" | null;
+            readable: boolean;
+            createdAt: Date;
+            username: string | null;
+            avatarUrl: string | null;
+            discordName: string | null;
+            discordAvatarUrl: string | null;
+            lastCheckAt: Date | null;
+            lastCheckOk: boolean | null;
+            lastCheckError: string | null;
+        };
+    }>;
     createWebhook(actor: Actor, b: z.infer<typeof webhookCreateSchema>): Promise<{
         id: string;
         name: string;
         webhookId: string;
         channelId: string | null;
         channelName: string | null;
+        channelType: "text" | "forum" | null;
         readable: boolean;
         createdAt: Date;
+        username: string | null;
+        avatarUrl: string | null;
+        discordName: string | null;
+        discordAvatarUrl: string | null;
+        lastCheckAt: Date | null;
+        lastCheckOk: boolean | null;
+        lastCheckError: string | null;
     }>;
     removeWebhook(actor: Actor, id: string): Promise<void>;
 }

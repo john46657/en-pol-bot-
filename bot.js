@@ -315,7 +315,7 @@ function __awaiter(thisArg, _arguments, P2, generator) {
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 }
-function __generator(thisArg, body) {
+function __generator(thisArg, body2) {
   var _ = { label: 0, sent: function() {
     if (t2[0] & 1) throw t2[1];
     return t2[1];
@@ -373,7 +373,7 @@ function __generator(thisArg, body) {
           _.trys.pop();
           continue;
       }
-      op = body.call(thisArg, _);
+      op = body2.call(thisArg, _);
     } catch (e) {
       op = [6, e];
       y = 0;
@@ -839,12 +839,12 @@ var require_errors = __commonJS({
     };
     var kResponseStatusCodeError = /* @__PURE__ */ Symbol.for("undici.error.UND_ERR_RESPONSE_STATUS_CODE");
     var ResponseStatusCodeError = class extends UndiciError {
-      constructor(message, statusCode, headers, body) {
+      constructor(message, statusCode, headers, body2) {
         super(message);
         this.name = "ResponseStatusCodeError";
         this.message = message || "Response Status Code Error";
         this.code = "UND_ERR_RESPONSE_STATUS_CODE";
-        this.body = body;
+        this.body = body2;
         this.status = statusCode;
         this.statusCode = statusCode;
         this.headers = headers;
@@ -1400,8 +1400,8 @@ var require_util = __commonJS({
     var { tree } = require_tree();
     var [nodeMajor, nodeMinor] = process.versions.node.split(".").map((v) => Number(v));
     var BodyAsyncIterable = class {
-      constructor(body) {
-        this[kBody] = body;
+      constructor(body2) {
+        this[kBody] = body2;
         this[kBodyUsed] = false;
       }
       async *[Symbol.asyncIterator]() {
@@ -1410,26 +1410,26 @@ var require_util = __commonJS({
         yield* this[kBody];
       }
     };
-    function wrapRequestBody(body) {
-      if (isStream(body)) {
-        if (bodyLength(body) === 0) {
-          body.on("data", function() {
+    function wrapRequestBody(body2) {
+      if (isStream(body2)) {
+        if (bodyLength(body2) === 0) {
+          body2.on("data", function() {
             assert(false);
           });
         }
-        if (typeof body.readableDidRead !== "boolean") {
-          body[kBodyUsed] = false;
-          EE.prototype.on.call(body, "data", function() {
+        if (typeof body2.readableDidRead !== "boolean") {
+          body2[kBodyUsed] = false;
+          EE.prototype.on.call(body2, "data", function() {
             this[kBodyUsed] = true;
           });
         }
-        return body;
-      } else if (body && typeof body.pipeTo === "function") {
-        return new BodyAsyncIterable(body);
-      } else if (body && typeof body !== "string" && !ArrayBuffer.isView(body) && isIterable(body)) {
-        return new BodyAsyncIterable(body);
+        return body2;
+      } else if (body2 && typeof body2.pipeTo === "function") {
+        return new BodyAsyncIterable(body2);
+      } else if (body2 && typeof body2 !== "string" && !ArrayBuffer.isView(body2) && isIterable(body2)) {
+        return new BodyAsyncIterable(body2);
       } else {
-        return body;
+        return body2;
       }
     }
     function nop() {
@@ -1549,21 +1549,21 @@ var require_util = __commonJS({
     function isIterable(obj) {
       return !!(obj != null && (typeof obj[Symbol.iterator] === "function" || typeof obj[Symbol.asyncIterator] === "function"));
     }
-    function bodyLength(body) {
-      if (body == null) {
+    function bodyLength(body2) {
+      if (body2 == null) {
         return 0;
-      } else if (isStream(body)) {
-        const state = body._readableState;
+      } else if (isStream(body2)) {
+        const state = body2._readableState;
         return state && state.objectMode === false && state.ended === true && Number.isFinite(state.length) ? state.length : null;
-      } else if (isBlobLike(body)) {
-        return body.size != null ? body.size : null;
-      } else if (isBuffer(body)) {
-        return body.byteLength;
+      } else if (isBlobLike(body2)) {
+        return body2.size != null ? body2.size : null;
+      } else if (isBuffer(body2)) {
+        return body2.byteLength;
       }
       return null;
     }
-    function isDestroyed(body) {
-      return body && !!(body.destroyed || body[kDestroyed] || stream.isDestroyed?.(body));
+    function isDestroyed(body2) {
+      return body2 && !!(body2.destroyed || body2[kDestroyed] || stream.isDestroyed?.(body2));
     }
     function destroy(stream2, err) {
       if (stream2 == null || !isStream(stream2) || isDestroyed(stream2)) {
@@ -1678,14 +1678,14 @@ var require_util = __commonJS({
         }
       }
     }
-    function isDisturbed(body) {
-      return !!(body && (stream.isDisturbed(body) || body[kBodyUsed]));
+    function isDisturbed(body2) {
+      return !!(body2 && (stream.isDisturbed(body2) || body2[kBodyUsed]));
     }
-    function isErrored(body) {
-      return !!(body && stream.isErrored(body));
+    function isErrored(body2) {
+      return !!(body2 && stream.isErrored(body2));
     }
-    function isReadable(body) {
-      return !!(body && stream.isReadable(body));
+    function isReadable(body2) {
+      return !!(body2 && stream.isReadable(body2));
     }
     function getSocketInfo(socket) {
       return {
@@ -2104,7 +2104,7 @@ var require_request = __commonJS({
       constructor(origin, {
         path: path3,
         method,
-        body,
+        body: body2,
         headers,
         query,
         idempotent,
@@ -2152,10 +2152,10 @@ var require_request = __commonJS({
         this.throwOnError = throwOnError === true;
         this.method = method;
         this.abort = null;
-        if (body == null) {
+        if (body2 == null) {
           this.body = null;
-        } else if (isStream(body)) {
-          this.body = body;
+        } else if (isStream(body2)) {
+          this.body = body2;
           const rState = this.body._readableState;
           if (!rState || !rState.autoDestroy) {
             this.endHandler = function autoDestroy() {
@@ -2171,16 +2171,16 @@ var require_request = __commonJS({
             }
           };
           this.body.on("error", this.errorHandler);
-        } else if (isBuffer(body)) {
-          this.body = body.byteLength ? body : null;
-        } else if (ArrayBuffer.isView(body)) {
-          this.body = body.buffer.byteLength ? Buffer.from(body.buffer, body.byteOffset, body.byteLength) : null;
-        } else if (body instanceof ArrayBuffer) {
-          this.body = body.byteLength ? Buffer.from(body) : null;
-        } else if (typeof body === "string") {
-          this.body = body.length ? Buffer.from(body) : null;
-        } else if (isFormDataLike(body) || isIterable(body) || isBlobLike(body)) {
-          this.body = body;
+        } else if (isBuffer(body2)) {
+          this.body = body2.byteLength ? body2 : null;
+        } else if (ArrayBuffer.isView(body2)) {
+          this.body = body2.buffer.byteLength ? Buffer.from(body2.buffer, body2.byteOffset, body2.byteLength) : null;
+        } else if (body2 instanceof ArrayBuffer) {
+          this.body = body2.byteLength ? Buffer.from(body2) : null;
+        } else if (typeof body2 === "string") {
+          this.body = body2.length ? Buffer.from(body2) : null;
+        } else if (isFormDataLike(body2) || isIterable(body2) || isBlobLike(body2)) {
+          this.body = body2;
         } else {
           throw new InvalidArgumentError("body must be a string, a Buffer, a Readable stream, an iterable, or an async iterable");
         }
@@ -3744,11 +3744,11 @@ var require_data_url = __commonJS({
       }
       position.position++;
       const encodedBody = input.slice(mimeTypeLength + 1);
-      let body = stringPercentDecode(encodedBody);
+      let body2 = stringPercentDecode(encodedBody);
       if (/;(\u0020){0,}base64$/i.test(mimeType)) {
-        const stringBody = isomorphicDecode(body);
-        body = forgivingBase64(stringBody);
-        if (body === "failure") {
+        const stringBody = isomorphicDecode(body2);
+        body2 = forgivingBase64(stringBody);
+        if (body2 === "failure") {
           return "failure";
         }
         mimeType = mimeType.slice(0, -6);
@@ -3762,7 +3762,7 @@ var require_data_url = __commonJS({
       if (mimeTypeRecord === "failure") {
         mimeTypeRecord = parseMIMEType("text/plain;charset=US-ASCII");
       }
-      return { mimeType: mimeTypeRecord, body };
+      return { mimeType: mimeTypeRecord, body: body2 };
     }
     function URLSerializer(url, excludeFragment = false) {
       if (!excludeFragment) {
@@ -5038,12 +5038,12 @@ var require_util2 = __commonJS({
         }
       });
     }
-    async function fullyReadBody(body, processBody, processBodyError) {
+    async function fullyReadBody(body2, processBody, processBodyError) {
       const successSteps = processBody;
       const errorSteps = processBodyError;
       let reader;
       try {
-        reader = body.stream.getReader();
+        reader = body2.stream.getReader();
       } catch (e) {
         errorSteps(e);
         return;
@@ -5657,16 +5657,16 @@ var require_formdata_parser = __commonJS({
         }
         let { name, filename, contentType, encoding } = result;
         position.position += 2;
-        let body;
+        let body2;
         {
           const boundaryIndex = input.indexOf(boundary.subarray(2), position.position);
           if (boundaryIndex === -1) {
             return "failure";
           }
-          body = input.subarray(position.position, boundaryIndex - 4);
-          position.position += body.length;
+          body2 = input.subarray(position.position, boundaryIndex - 4);
+          position.position += body2.length;
           if (encoding === "base64") {
-            body = Buffer.from(body.toString(), "base64");
+            body2 = Buffer.from(body2.toString(), "base64");
           }
         }
         if (input[position.position] !== 13 || input[position.position + 1] !== 10) {
@@ -5680,9 +5680,9 @@ var require_formdata_parser = __commonJS({
           if (!isAsciiString(contentType)) {
             contentType = "";
           }
-          value = new File([body], filename, { type: contentType });
+          value = new File([body2], filename, { type: contentType });
         } else {
-          value = utf8DecodeBytes(Buffer.from(body));
+          value = utf8DecodeBytes(Buffer.from(body2));
         }
         assert(isUSVString(name));
         assert(typeof value === "string" && isUSVString(value) || isFileLike(value));
@@ -6010,8 +6010,8 @@ Content-Type: ${value.type || "application/octet-stream"}\r
           type: "bytes"
         });
       }
-      const body = { stream, source, length };
-      return [body, type];
+      const body2 = { stream, source, length };
+      return [body2, type];
     }
     function safelyExtractBody(object, keepalive = false) {
       if (object instanceof ReadableStream) {
@@ -6020,13 +6020,13 @@ Content-Type: ${value.type || "application/octet-stream"}\r
       }
       return extractBody(object, keepalive);
     }
-    function cloneBody(instance, body) {
-      const [out1, out2] = body.stream.tee();
-      body.stream = out1;
+    function cloneBody(instance, body2) {
+      const [out1, out2] = body2.stream.tee();
+      body2.stream = out1;
       return {
         stream: out2,
-        length: body.length,
-        source: body.source
+        length: body2.length,
+        source: body2.source
       };
     }
     function throwIfAborted(state) {
@@ -6121,8 +6121,8 @@ Content-Type: ${value.type || "application/octet-stream"}\r
       return promise.promise;
     }
     function bodyUnusable(object) {
-      const body = object[kState].body;
-      return body != null && (body.stream.locked || util2.isDisturbed(body.stream));
+      const body2 = object[kState].body;
+      return body2 != null && (body2.stream.locked || util2.isDisturbed(body2.stream));
     }
     function parseJSONFromBytes(bytes) {
       return JSON.parse(utf8DecodeBytes(bytes));
@@ -6372,14 +6372,14 @@ var require_client_h1 = __commonJS({
           }
           const offset = llhttp.llhttp_get_error_pos(this.ptr) - currentBufferPtr;
           if (ret !== constants.ERROR.OK) {
-            const body = data.subarray(offset);
+            const body2 = data.subarray(offset);
             if (ret === constants.ERROR.PAUSED_UPGRADE) {
-              this.onUpgrade(body);
+              this.onUpgrade(body2);
             } else if (ret === constants.ERROR.PAUSED) {
               this.paused = true;
-              socket.unshift(body);
+              socket.unshift(body2);
             } else {
-              throw this.createError(ret, body);
+              throw this.createError(ret, body2);
             }
           }
         } catch (err) {
@@ -6874,20 +6874,20 @@ var require_client_h1 = __commonJS({
     }
     function writeH1(client2, request) {
       const { method, path: path3, host, upgrade, blocking, reset } = request;
-      let { body, headers, contentLength } = request;
+      let { body: body2, headers, contentLength } = request;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
-      if (util2.isFormDataLike(body)) {
+      if (util2.isFormDataLike(body2)) {
         if (!extractBody) {
           extractBody = require_body().extractBody;
         }
-        const [bodyStream, contentType] = extractBody(body);
+        const [bodyStream, contentType] = extractBody(body2);
         if (request.contentType == null) {
           headers.push("content-type", contentType);
         }
-        body = bodyStream.stream;
+        body2 = bodyStream.stream;
         contentLength = bodyStream.length;
-      } else if (util2.isBlobLike(body) && request.contentType == null) {
-        const contentType = body.type;
+      } else if (util2.isBlobLike(body2) && request.contentType == null) {
+        const contentType = body2.type;
         if (contentType) {
           const contentTypeValue = `${contentType}`;
           if (!util2.isValidHeaderValue(contentTypeValue)) {
@@ -6897,10 +6897,10 @@ var require_client_h1 = __commonJS({
           headers.push("content-type", contentTypeValue);
         }
       }
-      if (body && typeof body.read === "function") {
-        body.read(0);
+      if (body2 && typeof body2.read === "function") {
+        body2.read(0);
       }
-      const bodyLength = util2.bodyLength(body);
+      const bodyLength = util2.bodyLength(body2);
       contentLength = bodyLength ?? contentLength;
       if (contentLength === null) {
         contentLength = request.contentLength;
@@ -6928,7 +6928,7 @@ var require_client_h1 = __commonJS({
           return;
         }
         util2.errorRequest(client2, request, error || new RequestAbortedError());
-        util2.destroy(body);
+        util2.destroy(body2);
         util2.destroy(socket, new InformationalError("aborted"));
       };
       try {
@@ -6989,26 +6989,26 @@ upgrade: ${upgrade}\r
       if (channels.sendHeaders.hasSubscribers) {
         channels.sendHeaders.publish({ request, headers: header, socket });
       }
-      if (!body || bodyLength === 0) {
+      if (!body2 || bodyLength === 0) {
         writeBuffer(abort, null, client2, request, socket, contentLength, header, expectsPayload);
-      } else if (util2.isBuffer(body)) {
-        writeBuffer(abort, body, client2, request, socket, contentLength, header, expectsPayload);
-      } else if (util2.isBlobLike(body)) {
-        if (typeof body.stream === "function") {
-          writeIterable(abort, body.stream(), client2, request, socket, contentLength, header, expectsPayload);
+      } else if (util2.isBuffer(body2)) {
+        writeBuffer(abort, body2, client2, request, socket, contentLength, header, expectsPayload);
+      } else if (util2.isBlobLike(body2)) {
+        if (typeof body2.stream === "function") {
+          writeIterable(abort, body2.stream(), client2, request, socket, contentLength, header, expectsPayload);
         } else {
-          writeBlob(abort, body, client2, request, socket, contentLength, header, expectsPayload);
+          writeBlob(abort, body2, client2, request, socket, contentLength, header, expectsPayload);
         }
-      } else if (util2.isStream(body)) {
-        writeStream(abort, body, client2, request, socket, contentLength, header, expectsPayload);
-      } else if (util2.isIterable(body)) {
-        writeIterable(abort, body, client2, request, socket, contentLength, header, expectsPayload);
+      } else if (util2.isStream(body2)) {
+        writeStream(abort, body2, client2, request, socket, contentLength, header, expectsPayload);
+      } else if (util2.isIterable(body2)) {
+        writeIterable(abort, body2, client2, request, socket, contentLength, header, expectsPayload);
       } else {
         assert(false);
       }
       return true;
     }
-    function writeStream(abort, body, client2, request, socket, contentLength, header, expectsPayload) {
+    function writeStream(abort, body2, client2, request, socket, contentLength, header, expectsPayload) {
       assert(contentLength !== 0 || client2[kRunning] === 0, "stream body cannot be pipelined");
       let finished = false;
       const writer = new AsyncWriter({ abort, socket, request, contentLength, client: client2, expectsPayload, header });
@@ -7028,13 +7028,13 @@ upgrade: ${upgrade}\r
         if (finished) {
           return;
         }
-        if (body.resume) {
-          body.resume();
+        if (body2.resume) {
+          body2.resume();
         }
       };
       const onClose = function() {
         queueMicrotask(() => {
-          body.removeListener("error", onFinished);
+          body2.removeListener("error", onFinished);
         });
         if (!finished) {
           const err = new RequestAbortedError();
@@ -7048,7 +7048,7 @@ upgrade: ${upgrade}\r
         finished = true;
         assert(socket.destroyed || socket[kWriting] && client2[kRunning] <= 1);
         socket.off("drain", onDrain).off("error", onFinished);
-        body.removeListener("data", onData).removeListener("end", onFinished).removeListener("close", onClose);
+        body2.removeListener("data", onData).removeListener("end", onFinished).removeListener("close", onClose);
         if (!err) {
           try {
             writer.end();
@@ -7058,28 +7058,28 @@ upgrade: ${upgrade}\r
         }
         writer.destroy(err);
         if (err && (err.code !== "UND_ERR_INFO" || err.message !== "reset")) {
-          util2.destroy(body, err);
+          util2.destroy(body2, err);
         } else {
-          util2.destroy(body);
+          util2.destroy(body2);
         }
       };
-      body.on("data", onData).on("end", onFinished).on("error", onFinished).on("close", onClose);
-      if (body.resume) {
-        body.resume();
+      body2.on("data", onData).on("end", onFinished).on("error", onFinished).on("close", onClose);
+      if (body2.resume) {
+        body2.resume();
       }
       socket.on("drain", onDrain).on("error", onFinished);
-      if (body.errorEmitted ?? body.errored) {
-        setImmediate(() => onFinished(body.errored));
-      } else if (body.endEmitted ?? body.readableEnded) {
+      if (body2.errorEmitted ?? body2.errored) {
+        setImmediate(() => onFinished(body2.errored));
+      } else if (body2.endEmitted ?? body2.readableEnded) {
         setImmediate(() => onFinished(null));
       }
-      if (body.closeEmitted ?? body.closed) {
+      if (body2.closeEmitted ?? body2.closed) {
         setImmediate(onClose);
       }
     }
-    function writeBuffer(abort, body, client2, request, socket, contentLength, header, expectsPayload) {
+    function writeBuffer(abort, body2, client2, request, socket, contentLength, header, expectsPayload) {
       try {
-        if (!body) {
+        if (!body2) {
           if (contentLength === 0) {
             socket.write(`${header}content-length: 0\r
 \r
@@ -7089,15 +7089,15 @@ upgrade: ${upgrade}\r
             socket.write(`${header}\r
 `, "latin1");
           }
-        } else if (util2.isBuffer(body)) {
-          assert(contentLength === body.byteLength, "buffer body must have content length");
+        } else if (util2.isBuffer(body2)) {
+          assert(contentLength === body2.byteLength, "buffer body must have content length");
           socket.cork();
           socket.write(`${header}content-length: ${contentLength}\r
 \r
 `, "latin1");
-          socket.write(body);
+          socket.write(body2);
           socket.uncork();
-          request.onBodySent(body);
+          request.onBodySent(body2);
           if (!expectsPayload && request.reset !== false) {
             socket[kReset] = true;
           }
@@ -7108,13 +7108,13 @@ upgrade: ${upgrade}\r
         abort(err);
       }
     }
-    async function writeBlob(abort, body, client2, request, socket, contentLength, header, expectsPayload) {
-      assert(contentLength === body.size, "blob body must have content length");
+    async function writeBlob(abort, body2, client2, request, socket, contentLength, header, expectsPayload) {
+      assert(contentLength === body2.size, "blob body must have content length");
       try {
-        if (contentLength != null && contentLength !== body.size) {
+        if (contentLength != null && contentLength !== body2.size) {
           throw new RequestContentLengthMismatchError();
         }
-        const buffer = Buffer.from(await body.arrayBuffer());
+        const buffer = Buffer.from(await body2.arrayBuffer());
         socket.cork();
         socket.write(`${header}content-length: ${contentLength}\r
 \r
@@ -7131,7 +7131,7 @@ upgrade: ${upgrade}\r
         abort(err);
       }
     }
-    async function writeIterable(abort, body, client2, request, socket, contentLength, header, expectsPayload) {
+    async function writeIterable(abort, body2, client2, request, socket, contentLength, header, expectsPayload) {
       assert(contentLength !== 0 || client2[kRunning] === 0, "iterator body cannot be pipelined");
       let callback = null;
       function onDrain() {
@@ -7152,7 +7152,7 @@ upgrade: ${upgrade}\r
       socket.on("close", onDrain).on("drain", onDrain);
       const writer = new AsyncWriter({ abort, socket, request, contentLength, client: client2, expectsPayload, header });
       try {
-        for await (const chunk of body) {
+        for await (const chunk of body2) {
           if (socket[kError]) {
             throw socket[kError];
           }
@@ -7486,7 +7486,7 @@ var require_client_h2 = __commonJS({
     function writeH2(client2, request) {
       const session = client2[kHTTP2Session];
       const { method, path: path3, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
-      let { body } = request;
+      let { body: body2 } = request;
       if (upgrade) {
         util2.errorRequest(client2, request, new Error("Upgrade not supported for H2"));
         return false;
@@ -7526,7 +7526,7 @@ var require_client_h2 = __commonJS({
         if (stream != null) {
           util2.destroy(stream, error);
         }
-        util2.destroy(body, error);
+        util2.destroy(body2, error);
         client2[kQueue][client2[kRunningIdx]++] = null;
         client2[kResume]();
       };
@@ -7585,15 +7585,15 @@ var require_client_h2 = __commonJS({
       headers[HTTP2_HEADER_PATH] = path3;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
-      if (body && typeof body.read === "function") {
-        body.read(0);
+      if (body2 && typeof body2.read === "function") {
+        body2.read(0);
       }
-      let contentLength = util2.bodyLength(body);
-      if (util2.isFormDataLike(body)) {
+      let contentLength = util2.bodyLength(body2);
+      if (util2.isFormDataLike(body2)) {
         extractBody ??= require_body().extractBody;
-        const [bodyStream, contentType] = extractBody(body);
+        const [bodyStream, contentType] = extractBody(body2);
         headers["content-type"] = contentType;
-        body = bodyStream.stream;
+        body2 = bodyStream.stream;
         contentLength = bodyStream.length;
       }
       if (contentLength == null) {
@@ -7610,11 +7610,11 @@ var require_client_h2 = __commonJS({
         process.emitWarning(new RequestContentLengthMismatchError());
       }
       if (contentLength != null) {
-        assert(body, "no body must not have content length");
+        assert(body2, "no body must not have content length");
         headers[HTTP2_HEADER_CONTENT_LENGTH] = `${contentLength}`;
       }
       session.ref();
-      const shouldEndStream = method === "GET" || method === "HEAD" || body === null;
+      const shouldEndStream = method === "GET" || method === "HEAD" || body2 === null;
       if (expectContinue) {
         headers[HTTP2_HEADER_EXPECT] = "100-continue";
         stream = session.request(headers, { endStream: shouldEndStream, signal });
@@ -7671,7 +7671,7 @@ var require_client_h2 = __commonJS({
       });
       return true;
       function writeBodyH2() {
-        if (!body || contentLength === 0) {
+        if (!body2 || contentLength === 0) {
           writeBuffer(
             abort,
             stream,
@@ -7682,23 +7682,23 @@ var require_client_h2 = __commonJS({
             contentLength,
             expectsPayload
           );
-        } else if (util2.isBuffer(body)) {
+        } else if (util2.isBuffer(body2)) {
           writeBuffer(
             abort,
             stream,
-            body,
+            body2,
             client2,
             request,
             client2[kSocket],
             contentLength,
             expectsPayload
           );
-        } else if (util2.isBlobLike(body)) {
-          if (typeof body.stream === "function") {
+        } else if (util2.isBlobLike(body2)) {
+          if (typeof body2.stream === "function") {
             writeIterable(
               abort,
               stream,
-              body.stream(),
+              body2.stream(),
               client2,
               request,
               client2[kSocket],
@@ -7709,7 +7709,7 @@ var require_client_h2 = __commonJS({
             writeBlob(
               abort,
               stream,
-              body,
+              body2,
               client2,
               request,
               client2[kSocket],
@@ -7717,22 +7717,22 @@ var require_client_h2 = __commonJS({
               expectsPayload
             );
           }
-        } else if (util2.isStream(body)) {
+        } else if (util2.isStream(body2)) {
           writeStream(
             abort,
             client2[kSocket],
             expectsPayload,
             stream,
-            body,
+            body2,
             client2,
             request,
             contentLength
           );
-        } else if (util2.isIterable(body)) {
+        } else if (util2.isIterable(body2)) {
           writeIterable(
             abort,
             stream,
-            body,
+            body2,
             client2,
             request,
             client2[kSocket],
@@ -7744,15 +7744,15 @@ var require_client_h2 = __commonJS({
         }
       }
     }
-    function writeBuffer(abort, h2stream, body, client2, request, socket, contentLength, expectsPayload) {
+    function writeBuffer(abort, h2stream, body2, client2, request, socket, contentLength, expectsPayload) {
       try {
-        if (body != null && util2.isBuffer(body)) {
-          assert(contentLength === body.byteLength, "buffer body must have content length");
+        if (body2 != null && util2.isBuffer(body2)) {
+          assert(contentLength === body2.byteLength, "buffer body must have content length");
           h2stream.cork();
-          h2stream.write(body);
+          h2stream.write(body2);
           h2stream.uncork();
           h2stream.end();
-          request.onBodySent(body);
+          request.onBodySent(body2);
         }
         if (!expectsPayload) {
           socket[kReset] = true;
@@ -7763,10 +7763,10 @@ var require_client_h2 = __commonJS({
         abort(error);
       }
     }
-    function writeStream(abort, socket, expectsPayload, h2stream, body, client2, request, contentLength) {
+    function writeStream(abort, socket, expectsPayload, h2stream, body2, client2, request, contentLength) {
       assert(contentLength !== 0 || client2[kRunning] === 0, "stream body cannot be pipelined");
       const pipe = pipeline(
-        body,
+        body2,
         h2stream,
         (err) => {
           if (err) {
@@ -7787,13 +7787,13 @@ var require_client_h2 = __commonJS({
         request.onBodySent(chunk);
       }
     }
-    async function writeBlob(abort, h2stream, body, client2, request, socket, contentLength, expectsPayload) {
-      assert(contentLength === body.size, "blob body must have content length");
+    async function writeBlob(abort, h2stream, body2, client2, request, socket, contentLength, expectsPayload) {
+      assert(contentLength === body2.size, "blob body must have content length");
       try {
-        if (contentLength != null && contentLength !== body.size) {
+        if (contentLength != null && contentLength !== body2.size) {
           throw new RequestContentLengthMismatchError();
         }
-        const buffer = Buffer.from(await body.arrayBuffer());
+        const buffer = Buffer.from(await body2.arrayBuffer());
         h2stream.cork();
         h2stream.write(buffer);
         h2stream.uncork();
@@ -7808,7 +7808,7 @@ var require_client_h2 = __commonJS({
         abort(err);
       }
     }
-    async function writeIterable(abort, h2stream, body, client2, request, socket, contentLength, expectsPayload) {
+    async function writeIterable(abort, h2stream, body2, client2, request, socket, contentLength, expectsPayload) {
       assert(contentLength !== 0 || client2[kRunning] === 0, "iterator body cannot be pipelined");
       let callback = null;
       function onDrain() {
@@ -7828,7 +7828,7 @@ var require_client_h2 = __commonJS({
       });
       h2stream.on("close", onDrain).on("drain", onDrain);
       try {
-        for await (const chunk of body) {
+        for await (const chunk of body2) {
           if (socket[kError]) {
             throw socket[kError];
           }
@@ -7866,8 +7866,8 @@ var require_redirect_handler = __commonJS({
     var redirectableStatusCodes = [300, 301, 302, 303, 307, 308];
     var kBody = /* @__PURE__ */ Symbol("body");
     var BodyAsyncIterable = class {
-      constructor(body) {
-        this[kBody] = body;
+      constructor(body2) {
+        this[kBody] = body2;
         this[kBodyUsed] = false;
       }
       async *[Symbol.asyncIterator]() {
@@ -10106,18 +10106,18 @@ var require_readable = __commonJS({
       return buffer;
     }
     function consumeEnd(consume2) {
-      const { type, body, resolve, stream, length } = consume2;
+      const { type, body: body2, resolve, stream, length } = consume2;
       try {
         if (type === "text") {
-          resolve(chunksDecode(body, length));
+          resolve(chunksDecode(body2, length));
         } else if (type === "json") {
-          resolve(JSON.parse(chunksDecode(body, length)));
+          resolve(JSON.parse(chunksDecode(body2, length)));
         } else if (type === "arrayBuffer") {
-          resolve(chunksConcat(body, length).buffer);
+          resolve(chunksConcat(body2, length).buffer);
         } else if (type === "blob") {
-          resolve(new Blob(body, { type: stream[kContentType] }));
+          resolve(new Blob(body2, { type: stream[kContentType] }));
         } else if (type === "bytes") {
-          resolve(chunksConcat(body, length));
+          resolve(chunksConcat(body2, length));
         }
         consumeFinish(consume2);
       } catch (err) {
@@ -10157,12 +10157,12 @@ var require_util3 = __commonJS({
     } = require_errors();
     var { chunksDecode } = require_readable();
     var CHUNK_LIMIT = 128 * 1024;
-    async function getResolveErrorBodyCallback({ callback, body, contentType, statusCode, statusMessage, headers }) {
-      assert(body);
+    async function getResolveErrorBodyCallback({ callback, body: body2, contentType, statusCode, statusMessage, headers }) {
+      assert(body2);
       let chunks = [];
       let length = 0;
       try {
-        for await (const chunk of body) {
+        for await (const chunk of body2) {
           chunks.push(chunk);
           length += chunk.length;
           if (length > CHUNK_LIMIT) {
@@ -10224,7 +10224,7 @@ var require_api_request = __commonJS({
         if (!opts || typeof opts !== "object") {
           throw new InvalidArgumentError("invalid opts");
         }
-        const { signal, method, opaque, body, onInfo, responseHeaders, throwOnError, highWaterMark } = opts;
+        const { signal, method, opaque, body: body2, onInfo, responseHeaders, throwOnError, highWaterMark } = opts;
         try {
           if (typeof callback !== "function") {
             throw new InvalidArgumentError("invalid callback");
@@ -10243,8 +10243,8 @@ var require_api_request = __commonJS({
           }
           super("UNDICI_REQUEST");
         } catch (err) {
-          if (util2.isStream(body)) {
-            util2.destroy(body.on("error", util2.nop), err);
+          if (util2.isStream(body2)) {
+            util2.destroy(body2.on("error", util2.nop), err);
           }
           throw err;
         }
@@ -10254,7 +10254,7 @@ var require_api_request = __commonJS({
         this.callback = callback;
         this.res = null;
         this.abort = null;
-        this.body = body;
+        this.body = body2;
         this.trailers = {};
         this.context = null;
         this.onInfo = onInfo || null;
@@ -10263,8 +10263,8 @@ var require_api_request = __commonJS({
         this.signal = signal;
         this.reason = null;
         this.removeAbortListener = null;
-        if (util2.isStream(body)) {
-          body.on("error", (err) => {
+        if (util2.isStream(body2)) {
+          body2.on("error", (err) => {
             this.onError(err);
           });
         }
@@ -10348,7 +10348,7 @@ var require_api_request = __commonJS({
         this.res.push(null);
       }
       onError(err) {
-        const { res, callback, body, opaque } = this;
+        const { res, callback, body: body2, opaque } = this;
         if (callback) {
           this.callback = null;
           queueMicrotask(() => {
@@ -10361,9 +10361,9 @@ var require_api_request = __commonJS({
             util2.destroy(res, err);
           });
         }
-        if (body) {
+        if (body2) {
           this.body = null;
-          util2.destroy(body, err);
+          util2.destroy(body2, err);
         }
         if (this.removeAbortListener) {
           res?.off("close", this.removeAbortListener);
@@ -10462,7 +10462,7 @@ var require_api_stream = __commonJS({
         if (!opts || typeof opts !== "object") {
           throw new InvalidArgumentError("invalid opts");
         }
-        const { signal, method, opaque, body, onInfo, responseHeaders, throwOnError } = opts;
+        const { signal, method, opaque, body: body2, onInfo, responseHeaders, throwOnError } = opts;
         try {
           if (typeof callback !== "function") {
             throw new InvalidArgumentError("invalid callback");
@@ -10481,8 +10481,8 @@ var require_api_stream = __commonJS({
           }
           super("UNDICI_STREAM");
         } catch (err) {
-          if (util2.isStream(body)) {
-            util2.destroy(body.on("error", util2.nop), err);
+          if (util2.isStream(body2)) {
+            util2.destroy(body2.on("error", util2.nop), err);
           }
           throw err;
         }
@@ -10494,11 +10494,11 @@ var require_api_stream = __commonJS({
         this.abort = null;
         this.context = null;
         this.trailers = null;
-        this.body = body;
+        this.body = body2;
         this.onInfo = onInfo || null;
         this.throwOnError = throwOnError || false;
-        if (util2.isStream(body)) {
-          body.on("error", (err) => {
+        if (util2.isStream(body2)) {
+          body2.on("error", (err) => {
             this.onError(err);
           });
         }
@@ -10579,7 +10579,7 @@ var require_api_stream = __commonJS({
         res.end();
       }
       onError(err) {
-        const { res, callback, opaque, body } = this;
+        const { res, callback, opaque, body: body2 } = this;
         removeSignal(this);
         this.factory = null;
         if (res) {
@@ -10591,9 +10591,9 @@ var require_api_stream = __commonJS({
             this.runInAsyncScope(callback, null, err, { opaque });
           });
         }
-        if (body) {
+        if (body2) {
           this.body = null;
-          util2.destroy(body, err);
+          util2.destroy(body2, err);
         }
       }
     };
@@ -10700,9 +10700,9 @@ var require_api_pipeline = __commonJS({
           readableObjectMode: opts.objectMode,
           autoDestroy: true,
           read: () => {
-            const { body } = this;
-            if (body?.resume) {
-              body.resume();
+            const { body: body2 } = this;
+            if (body2?.resume) {
+              body2.resume();
             }
           },
           write: (chunk, encoding, callback) => {
@@ -10714,14 +10714,14 @@ var require_api_pipeline = __commonJS({
             }
           },
           destroy: (err, callback) => {
-            const { body, req, res, ret, abort } = this;
+            const { body: body2, req, res, ret, abort } = this;
             if (!err && !ret._readableState.endEmitted) {
               err = new RequestAbortedError();
             }
             if (abort && err) {
               abort();
             }
-            util2.destroy(body, err);
+            util2.destroy(body2, err);
             util2.destroy(req, err);
             util2.destroy(res, err);
             removeSignal(this);
@@ -10755,11 +10755,11 @@ var require_api_pipeline = __commonJS({
           return;
         }
         this.res = new PipelineResponse(resume);
-        let body;
+        let body2;
         try {
           this.handler = null;
           const headers = this.responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
-          body = this.runInAsyncScope(handler, null, {
+          body2 = this.runInAsyncScope(handler, null, {
             statusCode,
             headers,
             opaque,
@@ -10770,13 +10770,13 @@ var require_api_pipeline = __commonJS({
           this.res.on("error", util2.nop);
           throw err;
         }
-        if (!body || typeof body.on !== "function") {
+        if (!body2 || typeof body2.on !== "function") {
           throw new InvalidReturnValueError("expected Readable");
         }
-        body.on("data", (chunk) => {
-          const { ret, body: body2 } = this;
-          if (!ret.push(chunk) && body2.pause) {
-            body2.pause();
+        body2.on("data", (chunk) => {
+          const { ret, body: body3 } = this;
+          if (!ret.push(chunk) && body3.pause) {
+            body3.pause();
           }
         }).on("error", (err) => {
           const { ret } = this;
@@ -10790,7 +10790,7 @@ var require_api_pipeline = __commonJS({
             util2.destroy(ret, new RequestAbortedError());
           }
         });
-        this.body = body;
+        this.body = body2;
       }
       onData(chunk) {
         const { res } = this;
@@ -11159,10 +11159,10 @@ var require_mock_utils = __commonJS({
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path3, method, body, headers }) {
+    function matchKey(mockDispatch2, { path: path3, method, body: body2, headers }) {
       const pathMatch = matchValue(mockDispatch2.path, path3);
       const methodMatch = matchValue(mockDispatch2.method, method);
-      const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
+      const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body2) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
       return pathMatch && methodMatch && bodyMatch && headersMatch;
     }
@@ -11190,7 +11190,7 @@ var require_mock_utils = __commonJS({
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for method '${key4.method}' on path '${resolvedPath}'`);
       }
-      matchedMockDispatches = matchedMockDispatches.filter(({ body }) => typeof body !== "undefined" ? matchValue(body, key4.body) : true);
+      matchedMockDispatches = matchedMockDispatches.filter(({ body: body2 }) => typeof body2 !== "undefined" ? matchValue(body2, key4.body) : true);
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for body '${key4.body}' on path '${resolvedPath}'`);
       }
@@ -11220,11 +11220,11 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path3, method, body, headers, query } = opts;
+      const { path: path3, method, body: body2, headers, query } = opts;
       return {
         path: path3,
         method,
-        body,
+        body: body2,
         headers,
         query
       };
@@ -11249,9 +11249,9 @@ var require_mock_utils = __commonJS({
     function getStatusText(statusCode) {
       return STATUS_CODES[statusCode] || "unknown";
     }
-    async function getResponse(body) {
+    async function getResponse(body2) {
       const buffers = [];
-      for await (const data of body) {
+      for await (const data of body2) {
         buffers.push(data);
       }
       return Buffer.concat(buffers).toString("utf8");
@@ -11281,12 +11281,12 @@ var require_mock_utils = __commonJS({
       }
       function handleReply(mockDispatches, _data = data) {
         const optsHeaders = Array.isArray(opts.headers) ? buildHeadersFromArray(opts.headers) : opts.headers;
-        const body = typeof _data === "function" ? _data({ ...opts, headers: optsHeaders }) : _data;
-        if (isPromise(body)) {
-          body.then((newData) => handleReply(mockDispatches, newData));
+        const body2 = typeof _data === "function" ? _data({ ...opts, headers: optsHeaders }) : _data;
+        if (isPromise(body2)) {
+          body2.then((newData) => handleReply(mockDispatches, newData));
           return;
         }
-        const responseData = getResponseData(body);
+        const responseData = getResponseData(body2);
         const responseHeaders = generateKeyValues(headers);
         const responseTrailers = generateKeyValues(trailers);
         handler.onConnect?.((err) => handler.onError(err), null);
@@ -12830,9 +12830,9 @@ var require_response = __commonJS({
         const bytes = textEncoder.encode(
           serializeJavascriptValueToJSONString(data)
         );
-        const body = extractBody(bytes);
+        const body2 = extractBody(bytes);
         const responseObject = fromInnerResponse(makeResponse({}), "response");
-        initializeResponse(responseObject, init, { body: body[0], type: "application/json" });
+        initializeResponse(responseObject, init, { body: body2[0], type: "application/json" });
         return responseObject;
       }
       // Creates a redirect Response that redirects to url with status status.
@@ -12856,13 +12856,13 @@ var require_response = __commonJS({
         return responseObject;
       }
       // https://fetch.spec.whatwg.org/#dom-response
-      constructor(body = null, init = {}) {
+      constructor(body2 = null, init = {}) {
         webidl.util.markAsUncloneable(this);
-        if (body === kConstruct) {
+        if (body2 === kConstruct) {
           return;
         }
-        if (body !== null) {
-          body = webidl.converters.BodyInit(body);
+        if (body2 !== null) {
+          body2 = webidl.converters.BodyInit(body2);
         }
         init = webidl.converters.ResponseInit(init);
         this[kState] = makeResponse({});
@@ -12870,8 +12870,8 @@ var require_response = __commonJS({
         setHeadersGuard(this[kHeaders], "response");
         setHeadersList(this[kHeaders], this[kState].headersList);
         let bodyWithType = null;
-        if (body != null) {
-          const [extractedBody, type] = extractBody(body);
+        if (body2 != null) {
+          const [extractedBody, type] = extractBody(body2);
           bodyWithType = { body: extractedBody, type };
         }
         initializeResponse(this, init, bodyWithType);
@@ -13076,7 +13076,7 @@ var require_response = __commonJS({
       assert(isCancelled(fetchParams));
       return isAborted2(fetchParams) ? makeNetworkError(Object.assign(new DOMException("The operation was aborted.", "AbortError"), { cause: err })) : makeNetworkError(Object.assign(new DOMException("Request was cancelled."), { cause: err }));
     }
-    function initializeResponse(response, init, body) {
+    function initializeResponse(response, init, body2) {
       if (init.status !== null && (init.status < 200 || init.status > 599)) {
         throw new RangeError('init["status"] must be in the range of 200 to 599, inclusive.');
       }
@@ -13094,16 +13094,16 @@ var require_response = __commonJS({
       if ("headers" in init && init.headers != null) {
         fill(response[kHeaders], init.headers);
       }
-      if (body) {
+      if (body2) {
         if (nullBodyStatus.includes(response.status)) {
           throw webidl.errors.exception({
             header: "Response constructor",
             message: `Invalid response status code ${response.status}`
           });
         }
-        response[kState].body = body.body;
-        if (body.type != null && !response[kState].headersList.contains("content-type", true)) {
-          response[kState].headersList.append("content-type", body.type, true);
+        response[kState].body = body2.body;
+        if (body2.type != null && !response[kState].headersList.contains("content-type", true)) {
+          response[kState].headersList.append("content-type", body2.type, true);
         }
       }
     }
@@ -14742,11 +14742,11 @@ var require_fetch = __commonJS({
         })();
       }
       try {
-        const { body, status: status3, statusText, headersList, socket } = await dispatch({ body: requestBody });
+        const { body: body2, status: status3, statusText, headersList, socket } = await dispatch({ body: requestBody });
         if (socket) {
           response = makeResponse({ status: status3, statusText, headersList, socket });
         } else {
-          const iterator = body[Symbol.asyncIterator]();
+          const iterator = body2[Symbol.asyncIterator]();
           fetchParams.controller.next = () => iterator.next();
           response = makeResponse({ status: status3, statusText, headersList });
         }
@@ -14841,7 +14841,7 @@ var require_fetch = __commonJS({
         fetchParams.controller.connection.destroy();
       }
       return response;
-      function dispatch({ body }) {
+      function dispatch({ body: body2 }) {
         const url = requestCurrentURL(request);
         const agent = fetchParams.controller.dispatcher;
         return new Promise((resolve, reject) => agent.dispatch(
@@ -14849,7 +14849,7 @@ var require_fetch = __commonJS({
             path: url.pathname + url.search,
             origin: url.origin,
             method: request.method,
-            body: agent.isMockActive ? request.body && (request.body.source || request.body.stream) : body,
+            body: agent.isMockActive ? request.body && (request.body.source || request.body.stream) : body2,
             headers: request.headersList.entries,
             maxRedirections: 0,
             upgrade: request.mode === "websocket" ? "websocket" : void 0
@@ -18016,13 +18016,13 @@ var require_receiver = __commonJS({
             if (this.#byteOffset < this.#info.payloadLength) {
               return callback();
             }
-            const body = this.consume(this.#info.payloadLength);
+            const body2 = this.consume(this.#info.payloadLength);
             if (isControlFrame(this.#info.opcode)) {
-              this.#loop = this.parseControlFrame(body);
+              this.#loop = this.parseControlFrame(body2);
               this.#state = parserStates.INFO;
             } else {
               if (!this.#info.compressed) {
-                if (!this.writeFragments(body)) {
+                if (!this.writeFragments(body2)) {
                   return;
                 }
                 if (this.#maxPayloadSize > 0 && this.#fragmentsBytes > this.#maxPayloadSize) {
@@ -18035,7 +18035,7 @@ var require_receiver = __commonJS({
                 this.#state = parserStates.INFO;
               } else {
                 this.#extensions.get("permessage-deflate").decompress(
-                  body,
+                  body2,
                   this.#info.fin,
                   (error, data) => {
                     if (error) {
@@ -18148,14 +18148,14 @@ var require_receiver = __commonJS({
        * Parses control frames.
        * @param {Buffer} body
        */
-      parseControlFrame(body) {
+      parseControlFrame(body2) {
         const { opcode, payloadLength } = this.#info;
         if (opcode === opcodes.CLOSE) {
           if (payloadLength === 1) {
             failWebsocketConnection(this.ws, "Received close frame with a 1-byte body.");
             return false;
           }
-          this.#info.closeInfo = this.parseCloseBody(body);
+          this.#info.closeInfo = this.parseCloseBody(body2);
           if (this.#info.closeInfo.error) {
             const { code, reason } = this.#info.closeInfo;
             closeWebSocketConnection(this.ws, code, reason, reason.length);
@@ -18163,12 +18163,12 @@ var require_receiver = __commonJS({
             return false;
           }
           if (this.ws[kSentClose] !== sentCloseFrameState.SENT) {
-            let body2 = emptyBuffer;
+            let body3 = emptyBuffer;
             if (this.#info.closeInfo.code) {
-              body2 = Buffer.allocUnsafe(2);
-              body2.writeUInt16BE(this.#info.closeInfo.code, 0);
+              body3 = Buffer.allocUnsafe(2);
+              body3.writeUInt16BE(this.#info.closeInfo.code, 0);
             }
-            const closeFrame = new WebsocketFrameSend(body2);
+            const closeFrame = new WebsocketFrameSend(body3);
             this.ws[kResponse].socket.write(
               closeFrame.createFrame(opcodes.CLOSE),
               (err) => {
@@ -18183,18 +18183,18 @@ var require_receiver = __commonJS({
           return false;
         } else if (opcode === opcodes.PING) {
           if (!this.ws[kReceivedClose]) {
-            const frame = new WebsocketFrameSend(body);
+            const frame = new WebsocketFrameSend(body2);
             this.ws[kResponse].socket.write(frame.createFrame(opcodes.PONG));
             if (channels.ping.hasSubscribers) {
               channels.ping.publish({
-                payload: body
+                payload: body2
               });
             }
           }
         } else if (opcode === opcodes.PONG) {
           if (channels.pong.hasSubscribers) {
             channels.pong.publish({
-              payload: body
+              payload: body2
             });
           }
         }
@@ -20273,26 +20273,26 @@ var require_channel = __commonJS({
       ForumLayoutType2[ForumLayoutType2["ListView"] = 1] = "ListView";
       ForumLayoutType2[ForumLayoutType2["GalleryView"] = 2] = "GalleryView";
     })(ForumLayoutType || (exports2.ForumLayoutType = ForumLayoutType = {}));
-    var ChannelType6;
-    (function(ChannelType7) {
-      ChannelType7[ChannelType7["GuildText"] = 0] = "GuildText";
-      ChannelType7[ChannelType7["DM"] = 1] = "DM";
-      ChannelType7[ChannelType7["GuildVoice"] = 2] = "GuildVoice";
-      ChannelType7[ChannelType7["GroupDM"] = 3] = "GroupDM";
-      ChannelType7[ChannelType7["GuildCategory"] = 4] = "GuildCategory";
-      ChannelType7[ChannelType7["GuildAnnouncement"] = 5] = "GuildAnnouncement";
-      ChannelType7[ChannelType7["AnnouncementThread"] = 10] = "AnnouncementThread";
-      ChannelType7[ChannelType7["PublicThread"] = 11] = "PublicThread";
-      ChannelType7[ChannelType7["PrivateThread"] = 12] = "PrivateThread";
-      ChannelType7[ChannelType7["GuildStageVoice"] = 13] = "GuildStageVoice";
-      ChannelType7[ChannelType7["GuildDirectory"] = 14] = "GuildDirectory";
-      ChannelType7[ChannelType7["GuildForum"] = 15] = "GuildForum";
-      ChannelType7[ChannelType7["GuildMedia"] = 16] = "GuildMedia";
-      ChannelType7[ChannelType7["GuildNews"] = 5] = "GuildNews";
-      ChannelType7[ChannelType7["GuildNewsThread"] = 10] = "GuildNewsThread";
-      ChannelType7[ChannelType7["GuildPublicThread"] = 11] = "GuildPublicThread";
-      ChannelType7[ChannelType7["GuildPrivateThread"] = 12] = "GuildPrivateThread";
-    })(ChannelType6 || (exports2.ChannelType = ChannelType6 = {}));
+    var ChannelType7;
+    (function(ChannelType8) {
+      ChannelType8[ChannelType8["GuildText"] = 0] = "GuildText";
+      ChannelType8[ChannelType8["DM"] = 1] = "DM";
+      ChannelType8[ChannelType8["GuildVoice"] = 2] = "GuildVoice";
+      ChannelType8[ChannelType8["GroupDM"] = 3] = "GroupDM";
+      ChannelType8[ChannelType8["GuildCategory"] = 4] = "GuildCategory";
+      ChannelType8[ChannelType8["GuildAnnouncement"] = 5] = "GuildAnnouncement";
+      ChannelType8[ChannelType8["AnnouncementThread"] = 10] = "AnnouncementThread";
+      ChannelType8[ChannelType8["PublicThread"] = 11] = "PublicThread";
+      ChannelType8[ChannelType8["PrivateThread"] = 12] = "PrivateThread";
+      ChannelType8[ChannelType8["GuildStageVoice"] = 13] = "GuildStageVoice";
+      ChannelType8[ChannelType8["GuildDirectory"] = 14] = "GuildDirectory";
+      ChannelType8[ChannelType8["GuildForum"] = 15] = "GuildForum";
+      ChannelType8[ChannelType8["GuildMedia"] = 16] = "GuildMedia";
+      ChannelType8[ChannelType8["GuildNews"] = 5] = "GuildNews";
+      ChannelType8[ChannelType8["GuildNewsThread"] = 10] = "GuildNewsThread";
+      ChannelType8[ChannelType8["GuildPublicThread"] = 11] = "GuildPublicThread";
+      ChannelType8[ChannelType8["GuildPrivateThread"] = 12] = "GuildPrivateThread";
+    })(ChannelType7 || (exports2.ChannelType = ChannelType7 = {}));
     var VideoQualityMode;
     (function(VideoQualityMode2) {
       VideoQualityMode2[VideoQualityMode2["Auto"] = 1] = "Auto";
@@ -28464,29 +28464,29 @@ var require_dist5 = __commonJS({
       };
     }
     __name(makeRequest, "makeRequest");
-    async function resolveBody(body) {
-      if (body == null) {
+    async function resolveBody(body2) {
+      if (body2 == null) {
         return null;
-      } else if (typeof body === "string") {
-        return body;
-      } else if (import_node_util.types.isUint8Array(body)) {
-        return body;
-      } else if (import_node_util.types.isArrayBuffer(body)) {
-        return new Uint8Array(body);
-      } else if (body instanceof import_node_url.URLSearchParams) {
-        return body.toString();
-      } else if (body instanceof DataView) {
-        return new Uint8Array(body.buffer);
-      } else if (body instanceof Blob) {
-        return new Uint8Array(await body.arrayBuffer());
-      } else if (body instanceof FormData) {
-        return body;
-      } else if (body[Symbol.iterator]) {
-        const chunks = [...body];
+      } else if (typeof body2 === "string") {
+        return body2;
+      } else if (import_node_util.types.isUint8Array(body2)) {
+        return body2;
+      } else if (import_node_util.types.isArrayBuffer(body2)) {
+        return new Uint8Array(body2);
+      } else if (body2 instanceof import_node_url.URLSearchParams) {
+        return body2.toString();
+      } else if (body2 instanceof DataView) {
+        return new Uint8Array(body2.buffer);
+      } else if (body2 instanceof Blob) {
+        return new Uint8Array(await body2.arrayBuffer());
+      } else if (body2 instanceof FormData) {
+        return body2;
+      } else if (body2[Symbol.iterator]) {
+        const chunks = [...body2];
         return Buffer.concat(chunks);
-      } else if (body[Symbol.asyncIterator]) {
+      } else if (body2[Symbol.asyncIterator]) {
         const chunks = [];
-        for await (const chunk of body) {
+        for await (const chunk of body2) {
           chunks.push(chunk);
         }
         return Buffer.concat(chunks);
@@ -28664,11 +28664,11 @@ var require_dist5 = __commonJS({
       return res.arrayBuffer();
     }
     __name(parseResponse, "parseResponse");
-    function hasSublimit(bucketRoute, body, method) {
+    function hasSublimit(bucketRoute, body2, method) {
       if (bucketRoute === "/channels/:id") {
-        if (typeof body !== "object" || body === null) return false;
+        if (typeof body2 !== "object" || body2 === null) return false;
         if (method !== "PATCH") return false;
-        const castedBody = body;
+        const castedBody = body2;
         return ["name", "topic"].some((key4) => Reflect.has(castedBody, key4));
       }
       return true;
@@ -31880,7 +31880,7 @@ var require_ChannelFlagsBitField = __commonJS({
 var require_Constants = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Constants.js"(exports2) {
     "use strict";
-    var { ChannelType: ChannelType6, MessageType, ComponentType: ComponentType3, ImageFormat, StickerFormatType } = require_v106();
+    var { ChannelType: ChannelType7, MessageType, ComponentType: ComponentType3, ImageFormat, StickerFormatType } = require_v106();
     exports2.MaxBulkDeletableMessageAge = 12096e5;
     exports2.SweeperKeys = [
       "autoModerationRules",
@@ -31907,18 +31907,18 @@ var require_Constants = __commonJS({
       MessageType.ContextMenuCommand
     ];
     exports2.GuildTextBasedChannelTypes = [
-      ChannelType6.GuildText,
-      ChannelType6.GuildAnnouncement,
-      ChannelType6.AnnouncementThread,
-      ChannelType6.PublicThread,
-      ChannelType6.PrivateThread,
-      ChannelType6.GuildVoice,
-      ChannelType6.GuildStageVoice
+      ChannelType7.GuildText,
+      ChannelType7.GuildAnnouncement,
+      ChannelType7.AnnouncementThread,
+      ChannelType7.PublicThread,
+      ChannelType7.PrivateThread,
+      ChannelType7.GuildVoice,
+      ChannelType7.GuildStageVoice
     ];
-    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType6.DM, ChannelType6.GroupDM];
-    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType6.DM];
-    exports2.ThreadChannelTypes = [ChannelType6.AnnouncementThread, ChannelType6.PublicThread, ChannelType6.PrivateThread];
-    exports2.VoiceBasedChannelTypes = [ChannelType6.GuildVoice, ChannelType6.GuildStageVoice];
+    exports2.TextBasedChannelTypes = [...exports2.GuildTextBasedChannelTypes, ChannelType7.DM, ChannelType7.GroupDM];
+    exports2.SendableChannels = [...exports2.GuildTextBasedChannelTypes, ChannelType7.DM];
+    exports2.ThreadChannelTypes = [ChannelType7.AnnouncementThread, ChannelType7.PublicThread, ChannelType7.PrivateThread];
+    exports2.VoiceBasedChannelTypes = [ChannelType7.GuildVoice, ChannelType7.GuildStageVoice];
     exports2.SelectMenuTypes = [
       ComponentType3.StringSelect,
       ComponentType3.UserSelect,
@@ -31977,7 +31977,7 @@ var require_BaseChannel = __commonJS({
     "use strict";
     var { channelLink, channelMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType7, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var ChannelFlagsBitField = require_ChannelFlagsBitField();
     var { ThreadChannelTypes } = require_Constants();
@@ -32078,7 +32078,7 @@ var require_BaseChannel = __commonJS({
        * @returns {boolean}
        */
       isDMBased() {
-        return [ChannelType6.DM, ChannelType6.GroupDM].includes(this.type);
+        return [ChannelType7.DM, ChannelType7.GroupDM].includes(this.type);
       }
       /**
        * Indicates whether this channel is {@link BaseGuildVoiceChannel voice-based}.
@@ -32231,7 +32231,7 @@ var require_CachedManager = __commonJS({
 var require_PermissionsBitField = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/PermissionsBitField.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var BitField = require_BitField();
     var PermissionsBitField3 = class extends BitField {
       /**
@@ -32240,13 +32240,13 @@ var require_PermissionsBitField = __commonJS({
        * @memberof PermissionsBitField
        * @see {@link https://discord.com/developers/docs/topics/permissions#permissions-bitwise-permission-flags}
        */
-      static Flags = PermissionFlagsBits6;
+      static Flags = PermissionFlagsBits7;
       /**
        * Bitfield representing every permission combined
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static All = Object.values(PermissionFlagsBits6).reduce((all, p) => all | p, 0n);
+      static All = Object.values(PermissionFlagsBits7).reduce((all, p) => all | p, 0n);
       /**
        * Bitfield representing the default permissions for users
        * @type {bigint}
@@ -32258,7 +32258,7 @@ var require_PermissionsBitField = __commonJS({
        * @type {bigint}
        * @memberof PermissionsBitField
        */
-      static StageModerator = PermissionFlagsBits6.ManageChannels | PermissionFlagsBits6.MuteMembers | PermissionFlagsBits6.MoveMembers;
+      static StageModerator = PermissionFlagsBits7.ManageChannels | PermissionFlagsBits7.MuteMembers | PermissionFlagsBits7.MoveMembers;
       /**
        * @type {bigint}
        * @memberof PermissionsBitField
@@ -32285,7 +32285,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {string[]}
        */
       missing(bits, checkAdmin = true) {
-        return checkAdmin && this.has(PermissionFlagsBits6.Administrator) ? [] : super.missing(bits);
+        return checkAdmin && this.has(PermissionFlagsBits7.Administrator) ? [] : super.missing(bits);
       }
       /**
        * Checks whether the bitfield has a permission, or any of multiple permissions.
@@ -32294,7 +32294,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       any(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits6.Administrator) || super.any(permission);
+        return checkAdmin && super.has(PermissionFlagsBits7.Administrator) || super.any(permission);
       }
       /**
        * Checks whether the bitfield has a permission, or multiple permissions.
@@ -32303,7 +32303,7 @@ var require_PermissionsBitField = __commonJS({
        * @returns {boolean}
        */
       has(permission, checkAdmin = true) {
-        return checkAdmin && super.has(PermissionFlagsBits6.Administrator) || super.has(permission);
+        return checkAdmin && super.has(PermissionFlagsBits7.Administrator) || super.has(permission);
       }
       /**
        * Gets an {@link Array} of bitfield names based on the permissions available.
@@ -32341,7 +32341,7 @@ var require_Role = __commonJS({
     "use strict";
     var { roleMention } = require_dist7();
     var { DiscordSnowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionsBitField3 = require_PermissionsBitField();
@@ -32453,7 +32453,7 @@ var require_Role = __commonJS({
       get editable() {
         if (this.managed) return false;
         const clientMember = this.guild.members.resolve(this.client.user);
-        if (!clientMember.permissions.has(PermissionFlagsBits6.ManageRoles)) return false;
+        if (!clientMember.permissions.has(PermissionFlagsBits7.ManageRoles)) return false;
         return clientMember.roles.highest.comparePositionTo(this) > 0;
       }
       /**
@@ -33023,7 +33023,7 @@ var require_GuildChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildChannel.js"(exports2, module2) {
     "use strict";
     var { Snowflake } = require_cjs();
-    var { PermissionFlagsBits: PermissionFlagsBits6, ChannelType: ChannelType6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7, ChannelType: ChannelType7 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var PermissionOverwriteManager = require_PermissionOverwriteManager();
@@ -33101,7 +33101,7 @@ var require_GuildChannel = __commonJS({
        * @readonly
        */
       get position() {
-        const selfIsCategory = this.type === ChannelType6.GuildCategory;
+        const selfIsCategory = this.type === ChannelType7.GuildCategory;
         const types = getSortableGroupTypes(this.type);
         let count = 0;
         for (const channel of this.guild.channels.cache.values()) {
@@ -33164,7 +33164,7 @@ var require_GuildChannel = __commonJS({
         }
         const roles2 = member.roles.cache;
         const permissions = new PermissionsBitField3(roles2.map((role) => role.permissions));
-        if (checkAdmin && permissions.has(PermissionFlagsBits6.Administrator)) {
+        if (checkAdmin && permissions.has(PermissionFlagsBits7.Administrator)) {
           return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
         const overwrites = this.overwritesFor(member, true, roles2);
@@ -33179,7 +33179,7 @@ var require_GuildChannel = __commonJS({
        * @private
        */
       rolePermissions(role, checkAdmin) {
-        if (checkAdmin && role.permissions.has(PermissionFlagsBits6.Administrator)) {
+        if (checkAdmin && role.permissions.has(PermissionFlagsBits7.Administrator)) {
           return new PermissionsBitField3(PermissionsBitField3.All).freeze();
         }
         const basePermissions = new PermissionsBitField3([role.permissions, role.guild.roles.everyone.permissions]);
@@ -33205,7 +33205,7 @@ var require_GuildChannel = __commonJS({
        */
       get members() {
         return this.guild.members.cache.filter(
-          (member) => this.permissionsFor(member).has(PermissionFlagsBits6.ViewChannel, false)
+          (member) => this.permissionsFor(member).has(PermissionFlagsBits7.ViewChannel, false)
         );
       }
       /**
@@ -33339,10 +33339,10 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
+        if (permissions.has(PermissionFlagsBits7.Administrator, false)) return true;
         if (this.guild.members.me.communicationDisabledUntilTimestamp > Date.now()) return false;
-        const baseBitfield = PermissionFlagsBits6.ViewChannel | PermissionFlagsBits6.ManageChannels;
-        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits6.Connect : baseBitfield;
+        const baseBitfield = PermissionFlagsBits7.ViewChannel | PermissionFlagsBits7.ManageChannels;
+        const bitfield = VoiceBasedChannelTypes.includes(this.type) ? baseBitfield | PermissionFlagsBits7.Connect : baseBitfield;
         return permissions.has(bitfield, false);
       }
       /**
@@ -33354,7 +33354,7 @@ var require_GuildChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits6.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits7.ViewChannel, false);
       }
       /**
        * Deletes this channel.
@@ -33421,7 +33421,7 @@ var require_Util = __commonJS({
     var { parse } = require("node:path");
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType: ChannelType6, RouteBases, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType7, RouteBases, Routes: Routes2 } = require_v106();
     var { fetch: fetch2 } = require_undici();
     var Colors = require_Colors();
     var { DiscordjsError: DiscordjsError2, DiscordjsRangeError: DiscordjsRangeError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -33490,24 +33490,24 @@ var require_Util = __commonJS({
       };
     }
     var TextSortableGroupTypes = [
-      ChannelType6.GuildText,
-      ChannelType6.GuildAnnouncement,
-      ChannelType6.GuildForum,
-      ChannelType6.GuildMedia
+      ChannelType7.GuildText,
+      ChannelType7.GuildAnnouncement,
+      ChannelType7.GuildForum,
+      ChannelType7.GuildMedia
     ];
-    var VoiceSortableGroupTypes = [ChannelType6.GuildVoice, ChannelType6.GuildStageVoice];
-    var CategorySortableGroupTypes = [ChannelType6.GuildCategory];
+    var VoiceSortableGroupTypes = [ChannelType7.GuildVoice, ChannelType7.GuildStageVoice];
+    var CategorySortableGroupTypes = [ChannelType7.GuildCategory];
     function getSortableGroupTypes(type) {
       switch (type) {
-        case ChannelType6.GuildText:
-        case ChannelType6.GuildAnnouncement:
-        case ChannelType6.GuildForum:
-        case ChannelType6.GuildMedia:
+        case ChannelType7.GuildText:
+        case ChannelType7.GuildAnnouncement:
+        case ChannelType7.GuildForum:
+        case ChannelType7.GuildMedia:
           return TextSortableGroupTypes;
-        case ChannelType6.GuildVoice:
-        case ChannelType6.GuildStageVoice:
+        case ChannelType7.GuildVoice:
+        case ChannelType7.GuildStageVoice:
           return VoiceSortableGroupTypes;
-        case ChannelType6.GuildCategory:
+        case ChannelType7.GuildCategory:
           return CategorySortableGroupTypes;
         default:
           return [type];
@@ -33582,7 +33582,7 @@ var require_Util = __commonJS({
               return user ? `@${user.displayName}` : match;
             }
             case "@&": {
-              if (channel.type === ChannelType6.DM) return match;
+              if (channel.type === ChannelType7.DM) return match;
               const role = channel.guild.roles.cache.get(id3);
               return role ? `@${role.name}` : match;
             }
@@ -35708,7 +35708,7 @@ var require_InviteGuild = __commonJS({
 var require_Invite = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/Invite.js"(exports2, module2) {
     "use strict";
-    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { RouteBases, Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var Base = require_Base();
     var { GuildScheduledEvent } = require_GuildScheduledEvent();
     var IntegrationApplication = require_IntegrationApplication();
@@ -35842,7 +35842,7 @@ var require_Invite = __commonJS({
         if (!guild || !this.client.guilds.cache.has(guild.id)) return false;
         if (!guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
         return Boolean(
-          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits6.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits6.ManageGuild)
+          this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits7.ManageChannels, false) || guild.members.me.permissions.has(PermissionFlagsBits7.ManageGuild)
         );
       }
       /**
@@ -37802,8 +37802,8 @@ var require_ApplicationEmojiManager = __commonJS({
       async create({ attachment, name }) {
         attachment = await resolveImage(attachment);
         if (!attachment) throw new DiscordjsTypeError2(ErrorCodes2.ReqResourceType);
-        const body = { image: attachment, name };
-        const emoji2 = await this.client.rest.post(Routes2.applicationEmojis(this.application.id), { body });
+        const body2 = { image: attachment, name };
+        const emoji2 = await this.client.rest.post(Routes2.applicationEmojis(this.application.id), { body: body2 });
         return this._add(emoji2);
       }
       /**
@@ -38338,12 +38338,12 @@ var require_ClientApplication = __commonJS({
         }
         if ("integration_types_config" in data) {
           this.integrationTypesConfig = Object.fromEntries(
-            Object.entries(data.integration_types_config).map(([key4, config2]) => {
+            Object.entries(data.integration_types_config).map(([key4, config]) => {
               let oauth2InstallParams = null;
-              if (config2.oauth2_install_params) {
+              if (config.oauth2_install_params) {
                 oauth2InstallParams = {
-                  scopes: config2.oauth2_install_params.scopes,
-                  permissions: new PermissionsBitField3(config2.oauth2_install_params.permissions).freeze()
+                  scopes: config.oauth2_install_params.scopes,
+                  permissions: new PermissionsBitField3(config.oauth2_install_params.permissions).freeze()
                 };
               }
               const context = {
@@ -40790,8 +40790,8 @@ ${givenBlock}`;
         const message = options2.stylize(this.message, "regexp");
         const errors = this.errors.map(([key4, error]) => {
           const property = _CombinedPropertyError2.formatProperty(key4, options2);
-          const body = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
-          return `  input${property}${padding}${body}`;
+          const body2 = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
+          return `  input${property}${padding}${body2}`;
         }).join("\n\n");
         return `${header}
   ${message}
@@ -41467,8 +41467,8 @@ ${givenBlock}`;
         const message = options2.stylize(this.message, "regexp");
         const errors = this.errors.map((error, i3) => {
           const index = options2.stylize((i3 + 1).toString(), "number");
-          const body = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
-          return `  ${index} ${body}`;
+          const body2 = error[customInspectSymbolStackLess](depth - 1, newOptions).replace(/\n/g, padding);
+          return `  ${index} ${body2}`;
         }).join("\n\n");
         return `${header}
   ${message}
@@ -48629,7 +48629,7 @@ var require_GuildEmojiRoleManager = __commonJS({
 var require_GuildEmoji = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildEmoji.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var BaseGuildEmoji = require_BaseGuildEmoji();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildEmojiRoleManager = require_GuildEmojiRoleManager();
@@ -48662,7 +48662,7 @@ var require_GuildEmoji = __commonJS({
        */
       get deletable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits6.ManageGuildExpressions);
+        return !this.managed && this.guild.members.me.permissions.has(PermissionFlagsBits7.ManageGuildExpressions);
       }
       /**
        * A manager for roles this emoji is active for.
@@ -49978,10 +49978,10 @@ var require_Message = __commonJS({
     var { DiscordSnowflake } = require_cjs();
     var {
       InteractionType,
-      ChannelType: ChannelType6,
+      ChannelType: ChannelType7,
       MessageType,
       MessageFlags: MessageFlags2,
-      PermissionFlagsBits: PermissionFlagsBits6,
+      PermissionFlagsBits: PermissionFlagsBits7,
       MessageReferenceType
     } = require_v106();
     var Attachment = require_Attachment();
@@ -50437,7 +50437,7 @@ var require_Message = __commonJS({
           if (this.channel.archived) return false;
           if (this.channel.locked) {
             const permissions = this.channel.permissionsFor(this.client.user);
-            if (!permissions?.has(PermissionFlagsBits6.ManageThreads, true)) return false;
+            if (!permissions?.has(PermissionFlagsBits7.ManageThreads, true)) return false;
           }
         }
         return precheck;
@@ -50457,8 +50457,8 @@ var require_Message = __commonJS({
         }
         const permissions = this.channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
-        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits6.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
+        if (permissions.has(PermissionFlagsBits7.Administrator, false)) return true;
+        return this.type !== MessageType.AutoModerationAction && this.author.id === this.client.user.id || permissions.has(PermissionFlagsBits7.ManageMessages, false) && !this.guild.members.me.isCommunicationDisabled();
       }
       /**
        * Whether the message is bulk deletable by the client user
@@ -50469,7 +50469,7 @@ var require_Message = __commonJS({
        * channel.bulkDelete(messages.filter(message => message.bulkDeletable));
        */
       get bulkDeletable() {
-        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits6.ManageMessages, false)) ?? false;
+        return (this.inGuild() && Date.now() - this.createdTimestamp < MaxBulkDeletableMessageAge && this.deletable && this.channel?.permissionsFor(this.client.user).has(PermissionFlagsBits7.ManageMessages, false)) ?? false;
       }
       /**
        * Whether the message is pinnable by the client user
@@ -50483,7 +50483,7 @@ var require_Message = __commonJS({
         if (!channel || channel.isVoiceBased() || !channel.viewable) return false;
         const permissions = channel?.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits6.ReadMessageHistory | PermissionFlagsBits6.PinMessages);
+        return permissions.has(PermissionFlagsBits7.ReadMessageHistory | PermissionFlagsBits7.PinMessages);
       }
       /**
        * Fetches the Message this crosspost/reply/pin-add references, if available to the client
@@ -50504,10 +50504,10 @@ var require_Message = __commonJS({
        * @readonly
        */
       get crosspostable() {
-        const bitfield = PermissionFlagsBits6.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField3.DefaultBit : PermissionFlagsBits6.ManageMessages);
+        const bitfield = PermissionFlagsBits7.SendMessages | (this.author.id === this.client.user.id ? PermissionsBitField3.DefaultBit : PermissionFlagsBits7.ManageMessages);
         const { channel } = this;
         return Boolean(
-          channel?.type === ChannelType6.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
+          channel?.type === ChannelType7.GuildAnnouncement && !this.flags.has(MessageFlags2.Crossposted) && this.reference?.type !== MessageReferenceType.Forward && this.type === MessageType.Default && !this.poll && channel.viewable && channel.permissionsFor(this.client.user)?.has(bitfield, false)
         );
       }
       /**
@@ -50676,7 +50676,7 @@ var require_Message = __commonJS({
        */
       async startThread(options2 = {}) {
         if (!this.channel) throw new DiscordjsError2(ErrorCodes2.ChannelNotCached);
-        if (![ChannelType6.GuildText, ChannelType6.GuildAnnouncement].includes(this.channel.type)) {
+        if (![ChannelType7.GuildText, ChannelType7.GuildAnnouncement].includes(this.channel.type)) {
           throw new DiscordjsError2(ErrorCodes2.MessageThreadParent);
         }
         if (this.hasThread) throw new DiscordjsError2(ErrorCodes2.MessageExistingThread);
@@ -50926,14 +50926,14 @@ var require_Webhook = __commonJS({
         } else {
           messagePayload = MessagePayload.create(this, options2).resolveBody();
         }
-        const { body, files } = await messagePayload.resolveFiles();
+        const { body: body2, files } = await messagePayload.resolveFiles();
         const query = makeURLSearchParams2({
           wait: true,
           thread_id: messagePayload.options.threadId,
           with_components: messagePayload.options.withComponents
         });
         const d = await this.client.rest.post(Routes2.webhook(this.id, this.token), {
-          body,
+          body: body2,
           files,
           query,
           auth: false
@@ -50959,12 +50959,12 @@ var require_Webhook = __commonJS({
        * }).catch(console.error);
        * @see {@link https://api.slack.com/messaging/webhooks}
        */
-      async sendSlackMessage(body) {
+      async sendSlackMessage(body2) {
         if (!this.token) throw new DiscordjsError2(ErrorCodes2.WebhookTokenUnavailable);
         const data = await this.client.rest.post(Routes2.webhookPlatform(this.id, this.token, "slack"), {
           query: makeURLSearchParams2({ wait: true }),
           auth: false,
-          body
+          body: body2
         });
         return data.toString() === "ok";
       }
@@ -51032,7 +51032,7 @@ var require_Webhook = __commonJS({
         let messagePayload;
         if (options2 instanceof MessagePayload) messagePayload = options2;
         else messagePayload = MessagePayload.create(this, options2);
-        const { body, files } = await messagePayload.resolveBody().resolveFiles();
+        const { body: body2, files } = await messagePayload.resolveBody().resolveFiles();
         const query = makeURLSearchParams2({
           thread_id: messagePayload.options.threadId,
           with_components: messagePayload.options.withComponents
@@ -51040,7 +51040,7 @@ var require_Webhook = __commonJS({
         const d = await this.client.rest.patch(
           Routes2.webhookMessage(this.id, this.token, typeof message === "string" ? message : message.id),
           {
-            body,
+            body: body2,
             files,
             query,
             auth: false
@@ -51264,7 +51264,7 @@ var require_WebhookClient = __commonJS({
 var require_VoiceState = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceState.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType7, Routes: Routes2 } = require_v106();
     var Base = require_Base();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var VoiceState = class extends Base {
@@ -51408,7 +51408,7 @@ var require_VoiceState = __commonJS({
        * @returns {Promise<VoiceState>}
        */
       async edit(options2) {
-        if (this.channel?.type !== ChannelType6.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
+        if (this.channel?.type !== ChannelType7.GuildStageVoice) throw new DiscordjsError2(ErrorCodes2.VoiceNotStageChannel);
         const target = this.client.user.id === this.id ? "@me" : this.id;
         if (target !== "@me" && options2.requestToSpeak !== void 0) {
           throw new DiscordjsError2(ErrorCodes2.VoiceStateNotOwn);
@@ -51697,7 +51697,7 @@ var require_GuildMemberFlagsBitField = __commonJS({
 var require_GuildMember = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/GuildMember.js"(exports2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var Base = require_Base();
     var VoiceState = require_VoiceState();
     var TextBasedChannel = require_TextBasedChannel();
@@ -51949,7 +51949,7 @@ var require_GuildMember = __commonJS({
        */
       get kickable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits6.KickMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits7.KickMembers);
       }
       /**
        * Whether this member is bannable by the client user
@@ -51958,7 +51958,7 @@ var require_GuildMember = __commonJS({
        */
       get bannable() {
         if (!this.guild.members.me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits6.BanMembers);
+        return this.manageable && this.guild.members.me.permissions.has(PermissionFlagsBits7.BanMembers);
       }
       /**
        * Whether this member is moderatable by the client user
@@ -51966,7 +51966,7 @@ var require_GuildMember = __commonJS({
        * @readonly
        */
       get moderatable() {
-        return !this.permissions.has(PermissionFlagsBits6.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits6.ModerateMembers) ?? false);
+        return !this.permissions.has(PermissionFlagsBits7.Administrator) && this.manageable && (this.guild.members.me?.permissions.has(PermissionFlagsBits7.ModerateMembers) ?? false);
       }
       /**
        * Whether this member is currently timed out
@@ -52353,8 +52353,8 @@ var require_MessageManager = __commonJS({
       async edit(message, options2) {
         const messageId = this.resolveId(message);
         if (!messageId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "message", "MessageResolvable");
-        const { body, files } = await (options2 instanceof MessagePayload ? options2 : MessagePayload.create(message instanceof Message ? message : this, options2)).resolveBody().resolveFiles();
-        const d = await this.client.rest.patch(Routes2.channelMessage(this.channel.id, messageId), { body, files });
+        const { body: body2, files } = await (options2 instanceof MessagePayload ? options2 : MessagePayload.create(message instanceof Message ? message : this, options2)).resolveBody().resolveFiles();
+        const d = await this.client.rest.patch(Routes2.channelMessage(this.channel.id, messageId), { body: body2, files });
         const existing = this.cache.get(messageId);
         if (existing) {
           const clone = existing._clone();
@@ -52955,8 +52955,8 @@ var require_TextBasedChannel = __commonJS({
         } else {
           messagePayload = MessagePayload.create(this, options2).resolveBody();
         }
-        const { body, files } = await messagePayload.resolveFiles();
-        const d = await this.client.rest.post(Routes2.channelMessages(this.id), { body, files });
+        const { body: body2, files } = await messagePayload.resolveFiles();
+        const d = await this.client.rest.post(Routes2.channelMessages(this.id), { body: body2, files });
         return this.messages.cache.get(d.id) ?? this.messages._add(d);
       }
       /**
@@ -53765,7 +53765,7 @@ var require_Partials = __commonJS({
 var require_Action = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/client/actions/Action.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType6 } = require_v106();
+    var { ChannelType: ChannelType7 } = require_v106();
     var { Poll } = require_Poll();
     var { PollAnswer } = require_PollAnswer();
     var Partials2 = require_Partials();
@@ -53787,7 +53787,7 @@ var require_Action = __commonJS({
           if (!data.recipients.some((existingRecipient) => recipient.id === existingRecipient.id)) {
             payloadData.recipients = [...data.recipients, recipient];
           }
-        } else if (data.type === ChannelType6.DM || data.type === ChannelType6.GroupDM) {
+        } else if (data.type === ChannelType7.DM || data.type === ChannelType7.GroupDM) {
           const recipient = data.author ?? data.user ?? { id: data.user_id };
           payloadData.recipients = [recipient];
         }
@@ -54213,7 +54213,7 @@ var require_DMChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/DMChannel.js"(exports2, module2) {
     "use strict";
     var { userMention } = require_dist7();
-    var { ChannelType: ChannelType6 } = require_v106();
+    var { ChannelType: ChannelType7 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var DMMessageManager = require_DMMessageManager();
@@ -54221,7 +54221,7 @@ var require_DMChannel = __commonJS({
     var DMChannel = class extends BaseChannel {
       constructor(client2, data) {
         super(client2, data);
-        this.type = ChannelType6.DM;
+        this.type = ChannelType7.DM;
         this.messages = new DMMessageManager(this);
       }
       _patch(data) {
@@ -54381,14 +54381,14 @@ var require_GuildForumThreadManager = __commonJS({
         if (!message) {
           throw new DiscordjsTypeError2(ErrorCodes2.GuildForumMessageRequired);
         }
-        const { body, files } = await (message instanceof MessagePayload ? message : MessagePayload.create(this, message)).resolveBody().resolveFiles();
+        const { body: body2, files } = await (message instanceof MessagePayload ? message : MessagePayload.create(this, message)).resolveBody().resolveFiles();
         const data = await this.client.rest.post(Routes2.threads(this.channel.id), {
           body: {
             name,
             auto_archive_duration: autoArchiveDuration,
             rate_limit_per_user: rateLimitPerUser,
             applied_tags: appliedTags,
-            message: body
+            message: body2
           },
           files,
           reason
@@ -54843,7 +54843,7 @@ var require_ThreadChannel = __commonJS({
     "use strict";
     var { DiscordAPIError } = require_dist5();
     var { lazy } = require_dist();
-    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType6, PermissionFlagsBits: PermissionFlagsBits6, Routes: Routes2 } = require_v106();
+    var { RESTJSONErrorCodes, ChannelFlags, ChannelType: ChannelType7, PermissionFlagsBits: PermissionFlagsBits7, Routes: Routes2 } = require_v106();
     var { BaseChannel } = require_BaseChannel();
     var getThreadOnlyChannel = lazy(() => require_ThreadOnlyChannel());
     var TextBasedChannel = require_TextBasedChannel();
@@ -54877,7 +54877,7 @@ var require_ThreadChannel = __commonJS({
         }
         if ("thread_metadata" in data) {
           this.locked = data.thread_metadata.locked ?? false;
-          this.invitable = this.type === ChannelType6.PrivateThread ? data.thread_metadata.invitable ?? false : null;
+          this.invitable = this.type === ChannelType7.PrivateThread ? data.thread_metadata.invitable ?? false : null;
           this.archived = data.thread_metadata.archived;
           this.autoArchiveDuration = data.thread_metadata.auto_archive_duration;
           this.archiveTimestamp = Date.parse(data.thread_metadata.archive_timestamp);
@@ -54891,7 +54891,7 @@ var require_ThreadChannel = __commonJS({
           this.archiveTimestamp ??= null;
           this.invitable ??= null;
         }
-        this._createdTimestamp ??= this.type === ChannelType6.PrivateThread ? super.createdTimestamp : null;
+        this._createdTimestamp ??= this.type === ChannelType7.PrivateThread ? super.createdTimestamp : null;
         if ("last_message_id" in data) {
           this.lastMessageId = data.last_message_id;
         } else {
@@ -55064,7 +55064,7 @@ var require_ThreadChannel = __commonJS({
             auto_archive_duration: options2.autoArchiveDuration,
             rate_limit_per_user: options2.rateLimitPerUser,
             locked: options2.locked,
-            invitable: this.type === ChannelType6.PrivateThread ? options2.invitable : void 0,
+            invitable: this.type === ChannelType7.PrivateThread ? options2.invitable : void 0,
             applied_tags: options2.appliedTags,
             flags: "flags" in options2 ? ChannelFlagsBitField.resolve(options2.flags) : void 0
           },
@@ -55111,7 +55111,7 @@ var require_ThreadChannel = __commonJS({
        * @returns {Promise<ThreadChannel>}
        */
       async setInvitable(invitable = true, reason) {
-        if (this.type !== ChannelType6.PrivateThread) {
+        if (this.type !== ChannelType7.PrivateThread) {
           throw new DiscordjsRangeError2(ErrorCodes2.ThreadInvitableType, this.type);
         }
         return this.edit({ invitable, reason });
@@ -55194,7 +55194,7 @@ var require_ThreadChannel = __commonJS({
        * @readonly
        */
       get editable() {
-        return this.ownerId === this.client.user.id && (this.type !== ChannelType6.PrivateThread || this.joined) || this.manageable;
+        return this.ownerId === this.client.user.id && (this.type !== ChannelType7.PrivateThread || this.joined) || this.manageable;
       }
       /**
        * Whether the thread is joinable by the client user
@@ -55203,7 +55203,7 @@ var require_ThreadChannel = __commonJS({
        */
       get joinable() {
         return !this.archived && !this.joined && this.permissionsFor(this.client.user)?.has(
-          this.type === ChannelType6.PrivateThread ? PermissionFlagsBits6.ManageThreads : PermissionFlagsBits6.ViewChannel,
+          this.type === ChannelType7.PrivateThread ? PermissionFlagsBits7.ManageThreads : PermissionFlagsBits7.ViewChannel,
           false
         );
       }
@@ -55215,8 +55215,8 @@ var require_ThreadChannel = __commonJS({
       get manageable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits6.ManageThreads, false);
+        if (permissions.has(PermissionFlagsBits7.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits7.ManageThreads, false);
       }
       /**
        * Whether the thread is viewable by the client user
@@ -55227,7 +55227,7 @@ var require_ThreadChannel = __commonJS({
         if (this.client.user.id === this.guild.ownerId) return true;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        return permissions.has(PermissionFlagsBits6.ViewChannel, false);
+        return permissions.has(PermissionFlagsBits7.ViewChannel, false);
       }
       /**
        * Whether the client user can send messages in this thread
@@ -55237,8 +55237,8 @@ var require_ThreadChannel = __commonJS({
       get sendable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
-        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType6.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits6.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
+        if (permissions.has(PermissionFlagsBits7.Administrator, false)) return true;
+        return !(this.archived && this.locked && !this.manageable) && (this.type !== ChannelType7.PrivateThread || this.joined || this.manageable) && permissions.has(PermissionFlagsBits7.SendMessagesInThreads, false) && this.guild.members.me.communicationDisabledUntilTimestamp < Date.now();
       }
       /**
        * Whether the thread is unarchivable by the client user
@@ -55461,7 +55461,7 @@ var require_ThreadManager = __commonJS({
 var require_GuildTextThreadManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildTextThreadManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType7, Routes: Routes2 } = require_v106();
     var ThreadManager = require_ThreadManager();
     var { DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var GuildTextThreadManager = class extends ThreadManager {
@@ -55517,12 +55517,12 @@ var require_GuildTextThreadManager = __commonJS({
         reason,
         rateLimitPerUser
       } = {}) {
-        let resolvedType = this.channel.type === ChannelType6.GuildAnnouncement ? ChannelType6.AnnouncementThread : ChannelType6.PublicThread;
+        let resolvedType = this.channel.type === ChannelType7.GuildAnnouncement ? ChannelType7.AnnouncementThread : ChannelType7.PublicThread;
         let startMessageId;
         if (startMessage) {
           startMessageId = this.channel.messages.resolveId(startMessage);
           if (!startMessageId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "startMessage", "MessageResolvable");
-        } else if (this.channel.type !== ChannelType6.GuildAnnouncement) {
+        } else if (this.channel.type !== ChannelType7.GuildAnnouncement) {
           resolvedType = type ?? resolvedType;
         }
         const data = await this.client.rest.post(Routes2.threads(this.channel.id, startMessageId), {
@@ -55530,7 +55530,7 @@ var require_GuildTextThreadManager = __commonJS({
             name,
             auto_archive_duration: autoArchiveDuration,
             type: resolvedType,
-            invitable: resolvedType === ChannelType6.PrivateThread ? invitable : void 0,
+            invitable: resolvedType === ChannelType7.PrivateThread ? invitable : void 0,
             rate_limit_per_user: rateLimitPerUser
           },
           reason
@@ -55732,7 +55732,7 @@ var require_BaseGuildVoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/BaseGuildVoiceChannel.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var GuildChannel = require_GuildChannel();
     var TextBasedChannel = require_TextBasedChannel();
     var GuildMessageManager = require_GuildMessageManager();
@@ -55803,8 +55803,8 @@ var require_BaseGuildVoiceChannel = __commonJS({
         if (!this.viewable) return false;
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits6.Connect, false);
+        if (permissions.has(PermissionFlagsBits7.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits7.Connect, false);
       }
       /**
        * Creates an invite to this guild channel.
@@ -55988,7 +55988,7 @@ var require_TextChannel = __commonJS({
 var require_VoiceChannel = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/structures/VoiceChannel.js"(exports2, module2) {
     "use strict";
-    var { PermissionFlagsBits: PermissionFlagsBits6, Routes: Routes2 } = require_v106();
+    var { PermissionFlagsBits: PermissionFlagsBits7, Routes: Routes2 } = require_v106();
     var BaseGuildVoiceChannel = require_BaseGuildVoiceChannel();
     var VoiceChannel = class extends BaseGuildVoiceChannel {
       /**
@@ -55998,7 +55998,7 @@ var require_VoiceChannel = __commonJS({
        */
       get joinable() {
         if (!super.joinable) return false;
-        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits6.MoveMembers, false)) return false;
+        if (this.full && !this.permissionsFor(this.client.user).has(PermissionFlagsBits7.MoveMembers, false)) return false;
         return true;
       }
       /**
@@ -56009,8 +56009,8 @@ var require_VoiceChannel = __commonJS({
       get speakable() {
         const permissions = this.permissionsFor(this.client.user);
         if (!permissions) return false;
-        if (permissions.has(PermissionFlagsBits6.Administrator, false)) return true;
-        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits6.Speak, false);
+        if (permissions.has(PermissionFlagsBits7.Administrator, false)) return true;
+        return this.guild.members.me.communicationDisabledUntilTimestamp < Date.now() && permissions.has(PermissionFlagsBits7.Speak, false);
       }
       /**
        * @typedef {Object} SendSoundboardSoundOptions
@@ -56194,7 +56194,7 @@ var require_Channels = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/util/Channels.js"(exports2, module2) {
     "use strict";
     var { lazy } = require_dist();
-    var { ChannelType: ChannelType6 } = require_v106();
+    var { ChannelType: ChannelType7 } = require_v106();
     var getCategoryChannel = lazy(() => require_CategoryChannel());
     var getDMChannel = lazy(() => require_DMChannel());
     var getNewsChannel = lazy(() => require_NewsChannel());
@@ -56209,49 +56209,49 @@ var require_Channels = __commonJS({
     function createChannel(client2, data, guild, { allowUnknownGuild } = {}) {
       let channel;
       if (!data.guild_id && !guild) {
-        if (data.recipients && data.type !== ChannelType6.GroupDM || data.type === ChannelType6.DM) {
+        if (data.recipients && data.type !== ChannelType7.GroupDM || data.type === ChannelType7.DM) {
           channel = new (getDMChannel())(client2, data);
-        } else if (data.type === ChannelType6.GroupDM) {
+        } else if (data.type === ChannelType7.GroupDM) {
           channel = new (getPartialGroupDMChannel())(client2, data);
         }
       } else {
         guild ??= client2.guilds.cache.get(data.guild_id);
         if (guild || allowUnknownGuild) {
           switch (data.type) {
-            case ChannelType6.GuildText: {
+            case ChannelType7.GuildText: {
               channel = new (getTextChannel())(guild, data, client2);
               break;
             }
-            case ChannelType6.GuildVoice: {
+            case ChannelType7.GuildVoice: {
               channel = new (getVoiceChannel())(guild, data, client2);
               break;
             }
-            case ChannelType6.GuildCategory: {
+            case ChannelType7.GuildCategory: {
               channel = new (getCategoryChannel())(guild, data, client2);
               break;
             }
-            case ChannelType6.GuildAnnouncement: {
+            case ChannelType7.GuildAnnouncement: {
               channel = new (getNewsChannel())(guild, data, client2);
               break;
             }
-            case ChannelType6.GuildStageVoice: {
+            case ChannelType7.GuildStageVoice: {
               channel = new (getStageChannel())(guild, data, client2);
               break;
             }
-            case ChannelType6.AnnouncementThread:
-            case ChannelType6.PublicThread:
-            case ChannelType6.PrivateThread: {
+            case ChannelType7.AnnouncementThread:
+            case ChannelType7.PublicThread:
+            case ChannelType7.PrivateThread: {
               channel = new (getThreadChannel())(guild, data, client2);
               if (!allowUnknownGuild) channel.parent?.threads.cache.set(channel.id, channel);
               break;
             }
-            case ChannelType6.GuildDirectory:
+            case ChannelType7.GuildDirectory:
               channel = new (getDirectoryChannel())(guild, data, client2);
               break;
-            case ChannelType6.GuildForum:
+            case ChannelType7.GuildForum:
               channel = new (getForumChannel())(guild, data, client2);
               break;
-            case ChannelType6.GuildMedia:
+            case ChannelType7.GuildMedia:
               channel = new (getMediaChannel())(guild, data, client2);
               break;
           }
@@ -63995,12 +63995,12 @@ var require_websocket_server = __commonJS({
         }
         if (options2.port != null) {
           this._server = http.createServer((req, res) => {
-            const body = http.STATUS_CODES[426];
+            const body2 = http.STATUS_CODES[426];
             res.writeHead(426, {
-              "Content-Length": body.length,
+              "Content-Length": body2.length,
               "Content-Type": "text/plain"
             });
-            res.end(body);
+            res.end(body2);
           });
           this._server.listen(
             options2.port,
@@ -68618,7 +68618,7 @@ var require_GuildChannelManager = __commonJS({
     "use strict";
     var process2 = require("node:process");
     var { Collection: Collection2 } = require_dist6();
-    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType7, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var GuildTextThreadManager = require_GuildTextThreadManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
@@ -68881,7 +68881,7 @@ var require_GuildChannelManager = __commonJS({
         if (options2.lockPermissions) {
           if (parentId) {
             const newParent = this.cache.get(parentId);
-            if (newParent?.type === ChannelType6.GuildCategory) {
+            if (newParent?.type === ChannelType7.GuildCategory) {
               permission_overwrites = newParent.permissionOverwrites.cache.map(
                 (overwrite) => PermissionOverwrites.resolve(overwrite, this.guild)
               );
@@ -69087,7 +69087,7 @@ var require_GuildEmojiManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/GuildEmojiManager.js"(exports2, module2) {
     "use strict";
     var { Collection: Collection2 } = require_dist6();
-    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits6 } = require_v106();
+    var { Routes: Routes2, PermissionFlagsBits: PermissionFlagsBits7 } = require_v106();
     var BaseGuildEmojiManager2 = require_BaseGuildEmojiManager();
     var { DiscordjsError: DiscordjsError2, DiscordjsTypeError: DiscordjsTypeError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { resolveImage } = require_DataResolver();
@@ -69125,7 +69125,7 @@ var require_GuildEmojiManager = __commonJS({
       async create({ attachment, name, roles: roles2, reason }) {
         attachment = await resolveImage(attachment);
         if (!attachment) throw new DiscordjsTypeError2(ErrorCodes2.ReqResourceType);
-        const body = { image: attachment, name };
+        const body2 = { image: attachment, name };
         if (roles2) {
           if (!Array.isArray(roles2) && !(roles2 instanceof Collection2)) {
             throw new DiscordjsTypeError2(
@@ -69135,16 +69135,16 @@ var require_GuildEmojiManager = __commonJS({
               true
             );
           }
-          body.roles = [];
+          body2.roles = [];
           for (const role of roles2.values()) {
             const resolvedRole = this.guild.roles.resolveId(role);
             if (!resolvedRole) {
               throw new DiscordjsTypeError2(ErrorCodes2.InvalidElement, "Array or Collection", "options.roles", role);
             }
-            body.roles.push(resolvedRole);
+            body2.roles.push(resolvedRole);
           }
         }
-        const emoji2 = await this.client.rest.post(Routes2.guildEmojis(this.guild.id), { body, reason });
+        const emoji2 = await this.client.rest.post(Routes2.guildEmojis(this.guild.id), { body: body2, reason });
         return this.client.actions.GuildEmojiCreate.handle(this.guild, emoji2).emoji;
       }
       /**
@@ -69226,7 +69226,7 @@ var require_GuildEmojiManager = __commonJS({
         }
         const { me } = this.guild.members;
         if (!me) throw new DiscordjsError2(ErrorCodes2.GuildUncachedMe);
-        if (!me.permissions.any(PermissionFlagsBits6.CreateGuildExpressions | PermissionFlagsBits6.ManageGuildExpressions)) {
+        if (!me.permissions.any(PermissionFlagsBits7.CreateGuildExpressions | PermissionFlagsBits7.ManageGuildExpressions)) {
           throw new DiscordjsError2(ErrorCodes2.MissingManageGuildExpressionsPermission, this.guild);
         }
         const data = await this.client.rest.get(Routes2.guildEmoji(this.guild.id, emoji2.id));
@@ -70458,9 +70458,9 @@ var require_GuildSoundboardSoundManager = __commonJS({
         const resolvedFile = await resolveFile(file);
         const resolvedContentType = contentType ?? resolvedFile.contentType ?? fileTypeMime()(resolvedFile.data)[0];
         const sound = resolveBase64(resolvedFile.data, resolvedContentType);
-        const body = { emoji_id: emojiId, emoji_name: emojiName, name, sound, volume };
+        const body2 = { emoji_id: emojiId, emoji_name: emojiName, name, sound, volume };
         const soundboardSound = await this.client.rest.post(Routes2.guildSoundboardSounds(this.guild.id), {
-          body,
+          body: body2,
           reason
         });
         return this._add(soundboardSound);
@@ -70484,9 +70484,9 @@ var require_GuildSoundboardSoundManager = __commonJS({
         const soundId = this.resolveId(soundboardSound);
         if (!soundId) throw new DiscordjsTypeError2(ErrorCodes2.InvalidType, "soundboardSound", "SoundboardSoundResolvable");
         const { emojiId, emojiName, name, reason, volume } = options2;
-        const body = { emoji_id: emojiId, emoji_name: emojiName, name, volume };
+        const body2 = { emoji_id: emojiId, emoji_name: emojiName, name, volume };
         const data = await this.client.rest.patch(Routes2.guildSoundboardSound(this.guild.id, soundId), {
-          body,
+          body: body2,
           reason
         });
         const existing = this.cache.get(soundId);
@@ -70610,10 +70610,10 @@ var require_GuildStickerManager = __commonJS({
         const resolvedFile = await MessagePayload.resolveFile(file);
         if (!resolvedFile) throw new DiscordjsTypeError2(ErrorCodes2.ReqResourceType);
         file = { ...resolvedFile, key: "file" };
-        const body = { name, tags, description: description ?? "" };
+        const body2 = { name, tags, description: description ?? "" };
         const sticker = await this.client.rest.post(Routes2.guildStickers(this.guild.id), {
           appendToFormData: true,
-          body,
+          body: body2,
           files: [file],
           reason
         });
@@ -71226,7 +71226,7 @@ var require_RoleManager = __commonJS({
             tertiary_color: null
           };
         }
-        const body = {
+        const body2 = {
           name: options2.name,
           colors,
           hoist: options2.hoist,
@@ -71235,7 +71235,7 @@ var require_RoleManager = __commonJS({
           icon,
           unicode_emoji: options2.unicodeEmoji
         };
-        const d = await this.client.rest.patch(Routes2.guildRole(this.guild.id, role.id), { body, reason: options2.reason });
+        const d = await this.client.rest.patch(Routes2.guildRole(this.guild.id, role.id), { body: body2, reason: options2.reason });
         const clone = role._clone();
         clone._patch(d);
         return clone;
@@ -71581,7 +71581,7 @@ var require_Guild = __commonJS({
     var { Collection: Collection2 } = require_dist6();
     var { makeURLSearchParams: makeURLSearchParams2 } = require_dist5();
     var { DiscordSnowflake } = require_cjs();
-    var { ChannelType: ChannelType6, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
+    var { ChannelType: ChannelType7, GuildPremiumTier, Routes: Routes2, GuildFeature } = require_v106();
     var AnonymousGuild = require_AnonymousGuild();
     var GuildAuditLogs = require_GuildAuditLogs();
     var { GuildOnboarding } = require_GuildOnboarding();
@@ -72717,7 +72717,7 @@ var require_Guild = __commonJS({
        * @private
        */
       _sortedChannels(channel) {
-        const channelIsCategory = channel.type === ChannelType6.GuildCategory;
+        const channelIsCategory = channel.type === ChannelType7.GuildCategory;
         const types = getSortableGroupTypes(channel.type);
         return discordSort(
           this.channels.cache.filter(
@@ -73099,7 +73099,7 @@ var require_GuildManager = __commonJS({
 var require_UserManager = __commonJS({
   "node_modules/.pnpm/discord.js@14.27.0/node_modules/discord.js/src/managers/UserManager.js"(exports2, module2) {
     "use strict";
-    var { ChannelType: ChannelType6, Routes: Routes2 } = require_v106();
+    var { ChannelType: ChannelType7, Routes: Routes2 } = require_v106();
     var CachedManager = require_CachedManager();
     var { DiscordjsError: DiscordjsError2, ErrorCodes: ErrorCodes2 } = require_errors2();
     var { GuildMember } = require_GuildMember();
@@ -73134,7 +73134,7 @@ var require_UserManager = __commonJS({
       dmChannel(userId) {
         const expectedRecipientIds = [userId, this.client.user.id];
         return this.client.channels.cache.find(
-          (channel) => channel.type === ChannelType6.DM && channel.recipientId === userId && channel.recipientIds.every((id3) => expectedRecipientIds.includes(id3))
+          (channel) => channel.type === ChannelType7.DM && channel.recipientId === userId && channel.recipientIds.every((id3) => expectedRecipientIds.includes(id3))
         ) ?? null;
       }
       /**
@@ -75758,7 +75758,7 @@ var require_src = __commonJS({
 });
 
 // apps/bot/src/index.ts
-var import_discord8 = __toESM(require_src());
+var import_discord9 = __toESM(require_src());
 
 // apps/bot/src/discord-tickets.ts
 var import_discord = __toESM(require_src());
@@ -80233,9 +80233,10 @@ var PERMISSION_CATALOG = {
   /**
    * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
-   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben, edit = eigene gesendete Discord-Nachrichten laden und
+   * bearbeiten, edit_others = auch Nachrichten anderer Nutzer (und per Link geladene) bearbeiten.
    */
-  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"]
+  messagebuilder: ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles", "edit", "edit_others"]
 };
 var ALL_PERMISSIONS = Object.entries(PERMISSION_CATALOG).flatMap(
   ([module2, actions]) => actions.map((a) => `${module2}.${a}`)
@@ -80640,41 +80641,24 @@ var MODULES = [
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
-  { key: "message_builder", name: "Discord Message Builder", description: "Nachrichten und Embeds bauen, Vorlagen, Versand \xFCber den Bot, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
+  { key: "message_builder", name: "Embed Builder", description: "Discord-Nachrichten und Embeds bauen (JSON-Editor, Vorlagen), \xFCber den Bot oder Webhooks senden, gesendete Nachrichten bearbeiten, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
 var OFF_MODULES = MODULES.filter((m) => m.off).map((m) => m.key);
 var BOT_COMMAND_MODULES = {
-  cad: "cad",
-  bericht: "reports",
   dienstbericht: "reports",
-  person: "mdt",
-  kennzeichen: "mdt",
-  fahndungen: "mdt",
-  fahndung: "mdt",
   shift: "shift_logs",
   dienst: "shift_logs",
   dienststunden: "shift_logs",
   team: "shift_logs",
   dienstpanel: "shift_logs",
   teamliste: "shift_logs",
-  einheiten: "dispatch",
-  einheitstatus: "dispatch",
-  einsaetze: "dispatch",
-  einsatz: "dispatch",
-  einsatzinfo: "dispatch",
-  einsatzstatus: "dispatch",
-  einsatzzuweisen: "dispatch",
-  beschwerde: "investigations",
   abmeldung: "personnel",
   leave: "personnel",
   ausbildung: "personnel",
   verwarnen: "personnel",
   teamchance: "applications",
-  bewerbung: "applications",
-  bewerbungspanel: "applications",
-  qualipanel: "applications",
   support: "support",
   ticket: "support",
   funkcode: "communication",
@@ -81047,12 +81031,27 @@ var mbButtonSchema = external_exports.object({
   style: external_exports.enum(MB_BUTTON_STYLES).default("primary"),
   url: str(4e3),
   disabled: external_exports.boolean().default(false),
-  action: mbActionSchema.default({ type: "reply", text: "" })
+  action: mbActionSchema.default({ type: "reply", text: "" }),
+  /**
+   * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+   * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+   */
+  keepCustomId: str(100)
 });
 var mbSelectOptionSchema = external_exports.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
 var mbRowSchema = external_exports.discriminatedUnion("type", [
   external_exports.object({ id: id2, type: external_exports.literal("buttons"), buttons: external_exports.array(mbButtonSchema).max(25).default([]) }),
-  external_exports.object({ id: id2, type: external_exports.literal("select"), placeholder: str(500), disabled: external_exports.boolean().default(false), options: external_exports.array(mbSelectOptionSchema).max(50).default([]) })
+  external_exports.object({
+    id: id2,
+    type: external_exports.literal("select"),
+    placeholder: str(500),
+    disabled: external_exports.boolean().default(false),
+    options: external_exports.array(mbSelectOptionSchema).max(50).default([]),
+    /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
+    minValues: external_exports.number().int().min(0).max(25).default(1),
+    maxValues: external_exports.number().int().min(1).max(25).default(1),
+    keepCustomId: str(100)
+  })
 ]);
 var mbFieldSchema = external_exports.object({ id: id2, name: str(2e3), value: str(4e3), inline: external_exports.boolean().default(false) });
 var mbEmbedSchema = external_exports.object({
@@ -81092,6 +81091,11 @@ var DISCORD_ERRORS = {
   10003: "Den Kanal gibt es nicht (mehr).",
   10008: "Die Nachricht gibt es nicht (mehr).",
   10015: "Den Webhook gibt es nicht mehr \u2013 in den Webhook-Einstellungen entfernen oder neu anlegen.",
+  10017: "Den Thread gibt es nicht (mehr).",
+  50005: "Diese Nachricht stammt von jemand anderem und kann nicht bearbeitet werden.",
+  50083: "Der Thread ist archiviert \u2013 erst wieder \xF6ffnen.",
+  220001: "Forum-Beitr\xE4ge brauchen einen Titel (Thread-Name).",
+  220003: "In diesem Forum muss ein Tag gew\xE4hlt werden \u2013 bitte in einen bestehenden Beitrag senden.",
   20016: "Langsamer Modus im Kanal aktiv \u2013 sp\xE4ter erneut senden.",
   40005: "Die Nachricht ist zu gro\xDF.",
   50001: "Der Bot hat keinen Zugriff auf diesen Kanal.",
@@ -81110,37 +81114,134 @@ function describeDiscordError(e) {
   if (e.status && e.status >= 500) return "Discord ist gerade nicht erreichbar (Serverfehler) \u2013 sp\xE4ter erneut versuchen.";
   return detail || "Unbekannter Discord-Fehler.";
 }
-var POLICE_APPLICATION_KEY = "@polizei";
-var clip = (s, max) => s.length > max ? `${s.slice(0, max - 1)}\u2026` : s;
-var plain = (s) => s.replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
-var optionOf = (u) => ({
-  label: clip(`${u.name}${u.enabled === false ? " (geschlossen)" : ""}`, 100),
-  value: u.key,
-  ...u.description ? { description: clip(plain(u.description).replace(/\*|_/g, ""), 100) } : {}
+var emojiIn = external_exports.object({ id: external_exports.string().regex(/^\d{15,25}$/).nullish(), name: external_exports.string().max(100).nullish(), animated: external_exports.boolean().optional() }).nullish();
+var linkButtonIn = external_exports.object({ type: external_exports.literal(2), style: external_exports.literal(5), label: external_exports.string().optional(), emoji: emojiIn, url: external_exports.string(), disabled: external_exports.boolean().optional() });
+var actionButtonIn = external_exports.object({ type: external_exports.literal(2), style: external_exports.union([external_exports.literal(1), external_exports.literal(2), external_exports.literal(3), external_exports.literal(4)]), label: external_exports.string().optional(), emoji: emojiIn, custom_id: external_exports.string().min(1).max(100), disabled: external_exports.boolean().optional() });
+var selectIn = external_exports.object({
+  type: external_exports.literal(3),
+  custom_id: external_exports.string().min(1).max(100),
+  placeholder: external_exports.string().optional(),
+  disabled: external_exports.boolean().optional(),
+  min_values: external_exports.number().int().min(0).max(25).optional(),
+  max_values: external_exports.number().int().min(1).max(25).optional(),
+  options: external_exports.array(external_exports.object({ label: external_exports.string(), value: external_exports.string().min(1).max(100), description: external_exports.string().nullish(), emoji: emojiIn, default: external_exports.boolean().optional() })).max(25)
 });
-var section = (u) => `**__${plain(u.name)}:__**
-${u.description}`;
-var panelUnits = (units, kind2) => units.filter((u) => (u.panel ?? "quali") === kind2);
-function qualiPanelParts(cfg2) {
-  const units = panelUnits(cfg2.units, "quali");
-  return {
-    title: clip(cfg2.title, 256),
-    description: clip([cfg2.intro, ...units.map(section)].filter(Boolean).join("\n\n"), 4e3),
-    select: { id: "quali:pick", placeholder: "Triff eine Auswahl", options: units.slice(0, 25).map(optionOf) }
-  };
-}
-function applyPanelParts(cfg2) {
-  const p = cfg2.police ?? { title: "\u{1F4CB} Bewerbung bei EN Polizei", description: "" };
-  const extra = panelUnits(cfg2.units, "apply");
-  const title = clip(p.title, 256);
-  if (!extra.length) return { title, ...p.description ? { description: clip(p.description, 4e3) } : {}, button: { id: `quali:pick:${POLICE_APPLICATION_KEY}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" } };
-  const police = { key: POLICE_APPLICATION_KEY, name: p.name || "Polizei", enabled: p.enabled };
-  return {
-    title,
-    description: clip([p.description, ...extra.map(section)].filter(Boolean).join("\n\n"), 4e3),
-    select: { id: "quali:pick", placeholder: "Wof\xFCr m\xF6chtest du dich bewerben?", options: [police, ...extra].slice(0, 25).map(optionOf) }
-  };
-}
+var rowIn = external_exports.object({ type: external_exports.literal(1), components: external_exports.array(external_exports.unknown()).min(1).max(5) });
+var embedIn = external_exports.object({
+  title: external_exports.string().nullish(),
+  url: external_exports.string().nullish(),
+  description: external_exports.string().nullish(),
+  color: external_exports.number().int().min(0).max(16777215).nullish(),
+  timestamp: external_exports.string().nullish(),
+  author: external_exports.object({ name: external_exports.string(), url: external_exports.string().nullish(), icon_url: external_exports.string().nullish() }).nullish(),
+  footer: external_exports.object({ text: external_exports.string(), icon_url: external_exports.string().nullish() }).nullish(),
+  thumbnail: external_exports.object({ url: external_exports.string() }).nullish(),
+  image: external_exports.object({ url: external_exports.string() }).nullish(),
+  fields: external_exports.array(external_exports.object({ name: external_exports.string(), value: external_exports.string(), inline: external_exports.boolean().nullish() })).nullish()
+});
+var messageIn = external_exports.object({
+  content: external_exports.string().nullish(),
+  embeds: external_exports.array(embedIn).nullish(),
+  components: external_exports.array(rowIn).nullish(),
+  allowed_mentions: external_exports.object({ parse: external_exports.array(external_exports.enum(["users", "roles", "everyone"])).optional() }).nullish()
+});
+var MB_TEMPLATE_EXPORT_FORMAT = "enpol-embed-builder-templates";
+var mbTemplateExportSchema = external_exports.object({
+  format: external_exports.literal(MB_TEMPLATE_EXPORT_FORMAT),
+  version: external_exports.literal(1),
+  templates: external_exports.array(external_exports.object({ name: external_exports.string().trim().min(1).max(100), category: external_exports.string().trim().max(60).nullable().default(null), data: mbDocumentDataSchema })).min(1).max(200)
+});
+var BLUE = "#1e3a8a";
+var doc = (messages) => mbDocumentDataSchema.parse({ messages });
+var footer = { footerText: "EN | POLIZEI", timestamp: "send" };
+var MB_EXAMPLE_TEMPLATES = [
+  {
+    name: "Willkommen",
+    category: "Informationen",
+    data: doc([{ id: "ex-welcome", content: "", embeds: [{
+      id: "ex-welcome-e",
+      color: BLUE,
+      title: "\u{1F44B} Willkommen bei EN | POLIZEI",
+      description: "Sch\xF6n, dass du da bist! Bitte lies dir zuerst das **Regelwerk** durch und melde dich bei Fragen im Support.",
+      fields: [
+        { id: "ex-w-f1", name: "\u{1F4DC} Regelwerk", value: "Pflichtlekt\xFCre f\xFCr alle Mitglieder.", inline: true },
+        { id: "ex-w-f2", name: "\u{1F4DD} Bewerbung", value: "Infos im Bewerbungskanal.", inline: true },
+        { id: "ex-w-f3", name: "\u{1F3AB} Support", value: "Ticket \xFCber das Ticket-Panel.", inline: true }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Dienstbeginn",
+    category: "Dienstanweisungen",
+    data: doc([{ id: "ex-duty", content: "", embeds: [{
+      id: "ex-duty-e",
+      color: "#22c55e",
+      title: "\u{1F693} Dienstbeginn",
+      description: "Der Dienst beginnt. Bitte meldet euch im Funk an und \xFCbernehmt eure Einheit.",
+      fields: [
+        { id: "ex-d-f1", name: "Treffpunkt", value: "Polizeirevier", inline: true },
+        { id: "ex-d-f2", name: "Uhrzeit", value: "20:00 Uhr (anpassen)", inline: true },
+        { id: "ex-d-f3", name: "Hinweis", value: "Ausr\xFCstung und Fahrzeug vor Dienstantritt pr\xFCfen.", inline: false }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Bewerbungsinformationen",
+    category: "Bewerbungen",
+    data: doc([{ id: "ex-apply", content: "", embeds: [{
+      id: "ex-apply-e",
+      color: BLUE,
+      title: "\u{1F4DD} Bewerbung bei EN | POLIZEI",
+      description: "Du m\xF6chtest Teil des Teams werden? So l\xE4uft die Bewerbung ab:",
+      fields: [
+        { id: "ex-a-f1", name: "1. Voraussetzungen", value: "Mindestalter und Regelwerk beachten.", inline: false },
+        { id: "ex-a-f2", name: "2. Bewerbung", value: "\xDCber das Bewerbungs-Panel einreichen.", inline: false },
+        { id: "ex-a-f3", name: "3. R\xFCckmeldung", value: "Du erh\xE4ltst eine Nachricht, sobald entschieden wurde.", inline: false }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Ticket-Er\xF6ffnung",
+    category: "Tickets",
+    data: doc([{ id: "ex-ticket", content: "", embeds: [{
+      id: "ex-ticket-e",
+      color: "#0ea5e9",
+      title: "\u{1F3AB} Support-Ticket",
+      description: "Du brauchst Hilfe? \xD6ffne \xFCber das Ticket-Panel ein Ticket. Ein Teammitglied meldet sich so schnell wie m\xF6glich.\n\n-# Bitte keine Ticket-Anfragen per Direktnachricht.",
+      ...footer
+    }] }])
+  },
+  {
+    name: "Ausbildungsank\xFCndigung",
+    category: "Ausbildung",
+    data: doc([{ id: "ex-training", content: "", embeds: [{
+      id: "ex-training-e",
+      color: "#a855f7",
+      title: "\u{1F393} Ausbildung",
+      description: "Eine neue Ausbildung findet statt. Interessierte melden sich bitte bei der Ausbildungsleitung.",
+      fields: [
+        { id: "ex-t-f1", name: "Thema", value: "Grundausbildung", inline: true },
+        { id: "ex-t-f2", name: "Datum", value: "Datum (anpassen)", inline: true },
+        { id: "ex-t-f3", name: "Ort", value: "Polizeiakademie", inline: true }
+      ],
+      ...footer
+    }] }])
+  },
+  {
+    name: "Regelwerk-Hinweis",
+    category: "Ank\xFCndigungen",
+    data: doc([{ id: "ex-rules", content: "", embeds: [{
+      id: "ex-rules-e",
+      color: "#f59e0b",
+      title: "\u26A0\uFE0F Hinweis zum Regelwerk",
+      description: "Bitte beachtet das aktuelle Regelwerk. Verst\xF6\xDFe k\xF6nnen zu Verwarnungen f\xFChren.\n\n> Respektvoller Umgang ist f\xFCr alle Pflicht.",
+      ...footer
+    }] }])
+  }
+];
 var AI_CHECK_LEVEL_LABEL = { LOW: "gering", MEDIUM: "mittel", HIGH: "hoch" };
 var GIVEAWAYS = [
   [/\bals (eine? )?(ki|künstliche intelligenz|sprachmodell|ai)\b/i, "\u201Eals KI/Sprachmodell\u201C"],
@@ -81432,6 +81533,12 @@ function guildInfo(g) {
       return { id: c.id, name: c.name.slice(0, 100), type: kind(c.type), parentId: "parentId" in c ? c.parentId ?? null : null, position: "rawPosition" in c ? c.rawPosition : 0, ...bot ? { bot } : {} };
     }),
     // @everyone und Rollen von Bots/Integrationen sind keine sinnvolle Auswahl
+    forums: [...g.channels.cache.values()].filter((c) => c.type === import_discord3.ChannelType.GuildForum || c.type === import_discord3.ChannelType.GuildMedia).slice(0, 100).map((c) => {
+      const bot = botPerms(g, c);
+      const p = "permissionsFor" in c && g.members?.me ? c.permissionsFor(g.members.me) : null;
+      return { id: c.id, ...bot ? { bot: { ...bot, createThreads: !!p?.has(import_discord3.PermissionFlagsBits.SendMessages) } } : {} };
+    }),
+    threads: [...g.channels.cache.values()].filter((c) => c.isThread() && !c.archived && !!c.parentId).slice(0, 300).map((c) => ({ id: c.id, name: c.name.slice(0, 100), parentId: c.parentId })),
     roles: [...g.roles.cache.values()].filter((r) => r.id !== g.id && !r.managed).slice(0, 250).map((r) => ({ id: r.id, name: r.name.slice(0, 100), color: r.colors?.primaryColor ?? r.color ?? 0, position: r.position }))
   };
 }
@@ -81447,7 +81554,7 @@ function startGuildDirectory(client2, api2, log = console.log) {
     timer.unref?.();
   };
   const c = client2();
-  for (const ev of ["guildCreate", "guildDelete", "guildUpdate", "channelCreate", "channelDelete", "channelUpdate", "roleCreate", "roleDelete", "roleUpdate"]) c.on(ev, soon);
+  for (const ev of ["guildCreate", "guildDelete", "guildUpdate", "channelCreate", "channelDelete", "channelUpdate", "roleCreate", "roleDelete", "roleUpdate", "threadCreate", "threadDelete", "threadUpdate"]) c.on(ev, soon);
   c.on("guildMemberUpdate", (_old, m) => {
     if (m.id === c.user?.id) soon();
   });
@@ -81593,15 +81700,15 @@ var HttpApi = class {
   baseUrl;
   token;
   doFetch;
-  async call(method, path3, discordId, body) {
+  async call(method, path3, discordId, body2) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 1e4);
     try {
       const res = await this.doFetch(`${this.baseUrl}/api/v1${path3}`, {
         method,
         signal: ctl.signal,
-        headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body ? { "content-type": "application/json" } : {} },
-        body: body ? JSON.stringify(body) : void 0
+        headers: { authorization: `Bot ${this.token}`, ...discordId ? { "x-discord-user": discordId } : {}, ...discordId && guildScope.getStore() ? { "x-guild-id": guildScope.getStore() } : {}, ...discordId && rolesScope.getStore()?.length ? { "x-discord-roles": rolesScope.getStore().slice(0, 100).join(",") } : {}, ...body2 ? { "content-type": "application/json" } : {} },
+        body: body2 ? JSON.stringify(body2) : void 0
       });
       const text = await res.text();
       let json;
@@ -81622,114 +81729,89 @@ var HttpApi = class {
       clearTimeout(timer);
     }
   }
-  asUser(discordId, method, path3, body) {
-    return this.call(method, path3, discordId, body);
+  asUser(discordId, method, path3, body2) {
+    return this.call(method, path3, discordId, body2);
   }
-  service(method, path3, body) {
-    return this.call(method, path3, null, body);
+  service(method, path3, body2) {
+    return this.call(method, path3, null, body2);
   }
 };
 
 // apps/bot/src/format.ts
 var COLORS = { info: 3900150, success: 2278750, warning: 16096779, danger: 15680580, neutral: 6583435 };
 var PRIORITY_COLOR = { LOW: COLORS.neutral, MEDIUM: COLORS.info, HIGH: COLORS.warning, URGENT: COLORS.danger, CRITICAL: COLORS.danger };
-var clip2 = (s, max) => {
+var clip = (s, max) => {
   const t2 = String(s ?? "\u2014");
   return t2.length > max ? `${t2.slice(0, max - 1)}\u2026` : t2;
 };
 var label = (s) => String(s ?? "\u2014").replace(/_/g, " ");
-var plain2 = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
+var plain = (s) => String(s ?? "\u2014").replace(/[*_`~|>\\]/g, "\\$&").replace(/@(everyone|here)/g, "@\u200B$1");
 var errorReply = (text) => ({ content: `\u274C ${text}`, ephemeral: true });
 var okReply = (text) => ({ content: `\u2705 ${text}`, ephemeral: true });
-function personEmbed(p, extra = {}) {
-  return {
-    title: clip2(`\u{1F464} ${p.robloxUsername}`, 256),
-    color: extra.wanted ? COLORS.warning : COLORS.info,
-    fields: [
-      { name: "Roblox-ID", value: clip2(p.robloxUserId ?? "unbekannt", 1024), inline: true },
-      { name: "Status", value: label(p.status), inline: true },
-      ...extra.tickets !== void 0 ? [{ name: "Tickets", value: String(extra.tickets), inline: true }] : [],
-      ...p.aliases?.length ? [{ name: "Aliase", value: clip2(p.aliases.map(plain2).join(", "), 1024) }] : [],
-      ...p.notes ? [{ name: "Notizen", value: clip2(plain2(p.notes), 1024) }] : []
-    ],
-    footer: extra.wanted ? "\u26A0\uFE0F Mit Fahndungseintrag verkn\xFCpft (ggf. erledigt) \u2014 Status im System pr\xFCfen" : void 0
-  };
-}
-var vehicleEmbed = (v) => ({
-  title: clip2(`\u{1F697} ${v.plate}`, 256),
-  color: COLORS.info,
-  fields: [
-    { name: "Modell", value: clip2(plain2(v.model), 1024), inline: true },
-    { name: "Farbe", value: clip2(plain2(v.color), 1024), inline: true },
-    { name: "Halter", value: clip2(plain2(v.owner?.robloxUsername), 1024), inline: true },
-    { name: "Status", value: label(v.status), inline: true }
-  ]
-});
-var incidentLine = (i) => `**${i.number}** \xB7 ${plain2(i.title)} \u2014 ${label(i.priority)} / ${label(i.status)}${i.location ? ` \xB7 ${plain2(i.location)}` : ""}`;
 function listEmbed(title, lines, empty) {
-  return { title: clip2(title, 256), description: clip2(lines.length ? lines.join("\n") : empty, 4e3), color: COLORS.info };
+  return { title: clip(title, 256), description: clip(lines.length ? lines.join("\n") : empty, 4e3), color: COLORS.info };
 }
 function renderOutbox(type, p) {
   switch (type) {
     case "workflow.message": {
       const color3 = typeof p.color === "string" && /^#[0-9a-f]{6}$/i.test(p.color) ? parseInt(p.color.slice(1), 16) : COLORS.info;
-      return { title: clip2(plain2(p.title), 256), ...p.text ? { description: clip2(plain2(p.text), 4e3) } : {}, color: color3, footer: clip2(`Workflow: ${String(p.workflow ?? "")}`, 200) };
+      return { title: clip(plain(p.title), 256), ...p.text ? { description: clip(plain(p.text), 4e3) } : {}, color: color3, footer: clip(`Workflow: ${String(p.workflow ?? "")}`, 200) };
     }
     case "incident.created":
-      return { title: `\u{1F6A8} Neuer Einsatz: ${clip2(plain2(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Nummer", value: String(p.number), inline: true }, { name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "Ort", value: clip2(plain2(p.location ?? "unbekannt"), 1024), inline: true }] };
+      return { title: `\u{1F6A8} Neuer Einsatz: ${clip(plain(p.title), 200)}`, color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Nummer", value: String(p.number), inline: true }, { name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
     case "incident.assigned":
-      return { title: `\u{1F4FB} ${plain2(p.callsign)} \u2192 ${p.number}`, description: clip2(plain2(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip2(plain2(p.location ?? "unbekannt"), 1024), inline: true }] };
+      return { title: `\u{1F4FB} ${plain(p.callsign)} \u2192 ${p.number}`, description: clip(plain(p.title), 4e3), color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.info, fields: [{ name: "Ort", value: clip(plain(p.location ?? "unbekannt"), 1024), inline: true }] };
     case "wanted.created":
       return {
         title: `\u{1F6A8} Neue Fahndung (${p.kind === "vehicle" ? "Fahrzeug" : "Person"})`,
-        description: `**${clip2(plain2(p.subject), 200)}**
-${clip2(plain2(p.reason), 1500)}${p.description ? `
+        description: `**${clip(plain(p.subject), 200)}**
+${clip(plain(p.reason), 1500)}${p.description ? `
 
-${clip2(plain2(p.description), 2e3)}` : ""}`,
+${clip(plain(p.description), 2e3)}` : ""}`,
         color: PRIORITY_COLOR[String(p.priority)] ?? COLORS.danger,
-        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip2(plain2(p.createdBy), 200), inline: true }] : []]
+        fields: [{ name: "Priorit\xE4t", value: label(p.priority), inline: true }, { name: "G\xFCltig bis", value: p.expiresAt ? `<t:${Math.floor(Date.parse(String(p.expiresAt)) / 1e3)}:f>` : "unbefristet", inline: true }, ...p.createdBy ? [{ name: "Ausgestellt von", value: clip(plain(p.createdBy), 200), inline: true }] : []]
       };
     case "wanted.status": {
       const st = { CLEARED: ["\u2705 Fahndung aufgehoben", COLORS.success], CANCELLED: ["\u26AA Fahndung abgebrochen", COLORS.info], ACTIVE: ["\u{1F6A8} Fahndung wieder aktiv", COLORS.danger], EXPIRED: ["\u231B Fahndung abgelaufen", COLORS.info] };
       const [title, color3] = st[String(p.status)] ?? [`Fahndung: ${label(p.status)}`, COLORS.info];
-      return { title, description: `**${clip2(plain2(p.subject), 200)}** \u2013 ${clip2(plain2(p.reason), 1e3)}${p.note ? `
-**Grund:** ${clip2(plain2(p.note), 1e3)}` : ""}`, color: color3, ...p.by ? { footer: `von ${clip2(plain2(p.by), 100)}` } : {} };
+      return { title, description: `**${clip(plain(p.subject), 200)}** \u2013 ${clip(plain(p.reason), 1e3)}${p.note ? `
+**Grund:** ${clip(plain(p.note), 1e3)}` : ""}`, color: color3, ...p.by ? { footer: `von ${clip(plain(p.by), 100)}` } : {} };
     }
     case "teamchance.changed":
       return p.open ? {
-        title: `\u{1F4E3} ${clip2(plain2(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
-        description: clip2(plain2(p.description ?? ""), 3500) || void 0,
+        title: `\u{1F4E3} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 jetzt offen!`,
+        description: clip(plain(p.description ?? ""), 3500) || void 0,
         color: COLORS.success,
         fields: [...p.closesAt ? [{ name: "Bewerbungsschluss", value: `<t:${Math.floor(Date.parse(String(p.closesAt)) / 1e3)}:f>`, inline: true }] : [], ...Number(p.slots) > 0 ? [{ name: "Pl\xE4tze", value: String(p.slots), inline: true }] : []]
-      } : { title: `\u{1F512} ${clip2(plain2(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
+      } : { title: `\u{1F512} ${clip(plain(p.title ?? "Team-Chance"), 200)} \u2013 geschlossen`, description: "Vielen Dank f\xFCr alle Bewerbungen!", color: COLORS.danger };
     case "announcement":
-      return { title: "\u{1F4E2} Ank\xFCndigung", description: clip2(plain2(p.body), 4e3), color: COLORS.warning, footer: `von ${clip2(p.author, 100)}` };
+      return { title: "\u{1F4E2} Ank\xFCndigung", description: clip(plain(p.body), 4e3), color: COLORS.warning, footer: `von ${clip(p.author, 100)}` };
     case "danger.changed": {
       return {
         box: true,
-        title: clip2(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
-        description: clip2(`${String(p.text ?? "")}${p.reason ? `
+        title: clip(`${String(p.name ?? p.level)}${p.title ? `: ${String(p.title)}` : ""}`, 256),
+        description: clip(`${String(p.text ?? "")}${p.reason ? `
 
-**Hinweis:** ${plain2(p.reason)}` : ""}`, 4e3) || void 0
+**Hinweis:** ${plain(p.reason)}` : ""}`, 4e3) || void 0
       };
     }
     case "duty.changed": {
       if (typeof p.shiftId === "string" && p.shiftId) return shiftLogEmbed(p);
       const st = String(p.status), prev = String(p.previous ?? "OFF_DUTY");
-      const who3 = `${p.callsign ? `${plain2(p.callsign)} \xB7 ` : ""}${plain2(p.name)}`;
+      const who3 = `${p.callsign ? `${plain(p.callsign)} \xB7 ` : ""}${plain(p.name)}`;
       const mins = typeof p.previousMinutes === "number" && prev !== "OFF_DUTY" ? ` \u2013 ${fmtDuration(p.previousMinutes * 60)}` : "";
       return {
-        title: clip2(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who3} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
+        title: clip(`${DUTY_DE[st]?.emoji ?? "\u2022"} ${who3} ist jetzt ${DUTY_DE[st]?.label ?? label(st)}`, 256),
         color: DUTY_DE[st]?.color ?? COLORS.neutral,
-        description: clip2([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain2(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain2(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
+        description: clip([p.discordId ? `<@${String(p.discordId)}>` : null, p.shiftType ? `Schicht: **${plain(p.shiftType)}**` : null, `Vorher: ${DUTY_DE[prev]?.label ?? label(prev)}${mins}`, p.setBy ? `Gesetzt von: ${plain(p.setBy)}` : null].filter(Boolean).join("\n"), 1e3)
       };
     }
     case "leave.requested":
       return {
         title: "Abmeldeantrag",
         color: COLORS.warning,
-        description: clip2(`${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)} m\xF6chte sich abmelden.`, 4e3),
-        fields: [{ name: "Grund", value: clip2(plain2(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte sich abmelden.`, 4e3),
+        fields: [{ name: "Grund", value: clip(plain(p.reason), 1024) }, { name: "Dauer", value: leaveSpan(p) }, { name: "Zeitraum", value: `<t:${unixOf(p.startsAt)}:f> \u2013 <t:${unixOf(p.endsAt)}:f>` }],
         footer: `ID: ${String(p.number)}`
       };
     case "leave.extension": {
@@ -81737,9 +81819,9 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
       return {
         title: "Verl\xE4ngerungsantrag",
         color: COLORS.warning,
-        description: clip2(`${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)} m\xF6chte die Abmeldung verl\xE4ngern.`, 4e3),
+        description: clip(`${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)} m\xF6chte die Abmeldung verl\xE4ngern.`, 4e3),
         fields: [
-          { name: "Grund", value: clip2(plain2(p.extensionReason), 1024) },
+          { name: "Grund", value: clip(plain(p.extensionReason), 1024) },
           { name: "Zus\xE4tzliche Dauer", value: Number.isFinite(add) && add > 0 ? humanDuration(add) : "\u2014" },
           { name: "Ende", value: `bisher <t:${unixOf(p.endsAt)}:f> \u2192 neu <t:${unixOf(p.newEndsAt)}:f>` }
         ],
@@ -81751,27 +81833,27 @@ ${clip2(plain2(p.description), 2e3)}` : ""}`,
       const by = p.event === "approved" ? "Angenommen von" : p.event === "denied" ? "Abgelehnt von" : p.event === "extended" ? "Verl\xE4ngert von" : "Entschieden von";
       const t2 = (v, style = "f") => `<t:${unixOf(v)}:${style}>`;
       return {
-        author: { name: clip2(`@${String(p.name ?? "\u2014")}`, 200) },
+        author: { name: clip(`@${String(p.name ?? "\u2014")}`, 200) },
         title: ev.text,
         color: ev.color,
         footer: `ID: ${String(p.number)}`,
-        description: clip2([
+        description: clip([
           p.discordId ? `**Mitglied**: <@${String(p.discordId)}>` : null,
           `**Beginn**: ${t2(p.startsAt)}`,
           `**Ende**: ${t2(p.endsAt)}${p.previousEndsAt ? ` (vorher ${t2(p.previousEndsAt)})` : ""}`,
           `**Dauer**: ${leaveSpan(p)}`,
-          `**Grund**: ${plain2(p.reason)}`,
-          p.extendReason ? `**Grund der Verl\xE4ngerung**: ${plain2(p.extendReason)}` : null,
-          p.decidedByName ? `**${by}**: ${plain2(p.decidedByName)}` : null,
-          p.decisionReason ? `**Begr\xFCndung**: ${plain2(p.decisionReason)}` : null
+          `**Grund**: ${plain(p.reason)}`,
+          p.extendReason ? `**Grund der Verl\xE4ngerung**: ${plain(p.extendReason)}` : null,
+          p.decidedByName ? `**${by}**: ${plain(p.decidedByName)}` : null,
+          p.decisionReason ? `**Begr\xFCndung**: ${plain(p.decisionReason)}` : null
         ].filter(Boolean).join("\n"), 4e3)
       };
     }
     case "sek.report":
-      return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip2(plain2(p.description), 3500), fields: [
-        { name: "Einsatzart", value: clip2(plain2(p.missionType), 200), inline: true },
+      return { title: `\u{1F3AF} SEK-Einsatzbericht ${p.number}`, color: COLORS.neutral, description: clip(plain(p.description), 3500), fields: [
+        { name: "Einsatzart", value: clip(plain(p.missionType), 200), inline: true },
         { name: "Datum", value: new Date(String(p.occurredAt)).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }), inline: true },
-        { name: "Beamter", value: clip2(plain2(p.author), 200), inline: true }
+        { name: "Beamter", value: clip(plain(p.author), 200), inline: true }
       ] };
     default:
       return null;
@@ -81786,7 +81868,7 @@ var BUDGET = 4800;
 var AI_ICON = { LOW: "\u{1F7E2}", MEDIUM: "\u{1F7E1}", HIGH: "\u{1F534}" };
 function aiLines(qa, durationSec) {
   const r = aiCheck(qa.map((q2) => ({ answer: String(q2.answer ?? "") })), durationSec);
-  return [`KI-Check: ${AI_ICON[r.level]} ${AI_CHECK_LEVEL_LABEL[r.level]} (\`${r.score} %\`)`, ...r.level === "LOW" ? [] : r.reasons.slice(0, 2).map((x) => `\u203A ${clip2(plain2(x), 160)}`)];
+  return [`KI-Check: ${AI_ICON[r.level]} ${AI_CHECK_LEVEL_LABEL[r.level]} (\`${r.score} %\`)`, ...r.level === "LOW" ? [] : r.reasons.slice(0, 2).map((x) => `\u203A ${clip(plain(x), 160)}`)];
 }
 function applicationEmbeds(p, kind2) {
   const qa = Array.isArray(p.answers) ? p.answers : [];
@@ -81794,28 +81876,28 @@ function applicationEmbeds(p, kind2) {
   const joined = unix(p.joinedAt), submitted = unix(p.createdAt);
   const stats = [
     "**Bewerber-Infos**",
-    ...id3 ? [`Discord-ID: \`${id3}\``, `Benutzername: \`${plain2(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id3}>`] : ["Quelle: Web-Formular (kein Discord)"],
-    ...kind2 === "p" ? [`Roblox: \`${plain2(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain2(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
+    ...id3 ? [`Discord-ID: \`${id3}\``, `Benutzername: \`${plain(p.discordName ?? "\u2014")}\``, `Benutzer: <@${id3}>`] : ["Quelle: Web-Formular (kein Discord)"],
+    ...kind2 === "p" ? [`Roblox: \`${plain(p.robloxUsername)}\`${p.robloxUserId ? ` (\`${String(p.robloxUserId)}\`)` : ""}`] : [p.linkedName ? `Im System: **${plain(p.linkedName)}**` : "Im System: nicht verkn\xFCpft"],
     ...typeof p.durationSec === "number" ? [`Dauer: \`${fmtDuration(p.durationSec)}\``] : [],
     ...aiLines(qa, typeof p.durationSec === "number" ? p.durationSec : null),
     ...joined ? [`Server beigetreten: <t:${joined}:R>`] : [],
     ...submitted ? [`Eingereicht: <t:${submitted}:R>`] : [],
-    ...p.guildName ? [`Server: \`${plain2(p.guildName)}\``] : []
+    ...p.guildName ? [`Server: \`${plain(p.guildName)}\``] : []
   ].join("\n");
-  const section3 = (q2, i, max) => {
-    const a = plain2(q2.answer) || "\u2014";
-    return `**${i + 1}. ${clip2(plain2(q2.question), 200)}**
+  const section2 = (q2, i, max) => {
+    const a = plain(q2.answer) || "\u2014";
+    return `**${i + 1}. ${clip(plain(q2.question), 200)}**
 ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` : a}`;
   };
-  let sections = qa.map((q2, i) => section3(q2, i));
-  const who3 = p.discordName ? `${plain2(p.discordName)}s ` : "";
-  const title = clip2(kind2 === "p" ? `\u{1F4CB} ${who3}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who3}Bewerbung \u201E${plain2(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
+  let sections = qa.map((q2, i) => section2(q2, i));
+  const who3 = p.discordName ? `${plain(p.discordName)}s ` : "";
+  const title = clip(kind2 === "p" ? `\u{1F4CB} ${who3}Bewerbung bei EN Polizei eingereicht \xB7 ${p.number}` : `\u{1F4CB} ${who3}Bewerbung \u201E${plain(p.unitName)}\u201C eingereicht \xB7 ${p.number}`, 256);
   const room = BUDGET - stats.length - (title.length + 20) * 3;
   const size = (xs) => xs.reduce((n, x) => n + x.length + 2, 0);
   if (size(sections) > room) {
-    const questions = qa.reduce((n, q2, i) => n + section3({ question: q2.question, answer: "" }, i).length + 15, 0);
+    const questions = qa.reduce((n, q2, i) => n + section2({ question: q2.question, answer: "" }, i).length + 15, 0);
     const per = Math.max(40, Math.floor((room - questions) / Math.max(1, qa.length)));
-    sections = qa.map((q2, i) => section3(q2, i, per));
+    sections = qa.map((q2, i) => section2(q2, i, per));
   }
   if (size(sections) > room) {
     const kept = [];
@@ -81835,7 +81917,7 @@ ${max !== void 0 && a.length > max ? `${a.slice(0, max)}\u2026 *(gek\xFCrzt)*` :
     }
     cur = cur ? `${cur}
 
-${piece}` : clip2(piece, 4e3);
+${piece}` : clip(piece, 4e3);
   }
   embeds.push({ title: embeds.length ? `${title} (Fortsetzung)` : title, color: COLORS.warning, description: cur });
   return embeds.slice(0, 10);
@@ -81866,9 +81948,9 @@ function shiftLogEmbed(p) {
   const t2 = (v, style) => `<t:${unixOf(v)}:${style}>`;
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const [event, color3] = prev === "OFF_DUTY" ? ["Shift Started", COLORS.success] : st === "OFF_DUTY" ? ["Shift Ended", COLORS.danger] : st === "BREAK" ? ["Break Started", COLORS.warning] : prev === "BREAK" ? ["Break Ended", COLORS.info] : ["Shift Updated", COLORS.info];
-  const kind2 = p.shiftType ? plain2(p.shiftType) : "Dienst";
+  const kind2 = p.shiftType ? plain(p.shiftType) : "Dienst";
   const secs = (v) => shiftDuration(Number(v) || 0);
-  const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : plain2(p.name)}`];
+  const lines = [`**Staff Member**: ${p.discordId ? `<@${String(p.discordId)}>` : plain(p.name)}`];
   if (event === "Shift Started") lines.push(`**Started**: ${t2(p.shiftStartedAt ?? now, "R")} (${t2(p.shiftStartedAt ?? now, "f")})`);
   else if (event === "Shift Ended") {
     lines.push(`**Total Time**: ${secs(p.totalSeconds)}`);
@@ -81876,8 +81958,8 @@ function shiftLogEmbed(p) {
   } else if (event === "Break Started") lines.push(`**Break Started**: ${t2(now, "R")}`, `**Shift Time**: ${secs(p.totalSeconds)}`);
   else if (event === "Break Ended") lines.push(`**Break Time**: ${secs(p.previousSeconds)}`);
   else lines.push(`**Status**: ${DUTY_DE[st]?.label ?? label(st)}`);
-  if (p.setBy) lines.push(`**${event === "Shift Ended" ? "Ended" : "Set"} By**: ${plain2(p.setBy)}`);
-  return { author: { name: clip2(`@${String(p.name ?? "\u2014")}`, 200) }, title: clip2(`${event} \u2022 ${kind2}`, 256), color: color3, description: clip2(lines.join("\n"), 4e3), footer: `Shift ID: ${String(p.shiftId)}` };
+  if (p.setBy) lines.push(`**${event === "Shift Ended" ? "Ended" : "Set"} By**: ${plain(p.setBy)}`);
+  return { author: { name: clip(`@${String(p.name ?? "\u2014")}`, 200) }, title: clip(`${event} \u2022 ${kind2}`, 256), color: color3, description: clip(lines.join("\n"), 4e3), footer: `Shift ID: ${String(p.shiftId)}` };
 }
 function humanDuration(ms) {
   const H = 36e5, D = 24 * H, W = 7 * D;
@@ -81896,10 +81978,10 @@ function humanDuration(ms) {
   return parts.join(", ");
 }
 var leaveSpan = (p) => humanDuration(new Date(String(p.endsAt)).getTime() - new Date(String(p.startsAt)).getTime());
-var guildAuthor = (p) => p.guildName ? { name: clip2(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
+var guildAuthor = (p) => p.guildName ? { name: clip(String(p.guildName), 200), ...typeof p.guildIcon === "string" && /^https:\/\//.test(p.guildIcon) ? { iconUrl: p.guildIcon } : {} } : void 0;
 function leaveDirectEmbed(type, p) {
   const author = guildAuthor(p);
-  const server = plain2(p.guildName ?? "dem Server");
+  const server = plain(p.guildName ?? "dem Server");
   const end = unixOf(p.endsAt);
   const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
   if (type === "leave.pending") return {
@@ -81916,19 +81998,19 @@ Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
     color: COLORS.success,
     description: `Deine Abmeldung endet ungef\xE4hr <t:${end}:F> (<t:${end}:R>).
 Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`,
-    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip2(plain2(p.decisionReason), 1024) }] } : {}
+    ...p.decisionReason ? { fields: [{ name: "Hinweis", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
   return {
     ...base,
     title: "Abmeldung abgelehnt",
     color: COLORS.danger,
     description: `Falls du denkst, dass das ein Fehler war, wende dich an die Leitung von **${server}**.`,
-    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip2(plain2(p.decisionReason), 1024) }] } : {}
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
 }
 function leaveExtensionDirectEmbed(p) {
   const author = guildAuthor(p);
-  const server = plain2(p.guildName ?? "dem Server");
+  const server = plain(p.guildName ?? "dem Server");
   const end = unixOf(p.endsAt);
   const add = humanDuration(Number(p.extensionMinutes) * 6e4);
   const base = { ...author ? { author } : {}, footer: `ID: ${String(p.number)}` };
@@ -81944,7 +82026,7 @@ Um deine Abmeldung zu verwalten, nutze \`/leave manage\` auf **${server}**.`
     title: "Verl\xE4ngerung abgelehnt",
     color: COLORS.danger,
     description: `Deine Abmeldung wird nicht verl\xE4ngert und endet weiterhin ungef\xE4hr <t:${end}:F> (<t:${end}:R>).`,
-    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip2(plain2(p.decisionReason), 1024) }] } : {}
+    ...p.decisionReason ? { fields: [{ name: "Grund", value: clip(plain(p.decisionReason), 1024) }] } : {}
   };
 }
 function renderOutboxEmbeds(type, p) {
@@ -81954,8 +82036,8 @@ function renderOutboxEmbeds(type, p) {
     const accepted = p.status === "ACCEPTED";
     const embeds = applicationEmbeds(p, type === "application.archived" ? "p" : "q").map((e2) => ({ ...e2, color: accepted ? COLORS.success : COLORS.danger }));
     const last = embeds[embeds.length - 1];
-    last.fields = [{ name: "Entscheidung", value: clip2(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"}${p.decidedByName ? ` von ${plain2(p.decidedByName)}` : ""}${p.reason ? `
-**Grund:** ${plain2(p.reason)}` : ""}`, 1024) }];
+    last.fields = [{ name: "Entscheidung", value: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"}${p.decidedByName ? ` von ${plain(p.decidedByName)}` : ""}${p.reason ? `
+**Grund:** ${plain(p.reason)}` : ""}`, 1024) }];
     return embeds;
   }
   if (type === "academy.course") return [academyCourseEmbed(p)];
@@ -81966,11 +82048,11 @@ function academyCourseEmbed(p) {
   const when = typeof p.when === "string" && !Number.isNaN(Date.parse(p.when)) ? Math.floor(Date.parse(p.when) / 1e3) : null;
   const fields = [
     ...when ? [{ name: "\u{1F552} Termin", value: `<t:${when}:F> (<t:${when}:R>)`, inline: true }] : [],
-    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip2(plain2(p.location), 1024), inline: true }] : [],
+    ...p.location ? [{ name: "\u{1F4CD} Ort", value: clip(plain(p.location), 1024), inline: true }] : [],
     { name: "\u{1F3AF} Bestehensgrenze", value: `${Number(p.passScore) || 0} Punkte`, inline: true },
-    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip2(plain2(p.instructorName), 1024), inline: true }] : []
+    ...p.instructorName ? [{ name: "\u{1F46E} Ausbilder", value: clip(plain(p.instructorName), 1024), inline: true }] : []
   ];
-  return { title: clip2(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip2(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
+  return { title: clip(`\u{1F393} Akademie: ${String(p.title ?? "Kurs")}`, 256), color: COLORS.info, ...p.description ? { description: clip(String(p.description), 4e3) } : {}, fields, footer: "Akademie \xB7 EN Polizei" };
 }
 function outboxButtons(type, p) {
   if (type === "leave.requested" && typeof p.id === "string") return [
@@ -81998,36 +82080,20 @@ function outboxButtons(type, p) {
 }
 var reasonText = (p) => p.reason ? `
 
-**Begr\xFCndung:** ${clip2(plain2(p.reason), 1e3)}` : "";
+**Begr\xFCndung:** ${clip(plain(p.reason), 1e3)}` : "";
 function qualificationDecisionText(p) {
-  if (typeof p.message === "string" && p.message.trim()) return clip2(p.message, 2e3);
-  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain2(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain2(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
+  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
+  return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde **angenommen** \u2013 willkommen! Ein Teammitglied meldet sich bei dir.${reasonText(p)}` : `Deine Bewerbung f\xFCr **${plain(p.unitName)}** (${p.number}) wurde diesmal leider **nicht angenommen**. Du kannst dich sp\xE4ter gerne erneut bewerben.${reasonText(p)}`;
 }
 function applicationDecisionText(p) {
-  if (typeof p.message === "string" && p.message.trim()) return clip2(p.message, 2e3);
+  if (typeof p.message === "string" && p.message.trim()) return clip(p.message, 2e3);
   return p.status === "ACCEPTED" ? `\u{1F389} Deine Bewerbung **${p.number}** bei EN Polizei wurde **angenommen**! Ein Teammitglied meldet sich bei dir f\xFCr die n\xE4chsten Schritte.${reasonText(p)}` : `Deine Bewerbung **${p.number}** bei EN Polizei wurde diesmal leider **nicht angenommen**. Du kannst dich gerne sp\xE4ter erneut bewerben.${reasonText(p)}`;
 }
-var hexColor2 = (v, fallback) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : fallback;
-function dangerEmbed(s) {
-  const d = s.def;
-  const current = d ? `**Aktuell:** ${d.emoji} ${plain2(d.name)}${d.title ? ` \u2013 ${plain2(d.title)}` : ""}${s.reason ? `
-${clip2(plain2(s.reason), 300)}` : ""}` : "";
-  const when = s.at ? `
-<t:${Math.floor(new Date(s.at).getTime() / 1e3)}:f>` : "";
-  return {
-    title: clip2(s.panel?.title ?? "Gefahrenstatus", 256),
-    color: hexColor2(d?.color, COLORS.danger),
-    description: clip2(`${s.panel?.text ?? ""}${current ? `
-
-${current}` : ""}${when}`, 4e3),
-    ...s.setByName ? { footer: `Gesetzt von ${clip2(s.setByName, 100)}` } : {}
-  };
-}
 function dangerPanel(s) {
-  return { box: true, heading: true, title: clip2(s.panel?.title ?? "Gefahrenstatus", 256), description: clip2(s.panel?.text ?? "", 4e3) || void 0, ...s.at ? { stamp: s.at } : {} };
+  return { box: true, heading: true, title: clip(s.panel?.title ?? "Gefahrenstatus", 256), description: clip(s.panel?.text ?? "", 4e3) || void 0, ...s.at ? { stamp: s.at } : {} };
 }
 function dangerButtons(s) {
-  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip2(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
+  return (s.levels ?? []).slice(0, 10).map((l) => ({ id: `danger:set:${l.key}`, label: clip(l.name, 80), emoji: s.panel?.buttonEmoji || l.emoji || void 0, style: l.buttonStyle ?? "danger" }));
 }
 var DUTY_EMOJI = { ON_DUTY: "\u{1F7E2}", BREAK: "\u{1F7E1}", TRAINING: "\u{1F535}", ADMINISTRATIVE: "\u{1F535}", OFF_DUTY: "\u26AA" };
 var DUTY_DE = {
@@ -82044,7 +82110,7 @@ function teamlistEmbed(members, rankOrder) {
   const fields = [];
   for (const rank of [...known2, ...rest]) {
     const people = members.filter((m) => rankOf(m) === rank).sort((a, b2) => (a.callsign ?? "~").localeCompare(b2.callsign ?? "~"));
-    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain2(m.callsign)}** ` : ""}${plain2(m.name)}${m.unit ? ` \xB7 ${plain2(m.unit)}` : ""}`);
+    const lines = people.map((m) => `${DUTY_EMOJI[m.dutyStatus] ?? "\u26AA"} ${m.callsign ? `**${plain(m.callsign)}** ` : ""}${plain(m.name)}${m.unit ? ` \xB7 ${plain(m.unit)}` : ""}`);
     let chunk = "";
     let part = 0;
     for (const l of lines) {
@@ -82132,23 +82198,23 @@ var questionMessage = (s) => {
   const i = s.answers.length;
   const q2 = s.questions[i];
   const f2 = q2.field;
-  const head = `**${i + 1}/${s.questions.length}.** ${plain2(q2.text)}`;
+  const head = `**${i + 1}/${s.questions.length}.** ${plain(q2.text)}`;
   if (f2.type === "ROBLOX") {
-    return { embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: clip2(`${head}
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _Schreibe deinen **Roblox-Benutzernamen** (genau wie in Roblox, nicht den Anzeigenamen) hier in den Chat \u2013 ich pr\xFCfe, ob es das Konto gibt.${f2.required ? "" : ` Optional \u2013 \u201E${SKIP}\u201C zum \xDCberspringen.`}_`, 4e3) } };
   }
   if (f2.type === "TEXT") {
     const hints = [f2.minLength ? `mindestens ${f2.minLength} Zeichen` : "", !f2.required ? `optional \u2013 schreibe \u201E${SKIP}\u201C, um zu \xFCberspringen` : ""].filter(Boolean).join(" \xB7 ");
-    return { embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: clip2(`${head}
+    return { embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _Antworte einfach mit einer Nachricht hier im Chat.${hints ? ` (${hints})` : ""}_`, 4e3) } };
   }
   return {
-    embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: clip2(`${head}
+    embed: { title: clip(s.unitName, 256), color: COLORS.info, description: clip(`${head}
 
 _W\xE4hle unten ${f2.multiple ? "eine oder mehrere Optionen" : "eine Option"} aus.${f2.required ? "" : " Optional."}_`, 4e3) },
-    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip2(o.label, 100), value: String(j) })) },
+    select: { id: `quali:ans:${i}`, placeholder: f2.multiple ? "Optionen w\xE4hlen \u2026" : "Option w\xE4hlen \u2026", min: 1, max: f2.multiple ? f2.options.length : 1, options: f2.options.map((o, j) => ({ label: clip(o.label, 100), value: String(j) })) },
     buttons: f2.required ? [] : [{ id: `quali:skip:${i}`, label: "\xDCberspringen", style: "secondary" }]
   };
 };
@@ -82184,22 +82250,21 @@ async function submitSession(api2, s, userId, userName, robloxLookup2, now = Dat
   }
   return (await api2.service("POST", "/bot/qualifications/applications", { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q2, i) => ({ question: q2.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
-var POLICE_PANEL = { title: "\u{1F4CB} Bewerbung bei EN Polizei", color: COLORS.info, description: "Du m\xF6chtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** \u2013 der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht." };
 async function offer(c, key4) {
   const running = sessions.get(c.discordId);
-  if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain2(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
+  if (running && running.expiresAt > Date.now()) return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**) in deinen Direktnachrichten. Beende oder brich sie dort zuerst ab.`);
   const flow = await loadFlow(c.api, key4, c.guildId);
   if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
-  if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain2(flow.name)}** sind derzeit geschlossen.`);
+  if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
   const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
   if (blocked) return errorReply(blocked);
   const ban = await c.api.service("GET", `/bot/application-bans/check?discordId=${c.discordId}&scope=${encodeURIComponent(flow.key === POLICE ? "police" : flow.key)}&name=${encodeURIComponent(flow.key === POLICE ? "die Polizei-Bewerbung" : flow.appName)}${c.guildId ? `&guildId=${c.guildId}` : ""}`).catch(() => null);
   if (ban?.banned) return errorReply(`\u26D4 ${ban.message ?? "Du bist f\xFCr diese Bewerbung gesperrt."}`);
   const open = await openApplication(c.api, flow.key, c.discordId, c.guildId);
-  if (open.open) return errorReply(`Du hast f\xFCr **${plain2(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+  if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
   if (flow.settings.mode === "WEB") {
     const link = await c.api.service("POST", "/bot/qualifications/web-link", { unit: flow.key, discordId: c.discordId, discordName: c.userName ?? c.discordId, ...c.guildId ? { guildId: c.guildId } : {}, ...c.memberJoinedAt ? { joinedAt: c.memberJoinedAt } : {} });
-    return { ephemeral: true, embeds: [{ title: clip2(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung f\xFCllst du im **Browser** aus. Der Link gilt nur f\xFCr dich und ist **${link.timeLimit}** g\xFCltig \u2013 teile ihn mit niemandem.` }], buttons: [{ id: "quali:web", label: "Bewerbung \xF6ffnen", style: "secondary", url: link.url }] };
+    return { ephemeral: true, embeds: [{ title: clip(flow.name, 256), color: COLORS.info, description: `Deine Bewerbung f\xFCllst du im **Browser** aus. Der Link gilt nur f\xFCr dich und ist **${link.timeLimit}** g\xFCltig \u2013 teile ihn mit niemandem.` }], buttons: [{ id: "quali:web", label: "Bewerbung \xF6ffnen", style: "secondary", url: link.url }] };
   }
   if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
   if (c.memberJoinedAt) joinedAtOf.set(c.discordId, c.memberJoinedAt);
@@ -82207,7 +82272,7 @@ async function offer(c, key4) {
   let dm;
   try {
     dm = await c.platform.sendDm(c.discordId, {
-      embed: { title: clip2(flow.name, 256), color: COLORS.info, description: clip2(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { "{questionCount}": String(flow.questions.length), "{timeLimit}": formatMinutes(Math.round(limitMs(flow.settings) / 6e4)), "{applicationName}": flow.appName }), 4e3) },
+      embed: { title: clip(flow.name, 256), color: COLORS.info, description: clip(renderApplicationText(flow.settings.messages?.confirmation ?? DEFAULT_APPLICATION_MESSAGES.confirmation, { "{questionCount}": String(flow.questions.length), "{timeLimit}": formatMinutes(Math.round(limitMs(flow.settings) / 6e4)), "{applicationName}": flow.appName }), 4e3) },
       buttons: [{ id: `quali:start:${flow.key}`, label: "Bewerbung starten", style: "success" }, { id: "quali:cancel", label: "Abbrechen", style: "danger" }]
     });
   } catch {
@@ -82215,61 +82280,12 @@ async function offer(c, key4) {
   }
   return { ephemeral: true, embeds: [{ title: "Bewerbung gestartet", description: "Die Bewerbung wurde in deinen **Direktnachrichten** gestartet!", color: COLORS.success }], buttons: [{ id: "quali:link", label: "Zur Bewerbung", style: "secondary", url: `https://discord.com/channels/@me/${dm.channelId}/${dm.messageId}` }] };
 }
-var panelPost = (p) => ({ embed: { title: p.title, color: COLORS.info, ...p.description ? { description: p.description } : {} }, ...p.button ? { buttons: [p.button] } : {}, ...p.select ? { select: p.select } : {} });
-var QUALI_COMMANDS = [
-  {
-    name: "bewerbung",
-    description: "Bewirb dich bei EN Polizei (Fragen per Direktnachricht)",
-    async run(c) {
-      try {
-        return await offer(c, POLICE);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "bewerbungspanel",
-    description: "Postet das Bewerbungs-Panel (\u201EJetzt bewerben\u201C) in diesen Kanal",
-    async run(c) {
-      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
-      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        const cfg2 = await getConfig(c.api, c.guildId).catch(() => void 0);
-        const panel = cfg2?.police ? panelPost(applyPanelParts(cfg2)) : { embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${POLICE}`, label: "Jetzt bewerben", emoji: "\u{1F4CB}", style: "primary" }] };
-        await c.platform.postPanel({ channelId: c.channelId, ...panel });
-      } catch {
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-      return okReply("Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).");
-    }
-  },
-  {
-    name: "qualipanel",
-    description: "Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder \u2026) in diesen Kanal",
-    async run(c) {
-      if (!c.guildId) return errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.");
-      if (!c.isGuildAdmin) return errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.");
-      if (!c.channelId || !c.platform) return errorReply("Panel kann hier nicht gepostet werden.");
-      try {
-        const cfg2 = await getConfig(c.api, c.guildId);
-        await c.platform.postPanel({ channelId: c.channelId, ...panelPost(qualiPanelParts(cfg2)) });
-        const ch2 = await c.config?.().catch(() => void 0);
-        return okReply(`Qualifikations-Panel gepostet.${ch2?.qualifications ? "" : " Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen \u2013 dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons."}`);
-      } catch (e) {
-        if (e instanceof BotApiError) return mapError(e);
-        return errorReply("Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).");
-      }
-    }
-  }
-];
 async function handleDirectMessage(a) {
   const now = a.now ?? Date.now();
   const s = sessions.get(a.userId);
-  const say = (description, color3 = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip2(s.unitName, 256) : "Bewerbung", description, color: color3 }, buttons });
+  const say = (description, color3 = COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? clip(s.unitName, 256) : "Bewerbung", description, color: color3 }, buttons });
   if (!s) {
-    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).", COLORS.neutral);
+    await say("Du hast gerade keine laufende Bewerbung. Starte eine \xFCber das Bewerbungs- oder Qualifikations-Panel auf dem Server.", COLORS.neutral);
     return;
   }
   if (s.expiresAt <= now) {
@@ -82305,17 +82321,17 @@ async function handleDirectMessage(a) {
     if (q2.field.type === "ROBLOX" && a.robloxCheck) {
       const rb = await a.robloxCheck(r.text).catch(() => void 0);
       if (rb === null) {
-        await say(`\u274C Den Roblox-Benutzer **${plain2(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
+        await say(`\u274C Den Roblox-Benutzer **${plain(r.text)}** gibt es nicht. Bitte pr\xFCfe die Schreibweise und schicke ihn noch einmal.`, COLORS.warning);
         return;
       }
       if (rb) {
         s.pendingRoblox = rb.name;
         const i = s.answers.length;
         await a.sendDm(a.userId, {
-          embed: { title: clip2(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
+          embed: { title: clip(s.unitName, 256), color: COLORS.info, description: `Ist das dein Roblox-Konto?
 
-**${plain2(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
-${plain2(rb.displayName)}` : ""}
+**${plain(rb.name)}**${rb.displayName && rb.displayName !== rb.name ? `
+${plain(rb.displayName)}` : ""}
 
 _Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Namen schreiben._`, ...rb.avatarUrl ? { thumbnail: rb.avatarUrl } : {} },
           buttons: [{ id: `quali:rb:${i}:yes`, label: "Ja, das bin ich", style: "success" }, { id: `quali:rb:${i}:no`, label: "Anderer Name", style: "secondary" }]
@@ -82328,7 +82344,7 @@ _Falls nicht: auf \u201EAnderer Name\u201C tippen oder einfach den richtigen Nam
   await proceed({ api: a.api, userId: a.userId, userName: a.userName, sendDm: a.sendDm, robloxLookup: a.robloxLookup, now }, s);
 }
 async function proceed(o, s) {
-  const say = (description, color3 = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip2(s.unitName, 256), description, color: color3 }, buttons });
+  const say = (description, color3 = COLORS.info, buttons) => o.sendDm(o.userId, { embed: { title: clip(s.unitName, 256), description, color: color3 }, buttons });
   if (s.answers.length < s.questions.length) {
     report(o.api, o.userId, o.userName, s);
     await o.sendDm(o.userId, questionMessage(s));
@@ -82337,7 +82353,7 @@ async function proceed(o, s) {
   try {
     const number = await submitSession(o.api, s, o.userId, o.userName, o.robloxLookup, o.now);
     sessions.delete(o.userId);
-    await say(clip2(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { "{number}": number, "{applicationName}": s.appName }), 4e3), COLORS.success);
+    await say(clip(renderApplicationText(s.settings.messages?.completion ?? DEFAULT_APPLICATION_MESSAGES.completion, { "{number}": number, "{applicationName}": s.appName }), 4e3), COLORS.success);
   } catch (e) {
     if (e instanceof BotApiError && (e.status === 409 || e.status === 400 || e.status === 404)) {
       sessions.delete(o.userId);
@@ -82370,11 +82386,11 @@ async function decide(c, d, reason) {
   const path3 = d.kind === "p" ? `/applications/${d.id}/discord-decision` : `/qualifications/applications/${d.id}/decision`;
   const r = await c.api.asUser(c.discordId, "POST", path3, { status: d.status, ...reason ? { reason } : {} });
   const accepted = d.status === "ACCEPTED";
-  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain2(r.unitName)})` : ""}`;
+  const what = `Bewerbung **${r.number}**${r.unitName ? ` (${plain(r.unitName)})` : ""}`;
   return {
     ...okReply(`${what} ${accepted ? "**angenommen**" : "**abgelehnt**"}. Die Person wird per Direktnachricht informiert${accepted && d.kind === "q" ? " (und bekommt ggf. die Rolle)" : ""}.${r.addedToSek ? " Au\xDFerdem ins SEK aufgenommen." : ""}`),
-    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip2(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain2(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`, 1024) }
+    decided: { color: accepted ? COLORS.success : COLORS.danger, text: clip(`${accepted ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024) }
   };
 }
 var STATUS_DE = { OPEN: "\u{1F7E1} offen", SUBMITTED: "\u{1F7E1} eingereicht", SCREENING: "\u{1F7E1} in Pr\xFCfung", INTERVIEW: "\u{1F7E1} Gespr\xE4ch", PENDING_DECISION: "\u{1F7E1} Entscheidung offen", ACCEPTED: "\u2705 angenommen", REJECTED: "\u274C abgelehnt", WITHDRAWN: "\u21A9\uFE0F zur\xFCckgezogen" };
@@ -82402,9 +82418,9 @@ var QUALI_INTERACTION = {
         const [quali, police] = await Promise.all([get(`/qualifications/history?discordId=${id3}`), get(`/applications/history?discordId=${id3}`)]);
         if (!quali && !police) return errorReply("Du hast keine Berechtigung, Bewerbungen anzusehen.");
         const rows = [...(police ?? []).map((r) => ({ ...r, unitName: "EN Polizei" })), ...quali ?? []].sort((a, b2) => Date.parse(b2.createdAt) - Date.parse(a.createdAt));
-        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain2(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
-  \u21B3 ${clip2(plain2(r.decisionReason), 150)}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip2(`<@${id3}>
+        const lines = rows.slice(0, 20).map((r) => `\u2022 **${r.number}** \xB7 ${plain(r.unitName)} \xB7 ${STATUS_DE[r.status] ?? r.status} \xB7 <t:${Math.floor(Date.parse(r.createdAt) / 1e3)}:d>${r.decisionReason ? `
+  \u21B3 ${clip(plain(r.decisionReason), 150)}` : ""}`);
+        return { ephemeral: true, embeds: [{ title: "\u{1F5C2}\uFE0F Bewerbungs-Verlauf", color: COLORS.info, description: clip(`<@${id3}>
 
 ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
       }
@@ -82431,7 +82447,7 @@ ${lines.join("\n") || "Keine Bewerbungen."}`, 4e3) }] };
         const q2 = s2.questions[i];
         if (rest[1] !== "yes") {
           s2.pendingRoblox = void 0;
-          return { ...okReply("Okay."), update: { embeds: [{ title: clip2(s2.unitName, 256), color: COLORS.neutral, description: clip2(`**${i + 1}/${s2.questions.length}.** ${plain2(q2.text)}
+          return { ...okReply("Okay."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.neutral, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
 
 Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4e3) }] } };
         }
@@ -82441,9 +82457,9 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
         s2.answers.push(name);
         const platform2 = c.platform;
         await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
-        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip2(s2.unitName, 256), color: COLORS.success, description: clip2(`**${i + 1}/${s2.questions.length}.** ${plain2(q2.text)}
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
 
-\u2705 ${plain2(name)}`, 4e3) }] } };
+\u2705 ${plain(name)}`, 4e3) }] } };
       }
       if (action === "ans" || action === "skip") {
         const s2 = sessions.get(c.discordId);
@@ -82464,9 +82480,9 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
         s2.answers.push(value);
         const platform2 = c.platform;
         await proceed({ api: c.api, userId: c.discordId, userName: c.userName ?? c.discordId, sendDm: (u, m) => platform2.sendDm(u, m), robloxLookup: c.robloxLookup, now: Date.now() }, s2);
-        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip2(s2.unitName, 256), color: COLORS.success, description: clip2(`**${i + 1}/${s2.questions.length}.** ${plain2(q2.text)}
+        return { ...okReply("Gespeichert."), update: { embeds: [{ title: clip(s2.unitName, 256), color: COLORS.success, description: clip(`**${i + 1}/${s2.questions.length}.** ${plain(q2.text)}
 
-\u2705 ${plain2(answerText(value))}`, 4e3) }] } };
+\u2705 ${plain(answerText(value))}`, 4e3) }] } };
       }
       if (action === "cancel") {
         const running2 = sessions.get(c.discordId);
@@ -82482,14 +82498,14 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
       if (action !== "start") return errorReply("Unbekannte Aktion.");
       const running = sessions.get(c.discordId);
       if (running && running.expiresAt > Date.now()) {
-        if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain2(running.questions[running.answers.length].text)}`);
-        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain2(running.unitName)}**). Beende oder brich sie zuerst ab.`);
+        if (running.unit === rest[0]) return okReply(`Deine Bewerbung l\xE4uft bereits \u2013 Frage ${running.answers.length + 1}/${running.questions.length}: ${plain(running.questions[running.answers.length].text)}`);
+        return errorReply(`Du hast bereits eine laufende Bewerbung (**${plain(running.unitName)}**). Beende oder brich sie zuerst ab.`);
       }
       const flow = await loadFlow(c.api, rest[0], c.guildId ?? guildOf.get(c.discordId));
       if (!flow) return errorReply("Diese Auswahl gibt es nicht mehr. Bitte das Panel neu laden.");
-      if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain2(flow.name)}** sind derzeit geschlossen.`);
+      if (!flow.enabled) return errorReply(`Bewerbungen f\xFCr **${plain(flow.name)}** sind derzeit geschlossen.`);
       const open = await openApplication(c.api, flow.key, c.discordId, c.guildId ?? guildOf.get(c.discordId));
-      if (open.open) return errorReply(`Du hast f\xFCr **${plain2(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
+      if (open.open) return errorReply(`Du hast f\xFCr **${plain(flow.name)}** bereits eine offene Bewerbung (${open.number}). Bitte warte auf die Entscheidung.`);
       if (!c.platform) return errorReply("Direktnachrichten sind hier nicht verf\xFCgbar.");
       const blocked = roleBlock(flow.settings, c.guildId ? c.memberRoleIds ?? [] : void 0);
       if (blocked) return errorReply(blocked);
@@ -82512,7 +82528,7 @@ Schreib deinen Roblox-Benutzernamen bitte noch einmal (genau wie in Roblox).`, 4
 async function openApplicantTicket(platform2, cfg2, a) {
   const t2 = await platform2.createTicketChannel({ guildId: a.guildId, userId: a.discordId, userName: a.userName, categoryId: cfg2?.tickets, staffRoleId: cfg2?.staffRole, extraUserIds: a.requesterId ? [a.requesterId] : [] });
   if (!t2.existing) {
-    await platform2.postPanel({ channelId: t2.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain2(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
+    await platform2.postPanel({ channelId: t2.channelId, embed: { title: `\u{1F3AB} Ticket zur Bewerbung ${a.number}`, color: COLORS.info, description: `<@${a.discordId}>, das Team hat eine R\xFCckfrage zu deiner Bewerbung **${a.number}**${a.unitName ? ` (${plain(a.unitName)})` : ""}. Bitte antworte hier.` }, buttons: [{ id: "support:close", label: "Ticket schlie\xDFen", emoji: "\u{1F512}", style: "danger" }] }).catch(() => void 0);
   }
   return t2;
 }
@@ -82521,23 +82537,23 @@ async function openApplicantTicket(platform2, cfg2, a) {
 var UUID = /^[0-9a-f-]{36}$/;
 var emojiOf = (e) => e && e.length <= 64 ? e : void 0;
 function fail(e) {
-  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip2(e.message, 500));
+  if (e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message && !/^You |permission|^Dafür fehlt dir die Berechtigung|steht dem Bot nicht zur Verfügung/i.test(e.message)) return errorReply(clip(e.message, 500));
   return mapError(e);
 }
 async function run(c, r, text) {
   if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
   return okReply(text ?? r.message ?? "Erledigt.");
 }
-var staff = (c, id3, body) => c.api.asUser(c.discordId, "POST", `/support-tickets/${id3}/actions`, body);
+var staff = (c, id3, body2) => c.api.asUser(c.discordId, "POST", `/support-tickets/${id3}/actions`, body2);
 var options = (c, id3) => c.api.asUser(c.discordId, "GET", `/support-tickets/${id3}/options`);
 async function close(c, id3, reason, answers) {
-  const body = { ...reason ? { reason } : {}, ...answers ? { answers } : {} };
+  const body2 = { ...reason ? { reason } : {}, ...answers ? { answers } : {} };
   try {
-    return await run(c, await staff(c, id3, { action: "close", ...body }));
+    return await run(c, await staff(c, id3, { action: "close", ...body2 }));
   } catch (e) {
     if (!(e instanceof BotApiError) || e.status !== 401 && e.status !== 403) return fail(e);
     try {
-      return await run(c, await c.api.service("POST", `/bot/support-tickets/${id3}/creator-close`, { discordId: c.discordId, ...body }));
+      return await run(c, await c.api.service("POST", `/bot/support-tickets/${id3}/creator-close`, { discordId: c.discordId, ...body2 }));
     } catch (e2) {
       return fail(e2);
     }
@@ -82547,7 +82563,7 @@ async function answer(c, id3, questionId, values) {
   try {
     const r = await c.api.service("POST", `/bot/support-tickets/${id3}/answer`, { discordId: c.discordId, questionId, values });
     if (r.effects?.length && c.applyEffects) await c.applyEffects(r.effects);
-    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip2(plain2(r.answer), 1e3), color: COLORS.success }] } };
+    return { ...okReply(r.done ? "Danke! Alle Fragen sind beantwortet \u2013 das Team meldet sich." : "Gespeichert."), update: { embeds: [{ title: "\u2705 Beantwortet", description: clip(plain(r.answer), 1e3), color: COLORS.success }] } };
   } catch (e) {
     return fail(e);
   }
@@ -82610,7 +82626,7 @@ var TICKET_INTERACTION = {
         case "formsub": {
           const step = Number(rest[0]) || 0;
           const r = await c.api.service("POST", `/bot/support-tickets/form/${id3}/submit`, { discordId: c.discordId, step, values: c.modal?.values ?? {}, files: c.modal?.files ?? {} });
-          if ("errors" in r) return { ephemeral: true, embeds: [{ title: "\u26A0\uFE0F Bitte pr\xFCfe deine Angaben", description: clip2(r.errors.map((e) => `\u2022 **${plain2(e.field)}:** ${plain2(e.message)}`).join("\n"), 3500), color: COLORS.warning }], buttons: [{ id: `tk:formstep:${id3}:${r.step}`, label: "Erneut ausf\xFCllen", emoji: "\u270F\uFE0F", style: "primary" }] };
+          if ("errors" in r) return { ephemeral: true, embeds: [{ title: "\u26A0\uFE0F Bitte pr\xFCfe deine Angaben", description: clip(r.errors.map((e) => `\u2022 **${plain(e.field)}:** ${plain(e.message)}`).join("\n"), 3500), color: COLORS.warning }], buttons: [{ id: `tk:formstep:${id3}:${r.step}`, label: "Erneut ausf\xFCllen", emoji: "\u270F\uFE0F", style: "primary" }] };
           if ("next" in r) return { ephemeral: true, embeds: [{ title: `\u2705 Schritt ${r.next}/${r.steps} gespeichert`, description: "Weiter geht es mit dem n\xE4chsten Teil des Formulars.", color: COLORS.success }], buttons: [{ id: `tk:formstep:${id3}:${r.next}`, label: `Weiter (Schritt ${r.next + 1}/${r.steps})`, emoji: "\u27A1\uFE0F", style: "primary" }] };
           if (r.existing) return okReply(`Dein Ticket **${r.ticket.ref}** wurde bereits erstellt.`);
           if (!c.applyEffects) return errorReply("Tickets sind hier nicht verf\xFCgbar.");
@@ -82658,7 +82674,7 @@ var TICKET_INTERACTION = {
             ...o.source === "BOTH" ? [{ id: `tk:closem:${id3}`, label: "Eigener Grund", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
             ...o.mode === "OPTIONAL" ? [{ id: `tk:closen:${id3}`, label: "Ohne Grund schlie\xDFen", style: "secondary" }] : []
           ];
-          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id3}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip2(r, 100), value: clip2(r, 100) })) }, buttons };
+          return { ephemeral: true, embeds: [{ title: "\u{1F512} Ticket schlie\xDFen", description: "Warum wird dieses Ticket geschlossen?", color: COLORS.danger }], select: { id: `tk:closer:${id3}`, placeholder: "Grund ausw\xE4hlen \u2026", options: o.reasons.slice(0, 25).map((r) => ({ label: clip(r, 100), value: clip(r, 100) })) }, buttons };
         }
         case "closem":
           return { modal: { id: `tk:closemodal:${id3}`, title: "Ticket schlie\xDFen", fields: [{ id: "reason", label: "Warum wird dieses Ticket geschlossen?", paragraph: true, required: true, maxLength: 500 }] } };
@@ -82691,7 +82707,7 @@ var TICKET_INTERACTION = {
             selects: [
               { id: `tk:fwu:${id3}`, placeholder: "An Teammitglied \u2026", kind: "user", min: 1, max: 1, options: [] },
               { id: `tk:fwr:${id3}`, placeholder: "An Team-Rolle \u2026", kind: "role", min: 1, max: 1, options: [] },
-              ...o.categories.length ? [{ id: `tk:fwc:${id3}`, placeholder: "An Kategorie \u2026", options: o.categories.slice(0, 25).map((x) => ({ label: clip2(x.name, 100), value: x.id, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} })) }] : []
+              ...o.categories.length ? [{ id: `tk:fwc:${id3}`, placeholder: "An Kategorie \u2026", options: o.categories.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} })) }] : []
             ]
           };
         }
@@ -82817,7 +82833,7 @@ var TICKET_INTERACTION = {
     }
   }
 };
-var pick = (id3, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id: id3, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip2(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
+var pick = (id3, title, opts) => opts.length ? { ephemeral: true, embeds: [{ title, color: COLORS.info }], select: { id: id3, placeholder: "Bitte ausw\xE4hlen \u2026", options: opts.slice(0, 25).map((o) => ({ ...o, label: clip(o.label, 100) })) } } : errorReply("Keine Auswahl verf\xFCgbar.");
 var TICKET_COMMAND = {
   name: "support",
   description: "Ein Support-Ticket \xF6ffnen (Team: auch f\xFCr ein anderes Mitglied)",
@@ -82830,7 +82846,7 @@ var TICKET_COMMAND = {
       const roles2 = c.memberRoleIds ?? [];
       const cats = member ? all : all.filter((x) => (!x.requiredRoleIds.length || x.requiredRoleIds.some((r) => roles2.includes(r))) && (!x.allowedUserIds.length || x.allowedUserIds.includes(c.discordId)));
       if (!cats.length) return errorReply(all.length ? "Du darfst derzeit keine Ticket-Art \xF6ffnen." : "Es ist noch keine Ticket-Art eingerichtet (Dashboard \u2192 Support Tickets \u2192 Categories).");
-      const options2 = cats.slice(0, 25).map((x) => ({ label: clip2(x.name, 100), value: x.id, ...x.description ? { description: clip2(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
+      const options2 = cats.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...x.description ? { description: clip(x.description, 100) } : {}, ...emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji) } : {} }));
       if (!member && cats.length === 1) return await TICKET_INTERACTION.run({ ...c, args: ["open", "cmd", cats[0].id] });
       return {
         ephemeral: true,
@@ -82929,8 +82945,8 @@ var TICKET_ADMIN_COMMAND = {
           return run(c, await staff(c, id3, { action: "note", text: str4("text") ?? "" }));
         case "automatik": {
           const m = str4("modus") ?? "";
-          const body = m.startsWith("pause") ? { mode: "pause", minutes: Number(m.slice(5)) || 60 } : { mode: m === "disable" ? "disable" : "enable" };
-          return run(c, await staff(c, id3, { action: "automation", ...body }));
+          const body2 = m.startsWith("pause") ? { mode: "pause", minutes: Number(m.slice(5)) || 60 } : { mode: m === "disable" ? "disable" : "enable" };
+          return run(c, await staff(c, id3, { action: "automation", ...body2 }));
         }
         default:
           return errorReply("Unbekannter Unterbefehl.");
@@ -82944,7 +82960,7 @@ var TICKET_ADMIN_COMMAND = {
 // apps/bot/src/voice-support.ts
 var ROOMS_MS = 6e4;
 var note = (text) => ({ content: text, ephemeral: true });
-var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip2(e.message, 500)) : mapError(e);
+var fail2 = (e) => e instanceof BotApiError && [400, 403, 404, 409].includes(e.status) && e.message ? errorReply(clip(e.message, 500)) : mapError(e);
 function createVoiceSupport(api2, ops, log = console.error) {
   const rooms = /* @__PURE__ */ new Map();
   const roomsOf = async (guildId) => {
@@ -82991,7 +83007,7 @@ function createVoiceSupport(api2, ops, log = console.error) {
     try {
       if (room.ownChannels) channelId = room.ownChannelIds.find((x) => !ops.members(x).length) ?? null;
       else {
-        channelId = await ops.createVoice({ guildId: c.guildId, name: clip2(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
+        channelId = await ops.createVoice({ guildId: c.guildId, name: clip(`${room.channelPrefix}${c.userName}`, 100), nearChannelId: room.waitingChannelId, userId: c.userId, teamRoleId: room.teamRoleId });
         created = true;
       }
     } catch (e) {
@@ -83131,7 +83147,7 @@ function currentBlock(r) {
     `**Beginn**: ${ts(r.startsAt, "f")}`,
     `**Ende**: ${ts(r.endsAt, "f")} (${ts(r.endsAt, "R")})`,
     `**Dauer**: ${humanDuration(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}`,
-    `**Grund**: ${clip2(plain2(r.reason), 800)}`,
+    `**Grund**: ${clip(plain(r.reason), 800)}`,
     ...r.extensionMinutes ? [`**Verl\xE4ngerung**: \u23F3 +${humanDuration(r.extensionMinutes * 6e4)} beantragt \u2013 wartet auf die Leitung`] : [],
     `-# ID: ${r.number}`
   ].join("\n");
@@ -83185,32 +83201,32 @@ async function adminHistory(c, discordId) {
   if (!items.length) return okReply("Noch keine Abmeldungen.");
   const blocks = items.slice(0, 15).map((r) => {
     const st = leaveState(r);
-    return clip2([
+    return clip([
       `\`${r.number}\`${st ? ` ${st}` : ""}`,
       `- **Beginn:** ${ts(r.startsAt, "f")}`,
       `- **Ende:** ${ts(r.status === "ENDED" && r.endedAt ? r.endedAt : r.endsAt, "f")}`,
-      `- **Grund:** ${clip2(plain2(r.reason), 300)}`,
-      ...r.decisionReason ? [`- **Entscheidung:** ${clip2(plain2(r.decisionReason), 200)}`] : []
+      `- **Grund:** ${clip(plain(r.reason), 300)}`,
+      ...r.decisionReason ? [`- **Entscheidung:** ${clip(plain(r.decisionReason), 200)}`] : []
     ].join("\n"), 900);
   });
-  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip2(blocks.join("\n\n"), 3900) }] };
+  return { ephemeral: true, embeds: [{ box: true, heading: "small", author: await memberHead(c, discordId), title: "Verlauf der Abmeldungen", description: clip(blocks.join("\n\n"), 3900) }] };
 }
 var LIST_VIEWS = { offen: ["PENDING", "Offene Antr\xE4ge"], aktiv: ["ACTIVE", "Gerade abgemeldet"], geplant: ["UPCOMING", "Bevorstehend"], kalender: ["CALENDAR", "N\xE4chste 4 Wochen"], alle: ["ALL", "Alle Abmeldungen"] };
-var who = (r) => r.discordId ? `<@${r.discordId}>` : `**${plain2(r.name)}**`;
+var who = (r) => r.discordId ? `<@${r.discordId}>` : `**${plain(r.name)}**`;
 async function listReply(c, view) {
   const [status3, title] = LIST_VIEWS[view] ?? LIST_VIEWS.offen;
   const { all, items } = await c.api.asUser(c.discordId, "GET", `/leave?status=${status3}`);
   const rows = status3 === "PENDING" ? [...items].reverse() : status3 === "CALENDAR" || status3 === "UPCOMING" ? [...items].sort((a, b2) => a.startsAt.localeCompare(b2.startsAt)) : items;
   const lines = rows.slice(0, 20).map((r) => `\`${r.number}\` ${all ? `${who(r)} \xB7 ` : ""}${ts(r.startsAt, "d")} \u2013 ${ts(r.endsAt, "d")} [${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())}]${status3 === "ACTIVE" ? ` \xB7 bis ${ts(r.endsAt, "R")}` : ""}${status3 === "ALL" || status3 === "CALENDAR" ? ` ${leaveState(r)}` : ""}
-> ${clip2(plain2(r.reason), 120)}`);
+> ${clip(plain(r.reason), 120)}`);
   const embed = {
     title: `\u{1F4C5} ${all ? title : `Deine Abmeldungen \u2013 ${title}`} (${items.length})`,
     color: status3 === "PENDING" && items.length ? COLORS.warning : COLORS.info,
-    description: clip2(lines.length ? `${lines.join("\n")}${rows.length > 20 ? `
+    description: clip(lines.length ? `${lines.join("\n")}${rows.length > 20 ? `
 \u2026 und ${rows.length - 20} weitere (im Dashboard)` : ""}` : "Keine Eintr\xE4ge.", 4e3)
   };
   if (status3 !== "PENDING" || !all || !rows.length) return { ephemeral: true, embeds: [embed] };
-  return { ephemeral: true, embeds: [embed], select: { id: "leave:pick", placeholder: "Antrag zum Entscheiden w\xE4hlen \u2026", options: rows.slice(0, 25).map((r) => ({ label: clip2(`${r.number} \xB7 ${r.name}`, 100), value: r.id, description: clip2(`${fmt(r.startsAt)} \u2013 ${fmt(r.endsAt)} \xB7 ${r.reason}`, 100) })) } };
+  return { ephemeral: true, embeds: [embed], select: { id: "leave:pick", placeholder: "Antrag zum Entscheiden w\xE4hlen \u2026", options: rows.slice(0, 25).map((r) => ({ label: clip(`${r.number} \xB7 ${r.name}`, 100), value: r.id, description: clip(`${fmt(r.startsAt)} \u2013 ${fmt(r.endsAt)} \xB7 ${r.reason}`, 100) })) } };
 }
 async function pickReply(c, id3) {
   const { items } = await c.api.asUser(c.discordId, "GET", "/leave?status=PENDING");
@@ -83222,9 +83238,9 @@ async function pickReply(c, id3) {
       title: "Abmeldeantrag",
       color: COLORS.warning,
       footer: `ID: ${r.number}`,
-      description: `${who(r)}${r.discordId ? ` (${plain2(r.name)})` : ""}
+      description: `${who(r)}${r.discordId ? ` (${plain(r.name)})` : ""}
 **${ts(r.startsAt, "f")}** bis **${ts(r.endsAt, "f")}** (${span(new Date(r.endsAt).getTime() - new Date(r.startsAt).getTime())})`,
-      fields: [{ name: "Grund", value: clip2(plain2(r.reason), 1024) }]
+      fields: [{ name: "Grund", value: clip(plain(r.reason), 1024) }]
     }],
     buttons: [{ id: `leave:decide:${r.id}:APPROVED`, label: "Annehmen", style: "success", emoji: "\u2705" }, { id: `leave:reason:${r.id}:DENIED`, label: "Ablehnen", style: "danger", emoji: "\u274C" }]
   };
@@ -83283,14 +83299,14 @@ async function decide2(c, id3, status3, reason) {
     return {
       ephemeral: true,
       embeds: [ok ? { title: "Abmeldung angenommen", color: COLORS.success, description: `Diese Abmeldung endet ungef\xE4hr ${ts(r.endsAt)}.
-Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Abmeldung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain2(r.name)} wurde abgelehnt. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Abmeldung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} wurde abgelehnt. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
       // wie Trident: über dem Antrag „Angenommen von @… am …“, statt der Buttons ein ausgegrautes „Angenommen“
       decided: {
         color: ok ? COLORS.success : COLORS.danger,
         note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am ${now}`,
         badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
-        text: clip2(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain2(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`, 1024)
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
       }
     };
   } catch (e) {
@@ -83303,14 +83319,14 @@ async function decideExtension(c, id3, status3, reason) {
     const ok = status3 === "APPROVED";
     return {
       ephemeral: true,
-      embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain2(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
-Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Verl\xE4ngerung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain2(r.name)} endet weiterhin ungef\xE4hr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
+      embeds: [ok ? { title: "Verl\xE4ngerung angenommen", color: COLORS.success, description: `Die Abmeldung von ${plain(r.name)} endet jetzt ungef\xE4hr ${ts(r.endsAt)}.
+Um sie anzusehen oder zu \xE4ndern, nutze \`/leave admin\`.`, footer: `ID: ${r.number}` } : { title: "Verl\xE4ngerung abgelehnt", color: COLORS.danger, description: `Die Abmeldung von ${plain(r.name)} endet weiterhin ungef\xE4hr ${ts(r.endsAt)}. Die Person bekommt eine Direktnachricht.`, footer: `ID: ${r.number}` }],
       decided: {
         color: ok ? COLORS.success : COLORS.danger,
         note: `${ok ? "Angenommen" : "Abgelehnt"} von <@${c.discordId}> am <t:${Math.floor(Date.now() / 1e3)}:f>`,
         badge: ok ? { label: "Angenommen", style: "success", emoji: "\u2714\uFE0F" } : { label: "Abgelehnt", style: "danger", emoji: "\u2716\uFE0F" },
-        text: clip2(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`, 1024)
+        text: clip(`${ok ? "\u2705 Angenommen" : "\u274C Abgelehnt"} von <@${c.discordId}>${reason ? `
+**Grund:** ${plain(reason)}` : ""}`, 1024)
       }
     };
   } catch (e) {
@@ -83413,7 +83429,7 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
     if (action === "cancel") {
       try {
         const r = await c.api.asUser(c.discordId, "POST", `/leave/${id3}/cancel`);
-        if (r.discordId && r.discordId !== c.discordId) return okReply(`Abmeldung **${r.number}** von ${plain2(r.name)} ${r.status === "ENDED" ? "beendet" : "abgesagt"}.`);
+        if (r.discordId && r.discordId !== c.discordId) return okReply(`Abmeldung **${r.number}** von ${plain(r.name)} ${r.status === "ENDED" ? "beendet" : "abgesagt"}.`);
         return okReply(r.status === "ENDED" ? `Deine Abmeldung **${r.number}** ist beendet \u2013 willkommen zur\xFCck!` : `Abmeldung **${r.number}** zur\xFCckgezogen.`);
       } catch (e) {
         return mapError(e);
@@ -83432,79 +83448,6 @@ Um benachrichtigt zu werden, ob sie angenommen oder abgelehnt wird, lass bitte d
 };
 
 // apps/bot/src/commands/cad.ts
-var lbl = (list3, key4) => {
-  const o = list3.find((x) => x.key === key4);
-  return o ? `${o.emoji ? `${o.emoji} ` : ""}${o.label}` : key4;
-};
-var norm = (s) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
-var config = (c) => c.api.asUser(c.discordId, "GET", "/cad/config");
-async function myUnit(c, callsign) {
-  const units = await c.api.asUser(c.discordId, "GET", "/cad/units");
-  if (callsign) return units.find((u) => norm(u.callsign) === norm(callsign)) ?? null;
-  return units.find((u) => u.crew.some((m) => m.discordId === c.discordId)) ?? null;
-}
-var CAD_COMMANDS = [{
-  name: "cad",
-  description: "CAD-Leitstelle: Einheitenstatus, Funkmeldung, aktive Eins\xE4tze",
-  subcommands: [
-    { name: "status", description: "Status deiner Einheit an die Leitstelle melden", options: [
-      { name: "status", description: "z. B. Verf\xFCgbar, Unterwegs, Am Einsatzort", type: "string", required: true, maxLength: 40 },
-      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
-    ] },
-    { name: "funk", description: "Funkmeldung an die Leitstelle (landet in der Einsatzchronik)", options: [
-      { name: "text", description: "z. B. \u201EAm Einsatzort.\u201C", type: "string", required: true, maxLength: 500 },
-      { name: "einsatz", description: "Einsatznummer (leer = aktueller Einsatz deiner Einheit)", type: "string", maxLength: 32 }
-    ] },
-    { name: "rueckmeldung", description: "R\xFCckmeldung deiner Einheit zum Einsatz an die Leitstelle (Chronik)", options: [
-      { name: "art", description: "Was meldest du?", type: "string", required: true, choices: CAD_FEEDBACK.map((x) => ({ name: x.label, value: x.key })) },
-      { name: "notiz", description: "Zusatz, z. B. \u201E2 Verd\xE4chtige fl\xFCchtig Richtung Norden\u201C", type: "string", maxLength: 500 },
-      { name: "einheit", description: "Rufname (leer = deine Einheit)", type: "string", maxLength: 16 }
-    ] },
-    { name: "einsaetze", description: "Aktive Eins\xE4tze der Leitstelle" },
-    { name: "fahrzeuge", description: "Gerade in ER:LC gemeldete Polizeifahrzeuge (Besitzer, Einheit)" }
-  ],
-  async run(c) {
-    try {
-      const sub = String(c.opts._sub ?? "");
-      if (sub === "status") {
-        const cfg2 = await config(c);
-        const want = String(c.opts.status ?? "");
-        const st = cfg2.unitStatuses.find((s) => norm(s.key) === norm(want) || norm(s.label) === norm(want));
-        if (!st) return errorReply(`Unbekannter Status. M\xF6glich: ${cfg2.unitStatuses.map((s) => `\`${s.label}\``).join(", ")}`);
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
-        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
-        await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/status`, { status: st.key });
-        return okReply(`**${plain2(unit.callsign)}** ist jetzt ${lbl(cfg2.unitStatuses, st.key)}.`);
-      }
-      if (sub === "rueckmeldung") {
-        const unit = await myUnit(c, c.opts.einheit ? String(c.opts.einheit) : void 0);
-        if (!unit) return errorReply(c.opts.einheit ? "Diese Einheit gibt es nicht." : "Du bist keiner Einheit zugeordnet. Gib den Rufnamen mit `einheit:` an.");
-        const r = await c.api.asUser(c.discordId, "POST", `/cad/units/${unit.id}/feedback`, { kind: String(c.opts.art ?? ""), ...c.opts.notiz ? { note: String(c.opts.notiz) } : {} });
-        const fb = CAD_FEEDBACK.find((x) => x.key === c.opts.art);
-        return okReply(`${fb ? `${fb.emoji} ${fb.label}` : "R\xFCckmeldung"} \u2013 **${plain2(r.callsign)}** \xB7 Einsatz **${plain2(r.number)}** an die Leitstelle gemeldet.`);
-      }
-      if (sub === "funk") {
-        const r = await c.api.asUser(c.discordId, "POST", "/cad/radio", { text: String(c.opts.text ?? ""), ...c.opts.einsatz ? { incidentNumber: String(c.opts.einsatz) } : {} });
-        return okReply(`\u{1F4FB} ${r.callsign ? `**${plain2(r.callsign)}**: ` : ""}\u201E${plain2(c.opts.text)}\u201C gesendet${r.incidentNumber ? ` \u2013 Einsatz **${plain2(r.incidentNumber)}**` : ""}.`);
-      }
-      if (sub === "einsaetze") {
-        const [cfg2, list3] = await Promise.all([config(c), c.api.asUser(c.discordId, "GET", "/cad/incidents?active=true&take=20")]);
-        const lines = list3.map((i) => `**${plain2(i.number)}** \xB7 ${clip2(plain2(i.title), 80)} \u2014 ${lbl(cfg2.priorities, i.priority)} / ${lbl(cfg2.incidentStatuses, i.status)}${i.location ? ` \xB7 ${clip2(plain2(i.location), 60)}` : ""}${i.units.filter((u) => !u.clearedAt).length ? `
-   \u21B3 ${i.units.filter((u) => !u.clearedAt).map((u) => plain2(u.unit.callsign)).join(", ")}` : ""}`);
-        return { ephemeral: true, embeds: [{ title: `\u{1F6A8} Aktive Eins\xE4tze (${list3.length})`, description: clip2(lines.join("\n") || "Keine aktiven Eins\xE4tze.", 4e3), color: COLORS.info }] };
-      }
-      if (sub === "fahrzeuge") {
-        const r = await c.api.asUser(c.discordId, "GET", "/fleet/vehicles");
-        const lines = r.items.slice(0, 30).map((v) => `\u{1F693} **${clip2(plain2(v.api.name), 60)}**${v.api.plate ? ` \xB7 ${plain2(v.api.plate)}` : ""}${v.internal.internalCode ? ` \xB7 ${plain2(v.internal.internalCode)}` : ""}
-   \u21B3 Besitzer ${plain2(v.api.owner)}${v.ownerOnline ? "" : " (nicht im Spiel)"}${v.internal.unit ? ` \xB7 Einheit ${plain2(v.internal.unit.callsign)}` : ""}${v.stale ? " \xB7 \u26A0\uFE0F veraltet" : ""}`);
-        return { ephemeral: true, embeds: [{ title: `\u{1F693} Polizeifahrzeuge (${r.items.length})`, description: clip2(lines.join("\n") || "Gerade meldet ER:LC keine Polizeifahrzeuge.", 4e3), color: COLORS.info, footer: "Fahrer: nicht verf\xFCgbar \u2013 ER:LC meldet nur den Besitzer." }] };
-      }
-      return errorReply("Unbekannter Unterbefehl.");
-    } catch (e) {
-      return mapError(e);
-    }
-  }
-}];
 var CAD_INTERACTION = {
   prefix: "cad",
   async run(c) {
@@ -83522,12 +83465,12 @@ var CAD_INTERACTION = {
         }
         if (action === "incident") {
           const r = await c.api.asUser(c.discordId, "POST", `/cad/calls/${id3}/incident`, {});
-          return okReply(`Einsatz **${plain2(r.number)}** aus dem Notruf erstellt.`);
+          return okReply(`Einsatz **${plain(r.number)}** aus dem Notruf erstellt.`);
         }
         if (action === "units") {
           const units = (await c.api.asUser(c.discordId, "GET", "/cad/units")).filter((u) => u.operational && !["OFF_DUTY", "UNAVAILABLE"].includes(u.status));
           if (!units.length) return errorReply("Gerade ist keine Einheit verf\xFCgbar.");
-          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id3}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip2(u.callsign, 100), value: u.id, ...u.current ? { description: clip2(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip2(u.name, 100) } : {} })) } };
+          return { ephemeral: true, content: "Welche Einheit soll den Notruf \xFCbernehmen?", select: { id: `cad:assign:${id3}`, placeholder: "Einheit w\xE4hlen \u2026", options: units.slice(0, 25).map((u) => ({ label: clip(u.callsign, 100), value: u.id, ...u.current ? { description: clip(`im Einsatz ${u.current.number}`, 100) } : u.name ? { description: clip(u.name, 100) } : {} })) } };
         }
       }
       if (kind2 === "assign") {
@@ -83543,44 +83486,44 @@ var CAD_INTERACTION = {
   }
 };
 var hex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? parseInt(v.slice(1), 16) : void 0;
-var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip2(plain2(value), 1024), inline }];
+var f = (name, value, inline = true) => value === null || value === void 0 || value === "" ? [] : [{ name, value: clip(plain(value), 1024), inline }];
 function renderCadOutbox(type, p) {
-  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip2(plain2(p.title ?? ""), 180)}`;
+  const head = `${p.number ? `${String(p.number)} \xB7 ` : ""}${clip(plain(p.title ?? ""), 180)}`;
   const base = [...f("Stichwort", p.keyword), ...f("Einsatzart", p.type), ...f("Priorit\xE4t", p.priority), ...f("Status", p.status), ...f("Ort", p.location)];
   switch (type) {
     case "cad.incident.created":
-      return { title: clip2(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip2(plain2(p.description), 1500) : void 0, fields: base };
+      return { title: clip(`\u{1F6A8} Neuer Einsatz: ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.danger, description: p.description ? clip(plain(p.description), 1500) : void 0, fields: base };
     case "cad.incident.status":
-      return { title: clip2(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain2(p.previous ?? "\u2014")}** \u2192 **${plain2(p.status)}**${p.note ? `
-${clip2(plain2(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
+      return { title: clip(`\u{1F504} ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.info, description: `Status: **${plain(p.previous ?? "\u2014")}** \u2192 **${plain(p.status)}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, fields: [...f("Ort", p.location)] };
     case "cad.incident.assigned":
-      return { title: clip2(`\u{1F4FB} ${plain2(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign)} \u2192 ${head}`, 256), color: hex(p.priorityColor) ?? COLORS.warning, description: p.unitRoleId ? `<@&${String(p.unitRoleId)}>` : void 0, fields: base };
     case "cad.incident.closed":
-      return { title: clip2(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
+      return { title: clip(`\u2705 Einsatz abgeschlossen: ${head}`, 256), color: COLORS.success, fields: [...f("Status", p.status), ...f("Ort", p.location)] };
     case "cad.incident.feedback":
-      return { title: clip2(`\u{1F4DF} ${plain2(p.callsign)}: ${plain2(p.feedback)}`, 256), color: COLORS.info, description: clip2(`**${head}**${p.note ? `
-${clip2(plain2(p.note), 500)}` : ""}`, 1500), fields: [...f("Ort", p.location)] };
+      return { title: clip(`\u{1F4DF} ${plain(p.callsign)}: ${plain(p.feedback)}`, 256), color: COLORS.info, description: clip(`**${head}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, 1500), fields: [...f("Ort", p.location)] };
     case "cad.incident.support":
-      return { title: clip2(`\u{1F198} Unterst\xFCtzung ben\xF6tigt: ${plain2(p.callsign)}`, 256), color: COLORS.danger, description: clip2(`**${head}**${p.note ? `
-${clip2(plain2(p.note), 500)}` : ""}`, 1500), fields: [...f("Priorit\xE4t", p.priority), ...f("Ort", p.location)] };
+      return { title: clip(`\u{1F198} Unterst\xFCtzung ben\xF6tigt: ${plain(p.callsign)}`, 256), color: COLORS.danger, description: clip(`**${head}**${p.note ? `
+${clip(plain(p.note), 500)}` : ""}`, 1500), fields: [...f("Priorit\xE4t", p.priority), ...f("Ort", p.location)] };
     case "cad.handover": {
-      const list3 = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain2(x)}`).join("\n") : "";
+      const list3 = Array.isArray(p.incidents) ? p.incidents.map((x) => `\u2022 ${plain(x)}`).join("\n") : "";
       return {
         title: "\u{1F501} Schicht\xFCbergabe der Leitstelle",
         color: COLORS.info,
-        description: clip2(`${p.notes ? `${plain2(p.notes)}
+        description: clip(`${p.notes ? `${plain(p.notes)}
 
 ` : ""}${list3 ? `**Offene Eins\xE4tze**
 ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         fields: [...f("Offene Eins\xE4tze", p.openIncidents), ...f("Einheiten im Einsatz", p.activeUnits), ...f("Offene Notrufe", p.openCalls)],
-        ...p.by ? { footer: `von ${clip2(String(p.by), 100)}` } : {}
+        ...p.by ? { footer: `von ${clip(String(p.by), 100)}` } : {}
       };
     }
     case "cad.call.received":
       return {
-        title: clip2(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
+        title: clip(`\u{1F6A8} NOTRUF #${String(p.callNumber ?? "?")}`, 256),
         color: COLORS.danger,
-        description: p.description ? clip2(plain2(p.description), 1500) : void 0,
+        description: p.description ? clip(plain(p.description), 1500) : void 0,
         fields: [...f("Ort", p.location), ...f("Team", p.team), ...p.startedAt ? [{ name: "Zeit", value: `<t:${Math.floor(Date.parse(String(p.startedAt)) / 1e3)}:t>`, inline: true }] : [], { name: "Status", value: "Offen", inline: true }, ...f("Server", p.server)]
       };
     case "cad.wanted.hit":
@@ -83590,13 +83533,13 @@ ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         title: confirmed ? "\u{1F6A8} FAHNDUNGSTREFFER" : "\u26A0\uFE0F M\xD6GLICHER FAHNDUNGSTREFFER",
         color: confirmed ? COLORS.danger : COLORS.warning,
         fields: [
-          { name: "Spieler", value: clip2(plain2(p.playerName), 256), inline: true },
-          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain2(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
+          { name: "Spieler", value: clip(plain(p.playerName), 256), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
           ...f("Fahndung", p.wantedNumber),
-          { name: "Grund", value: clip2(plain2(p.reason), 1024), inline: false },
+          { name: "Grund", value: clip(plain(p.reason), 1024), inline: false },
           ...f("Priorit\xE4t", p.priority),
           ...p.detectedAt ? [{ name: "Erkannt am", value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1e3)}:f>`, inline: true }] : [],
-          { name: "Identifikation", value: confirmed ? "Best\xE4tigt (Roblox-ID stimmt \xFCberein)" : `Manuelle Pr\xFCfung erforderlich${p.matchLabel ? ` \u2013 ${plain2(p.matchLabel)}` : ""}`, inline: false },
+          { name: "Identifikation", value: confirmed ? "Best\xE4tigt (Roblox-ID stimmt \xFCberein)" : `Manuelle Pr\xFCfung erforderlich${p.matchLabel ? ` \u2013 ${plain(p.matchLabel)}` : ""}`, inline: false },
           ...f("Server", p.server)
         ],
         footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
@@ -83607,9 +83550,9 @@ ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         title: "\u{1F6A8} IM SPIEL GESUCHT",
         color: COLORS.danger,
         fields: [
-          { name: "Spieler", value: clip2(plain2(p.playerName), 256), inline: true },
-          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain2(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
-          { name: "Grund", value: clip2(plain2(p.reason), 1024), inline: false },
+          { name: "Spieler", value: clip(plain(p.playerName), 256), inline: true },
+          { name: "Identifikator", value: p.robloxUserId ? `Roblox-ID ${plain(p.robloxUserId)}` : "keine ID von ER:LC geliefert", inline: true },
+          { name: "Grund", value: clip(plain(p.reason), 1024), inline: false },
           ...f("Priorit\xE4t", p.priority),
           ...p.detectedAt ? [{ name: "Erkannt am", value: `<t:${Math.floor(Date.parse(String(p.detectedAt)) / 1e3)}:f>`, inline: true }] : [],
           ...f("Server", p.server)
@@ -83617,9 +83560,9 @@ ${list3}` : "Keine offenen Eins\xE4tze."}`, 4e3),
         footer: "Nur zur Information \u2013 keine automatischen Ma\xDFnahmen im Spiel."
       };
     case "cad.announcement":
-      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip2(plain2(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip2(String(p.from), 100)}` } : {} };
+      return { title: "\u{1F4E2} Leitstellenmeldung", description: clip(plain(p.text), 4e3), color: COLORS.warning, ...p.from ? { footer: `von ${clip(String(p.from), 100)}` } : {} };
     case "cad.radio":
-      return { title: clip2(`\u{1F4FB} ${plain2(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip2(plain2(p.text), 1500)}\u201C`, color: COLORS.neutral };
+      return { title: clip(`\u{1F4FB} ${plain(p.callsign ?? "Funk")}${p.incidentNumber ? ` \xB7 ${String(p.incidentNumber)}` : ""}`, 256), description: `\u201E${clip(plain(p.text), 1500)}\u201C`, color: COLORS.neutral };
     default:
       return null;
   }
@@ -83690,10 +83633,10 @@ function discordErrorText(e) {
   if (x?.name === "RateLimitError") return describeDiscordError({ status: 429 });
   return describeDiscordError({ status: typeof x?.status === "number" ? x.status : void 0, code: typeof x?.code === "number" ? x.code : void 0, message: typeof x?.message === "string" ? x.message : String(e) });
 }
-async function report2(api2, path3, body, log) {
+async function report2(api2, path3, body2, log) {
   for (let i = 1; i <= 3; i++) {
     try {
-      await api2.service("POST", path3, body);
+      await api2.service("POST", path3, body2);
       return;
     } catch (e) {
       if (i === 3) log(`message builder: could not report ${path3}: ${e instanceof Error ? e.message : e}`);
@@ -83707,9 +83650,12 @@ async function runMbSend(api2, sendId, discord, log = console.log) {
   if (!s.proceed || !s.items) return;
   const base = `/bot/message-builder/sends/${sendId}`;
   const channelId = s.channelId ?? "";
+  const edit = s.kind === "EDIT";
   let stop = null;
   try {
-    const miss = await discord.missingPerms(s.guildId ?? null, channelId, s.items.map((i) => i.payload));
+    if (edit && (!s.messageId || !discord.edit)) throw new Error("Bearbeiten wird von dieser Bot-Version nicht unterst\xFCtzt.");
+    if (s.threadName && !discord.createPost) throw new Error("Forum-Beitr\xE4ge werden von dieser Bot-Version nicht unterst\xFCtzt.");
+    const miss = await discord.missingPerms(s.guildId ?? null, channelId, s.items.map((i) => i.payload), { threadId: s.threadId ?? null, threadName: s.threadName ?? null, edit });
     if (miss.length) stop = `Dem Bot fehlen in diesem Kanal Rechte: ${miss.join(", ")}.`;
   } catch (e) {
     stop = e instanceof Error ? e.message : String(e);
@@ -83719,10 +83665,17 @@ async function runMbSend(api2, sendId, discord, log = console.log) {
     await report2(api2, `${base}/finish`, { error: "Nicht gesendet." }, log);
     return;
   }
+  let where = edit ? channelId : s.threadId || channelId;
   for (const item of s.items) {
     try {
-      const msg = await discord.send(channelId, item.payload);
-      await report2(api2, `${base}/items/${item.position}`, { ok: true, messageId: msg.id }, log);
+      let msg;
+      if (edit) msg = await discord.edit(where, s.messageId, item.payload);
+      else if (s.threadName && where === channelId) {
+        const post = await discord.createPost(channelId, s.threadName, item.payload);
+        where = post.channelId;
+        msg = post;
+      } else msg = await discord.send(where, item.payload);
+      await report2(api2, `${base}/items/${item.position}`, { ok: true, messageId: msg.id, ...where !== channelId ? { channelId: where } : {} }, log);
     } catch (e) {
       const error = discordErrorText(e);
       log(`message builder ${sendId}: message ${item.position + 1} failed: ${error}`);
@@ -83733,23 +83686,47 @@ async function runMbSend(api2, sendId, discord, log = console.log) {
   }
   await report2(api2, `${base}/finish`, stop ? { error: stop } : {}, log);
 }
+async function runMbFetch(api2, id3, discord, log = console.log) {
+  if (!/^[0-9a-f-]{36}$/.test(id3)) throw new Error("invalid message id");
+  const t2 = await api2.service("GET", `/bot/message-builder/messages/${id3}`);
+  if (!t2.proceed || !t2.channelId || !t2.messageId) return;
+  let body2;
+  try {
+    const f2 = await discord.fetch(t2.guildId ?? null, t2.channelId, t2.messageId);
+    body2 = { ok: true, author: f2.author, ...f2.webhookId ? { webhookId: f2.webhookId } : {}, channelId: f2.channelId, parentId: f2.parentId, ...f2.channelName ? { channelName: f2.channelName.slice(0, 100) } : {}, message: f2.message };
+  } catch (e) {
+    body2 = { ok: false, error: e instanceof Error && !("status" in e) ? e.message.slice(0, 500) : discordErrorText(e) };
+  }
+  await report2(api2, `/bot/message-builder/messages/${id3}/loaded`, body2, log);
+}
 var MB_INTERACTION = {
   prefix: "mb",
   async run(c) {
     const [actionId] = c.args;
     if (!/^[0-9a-f-]{36}$/.test(actionId ?? "")) return errorReply("Unbekannte Aktion.");
     try {
-      const a = await c.api.service("POST", "/bot/message-builder/interactions", { actionId, guildId: c.guildId ?? null, discordId: c.discordId, ...c.values?.[0] ? { value: c.values[0] } : {} });
-      if (a.type === "reply") return { ephemeral: true, content: a.text.slice(0, 2e3) };
+      const values = c.values ?? [];
+      const sel = c.values !== void 0 ? { values, ...values[0] ? { value: values[0] } : {} } : {};
+      const a = await c.api.service("POST", "/bot/message-builder/interactions", { actionId, guildId: c.guildId ?? null, discordId: c.discordId, ...sel });
       if (a.type === "gone") return errorReply("Diese Aktion ist nicht mehr verf\xFCgbar.");
-      if (!c.guildId || !c.discord?.setRole) return errorReply("Das geht nur auf dem Discord-Server.");
-      try {
-        const r = await c.discord.setRole(c.guildId, c.discordId, a.roleId, a.mode);
-        const text = { added: `\u2705 Du hast jetzt die Rolle <@&${a.roleId}>.`, removed: `\u2705 Die Rolle <@&${a.roleId}> wurde dir entfernt.`, unchanged: `\u2139\uFE0F Keine \xC4nderung an <@&${a.roleId}>.` }[r];
-        return { ephemeral: true, content: text };
-      } catch (e) {
-        return errorReply(`Die Rolle konnte nicht ge\xE4ndert werden: ${discordErrorText(e)} (Die Bot-Rolle muss \xFCber dieser Rolle stehen und \u201ERollen verwalten\u201C haben.)`);
+      const list3 = a.type === "multi" ? a.actions : [a];
+      const out = [];
+      for (const x of list3) {
+        if (x.type === "reply") {
+          out.push(x.text);
+          continue;
+        }
+        if (!c.guildId || !c.discord?.setRole) return errorReply("Das geht nur auf dem Discord-Server.");
+        try {
+          const r = await c.discord.setRole(c.guildId, c.discordId, x.roleId, x.mode);
+          out.push({ added: `\u2705 Du hast jetzt die Rolle <@&${x.roleId}>.`, removed: `\u2705 Die Rolle <@&${x.roleId}> wurde dir entfernt.`, unchanged: `\u2139\uFE0F Keine \xC4nderung an <@&${x.roleId}>.` }[r]);
+        } catch (e) {
+          const err = `Die Rolle konnte nicht ge\xE4ndert werden: ${discordErrorText(e)} (Die Bot-Rolle muss \xFCber dieser Rolle stehen und \u201ERollen verwalten\u201C haben.)`;
+          if (list3.length === 1) return errorReply(err);
+          out.push(`\u274C ${err}`);
+        }
       }
+      return { ephemeral: true, content: out.join("\n\n").slice(0, 2e3) };
     } catch (e) {
       return mapError(e);
     }
@@ -83778,7 +83755,7 @@ function modal(t2, mode, id3, page, values) {
 async function showReport(c, idOrNumber) {
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports/${encodeURIComponent(idOrNumber.trim())}`);
   const t2 = r.template;
-  const head = [`**${r.number}** \xB7 ${STATUS_DE2[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain2(r.author.displayName)}` : null, r.reviewerName ? `**Gepr\xFCft von:** ${plain2(r.reviewerName)}` : null, r.status === "RETURNED" && r.reviewNote ? `**Nachbessern:** ${plain2(r.reviewNote)}` : null].filter(Boolean).join("\n");
+  const head = [`**${r.number}** \xB7 ${STATUS_DE2[r.status] ?? r.status}`, r.author ? `**Verfasser:** ${plain(r.author.displayName)}` : null, r.reviewerName ? `**Gepr\xFCft von:** ${plain(r.reviewerName)}` : null, r.status === "RETURNED" && r.reviewNote ? `**Nachbessern:** ${plain(r.reviewNote)}` : null].filter(Boolean).join("\n");
   const buttons = [
     ...r.canEdit ? [{ id: `drep:edit:${r.id}`, label: "Bearbeiten", emoji: "\u270F\uFE0F", style: "secondary" }] : [],
     ...r.canReview && r.status !== "REVIEWED" ? [{ id: `drep:rev:${r.id}`, label: "Gepr\xFCft", emoji: "\u2705", style: "success" }] : [],
@@ -83807,12 +83784,12 @@ async function listReply2(c) {
   if (name) {
     const all = await templates(c, false);
     const t2 = all.find((x) => x.name.toLowerCase() === name) ?? all.find((x) => x.name.toLowerCase().includes(name));
-    if (!t2) return errorReply(`Keine Vorlage \u201E${plain2(name)}\u201C gefunden.`);
+    if (!t2) return errorReply(`Keine Vorlage \u201E${plain(name)}\u201C gefunden.`);
     params.set("templateId", t2.id);
   }
   const r = await c.api.asUser(c.discordId, "GET", `/duty-reports?${params}`);
   const label2 = statusKey in LIST_STATUS ? { offen: "Offen", zurueckgegeben: "Zur Nachbesserung", geprueft: "Gepr\xFCft", alle: "Alle" }[statusKey] : "Offen";
-  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain2(x.author.displayName)} \xB7 ` : ""}${plain2(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status3 ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
+  const lines = r.items.map((x) => `**${x.number}** \xB7 ${r.seeAll ? `${plain(x.author.displayName)} \xB7 ` : ""}${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${status3 ? "" : ` \xB7 ${STATUS_DE2[x.status] ?? x.status}`}`);
   const embed = listEmbed(`\u{1F5D3}\uFE0F ${r.seeAll ? "Berichte" : "Deine Berichte"} \u2013 ${label2} (${r.total})`, lines, "Keine Berichte gefunden.");
   if (r.total > r.items.length) embed.footer = `${r.total - r.items.length} weitere \u2013 Filter eingrenzen oder im Dashboard ansehen`;
   if (!r.items.length) return { ephemeral: true, embeds: [embed] };
@@ -83861,7 +83838,7 @@ var DUTY_REPORT_COMMANDS = [{
       const sub = String(c.opts._sub ?? "ausfuellen");
       if (sub === "meine") {
         const r = await c.api.asUser(c.discordId, "GET", "/duty-reports?mine=true&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain2(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : x.status === "RETURNED" ? " \u21A9\uFE0F nachbessern" : ""}`), "Noch keine Berichte.")] };
+        return { ephemeral: true, embeds: [listEmbed("\u{1F5D3}\uFE0F Deine Berichte", r.items.map((x) => `**${x.number}** \xB7 ${plain(x.templateName)} \u2013 ${periodLabel(x.period, x.periodStart)}${x.status === "REVIEWED" ? " \u2705" : x.status === "RETURNED" ? " \u21A9\uFE0F nachbessern" : ""}`), "Noch keine Berichte.")] };
       }
       if (sub === "anzeigen") return await showReport(c, String(c.opts.nummer ?? ""));
       if (sub === "liste") return await listReply2(c);
@@ -84009,7 +83986,7 @@ var TRAINING_INTERACTION = {
         if ("error" in when) return errorReply(when.error);
         const unix2 = Math.floor(Date.parse(when.startsAt) / 1e3);
         const s = await c.api.asUser(c.discordId, "POST", "/hr/training-sessions", { title, startsAt: when.startsAt, forRank: f2.rank?.trim() || null, duration: f2.duration?.trim() || null, notes: f2.notes?.trim() || null, channelId: c.channelId ?? null, guildId: c.guildId ?? null });
-        return okReply(`Ausbildung **${plain2(title)}** angesetzt (**${s.number}**) f\xFCr <t:${unix2}:F> (<t:${unix2}:R>)${f2.duration?.trim() ? ` \xB7 Dauer: ${plain2(f2.duration.trim())}` : ""} \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
+        return okReply(`Ausbildung **${plain(title)}** angesetzt (**${s.number}**) f\xFCr <t:${unix2}:F> (<t:${unix2}:R>)${f2.duration?.trim() ? ` \xB7 Dauer: ${plain(f2.duration.trim())}` : ""} \u2013 die Ank\xFCndigung mit Anmeldung erscheint gleich in diesem Kanal. Auswerten im Dashboard unter \u201EAusbildungen & Pr\xFCfungen\u201C.`);
       }
       return errorReply("Unbekannte Aktion.");
     } catch (e) {
@@ -84056,8 +84033,8 @@ async function decide3(c, id3, decision, reason) {
     const ok = decision === "APPROVE";
     return {
       ...okReply(ok ? "\u2705 Antrag genehmigt \u2013 das Mitglied wurde per Direktnachricht informiert." : "\u274C Antrag abgelehnt \u2013 das Mitglied wurde per Direktnachricht informiert."),
-      decided: { color: ok ? COLORS.success : COLORS.danger, text: `${ok ? "\u2705 Genehmigt" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain2(r.decidedByName)})` : ""}${reason ? `
-**Grund:** ${plain2(reason)}` : ""}`.slice(0, 1024) }
+      decided: { color: ok ? COLORS.success : COLORS.danger, text: `${ok ? "\u2705 Genehmigt" : "\u274C Abgelehnt"} von <@${c.discordId}>${r.decidedByName ? ` (${plain(r.decidedByName)})` : ""}${reason ? `
+**Grund:** ${plain(reason)}` : ""}`.slice(0, 1024) }
     };
   } catch (e) {
     return apiError(e);
@@ -84119,7 +84096,7 @@ var RADIO_WHITELIST_INTERACTION = {
         ...Object.keys(answers).length ? { answers } : {}
       });
       return okReply(`\u{1F4E8} Dein Antrag auf Funkfreigabe ist eingegangen. Du bekommst eine Direktnachricht, sobald eine F\xFChrungskraft entschieden hat.
-> ${plain2(reason).slice(0, 300)}`);
+> ${plain(reason).slice(0, 300)}`);
     } catch (e) {
       return apiError(e);
     }
@@ -84168,36 +84145,36 @@ async function manageReply2(c, type, notice) {
     `**Total Duration**: ${shiftDuration(total)}`,
     `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
     "",
-    `-# Shift Type: ${typeName ? plain2(typeName) : "default"}`
+    `-# Shift Type: ${typeName ? plain(typeName) : "default"}`
   ].join("\n");
   const buttons = [
     { id: `shift:on:${!current && type ? type.id : ""}:${c.discordId}`, label: "Start", style: "success", emoji: "\u25B6\uFE0F", disabled: !!current },
     { id: `shift:break:${c.discordId}`, label: onBreak ? "Resume" : "Pause", style: "primary", emoji: "\u23F8\uFE0F", disabled: !current },
     { id: `shift:off:${c.discordId}`, label: "End", style: "danger", emoji: "\u23F9\uFE0F", disabled: !current }
   ];
-  return { ephemeral: false, panel: true, buttons, embeds: [{ author: { name: "Shift Management", ...c.userAvatar ? { iconUrl: c.userAvatar } : {} }, title: "", description: clip2(description, 3900) }] };
+  return { ephemeral: false, panel: true, buttons, embeds: [{ author: { name: "Shift Management", ...c.userAvatar ? { iconUrl: c.userAvatar } : {} }, title: "", description: clip(description, 3900) }] };
 }
 var NOTICE = { ON_DUTY: "\u{1F7E2} Your shift is now **active**.", BREAK: "\u{1F7E1} You are now **on break**.", OFF_DUTY: "\u{1F534} Your shift has **ended**." };
 async function switchTo(c, status3, type) {
   let notice;
   try {
     await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...type ? { shiftType: type.id } : {} });
-    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Shift **${plain2(type.name)}** started.` : NOTICE[status3];
+    notice = status3 === "ON_DUTY" && type ? `\u{1F7E2} Shift **${plain(type.name)}** started.` : NOTICE[status3];
   } catch (e) {
     notice = e instanceof BotApiError && e.status === 409 ? `Du bist bereits **${DUTY_DE[status3].label}**.` : mapError(e).content ?? "\u274C Das hat nicht geklappt.";
   }
   return manageReply2(c, type, notice);
 }
-var serverAuthor = (c) => c.guildName ? { author: { name: clip2(c.guildName, 200), ...c.guildIcon ? { iconUrl: c.guildIcon } : {} } } : {};
-var who2 = (u) => u.discordId ? `<@${u.discordId}>` : `**${plain2(u.name)}**`;
+var serverAuthor = (c) => c.guildName ? { author: { name: clip(c.guildName, 200), ...c.guildIcon ? { iconUrl: c.guildIcon } : {} } } : {};
+var who2 = (u) => u.discordId ? `<@${u.discordId}>` : `**${plain(u.name)}**`;
 async function active(c) {
   try {
     const rows = await c.api.asUser(c.discordId, "GET", "/team/active-shifts");
-    const lines = rows.slice(0, 30).map((r, i) => `\`${i + 1}.\` ${who2(r)} \u2022 ${shiftDuration(r.seconds)}${r.status === "BREAK" ? " (On Break)" : ""}${r.shiftType ? ` \u2022 ${plain2(r.shiftType)}` : ""}`);
+    const lines = rows.slice(0, 30).map((r, i) => `\`${i + 1}.\` ${who2(r)} \u2022 ${shiftDuration(r.seconds)}${r.status === "BREAK" ? " (On Break)" : ""}${r.shiftType ? ` \u2022 ${plain(r.shiftType)}` : ""}`);
     return { ephemeral: false, embeds: [{
       ...serverAuthor(c),
       title: "\u{1F552} Active Shifts",
-      description: clip2(lines.length ? `${lines.join("\n")}${rows.length > 30 ? `
+      description: clip(lines.length ? `${lines.join("\n")}${rows.length > 30 ? `
 \u2026 and ${rows.length - 30} more` : ""}` : "There are no active shifts.", 4e3)
     }] };
   } catch (e) {
@@ -84213,15 +84190,15 @@ async function leaderboard(c) {
     if (wanted && !t2) return errorReply("Unbekannte Schichtart.");
     const r = await c.api.asUser(c.discordId, "GET", boardPath(d, t2?.id ?? ""));
     const lines = r.users.slice(0, 25).map((u, i) => `\`${i + 1}.\` ${who2(u)} \u2022 ${shiftDuration(u.seconds)}`);
-    const footer = `Showing ${t2 ? `Shift Type: ${t2.name}` : "All Shift Types"}${d ? ` \xB7 last ${d === 1 ? "24 hours" : `${d} days`}` : ""}`;
+    const footer2 = `Showing ${t2 ? `Shift Type: ${t2.name}` : "All Shift Types"}${d ? ` \xB7 last ${d === 1 ? "24 hours" : `${d} days`}` : ""}`;
     return {
       ephemeral: false,
       embeds: [{
         ...serverAuthor(c),
         title: "Shift Leaderboard",
-        description: clip2(lines.length ? `${lines.join("\n")}${r.users.length > 25 ? `
+        description: clip(lines.length ? `${lines.join("\n")}${r.users.length > 25 ? `
 \u2026 and ${r.users.length - 25} more` : ""}` : "No shifts yet.", 4e3),
-        footer
+        footer: footer2
       }],
       buttons: [{ id: `shift:raw:${d ?? 0}:${t2?.id ?? ""}`, label: "Raw Shift Data", style: "secondary" }]
     };
@@ -84257,14 +84234,14 @@ async function adminReply2(c, discordId, notice) {
     `**Average Duration**: ${shiftDuration(stats.count ? total / stats.count : 0)}`,
     ...stats.last ? ["", "### \u{1F552} Last Shift", `**Status**: ${LAST_STATUS[stats.last.status] ?? stats.last.status}`, `**Total Time**: ${shiftDuration(stats.last.seconds)}`, ...stats.last.shiftId ? [`**Shift ID**: \`${stats.last.shiftId}\``] : []] : [],
     "",
-    `-# Shift Type: ${stats.last?.shiftType ? plain2(stats.last.shiftType) : "default"}`
+    `-# Shift Type: ${stats.last?.shiftType ? plain(stats.last.shiftType) : "default"}`
   ].join("\n");
   const ref = `${userId}:${discordId}`;
   const onBreak = current?.status === "BREAK";
   return {
     ephemeral: false,
     panel: true,
-    embeds: [{ author: { name: clip2(`Shift Management: @${name ?? log.member.name}`, 200), ...avatar ? { iconUrl: avatar } : {} }, title: "", description: clip2(description, 3900) }],
+    embeds: [{ author: { name: clip(`Shift Management: @${name ?? log.member.name}`, 200), ...avatar ? { iconUrl: avatar } : {} }, title: "", description: clip(description, 3900) }],
     select: { id: `shift:act:${ref}`, placeholder: "Shift Actions", options: [
       { label: "View Shift List", value: "list", description: "View all shifts for this user", emoji: "\u{1F4C3}" },
       { label: "Modify Shift", value: "modify", description: "Modify a shift: add, remove, or set time", emoji: "\u{1F552}" },
@@ -84290,12 +84267,12 @@ function parseShiftDuration(input) {
 async function shiftList(c, discordId) {
   const log = await c.api.asUser(c.discordId, "GET", `/team/shifts?discordId=${discordId}&days=3650`);
   const items = log.items;
-  const lines = items.slice(0, 25).map((s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \u2022 ${shiftDuration(s.seconds ?? (s.minutes - s.breakMinutes) * 60)}${s.shiftType ? ` \u2022 ${plain2(s.shiftType)}` : ""}${s.active ? " \u2022 \u{1F7E2} Active" : ""}
+  const lines = items.slice(0, 25).map((s, i) => `\`${i + 1}.\` ${ts3(s.startedAt)} \u2022 ${shiftDuration(s.seconds ?? (s.minutes - s.breakMinutes) * 60)}${s.shiftType ? ` \u2022 ${plain(s.shiftType)}` : ""}${s.active ? " \u2022 \u{1F7E2} Active" : ""}
 -# Shift ID: ${s.shiftId ? `\`${s.shiftId}\`` : "\u2014"}`);
   return { ephemeral: true, embeds: [{
-    title: clip2(`Shift List: ${log.member?.name ?? ""}`, 256),
+    title: clip(`Shift List: ${log.member?.name ?? ""}`, 256),
     color: COLORS.info,
-    description: clip2(lines.length ? `${lines.join("\n")}${items.length > 25 ? `
+    description: clip(lines.length ? `${lines.join("\n")}${items.length > 25 ? `
 \u2026 and ${items.length - 25} more` : ""}` : "This user has no shifts.", 4e3)
   }] };
 }
@@ -84353,8 +84330,8 @@ var SHIFT_COMMANDS = [
           try {
             const types = await shiftTypes(c);
             const t2 = pickType(c, types, wanted || void 0);
-            if (t2 && !permittedFor(c, t2)) return errorReply(`F\xFCr die Schichtart **${plain2(t2.name)}** fehlt dir die passende Rolle.`);
-            if (wanted && !t2) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain2(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
+            if (t2 && !permittedFor(c, t2)) return errorReply(`F\xFCr die Schichtart **${plain(t2.name)}** fehlt dir die passende Rolle.`);
+            if (wanted && !t2) return errorReply(types.length ? `Unbekannte Schichtart. Verf\xFCgbar: ${types.map((x) => `**${plain(x.name)}**`).join(", ")}.` : "Auf diesem Server sind keine Schichtarten eingerichtet \u2013 einfach `/shift manage` ohne Schichtart.");
             return await manageReply2(c, t2);
           } catch (e) {
             return mapError(e);
@@ -84528,7 +84505,7 @@ var LEVEL_LABEL = { admin: "Serveradministrator", leadership: "Polizeif\xFChrung
 var SETUP_CHANNELS = ["welcome", "log", "exams"];
 var CHANNEL_LABEL = { welcome: "Begr\xFC\xDFung", log: "Bot-Meldungen (Admins)", exams: "Pr\xFCfungs-Ank\xFCndigungen" };
 var TOGGLE_MODULES = MODULES.filter((m) => !("system" in m && m.system)).map((m) => ({ key: m.key, name: m.name }));
-var section2 = (s) => s.default({}).catch(() => s.parse({}));
+var section = (s) => s.default({}).catch(() => s.parse({}));
 var SECTION_SCHEMAS = {
   branding: external_exports.object({
     serverName: external_exports.string().trim().max(100).nullable().default(null),
@@ -84556,12 +84533,12 @@ var guildConfigSchema = external_exports.object({
   /** Zählt bei jedem Speichern hoch (erkennt gleichzeitige Änderungen, z. B. während einer geplanten Wiederherstellung). */
   revision: external_exports.number().int().min(0).default(0),
   setupDone: external_exports.boolean().default(false),
-  branding: section2(SECTION_SCHEMAS.branding),
-  colors: section2(SECTION_SCHEMAS.colors),
-  welcome: section2(SECTION_SCHEMAS.welcome),
-  channels: section2(SECTION_SCHEMAS.channels),
-  roles: section2(SECTION_SCHEMAS.roles),
-  modules: section2(SECTION_SCHEMAS.modules),
+  branding: section(SECTION_SCHEMAS.branding),
+  colors: section(SECTION_SCHEMAS.colors),
+  welcome: section(SECTION_SCHEMAS.welcome),
+  channels: section(SECTION_SCHEMAS.channels),
+  roles: section(SECTION_SCHEMAS.roles),
+  modules: section(SECTION_SCHEMAS.modules),
   updatedAt: external_exports.string().nullable().default(null),
   updatedBy: sf5.nullable().default(null)
 }).passthrough();
@@ -84810,7 +84787,7 @@ function homePanel(cfg2, note2) {
       next ? `\u27A1\uFE0F N\xE4chster Schritt: **${next.label}**` : cfg2.setupDone ? "\u{1F389} Einrichtung abgeschlossen." : "\u{1F44D} Alles eingerichtet \u2013 mit **Fertig** abschlie\xDFen."
     ].join("\n"),
     fields: [
-      { name: "Servername / Anzeigename", value: `${plain2(cfg2.branding.serverName ?? "\u2014")} / ${plain2(cfg2.branding.displayName ?? "\u2014")}`, inline: true },
+      { name: "Servername / Anzeigename", value: `${plain(cfg2.branding.serverName ?? "\u2014")} / ${plain(cfg2.branding.displayName ?? "\u2014")}`, inline: true },
       { name: "Farben", value: `${cfg2.colors.primary} \xB7 ${cfg2.colors.success} \xB7 ${cfg2.colors.warning} \xB7 ${cfg2.colors.danger}${cfg2.branding.applyToAll ? " (alle Antworten)" : ""}`, inline: true },
       { name: "Begr\xFC\xDFung / Abschied", value: `${on(cfg2.welcome.enabled)} / ${on(cfg2.welcome.goodbyeEnabled)}`, inline: true },
       { name: "Kan\xE4le", value: SETUP_CHANNELS.map((k) => `${CHANNEL_LABEL[k]}: ${ch(cfg2.channels[k])}`).join("\n") },
@@ -85189,13 +85166,13 @@ var BACKUP_INTERACTION = {
       if (action === "apply") {
         if ((c.fields?.confirm ?? "").trim() !== "WIEDERHERSTELLEN") return errorReply("Nicht best\xE4tigt \u2013 bitte genau WIEDERHERSTELLEN eingeben. Es wurde nichts ver\xE4ndert.");
         PLANS.delete(token);
-        const { safety, config: config2 } = await rt.backups.apply(held.plan, { by: c.discordId });
+        const { safety, config } = await rt.backups.apply(held.plan, { by: c.discordId });
         await rt.reregister(c.guildId).catch(() => void 0);
-        const nick = await rt.setNickname(c.guildId, config2.branding.displayName).catch(() => null);
-        return { ephemeral: true, panel: true, embeds: [brand(config2, { title: "\u2705 Wiederherstellung abgeschlossen", description: [
+        const nick = await rt.setNickname(c.guildId, config.branding.displayName).catch(() => null);
+        return { ephemeral: true, panel: true, embeds: [brand(config, { title: "\u2705 Wiederherstellung abgeschlossen", description: [
           `Eingespielt: \`${held.plan.name}\` (${held.plan.changes.length} \xC4nderungen).`,
           `Vorheriger Stand gesichert als \`${safety.name}\` (${safety.locations.join(" + ")}) \u2013 damit l\xE4sst sich der Schritt r\xFCckg\xE4ngig machen.`,
-          ...nick ? [`\u26A0\uFE0F Anzeigename: ${plain2(nick)}`] : [],
+          ...nick ? [`\u26A0\uFE0F Anzeigename: ${plain(nick)}`] : [],
           "Pr\xFCfe jetzt mit `/system diagnose`, ob alle Kan\xE4le und Rollen passen."
         ].join("\n") }, "success")] };
       }
@@ -85300,14 +85277,14 @@ function questionReply(v, idx, cfg2, note2) {
   if (q2.type === "MATCH") lines.push("", ...q2.options.map((o, p) => `**${p + 1})** ${o.text}`), "", ...q2.matches.map((m, p) => `**${LETTERS[p]})** ${m.text}`));
   const answered = v.questions.filter((x) => isAnswered(x, v.answers?.[x.id])).length;
   const embed = b(cfg2, {
-    title: clip2(`\u{1F4DD} ${v.title} \u2013 Frage ${i + 1}/${n}${flagged ? " \u{1F6A9}" : ""}`, 256),
-    description: clip2(`${note2 ? `${note2}
+    title: clip(`\u{1F4DD} ${v.title} \u2013 Frage ${i + 1}/${n}${flagged ? " \u{1F6A9}" : ""}`, 256),
+    description: clip(`${note2 ? `${note2}
 
 ` : ""}${lines.join("\n")}`, 4e3),
     fields: [
       { name: "Typ", value: `${EXAM_QUESTION_TYPE_LABEL[q2.type]} \u2013 ${EXAM_QUESTION_TYPE_HINT[q2.type]}`.slice(0, 1024) },
       { name: "Bewertung", value: criteriaText(q2) },
-      { name: "Deine Antwort", value: clip2(plain2(answerText2(q2, a)), 1024) },
+      { name: "Deine Antwort", value: clip(plain(answerText2(q2, a)), 1024) },
       { name: "Fortschritt", value: `${answered}/${n} beantwortet${v.deadline ? ` \xB7 Abgabe sp\xE4testens ${t(v.deadline)}` : ""}`, inline: true }
     ],
     ...q2.image && /^https:\/\//.test(q2.image) ? { image: q2.image } : {},
@@ -85321,7 +85298,7 @@ function questionReply(v, idx, cfg2, note2) {
     placeholder: q2.type === "MULTI" ? "Antworten w\xE4hlen (mehrere m\xF6glich) \u2026" : "Antwort w\xE4hlen \u2026",
     min: q2.type === "MULTI" ? 0 : 1,
     max: q2.type === "MULTI" ? q2.options.length : 1,
-    options: q2.options.map((o, p) => ({ label: clip2(`${LETTERS[p]}) ${o.text}`, 100), value: String(o.i) })),
+    options: q2.options.map((o, p) => ({ label: clip(`${LETTERS[p]}) ${o.text}`, 100), value: String(o.i) })),
     defaults: list2(a)
   });
   else if (q2.type === "YESNO") buttons.push({ id: `exam:yn:${base}:ja`, label: "Ja", style: list2(a)[0] === "ja" ? "success" : "secondary" }, { id: `exam:yn:${base}:nein`, label: "Nein", style: list2(a)[0] === "nein" ? "success" : "secondary" });
@@ -85339,7 +85316,7 @@ function answerModal(v, idx) {
   if (!q2) return errorReply("Frage nicht gefunden.");
   const a = list2(v.answers?.[q2.id]);
   const id3 = `exam:m:${v.id}:${idx}`;
-  const title = clip2(`Frage ${idx + 1}`, 45);
+  const title = clip(`Frage ${idx + 1}`, 45);
   switch (q2.type) {
     case "TEXT":
       return { modal: { id: id3, title, fields: [{ id: "a", label: "Deine Antwort", paragraph: true, required: true, maxLength: 4e3, value: a[0] ?? "" }] } };
@@ -85361,7 +85338,7 @@ function answerModal(v, idx) {
       }).filter(Boolean).join(", ") }] } };
       return { modal: { id: id3, title, fields: q2.options.map((o, row) => {
         const m = q2.matches.findIndex((x) => String(x.i) === a[o.i]);
-        return { id: `r${row}`, label: clip2(`${row + 1}) ${o.text} \u2192 Buchstabe`, 45), required: true, maxLength: 1, value: m >= 0 ? LETTERS[m] : "" };
+        return { id: `r${row}`, label: clip(`${row + 1}) ${o.text} \u2192 Buchstabe`, 45), required: true, maxLength: 1, value: m >= 0 ? LETTERS[m] : "" };
       }) } };
     }
     default:
@@ -85420,7 +85397,7 @@ function reviewReply(v, cfg2) {
   const open = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => !isAnswered(q2, v.answers?.[q2.id]));
   const flagged = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => v.flagged.includes(q2.id));
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: `\u{1F4E4} Abgabe: ${clip2(v.title, 200)}`,
+    title: `\u{1F4E4} Abgabe: ${clip(v.title, 200)}`,
     description: [
       `Beantwortet: **${v.questions.length - open.length}/${v.questions.length}**`,
       open.length ? `Offen: ${open.map(({ i }) => `Frage ${i + 1}`).join(", ")}` : "\u2705 Alle Fragen beantwortet.",
@@ -85434,18 +85411,18 @@ function reviewReply(v, cfg2) {
   ] };
 }
 function resultReply(v, cfg2, note2) {
-  if (v.status === "VOIDED") return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u{1F4DD} ${clip2(v.title, 200)} \u2013 annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain2(v.voided.reason)}` : ""}. Er z\xE4hlt nicht als Versuch.` }, "warning")] };
-  if (v.status === "SUBMITTED" || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u23F3 ${clip2(v.title, 200)} \u2013 abgegeben`, description: `${note2 ? `${note2}
+  if (v.status === "VOIDED") return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u{1F4DD} ${clip(v.title, 200)} \u2013 annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain(v.voided.reason)}` : ""}. Er z\xE4hlt nicht als Versuch.` }, "warning")] };
+  if (v.status === "SUBMITTED" || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u23F3 ${clip(v.title, 200)} \u2013 abgegeben`, description: `${note2 ? `${note2}
 
 ` : ""}Deine Antworten sind gespeichert. Einige Fragen bewertet ein Pr\xFCfer \u2013 du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
   const r = v.result;
   const head = r.passed ? "\u2705 Bestanden" : "\u274C Nicht bestanden";
   const score = r.percent !== void 0 && r.percent !== null ? ` \u2013 **${r.percent} %** (${pts(r.score)} von ${pts(r.maxScore)} Punkten, n\xF6tig: ${v.passPercent} %)` : "";
-  const review = v.reviewMode !== "NONE" ? v.questions.slice(0, 20).map((q2, i) => `${q2.earned !== void 0 ? q2.earned >= q2.points ? "\u2705" : q2.earned > 0 ? "\u{1F7E1}" : "\u274C" : q2.correctAnswer === void 0 ? "\u2022" : q2.correctAnswer ? "\u2705" : "\u274C"} Frage ${i + 1}${q2.earned !== void 0 ? ` (${pts(q2.earned)}/${pts(q2.points)})` : ""}${v.reviewMode === "SOLUTIONS" && q2.correct ? ` \u2013 L\xF6sung: ${clip2(solutionText(q2), 120)}` : ""}`) : [];
+  const review = v.reviewMode !== "NONE" ? v.questions.slice(0, 20).map((q2, i) => `${q2.earned !== void 0 ? q2.earned >= q2.points ? "\u2705" : q2.earned > 0 ? "\u{1F7E1}" : "\u274C" : q2.correctAnswer === void 0 ? "\u2022" : q2.correctAnswer ? "\u2705" : "\u274C"} Frage ${i + 1}${q2.earned !== void 0 ? ` (${pts(q2.earned)}/${pts(q2.points)})` : ""}${v.reviewMode === "SOLUTIONS" && q2.correct ? ` \u2013 L\xF6sung: ${clip(solutionText(q2), 120)}` : ""}`) : [];
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: `\u{1F4DD} ${clip2(v.title, 200)}`,
-    description: clip2([note2, `**${head}**${score}`, r.feedback ? `
-\u{1F4AC} R\xFCckmeldung: ${plain2(r.feedback)}` : "", review.length ? `
+    title: `\u{1F4DD} ${clip(v.title, 200)}`,
+    description: clip([note2, `**${head}**${score}`, r.feedback ? `
+\u{1F4AC} R\xFCckmeldung: ${plain(r.feedback)}` : "", review.length ? `
 **Einsicht (${EXAM_REVIEW_LABEL[v.reviewMode]}):**
 ${review.join("\n")}` : "", r.passed ? "\nDas Ergebnis ist in deiner Personalakte dokumentiert." : ""].filter(Boolean).join("\n"), 4e3)
   }, r.passed ? "success" : "danger")] };
@@ -85460,14 +85437,14 @@ function examDetail(e, cfg2) {
     { name: "\u23F1\uFE0F Zeit", value: e.timeLimitMin ? `${e.timeLimitMin} Min.` : "ohne Limit", inline: true },
     { name: "\u{1F501} Versuche", value: `${e.me.attemptsUsed}/${e.maxAttempts} genutzt${e.retryHours ? ` \xB7 ${e.retryHours} h Wartezeit` : ""}`, inline: true },
     { name: "\u{1F441}\uFE0F Einsicht", value: EXAM_REVIEW_LABEL[e.reviewMode] ?? "\u2014", inline: true },
-    ...e.trainingName ? [{ name: "\u{1F393} Ausbildung", value: plain2(e.trainingName), inline: true }] : [],
-    ...e.requiredExamTitle ? [{ name: "\u{1F512} Voraussetzung", value: plain2(e.requiredExamTitle), inline: true }] : [],
-    { name: "Status", value: `${STATE_ICON[e.me.state]} ${STATE_LABEL[e.me.state]}${e.me.reason ? ` \u2013 ${plain2(e.me.reason)}` : ""}` }
+    ...e.trainingName ? [{ name: "\u{1F393} Ausbildung", value: plain(e.trainingName), inline: true }] : [],
+    ...e.requiredExamTitle ? [{ name: "\u{1F512} Voraussetzung", value: plain(e.requiredExamTitle), inline: true }] : [],
+    { name: "Status", value: `${STATE_ICON[e.me.state]} ${STATE_LABEL[e.me.state]}${e.me.reason ? ` \u2013 ${plain(e.me.reason)}` : ""}` }
   ];
   const can = e.me.state === "AVAILABLE" || e.me.state === "IN_PROGRESS";
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: clip2(`\u{1F4DD} ${e.title}`, 256),
-    description: clip2([e.description, e.instructions ? `**Hinweise:**
+    title: clip(`\u{1F4DD} ${e.title}`, 256),
+    description: clip([e.description, e.instructions ? `**Hinweise:**
 ${e.instructions}` : "", "Bewertet wird automatisch nach den hinterlegten Kriterien (Punkte je Frage, ggf. Teilpunkte); Freitext ohne Stichworte bewertet ein Pr\xFCfer. Die Kriterien stehen bei jeder Frage."].filter(Boolean).join("\n\n"), 4e3),
     fields
   })], buttons: can ? [{ id: `exam:start:${e.id}`, label: e.me.state === "IN_PROGRESS" ? "Fortsetzen" : "Pr\xFCfung starten", emoji: "\u25B6\uFE0F", style: "success" }] : [] };
@@ -85478,8 +85455,8 @@ async function listReply3(c) {
   if (!mine.length) return { ephemeral: true, embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: "F\xFCr dich sind gerade keine Pr\xFCfungen freigegeben." })] };
   return {
     ephemeral: true,
-    embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: clip2(mine.map((e) => `${STATE_ICON[e.me.state]} **${plain2(e.title)}**${e.category ? ` \xB7 ${plain2(e.category)}` : ""} \u2013 ${STATE_LABEL[e.me.state]}`).join("\n"), 4e3), footer: "Pr\xFCfung ausw\xE4hlen, um Kriterien und Start zu sehen." })],
-    select: { id: "exam:open", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: mine.slice(0, 25).map((e) => ({ label: clip2(e.title, 100), value: e.id, description: clip2(STATE_LABEL[e.me.state], 100), emoji: STATE_ICON[e.me.state] })) }
+    embeds: [b(cfg2, { title: "\u{1F4DD} Pr\xFCfungen", description: clip(mine.map((e) => `${STATE_ICON[e.me.state]} **${plain(e.title)}**${e.category ? ` \xB7 ${plain(e.category)}` : ""} \u2013 ${STATE_LABEL[e.me.state]}`).join("\n"), 4e3), footer: "Pr\xFCfung ausw\xE4hlen, um Kriterien und Start zu sehen." })],
+    select: { id: "exam:open", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: mine.slice(0, 25).map((e) => ({ label: clip(e.title, 100), value: e.id, description: clip(STATE_LABEL[e.me.state], 100), emoji: STATE_ICON[e.me.state] })) }
   };
 }
 async function resultsReply(c) {
@@ -85489,14 +85466,14 @@ async function resultsReply(c) {
   const line = (e) => {
     const last = e.me.last;
     const pct = e.me.bestPercent !== null ? ` \xB7 bestes Ergebnis ${e.me.bestPercent} %` : "";
-    if (e.me.state === "PASSED") return `\u2705 **${plain2(e.title)}** \u2013 bestanden${pct}`;
-    if (e.me.state === "PENDING") return `\u23F3 **${plain2(e.title)}** \u2013 wird bewertet`;
-    return `${last?.passed === false ? "\u274C" : "\u2022"} **${plain2(e.title)}** \u2013 ${last?.passed === false ? "nicht bestanden" : last?.status ?? "\u2014"}${pct} \xB7 Versuche ${e.me.attemptsUsed}/${e.maxAttempts}${last?.at ? ` \xB7 zuletzt ${t(last.at)}` : ""}`;
+    if (e.me.state === "PASSED") return `\u2705 **${plain(e.title)}** \u2013 bestanden${pct}`;
+    if (e.me.state === "PENDING") return `\u23F3 **${plain(e.title)}** \u2013 wird bewertet`;
+    return `${last?.passed === false ? "\u274C" : "\u2022"} **${plain(e.title)}** \u2013 ${last?.passed === false ? "nicht bestanden" : last?.status ?? "\u2014"}${pct} \xB7 Versuche ${e.me.attemptsUsed}/${e.maxAttempts}${last?.at ? ` \xB7 zuletzt ${t(last.at)}` : ""}`;
   };
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F393} Deine Pr\xFCfungsergebnisse",
-    description: clip2(done.length ? done.map(line).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
-    fields: [{ name: "Qualifikationen (bestandene Pr\xFCfungen)", value: clip2(passed.length ? passed.map((e) => `\u2022 ${plain2(e.title)}${e.trainingName ? ` (${plain2(e.trainingName)})` : ""}`).join("\n") : "\u2014", 1024) }],
+    description: clip(done.length ? done.map(line).join("\n") : "Du hast noch keine Pr\xFCfung abgelegt.", 3500),
+    fields: [{ name: "Qualifikationen (bestandene Pr\xFCfungen)", value: clip(passed.length ? passed.map((e) => `\u2022 ${plain(e.title)}${e.trainingName ? ` (${plain(e.trainingName)})` : ""}`).join("\n") : "\u2014", 1024) }],
     footer: "Alle Versuche bleiben im System erhalten; Ergebnisse stehen auch in der Personalakte."
   })] };
 }
@@ -85504,8 +85481,8 @@ async function trainingsReply(c) {
   const [list3, cfg2] = await Promise.all([withRetry(() => c.api.asUser(c.discordId, "GET", "/hr/trainings")), cfgOf2(c)]);
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F393} Ausbildungen",
-    description: clip2(list3.length ? list3.slice(0, 25).map((x) => `**${plain2(x.name)}** \u2013 ${x.passed} bestanden${x.modules?.length ? ` \xB7 ${x.modules.length} Module: ${clip2(x.modules.map(plain2).join(", "), 200)}` : ""}${x.description ? `
-${clip2(plain2(x.description), 200)}` : ""}`).join("\n") : "Es sind keine Ausbildungen angelegt.", 4e3),
+    description: clip(list3.length ? list3.slice(0, 25).map((x) => `**${plain(x.name)}** \u2013 ${x.passed} bestanden${x.modules?.length ? ` \xB7 ${x.modules.length} Module: ${clip(x.modules.map(plain).join(", "), 200)}` : ""}${x.description ? `
+${clip(plain(x.description), 200)}` : ""}`).join("\n") : "Es sind keine Ausbildungen angelegt.", 4e3),
     footer: "Termine: /ausbildung termine \xB7 Pr\xFCfungen: /pruefung liste"
   })] };
 }
@@ -85515,8 +85492,8 @@ async function manageReply3(c) {
   if (!staff2.length) return errorReply("Du bist f\xFCr keine Pr\xFCfung als Pr\xFCfer eingetragen (im System: Recht `exam.grade`/`exam.manage` oder Pr\xFCfer der Pr\xFCfung).");
   return { ephemeral: true, embeds: [b(cfg2, {
     title: "\u{1F5C2}\uFE0F Pr\xFCfungen verwalten",
-    description: clip2(staff2.map((e) => `${e.active ? "\u{1F7E2}" : "\u23F8\uFE0F"} **${plain2(e.title)}** \u2013 ${e.stats ? `${e.stats.participants} Teiln., ${e.stats.passed} bestanden${e.stats.passRate !== null ? ` (${e.stats.passRate} %)` : ""}${e.stats.pending ? ` \xB7 \u23F3 ${e.stats.pending} zu bewerten` : ""}` : "keine Daten"}`).join("\n"), 4e3)
-  })], select: { id: "exam:adm", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: staff2.slice(0, 25).map((e) => ({ label: clip2(e.title, 100), value: e.id, description: e.active ? "aktiv" : "nicht freigegeben" })) } };
+    description: clip(staff2.map((e) => `${e.active ? "\u{1F7E2}" : "\u23F8\uFE0F"} **${plain(e.title)}** \u2013 ${e.stats ? `${e.stats.participants} Teiln., ${e.stats.passed} bestanden${e.stats.passRate !== null ? ` (${e.stats.passRate} %)` : ""}${e.stats.pending ? ` \xB7 \u23F3 ${e.stats.pending} zu bewerten` : ""}` : "keine Daten"}`).join("\n"), 4e3)
+  })], select: { id: "exam:adm", placeholder: "Pr\xFCfung ausw\xE4hlen \u2026", options: staff2.slice(0, 25).map((e) => ({ label: clip(e.title, 100), value: e.id, description: e.active ? "aktiv" : "nicht freigegeben" })) } };
 }
 function adminDetail(e, cfg2) {
   const s = e.stats;
@@ -85524,7 +85501,7 @@ function adminDetail(e, cfg2) {
   if (s?.pending) buttons.push({ id: `exam:pend:${e.id}`, label: `Zu bewerten (${s.pending})`, emoji: "\u23F3", style: "primary" });
   if (e.canEdit) buttons.push({ id: `exam:post:${e.id}`, label: "In Discord ank\xFCndigen", emoji: "\u{1F4E2}", style: "secondary", disabled: !e.active }, { id: `exam:toggle:${e.id}`, label: e.active ? "Deaktivieren \u2026" : "Aktivieren \u2026", emoji: e.active ? "\u23F8\uFE0F" : "\u25B6\uFE0F", style: "secondary" });
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: clip2(`\u{1F5C2}\uFE0F ${e.title}`, 256),
+    title: clip(`\u{1F5C2}\uFE0F ${e.title}`, 256),
     fields: [
       { name: "Status", value: e.active ? "\u{1F7E2} aktiv" : "\u23F8\uFE0F nicht freigegeben", inline: true },
       { name: "Fragen", value: `${e.questionsPerAttempt}/${e.questionTotal}`, inline: true },
@@ -85544,20 +85521,20 @@ async function pendingReply(c, examId) {
   return {
     ephemeral: true,
     panel: true,
-    embeds: [b(cfg2, { title: `\u23F3 Zu bewerten (${open.length})`, description: clip2(open.slice(0, 25).map((r) => `\u2022 **${plain2(r.personnel.user.displayName)}** \u2013 ${plain2(r.exam.title)} \xB7 abgegeben ${t(r.submittedAt)}`).join("\n"), 4e3) })],
-    select: { id: "exam:g", placeholder: "Versuch zum Bewerten ausw\xE4hlen \u2026", options: open.slice(0, 25).map((r) => ({ label: clip2(`${r.personnel.user.displayName} \u2013 ${r.exam.title}`, 100), value: r.id, description: clip2(`abgegeben ${r.submittedAt ? new Date(r.submittedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }) : "\u2014"}`, 100) })) }
+    embeds: [b(cfg2, { title: `\u23F3 Zu bewerten (${open.length})`, description: clip(open.slice(0, 25).map((r) => `\u2022 **${plain(r.personnel.user.displayName)}** \u2013 ${plain(r.exam.title)} \xB7 abgegeben ${t(r.submittedAt)}`).join("\n"), 4e3) })],
+    select: { id: "exam:g", placeholder: "Versuch zum Bewerten ausw\xE4hlen \u2026", options: open.slice(0, 25).map((r) => ({ label: clip(`${r.personnel.user.displayName} \u2013 ${r.exam.title}`, 100), value: r.id, description: clip(`abgegeben ${r.submittedAt ? new Date(r.submittedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" }) : "\u2014"}`, 100) })) }
   };
 }
 function gradingReply(v, cfg2) {
   const fields = v.questions.slice(0, 20).map((q2, i) => ({
-    name: clip2(`Frage ${i + 1} \xB7 max ${pts(q2.points)} P. \xB7 ${q2.auto === null || q2.auto === void 0 ? "\u270D\uFE0F manuell" : `automatisch ${pts(q2.auto)} P.`}`, 256),
-    value: clip2(`${plain2(q2.type === "GAP" ? gapText(q2.text) : q2.text)}
-**Antwort:** ${plain2(answerText2(q2, v.answers?.[q2.id]))}
-**Kriterium:** ${plain2(solutionText(q2))}${q2.partial ? " (Teilpunkte)" : ""}`, 1024)
+    name: clip(`Frage ${i + 1} \xB7 max ${pts(q2.points)} P. \xB7 ${q2.auto === null || q2.auto === void 0 ? "\u270D\uFE0F manuell" : `automatisch ${pts(q2.auto)} P.`}`, 256),
+    value: clip(`${plain(q2.type === "GAP" ? gapText(q2.text) : q2.text)}
+**Antwort:** ${plain(answerText2(q2, v.answers?.[q2.id]))}
+**Kriterium:** ${plain(solutionText(q2))}${q2.partial ? " (Teilpunkte)" : ""}`, 1024)
   }));
   const manual = v.questions.filter((q2) => q2.auto === null || q2.auto === void 0).length;
   return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-    title: clip2(`\u270D\uFE0F ${v.title} \u2013 ${v.name}`, 256),
+    title: clip(`\u270D\uFE0F ${v.title} \u2013 ${v.name}`, 256),
     description: `Status: **${v.status === "SUBMITTED" ? "wartet auf Bewertung" : v.status === "GRADED" ? "bewertet" : v.status}** \xB7 Bestanden ab ${v.passPercent} %${v.result?.percent !== void 0 && v.result?.percent !== null ? ` \xB7 aktuell ${v.result.percent} %` : ""}
 ${manual ? `${manual} Frage(n) ohne automatische Bewertung \u2013 Punkte im Formular vergeben.` : "Alle Fragen sind automatisch bewertbar \u2013 optional R\xFCckmeldung geben."}${v.questions.length > 20 ? `
 \u2026 ${v.questions.length - 20} weitere Fragen im Dashboard` : ""}`,
@@ -85571,7 +85548,7 @@ function gradeModal(v) {
   const manual = v.questions.map((q2, i) => ({ q: q2, i })).filter(({ q: q2 }) => q2.auto === null || q2.auto === void 0);
   if (manual.length > 4) return errorReply(`${manual.length} Fragen m\xFCssen von Hand bewertet werden \u2013 das passt nicht in ein Discord-Formular (h\xF6chstens 4). Bitte im Dashboard bewerten.`);
   return { modal: { id: `exam:gm:${v.id}`, title: "Versuch bewerten", fields: [
-    ...manual.map(({ q: q2, i }) => ({ id: `s${i}`, label: clip2(`Frage ${i + 1}: Punkte (0\u2013${pts(q2.points)})`, 45), required: true, maxLength: 6, placeholder: "0" })),
+    ...manual.map(({ q: q2, i }) => ({ id: `s${i}`, label: clip(`Frage ${i + 1}: Punkte (0\u2013${pts(q2.points)})`, 45), required: true, maxLength: 6, placeholder: "0" })),
     { id: "feedback", label: "R\xFCckmeldung an die Person (optional)", paragraph: true, maxLength: 2e3 }
   ] } };
 }
@@ -85637,7 +85614,7 @@ var EXAM_INTERACTION = {
         case "start": {
           const v = await c.api.asUser(c.discordId, "POST", `/hr/exams/${target}/start`);
           const first = v.questions.findIndex((q2) => !isAnswered(q2, v.answers?.[q2.id]));
-          return questionReply(v, first < 0 ? 0 : first, cfg2, v.instructions ? `**Hinweise:** ${clip2(v.instructions, 800)}` : void 0);
+          return questionReply(v, first < 0 ? 0 : first, cfg2, v.instructions ? `**Hinweise:** ${clip(v.instructions, 800)}` : void 0);
         }
         case "q": {
           const v = await viewOf(c, target);
@@ -85685,11 +85662,11 @@ var EXAM_INTERACTION = {
           const r = await c.api.asUser(c.discordId, "GET", `/hr/exams/${target}/results`);
           const hard = r.questions.filter((q2) => q2.asked && q2.correctRate !== null).sort((a, z) => a.correctRate - z.correctRate).slice(0, 5);
           return { ephemeral: true, panel: true, embeds: [b(cfg2, {
-            title: clip2(`\u{1F4CA} Auswertung: ${r.exam.title}`, 256),
-            description: clip2(r.people.slice(0, 20).map((p) => `${p.passed ? "\u2705" : p.pending ? "\u23F3" : "\u274C"} **${plain2(p.name)}**${p.rank ? ` (${plain2(p.rank)})` : ""} \u2013 ${p.bestPercent !== null ? `${p.bestPercent} %` : "\u2014"} \xB7 ${p.attempts} Versuch(e)`).join("\n") || "Noch keine Versuche.", 4e3),
+            title: clip(`\u{1F4CA} Auswertung: ${r.exam.title}`, 256),
+            description: clip(r.people.slice(0, 20).map((p) => `${p.passed ? "\u2705" : p.pending ? "\u23F3" : "\u274C"} **${plain(p.name)}**${p.rank ? ` (${plain(p.rank)})` : ""} \u2013 ${p.bestPercent !== null ? `${p.bestPercent} %` : "\u2014"} \xB7 ${p.attempts} Versuch(e)`).join("\n") || "Noch keine Versuche.", 4e3),
             fields: [
               { name: "Kennzahlen", value: `${r.stats.participants} Teilnehmende \xB7 ${r.stats.attempts} Versuche \xB7 ${r.stats.passed} bestanden${r.stats.passRate !== null ? ` (${r.stats.passRate} %)` : ""} \xB7 \xD8 ${r.stats.avgPercent ?? "\u2014"} %${r.stats.avgMinutes !== null ? ` \xB7 \xD8 ${r.stats.avgMinutes} Min.` : ""} \xB7 ${r.stats.voided} annulliert` },
-              ...hard.length ? [{ name: "Schwierigste Fragen", value: clip2(hard.map((q2) => `\u2022 ${q2.correctRate} % richtig \u2013 ${plain2(q2.text)}`).join("\n"), 1024) }] : []
+              ...hard.length ? [{ name: "Schwierigste Fragen", value: clip(hard.map((q2) => `\u2022 ${q2.correctRate} % richtig \u2013 ${plain(q2.text)}`).join("\n"), 1024) }] : []
             ]
           })], buttons: [{ id: `exam:pend:${target}`, label: `Zu bewerten (${r.stats.pending})`, emoji: "\u23F3", style: "primary", disabled: !r.stats.pending }] };
         }
@@ -85707,16 +85684,16 @@ var EXAM_INTERACTION = {
           return {
             ephemeral: true,
             panel: true,
-            embeds: [b(cfg2, { title: e.active ? "\u23F8\uFE0F Pr\xFCfung deaktivieren?" : "\u25B6\uFE0F Pr\xFCfung aktivieren?", description: e.active ? `**${plain2(e.title)}** wird nicht mehr zum Ablegen angeboten. Laufende und fr\xFChere Versuche, Ergebnisse und Fragen **bleiben vollst\xE4ndig erhalten**.` : `**${plain2(e.title)}** wird wieder zum Ablegen angeboten.` }, "warning")],
+            embeds: [b(cfg2, { title: e.active ? "\u23F8\uFE0F Pr\xFCfung deaktivieren?" : "\u25B6\uFE0F Pr\xFCfung aktivieren?", description: e.active ? `**${plain(e.title)}** wird nicht mehr zum Ablegen angeboten. Laufende und fr\xFChere Versuche, Ergebnisse und Fragen **bleiben vollst\xE4ndig erhalten**.` : `**${plain(e.title)}** wird wieder zum Ablegen angeboten.` }, "warning")],
             buttons: [{ id: `exam:togglec:${target}:${e.active ? 0 : 1}`, label: e.active ? "Ja, deaktivieren" : "Ja, aktivieren", style: e.active ? "danger" : "success" }, { id: `exam:admv:${target}`, label: "Abbrechen", style: "secondary" }]
           };
         }
         case "togglec": {
           const detail = await c.api.asUser(c.discordId, "GET", `/hr/exams/${target}`);
-          const body = examBodyWithActive(detail, rawIdx === "1");
-          if (!body) return errorReply("Die Pr\xFCfung konnte nicht vollst\xE4ndig gelesen werden \u2013 zur Sicherheit wurde nichts ge\xE4ndert. Bitte im Dashboard \xE4ndern.");
-          await c.api.asUser(c.discordId, "PUT", `/hr/exams/${target}`, body);
-          return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: rawIdx === "1" ? "\u25B6\uFE0F Aktiviert" : "\u23F8\uFE0F Deaktiviert", description: `${plain2(String(detail.title ?? ""))} \u2013 alle Versuche und Ergebnisse bleiben erhalten.` }, "success")] };
+          const body2 = examBodyWithActive(detail, rawIdx === "1");
+          if (!body2) return errorReply("Die Pr\xFCfung konnte nicht vollst\xE4ndig gelesen werden \u2013 zur Sicherheit wurde nichts ge\xE4ndert. Bitte im Dashboard \xE4ndern.");
+          await c.api.asUser(c.discordId, "PUT", `/hr/exams/${target}`, body2);
+          return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: rawIdx === "1" ? "\u25B6\uFE0F Aktiviert" : "\u23F8\uFE0F Deaktiviert", description: `${plain(String(detail.title ?? ""))} \u2013 alle Versuche und Ergebnisse bleiben erhalten.` }, "success")] };
         }
         case "g":
           return gradingReply(await viewOf(c, target), cfg2);
@@ -85778,7 +85755,7 @@ var REMINDER_COMMANDS = [{
     if (dm && channelId && c.platform) {
       try {
         await c.platform.sendDm(c.discordId, { embed: { title: "\u23F0 Erinnerung gespeichert", description: `Ich schreibe dir hier ${formatReminderDuration(d.ms)} nach dem Speichern:
-> ${clip2(plain2(text), 300)}`, color: COLORS.info } });
+> ${clip(plain(text), 300)}`, color: COLORS.info } });
       } catch {
         dm = false;
         note2 = "\n\u26A0\uFE0F Ich kann dir keine Direktnachricht schicken (DMs geschlossen?) \u2013 die Erinnerung kommt deshalb **hier im Kanal**.";
@@ -85787,7 +85764,7 @@ var REMINDER_COMMANDS = [{
     try {
       const r = await c.api.service("POST", "/bot/reminders", { discordId: c.discordId, guildId: c.guildId ?? null, channelId, text, dm, delayMs: d.ms });
       return okReply(`${r.duplicate ? "Diese Erinnerung hast du gerade schon gespeichert. " : ""}Ich erinnere dich ${ts5(r.dueAt)} (${ts5(r.dueAt, "f")}) ${r.dm ? "per **Direktnachricht**" : "hier im **Kanal**"}:
-> ${clip2(plain2(text), 300)}${note2}
+> ${clip(plain(text), 300)}${note2}
 -# \xDCbersicht und l\xF6schen: \`/erinnerungen\``);
     } catch (e) {
       return apiError2(e);
@@ -85800,10 +85777,10 @@ var REMINDER_COMMANDS = [{
     try {
       const list3 = await c.api.service("GET", `/bot/reminders?discordId=${c.discordId}`);
       if (!list3.length) return okReply("Du hast keine offenen Erinnerungen. Neue mit `/remind-me`.");
-      const lines = list3.map((r, i) => `**${i + 1}.** ${ts5(r.dueAt)} \xB7 ${r.dm ? "DM" : "Kanal"} \u2013 ${clip2(plain2(r.text), 120)}`);
+      const lines = list3.map((r, i) => `**${i + 1}.** ${ts5(r.dueAt)} \xB7 ${r.dm ? "DM" : "Kanal"} \u2013 ${clip(plain(r.text), 120)}`);
       return {
         ephemeral: true,
-        embeds: [{ title: `\u23F0 Deine Erinnerungen (${list3.length})`, color: COLORS.info, description: clip2(lines.join("\n"), 4e3) }],
+        embeds: [{ title: `\u23F0 Deine Erinnerungen (${list3.length})`, color: COLORS.info, description: clip(lines.join("\n"), 4e3) }],
         buttons: list3.slice(0, 20).map((r, i) => ({ id: `remind:cancel:${r.id}`, label: `${i + 1} l\xF6schen`, style: "danger" }))
       };
     } catch (e) {
@@ -85820,7 +85797,7 @@ function reminderMessage(p) {
     embed: {
       title: "\u23F0 Erinnerung",
       color: COLORS.warning,
-      description: clip2(`${plain2(p.text) || "\u2014"}${late2}`, 4e3),
+      description: clip(`${plain(p.text) || "\u2014"}${late2}`, 4e3),
       fields: typeof p.createdAt === "string" ? [{ name: "Gespeichert", value: ts5(p.createdAt), inline: true }] : [],
       footer: "Sp\xE4ter noch einmal erinnern:"
     },
@@ -85863,7 +85840,7 @@ var REMINDER_INTERACTION = {
         const r = await c.api.service("POST", `/bot/reminders/${id3}/snooze`, { discordId: c.discordId, fire, minutes });
         return {
           ...okReply(`Verschoben \u2013 ich erinnere dich ${ts5(r.dueAt)} (${ts5(r.dueAt, "f")}) erneut.`),
-          update: { embeds: [{ title: "\u23F0 Erinnerung (verschoben)", color: COLORS.neutral, description: clip2(`${plain2(r.text)}
+          update: { embeds: [{ title: "\u23F0 Erinnerung (verschoben)", color: COLORS.neutral, description: clip(`${plain(r.text)}
 
 N\xE4chste Erinnerung ${ts5(r.dueAt)}.`, 4e3) }], buttons: [] }
         };
@@ -85883,12 +85860,11 @@ N\xE4chste Erinnerung ${ts5(r.dueAt)}.`, 4e3) }], buttons: [] }
 var str2 = (c, k) => String(c.opts[k] ?? "").trim();
 var choices = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
 var needGuildAdmin = (c) => !c.guildId ? errorReply("Das geht nur auf einem Server, nicht per Direktnachricht.") : !c.isGuildAdmin ? errorReply("Daf\xFCr brauchst du auf diesem Discord-Server das Recht \u201EServer verwalten\u201C.") : null;
-var LEGACY = { gruen: "STATUS_1", "gr\xFCn": "STATUS_1", gelb: "STATUS_2", rot: "STATUS_4" };
 async function setDanger(c, level, reason) {
   try {
     const s = await c.api.asUser(c.discordId, "PUT", "/danger-level", { level, ...reason ? { reason } : {} });
     await c.refreshLive?.("danger").catch(() => void 0);
-    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain2(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain2(s.def.title)}` : ""}`);
+    return okReply(`Gefahrenstatus: ${s.def?.emoji ?? ""} **${plain(s.def?.name ?? s.level)}**${s.def?.title ? ` \u2013 ${plain(s.def.title)}` : ""}`);
   } catch (e) {
     return mapError(e);
   }
@@ -85901,39 +85877,6 @@ var DUTY_BUTTONS = [
 ];
 var RADIO = { hinzufuegen: "add", entfernen: "remove", pruefen: "check", liste: "list" };
 var FEATURE_COMMANDS = [
-  {
-    name: "gefahrenstatus",
-    description: "Gefahrenstatus anzeigen, setzen oder als Panel posten",
-    options: [
-      { name: "aktion", description: "Was m\xF6chtest du tun? (Standard: anzeigen)", type: "string", choices: [{ name: "anzeigen", value: "anzeigen" }, { name: "setzen", value: "setzen" }, { name: "panel hier posten", value: "panel" }] },
-      { name: "stufe", description: "Neue Stufe (bei \u201Esetzen\u201C), z. B. Status 2", type: "string", maxLength: 40 },
-      { name: "grund", description: "Grund (optional, bei \u201Esetzen\u201C)", type: "string", maxLength: 200 }
-    ],
-    async run(c) {
-      const action = str2(c, "aktion") || "anzeigen";
-      if (action === "setzen") {
-        const level = str2(c, "stufe");
-        return level ? setDanger(c, LEGACY[level.toLowerCase()] ?? level, str2(c, "grund") || void 0) : errorReply("Bitte eine Stufe angeben (z. B. \u201EStatus 2\u201C).");
-      }
-      if (action === "panel") {
-        const denied = needGuildAdmin(c);
-        if (denied) return denied;
-        if (!c.channelId || !c.refreshLive) return errorReply("Panel kann hier nicht gepostet werden.");
-        try {
-          await c.api.asUser(c.discordId, "GET", "/danger-level");
-          await c.refreshLive("danger", { channelId: c.channelId, force: true });
-          return okReply("Gefahrenstatus-Panel gepostet. Es aktualisiert sich selbst; ein \xE4lteres Panel wird nicht mehr bearbeitet.");
-        } catch (e) {
-          return mapError(e);
-        }
-      }
-      try {
-        return { ephemeral: true, embeds: [dangerEmbed(await c.api.asUser(c.discordId, "GET", "/danger-level"))] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
   {
     name: "teamliste",
     description: "Richtet die selbst aktualisierende Teamliste ein bzw. aktualisiert sie sofort",
@@ -85964,13 +85907,13 @@ var FEATURE_COMMANDS = [
       try {
         if (action === "list") {
           const rows = await c.api.asUser(c.discordId, "GET", "/radio-whitelist");
-          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain2(r2.callsign)}** ` : ""}${plain2(r2.displayName)}`), "Noch niemand freigegeben.")] };
+          return { ephemeral: true, embeds: [listEmbed(`\u{1F4FB} Funk-Freigabe (${rows.length})`, rows.map((r2) => `\u2022 ${r2.callsign ? `**${plain(r2.callsign)}** ` : ""}${plain(r2.displayName)}`), "Noch niemand freigegeben.")] };
         }
         const target = str2(c, "mitglied");
         if (!/^\d{15,25}$/.test(target)) return errorReply("Bitte ein Mitglied angeben.");
         if (action === "check") {
           const r2 = await c.api.asUser(c.discordId, "GET", `/radio-whitelist/check?discordId=${target}`);
-          return r2.whitelisted ? okReply(`**${plain2(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain2(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
+          return r2.whitelisted ? okReply(`**${plain(r2.displayName)}** ist f\xFCr den Funk freigegeben.`) : errorReply(`**${plain(r2.displayName)}** ist **nicht** f\xFCr den Funk freigegeben.`);
         }
         const r = await c.api.asUser(c.discordId, "POST", action === "add" ? "/radio-whitelist" : "/radio-whitelist/remove", { discordId: target });
         let note2 = "";
@@ -85983,7 +85926,7 @@ var FEATURE_COMMANDS = [
             note2 = " \u26A0\uFE0F Die Discord-Rolle konnte nicht ge\xE4ndert werden (Bot-Rolle muss \xFCber der Funkrolle stehen und \u201ERollen verwalten\u201C haben).";
           }
         }
-        return okReply(`**${plain2(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
+        return okReply(`**${plain(r.displayName)}** ${action === "add" ? "ist jetzt f\xFCr den Funk freigegeben" : "wurde von der Funk-Freigabe entfernt"}.${note2}`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 404) return errorReply("Dieses Discord-Konto ist mit keinem aktiven Benutzer verkn\xFCpft (oder steht nicht auf der Liste).");
         return mapError(e);
@@ -86013,10 +85956,10 @@ var FEATURE_COMMANDS = [
     async run(c) {
       if (!c.robloxLookup) return errorReply("Roblox-Suche ist nicht verf\xFCgbar.");
       const u = await c.robloxLookup(str2(c, "name"));
-      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain2(str2(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
-      return { ephemeral: true, embeds: [{ title: clip2(`\u{1F3AE} ${plain2(u.name)}`, 256), color: COLORS.info, fields: [
+      if (!u) return errorReply(`Kein Roblox-Benutzer \u201E${plain(str2(c, "name"))}\u201C gefunden (oder Roblox ist gerade nicht erreichbar).`);
+      return { ephemeral: true, embeds: [{ title: clip(`\u{1F3AE} ${plain(u.name)}`, 256), color: COLORS.info, fields: [
         { name: "Roblox-ID", value: String(u.id), inline: true },
-        { name: "Anzeigename", value: clip2(plain2(u.displayName), 1024), inline: true },
+        { name: "Anzeigename", value: clip(plain(u.displayName), 1024), inline: true },
         { name: "Profil", value: `https://www.roblox.com/users/${u.id}/profile` }
       ] }] };
     }
@@ -86029,7 +85972,7 @@ async function shiftTypes2(c) {
 async function shiftPicker(c) {
   const types = (await shiftTypes2(c))?.filter((t2) => permittedFor(c, t2));
   if (!types || types.length < 2) return null;
-  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t2) => ({ label: clip2(t2.name, 100), value: t2.id, ...t2.isDefault ? { description: "Standard" } : {} })) } };
+  return { ephemeral: true, content: "Welche Schicht beginnst du?", select: { id: "duty:type", placeholder: "Schicht w\xE4hlen \u2026", options: types.slice(0, 25).map((t2) => ({ label: clip(t2.name, 100), value: t2.id, ...t2.isDefault ? { description: "Standard" } : {} })) } };
 }
 var INTERACTIONS = [
   {
@@ -86053,7 +85996,7 @@ var INTERACTIONS = [
       try {
         const r = await c.api.asUser(c.discordId, "PUT", "/team/me/status", { status: status3, ...shiftType ? { shiftType } : {} });
         const name = shiftType ? (await shiftTypes2(c))?.find((t2) => t2.id === (r.shiftType ?? shiftType))?.name : void 0;
-        return okReply(`${DUTY_DE[status3].emoji} Du bist jetzt **${DUTY_DE[status3].label}**${name ? ` (Schicht: **${plain2(name)}**)` : ""}.`);
+        return okReply(`${DUTY_DE[status3].emoji} Du bist jetzt **${DUTY_DE[status3].label}**${name ? ` (Schicht: **${plain(name)}**)` : ""}.`);
       } catch (e) {
         if (e instanceof BotApiError && e.status === 409) return okReply(`Du bist bereits **${DUTY_DE[status3].label}**.`);
         return mapError(e);
@@ -86357,7 +86300,7 @@ function toPresenceData(p) {
   if (p.activity === "benutzerdefiniert") return { status: p.status, activities: [{ name: "Custom Status", type, state: p.text }] };
   return { status: p.status, activities: [{ name: p.text, type, ...p.url ? { url: p.url } : {} }] };
 }
-var presenceText = (p) => `${STATUSES[p.status]}${p.activity !== "keine" && p.text ? ` \xB7 ${ACTIVITY_LABEL[p.activity]}${p.activity === "benutzerdefiniert" ? ":" : ""} ${plain2(p.text)}` : ""}`;
+var presenceText = (p) => `${STATUSES[p.status]}${p.activity !== "keine" && p.text ? ` \xB7 ${ACTIVITY_LABEL[p.activity]}${p.activity === "benutzerdefiniert" ? ":" : ""} ${plain(p.text)}` : ""}`;
 function discordErrorText2(e, what) {
   const x = e;
   const raw = JSON.stringify(x?.rawError?.errors ?? "") + (x?.message ?? "");
@@ -86385,7 +86328,7 @@ async function setName(c, p, scope) {
     } catch (e) {
       return errorReply(discordErrorText2(e, "die Namens\xE4nderung"));
     }
-    return okReply(r2.nick ? `Der Bot hei\xDFt auf diesem Server jetzt **${plain2(r2.nick)}**.` : "Der Name des Bots auf diesem Server wurde zur\xFCckgesetzt (globaler Name).");
+    return okReply(r2.nick ? `Der Bot hei\xDFt auf diesem Server jetzt **${plain(r2.nick)}**.` : "Der Name des Bots auf diesem Server wurde zur\xFCckgesetzt (globaler Name).");
   }
   const r = checkUsername(input);
   if (r.error) return errorReply(r.error);
@@ -86394,7 +86337,7 @@ async function setName(c, p, scope) {
   } catch (e) {
     return errorReply(discordErrorText2(e, "die Namens\xE4nderung"));
   }
-  return okReply(`Der globale Name des Bots ist jetzt **${plain2(r.name)}** (gilt auf allen Servern, au\xDFer wo ein eigener Server-Name gesetzt ist).`);
+  return okReply(`Der globale Name des Bots ist jetzt **${plain(r.name)}** (gilt auf allen Servern, au\xDFer wo ein eigener Server-Name gesetzt ist).`);
 }
 async function setAvatar(c, p, scope) {
   const reset = c.opts.zuruecksetzen === true;
@@ -86489,28 +86432,9 @@ async function restorePresence(p, log = console.error) {
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str3 = (c, k) => String(c.opts[k] ?? "").trim();
-async function resolvePerson(c, term) {
-  const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(term)}&pageSize=10`);
-  const exact = page.items.filter((p) => String(p.robloxUsername).toLowerCase() === term.toLowerCase() || p.robloxUserId === term);
-  if (exact.length === 1) return { person: exact[0] };
-  if (exact.length === 0 && page.items.length === 0) {
-    return { reply: errorReply(`Keine Person zu \u201E${plain2(term)}\u201C gefunden.`) };
-  }
-  const names = (exact.length ? exact : page.items).slice(0, 8).map((p) => `${plain2(p.robloxUsername)} (${p.robloxUserId ?? "ohne ID"})`).join(", ");
-  return { reply: errorReply(`Nicht eindeutig. Treffer: ${names}. Bitte exakten Namen oder die Roblox-ID angeben.`) };
-}
 var DUTY = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
-var UNIT = { verfuegbar: "AVAILABLE", beschaeftigt: "BUSY", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", nicht_verfuegbar: "UNAVAILABLE", ausser_dienst: "OFF_DUTY" };
-var PRIO = { niedrig: "LOW", mittel: "MEDIUM", hoch: "HIGH", dringend: "URGENT", kritisch: "CRITICAL" };
 var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
-var INC_STATUS = { bestaetigt: "ACKNOWLEDGED", unterwegs: "EN_ROUTE", vor_ort: "ON_SCENE", in_bearbeitung: "PROCESSING", abschluss: "CLEARING", abgebrochen: "CANCELLED", geschlossen: "CLOSED" };
-var REPORT = { patrouille: "PATROL", vorfall: "INCIDENT", verkehr: "TRAFFIC", festnahme: "ARREST", zitation: "CITATION", kollision: "COLLISION", ermittlung: "INVESTIGATION", allgemein: "GENERAL" };
 var CHANNEL = { team: "TEAM", dispatch: "DISPATCH" };
-async function resolveIncident(c, number) {
-  const page = await c.api.asUser(c.discordId, "GET", `/incidents?q=${q(number)}&pageSize=10`);
-  const hit = page.items.find((i) => String(i.number).toLowerCase() === number.toLowerCase()) ?? (page.items.length === 1 ? page.items[0] : void 0);
-  return hit ? { incident: hit } : { reply: errorReply(page.items.length ? "Nicht eindeutig \u2013 bitte die vollst\xE4ndige Einsatznummer angeben (z. B. I-2026-ABC123)." : `Einsatz \u201E${plain2(number)}\u201C nicht gefunden.`) };
-}
 var COMMANDS = [
   {
     name: "funkcode",
@@ -86520,11 +86444,11 @@ var COMMANDS = [
       try {
         const term = str3(c, "suche");
         const rows = await c.api.asUser(c.discordId, "GET", `/radio-codes${term ? `?q=${q(term)}` : ""}`);
-        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain2(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
+        if (!rows.length) return errorReply(term ? `Kein Funk-Code zu \u201E${plain(term)}\u201C gefunden.` : "Es sind noch keine Funk-Codes hinterlegt.");
         const exact = term ? rows.find((r) => r.code.toLowerCase() === term.toLowerCase()) : void 0;
-        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain2(exact.code)}`, description: `**${plain2(exact.meaning)}**${exact.description ? `
-${plain2(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain2(exact.category) : void 0 }] };
-        const lines = rows.slice(0, 40).map((r) => `\`${plain2(r.code)}\` \u2013 ${plain2(r.meaning)}`);
+        if (exact) return { ephemeral: true, embeds: [{ title: `\u{1F4E1} ${plain(exact.code)}`, description: `**${plain(exact.meaning)}**${exact.description ? `
+${plain(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? plain(exact.category) : void 0 }] };
+        const lines = rows.slice(0, 40).map((r) => `\`${plain(r.code)}\` \u2013 ${plain(r.meaning)}`);
         return { ephemeral: true, embeds: [{ title: "\u{1F4E1} Funk-Codes", description: lines.join("\n").slice(0, 4e3), color: 3900150, footer: rows.length > 40 ? `${rows.length - 40} weitere \u2013 Suche eingrenzen` : void 0 }] };
       } catch (e) {
         return mapError(e);
@@ -86538,11 +86462,11 @@ ${plain2(exact.description)}` : ""}`, color: 3900150, footer: exact.category ? p
       try {
         const s = await c.api.service("GET", `/bot/teamchance${c.guildId ? `?guildId=${c.guildId}` : ""}`);
         const when = (iso) => iso ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:f>` : null;
-        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain2(s.title)} \u2013 offen`, description: `${plain2(s.description)}
+        if (s.isOpen) return { ephemeral: true, embeds: [{ title: `\u{1F4E3} ${plain(s.title)} \u2013 offen`, description: `${plain(s.description)}
 
-Bewerben: \`/bewerbung\``.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
+Bewerben: \xFCber das Bewerbungs-Panel auf dem Server`.slice(0, 4e3), color: 2278750, fields: [...s.closesAt ? [{ name: "Bewerbungsschluss", value: when(s.closesAt), inline: true }] : [], ...s.remaining !== null ? [{ name: "Freie Pl\xE4tze", value: String(s.remaining), inline: true }] : []] }] };
         const why = s.reason === "not_started" && s.opensAt ? `Startet ${when(s.opensAt)}.` : s.reason === "full" ? "Alle Pl\xE4tze sind vergeben." : "Derzeit ist keine Team-Chance offen.";
-        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain2(s.title)}`, description: why, color: 15680580 }] };
+        return { ephemeral: true, embeds: [{ title: `\u{1F512} ${plain(s.title)}`, description: why, color: 15680580 }] };
       } catch (e) {
         return mapError(e);
       }
@@ -86566,62 +86490,17 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     description: "Zeigt alle Befehle",
     async run() {
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
-        { name: "Konto", value: "`/dashboard` `/panel` `/entverknuepfen` `/profil` `/benachrichtigungen`" },
-        { name: "Abfragen", value: "`/person` `/kennzeichen` `/fahndungen` `/einsaetze` `/einsatzinfo` `/einheiten` `/team`" },
-        { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/einheitstatus` `/einsatz` `/einsatzstatus` `/einsatzzuweisen` `/funk` `/funkcode` `/funkantrag` `/funkstatus` `/cad`" },
-        { name: "Erfassen", value: "`/bericht` `/dienstbericht` `/dienstbericht liste` `/beschwerde` `/fahndung`" },
-        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/gefahrenstatus` `/funkfreigabe` `/teamliste` `/dienstpanel` `/bewerbungspanel` `/qualipanel` `/teamchance` `/roblox`" },
+        { name: "Konto", value: "`/dashboard` `/panel` `/benachrichtigungen`" },
+        { name: "Abfragen", value: "`/team`" },
+        { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`" },
+        { name: "Erfassen", value: "`/dienstbericht` `/dienstbericht liste`" },
+        { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/funkfreigabe` `/teamliste` `/dienstpanel` `/teamchance` `/roblox`" },
         { name: "Ausbildung & Pr\xFCfungen", value: "`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` \xB7 Ausbilder: `/pruefung verwalten` `/pruefung bewerten`" },
         { name: "Administration", value: "`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`" },
         { name: "Support-Tickets", value: "`/support` \xF6ffnet ein Ticket (Team: `/support mitglied:@\u2026` f\xFCr jemand anderen). Team im Ticket-Kanal: `/ticket` (claim, unclaim, schliessen, anfrage, weiterleiten, hinzufuegen, entfernen, umbenennen, erinnern, notiz, automatik, oeffnen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet." },
-        { name: "F\xFCr alle", value: "`/bewerbung` (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel \xB7 `/remind-me` (Erinnerung, z. B. `in: 30m`) \xB7 `/erinnerungen`" },
+        { name: "F\xFCr alle", value: "Bewerbung \xFCber das Bewerbungs-Panel (auch ohne Verkn\xFCpfung; Fragen per Direktnachricht) \xB7 SEK/Flugstaffel/Ausbilder \xFCber das Qualifikations-Panel \xB7 `/remind-me` (Erinnerung, z. B. `in: 30m`) \xB7 `/erinnerungen`" },
         { name: "Hinweis", value: "Alle Befehle laufen mit **deinen** Rechten im System. Antworten sind nur f\xFCr dich sichtbar." }
       ] }] };
-    }
-  },
-  {
-    name: "person",
-    description: "Sucht eine Person (Roblox-Name oder -ID)",
-    options: [{ name: "suche", description: "Name oder Roblox-ID", type: "string", required: true, maxLength: 64 }],
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", `/persons?q=${q(str3(c, "suche"))}&pageSize=5`);
-        if (!page.items.length) return errorReply("Keine Person gefunden.");
-        if (page.items.length > 1 && !page.items.some((p) => String(p.robloxUsername).toLowerCase() === str3(c, "suche").toLowerCase())) {
-          return { ephemeral: true, embeds: [listEmbed(`\u{1F465} ${page.total} Treffer`, page.items.map((p) => `\u2022 **${plain2(p.robloxUsername)}** (${p.robloxUserId ?? "ohne ID"})`), "")] };
-        }
-        const hit = page.items.find((p) => String(p.robloxUsername).toLowerCase() === str3(c, "suche").toLowerCase()) ?? page.items[0];
-        const ov = await c.api.asUser(c.discordId, "GET", `/persons/${hit.id}`);
-        const wanted = ov.links.some((l) => l.entityType === "Wanted");
-        return { ephemeral: true, embeds: [personEmbed(ov.person, { tickets: ov.tickets.length, wanted })] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "kennzeichen",
-    description: "Sucht ein Fahrzeug nach Kennzeichen",
-    options: [{ name: "kennzeichen", description: "z. B. LC 1001", type: "string", required: true, maxLength: 16 }],
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", `/vehicles?q=${q(str3(c, "kennzeichen"))}&pageSize=5`);
-        return page.items.length ? { ephemeral: true, embeds: page.items.map(vehicleEmbed) } : errorReply("Kein Fahrzeug gefunden.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "fahndungen",
-    description: "Zeigt aktive Fahndungen",
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", "/wanted?pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F534} Aktive Fahndungen (${page.total})`, page.items.map((w) => `\u2022 **${plain2(w.reason)}** \u2014 ${label(w.priority)}${w.personId ? "" : " (Fahrzeug)"}`), "Keine aktiven Fahndungen.")] };
-      } catch (e) {
-        return mapError(e);
-      }
     }
   },
   {
@@ -86657,7 +86536,7 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
         const r = await c.api.asUser(c.discordId, "GET", `${all ? "/team/hours" : "/team/me/hours"}?days=${days}`);
         const period = days === 1 ? "letzte 24 Stunden" : `letzte ${days} Tage`;
         if (all) {
-          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain2(u.callsign ?? u.name)}** ${u.callsign ? `(${plain2(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
+          const lines2 = r.users.slice(0, 25).map((u, i) => `${i + 1}. **${plain(u.callsign ?? u.name)}** ${u.callsign ? `(${plain(u.name)}) ` : ""}\u2014 ${hm(u.minutes)} \xB7 im Dienst ${hm(u.byStatus.ON_DUTY ?? 0)}`);
           return { ephemeral: true, embeds: [listEmbed(`\u23F1\uFE0F Dienststunden Team (${period})`, lines2, "Im Zeitraum war niemand im Dienst.")] };
         }
         const me = r.users[0];
@@ -86670,243 +86549,14 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     }
   },
   {
-    name: "einheiten",
-    description: "Zeigt alle Einheiten und ihren Status",
-    async run(c) {
-      try {
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        return { ephemeral: true, embeds: [listEmbed("\u{1F4FB} Einheiten", units.map((u) => `\u2022 **${plain2(u.callsign)}** \u2014 ${label(u.status)}`), "Keine Einheiten angelegt.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einheitstatus",
-    description: "\xC4ndert den Status einer Einheit",
-    options: [
-      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(UNIT) }
-    ],
-    async run(c) {
-      const status3 = UNIT[str3(c, "status")];
-      if (!status3) return errorReply("Unbekannter Status.");
-      try {
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
-        if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "PUT", `/dispatch/units/${unit.id}/status`, { status: status3 });
-        return okReply(`**${plain2(unit.callsign)}** \u2192 ${label(status3)}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsaetze",
-    description: "Zeigt offene Eins\xE4tze",
-    async run(c) {
-      try {
-        const page = await c.api.asUser(c.discordId, "GET", "/incidents?active=true&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F6A8} Offene Eins\xE4tze (${page.total})`, page.items.map(incidentLine), "Keine offenen Eins\xE4tze.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatz",
-    description: "Legt einen neuen Einsatz an",
-    options: [
-      { name: "titel", description: "Kurzbeschreibung", type: "string", required: true, maxLength: 200 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) },
-      { name: "ort", description: "Einsatzort", type: "string", maxLength: 200 }
-    ],
-    async run(c) {
-      const title = str3(c, "titel");
-      if (title.length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const prio = PRIO[str3(c, "prioritaet")] ?? "MEDIUM";
-        const inc = await c.api.asUser(c.discordId, "POST", "/incidents", { title, priority: prio, location: str3(c, "ort") || void 0 });
-        return okReply(`Einsatz **${inc.number}** angelegt (${label(prio)}).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "profil",
-    description: "Zeigt dein verkn\xFCpftes Konto und deine Rollen",
-    async run(c) {
-      try {
-        const me = await c.api.asUser(c.discordId, "GET", "/auth/me");
-        return { ephemeral: true, embeds: [{ title: `\u{1FAAA} ${plain2(me.displayName)}`, color: COLORS.info, fields: [
-          { name: "Benutzer", value: `@${plain2(me.username)}`, inline: true },
-          { name: "Roblox-ID", value: String(me.robloxUserId ?? "nicht hinterlegt"), inline: true },
-          { name: "Rollen", value: clip2(me.roles.map(plain2).join(", ") || "keine", 1024) },
-          { name: "Berechtigungen", value: `${me.permissions.length} aktiv`, inline: true }
-        ] }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "entverknuepfen",
-    description: "L\xF6st die Verkn\xFCpfung deines Discord-Kontos",
-    async run(c) {
-      try {
-        await c.api.asUser(c.discordId, "DELETE", "/discord/link");
-        return okReply("Verkn\xFCpfung gel\xF6st. Im Dashboard (Chat-Symbol oben rechts) kannst du sie jederzeit neu herstellen.");
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
     name: "team",
     description: "Zeigt, wer im Dienst ist",
     async run(c) {
       try {
         const rows = await c.api.asUser(c.discordId, "GET", "/team/overview");
         const on2 = rows.filter((r) => r.dutyStatus !== "OFF_DUTY");
-        const lines = on2.slice(0, 25).map((r) => `\u2022 **${plain2(r.callsign ?? "\u2014")}** ${plain2(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain2(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
+        const lines = on2.slice(0, 25).map((r) => `\u2022 **${plain(r.callsign ?? "\u2014")}** ${plain(r.name)} \u2014 ${label(r.dutyStatus)}${r.unit ? ` \xB7 ${plain(r.unit.callsign)}` : ""}${r.currentIncident ? ` \xB7 \u{1F6A8} ${r.currentIncident.number}` : ""}`);
         return { ephemeral: true, embeds: [listEmbed(`\u{1F46E} Im Dienst (${on2.length} von ${rows.length})`, lines, "Aktuell ist niemand im Dienst.")] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzinfo",
-    description: "Zeigt Details zu einem Einsatz",
-    options: [{ name: "nummer", description: "Einsatznummer, z. B. I-2026-ABC123", type: "string", required: true, maxLength: 32 }],
-    async run(c) {
-      try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
-        if (!incident) return reply;
-        const d = await c.api.asUser(c.discordId, "GET", `/incidents/${incident.id}`);
-        const i = d.incident;
-        const units = (i.units ?? []).filter((u) => !u.clearedAt).map((u) => plain2(u.unit.callsign)).join(", ") || "keine";
-        return { ephemeral: true, embeds: [{ title: clip2(`\u{1F6A8} ${i.number} \u2014 ${plain2(i.title)}`, 256), color: COLORS.info, description: i.description ? clip2(plain2(i.description), 1500) : void 0, fields: [
-          { name: "Priorit\xE4t", value: label(i.priority), inline: true },
-          { name: "Status", value: label(i.status), inline: true },
-          { name: "Ort", value: clip2(plain2(i.location), 1024), inline: true },
-          { name: "Einheiten", value: clip2(units, 1024) },
-          { name: "Verlauf", value: clip2(d.timeline.slice(0, 5).map((t2) => `\u2022 ${plain2(t2.summary)}`).join("\n") || "\u2014", 1024) }
-        ] }] };
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzstatus",
-    description: "\xC4ndert den Status eines Einsatzes",
-    options: [
-      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(INC_STATUS) }
-    ],
-    async run(c) {
-      const status3 = INC_STATUS[str3(c, "status")];
-      if (!status3) return errorReply("Unbekannter Status.");
-      try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
-        if (!incident) return reply;
-        if (status3 === "CLOSED") await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/close`);
-        else await c.api.asUser(c.discordId, "PUT", `/dispatch/incidents/${incident.id}/status`, { status: status3 });
-        return okReply(`**${incident.number}** \u2192 ${label(status3)}`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "einsatzzuweisen",
-    description: "Weist eine Einheit einem Einsatz zu",
-    options: [
-      { name: "nummer", description: "Einsatznummer", type: "string", required: true, maxLength: 32 },
-      { name: "rufzeichen", description: "z. B. ADAM-1", type: "string", required: true, maxLength: 16 }
-    ],
-    async run(c) {
-      try {
-        const { incident, reply } = await resolveIncident(c, str3(c, "nummer"));
-        if (!incident) return reply;
-        const units = await c.api.asUser(c.discordId, "GET", "/dispatch/units");
-        const unit = units.find((u) => String(u.callsign).toLowerCase() === str3(c, "rufzeichen").toLowerCase());
-        if (!unit) return errorReply("Einheit nicht gefunden.");
-        await c.api.asUser(c.discordId, "POST", `/dispatch/incidents/${incident.id}/assign`, { unitId: unit.id });
-        return okReply(`**${plain2(unit.callsign)}** wurde **${incident.number}** zugewiesen.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "bericht",
-    description: "Schreibt einen Polizeibericht (Entwurf oder direkt einreichen)",
-    options: [
-      { name: "titel", description: "Titel", type: "string", required: true, maxLength: 200 },
-      { name: "text", description: "Berichtstext", type: "string", required: true, maxLength: 4e3 },
-      { name: "typ", description: "Berichtstyp (Standard: allgemein)", type: "string", choices: choices2(REPORT) },
-      { name: "einreichen", description: "Direkt zur Pr\xFCfung einreichen", type: "boolean" }
-    ],
-    async run(c) {
-      if (str3(c, "titel").length < 3) return errorReply("Der Titel ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const type = REPORT[str3(c, "typ")] ?? "GENERAL";
-        const r = await c.api.asUser(c.discordId, "POST", "/reports", { type, title: str3(c, "titel"), content: { body: str3(c, "text") } });
-        if (c.opts.einreichen === true) {
-          await c.api.asUser(c.discordId, "POST", `/reports/${r.id}/submit`);
-          return okReply(`Bericht **${r.number}** angelegt und **eingereicht**.`);
-        }
-        return okReply(`Bericht **${r.number}** als **Entwurf** gespeichert (im Web bearbeiten/einreichen).`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "beschwerde",
-    description: "Erfasst eine Beschwerde",
-    options: [
-      { name: "kategorie", description: "z. B. Verhalten", type: "string", required: true, maxLength: 64 },
-      { name: "beschreibung", description: "Was ist passiert? (mind. 10 Zeichen)", type: "string", required: true, maxLength: 4e3 },
-      { name: "person", description: "Betroffene Person (Roblox-Name oder -ID)", type: "string", maxLength: 64 }
-    ],
-    async run(c) {
-      if (str3(c, "kategorie").length < 2) return errorReply("Die Kategorie ist zu kurz.");
-      if (str3(c, "beschreibung").length < 10) return errorReply("Die Beschreibung ist zu kurz (mindestens 10 Zeichen).");
-      try {
-        let subjectId;
-        if (str3(c, "person")) {
-          const r = await resolvePerson(c, str3(c, "person"));
-          if (!r.person) return r.reply;
-          subjectId = r.person.id;
-        }
-        const res = await c.api.asUser(c.discordId, "POST", "/complaints", { category: str3(c, "kategorie"), description: str3(c, "beschreibung"), ...subjectId ? { subjectId } : {} });
-        return okReply(`Beschwerde **${res.number}** erfasst.`);
-      } catch (e) {
-        return mapError(e);
-      }
-    }
-  },
-  {
-    name: "fahndung",
-    description: "Schreibt eine Person zur Fahndung aus",
-    options: [
-      { name: "person", description: "Roblox-Name oder -ID", type: "string", required: true, maxLength: 64 },
-      { name: "grund", description: "Fahndungsgrund", type: "string", required: true, maxLength: 500 },
-      { name: "prioritaet", description: "Priorit\xE4t (Standard: mittel)", type: "string", choices: choices2(PRIO) }
-    ],
-    async run(c) {
-      if (str3(c, "grund").length < 3) return errorReply("Der Grund ist zu kurz (mindestens 3 Zeichen).");
-      try {
-        const { person, reply } = await resolvePerson(c, str3(c, "person"));
-        if (!person) return reply;
-        const priority = PRIO[str3(c, "prioritaet")] ?? "MEDIUM";
-        await c.api.asUser(c.discordId, "POST", "/wanted", { personId: person.id, reason: str3(c, "grund"), priority });
-        return okReply(`**${plain2(person.robloxUsername)}** ist zur Fahndung ausgeschrieben (${label(priority)}).`);
       } catch (e) {
         return mapError(e);
       }
@@ -86936,16 +86586,14 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
     async run(c) {
       try {
         const r = await c.api.asUser(c.discordId, "GET", "/notifications?filter=unread&pageSize=10");
-        return { ephemeral: true, embeds: [listEmbed(`\u{1F514} Ungelesen (${r.unread})`, r.items.map((n) => `\u2022 ${plain2(n.title)}`), "Keine ungelesenen Benachrichtigungen.")] };
+        return { ephemeral: true, embeds: [listEmbed(`\u{1F514} Ungelesen (${r.unread})`, r.items.map((n) => `\u2022 ${plain(n.title)}`), "Keine ungelesenen Benachrichtigungen.")] };
       } catch (e) {
         return mapError(e);
       }
     }
   },
   ...FEATURE_COMMANDS,
-  ...QUALI_COMMANDS,
   ...LEAVE_COMMANDS,
-  ...CAD_COMMANDS,
   ...DUTY_REPORT_COMMANDS,
   ...WARNING_COMMANDS,
   ...RADIO_WHITELIST_COMMANDS,
@@ -87093,7 +86741,7 @@ async function pollOnce(api2, send, log = console.log, dm, grantRole, syncRoles,
       }
       continue;
     }
-    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "mb.send" || item.type === "message.post" || item.type.startsWith("bot.") || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder" || item.type === "reminder.due") {
+    if (item.type === "application.ticket" || item.type === "embed.post" || item.type === "mb.send" || item.type === "mb.fetch" || item.type === "message.post" || item.type.startsWith("bot.") || item.type === "message.decided" || item.type === "voice.effects" || item.type.startsWith("verify.") || item.type === "duty.reminder" || item.type === "reminder.due") {
       try {
         if (!onTask || !await onTask(item.type, item.payload)) throw new Error("tasks not supported");
         await api2.service("POST", `/bot/outbox/${item.id}/ack`, { ok: true });
@@ -87291,7 +86939,7 @@ function welcomeEmbed(def, m, now = Date.now(), bannerFile) {
 }
 function createWelcome(api2, actions, log = console.error, local) {
   const cache = /* @__PURE__ */ new Map();
-  const config2 = async (guildId) => {
+  const config = async (guildId) => {
     const hit = cache.get(guildId);
     if (hit && Date.now() - hit.at < CACHE_MS) return hit.cfg;
     const cfg2 = await api2.service("GET", `/bot/welcome?guildId=${guildId}`);
@@ -87326,7 +86974,7 @@ function createWelcome(api2, actions, log = console.error, local) {
   return {
     async joined(m) {
       if (m.bot) return;
-      const cfg2 = await config2(m.guildId).catch((e) => {
+      const cfg2 = await config(m.guildId).catch((e) => {
         log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`);
         return null;
       });
@@ -87339,7 +86987,7 @@ function createWelcome(api2, actions, log = console.error, local) {
     },
     async left(m) {
       if (m.bot) return;
-      const cfg2 = await config2(m.guildId).catch((e) => {
+      const cfg2 = await config(m.guildId).catch((e) => {
         log(`welcome config not loaded: ${e instanceof Error ? e.message : e}`);
         return null;
       });
@@ -87351,7 +86999,7 @@ function createWelcome(api2, actions, log = console.error, local) {
     /** Test aus dem Dashboard: Nachricht bzw. DM wie beim echten Beitritt/Austritt – auch wenn sie ausgeschaltet ist, ohne Rollen/Aktionen. */
     async test(kind2, m) {
       cache.delete(m.guildId);
-      const cfg2 = await config2(m.guildId);
+      const cfg2 = await config(m.guildId);
       if (kind2 === "dm") {
         await actions.dm(m.id, renderWelcomeText(cfg2.dm.message, m).slice(0, 2e3));
         return;
@@ -87506,7 +87154,7 @@ async function restoreGuild(guild, data, parts) {
 var CACHE_MS2 = 3e4;
 function createVerify(api2, ops, log = console.error) {
   const cache = /* @__PURE__ */ new Map();
-  const config2 = async (guildId) => {
+  const config = async (guildId) => {
     const hit = cache.get(guildId);
     if (hit && Date.now() - hit.at < CACHE_MS2) return hit.cfg;
     const cfg2 = await api2.service("GET", `/bot/verify/config?guildId=${guildId}`);
@@ -87523,7 +87171,7 @@ function createVerify(api2, ops, log = console.error) {
     /** Beitritt: Verifizierte bekommen sofort Rollen + Nickname, alle anderen die „nicht verifiziert“-Rollen. */
     async joined(m) {
       if (m.bot) return;
-      const cfg2 = await config2(m.guildId).catch((e) => {
+      const cfg2 = await config(m.guildId).catch((e) => {
         log(`verify config not loaded: ${e instanceof Error ? e.message : e}`);
         return null;
       });
@@ -87546,6 +87194,90 @@ function createVerify(api2, ops, log = console.error) {
     },
     clear() {
       cache.clear();
+    }
+  };
+}
+
+// apps/bot/src/message-builder-discord.ts
+var import_discord8 = __toESM(require_src());
+var isForum = (c) => c.type === import_discord8.ChannelType.GuildForum || c.type === import_discord8.ChannelType.GuildMedia;
+var body = (x, edit = false) => ({
+  // Beim Bearbeiten leert ein fehlender Text den bisherigen Text (sonst bliebe er stehen)
+  ...x.content || edit ? { content: x.content ?? "" } : {},
+  embeds: x.embeds,
+  components: x.components,
+  allowedMentions: { parse: x.allowed_mentions.parse }
+});
+async function guildChannel(client2, guildId, channelId) {
+  const ch2 = await client2.channels.fetch(channelId).catch(() => null);
+  if (!ch2 || ch2.isDMBased() || !("guildId" in ch2)) throw new Error("Den Kanal gibt es nicht (mehr) oder der Bot sieht ihn nicht.");
+  if (!guildId || ch2.guildId !== guildId) throw new Error("Der Kanal geh\xF6rt nicht zu dem Discord-Server, f\xFCr den die Nachricht gebaut wurde.");
+  return ch2;
+}
+function mbDiscord(client2) {
+  return {
+    async missingPerms(guildId, channelId, payloads, target = {}) {
+      const ch2 = await guildChannel(client2, guildId, channelId);
+      if (!("permissionsFor" in ch2)) throw new Error("In diesen Kanaltyp kann nicht gesendet werden.");
+      const embeds = payloads.some((x) => x.embeds.length);
+      const everyone = payloads.some((x) => x.allowed_mentions.parse.includes("everyone") && /@(everyone|here)/.test(x.content ?? ""));
+      let perms = ch2.permissionsFor(client2.user);
+      const need = [[import_discord8.PermissionFlagsBits.ViewChannel, "Kanal ansehen", true]];
+      if (target.edit) {
+        need.push([import_discord8.PermissionFlagsBits.ReadMessageHistory, "Nachrichtenverlauf lesen", true]);
+      } else if (target.threadId) {
+        const t2 = await client2.channels.fetch(target.threadId).catch(() => null);
+        if (!t2?.isThread()) throw new Error("Den gew\xE4hlten Thread bzw. Forum-Beitrag gibt es nicht (mehr).");
+        if (t2.parentId !== ch2.id) throw new Error("Der gew\xE4hlte Thread geh\xF6rt nicht zu diesem Kanal.");
+        if (t2.archived && t2.locked) throw new Error("Der Thread ist archiviert und gesperrt \u2013 erst in Discord wieder \xF6ffnen.");
+        perms = t2.permissionsFor(client2.user);
+        need.push([import_discord8.PermissionFlagsBits.SendMessagesInThreads, "Nachrichten in Threads senden", true]);
+      } else if (isForum(ch2)) {
+        if (!target.threadName) throw new Error("Forum-Kanal: Bitte einen bestehenden Beitrag w\xE4hlen oder einen Titel f\xFCr einen neuen Beitrag angeben.");
+        need.push([import_discord8.PermissionFlagsBits.SendMessages, "Beitr\xE4ge erstellen (Nachrichten senden)", true]);
+      } else {
+        if (!ch2.isSendable()) throw new Error("Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.");
+        need.push([import_discord8.PermissionFlagsBits.SendMessages, "Nachrichten senden", true]);
+      }
+      need.push([import_discord8.PermissionFlagsBits.EmbedLinks, "Links einbetten", embeds], [import_discord8.PermissionFlagsBits.MentionEveryone, "@everyone, @here und alle Rollen erw\xE4hnen", everyone]);
+      return need.filter(([flag, , used]) => used && !perms?.has(flag)).map(([, name]) => name);
+    },
+    async send(channelId, x) {
+      const ch2 = await client2.channels.fetch(channelId);
+      if (!ch2?.isSendable()) throw new Error("Der Kanal ist nicht beschreibbar.");
+      return ch2.send(body(x));
+    },
+    async createPost(forumId, name, x) {
+      const ch2 = await client2.channels.fetch(forumId);
+      if (!ch2 || !isForum(ch2) || !("threads" in ch2)) throw new Error("Der Kanal ist kein Forum.");
+      const thread = await ch2.threads.create({ name: name.slice(0, 100), message: body(x) });
+      const starter = await thread.fetchStarterMessage().catch(() => null);
+      return { id: starter?.id ?? thread.id, channelId: thread.id };
+    },
+    async edit(channelId, messageId, x) {
+      const ch2 = await client2.channels.fetch(channelId);
+      if (!ch2?.isTextBased() || !("messages" in ch2)) throw new Error("Den Kanal gibt es nicht (mehr) oder der Bot sieht ihn nicht.");
+      const msg = await ch2.messages.fetch(messageId);
+      if (msg.author.id !== client2.user.id) throw new Error("Diese Nachricht stammt nicht vom Bot \u2013 nur eigene Nachrichten k\xF6nnen bearbeitet werden.");
+      return msg.edit(body(x, true));
+    }
+  };
+}
+function mbFetchDiscord(client2) {
+  return {
+    async fetch(guildId, channelId, messageId) {
+      const ch2 = await guildChannel(client2, guildId, channelId);
+      if (!ch2.isTextBased() || !("messages" in ch2)) throw new Error("In diesem Kanal gibt es keine Nachrichten.");
+      const msg = await ch2.messages.fetch(messageId);
+      const author = msg.author.id === client2.user.id ? "bot" : msg.webhookId ? "webhook" : "other";
+      return {
+        author,
+        ...author === "webhook" && msg.webhookId ? { webhookId: msg.webhookId } : {},
+        channelId: ch2.id,
+        parentId: ch2.isThread() ? ch2.parentId : null,
+        channelName: "name" in ch2 ? ch2.name : void 0,
+        message: { content: msg.content, embeds: msg.embeds.map((e) => e.toJSON()), components: msg.components.map((c) => c.toJSON()) }
+      };
     }
   };
 }
@@ -87753,8 +87485,8 @@ var BotBackupService = class {
     const cur = await this.store.get(plan.guildId, { fresh: true });
     if (cur.revision !== plan.currentRevision) throw new Error("Die Einstellungen wurden seit der Pr\xFCfung ge\xE4ndert \u2013 bitte neu planen.");
     const { meta: safety } = await this.create(plan.guildId, { reason: "vor-wiederherstellung", by: o.by, guildName: o.guildName ?? null });
-    const config2 = await this.store.replace(plan.guildId, parseGuildConfig(again.contents.guildConfig), { by: o.by, expectRevision: plan.currentRevision });
-    return { safety, config: config2 };
+    const config = await this.store.replace(plan.guildId, parseGuildConfig(again.contents.guildConfig), { by: o.by, expectRevision: plan.currentRevision });
+    return { safety, config };
   }
 };
 
@@ -87768,17 +87500,17 @@ var guildConfig = new GuildConfigStore(apiKeyValue(api));
 var backupDir = cfg.BOT_BACKUP_DIR ? defaultBackupDir({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : defaultBackupDir({});
 var backupDirWarning = insideProduction(backupDir, [process.cwd(), ...typeof __dirname === "string" ? [__dirname] : []]) ? `Der Sicherungsordner ${backupDir} liegt im Bot-/Produktionsordner. Bitte BOT_BACKUP_DIR auf einen Ordner au\xDFerhalb setzen (die Kopie in der Datenbank besteht trotzdem).` : null;
 var botBackups = new BotBackupService(guildConfig, fsBackupFiles(backupDir), apiKeyValue(api));
-var makeClient = (i) => new import_discord8.Client({
+var makeClient = (i) => new import_discord9.Client({
   intents: [
-    import_discord8.GatewayIntentBits.Guilds,
-    import_discord8.GatewayIntentBits.DirectMessages,
-    import_discord8.GatewayIntentBits.GuildMessages,
-    import_discord8.GatewayIntentBits.GuildVoiceStates,
-    ...i.content ? [import_discord8.GatewayIntentBits.MessageContent] : [],
-    ...i.members ? [import_discord8.GatewayIntentBits.GuildMembers] : [],
-    ...i.presences ? [import_discord8.GatewayIntentBits.GuildPresences] : []
+    import_discord9.GatewayIntentBits.Guilds,
+    import_discord9.GatewayIntentBits.DirectMessages,
+    import_discord9.GatewayIntentBits.GuildMessages,
+    import_discord9.GatewayIntentBits.GuildVoiceStates,
+    ...i.content ? [import_discord9.GatewayIntentBits.MessageContent] : [],
+    ...i.members ? [import_discord9.GatewayIntentBits.GuildMembers] : [],
+    ...i.presences ? [import_discord9.GatewayIntentBits.GuildPresences] : []
   ],
-  partials: [import_discord8.Partials.Channel, import_discord8.Partials.GuildMember]
+  partials: [import_discord9.Partials.Channel, import_discord9.Partials.GuildMember]
   // GuildMember: Austritt auch von Mitgliedern, die nicht im Cache sind
 });
 var INTENT_STEPS = [
@@ -87792,7 +87524,7 @@ var intents = INTENT_STEPS[0];
 var client = makeClient(intents);
 var tickets = createTicketRuntime(() => client, api);
 var toEmbed = (e) => {
-  const b2 = new import_discord8.EmbedBuilder();
+  const b2 = new import_discord9.EmbedBuilder();
   if (e.title) b2.setTitle(e.title);
   if (e.description) b2.setDescription(e.description);
   if (e.color !== void 0) b2.setColor(e.color);
@@ -87804,12 +87536,12 @@ var toEmbed = (e) => {
   b2.setTimestamp(/* @__PURE__ */ new Date());
   return b2;
 };
-var STYLE2 = { primary: import_discord8.ButtonStyle.Primary, secondary: import_discord8.ButtonStyle.Secondary, success: import_discord8.ButtonStyle.Success, danger: import_discord8.ButtonStyle.Danger };
+var STYLE2 = { primary: import_discord9.ButtonStyle.Primary, secondary: import_discord9.ButtonStyle.Secondary, success: import_discord9.ButtonStyle.Success, danger: import_discord9.ButtonStyle.Danger };
 var toRows = (buttons = []) => {
   const rows = [];
   for (let i = 0; i < buttons.length && rows.length < 5; i += 5) {
-    rows.push(new import_discord8.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b2) => {
-      const x = b2.url ? new import_discord8.ButtonBuilder().setURL(b2.url).setLabel(b2.label).setStyle(import_discord8.ButtonStyle.Link) : new import_discord8.ButtonBuilder().setCustomId(b2.id).setLabel(b2.label).setStyle(STYLE2[b2.style]);
+    rows.push(new import_discord9.ActionRowBuilder().addComponents(buttons.slice(i, i + 5).map((b2) => {
+      const x = b2.url ? new import_discord9.ButtonBuilder().setURL(b2.url).setLabel(b2.label).setStyle(import_discord9.ButtonStyle.Link) : new import_discord9.ButtonBuilder().setCustomId(b2.id).setLabel(b2.label).setStyle(STYLE2[b2.style]);
       if (b2.emoji) x.setEmoji(b2.emoji);
       if (b2.disabled) x.setDisabled(true);
       return x;
@@ -87817,29 +87549,29 @@ var toRows = (buttons = []) => {
   }
   return rows;
 };
-var sep = () => new import_discord8.SeparatorBuilder().setDivider(true).setSpacing(import_discord8.SeparatorSpacingSize.Large);
+var sep = () => new import_discord9.SeparatorBuilder().setDivider(true).setSpacing(import_discord9.SeparatorSpacingSize.Large);
 var toBox = (list3, buttons, ping) => [
-  ...ping ? [new import_discord8.TextDisplayBuilder().setContent(ping)] : [],
+  ...ping ? [new import_discord9.TextDisplayBuilder().setContent(ping)] : [],
   ...list3.map((e, i) => {
-    const c = new import_discord8.ContainerBuilder();
-    if (e.author?.name) c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(`**${e.author.name}**`));
-    c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(e.heading === "small" ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
+    const c = new import_discord9.ContainerBuilder();
+    if (e.author?.name) c.addTextDisplayComponents(new import_discord9.TextDisplayBuilder().setContent(`**${e.author.name}**`));
+    c.addTextDisplayComponents(new import_discord9.TextDisplayBuilder().setContent(e.heading === "small" ? `### ${e.title}` : e.heading ? `# ${e.title}` : `**${e.title}**`));
     if (e.description) {
       if (e.heading === true) c.addSeparatorComponents(sep());
-      c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(e.description));
+      c.addTextDisplayComponents(new import_discord9.TextDisplayBuilder().setContent(e.description));
     }
-    for (const f2 of e.fields ?? []) c.addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(`**${f2.name}**
+    for (const f2 of e.fields ?? []) c.addTextDisplayComponents(new import_discord9.TextDisplayBuilder().setContent(`**${f2.name}**
 ${f2.value}`));
     const rows = i === list3.length - 1 ? toRows(buttons) : [];
     if (rows.length) c.addSeparatorComponents(sep()).addActionRowComponents(...rows);
-    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord8.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
+    if (e.stamp && !Number.isNaN(Date.parse(e.stamp))) c.addSeparatorComponents(sep()).addTextDisplayComponents(new import_discord9.TextDisplayBuilder().setContent(`<t:${Math.floor(Date.parse(e.stamp) / 1e3)}:f>`));
     return c;
   })
 ];
 var toComponents = (buttons, select, selects = []) => componentsOf(buttons, [...select ? [select] : [], ...selects]);
 var toModal2 = (m) => modalOf(m);
 var filesOf = (r) => r.files?.length ? { files: r.files.map((f2) => ({ attachment: Buffer.from(f2.data, "utf8"), name: f2.name })) } : {};
-var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] }, ...filesOf(r) };
+var replyPayload = (r) => r.embeds?.[0]?.box ? { components: [...toBox(r.embeds), ...toComponents(r.buttons, r.select, r.selects)], flags: import_discord9.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } } : { content: r.content ?? "", embeds: (r.embeds ?? []).map(toEmbed), components: toComponents(r.buttons, r.select, r.selects), allowedMentions: { parse: [] }, ...filesOf(r) };
 var TICKET_PREFIX = "ticket-";
 var ticketName = (userName, userId) => `${TICKET_PREFIX}${userName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || userId}`;
 var platform = {
@@ -87851,27 +87583,27 @@ var platform = {
   async createTicketChannel({ guildId, userId, userName, categoryId, staffRoleId, extraUserIds = [] }) {
     const guild = await client.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
-    const existing = channels.find((c) => c?.type === import_discord8.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
+    const existing = channels.find((c) => c?.type === import_discord9.ChannelType.GuildText && c.name.startsWith(TICKET_PREFIX) && c.topic?.includes(`(${userId})`));
     if (existing) return { channelId: existing.id, existing: true };
-    const view = [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.SendMessages, import_discord8.PermissionFlagsBits.ReadMessageHistory, import_discord8.PermissionFlagsBits.AttachFiles];
+    const view = [import_discord9.PermissionFlagsBits.ViewChannel, import_discord9.PermissionFlagsBits.SendMessages, import_discord9.PermissionFlagsBits.ReadMessageHistory, import_discord9.PermissionFlagsBits.AttachFiles];
     const ch2 = await guild.channels.create({
       name: ticketName(userName, userId),
-      type: import_discord8.ChannelType.GuildText,
+      type: import_discord9.ChannelType.GuildText,
       topic: `Support-Ticket von ${userName} (${userId})`,
-      ...categoryId && channels.get(categoryId)?.type === import_discord8.ChannelType.GuildCategory ? { parent: categoryId } : {},
+      ...categoryId && channels.get(categoryId)?.type === import_discord9.ChannelType.GuildCategory ? { parent: categoryId } : {},
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord8.OverwriteType.Role, deny: [import_discord8.PermissionFlagsBits.ViewChannel] },
-        { id: userId, type: import_discord8.OverwriteType.Member, allow: view },
-        { id: client.user.id, type: import_discord8.OverwriteType.Member, allow: [...view, import_discord8.PermissionFlagsBits.ManageChannels] },
-        ...staffRoleId ? [{ id: staffRoleId, type: import_discord8.OverwriteType.Role, allow: view }] : [],
-        ...extraUserIds.filter((id3) => id3 !== userId).map((id3) => ({ id: id3, type: import_discord8.OverwriteType.Member, allow: view }))
+        { id: guild.roles.everyone.id, type: import_discord9.OverwriteType.Role, deny: [import_discord9.PermissionFlagsBits.ViewChannel] },
+        { id: userId, type: import_discord9.OverwriteType.Member, allow: view },
+        { id: client.user.id, type: import_discord9.OverwriteType.Member, allow: [...view, import_discord9.PermissionFlagsBits.ManageChannels] },
+        ...staffRoleId ? [{ id: staffRoleId, type: import_discord9.OverwriteType.Role, allow: view }] : [],
+        ...extraUserIds.filter((id3) => id3 !== userId).map((id3) => ({ id: id3, type: import_discord9.OverwriteType.Member, allow: view }))
       ]
     });
     return { channelId: ch2.id, existing: false };
   },
   async deleteChannel(channelId, delayMs = 0) {
     const ch2 = await client.channels.fetch(channelId);
-    if (!ch2 || ch2.type !== import_discord8.ChannelType.GuildText || !ch2.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
+    if (!ch2 || ch2.type !== import_discord9.ChannelType.GuildText || !ch2.name.startsWith(TICKET_PREFIX)) throw new Error("not a ticket channel");
     setTimeout(() => void ch2.delete("Support-Ticket geschlossen").catch((e) => console.error("ticket delete failed:", e instanceof Error ? e.message : e)), delayMs);
   },
   async sendDirectMessage(userId, text) {
@@ -87885,9 +87617,9 @@ var platform = {
     const ch2 = await client.channels.fetch(channelId);
     if (!ch2?.isSendable() || !("messages" in ch2)) throw new Error(`channel ${channelId} is not a text channel the bot can post in`);
     if (embed.box) {
-      const box = { components: toBox([embed], buttons), flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
+      const box = { components: toBox([embed], buttons), flags: import_discord9.MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
       const old = messageId ? await ch2.messages.fetch(messageId).catch(() => null) : null;
-      if (old?.flags.has(import_discord8.MessageFlags.IsComponentsV2)) {
+      if (old?.flags.has(import_discord9.MessageFlags.IsComponentsV2)) {
         await old.edit(box);
         return old.id;
       }
@@ -87978,7 +87710,7 @@ var verify = createVerify(api, {
     return out;
   }
 });
-var VOICE_TALK = [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.Connect, import_discord8.PermissionFlagsBits.Speak, import_discord8.PermissionFlagsBits.Stream, import_discord8.PermissionFlagsBits.UseVAD];
+var VOICE_TALK = [import_discord9.PermissionFlagsBits.ViewChannel, import_discord9.PermissionFlagsBits.Connect, import_discord9.PermissionFlagsBits.Speak, import_discord9.PermissionFlagsBits.Stream, import_discord9.PermissionFlagsBits.UseVAD];
 var voiceSupport = createVoiceSupport(api, {
   async post(channelId, m) {
     const ch2 = await client.channels.fetch(channelId);
@@ -88006,14 +87738,14 @@ var voiceSupport = createVoiceSupport(api, {
     const near = await guild.channels.fetch(nearChannelId).catch(() => null);
     const ch2 = await guild.channels.create({
       name,
-      type: import_discord8.ChannelType.GuildVoice,
+      type: import_discord9.ChannelType.GuildVoice,
       ...near?.parentId ? { parent: near.parentId } : {},
       reason: "EN Polizei: Sprach-Support",
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, type: import_discord8.OverwriteType.Role, deny: [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.Connect] },
-        { id: userId, type: import_discord8.OverwriteType.Member, allow: VOICE_TALK },
-        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord8.OverwriteType.Role, allow: [...VOICE_TALK, import_discord8.PermissionFlagsBits.MoveMembers] }] : [],
-        { id: client.user.id, type: import_discord8.OverwriteType.Member, allow: [import_discord8.PermissionFlagsBits.ViewChannel, import_discord8.PermissionFlagsBits.Connect, import_discord8.PermissionFlagsBits.MoveMembers, import_discord8.PermissionFlagsBits.ManageChannels] }
+        { id: guild.roles.everyone.id, type: import_discord9.OverwriteType.Role, deny: [import_discord9.PermissionFlagsBits.ViewChannel, import_discord9.PermissionFlagsBits.Connect] },
+        { id: userId, type: import_discord9.OverwriteType.Member, allow: VOICE_TALK },
+        ...guild.roles.cache.has(teamRoleId) ? [{ id: teamRoleId, type: import_discord9.OverwriteType.Role, allow: [...VOICE_TALK, import_discord9.PermissionFlagsBits.MoveMembers] }] : [],
+        { id: client.user.id, type: import_discord9.OverwriteType.Member, allow: [import_discord9.PermissionFlagsBits.ViewChannel, import_discord9.PermissionFlagsBits.Connect, import_discord9.PermissionFlagsBits.MoveMembers, import_discord9.PermissionFlagsBits.ManageChannels] }
       ]
     });
     return ch2.id;
@@ -88026,7 +87758,7 @@ var voiceSupport = createVoiceSupport(api, {
   },
   async deleteChannel(channelId) {
     const ch2 = await client.channels.fetch(channelId).catch(() => null);
-    if (ch2?.type === import_discord8.ChannelType.GuildVoice) await ch2.delete("EN Polizei: Support-Fall geschlossen");
+    if (ch2?.type === import_discord9.ChannelType.GuildVoice) await ch2.delete("EN Polizei: Support-Fall geschlossen");
   },
   async thread(channelId, messageId, name) {
     const ch2 = await client.channels.fetch(channelId);
@@ -88050,7 +87782,7 @@ var access = {
       if (e?.code === 10007 || e?.code === 10013) return null;
       throw e;
     });
-    const out = m ? { userId, roleIds: [...m.roles.cache.keys()].filter((r) => r !== guild.id), isOwner: guild.ownerId === userId, administrator: m.permissions.has(import_discord8.PermissionFlagsBits.Administrator), manageGuild: m.permissions.has(import_discord8.PermissionFlagsBits.ManageGuild) } : null;
+    const out = m ? { userId, roleIds: [...m.roles.cache.keys()].filter((r) => r !== guild.id), isOwner: guild.ownerId === userId, administrator: m.permissions.has(import_discord9.PermissionFlagsBits.Administrator), manageGuild: m.permissions.has(import_discord9.PermissionFlagsBits.ManageGuild) } : null;
     if (memberMemo.size > 500) memberMemo.clear();
     memberMemo.set(key4, { at: Date.now(), m: out });
     return out;
@@ -88063,7 +87795,7 @@ async function guildSnapshot(guildId) {
   const me = g.members.me ?? await g.members.fetchMe().catch(() => null);
   if (!me) return null;
   await g.channels.fetch().catch(() => void 0);
-  const kindOf = (t2) => t2 === import_discord8.ChannelType.GuildText || t2 === import_discord8.ChannelType.GuildAnnouncement ? "text" : t2 === import_discord8.ChannelType.GuildVoice || t2 === import_discord8.ChannelType.GuildStageVoice ? "voice" : t2 === import_discord8.ChannelType.GuildCategory ? "category" : "other";
+  const kindOf = (t2) => t2 === import_discord9.ChannelType.GuildText || t2 === import_discord9.ChannelType.GuildAnnouncement ? "text" : t2 === import_discord9.ChannelType.GuildVoice || t2 === import_discord9.ChannelType.GuildStageVoice ? "voice" : t2 === import_discord9.ChannelType.GuildCategory ? "category" : "other";
   return {
     id: g.id,
     name: g.name,
@@ -88115,7 +87847,7 @@ var botProfile = {
   async canChangeNickname(guildId) {
     const g = await client.guilds.fetch(guildId);
     const me = g.members.me ?? await g.members.fetchMe();
-    return me.permissions.has(import_discord8.PermissionFlagsBits.ChangeNickname);
+    return me.permissions.has(import_discord9.PermissionFlagsBits.ChangeNickname);
   },
   async setServerNick(guildId, nick) {
     const g = await client.guilds.fetch(guildId);
@@ -88213,7 +87945,7 @@ function addOptions(b2, options2 = []) {
   }
 }
 function toBuilder(def) {
-  const b2 = new import_discord8.SlashCommandBuilder().setName(def.name).setDescription(def.description);
+  const b2 = new import_discord9.SlashCommandBuilder().setName(def.name).setDescription(def.description);
   if (def.subcommands?.length) for (const sc of def.subcommands) b2.addSubcommand((x) => {
     x.setName(sc.name).setDescription(sc.description);
     addOptions(x, sc.options);
@@ -88229,21 +87961,21 @@ function joinedAtOf2(m) {
 }
 async function markDecided(message, d) {
   const embeds = message.embeds.map((e, i, all) => {
-    const b2 = import_discord8.EmbedBuilder.from(e).setColor(d.color);
+    const b2 = import_discord9.EmbedBuilder.from(e).setColor(d.color);
     if (i === all.length - 1) b2.setFields([...(e.fields ?? []).filter((f2) => f2.name !== "Entscheidung"), { name: "Entscheidung", value: d.text.slice(0, 1024) }]);
     return b2;
   });
-  const badge = d.badge ? new import_discord8.ButtonBuilder().setCustomId("decided").setLabel(d.badge.label).setStyle(STYLE2[d.badge.style]).setDisabled(true) : null;
+  const badge = d.badge ? new import_discord9.ButtonBuilder().setCustomId("decided").setLabel(d.badge.label).setStyle(STYLE2[d.badge.style]).setDisabled(true) : null;
   if (badge && d.badge?.emoji) badge.setEmoji(d.badge.emoji);
   const rows = [];
   for (const row of message.components) {
     if (!("components" in row)) continue;
-    const kept = row.components.filter((c) => c.type === import_discord8.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? "") && !(badge && c.customId === "decided"));
-    if (kept.length) rows.push(new import_discord8.ActionRowBuilder().addComponents(kept.map((c) => import_discord8.ButtonBuilder.from(c))));
+    const kept = row.components.filter((c) => c.type === import_discord9.ComponentType.Button && !/^(quali|leave):x?(decide|reason):|^rwreq:(approve|reject):/.test(c.customId ?? "") && !(badge && c.customId === "decided"));
+    if (kept.length) rows.push(new import_discord9.ActionRowBuilder().addComponents(kept.map((c) => import_discord9.ButtonBuilder.from(c))));
   }
   if (badge) {
     if (rows[0] && rows[0].components.length < 5) rows[0].components.unshift(badge);
-    else rows.unshift(new import_discord8.ActionRowBuilder().addComponents(badge));
+    else rows.unshift(new import_discord9.ActionRowBuilder().addComponents(badge));
   }
   await message.edit({ ...d.note ? { content: d.note.slice(0, 2e3) } : {}, embeds, components: rows, allowedMentions: { parse: [] } });
 }
@@ -88260,7 +87992,7 @@ function baseCtx(i) {
     guildId: i.guildId ?? void 0,
     channelId: i.channelId ?? void 0,
     ...i.guild ? { guildName: i.guild.name, ...i.guild.iconURL({ size: 64 }) ? { guildIcon: i.guild.iconURL({ size: 64 }) } : {} } : {},
-    isGuildAdmin: !!perms && (perms.has(import_discord8.PermissionFlagsBits.ManageGuild) || perms.has(import_discord8.PermissionFlagsBits.Administrator)),
+    isGuildAdmin: !!perms && (perms.has(import_discord9.PermissionFlagsBits.ManageGuild) || perms.has(import_discord9.PermissionFlagsBits.Administrator)),
     config: () => api.service("GET", "/bot/config"),
     refreshLive: (kind2, o) => live.refresh(kind2, o),
     robloxLookup: (name) => robloxLookup(name),
@@ -88343,17 +88075,17 @@ async function handleCommand(i) {
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
-      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord9.MessageFlags.Ephemeral });
     }
     return;
   }
   const pub = !!def.publicReply?.(opts);
-  await i.deferReply(pub ? {} : { flags: import_discord8.MessageFlags.Ephemeral });
+  await i.deferReply(pub ? {} : { flags: import_discord9.MessageFlags.Ephemeral });
   const reply = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
   if (pub && reply.ephemeral) {
     await i.deleteReply().catch(() => void 0);
     const p = replyPayload(reply);
-    await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
+    await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord9.MessageFlags.Ephemeral });
     return;
   }
   await i.editReply(replyPayload(reply));
@@ -88366,7 +88098,7 @@ async function handleAutocomplete(i) {
   await i.respond(list3.slice(0, 25).map((c) => ({ name: c.name.slice(0, 100), value: c.value.slice(0, 100) })));
 }
 async function resetSelect(i) {
-  if (i.message.flags.has(import_discord8.MessageFlags.Ephemeral)) return;
+  if (i.message.flags.has(import_discord9.MessageFlags.Ephemeral)) return;
   await i.message.edit({ components: i.message.components }).catch((e) => console.error("could not reset select menu:", e instanceof Error ? e.message : e));
 }
 async function handleComponent(i) {
@@ -88378,7 +88110,7 @@ async function handleComponent(i) {
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));
     else {
       const p = replyPayload(reply2);
-      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
+      await i.reply({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord9.MessageFlags.Ephemeral });
     }
     if (i.isAnySelectMenu()) await resetSelect(i);
     return;
@@ -88389,21 +88121,21 @@ async function handleComponent(i) {
     const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args, ...fields2 ? { fields: fields2 } : {}, ...i.isModalSubmit() ? { modal: modalValuesOf(i) } : {}, ...i.isAnySelectMenu() ? { values: i.values } : {} }));
     const p = replyPayload(reply2);
     if (reply2.panel) await i.editReply(p);
-    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
+    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord9.MessageFlags.Ephemeral });
     return;
   }
   if (i.isButton() && hit.def.updatesMessage?.(hit.args)) {
     await i.deferUpdate();
     const reply2 = await check2() ?? await safeRun(`interaction ${i.customId}`, () => hit.def.run({ ...baseCtx(i), opts: {}, args: hit.args }));
     const p = replyPayload(reply2);
-    if (reply2.panel && !reply2.embeds?.[0]?.box && i.message.flags.has(import_discord8.MessageFlags.IsComponentsV2)) {
+    if (reply2.panel && !reply2.embeds?.[0]?.box && i.message.flags.has(import_discord9.MessageFlags.IsComponentsV2)) {
       await i.message.delete().catch(() => void 0);
       await i.followUp(p);
     } else if (reply2.embeds?.[0]?.box || reply2.panel) await i.editReply(p);
-    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord8.MessageFlags.Ephemeral });
+    else await i.followUp({ ...p, flags: ("flags" in p ? p.flags ?? 0 : 0) | import_discord9.MessageFlags.Ephemeral });
     return;
   }
-  await i.deferReply({ flags: import_discord8.MessageFlags.Ephemeral });
+  await i.deferReply({ flags: import_discord9.MessageFlags.Ephemeral });
   const fields = i.isModalSubmit() ? Object.fromEntries(i.fields.fields.map((f2, id3) => [id3, "value" in f2 ? String(f2.value) : ""])) : void 0;
   const modal3 = i.isModalSubmit() ? modalValuesOf(i) : void 0;
   const values = i.isAnySelectMenu() ? i.values : void 0;
@@ -88547,7 +88279,7 @@ function wireReady(client0) {
         }
         const roles2 = opts?.pingRoleIds ?? [];
         const ping = roles2.length ? roles2.map((r) => `<@&${r}>`).join(" ") : void 0;
-        const msg = list3[0]?.box ? await ch2.send({ components: toBox(list3, buttons, ping), flags: import_discord8.MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles: roles2 } }) : await ch2.send({ ...ping ? { content: ping } : {}, embeds: list3.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles: roles2 } });
+        const msg = list3[0]?.box ? await ch2.send({ components: toBox(list3, buttons, ping), flags: import_discord9.MessageFlags.IsComponentsV2, allowedMentions: { parse: [], roles: roles2 } }) : await ch2.send({ ...ping ? { content: ping } : {}, embeds: list3.map(toEmbed), components: toRows(buttons), allowedMentions: { parse: [], roles: roles2 } });
         if (opts?.replaceKey) {
           const key4 = `last-${opts.replaceKey}-${channelId}`;
           const old = await api.service("GET", `/bot/state/${key4}`).then((r) => r.value, () => null);
@@ -88641,26 +88373,11 @@ function wireReady(client0) {
           return true;
         }
         if (type === "mb.send") {
-          await runMbSend(api, String(p.sendId ?? ""), {
-            async missingPerms(guildId2, channelId, payloads) {
-              const ch2 = await client.channels.fetch(channelId).catch(() => null);
-              if (!ch2 || ch2.isDMBased() || !ch2.isSendable() || !("permissionsFor" in ch2)) throw new Error("Der Kanal existiert nicht oder ist kein Textkanal, in den der Bot senden kann.");
-              if (!guildId2 || ch2.guildId !== guildId2) throw new Error("Der Kanal geh\xF6rt nicht zu dem Discord-Server, f\xFCr den die Nachricht gebaut wurde.");
-              const perms = ch2.permissionsFor(client.user);
-              const need = [
-                [import_discord8.PermissionFlagsBits.ViewChannel, "Kanal ansehen", true],
-                [import_discord8.PermissionFlagsBits.SendMessages, "Nachrichten senden", true],
-                [import_discord8.PermissionFlagsBits.EmbedLinks, "Links einbetten", payloads.some((x) => x.embeds.length)],
-                [import_discord8.PermissionFlagsBits.MentionEveryone, "@everyone, @here und alle Rollen erw\xE4hnen", payloads.some((x) => x.allowed_mentions.parse.includes("everyone") && /@(everyone|here)/.test(x.content ?? ""))]
-              ];
-              return need.filter(([flag, , used]) => used && !perms?.has(flag)).map(([, name]) => name);
-            },
-            async send(channelId, x) {
-              const ch2 = await client.channels.fetch(channelId);
-              if (!ch2?.isSendable()) throw new Error("Der Kanal ist nicht beschreibbar.");
-              return ch2.send({ ...x.content ? { content: x.content } : {}, embeds: x.embeds, components: x.components, allowedMentions: { parse: x.allowed_mentions.parse } });
-            }
-          });
+          await runMbSend(api, String(p.sendId ?? ""), mbDiscord(client));
+          return true;
+        }
+        if (type === "mb.fetch") {
+          await runMbFetch(api, String(p.id ?? ""), mbFetchDiscord(client));
           return true;
         }
         if (type === "bot.radio.rolesync") {

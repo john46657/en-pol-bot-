@@ -97,6 +97,7 @@ export declare class VoiceSupportController {
         userId: string;
         closedAt: Date | null;
         channelId: string | null;
+        threadId: string | null;
         claimedById: string | null;
         closeReason: string | null;
         closedById: string | null;
@@ -109,7 +110,6 @@ export declare class VoiceSupportController {
         createdChannel: boolean;
         notifyChannelId: string | null;
         notifyMessageId: string | null;
-        threadId: string | null;
         messages: number;
         rating: number | null;
     }[]>;
@@ -123,6 +123,7 @@ export declare class VoiceSupportController {
         userId: string;
         closedAt: Date | null;
         channelId: string | null;
+        threadId: string | null;
         claimedById: string | null;
         closeReason: string | null;
         closedById: string | null;
@@ -135,7 +136,6 @@ export declare class VoiceSupportController {
         createdChannel: boolean;
         notifyChannelId: string | null;
         notifyMessageId: string | null;
-        threadId: string | null;
         messages: number;
         rating: number | null;
     }>;

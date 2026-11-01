@@ -63,9 +63,10 @@ declare const PERMISSION_CATALOG: {
     /**
      * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
      * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
-     * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+     * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben, edit = eigene gesendete Discord-Nachrichten laden und
+     * bearbeiten, edit_others = auch Nachrichten anderer Nutzer (und per Link geladene) bearbeiten.
      */
-    readonly messagebuilder: readonly ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles"];
+    readonly messagebuilder: readonly ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles", "edit", "edit_others"];
 };
 type Catalog = typeof PERMISSION_CATALOG;
 type PermissionKey = {
@@ -678,7 +679,7 @@ declare const CAD_EVENTS: readonly ["incident.created", "incident.status", "inci
 type CadEvent = (typeof CAD_EVENTS)[number];
 declare const CAD_EVENT_LABELS: Record<CadEvent, string>;
 /**
- * Rückmeldungen einer Einheit aus dem MDT bzw. Discord (`/cad rueckmeldung`). Sie landen in der Einsatzchronik;
+ * Rückmeldungen einer Einheit aus dem MDT. Sie landen in der Einsatzchronik;
  * `unitStatus` wird nur gesetzt, wenn es diesen Einheitenstatus in den CAD-Einstellungen gibt. Den Einsatz selbst ändern sie nie.
  */
 declare const CAD_FEEDBACK: readonly [{
@@ -1810,8 +1811,8 @@ declare const MODULES: readonly [{
     readonly permissionPrefixes: ["sek"];
 }, {
     readonly key: "message_builder";
-    readonly name: "Discord Message Builder";
-    readonly description: "Nachrichten und Embeds bauen, Vorlagen, Versand über den Bot, Versandhistorie";
+    readonly name: "Embed Builder";
+    readonly description: "Discord-Nachrichten und Embeds bauen (JSON-Editor, Vorlagen), über den Bot oder Webhooks senden, gesendete Nachrichten bearbeiten, Versandhistorie";
     readonly permissionPrefixes: ["messagebuilder"];
 }, {
     readonly key: "communication";
@@ -3744,6 +3745,11 @@ declare const mbButtonSchema: z.ZodObject<{
         roleId?: string | undefined;
         mode?: "remove" | "add" | "toggle" | undefined;
     }>]>>;
+    /**
+     * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+     * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+     */
+    keepCustomId: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     label: string;
     kind: "action" | "link";
@@ -3760,6 +3766,7 @@ declare const mbButtonSchema: z.ZodObject<{
     style: "danger" | "secondary" | "success" | "primary";
     url: string;
     disabled: boolean;
+    keepCustomId: string;
 }, {
     id: string;
     label?: string | undefined;
@@ -3776,6 +3783,7 @@ declare const mbButtonSchema: z.ZodObject<{
     style?: "danger" | "secondary" | "success" | "primary" | undefined;
     url?: string | undefined;
     disabled?: boolean | undefined;
+    keepCustomId?: string | undefined;
 }>;
 type MbButton = z.infer<typeof mbButtonSchema>;
 declare const mbSelectOptionSchema: z.ZodObject<{
@@ -3867,6 +3875,11 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
             roleId?: string | undefined;
             mode?: "remove" | "add" | "toggle" | undefined;
         }>]>>;
+        /**
+         * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+         * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+         */
+        keepCustomId: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         label: string;
         kind: "action" | "link";
@@ -3883,6 +3896,7 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         style: "danger" | "secondary" | "success" | "primary";
         url: string;
         disabled: boolean;
+        keepCustomId: string;
     }, {
         id: string;
         label?: string | undefined;
@@ -3899,6 +3913,7 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         style?: "danger" | "secondary" | "success" | "primary" | undefined;
         url?: string | undefined;
         disabled?: boolean | undefined;
+        keepCustomId?: string | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
     type: "buttons";
@@ -3919,6 +3934,7 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         style: "danger" | "secondary" | "success" | "primary";
         url: string;
         disabled: boolean;
+        keepCustomId: string;
     }[];
 }, {
     type: "buttons";
@@ -3939,6 +3955,7 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         style?: "danger" | "secondary" | "success" | "primary" | undefined;
         url?: string | undefined;
         disabled?: boolean | undefined;
+        keepCustomId?: string | undefined;
     }[] | undefined;
 }>, z.ZodObject<{
     id: z.ZodString;
@@ -3999,6 +4016,10 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
         emoji?: string | undefined;
         description?: string | undefined;
     }>, "many">>;
+    /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
+    minValues: z.ZodDefault<z.ZodNumber>;
+    maxValues: z.ZodDefault<z.ZodNumber>;
+    keepCustomId: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     options: {
         label: string;
@@ -4018,6 +4039,9 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
     id: string;
     placeholder: string;
     disabled: boolean;
+    keepCustomId: string;
+    minValues: number;
+    maxValues: number;
 }, {
     type: "select";
     id: string;
@@ -4037,6 +4061,9 @@ declare const mbRowSchema: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
     }[] | undefined;
     placeholder?: string | undefined;
     disabled?: boolean | undefined;
+    keepCustomId?: string | undefined;
+    minValues?: number | undefined;
+    maxValues?: number | undefined;
 }>]>;
 type MbRow = z.infer<typeof mbRowSchema>;
 declare const mbFieldSchema: z.ZodObject<{
@@ -4246,6 +4273,11 @@ declare const mbMessageSchema: z.ZodObject<{
                 roleId?: string | undefined;
                 mode?: "remove" | "add" | "toggle" | undefined;
             }>]>>;
+            /**
+             * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+             * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+             */
+            keepCustomId: z.ZodDefault<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             label: string;
             kind: "action" | "link";
@@ -4262,6 +4294,7 @@ declare const mbMessageSchema: z.ZodObject<{
             style: "danger" | "secondary" | "success" | "primary";
             url: string;
             disabled: boolean;
+            keepCustomId: string;
         }, {
             id: string;
             label?: string | undefined;
@@ -4278,6 +4311,7 @@ declare const mbMessageSchema: z.ZodObject<{
             style?: "danger" | "secondary" | "success" | "primary" | undefined;
             url?: string | undefined;
             disabled?: boolean | undefined;
+            keepCustomId?: string | undefined;
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
         type: "buttons";
@@ -4298,6 +4332,7 @@ declare const mbMessageSchema: z.ZodObject<{
             style: "danger" | "secondary" | "success" | "primary";
             url: string;
             disabled: boolean;
+            keepCustomId: string;
         }[];
     }, {
         type: "buttons";
@@ -4318,6 +4353,7 @@ declare const mbMessageSchema: z.ZodObject<{
             style?: "danger" | "secondary" | "success" | "primary" | undefined;
             url?: string | undefined;
             disabled?: boolean | undefined;
+            keepCustomId?: string | undefined;
         }[] | undefined;
     }>, z.ZodObject<{
         id: z.ZodString;
@@ -4378,6 +4414,10 @@ declare const mbMessageSchema: z.ZodObject<{
             emoji?: string | undefined;
             description?: string | undefined;
         }>, "many">>;
+        /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
+        minValues: z.ZodDefault<z.ZodNumber>;
+        maxValues: z.ZodDefault<z.ZodNumber>;
+        keepCustomId: z.ZodDefault<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         options: {
             label: string;
@@ -4397,6 +4437,9 @@ declare const mbMessageSchema: z.ZodObject<{
         id: string;
         placeholder: string;
         disabled: boolean;
+        keepCustomId: string;
+        minValues: number;
+        maxValues: number;
     }, {
         type: "select";
         id: string;
@@ -4416,6 +4459,9 @@ declare const mbMessageSchema: z.ZodObject<{
         }[] | undefined;
         placeholder?: string | undefined;
         disabled?: boolean | undefined;
+        keepCustomId?: string | undefined;
+        minValues?: number | undefined;
+        maxValues?: number | undefined;
     }>]>, "many">>;
     /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
     mentions: z.ZodDefault<z.ZodObject<{
@@ -4475,6 +4521,7 @@ declare const mbMessageSchema: z.ZodObject<{
             style: "danger" | "secondary" | "success" | "primary";
             url: string;
             disabled: boolean;
+            keepCustomId: string;
         }[];
     } | {
         options: {
@@ -4495,6 +4542,9 @@ declare const mbMessageSchema: z.ZodObject<{
         id: string;
         placeholder: string;
         disabled: boolean;
+        keepCustomId: string;
+        minValues: number;
+        maxValues: number;
     })[];
     mentions: {
         roles: boolean;
@@ -4545,6 +4595,7 @@ declare const mbMessageSchema: z.ZodObject<{
             style?: "danger" | "secondary" | "success" | "primary" | undefined;
             url?: string | undefined;
             disabled?: boolean | undefined;
+            keepCustomId?: string | undefined;
         }[] | undefined;
     } | {
         type: "select";
@@ -4565,6 +4616,9 @@ declare const mbMessageSchema: z.ZodObject<{
         }[] | undefined;
         placeholder?: string | undefined;
         disabled?: boolean | undefined;
+        keepCustomId?: string | undefined;
+        minValues?: number | undefined;
+        maxValues?: number | undefined;
     })[] | undefined;
     mentions?: {
         roles?: boolean | undefined;
@@ -4688,6 +4742,11 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                     roleId?: string | undefined;
                     mode?: "remove" | "add" | "toggle" | undefined;
                 }>]>>;
+                /**
+                 * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
+                 * unverändert übernehmen. Die API erlaubt nur custom_ids, die in der geladenen Nachricht schon standen.
+                 */
+                keepCustomId: z.ZodDefault<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 label: string;
                 kind: "action" | "link";
@@ -4704,6 +4763,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style: "danger" | "secondary" | "success" | "primary";
                 url: string;
                 disabled: boolean;
+                keepCustomId: string;
             }, {
                 id: string;
                 label?: string | undefined;
@@ -4720,6 +4780,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
                 url?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
             type: "buttons";
@@ -4740,6 +4801,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style: "danger" | "secondary" | "success" | "primary";
                 url: string;
                 disabled: boolean;
+                keepCustomId: string;
             }[];
         }, {
             type: "buttons";
@@ -4760,6 +4822,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
                 url?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
             }[] | undefined;
         }>, z.ZodObject<{
             id: z.ZodString;
@@ -4820,6 +4883,10 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 emoji?: string | undefined;
                 description?: string | undefined;
             }>, "many">>;
+            /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
+            minValues: z.ZodDefault<z.ZodNumber>;
+            maxValues: z.ZodDefault<z.ZodNumber>;
+            keepCustomId: z.ZodDefault<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             options: {
                 label: string;
@@ -4839,6 +4906,9 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             id: string;
             placeholder: string;
             disabled: boolean;
+            keepCustomId: string;
+            minValues: number;
+            maxValues: number;
         }, {
             type: "select";
             id: string;
@@ -4858,6 +4928,9 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             }[] | undefined;
             placeholder?: string | undefined;
             disabled?: boolean | undefined;
+            keepCustomId?: string | undefined;
+            minValues?: number | undefined;
+            maxValues?: number | undefined;
         }>]>, "many">>;
         /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
         mentions: z.ZodDefault<z.ZodObject<{
@@ -4917,6 +4990,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style: "danger" | "secondary" | "success" | "primary";
                 url: string;
                 disabled: boolean;
+                keepCustomId: string;
             }[];
         } | {
             options: {
@@ -4937,6 +5011,9 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             id: string;
             placeholder: string;
             disabled: boolean;
+            keepCustomId: string;
+            minValues: number;
+            maxValues: number;
         })[];
         mentions: {
             roles: boolean;
@@ -4987,6 +5064,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
                 url?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
             }[] | undefined;
         } | {
             type: "select";
@@ -5007,6 +5085,9 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             }[] | undefined;
             placeholder?: string | undefined;
             disabled?: boolean | undefined;
+            keepCustomId?: string | undefined;
+            minValues?: number | undefined;
+            maxValues?: number | undefined;
         })[] | undefined;
         mentions?: {
             roles?: boolean | undefined;
@@ -5070,6 +5151,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style: "danger" | "secondary" | "success" | "primary";
                 url: string;
                 disabled: boolean;
+                keepCustomId: string;
             }[];
         } | {
             options: {
@@ -5090,6 +5172,9 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             id: string;
             placeholder: string;
             disabled: boolean;
+            keepCustomId: string;
+            minValues: number;
+            maxValues: number;
         })[];
         mentions: {
             roles: boolean;
@@ -5146,6 +5231,7 @@ declare const mbDocumentDataSchema: z.ZodObject<{
                 style?: "danger" | "secondary" | "success" | "primary" | undefined;
                 url?: string | undefined;
                 disabled?: boolean | undefined;
+                keepCustomId?: string | undefined;
             }[] | undefined;
         } | {
             type: "select";
@@ -5166,6 +5252,9 @@ declare const mbDocumentDataSchema: z.ZodObject<{
             }[] | undefined;
             placeholder?: string | undefined;
             disabled?: boolean | undefined;
+            keepCustomId?: string | undefined;
+            minValues?: number | undefined;
+            maxValues?: number | undefined;
         })[] | undefined;
         mentions?: {
             roles?: boolean | undefined;
@@ -5204,6 +5293,8 @@ interface MbValidateOptions {
     allowRoleActions?: boolean;
     /** Bekannte Rollen des Servers (für Rollen-Aktionen); undefiniert = nicht prüfbar */
     roleIds?: readonly string[];
+    /** custom_ids, die unverändert übernommen werden dürfen (nur beim Bearbeiten geladener Nachrichten); sonst keine. */
+    keptCustomIds?: readonly string[];
 }
 declare function validateMbMessage(m: MbMessage, idx: number, o?: MbValidateOptions): MbIssue[];
 declare function validateMbDocument(d: MbDocumentData, o?: MbValidateOptions): MbIssue[];
@@ -5247,7 +5338,8 @@ type MbInteractive = {
     options: Record<string, MbAction>;
 };
 declare function interactiveComponents(m: MbMessage): MbInteractive[];
-declare const MB_DEFAULT_CATEGORIES: readonly ["Allgemein", "Polizei", "Leitstelle", "Dienstantritt", "Dienstende", "Einsatzmeldung", "Personalinformation", "Ankündigung", "Wartung", "Sonstiges"];
+/** Standard-Kategorien für Server, die noch keine Kategorien haben (bestehende Kategorien bleiben unverändert). */
+declare const MB_DEFAULT_CATEGORIES: readonly ["Ankündigungen", "Dienstanweisungen", "Bewerbungen", "Tickets", "Ausbildung", "Informationen", "Berichte", "Sonstiges"];
 /** Rechte des Bots im Kanal, die zum Senden gebraucht werden (meldet der Bot im Kanalverzeichnis). */
 interface MbChannelBotPerms {
     view: boolean;
@@ -5255,6 +5347,8 @@ interface MbChannelBotPerms {
     embed: boolean;
     mentionEveryone?: boolean;
     sendInThreads?: boolean;
+    createThreads?: boolean;
+    history?: boolean;
 }
 /** Fehlende Bot-Rechte für eine Nachrichtengruppe (leer = alles da). */
 declare function missingBotPerms(p: MbChannelBotPerms, d: MbDocumentData): string[];
@@ -5263,6 +5357,1290 @@ declare function describeDiscordError(e: {
     code?: number;
     message?: string;
 }): string;
+
+/**
+ * JSON-Editor des Embed Builders: Nachrichten im echten Discord-Nachrichtenformat (wie die REST-API „Create Message“ /
+ * „Execute Webhook“) anzeigen, bearbeiten, prüfen, importieren und exportieren.
+ *
+ * Format (Export):
+ * ```json
+ * { "messages": [ { "content": "…", "embeds": [ … ], "components": [ … ], "allowed_mentions": { "parse": ["users"] } } ],
+ *   "webhook": { "username": "…", "avatar_url": "…" } }
+ * ```
+ * Beim Import werden zusätzlich angenommen: eine einzelne Discord-Nachricht, eine Liste von Nachrichten und das verbreitete
+ * Format `{ "messages": [ { "data": { … } } ] }` (z. B. aus anderen Embed-Editoren).
+ *
+ * Interaktive Komponenten: Die custom_id ist im Export die interne Komponenten-ID. Discord kennt keine „Aktionen“ – beim
+ * Zurückübernehmen bleibt die im grafischen Editor festgelegte Aktion erhalten, solange die custom_id gleich bleibt.
+ * Neue interaktive Komponenten brauchen danach eine Aktion (die Prüfung meldet das), sonst wird nicht gesendet.
+ */
+interface JsonError {
+    message: string;
+    offset: number;
+    line: number;
+    column: number;
+}
+type JsonParseResult = {
+    ok: true;
+    value: unknown;
+} | {
+    ok: false;
+    error: JsonError;
+};
+/** Zeile/Spalte (1-basiert) zu einer Zeichenposition. */
+declare function lineCol(text: string, offset: number): {
+    line: number;
+    column: number;
+};
+/**
+ * Strenger JSON-Parser (RFC 8259) mit genauer Fehlerposition und deutschen Meldungen. Unabhängig vom Browser, weil die
+ * Meldungen von `JSON.parse` je nach Engine verschieden sind und nicht immer eine Position enthalten.
+ */
+declare function parseJsonWithPosition(text: string): JsonParseResult;
+declare const messageIn: z.ZodObject<{
+    content: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    embeds: z.ZodOptional<z.ZodNullable<z.ZodArray<z.ZodObject<{
+        title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        color: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+        timestamp: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        author: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+            name: z.ZodString;
+            url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            icon_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            url?: string | null | undefined;
+            icon_url?: string | null | undefined;
+        }, {
+            name: string;
+            url?: string | null | undefined;
+            icon_url?: string | null | undefined;
+        }>>>;
+        footer: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+            text: z.ZodString;
+            icon_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            text: string;
+            icon_url?: string | null | undefined;
+        }, {
+            text: string;
+            icon_url?: string | null | undefined;
+        }>>>;
+        thumbnail: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+            url: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            url: string;
+        }, {
+            url: string;
+        }>>>;
+        image: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+            url: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            url: string;
+        }, {
+            url: string;
+        }>>>;
+        fields: z.ZodOptional<z.ZodNullable<z.ZodArray<z.ZodObject<{
+            name: z.ZodString;
+            value: z.ZodString;
+            inline: z.ZodOptional<z.ZodNullable<z.ZodBoolean>>;
+        }, "strip", z.ZodTypeAny, {
+            value: string;
+            name: string;
+            inline?: boolean | null | undefined;
+        }, {
+            value: string;
+            name: string;
+            inline?: boolean | null | undefined;
+        }>, "many">>>;
+    }, "strip", z.ZodTypeAny, {
+        title?: string | null | undefined;
+        color?: number | null | undefined;
+        footer?: {
+            text: string;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        timestamp?: string | null | undefined;
+        image?: {
+            url: string;
+        } | null | undefined;
+        fields?: {
+            value: string;
+            name: string;
+            inline?: boolean | null | undefined;
+        }[] | null | undefined;
+        author?: {
+            name: string;
+            url?: string | null | undefined;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        description?: string | null | undefined;
+        url?: string | null | undefined;
+        thumbnail?: {
+            url: string;
+        } | null | undefined;
+    }, {
+        title?: string | null | undefined;
+        color?: number | null | undefined;
+        footer?: {
+            text: string;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        timestamp?: string | null | undefined;
+        image?: {
+            url: string;
+        } | null | undefined;
+        fields?: {
+            value: string;
+            name: string;
+            inline?: boolean | null | undefined;
+        }[] | null | undefined;
+        author?: {
+            name: string;
+            url?: string | null | undefined;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        description?: string | null | undefined;
+        url?: string | null | undefined;
+        thumbnail?: {
+            url: string;
+        } | null | undefined;
+    }>, "many">>>;
+    components: z.ZodOptional<z.ZodNullable<z.ZodArray<z.ZodObject<{
+        type: z.ZodLiteral<1>;
+        components: z.ZodArray<z.ZodUnknown, "many">;
+    }, "strip", z.ZodTypeAny, {
+        type: 1;
+        components: unknown[];
+    }, {
+        type: 1;
+        components: unknown[];
+    }>, "many">>>;
+    allowed_mentions: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+        parse: z.ZodOptional<z.ZodArray<z.ZodEnum<["users", "roles", "everyone"]>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        parse?: ("roles" | "users" | "everyone")[] | undefined;
+    }, {
+        parse?: ("roles" | "users" | "everyone")[] | undefined;
+    }>>>;
+}, "strip", z.ZodTypeAny, {
+    content?: string | null | undefined;
+    embeds?: {
+        title?: string | null | undefined;
+        color?: number | null | undefined;
+        footer?: {
+            text: string;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        timestamp?: string | null | undefined;
+        image?: {
+            url: string;
+        } | null | undefined;
+        fields?: {
+            value: string;
+            name: string;
+            inline?: boolean | null | undefined;
+        }[] | null | undefined;
+        author?: {
+            name: string;
+            url?: string | null | undefined;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        description?: string | null | undefined;
+        url?: string | null | undefined;
+        thumbnail?: {
+            url: string;
+        } | null | undefined;
+    }[] | null | undefined;
+    components?: {
+        type: 1;
+        components: unknown[];
+    }[] | null | undefined;
+    allowed_mentions?: {
+        parse?: ("roles" | "users" | "everyone")[] | undefined;
+    } | null | undefined;
+}, {
+    content?: string | null | undefined;
+    embeds?: {
+        title?: string | null | undefined;
+        color?: number | null | undefined;
+        footer?: {
+            text: string;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        timestamp?: string | null | undefined;
+        image?: {
+            url: string;
+        } | null | undefined;
+        fields?: {
+            value: string;
+            name: string;
+            inline?: boolean | null | undefined;
+        }[] | null | undefined;
+        author?: {
+            name: string;
+            url?: string | null | undefined;
+            icon_url?: string | null | undefined;
+        } | null | undefined;
+        description?: string | null | undefined;
+        url?: string | null | undefined;
+        thumbnail?: {
+            url: string;
+        } | null | undefined;
+    }[] | null | undefined;
+    components?: {
+        type: 1;
+        components: unknown[];
+    }[] | null | undefined;
+    allowed_mentions?: {
+        parse?: ("roles" | "users" | "everyone")[] | undefined;
+    } | null | undefined;
+}>;
+type DiscordMessageJson = z.infer<typeof messageIn>;
+interface MbJsonIssue {
+    message: string; /** z. B. `messages[0].embeds[1].color` */
+    path: string;
+}
+type MbJsonResult = {
+    ok: true;
+    data: MbDocumentData;
+    notes: string[];
+} | {
+    ok: false;
+    error: MbJsonIssue & Partial<JsonError>;
+};
+interface FromJsonOptions {
+    /** bisheriger Stand: Aktionen interaktiver Komponenten mit gleicher custom_id bleiben erhalten */
+    previous?: MbDocumentData;
+    /** Zeitpunkt, mit dem „Zeitpunkt des Sendens“ exportiert wurde – gleicher Wert wird wieder zu „beim Senden“ */
+    sendNow?: Date;
+    /**
+     * Was mit unbekannten custom_ids passiert: `action` = neue Aktions-Komponente (Aktion muss festgelegt werden),
+     * `keep` = custom_id unverändert übernehmen (nur beim Bearbeiten aus Discord geladener Nachrichten).
+     */
+    foreignCustomIds?: 'action' | 'keep';
+}
+/** Bereits geparstes JSON (Discord-Format) → Inhalt des Editors. */
+declare function mbFromDiscordJson(value: unknown, o?: FromJsonOptions): MbJsonResult;
+/** JSON-Text → Inhalt des Editors (mit Zeile/Spalte bei Syntaxfehlern). */
+declare function mbParseJsonText(text: string, o?: FromJsonOptions): MbJsonResult;
+/** Inhalt des Editors → Discord-Format (custom_id = interne Komponenten-ID). */
+declare function mbToDiscordJson(d: MbDocumentData, now?: Date): {
+    webhook?: {
+        avatar_url?: string | undefined;
+        username?: string | undefined;
+    } | undefined;
+    messages: {
+        embeds: Record<string, unknown>[];
+        components: {
+            type: 1;
+            components: Record<string, unknown>[];
+        }[];
+        allowed_mentions: {
+            parse: ("users" | "roles" | "everyone")[];
+        };
+        content?: string | undefined;
+    }[];
+};
+declare const mbToDiscordJsonText: (d: MbDocumentData, now?: Date) => string;
+/** custom_ids aller interaktiven Komponenten einer Discord-Nachricht (für erlaubte übernommene custom_ids beim Bearbeiten). */
+declare function customIdsOf(components: unknown): string[];
+declare const MB_TEMPLATE_EXPORT_FORMAT = "enpol-embed-builder-templates";
+declare const mbTemplateExportSchema: z.ZodObject<{
+    format: z.ZodLiteral<"enpol-embed-builder-templates">;
+    version: z.ZodLiteral<1>;
+    templates: z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        category: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        data: z.ZodObject<{
+            messages: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                content: z.ZodDefault<z.ZodString>;
+                embeds: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                    id: z.ZodString;
+                    title: z.ZodDefault<z.ZodString>;
+                    url: z.ZodDefault<z.ZodString>;
+                    description: z.ZodDefault<z.ZodString>;
+                    color: z.ZodDefault<z.ZodString>;
+                    authorName: z.ZodDefault<z.ZodString>;
+                    authorUrl: z.ZodDefault<z.ZodString>;
+                    authorIconUrl: z.ZodDefault<z.ZodString>;
+                    thumbnailUrl: z.ZodDefault<z.ZodString>;
+                    imageUrl: z.ZodDefault<z.ZodString>;
+                    footerText: z.ZodDefault<z.ZodString>;
+                    footerIconUrl: z.ZodDefault<z.ZodString>;
+                    timestamp: z.ZodDefault<z.ZodEnum<["none", "send", "custom"]>>;
+                    timestampAt: z.ZodDefault<z.ZodString>;
+                    fields: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                        id: z.ZodString;
+                        name: z.ZodDefault<z.ZodString>;
+                        value: z.ZodDefault<z.ZodString>;
+                        inline: z.ZodDefault<z.ZodBoolean>;
+                    }, "strip", z.ZodTypeAny, {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }, {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }>, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }, {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }>, "many">>;
+                rows: z.ZodDefault<z.ZodArray<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                    id: z.ZodString;
+                    type: z.ZodLiteral<"buttons">;
+                    buttons: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                        id: z.ZodString;
+                        kind: z.ZodDefault<z.ZodEnum<["link", "action"]>>;
+                        label: z.ZodDefault<z.ZodString>;
+                        emoji: z.ZodDefault<z.ZodString>;
+                        style: z.ZodDefault<z.ZodEnum<["primary", "secondary", "success", "danger"]>>;
+                        url: z.ZodDefault<z.ZodString>;
+                        disabled: z.ZodDefault<z.ZodBoolean>;
+                        action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                            type: z.ZodLiteral<"reply">;
+                            text: z.ZodDefault<z.ZodString>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "reply";
+                            text: string;
+                        }, {
+                            type: "reply";
+                            text?: string | undefined;
+                        }>, z.ZodObject<{
+                            type: z.ZodLiteral<"role">;
+                            roleId: z.ZodDefault<z.ZodString>;
+                            mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        }, {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        }>]>>;
+                        keepCustomId: z.ZodDefault<z.ZodString>;
+                    }, "strip", z.ZodTypeAny, {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }, {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }>, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                }, {
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                }>, z.ZodObject<{
+                    id: z.ZodString;
+                    type: z.ZodLiteral<"select">;
+                    placeholder: z.ZodDefault<z.ZodString>;
+                    disabled: z.ZodDefault<z.ZodBoolean>;
+                    options: z.ZodDefault<z.ZodArray<z.ZodObject<{
+                        id: z.ZodString;
+                        label: z.ZodDefault<z.ZodString>;
+                        description: z.ZodDefault<z.ZodString>;
+                        emoji: z.ZodDefault<z.ZodString>;
+                        action: z.ZodDefault<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+                            type: z.ZodLiteral<"reply">;
+                            text: z.ZodDefault<z.ZodString>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "reply";
+                            text: string;
+                        }, {
+                            type: "reply";
+                            text?: string | undefined;
+                        }>, z.ZodObject<{
+                            type: z.ZodLiteral<"role">;
+                            roleId: z.ZodDefault<z.ZodString>;
+                            mode: z.ZodDefault<z.ZodEnum<["toggle", "add", "remove"]>>;
+                        }, "strip", z.ZodTypeAny, {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        }, {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        }>]>>;
+                    }, "strip", z.ZodTypeAny, {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }, {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }>, "many">>;
+                    minValues: z.ZodDefault<z.ZodNumber>;
+                    maxValues: z.ZodDefault<z.ZodNumber>;
+                    keepCustomId: z.ZodDefault<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                }, {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                }>]>, "many">>;
+                mentions: z.ZodDefault<z.ZodObject<{
+                    users: z.ZodDefault<z.ZodBoolean>;
+                    roles: z.ZodDefault<z.ZodBoolean>;
+                    everyone: z.ZodDefault<z.ZodBoolean>;
+                }, "strip", z.ZodTypeAny, {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                }, {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                }>>;
+            }, "strip", z.ZodTypeAny, {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }, {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }>, "many">>;
+            webhookProfile: z.ZodDefault<z.ZodObject<{
+                username: z.ZodDefault<z.ZodString>;
+                avatarUrl: z.ZodDefault<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                username: string;
+                avatarUrl: string;
+            }, {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        }, {
+            messages?: {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }[] | undefined;
+            webhookProfile?: {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            } | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        category: string | null;
+        name: string;
+        data: {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        };
+    }, {
+        name: string;
+        data: {
+            messages?: {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }[] | undefined;
+            webhookProfile?: {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            } | undefined;
+        };
+        category?: string | null | undefined;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    format: "enpol-embed-builder-templates";
+    version: 1;
+    templates: {
+        category: string | null;
+        name: string;
+        data: {
+            messages: {
+                id: string;
+                content: string;
+                embeds: {
+                    title: string;
+                    id: string;
+                    color: string;
+                    timestamp: "send" | "custom" | "none";
+                    fields: {
+                        value: string;
+                        id: string;
+                        name: string;
+                        inline: boolean;
+                    }[];
+                    description: string;
+                    url: string;
+                    authorName: string;
+                    authorUrl: string;
+                    authorIconUrl: string;
+                    thumbnailUrl: string;
+                    imageUrl: string;
+                    footerText: string;
+                    footerIconUrl: string;
+                    timestampAt: string;
+                }[];
+                rows: ({
+                    type: "buttons";
+                    id: string;
+                    buttons: {
+                        label: string;
+                        kind: "action" | "link";
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        style: "danger" | "secondary" | "success" | "primary";
+                        url: string;
+                        disabled: boolean;
+                        keepCustomId: string;
+                    }[];
+                } | {
+                    options: {
+                        label: string;
+                        action: {
+                            type: "reply";
+                            text: string;
+                        } | {
+                            type: "role";
+                            roleId: string;
+                            mode: "remove" | "add" | "toggle";
+                        };
+                        id: string;
+                        emoji: string;
+                        description: string;
+                    }[];
+                    type: "select";
+                    id: string;
+                    placeholder: string;
+                    disabled: boolean;
+                    keepCustomId: string;
+                    minValues: number;
+                    maxValues: number;
+                })[];
+                mentions: {
+                    roles: boolean;
+                    users: boolean;
+                    everyone: boolean;
+                };
+            }[];
+            webhookProfile: {
+                username: string;
+                avatarUrl: string;
+            };
+        };
+    }[];
+}, {
+    format: "enpol-embed-builder-templates";
+    version: 1;
+    templates: {
+        name: string;
+        data: {
+            messages?: {
+                id: string;
+                content?: string | undefined;
+                embeds?: {
+                    id: string;
+                    title?: string | undefined;
+                    color?: string | undefined;
+                    timestamp?: "send" | "custom" | "none" | undefined;
+                    fields?: {
+                        id: string;
+                        value?: string | undefined;
+                        name?: string | undefined;
+                        inline?: boolean | undefined;
+                    }[] | undefined;
+                    description?: string | undefined;
+                    url?: string | undefined;
+                    authorName?: string | undefined;
+                    authorUrl?: string | undefined;
+                    authorIconUrl?: string | undefined;
+                    thumbnailUrl?: string | undefined;
+                    imageUrl?: string | undefined;
+                    footerText?: string | undefined;
+                    footerIconUrl?: string | undefined;
+                    timestampAt?: string | undefined;
+                }[] | undefined;
+                rows?: ({
+                    type: "buttons";
+                    id: string;
+                    buttons?: {
+                        id: string;
+                        label?: string | undefined;
+                        kind?: "action" | "link" | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        style?: "danger" | "secondary" | "success" | "primary" | undefined;
+                        url?: string | undefined;
+                        disabled?: boolean | undefined;
+                        keepCustomId?: string | undefined;
+                    }[] | undefined;
+                } | {
+                    type: "select";
+                    id: string;
+                    options?: {
+                        id: string;
+                        label?: string | undefined;
+                        action?: {
+                            type: "reply";
+                            text?: string | undefined;
+                        } | {
+                            type: "role";
+                            roleId?: string | undefined;
+                            mode?: "remove" | "add" | "toggle" | undefined;
+                        } | undefined;
+                        emoji?: string | undefined;
+                        description?: string | undefined;
+                    }[] | undefined;
+                    placeholder?: string | undefined;
+                    disabled?: boolean | undefined;
+                    keepCustomId?: string | undefined;
+                    minValues?: number | undefined;
+                    maxValues?: number | undefined;
+                })[] | undefined;
+                mentions?: {
+                    roles?: boolean | undefined;
+                    users?: boolean | undefined;
+                    everyone?: boolean | undefined;
+                } | undefined;
+            }[] | undefined;
+            webhookProfile?: {
+                username?: string | undefined;
+                avatarUrl?: string | undefined;
+            } | undefined;
+        };
+        category?: string | null | undefined;
+    }[];
+}>;
+type MbTemplateExport = z.infer<typeof mbTemplateExportSchema>;
+
+/**
+ * Neutrale Beispielvorlagen für EN | POLIZEI. Werden nur ergänzt: Eine Vorlage mit demselben Namen (auch archiviert)
+ * wird nie überschrieben oder doppelt angelegt.
+ */
+interface MbExampleTemplate {
+    name: string;
+    category: string;
+    data: MbDocumentData;
+}
+declare const MB_EXAMPLE_TEMPLATES: MbExampleTemplate[];
 
 /**
  * Funk-Whitelist (externer Funkdienst): Status, Regeln für den Discord-Rollenabgleich und CSV-Hilfen.
@@ -5347,7 +6725,7 @@ declare function parseCsv(text: string): {
 };
 
 /**
- * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot (/bewerbungspanel, /qualipanel) gleich gebaut.
+ * Discord-Panels der Bewerbungen – vom Dashboard (Senden/Aktualisieren) und vom Bot gleich gebaut.
  * Einheiten mit `panel: 'apply'` stehen im Bewerbungs-Panel neben der Polizei-Bewerbung, alle anderen im Qualifikations-Panel.
  */
 /** Schlüssel der Polizei-Bewerbung im Auswahlmenü bzw. am Button (`quali:pick:@polizei`). */
@@ -5693,4 +7071,4 @@ declare function isTimeZone(tz: unknown): tz is string;
 /** Alle Zeitzonen der Laufzeit (für Auswahllisten); häufige zuerst, UTC immer enthalten. */
 declare function timeZones(): string[];
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, loadLevel, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, median, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, normalizeRating, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseAutomation, parseBool, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, percentile, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, ratingLabel, ratingTone, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults };
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessageJson, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, type FromJsonOptions, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, type JsonError, type JsonParseResult, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_EXAMPLE_TEMPLATES, MB_LIMITS, MB_TEMPLATE_EXPORT_FORMAT, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbExampleTemplate, type MbField, type MbInteractive, type MbIssue, type MbJsonIssue, type MbJsonResult, type MbMessage, type MbRow, type MbSelectOption, type MbTemplateExport, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, conditionMatches, csvCell, customIdsOf, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, lineCol, loadLevel, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbFromDiscordJson, mbId, mbMessageSchema, mbParseJsonText, mbRowSchema, mbSelectOptionSchema, mbSummary, mbTemplateExportSchema, mbToDiscordJson, mbToDiscordJsonText, mdtConfigSchema, median, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, normalizeRating, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseAutomation, parseBool, parseCsv, parseFormDate, parseJsonWithPosition, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, percentile, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, ratingLabel, ratingTone, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults };

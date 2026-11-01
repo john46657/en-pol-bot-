@@ -22,7 +22,7 @@ export class WebhookClient {
   /** In Tests verkürzbar. */
   sleep = sleep;
 
-  private async call(url: string, method: 'GET' | 'POST', body?: unknown): Promise<Record<string, unknown>> {
+  private async call(url: string, method: 'GET' | 'POST' | 'PATCH', body?: unknown): Promise<Record<string, unknown>> {
     for (let attempt = 1; ; attempt++) {
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), 15_000);
@@ -53,13 +53,27 @@ export class WebhookClient {
   /** Webhook-Daten (Server, Kanal, Name) – prüft, dass die URL gültig ist. */
   async info(url: string) {
     const j = await this.call(url, 'GET');
-    return { id: String(j.id ?? ''), guildId: typeof j.guild_id === 'string' ? j.guild_id : null, channelId: typeof j.channel_id === 'string' ? j.channel_id : null, name: typeof j.name === 'string' ? j.name : null };
+    return { id: String(j.id ?? ''), guildId: typeof j.guild_id === 'string' ? j.guild_id : null, channelId: typeof j.channel_id === 'string' ? j.channel_id : null, name: typeof j.name === 'string' ? j.name : null, avatar: typeof j.avatar === 'string' ? j.avatar : null };
+  }
+
+  /** Namen des Webhooks in Discord ändern (mit Token möglich; Kanal ändern geht nur mit Bot-Rechten und wird hier nicht angeboten). */
+  async rename(url: string, name: string) {
+    const j = await this.call(url.replace(/\/$/, ''), 'PATCH', { name });
+    return { name: typeof j.name === 'string' ? j.name : name };
+  }
+
+  /** Vom Webhook gesendete Nachricht bearbeiten (im Thread: `thread_id`). */
+  async edit(url: string, messageId: string, body: Record<string, unknown>, threadId?: string | null): Promise<{ messageId: string }> {
+    const base = url.replace(/\/$/, '');
+    const q = new URLSearchParams({ with_components: 'true', ...(threadId ? { thread_id: threadId } : {}) });
+    const j = await this.call(`${base}/messages/${messageId}?${q.toString()}`, 'PATCH', body);
+    return { messageId: String(j.id ?? messageId) };
   }
 
   /** Nachricht senden (`wait=true` → Discord liefert die Nachricht samt ID; `with_components=true` → Link-Buttons erlaubt). */
-  async execute(url: string, body: Record<string, unknown>): Promise<{ messageId: string }> {
+  async execute(url: string, body: Record<string, unknown>, opts: { threadId?: string | null } = {}): Promise<{ messageId: string; channelId: string | null }> {
     const base = url.replace(/\/$/, '');
-    const j = await this.call(`${base}?wait=true&with_components=true`, 'POST', body);
-    return { messageId: String(j.id ?? '') };
+    const j = await this.call(`${base}?wait=true&with_components=true${opts.threadId ? `&thread_id=${opts.threadId}` : ''}`, 'POST', body);
+    return { messageId: String(j.id ?? ''), channelId: typeof j.channel_id === 'string' ? j.channel_id : null };
   }
 }

@@ -90,14 +90,15 @@ describe('Message Builder – Rechte', () => {
 });
 
 describe('Message Builder – Entwürfe, Vorlagen, Kategorien', () => {
-  it('Standard-Kategorien aus der Migration; Kategorien bearbeitbar, Löschen behält Vorlagen', async () => {
+  it('Standard-Kategorien für einen neuen Server; Kategorien bearbeitbar, Löschen behält Vorlagen', async () => {
     const a = await as('mb_admin');
     const cats = (await a.get('/api/v1/message-builder/categories')).body as { id: string; name: string }[];
-    expect(cats.map((c) => c.name)).toEqual(['Allgemein', 'Polizei', 'Leitstelle', 'Dienstantritt', 'Dienstende', 'Einsatzmeldung', 'Personalinformation', 'Ankündigung', 'Wartung', 'Sonstiges']);
+    expect(cats.map((c) => c.name)).toEqual(['Ankündigungen', 'Dienstanweisungen', 'Bewerbungen', 'Tickets', 'Ausbildung', 'Informationen', 'Berichte', 'Sonstiges']);
     const c = await a.post('/api/v1/message-builder/categories').send({ name: 'Schulung' });
     expect(c.status).toBe(201);
     expect((await a.post('/api/v1/message-builder/categories').send({ name: 'Schulung' })).status).toBe(409);
-    expect((await a.put(`/api/v1/message-builder/categories/${c.body.id}`).send({ name: 'Ausbildung' })).body.name).toBe('Ausbildung');
+    expect((await a.put(`/api/v1/message-builder/categories/${c.body.id}`).send({ name: 'Ausbildung' })).status).toBe(409); // gibt es schon
+    expect((await a.put(`/api/v1/message-builder/categories/${c.body.id}`).send({ name: 'Lehrgang' })).body.name).toBe('Lehrgang');
     const t = await a.post('/api/v1/message-builder/documents').send({ kind: 'TEMPLATE', name: 'Kursinfo', categoryId: c.body.id, data: data() });
     await a.delete(`/api/v1/message-builder/categories/${c.body.id}`).expect(204);
     expect((await a.get(`/api/v1/message-builder/documents/${t.body.id}`)).body).toMatchObject({ name: 'Kursinfo', categoryId: null });
@@ -105,7 +106,7 @@ describe('Message Builder – Entwürfe, Vorlagen, Kategorien', () => {
 
   it('Autosave mit Versionsprüfung, Duplizieren, Entwurf → Vorlage, Vorlage → Entwurf, Löschen = Archiv', async () => {
     const a = await as('mb_admin');
-    const cat = ((await a.get('/api/v1/message-builder/categories')).body as { id: string; name: string }[]).find((c) => c.name === 'Dienstantritt')!;
+    const cat = ((await a.get('/api/v1/message-builder/categories')).body as { id: string; name: string }[]).find((c) => c.name === 'Dienstanweisungen')!;
     const t = (await a.post('/api/v1/message-builder/documents').send({ kind: 'TEMPLATE', name: 'Dienstantritt', categoryId: cat.id })).body;
     expect(t).toMatchObject({ kind: 'TEMPLATE', version: 1, messageCount: 1 });
     const body = { name: 'Dienstantritt', categoryId: cat.id, channelId: CH_OK, data: data(msg(), msg({ id: 'm2', content: 'Zweite' })), version: 1 };

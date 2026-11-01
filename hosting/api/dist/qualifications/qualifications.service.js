@@ -32,9 +32,9 @@ const application_progress_1 = require("../applications/application-progress");
 const shared_2 = require("@enrp/shared");
 const KEY = 'qualifications.config';
 const FORM_KEY = 'application.form';
-/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+/** Bewerbungs-Panel: Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
 function policePanelMessage(cfg) { return panelMessage((0, shared_2.applyPanelParts)(cfg)); }
-/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten. */
 function qualiPanelMessage(cfg) { return panelMessage((0, shared_2.qualiPanelParts)(cfg)); }
 function panelMessage(p) {
     return { embeds: [{ title: p.title, description: p.description || undefined, color: 0x3b82f6 }], ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) };

@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Copy, FilePlus2, FileText, LayoutTemplate, Pencil, Plus, Save, Trash2 } from 'lucide-react';
-import { cloneWithNewIds, emptyMbMessage, MB_LIMITS, mbDocumentDataSchema, mbSummary, validateMbDocument, type MbDocumentData } from '@enrp/shared';
+import { ArrowDown, ArrowUp, Braces, Copy, Download, FilePlus2, FileText, FileUp, LayoutTemplate, MousePointerClick, Pencil, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
+import { cloneWithNewIds, emptyMbMessage, MB_LIMITS, mbSummary, mbTemplateExportSchema, validateMbDocument, type MbDocumentData } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useServer } from '../../lib/guilds';
 import { errText } from '../../lib/tickets';
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs, Textarea } from '../../components/ui';
-import { MessageEditor, type EditorCtx, type ServerChannel, type ServerRole } from './MessageEditor';
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
+import { MessageEditor, type EditorCtx, type ServerChannel, type ServerRole, type ServerThread } from './MessageEditor';
+import { downloadJson, JsonEditor, pickJsonFile, type JsonState } from './JsonEditor';
+import { SavedMessages } from './SavedMessages';
+import { WebhooksTab } from './Webhooks';
 import { MessagePreview } from './Preview';
 import { SendPanel, type Webhook } from './SendPanel';
 import { History, SettingsTab, type Category } from './HistoryAndSettings';
 import { useDocAutosave, type DocSaveStatus, type MbDoc } from './useDocAutosave';
 
 interface DocMeta { id: string; kind: 'DRAFT' | 'TEMPLATE'; name: string; categoryId: string | null; updatedAt: string; messageCount: number; updatedByName: string | null }
-interface ServerInfo {
-  guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; roles: ServerRole[]; configured: boolean; restricted?: boolean;
+export interface ServerInfo {
+  guild: { id: string; name: string; icon: string | null } | null; channels: ServerChannel[]; threads?: ServerThread[]; roles: ServerRole[]; configured: boolean; restricted?: boolean;
   problem?: 'no_server' | 'no_report';
 }
 /** Warum keine Kanäle da sind – mit dem, was zu tun ist. */
@@ -32,7 +35,7 @@ const SAVE_VIEW: Record<DocSaveStatus, [string, string]> = {
 };
 const move = <T,>(list: T[], i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= list.length) return list; const c = [...list]; [c[i], c[j]] = [c[j]!, c[i]!]; return c; };
 
-function useMbData() {
+export function useMbData() {
   const server = useQuery({ queryKey: ['mb-server'], queryFn: () => api<ServerInfo>('/message-builder/server'), staleTime: 30_000 });
   const categories = useQuery({ queryKey: ['mb-categories'], queryFn: () => api<Category[]>('/message-builder/categories') });
   const templates = useQuery({ queryKey: ['mb-docs', 'TEMPLATE'], queryFn: () => api<DocMeta[]>('/message-builder/documents', { query: { kind: 'TEMPLATE' } }) });
@@ -40,24 +43,36 @@ function useMbData() {
   return { server, categories, templates, drafts };
 }
 
-/** Discord Message Builder (Discohook-artig): links Nachrichten/Entwürfe/Vorlagen, Mitte Editor, rechts Live-Vorschau + Versand. */
+/** Embed Builder (Discohook-artig): links Nachrichten/Entwürfe/Vorlagen, Mitte Editor (grafisch oder JSON), rechts Live-Vorschau + Versand. */
 export function MessageBuilder() {
   const [server] = useServer();
-  if (!server) return (<div><PageHeader title="Discord Message Builder" /><EmptyState text="Kein Server gewählt" hint="Der Message Builder arbeitet je Discord-Server – bitte oben links einen Server wählen." /></div>);
+  if (!server) return (<div><PageHeader title="Embed Builder" /><EmptyState text="Kein Server gewählt" hint="Der Embed Builder arbeitet je Discord-Server – bitte oben links einen Server wählen." /></div>);
   // Server gewechselt → Editor komplett neu (offene Entwürfe gehören zum vorherigen Server)
   return <MessageBuilderFor key={server} />;
 }
 function MessageBuilderFor() {
   const { can } = useAuth();
-  const tabs = ['Editor', ...(can('messagebuilder.history') ? ['Versandhistorie'] : []), ...(can('messagebuilder.templates_edit') || can('messagebuilder.channels') || can('messagebuilder.webhooks') ? ['Einstellungen'] : [])];
+  const tabs = [
+    'Editor',
+    ...(can('messagebuilder.edit') || can('messagebuilder.history') || can('messagebuilder.edit_others') ? ['Gesendete Nachrichten'] : []),
+    ...(can('messagebuilder.history') ? ['Versandhistorie'] : []),
+    ...(can('messagebuilder.webhooks') ? ['Webhooks'] : []),
+    ...(can('messagebuilder.templates_edit') || can('messagebuilder.channels') ? ['Einstellungen'] : []),
+  ];
   const [tab, setTab] = useState('Editor');
+  const [, setParams] = useSearchParams();
   const d = useMbData();
+  const qc = useQueryClient();
+  /** Entwurf im Editor öffnen (z. B. aus Historie oder gesendeten Nachrichten). */
+  const openDraft = (id: string) => { void qc.invalidateQueries({ queryKey: ['mb-docs'] }); setParams({ doc: id }); setTab('Editor'); };
   return (
     <div>
-      <PageHeader title="Discord Message Builder" subtitle={d.server.data?.guild ? `Nachrichten und Embeds für ${d.server.data.guild.name} bauen und über den Bot senden` : 'Nachrichten und Embeds bauen und über den Bot senden'} />
+      <PageHeader title="Embed Builder" subtitle={d.server.data?.guild ? `Discord-Nachrichten und Embeds für ${d.server.data.guild.name} bauen, prüfen, senden und bearbeiten` : 'Discord-Nachrichten und Embeds bauen, prüfen, senden und bearbeiten'} />
       {tabs.length > 1 && <div className="mb-4"><Tabs tabs={tabs} active={tab} onChange={setTab} /></div>}
       {tab === 'Editor' && <EditorTab d={d} />}
-      {tab === 'Versandhistorie' && <History />}
+      {tab === 'Gesendete Nachrichten' && <SavedMessages server={d.server.data} onOpenDraft={openDraft} />}
+      {tab === 'Versandhistorie' && <History onOpenDraft={can('messagebuilder.create') ? openDraft : undefined} />}
+      {tab === 'Webhooks' && <WebhooksTab />}
       {tab === 'Einstellungen' && <SettingsTab can={can} categories={d.categories.data ?? []} channels={d.server.data?.channels ?? []} />}
     </div>
   );
@@ -103,13 +118,34 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
   const [confirmDel, setConfirmDel] = useState<DocMeta | null>(null);
   const [asTemplate, setAsTemplate] = useState(false);
   const [rename, setRename] = useState<DocMeta | null>(null);
-  const [json, setJson] = useState<string | null>(null);
-  const [jsonErr, setJsonErr] = useState<string | null>(null);
+  const [view, setView] = useState<'visual' | 'json'>('visual');
+  const [jsonState, setJsonState] = useState<JsonState>({ valid: true, error: null });
+  useEffect(() => { setView('visual'); setJsonState({ valid: true, error: null }); }, [docId]);
   const [filter, setFilter] = useState('');
+  const [catFilter, setCatFilter] = useState('');
+  const [tplMsg, setTplMsg] = useState<string | null>(null);
+  const examples = useMutation({ mutationFn: () => api<{ added: string[]; skipped: string[] }>('/message-builder/templates/examples', { method: 'POST' }), onSuccess: (r) => { refreshLists(); void qc.invalidateQueries({ queryKey: ['mb-categories'] }); setTplMsg(r.added.length ? `Hinzugefügt: ${r.added.join(', ')}` : 'Alle Beispielvorlagen sind schon vorhanden – nichts überschrieben.'); } });
+  const importTpl = useMutation({
+    mutationFn: async () => {
+      const text = await pickJsonFile();
+      if (text === null) return null;
+      let parsed: unknown;
+      try { parsed = JSON.parse(text); } catch { throw new Error('Die Datei enthält kein gültiges JSON.'); }
+      const p = mbTemplateExportSchema.safeParse(parsed);
+      if (!p.success) throw new Error(`Keine gültige Vorlagen-Datei (${p.error.issues[0]?.path.join('.') || 'Format'}: ${p.error.issues[0]?.message}).`);
+      return api<{ created: { id: string; name: string }[] }>('/message-builder/templates/import', { method: 'POST', body: p.data });
+    },
+    onSuccess: (r) => { if (!r) return; refreshLists(); void qc.invalidateQueries({ queryKey: ['mb-categories'] }); setTplMsg(`Importiert: ${r.created.map((c) => c.name).join(', ')}`); },
+  });
+  const exportTpl = async (ids?: string[]) => {
+    const r = await api<unknown>('/message-builder/templates/export', { query: ids?.length ? { ids: ids.join(',') } : {} });
+    downloadJson(`embed-builder-vorlagen-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(r, null, 2));
+  };
 
   if (d.drafts.isError) return <ErrorState error={d.drafts.error} onRetry={() => void d.drafts.refetch()} />;
   const cats = d.categories.data ?? [];
   const tplByCat = [...cats.map((c) => ({ id: c.id as string | null, name: c.name })), { id: null, name: 'Ohne Kategorie' }]
+    .filter((c) => !catFilter || (catFilter === 'none' ? c.id === null : c.id === catFilter))
     .map((c) => ({ ...c, items: (d.templates.data ?? []).filter((t) => t.categoryId === c.id && t.name.toLowerCase().includes(filter.toLowerCase())) }))
     .filter((c) => c.items.length);
   const author = mode === 'webhook' && doc?.data.webhookProfile.username ? { name: doc.data.webhookProfile.username, avatar: doc.data.webhookProfile.avatarUrl || null, app: false } : { name: 'EN | POLIZEI', avatar: server?.guild?.icon ?? null, app: true };
@@ -159,7 +195,19 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
         </Card>
 
         <Card title="Vorlagen" actions={can('messagebuilder.templates_create') && <Button size="sm" variant="secondary" disabled={create.isPending} onClick={() => create.mutate({ kind: 'TEMPLATE', name: 'Neue Vorlage', categoryId: cats[0]?.id ?? null })}><Plus size={14} />Neu</Button>}>
-          <Input aria-label="Vorlagen durchsuchen" placeholder="Suchen …" value={filter} onChange={(e) => setFilter(e.target.value)} className="mb-2 py-1 text-xs" />
+          <div className="mb-2 grid gap-1">
+            <Input aria-label="Vorlagen durchsuchen" placeholder="Suchen …" value={filter} onChange={(e) => setFilter(e.target.value)} className="py-1 text-xs" />
+            <Select aria-label="Nach Kategorie filtern" value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className="py-1 text-xs">
+              <option value="">Alle Kategorien</option>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}<option value="none">Ohne Kategorie</option>
+            </Select>
+            <div className="flex flex-wrap gap-1">
+              <Button size="sm" variant="ghost" title="Vorlagen als JSON-Datei herunterladen" onClick={() => void exportTpl(tplByCat.flatMap((c) => c.items.map((t) => t.id)))} disabled={!tplByCat.length}><Download size={13} />Export</Button>
+              {can('messagebuilder.templates_create') && <Button size="sm" variant="ghost" title="Vorlagen aus einer JSON-Datei importieren (immer als neue Vorlagen)" disabled={importTpl.isPending} onClick={() => importTpl.mutate()}><FileUp size={13} />Import</Button>}
+              {can('messagebuilder.templates_create') && <Button size="sm" variant="ghost" title="Fehlende Beispielvorlagen ergänzen (bestehende bleiben unverändert)" disabled={examples.isPending} onClick={() => examples.mutate()}><Sparkles size={13} />Beispiele</Button>}
+            </div>
+            {tplMsg && <p role="status" className="text-[11px] text-success">{tplMsg}</p>}
+            {(importTpl.isError || examples.isError) && <p role="alert" className="text-[11px] text-danger">{importTpl.error instanceof Error && !(importTpl.error as { status?: number }).status ? importTpl.error.message : errText(importTpl.error ?? examples.error)}</p>}
+          </div>
           {d.templates.isLoading ? <SkeletonRows rows={2} /> : !tplByCat.length ? <p className="text-xs text-muted">Keine Vorlagen{filter ? ' gefunden' : ''}.</p> : (
             <div className="grid max-h-[28rem] gap-2 overflow-auto">
               {tplByCat.map((c) => (
@@ -173,6 +221,7 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
                         <button type="button" className="text-primary hover:underline" onClick={() => open(t.id)}>{can('messagebuilder.templates_edit') ? 'Bearbeiten' : 'Ansehen'}</button>
                         {can('messagebuilder.templates_create') && <button type="button" className="text-primary hover:underline" onClick={() => copy.mutate({ id: t.id, kind: 'TEMPLATE' })}>Duplizieren</button>}
                         {can('messagebuilder.templates_edit') && <button type="button" className="text-primary hover:underline" onClick={() => setRename(t)}>Umbenennen</button>}
+                        <button type="button" className="text-primary hover:underline" onClick={() => void exportTpl([t.id])}>Export</button>
                         {can('messagebuilder.templates_delete') && <button type="button" className="text-danger hover:underline" onClick={() => setConfirmDel(t)}>Löschen</button>}
                       </div>
                     </li>
@@ -200,7 +249,7 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
               <span className="flex flex-wrap gap-1">
                 {!readOnly && auto.status !== 'saved' && auto.status !== 'conflict' && <Button size="sm" variant="ghost" onClick={() => void auto.saveNow()}><Save size={14} />Jetzt speichern</Button>}
                 {doc.kind === 'DRAFT' && can('messagebuilder.templates_create') && <Button size="sm" variant="secondary" onClick={() => { void auto.saveNow(); setAsTemplate(true); }}><LayoutTemplate size={14} />Als Vorlage speichern</Button>}
-                <Button size="sm" variant="ghost" onClick={() => { setJsonErr(null); setJson(JSON.stringify(doc.data, null, 2)); }}>JSON</Button>
+
               </span>
             }>
               <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
@@ -218,7 +267,18 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
                 </div>
               )}
             </Card>
-            {cur && (
+            <div className="flex gap-1" role="tablist" aria-label="Editor-Ansicht">
+              <Button size="sm" role="tab" aria-selected={view === 'visual'} variant={view === 'visual' ? 'primary' : 'secondary'} disabled={view === 'json' && !jsonState.valid} title={view === 'json' && !jsonState.valid ? 'Erst den JSON-Fehler beheben' : undefined} onClick={() => setView('visual')}><MousePointerClick size={14} />Grafisch</Button>
+              <Button size="sm" role="tab" aria-selected={view === 'json'} variant={view === 'json' ? 'primary' : 'secondary'} onClick={() => setView('json')}><Braces size={14} />JSON-Editor</Button>
+            </div>
+            {view === 'json' ? (
+              <Card title="Nachrichten-JSON (Discord-Format)">
+                <JsonEditor data={doc.data} readOnly={readOnly} onState={setJsonState} fileName={`${doc.name.replace(/[^\w.-]+/g, '_') || 'nachricht'}.json`} onChange={(next) => { setData(() => next); setSel((i) => Math.min(i, next.messages.length - 1)); }} />
+                {issues.filter((i) => i.level === 'error').length > 0 && (
+                  <ul className="mt-2 grid gap-0.5 text-xs text-danger" aria-label="Prüfung gegen die Discord-Limits">{issues.filter((i) => i.level === 'error').map((i, k) => <li key={k}>✖ {i.where}: {i.message}</li>)}</ul>
+                )}
+              </Card>
+            ) : cur && (
               <Card title={`Nachricht ${msgs.indexOf(cur) + 1} bearbeiten`}>
                 <MessageEditor m={cur} index={msgs.indexOf(cur)} ctx={ctx} issues={issues} onChange={(m) => setData((x) => ({ ...x, messages: x.messages.map((y) => (y.id === m.id ? m : y)) }))} />
               </Card>
@@ -245,7 +305,8 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
             </Card>
             {(can('messagebuilder.send') || can('messagebuilder.create')) && (
               <Card title="Senden">
-                <SendPanel data={doc.data} name={doc.name} documentId={doc.id} channelId={localChannel} channels={server?.channels ?? []} channelHint={server ? channelHint(server) : null} issues={issues} can={can} webhooks={webhooks.data ?? []} mode={mode} onMode={setMode}
+                <SendPanel data={doc.data} name={doc.name} documentId={doc.id} channelId={localChannel} channels={server?.channels ?? []} threads={server?.threads ?? []} channelHint={server ? channelHint(server) : null} issues={issues} can={can} webhooks={webhooks.data ?? []} mode={mode} onMode={setMode}
+                  serverName={server?.guild?.name ?? null} mdCtx={mdCtx} author={author} blockedReason={view === 'json' && !jsonState.valid ? 'Ungültiges JSON – wird nicht gesendet.' : null}
                   onChannel={(id) => { setLocalChannel(id); if (!readOnly) auto.setDoc((x) => ({ ...x, channelId: id })); }} />
               </Card>
             )}
@@ -257,23 +318,6 @@ function EditorTab({ d }: { d: ReturnType<typeof useMbData> }) {
         onClose={() => setConfirmDel(null)} onConfirm={() => { if (confirmDel) remove.mutate(confirmDel.id, { onSettled: () => setConfirmDel(null) }); }} />
       <SaveAsTemplate open={asTemplate} onClose={() => setAsTemplate(false)} name={doc?.name ?? ''} categories={cats} busy={copy.isPending} onSave={(name, categoryId) => doc && copy.mutate({ id: doc.id, kind: 'TEMPLATE', name, categoryId }, { onSuccess: () => setAsTemplate(false) })} />
       <RenameDialog doc={rename} onClose={() => setRename(null)} onDone={() => { refreshLists(); if (rename?.id === docId) void docQ.refetch(); }} />
-      <Modal open={json !== null} wide title="JSON exportieren / importieren" onClose={() => setJson(null)}>
-        <div className="grid gap-2">
-          <p className="text-xs text-muted">Inhalt der Nachrichtengruppe. Kopieren zum Sichern/Teilen, oder geänderten Inhalt einfügen und übernehmen.</p>
-          <Textarea aria-label="JSON" rows={14} className="font-mono text-xs" value={json ?? ''} onChange={(e) => setJson(e.target.value)} />
-          {jsonErr && <p role="alert" className="text-xs text-danger">{jsonErr}</p>}
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => void navigator.clipboard?.writeText(json ?? '')}>Kopieren</Button>
-            {!readOnly && <Button onClick={() => {
-              try {
-                const p = mbDocumentDataSchema.safeParse(JSON.parse(json ?? ''));
-                if (!p.success) { setJsonErr(`Ungültig: ${p.error.issues[0]?.path.join('.')} – ${p.error.issues[0]?.message}`); return; }
-                setData(() => cloneWithNewIds(p.data)); setSel(0); setJson(null);
-              } catch { setJsonErr('Kein gültiges JSON.'); }
-            }}>Übernehmen</Button>}
-          </div>
-        </div>
-      </Modal>
       <Modal open={auto.status === 'conflict' && !!auto.conflict} title="Neuere Fassung vorhanden" onClose={() => undefined}>
         <p className="mb-3 text-sm">Diese {doc?.kind === 'TEMPLATE' ? 'Vorlage' : 'Nachrichtengruppe'} wurde inzwischen woanders gespeichert (anderer Tab oder andere Person). Es wurde nichts überschrieben.</p>
         <div className="flex flex-wrap justify-end gap-2">

@@ -11,9 +11,9 @@ export interface Answer {
     question: string;
     answer: string | string[] | null;
 }
-/** Bewerbungs-Panel (wie /bewerbungspanel): Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
+/** Bewerbungs-Panel: Button „Jetzt bewerben“ oder Auswahl mit weiteren Bewerbungsarten. */
 export declare function policePanelMessage(cfg: QualificationConfig): MessageSpec;
-/** Qualifikations-Panel mit Auswahlmenü der Einheiten (wie /qualipanel). */
+/** Qualifikations-Panel mit Auswahlmenü der Einheiten. */
 export declare function qualiPanelMessage(cfg: QualificationConfig): MessageSpec;
 /**
  * Qualifikations-Bewerbungen (SEK, Flugstaffel, Ausbilder …): Discord-Panel → Fragen per DM → Team entscheidet (Web oder Button im Team-Channel).

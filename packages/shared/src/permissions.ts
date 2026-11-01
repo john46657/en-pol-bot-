@@ -61,9 +61,10 @@ export const PERMISSION_CATALOG = {
   /**
    * Discord Message Builder: view = Editor öffnen, create = Entwürfe/Nachrichten erstellen, templates_* = Vorlagen,
    * send = über den Bot senden, history = Versandhistorie, channels = erlaubte Kanäle festlegen, webhooks = Webhooks verwalten
-   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben.
+   * und darüber senden, roles = Buttons/Menüs, die Discord-Rollen vergeben, edit = eigene gesendete Discord-Nachrichten laden und
+   * bearbeiten, edit_others = auch Nachrichten anderer Nutzer (und per Link geladene) bearbeiten.
    */
-  messagebuilder: ['view', 'create', 'templates_create', 'templates_edit', 'templates_delete', 'send', 'history', 'channels', 'webhooks', 'roles'],
+  messagebuilder: ['view', 'create', 'templates_create', 'templates_edit', 'templates_delete', 'send', 'history', 'channels', 'webhooks', 'roles', 'edit', 'edit_others'],
 } as const;
 
 type Catalog = typeof PERMISSION_CATALOG;

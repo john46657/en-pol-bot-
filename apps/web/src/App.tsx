@@ -272,6 +272,7 @@ export function App() {
           <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />
+          <Route path="embed-builder" element={<Navigate to="/message-builder" replace />} />
           <Route path="admin/embeds" element={<Guard perm="settings.view" area="dashboard.settings.view"><Embeds /></Guard>} />
           <Route path="admin/welcome" element={<Guard perm="settings.view" area="dashboard.settings.view"><WelcomeSettings /></Guard>} />
           <Route path="admin/leave" element={<Guard perm="settings.view" area="dashboard.settings.view"><LeaveSettings /></Guard>} />

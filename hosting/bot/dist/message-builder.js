@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MB_INTERACTION = void 0;
 exports.discordErrorText = discordErrorText;
 exports.runMbSend = runMbSend;
+exports.runMbFetch = runMbFetch;
 const shared_1 = require("@enrp/shared");
 const format_1 = require("./format");
 const errors_1 = require("./commands/errors");
@@ -41,9 +42,14 @@ async function runMbSend(api, sendId, discord, log = console.log) {
         return;
     const base = `/bot/message-builder/sends/${sendId}`;
     const channelId = s.channelId ?? '';
+    const edit = s.kind === 'EDIT';
     let stop = null;
     try {
-        const miss = await discord.missingPerms(s.guildId ?? null, channelId, s.items.map((i) => i.payload));
+        if (edit && (!s.messageId || !discord.edit))
+            throw new Error('Bearbeiten wird von dieser Bot-Version nicht unterstützt.');
+        if (s.threadName && !discord.createPost)
+            throw new Error('Forum-Beiträge werden von dieser Bot-Version nicht unterstützt.');
+        const miss = await discord.missingPerms(s.guildId ?? null, channelId, s.items.map((i) => i.payload), { threadId: s.threadId ?? null, threadName: s.threadName ?? null, edit });
         if (miss.length)
             stop = `Dem Bot fehlen in diesem Kanal Rechte: ${miss.join(', ')}.`;
     }
@@ -55,10 +61,21 @@ async function runMbSend(api, sendId, discord, log = console.log) {
         await report(api, `${base}/finish`, { error: 'Nicht gesendet.' }, log);
         return;
     }
+    // Ziel: bearbeitete Nachricht liegt in channelId (bei Threads ist das die Thread-ID); sonst Thread bzw. neuer Forum-Beitrag
+    let where = edit ? channelId : s.threadId || channelId;
     for (const item of s.items) {
         try {
-            const msg = await discord.send(channelId, item.payload);
-            await report(api, `${base}/items/${item.position}`, { ok: true, messageId: msg.id }, log);
+            let msg;
+            if (edit)
+                msg = await discord.edit(where, s.messageId, item.payload);
+            else if (s.threadName && where === channelId) {
+                const post = await discord.createPost(channelId, s.threadName, item.payload);
+                where = post.channelId;
+                msg = post;
+            }
+            else
+                msg = await discord.send(where, item.payload);
+            await report(api, `${base}/items/${item.position}`, { ok: true, messageId: msg.id, ...(where !== channelId ? { channelId: where } : {}) }, log);
         }
         catch (e) {
             const error = discordErrorText(e);
@@ -70,6 +87,23 @@ async function runMbSend(api, sendId, discord, log = console.log) {
     }
     await report(api, `${base}/finish`, stop ? { error: stop } : {}, log);
 }
+/** Nachricht per Link laden: Inhalt und Absender (Bot, Webhook, fremd) an die API melden. */
+async function runMbFetch(api, id, discord, log = console.log) {
+    if (!/^[0-9a-f-]{36}$/.test(id))
+        throw new Error('invalid message id');
+    const t = await api.service('GET', `/bot/message-builder/messages/${id}`);
+    if (!t.proceed || !t.channelId || !t.messageId)
+        return;
+    let body;
+    try {
+        const f = await discord.fetch(t.guildId ?? null, t.channelId, t.messageId);
+        body = { ok: true, author: f.author, ...(f.webhookId ? { webhookId: f.webhookId } : {}), channelId: f.channelId, parentId: f.parentId, ...(f.channelName ? { channelName: f.channelName.slice(0, 100) } : {}), message: f.message };
+    }
+    catch (e) {
+        body = { ok: false, error: e instanceof Error && !('status' in e) ? e.message.slice(0, 500) : discordErrorText(e) };
+    }
+    await report(api, `/bot/message-builder/messages/${id}/loaded`, body, log);
+}
 /** Buttons/Menüs aus dem Message Builder (`mb:<aktion>`): Antwort nur für die Person oder Rolle geben/nehmen. */
 exports.MB_INTERACTION = {
     prefix: 'mb',
@@ -78,21 +112,33 @@ exports.MB_INTERACTION = {
         if (!/^[0-9a-f-]{36}$/.test(actionId ?? ''))
             return (0, format_1.errorReply)('Unbekannte Aktion.');
         try {
-            const a = await c.api.service('POST', '/bot/message-builder/interactions', { actionId, guildId: c.guildId ?? null, discordId: c.discordId, ...(c.values?.[0] ? { value: c.values[0] } : {}) });
-            if (a.type === 'reply')
-                return { ephemeral: true, content: a.text.slice(0, 2000) };
+            // Auswahlmenü: alle gewählten Werte (Mehrfachauswahl); ein Wert zusätzlich als `value` (ältere API-Versionen)
+            const values = c.values ?? [];
+            const sel = c.values !== undefined ? { values, ...(values[0] ? { value: values[0] } : {}) } : {};
+            const a = await c.api.service('POST', '/bot/message-builder/interactions', { actionId, guildId: c.guildId ?? null, discordId: c.discordId, ...sel });
             if (a.type === 'gone')
                 return (0, format_1.errorReply)('Diese Aktion ist nicht mehr verfügbar.');
-            if (!c.guildId || !c.discord?.setRole)
-                return (0, format_1.errorReply)('Das geht nur auf dem Discord-Server.');
-            try {
-                const r = await c.discord.setRole(c.guildId, c.discordId, a.roleId, a.mode);
-                const text = { added: `✅ Du hast jetzt die Rolle <@&${a.roleId}>.`, removed: `✅ Die Rolle <@&${a.roleId}> wurde dir entfernt.`, unchanged: `ℹ️ Keine Änderung an <@&${a.roleId}>.` }[r];
-                return { ephemeral: true, content: text };
+            const list = a.type === 'multi' ? a.actions : [a];
+            const out = [];
+            for (const x of list) {
+                if (x.type === 'reply') {
+                    out.push(x.text);
+                    continue;
+                }
+                if (!c.guildId || !c.discord?.setRole)
+                    return (0, format_1.errorReply)('Das geht nur auf dem Discord-Server.');
+                try {
+                    const r = await c.discord.setRole(c.guildId, c.discordId, x.roleId, x.mode);
+                    out.push({ added: `✅ Du hast jetzt die Rolle <@&${x.roleId}>.`, removed: `✅ Die Rolle <@&${x.roleId}> wurde dir entfernt.`, unchanged: `ℹ️ Keine Änderung an <@&${x.roleId}>.` }[r]);
+                }
+                catch (e) {
+                    const err = `Die Rolle konnte nicht geändert werden: ${discordErrorText(e)} (Die Bot-Rolle muss über dieser Rolle stehen und „Rollen verwalten“ haben.)`;
+                    if (list.length === 1)
+                        return (0, format_1.errorReply)(err);
+                    out.push(`❌ ${err}`);
+                }
             }
-            catch (e) {
-                return (0, format_1.errorReply)(`Die Rolle konnte nicht geändert werden: ${discordErrorText(e)} (Die Bot-Rolle muss über dieser Rolle stehen und „Rollen verwalten“ haben.)`);
-            }
+            return { ephemeral: true, content: out.join('\n\n').slice(0, 2000) };
         }
         catch (e) {
             return (0, errors_1.mapError)(e);

@@ -181,8 +181,8 @@ export declare class DutyReportsController {
             reviewedById: string | null;
             reviewedAt: Date | null;
             reviewNote: string | null;
-            templateId: string;
             templateName: string;
+            templateId: string;
             period: string;
             periodStart: Date;
             values: import("@prisma/client/runtime/library").JsonValue;
@@ -243,8 +243,8 @@ export declare class DutyReportsController {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: import("@prisma/client/runtime/library").JsonValue;
@@ -264,8 +264,8 @@ export declare class DutyReportsController {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: import("@prisma/client/runtime/library").JsonValue;
@@ -284,8 +284,8 @@ export declare class DutyReportsController {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: import("@prisma/client/runtime/library").JsonValue;
@@ -304,8 +304,8 @@ export declare class DutyReportsController {
         reviewedById: string | null;
         reviewedAt: Date | null;
         reviewNote: string | null;
-        templateId: string;
         templateName: string;
+        templateId: string;
         period: string;
         periodStart: Date;
         values: import("@prisma/client/runtime/library").JsonValue;

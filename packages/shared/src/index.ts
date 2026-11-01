@@ -21,6 +21,8 @@ export * from './backup';
 export * from './mdt';
 export * from './fleet';
 export * from './message-builder';
+export * from './message-builder-json';
+export * from './message-builder-examples';
 export * from './radio-whitelist';
 export * from './application-panels';
 export * from './ai-check';

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QUALI_INTERACTION = exports.QUALI_COMMANDS = exports.sweepSessions = exports.resetSessions = exports.MAX_ANSWER = exports.APPLICATION_MS = exports.POLICE = void 0;
+exports.QUALI_INTERACTION = exports.sweepSessions = exports.resetSessions = exports.MAX_ANSWER = exports.APPLICATION_MS = exports.POLICE = void 0;
 exports.panelEmbed = panelEmbed;
 exports.handleDirectMessage = handleDirectMessage;
 exports.openApplicantTicket = openApplicantTicket;
@@ -107,9 +107,7 @@ async function submitSession(api, s, userId, userName, robloxLookup, now = Date.
     }
     return (await api.service('POST', '/bot/qualifications/applications', { unit: s.unit, discordId: userId, discordName: userName, answers: s.questions.map((q, i) => ({ question: q.text, answer: s.answers[i] ?? null })), ...meta })).number;
 }
-/** Fallback, falls das System die Panel-Texte nicht liefert (Texte: Web → Qualifications → Setup). */
-const POLICE_PANEL = { title: '📋 Bewerbung bei EN Polizei', color: format_1.COLORS.info, description: 'Du möchtest Teil der **EN Polizei** werden? Klicke auf **Jetzt bewerben** – der Bot stellt dir die Fragen nacheinander per **Direktnachricht**.\n\nDu brauchst deinen **Roblox-Namen** und etwa 10 Minuten Zeit. Die Entscheidung bekommst du ebenfalls per Direktnachricht.' };
-/** Schritt 1 (Panel-Auswahl, Button oder /bewerbung): Bestätigung per DM mit Start/Abbrechen, im Channel „Zur Bewerbung“. */
+/** Schritt 1 (Panel-Auswahl oder Button): Bestätigung per DM mit Start/Abbrechen, im Channel „Zur Bewerbung“. */
 async function offer(c, key) {
     const running = sessions.get(c.discordId);
     if (running && running.expiresAt > Date.now())
@@ -156,68 +154,13 @@ function panelEmbed(cfg) {
     const p = (0, shared_1.qualiPanelParts)(cfg);
     return { title: p.title, color: format_1.COLORS.info, description: p.description };
 }
-/** Panel-Bausteine (gemeinsam mit dem Dashboard) → Nachricht für `postPanel`. */
-const panelPost = (p) => ({ embed: { title: p.title, color: format_1.COLORS.info, ...(p.description ? { description: p.description } : {}) }, ...(p.button ? { buttons: [p.button] } : {}), ...(p.select ? { select: p.select } : {}) });
-exports.QUALI_COMMANDS = [
-    {
-        name: 'bewerbung', description: 'Bewirb dich bei EN Polizei (Fragen per Direktnachricht)',
-        async run(c) { try {
-            return await offer(c, exports.POLICE);
-        }
-        catch (e) {
-            return (0, errors_1.mapError)(e);
-        } },
-    },
-    {
-        name: 'bewerbungspanel', description: 'Postet das Bewerbungs-Panel („Jetzt bewerben“) in diesen Kanal',
-        async run(c) {
-            if (!c.guildId)
-                return (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.');
-            if (!c.isGuildAdmin)
-                return (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
-            if (!c.channelId || !c.platform)
-                return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
-            try {
-                const cfg = await getConfig(c.api, c.guildId).catch(() => undefined);
-                const panel = cfg?.police ? panelPost((0, shared_1.applyPanelParts)(cfg)) : { embed: POLICE_PANEL, buttons: [{ id: `quali:pick:${exports.POLICE}`, label: 'Jetzt bewerben', emoji: '📋', style: 'primary' }] };
-                await c.platform.postPanel({ channelId: c.channelId, ...panel });
-            }
-            catch {
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
-            }
-            return (0, format_1.okReply)('Bewerbungs-Panel gepostet. Neue Bewerbungen erscheinen im System unter *Applications* (und im Bewerbungs-Kanal, falls eingestellt).');
-        },
-    },
-    {
-        name: 'qualipanel', description: 'Postet das Qualifikations-Panel (SEK, Flugstaffel, Ausbilder …) in diesen Kanal',
-        async run(c) {
-            if (!c.guildId)
-                return (0, format_1.errorReply)('Das geht nur auf einem Server, nicht per Direktnachricht.');
-            if (!c.isGuildAdmin)
-                return (0, format_1.errorReply)('Dafür brauchst du auf diesem Discord-Server das Recht „Server verwalten“.');
-            if (!c.channelId || !c.platform)
-                return (0, format_1.errorReply)('Panel kann hier nicht gepostet werden.');
-            try {
-                const cfg = await getConfig(c.api, c.guildId);
-                await c.platform.postPanel({ channelId: c.channelId, ...panelPost((0, shared_1.qualiPanelParts)(cfg)) });
-                const ch = await c.config?.().catch(() => undefined);
-                return (0, format_1.okReply)(`Qualifikations-Panel gepostet.${ch?.qualifications ? '' : ' Tipp: In den Einstellungen einen **Qualifications channel** hinterlegen – dort landen die Bewerbungen mit Annehmen/Ablehnen-Buttons.'}`);
-            }
-            catch (e) {
-                if (e instanceof api_1.BotApiError)
-                    return (0, errors_1.mapError)(e);
-                return (0, format_1.errorReply)('Panel konnte nicht gepostet werden (fehlen dem Bot Rechte in diesem Kanal?).');
-            }
-        },
-    },
-];
 /** Antwort auf eine Direktnachricht während einer laufenden Bewerbung. */
 async function handleDirectMessage(a) {
     const now = a.now ?? Date.now();
     const s = sessions.get(a.userId);
     const say = (description, color = format_1.COLORS.info, buttons) => a.sendDm(a.userId, { embed: { title: s ? (0, format_1.clip)(s.unitName, 256) : 'Bewerbung', description, color }, buttons });
     if (!s) {
-        await say('Du hast gerade keine laufende Bewerbung. Starte eine über das Bewerbungs- oder Qualifikations-Panel auf dem Server (oder mit `/bewerbung`).', format_1.COLORS.neutral);
+        await say('Du hast gerade keine laufende Bewerbung. Starte eine über das Bewerbungs- oder Qualifikations-Panel auf dem Server.', format_1.COLORS.neutral);
         return;
     }
     if (s.expiresAt <= now) {
