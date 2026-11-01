@@ -12,6 +12,8 @@ export const SERVER_SCOPED_MODELS = new Set([
   'Incident', 'Unit', 'CadMapObject', 'CadMember',
   'Personnel', 'HrRank', 'HrRequest', 'HrTraining', 'HrExam', 'ServiceNumberRange', 'ServiceNumber', 'HireQueue', 'AcademyCourse',
   'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
+  // Verwaltung 3.0 (Unterlagen wie Zuweisungen, Teilnehmer, Versionen nur über ihren Elterndatensatz erreichbar)
+  'PlannedShift', 'CalendarEvent', 'Meeting', 'Announcement', 'Document',
 ]);
 
 /** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */

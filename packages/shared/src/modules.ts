@@ -7,7 +7,7 @@
 export interface ModuleDef { key: string; name: string; description: string; system?: boolean; off?: boolean; dependsOn?: string[]; permissionPrefixes: string[] }
 
 export const MODULES = [
-  { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules'] },
+  { key: 'core', name: 'Grundsystem', description: 'Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server', system: true, permissionPrefixes: ['dashboard', 'settings', 'users', 'roles', 'audit', 'studio', 'analytics', 'servers', 'modules', 'notifications'] },
   { key: 'cad', name: 'CAD-Leitstelle', description: 'Einsätze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge', permissionPrefixes: ['cad', 'fleet'] },
   { key: 'mdt', name: 'MDT', description: 'Personen, Fahrzeuge, Haftbefehle, Bußgelder', permissionPrefixes: ['persons', 'vehicles', 'wanted', 'tickets'] },
   { key: 'dispatch', name: 'Dispatch', description: 'Einsatzverwaltung und Einheiten-Board', permissionPrefixes: ['dispatch', 'incidents'] },
@@ -19,6 +19,9 @@ export const MODULES = [
   { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },
   { key: 'message_builder', name: 'Embed Builder', description: 'Discord-Nachrichten und Embeds bauen (JSON-Editor, Vorlagen), über den Bot oder Webhooks senden, gesendete Nachrichten bearbeiten, Versandhistorie', permissionPrefixes: ['messagebuilder'] },
+  { key: 'planning', name: 'Dienstplanung', description: 'Schichtplanung, Kalender und Besprechungen', permissionPrefixes: ['shiftplan', 'calendar', 'meetings'] },
+  { key: 'announcements', name: 'Ankündigungen', description: 'Ankündigungen über den Bot veröffentlichen, planen und zurückziehen (ohne Lesebestätigung)', permissionPrefixes: ['announce'] },
+  { key: 'documents', name: 'Dokumente', description: 'Dokumentenverwaltung mit Versionen und Zugriffsgruppen', permissionPrefixes: ['documents'] },
   { key: 'communication', name: 'Kommunikation', description: 'Nachrichten, Funk-Codes, Funk-Whitelist', permissionPrefixes: ['communication', 'radio', 'radiowhitelist'] },
 ] as const satisfies readonly ModuleDef[];
 
@@ -58,7 +61,9 @@ export function moduleDependencyError(key: string, enabled: boolean, state: Reco
 export const BOT_COMMAND_MODULES: Record<string, string> = {
   dienstbericht: 'reports',
   shift: 'shift_logs', dienst: 'shift_logs', dienststunden: 'shift_logs', team: 'shift_logs', dienstpanel: 'shift_logs', teamliste: 'shift_logs',
-  abmeldung: 'personnel', leave: 'personnel', ausbildung: 'personnel', verwarnen: 'personnel',
+  abmeldung: 'personnel', leave: 'personnel', ausbildung: 'personnel', verwarnen: 'personnel', antrag: 'personnel',
+  schichtplan: 'planning', termine: 'planning', besprechung: 'planning',
+  dokument: 'documents',
   teamchance: 'applications',
   support: 'support', ticket: 'support',
   funkcode: 'communication', funk: 'communication', funkantrag: 'communication', funkstatus: 'communication', funkfreigabe: 'communication',
