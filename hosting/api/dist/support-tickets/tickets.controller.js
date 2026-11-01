@@ -24,8 +24,14 @@ const tickets_service_1 = require("./tickets.service");
 const config_service_1 = require("./config.service");
 const config_schemas_1 = require("./config.schemas");
 const snowflake = zod_1.z.string().regex(/^\d{15,25}$/);
+const formValues = zod_1.z.record(zod_1.z.string().max(40), zod_1.z.union([zod_1.z.string().max(4000), zod_1.z.array(zod_1.z.string().max(100)).max(25), zod_1.z.boolean(), zod_1.z.null()]));
 const actionSchema = zod_1.z.discriminatedUnion('action', [
-    zod_1.z.object({ action: zod_1.z.literal('close'), reason: zod_1.z.string().trim().max(500).optional() }), zod_1.z.object({ action: zod_1.z.literal('close_request') }),
+    zod_1.z.object({ action: zod_1.z.literal('close'), reason: zod_1.z.string().trim().max(500).optional(), answers: formValues.optional() }), zod_1.z.object({ action: zod_1.z.literal('close_request') }),
+    zod_1.z.object({ action: zod_1.z.literal('close_request_answer'), accept: zod_1.z.boolean() }),
+    zod_1.z.object({ action: zod_1.z.literal('remind'), text: zod_1.z.string().trim().max(1500).optional() }),
+    // Ziel wird im Service geprüft (Kategorie: UUID, Person/Rolle: Discord-ID)
+    zod_1.z.object({ action: zod_1.z.literal('forward'), target: zod_1.z.enum(['USER', 'ROLE', 'CATEGORY']), targetId: zod_1.z.string().trim().min(1).max(40), note: zod_1.z.string().trim().max(1000).optional() }),
+    zod_1.z.object({ action: zod_1.z.literal('automation'), mode: zod_1.z.enum(['pause', 'disable', 'enable']), minutes: zod_1.z.number().int().min(1).max(60 * 24 * 30).optional() }),
     zod_1.z.object({ action: zod_1.z.literal('reopen') }), zod_1.z.object({ action: zod_1.z.literal('claim') }), zod_1.z.object({ action: zod_1.z.literal('unclaim'), targetId: snowflake.optional() }),
     zod_1.z.object({ action: zod_1.z.literal('add_access'), targetId: snowflake, kind: zod_1.z.enum(['USER', 'ROLE']), minutes: zod_1.z.number().int().min(1).max(60 * 24 * 30).optional() }),
     zod_1.z.object({ action: zod_1.z.literal('remove_access'), targetId: snowflake }),
@@ -50,7 +56,7 @@ const transcriptQ = zod_1.z.object({
     number: zod_1.z.coerce.number().int().positive().optional(), from: zod_1.z.coerce.date().optional(), to: zod_1.z.coerce.date().optional(),
     page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25),
 });
-const ratingQ = zod_1.z.object({ stars: zod_1.z.coerce.number().int().min(1).max(5).optional(), categoryId: zod_1.z.string().uuid().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25) });
+const ratingQ = zod_1.z.object({ stars: zod_1.z.coerce.number().int().min(1).max(10).optional(), categoryId: zod_1.z.string().uuid().optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(500).default(25) });
 const openQ = zod_1.z.object({ categoryId: zod_1.z.string().uuid(), discordId: snowflake, discordName: zod_1.z.string().trim().max(100).optional(), guildId: snowflake.optional() });
 const actor = (u) => ({ userId: u.id, robloxUserId: u.robloxUserId, name: u.displayName });
 const auditQ = zod_1.z.object({ ticketId: zod_1.z.string().uuid().optional(), action: zod_1.z.string().max(80).optional(), result: zod_1.z.enum(['SUCCESS', 'DENIED', 'FAILED']).optional(), page: zod_1.z.coerce.number().int().min(1).default(1), pageSize: zod_1.z.coerce.number().int().min(1).max(200).default(50) });
@@ -80,7 +86,8 @@ let SupportTicketsController = class SupportTicketsController {
     dupCategory(u, id) { return this.cfg.duplicateCategory(actor(u), id); }
     delCategory(u, id) { return this.cfg.deleteCategory(actor(u), id); }
     createPanel(u, b) { return this.cfg.savePanel(actor(u), null, b); }
-    updatePanel(u, id, b) { return this.cfg.savePanel(actor(u), id, b); }
+    /** Speichern; wurde das Panel aktiviert/deaktiviert und ist es veröffentlicht, wird die Discord-Nachricht sofort angepasst. */
+    updatePanel(u, id, b) { return this.s.savePanelAndSync(actor(u), id, b); }
     dupPanel(u, id) { return this.cfg.duplicatePanel(actor(u), id); }
     delPanel(u, id) { return this.cfg.deletePanel(actor(u), id); }
     preview(id) { return this.s.panelMessage(id); }
@@ -105,7 +112,7 @@ let SupportTicketsController = class SupportTicketsController {
     // ---- Tickets ----
     list(u, q) { return this.s.list(u.id, { ...q, guildId: (0, guild_context_1.targetGuild)(q.guildId) ?? undefined, kind: q.kind === 'all' ? undefined : q.kind }); }
     async create(u, b) { return this.s.openFromDashboard(await this.s.actorFromUser(u), b); }
-    stats(u) { return this.s.stats(u.id); }
+    stats(u, q) { return this.s.stats(u.id, { guildId: (0, guild_context_1.targetGuild)(q.guildId) ?? undefined }); }
     overview(u, q) { return this.s.overview(u.id, (0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
     auditLog(q) { return this.s.auditLog(q); }
     /** Transkript-Seite /transcript/EMD-000123: Versionen (Mitarbeiter mit Zugriff oder der Ersteller selbst – Prüfung im Service). */
@@ -118,10 +125,13 @@ let SupportTicketsController = class SupportTicketsController {
         const tr = await this.s.transcript(u.id, id, fmt === 'json' ? 'json' : download || fmt === 'txt' ? 'export' : 'view');
         privateHeaders(res);
         const name = `transkript-${tr.ticketNumber}-v${tr.version}`;
+        // Team-Fassung (mit internen Notizen) nur für Mitarbeiter mit Zugriff – der Ersteller bekommt immer die Fassung ohne Notizen
+        const staff = tr.who === 'staff';
+        const html = staff && tr.staffHtml ? tr.staffHtml : tr.html, text = staff && tr.staffText ? tr.staffText : tr.text;
         if (fmt === 'txt') {
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
             res.setHeader('Content-Disposition', `attachment; filename="${name}.txt"`);
-            res.send(tr.text);
+            res.send(text);
             return;
         }
         if (fmt === 'json') {
@@ -134,7 +144,7 @@ let SupportTicketsController = class SupportTicketsController {
         // Transkript-HTML in einer Sandbox anzeigen: keine Skripte, kein Zugriff auf das Dashboard
         res.setHeader('Content-Security-Policy', "default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; sandbox");
         res.setHeader('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="${name}.html"`);
-        res.send(tr.html);
+        res.send(html);
     }
     async delTranscript(u, id) { return this.s.deleteTranscript(await this.s.actorFromUser(u), id); }
     async attachment(u, key, res) {
@@ -428,8 +438,9 @@ __decorate([
     (0, common_1.Get)('stats'),
     (0, decorators_1.RequirePermission)('ticket.view'),
     __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ guildId: snowflake.optional() })))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], SupportTicketsController.prototype, "stats", null);
 __decorate([
@@ -575,8 +586,12 @@ let BotSupportTicketsController = class BotSupportTicketsController {
     answer(id, b) { return this.s.answer(id, b.discordId, b.questionId, b.values); }
     closeRequest(id, b) { return this.s.closeRequestAnswer(id, b.discordId, b.accept); }
     creatorAdd(id, b) { return this.s.creatorAdd(id, b.discordId, b.targetId); }
-    creatorClose(id, b) { return this.s.creatorClose(id, b.discordId, b.reason); }
-    rate(id, b) { return this.s.rate(id, b.discordId, b.stars); }
+    creatorClose(id, b) { return this.s.creatorClose(id, b.discordId, b.reason, b.answers); }
+    rate(id, b) { return this.s.rate(id, b.discordId, b.stars, b.values); }
+    ratingForm(id, q) { return this.s.ratingForm(id, q.discordId, q.stars); }
+    closeForm(id) { return this.s.closeFormModal(id); }
+    byChannel(channelId) { if (!/^\d{15,25}$/.test(channelId))
+        return { id: null }; return this.s.byChannel(channelId); }
     rateComment(id, b) { return this.s.rateComment(id, b.discordId, b.comment); }
     message(b) { return this.s.message(b); }
     channels() { return this.s.channels(); }
@@ -687,7 +702,7 @@ __decorate([
     (0, common_1.Post)(':id/creator-close'),
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, reason: zod_1.z.string().trim().max(500).optional() })))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, reason: zod_1.z.string().trim().max(500).optional(), answers: formValues.optional() })))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
@@ -697,11 +712,36 @@ __decorate([
     (0, common_1.Post)(':id/rating'),
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, stars: zod_1.z.number().int().min(1).max(5) })))),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, stars: zod_1.z.number().int().min(1).max(10), values: formValues.optional() })))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BotSupportTicketsController.prototype, "rate", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)(':id/rating-form'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ discordId: snowflake, stars: zod_1.z.coerce.number().int().min(1).max(10) })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "ratingForm", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)(':id/close-form'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "closeForm", null);
+__decorate([
+    (0, decorators_1.BotService)(),
+    (0, common_1.Get)('by-channel/:channelId'),
+    __param(0, (0, common_1.Param)('channelId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], BotSupportTicketsController.prototype, "byChannel", null);
 __decorate([
     (0, decorators_1.BotService)(),
     (0, common_1.Post)(':id/rating-comment'),

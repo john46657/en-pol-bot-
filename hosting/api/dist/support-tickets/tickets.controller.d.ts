@@ -4,21 +4,70 @@ import type { AuthUser } from '../common/request-context';
 import { SupportTicketsService } from './tickets.service';
 import { TicketConfigService } from './config.service';
 import { categorySchema, departmentSchema, panelSchema, prioritySchema, reasonSchema, settingsSchema, statusSchema } from './config.schemas';
+declare const formValues: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">, z.ZodBoolean, z.ZodNull]>>;
 declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"close">;
     reason: z.ZodOptional<z.ZodString>;
+    answers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodString, "many">, z.ZodBoolean, z.ZodNull]>>>;
 }, "strip", z.ZodTypeAny, {
     action: "close";
     reason?: string | undefined;
+    answers?: Record<string, string | boolean | string[] | null> | undefined;
 }, {
     action: "close";
     reason?: string | undefined;
+    answers?: Record<string, string | boolean | string[] | null> | undefined;
 }>, z.ZodObject<{
     action: z.ZodLiteral<"close_request">;
 }, "strip", z.ZodTypeAny, {
     action: "close_request";
 }, {
     action: "close_request";
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"close_request_answer">;
+    accept: z.ZodBoolean;
+}, "strip", z.ZodTypeAny, {
+    action: "close_request_answer";
+    accept: boolean;
+}, {
+    action: "close_request_answer";
+    accept: boolean;
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"remind">;
+    text: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    action: "remind";
+    text?: string | undefined;
+}, {
+    action: "remind";
+    text?: string | undefined;
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"forward">;
+    target: z.ZodEnum<["USER", "ROLE", "CATEGORY"]>;
+    targetId: z.ZodString;
+    note: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    action: "forward";
+    targetId: string;
+    target: "ROLE" | "CATEGORY" | "USER";
+    note?: string | undefined;
+}, {
+    action: "forward";
+    targetId: string;
+    target: "ROLE" | "CATEGORY" | "USER";
+    note?: string | undefined;
+}>, z.ZodObject<{
+    action: z.ZodLiteral<"automation">;
+    mode: z.ZodEnum<["pause", "disable", "enable"]>;
+    minutes: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    mode: "pause" | "disable" | "enable";
+    action: "automation";
+    minutes?: number | undefined;
+}, {
+    mode: "pause" | "disable" | "enable";
+    action: "automation";
+    minutes?: number | undefined;
 }>, z.ZodObject<{
     action: z.ZodLiteral<"reopen">;
 }, "strip", z.ZodTypeAny, {
@@ -571,15 +620,15 @@ export declare class SupportTicketsController {
             departmentId: string | null;
             formVersion: number;
             emoji: string | null;
+            channelNameFormat: string;
+            maxOpen: number;
             staffRoleIds: string[];
             accessRoleNames: string[];
             buttonStyle: string;
             discordCategoryId: string | null;
-            channelNameFormat: string;
             extraRoleIds: string[];
             requiredRoleIds: string[];
             allowedUserIds: string[];
-            maxOpen: number;
             cooldownMinutes: number;
             defaultPriorityId: string | null;
             welcomeTitle: string;
@@ -619,9 +668,23 @@ export declare class SupportTicketsController {
             confidential: boolean;
             formMode: string;
             escalateUnassignedMinutes: number;
+            extraUserIds: string[];
+            capacityAction: string;
+            closeForm: import("@prisma/client/runtime/library").JsonValue;
+            ratingForm: import("@prisma/client/runtime/library").JsonValue;
+            closeRequestApprovers: string;
+            automationSource: string;
+            creatorReminderMinutes: number;
+            creatorReminderMessage: string;
+            teamReminderMinutes: number;
+            noResponseMinutes: number;
+            noResponseMessage: string;
+            closeRequestTimeoutMinutes: number;
         } & {
             buttons: import("@enrp/shared").TicketButtonConfig[];
             questions: import("@enrp/shared").TicketQuestion[];
+            closeForm: import("@enrp/shared").TicketQuestion[];
+            ratingForm: import("@enrp/shared").TicketQuestion[];
         })[];
         panels: {
             guildId: string | null;
@@ -631,8 +694,10 @@ export declare class SupportTicketsController {
             color: number;
             title: string;
             description: string;
+            active: boolean;
             name: string;
             position: number;
+            internalNote: string;
             channelId: string | null;
             messageId: string | null;
             emoji: string | null;
@@ -651,6 +716,10 @@ export declare class SupportTicketsController {
             messageChannelId: string | null;
             publishedAt: Date | null;
             publishError: string | null;
+            channelNameFormat: string | null;
+            mentionRoleIds: string[];
+            maxOpen: number;
+            automation: import("@prisma/client/runtime/library").JsonValue;
         }[];
         statuses: {
             id: string;
@@ -762,6 +831,8 @@ export declare class SupportTicketsController {
             slaReminderMinutes: number;
             slaEscalateAfterMinutes: number;
             userMessageNotifyMinutes: number;
+            ratingScale: number;
+            ratingPublicMinStars: number;
         };
         departments: {
             id: string;
@@ -858,6 +929,8 @@ export declare class SupportTicketsController {
         slaReminderMinutes: number;
         slaEscalateAfterMinutes: number;
         userMessageNotifyMinutes: number;
+        ratingScale: number;
+        ratingPublicMinStars: number;
     }>;
     createCategory(u: AuthUser, b: z.infer<typeof categorySchema>): Promise<{
         guildId: string | null;
@@ -874,15 +947,15 @@ export declare class SupportTicketsController {
         departmentId: string | null;
         formVersion: number;
         emoji: string | null;
+        channelNameFormat: string;
+        maxOpen: number;
         staffRoleIds: string[];
         accessRoleNames: string[];
         buttonStyle: string;
         discordCategoryId: string | null;
-        channelNameFormat: string;
         extraRoleIds: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
         welcomeTitle: string;
@@ -922,9 +995,23 @@ export declare class SupportTicketsController {
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
+        extraUserIds: string[];
+        capacityAction: string;
+        closeForm: import("@prisma/client/runtime/library").JsonValue;
+        ratingForm: import("@prisma/client/runtime/library").JsonValue;
+        closeRequestApprovers: string;
+        automationSource: string;
+        creatorReminderMinutes: number;
+        creatorReminderMessage: string;
+        teamReminderMinutes: number;
+        noResponseMinutes: number;
+        noResponseMessage: string;
+        closeRequestTimeoutMinutes: number;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
+        closeForm: import("@enrp/shared").TicketQuestion[];
+        ratingForm: import("@enrp/shared").TicketQuestion[];
     }>;
     updateCategory(u: AuthUser, id: string, b: z.infer<typeof categorySchema>): Promise<{
         guildId: string | null;
@@ -941,15 +1028,15 @@ export declare class SupportTicketsController {
         departmentId: string | null;
         formVersion: number;
         emoji: string | null;
+        channelNameFormat: string;
+        maxOpen: number;
         staffRoleIds: string[];
         accessRoleNames: string[];
         buttonStyle: string;
         discordCategoryId: string | null;
-        channelNameFormat: string;
         extraRoleIds: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
         welcomeTitle: string;
@@ -989,9 +1076,23 @@ export declare class SupportTicketsController {
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
+        extraUserIds: string[];
+        capacityAction: string;
+        closeForm: import("@prisma/client/runtime/library").JsonValue;
+        ratingForm: import("@prisma/client/runtime/library").JsonValue;
+        closeRequestApprovers: string;
+        automationSource: string;
+        creatorReminderMinutes: number;
+        creatorReminderMessage: string;
+        teamReminderMinutes: number;
+        noResponseMinutes: number;
+        noResponseMessage: string;
+        closeRequestTimeoutMinutes: number;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
+        closeForm: import("@enrp/shared").TicketQuestion[];
+        ratingForm: import("@enrp/shared").TicketQuestion[];
     }>;
     dupCategory(u: AuthUser, id: string): Promise<{
         guildId: string | null;
@@ -1008,15 +1109,15 @@ export declare class SupportTicketsController {
         departmentId: string | null;
         formVersion: number;
         emoji: string | null;
+        channelNameFormat: string;
+        maxOpen: number;
         staffRoleIds: string[];
         accessRoleNames: string[];
         buttonStyle: string;
         discordCategoryId: string | null;
-        channelNameFormat: string;
         extraRoleIds: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
         welcomeTitle: string;
@@ -1056,9 +1157,23 @@ export declare class SupportTicketsController {
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
+        extraUserIds: string[];
+        capacityAction: string;
+        closeForm: import("@prisma/client/runtime/library").JsonValue;
+        ratingForm: import("@prisma/client/runtime/library").JsonValue;
+        closeRequestApprovers: string;
+        automationSource: string;
+        creatorReminderMinutes: number;
+        creatorReminderMessage: string;
+        teamReminderMinutes: number;
+        noResponseMinutes: number;
+        noResponseMessage: string;
+        closeRequestTimeoutMinutes: number;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
+        closeForm: import("@enrp/shared").TicketQuestion[];
+        ratingForm: import("@enrp/shared").TicketQuestion[];
     }>;
     delCategory(u: AuthUser, id: string): Promise<void>;
     createPanel(u: AuthUser, b: z.infer<typeof panelSchema>): Promise<{
@@ -1069,8 +1184,10 @@ export declare class SupportTicketsController {
         color: number;
         title: string;
         description: string;
+        active: boolean;
         name: string;
         position: number;
+        internalNote: string;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1089,7 +1206,12 @@ export declare class SupportTicketsController {
         messageChannelId: string | null;
         publishedAt: Date | null;
         publishError: string | null;
+        channelNameFormat: string | null;
+        mentionRoleIds: string[];
+        maxOpen: number;
+        automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
+    /** Speichern; wurde das Panel aktiviert/deaktiviert und ist es veröffentlicht, wird die Discord-Nachricht sofort angepasst. */
     updatePanel(u: AuthUser, id: string, b: z.infer<typeof panelSchema>): Promise<{
         guildId: string | null;
         id: string;
@@ -1098,8 +1220,10 @@ export declare class SupportTicketsController {
         color: number;
         title: string;
         description: string;
+        active: boolean;
         name: string;
         position: number;
+        internalNote: string;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1118,6 +1242,10 @@ export declare class SupportTicketsController {
         messageChannelId: string | null;
         publishedAt: Date | null;
         publishError: string | null;
+        channelNameFormat: string | null;
+        mentionRoleIds: string[];
+        maxOpen: number;
+        automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
     dupPanel(u: AuthUser, id: string): Promise<{
         guildId: string | null;
@@ -1127,8 +1255,10 @@ export declare class SupportTicketsController {
         color: number;
         title: string;
         description: string;
+        active: boolean;
         name: string;
         position: number;
+        internalNote: string;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1147,6 +1277,10 @@ export declare class SupportTicketsController {
         messageChannelId: string | null;
         publishedAt: Date | null;
         publishError: string | null;
+        channelNameFormat: string | null;
+        mentionRoleIds: string[];
+        maxOpen: number;
+        automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
     delPanel(u: AuthUser, id: string): Promise<void>;
     preview(id: string): Promise<import("@enrp/shared").MessageSpec>;
@@ -1265,15 +1399,15 @@ export declare class SupportTicketsController {
         departmentId: string | null;
         formVersion: number;
         emoji: string | null;
+        channelNameFormat: string;
+        maxOpen: number;
         staffRoleIds: string[];
         accessRoleNames: string[];
         buttonStyle: string;
         discordCategoryId: string | null;
-        channelNameFormat: string;
         extraRoleIds: string[];
         requiredRoleIds: string[];
         allowedUserIds: string[];
-        maxOpen: number;
         cooldownMinutes: number;
         defaultPriorityId: string | null;
         welcomeTitle: string;
@@ -1313,9 +1447,23 @@ export declare class SupportTicketsController {
         confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
+        extraUserIds: string[];
+        capacityAction: string;
+        closeForm: import("@prisma/client/runtime/library").JsonValue;
+        ratingForm: import("@prisma/client/runtime/library").JsonValue;
+        closeRequestApprovers: string;
+        automationSource: string;
+        creatorReminderMinutes: number;
+        creatorReminderMessage: string;
+        teamReminderMinutes: number;
+        noResponseMinutes: number;
+        noResponseMessage: string;
+        closeRequestTimeoutMinutes: number;
     } & {
         buttons: import("@enrp/shared").TicketButtonConfig[];
         questions: import("@enrp/shared").TicketQuestion[];
+        closeForm: import("@enrp/shared").TicketQuestion[];
+        ratingForm: import("@enrp/shared").TicketQuestion[];
     }>;
     formVersions(id: string): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
@@ -1407,30 +1555,78 @@ export declare class SupportTicketsController {
             panelId: string | null;
         };
     }>;
-    stats(u: AuthUser): Promise<{
+    stats(u: AuthUser, q: {
+        guildId?: string;
+    }): Promise<{
         names: Record<string, string>;
         total: number;
         open: number;
         closed: number;
         archived: number;
+        inProgress: number;
+        unassigned: number;
         today: number;
         week: number;
         month: number;
         avgFirstResponseMinutes: number | null;
+        medianFirstResponseMinutes: number | null;
+        p90FirstResponseMinutes: number | null;
         avgCloseMinutes: number | null;
+        medianCloseMinutes: number | null;
+        p90CloseMinutes: number | null;
         escalations: number;
         perCategory: {
             id: string;
             name: string;
+            emoji: string | null;
             total: number;
             open: number;
+            capacity: number;
+            capacityAction: string;
+            load: number | null;
+            level: import("@enrp/shared").LoadLevel;
         }[];
         perStaff: {
+            discordId: string;
             tickets: number;
             closed: number;
-            discordId: string;
+            closedBy: number;
+            avgFirstResponseMinutes: number | null;
+            medianFirstResponseMinutes: number | null;
         }[];
+        perDay: {
+            day: string;
+            created: number;
+            closed: number;
+        }[];
+        perWeek: {
+            week: string;
+            created: number;
+            closed: number;
+        }[];
+        heatmap: number[][];
+        timezone: string;
+        leaderboards: {
+            handled: {
+                discordId: string;
+                value: number;
+            }[];
+            closed: {
+                discordId: string;
+                value: number;
+            }[];
+            fastest: {
+                discordId: string;
+                value: number;
+            }[];
+            rated: {
+                discordId: string;
+                value: number;
+                count: number;
+            }[];
+        };
         ratings: {
+            scale: number;
             count: number;
             average: number | null;
             positive: number;
@@ -1443,6 +1639,11 @@ export declare class SupportTicketsController {
             perCategory: {
                 id: string;
                 name: string;
+                count: number;
+                average: number | null;
+            }[];
+            trend: {
+                month: string;
                 count: number;
                 average: number | null;
             }[];
@@ -1508,6 +1709,7 @@ export declare class SupportTicketsController {
     ratings(u: AuthUser, q: z.infer<typeof ratingQ>): Promise<{
         total: number;
         summary: {
+            scale: number;
             count: number;
             average: number | null;
             positive: number;
@@ -1523,6 +1725,11 @@ export declare class SupportTicketsController {
                 count: number;
                 average: number | null;
             }[];
+            trend: {
+                month: string;
+                count: number;
+                average: number | null;
+            }[];
         };
         names: Record<string, string>;
         items: {
@@ -1534,11 +1741,13 @@ export declare class SupportTicketsController {
             id: string;
             createdAt: Date;
             categoryId: string;
+            answers: import("@prisma/client/runtime/library").JsonValue;
             creatorId: string;
             comment: string | null;
             ticketId: string;
             staffIds: string[];
             stars: number;
+            scale: number;
         }[];
     }>;
     transcripts(u: AuthUser, q: z.infer<typeof transcriptQ>): Promise<{
@@ -1575,6 +1784,7 @@ export declare class SupportTicketsController {
         number: string;
         ref: string;
         transcriptUrl: string;
+        ratingScale: number;
         category: {
             id: string;
             name: string;
@@ -1602,6 +1812,33 @@ export declare class SupportTicketsController {
             firstOverdue: boolean;
             resolveOverdue: boolean;
         };
+        automation: {
+            active: boolean;
+            disabled: boolean;
+            pausedUntil: Date | null;
+            source: string;
+            autoCloseMinutes: number;
+            autoCloseWarnMinutes: number;
+            creatorReminderMinutes: number;
+            teamReminderMinutes: number;
+            staffAlertMinutes: number;
+            autoUnclaimMinutes: number;
+            autoClaimOnMessage: boolean;
+            closeRequestCloses: boolean;
+            closeRequestTimeoutMinutes: number;
+            noResponseMinutes: number;
+        };
+        panel: {
+            id: string;
+            name: string;
+        } | null;
+        closeForm: import("@enrp/shared").TicketQuestion[];
+        closeRequest: {
+            at: Date;
+            by: string | null;
+            approvals: string[];
+            approvers: string;
+        } | null;
         status: {
             id: string;
             color: number;
@@ -1685,11 +1922,13 @@ export declare class SupportTicketsController {
             id: string;
             createdAt: Date;
             categoryId: string;
+            answers: import("@prisma/client/runtime/library").JsonValue;
             creatorId: string;
             comment: string | null;
             ticketId: string;
             staffIds: string[];
             stars: number;
+            scale: number;
         } | null;
         names: Record<string, string>;
         guildId: string;
@@ -1736,6 +1975,16 @@ export declare class SupportTicketsController {
         unassignedEscalatedAt: Date | null;
         resolvedAt: Date | null;
         userMessageNotifiedAt: Date | null;
+        automationDisabled: boolean;
+        automationPausedUntil: Date | null;
+        lastCreatorMessageAt: Date | null;
+        lastStaffMessageAt: Date | null;
+        creatorRemindedAt: Date | null;
+        teamRemindedAt: Date | null;
+        noResponseSentAt: Date | null;
+        closeRequestById: string | null;
+        closeRequestApprovals: string[];
+        closeAnswers: import("@prisma/client/runtime/library").JsonValue;
     }>;
     options(u: AuthUser, id: string): Promise<{
         closed: boolean;
@@ -1791,6 +2040,7 @@ export declare class SupportTicketsController {
         close: {
             mode: string;
             source: string;
+            form: import("@enrp/shared").TicketQuestion[];
         };
     }>;
     /** Alle Ticket-Aktionen (Web und Discord-Buttons); jede Aktion prüft ihr eigenes Recht. */
@@ -2078,6 +2328,7 @@ export declare class BotSupportTicketsController {
     creatorClose(id: string, b: {
         discordId: string;
         reason?: string;
+        answers?: z.infer<typeof formValues>;
     }): Promise<{
         ok: boolean;
         message: string;
@@ -2086,10 +2337,32 @@ export declare class BotSupportTicketsController {
     rate(id: string, b: {
         discordId: string;
         stars: number;
+        values?: z.infer<typeof formValues>;
     }): Promise<{
         ok: boolean;
         thanks: string;
+        hasForm: boolean;
     }>;
+    ratingForm(id: string, q: {
+        discordId: string;
+        stars: number;
+    }): Promise<{
+        modal: null;
+    } | {
+        modal: import("@enrp/shared").FormModalSpec;
+    }>;
+    closeForm(id: string): Promise<{
+        modal: null;
+    } | {
+        modal: import("@enrp/shared").FormModalSpec;
+    }>;
+    byChannel(channelId: string): Promise<{
+        id: string;
+        closedAt: Date | null;
+        creatorId: string;
+    }> | {
+        id: null;
+    };
     rateComment(id: string, b: {
         discordId: string;
         comment: string;
@@ -2115,6 +2388,7 @@ export declare class BotSupportTicketsController {
         source: string;
         reasons: string[];
         closed: boolean;
+        form: boolean;
     }>;
     posted(id: string, b: {
         channelId: string;

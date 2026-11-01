@@ -30,7 +30,32 @@ export interface TranscriptData {
         label: string;
         value: string;
     }[];
+    /** Team-Fassung: interne Notizen sind enthalten (nie in der Fassung für den Ersteller) */
+    staffView?: boolean;
+    closeAnswers?: {
+        label: string;
+        value: string;
+    }[];
+    rating?: {
+        stars: number;
+        scale: number;
+        comment: string | null;
+        answers: {
+            label: string;
+            value: string;
+        }[];
+    } | null;
+    /** Übernahmen, Weiterleitungen, Zuweisungen in zeitlicher Reihenfolge */
+    history?: {
+        at: Date;
+        text: string;
+    }[];
     entries: ({
+        kind: 'note';
+        at: Date;
+        author: string;
+        text: string;
+    } | {
         kind: 'message';
         at: Date;
         author: string;

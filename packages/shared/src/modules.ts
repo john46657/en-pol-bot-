@@ -16,7 +16,7 @@ export const MODULES = [
   { key: 'investigations', name: 'Beschwerden', description: 'Beschwerden', permissionPrefixes: ['complaints'] },
   { key: 'personnel', name: 'Personal', description: 'Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern', permissionPrefixes: ['personnel', 'promotion', 'transfer', 'training', 'exam', 'warning', 'awards', 'dienstnummer', 'leave'] },
   { key: 'applications', name: 'Bewerbungen', description: 'Bewerbungen, Qualifikationen, Academy, Team-Chance', permissionPrefixes: ['applications', 'qualifications', 'academy', 'teamchance'] },
-  { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', off: true, permissionPrefixes: ['ticket'] },
+  { key: 'support', name: 'Support-Tickets', description: 'Ticket-System für Discord', permissionPrefixes: ['ticket'] },
   { key: 'sek', name: 'SEK', description: 'Spezialeinsatzkommando', permissionPrefixes: ['sek'] },
   { key: 'message_builder', name: 'Discord Message Builder', description: 'Nachrichten und Embeds bauen, Vorlagen, Versand über den Bot, Versandhistorie', permissionPrefixes: ['messagebuilder'] },
   { key: 'communication', name: 'Kommunikation', description: 'Nachrichten, Funk-Codes, Funk-Whitelist', permissionPrefixes: ['communication', 'radio', 'radiowhitelist'] },
@@ -64,7 +64,7 @@ export const BOT_COMMAND_MODULES: Record<string, string> = {
   beschwerde: 'investigations',
   abmeldung: 'personnel', leave: 'personnel', ausbildung: 'personnel', verwarnen: 'personnel',
   teamchance: 'applications', bewerbung: 'applications', bewerbungspanel: 'applications', qualipanel: 'applications',
-  support: 'support',
+  support: 'support', ticket: 'support',
   funkcode: 'communication', funk: 'communication', funkantrag: 'communication', funkstatus: 'communication', funkfreigabe: 'communication',
 };
 /** Befehle, die auf einem Server mit diesen abgeschalteten Modulen registriert werden. */

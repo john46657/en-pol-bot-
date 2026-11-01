@@ -1,6 +1,6 @@
 import { NotifyService } from '../notifications/notify.service';
-import { Prisma, type SupportTicket, type TicketDepartment, type TicketPriority, type TicketStatus } from '@prisma/client';
-import { type FormAnswer, type FormFile, type FormRawValue, type MessageSpec, type TicketEffect, type TicketQuestion } from '@enrp/shared';
+import { Prisma, type SupportTicket, type TicketDepartment, type TicketPriority, type TicketStatus, type TicketTranscript } from '@prisma/client';
+import { type TicketAutomation, type FormAnswer, type FormFile, type FormRawValue, type MessageSpec, type TicketEffect, type TicketQuestion } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionService } from '../authz/permission.service';
 import { DiscordService } from '../discord/discord.service';
@@ -25,11 +25,13 @@ interface Loaded {
     priority: TicketPriority | null;
     settings: TicketSettings;
     tz: string;
-    dept: TicketDepartment | null;
+    dept: TicketDepartment | null; /** wirksame Automatik (Kategorie bzw. Panel) */
+    auto: TicketAutomation;
 }
 export type ActionInput = {
     action: 'close';
     reason?: string;
+    answers?: Record<string, FormRawValue>;
 } | {
     action: 'close_request';
 } | {
@@ -94,6 +96,21 @@ export type ActionInput = {
 } | {
     action: 'transcript_retry';
     transcriptId: string;
+} | {
+    action: 'remind';
+    text?: string;
+} | {
+    action: 'forward';
+    target: 'USER' | 'ROLE' | 'CATEGORY';
+    targetId: string;
+    note?: string;
+} | {
+    action: 'automation';
+    mode: 'pause' | 'disable' | 'enable';
+    minutes?: number;
+} | {
+    action: 'close_request_answer';
+    accept: boolean;
 };
 export interface OpenInput {
     categoryId: string;
@@ -142,7 +159,7 @@ export declare class SupportTicketsService {
     private isClosed;
     /** Ticket-Embed mit Buttons (wird bei jeder Änderung neu gezeichnet). */
     private control;
-    /** n = ohne Grund, m = Formular, s = Auswahl (feste Gründe). */
+    /** n = ohne Grund, m = Formular, s = Auswahl (feste Gründe), f = eigenes Schließformular der Kategorie. */
     private closeMode;
     private questionMessage;
     private logAction;
@@ -278,12 +295,16 @@ export declare class SupportTicketsService {
         effects: TicketEffect[];
     }>;
     /** Ersteller schließt sein eigenes Ticket (falls in der Kategorie erlaubt). */
-    creatorClose(id: string, discordId: string, reason: string | undefined): Promise<{
+    creatorClose(id: string, discordId: string, reason: string | undefined, answers?: Record<string, FormRawValue>): Promise<{
         ok: boolean;
         message: string;
         effects: TicketEffect[];
     }>;
-    /** Antwort des Erstellers auf „Schließen anfragen“. */
+    /**
+     * Antwort auf „Schließen anfragen“ – je nach Kategorie vom Ersteller und/oder dem zuständigen Mitarbeiter (Bearbeiter; ohne Bearbeiter
+     * der anfragende Mitarbeiter). Eine Ablehnung beendet die Anfrage, ohne zu schließen. Erst wenn alle nötigen Bestätigungen da sind,
+     * wird (falls eingestellt) geschlossen. Jede Antwort wird protokolliert.
+     */
     closeRequestAnswer(id: string, discordId: string, accept: boolean): Promise<{
         ok: boolean;
         message: string;
@@ -312,17 +333,41 @@ export declare class SupportTicketsService {
     private moveRoleAccess;
     private actorTag;
     private perform;
+    /**
+     * Kategorie wechseln (auch beim Weiterleiten): Zugriff auf die Zielkategorie prüfen, Kanalrechte von alter auf neue Zuständigkeit
+     * umstellen, Bearbeiter ohne Zugriff entfernen. Verlauf, Antworten, Notizen und Protokoll bleiben unverändert erhalten.
+     */
+    private changeCategory;
+    /** Zuständigkeit an ein Teammitglied geben (Zuweisen bzw. Weiterleiten an eine Person) – nur an Mitarbeiter mit Zugriff. */
+    private assignTo;
+    /** Begleittext einer Weiterleitung: als interne Notiz (nie für den Ersteller sichtbar). */
+    private forwardNote;
     /** Schließen (auch für Ersteller und Automatik): Status, Rechte, CLOSED-Anzeige, Transcript, Bewertung, Löschplanung. */
     private close;
+    /** Bewertungs-DM: Skala aus den Einstellungen (1–5 als Sterne, sonst Zahlen); mit Bewertungsformular öffnet ein Klick das Formular („:f“). */
     private ratingRequest;
-    rate(id: string, discordId: string, stars: number): Promise<{
+    /** Bewertungsformular als Discord-Formular (Bot), Titel mit der gewählten Bewertung. */
+    ratingForm(id: string, discordId: string, stars: number): Promise<{
+        modal: null;
+    } | {
+        modal: import("@enrp/shared").FormModalSpec;
+    }>;
+    /**
+     * Bewertung des Erstellers (einmal je Ticket). Skala aus den Einstellungen; ein Bewertungsformular wird serverseitig geprüft,
+     * das Feld „comment“ wird als Begründung übernommen.
+     */
+    rate(id: string, discordId: string, stars: number, values?: Record<string, FormRawValue>): Promise<{
         ok: boolean;
         thanks: string;
+        hasForm: boolean;
     }>;
     rateComment(id: string, discordId: string, comment: string): Promise<{
         ok: boolean;
     }>;
-    /** Bewertung in den Team-Channel (alles) und den öffentlichen Channel (gewählte Werte); Kommentar kommt als eigene Nachricht. */
+    /**
+     * Interner Bewertungs-Log (alles inkl. Formularantworten) und optional öffentlicher Log – dort NUR die unter Allgemein → Bewertungen
+     * freigegebenen Werte (nie Formularantworten) und erst ab der eingestellten Mindestbewertung. Nachgereichte Begründung: eigene Nachricht.
+     */
     private postRating;
     /** Bot meldet eine Nachricht aus einem Ticket-Channel (Verlauf + Transcript). */
     message(d: {
@@ -513,6 +558,7 @@ export declare class SupportTicketsService {
         number: string;
         ref: string;
         transcriptUrl: string;
+        ratingScale: number;
         category: {
             id: string;
             name: string;
@@ -540,6 +586,33 @@ export declare class SupportTicketsService {
             firstOverdue: boolean;
             resolveOverdue: boolean;
         };
+        automation: {
+            active: boolean;
+            disabled: boolean;
+            pausedUntil: Date | null;
+            source: string;
+            autoCloseMinutes: number;
+            autoCloseWarnMinutes: number;
+            creatorReminderMinutes: number;
+            teamReminderMinutes: number;
+            staffAlertMinutes: number;
+            autoUnclaimMinutes: number;
+            autoClaimOnMessage: boolean;
+            closeRequestCloses: boolean;
+            closeRequestTimeoutMinutes: number;
+            noResponseMinutes: number;
+        };
+        panel: {
+            id: string;
+            name: string;
+        } | null;
+        closeForm: TicketQuestion[];
+        closeRequest: {
+            at: Date;
+            by: string | null;
+            approvals: string[];
+            approvers: string;
+        } | null;
         status: {
             id: string;
             color: number;
@@ -623,11 +696,13 @@ export declare class SupportTicketsService {
             id: string;
             createdAt: Date;
             categoryId: string;
+            answers: Prisma.JsonValue;
             creatorId: string;
             comment: string | null;
             ticketId: string;
             staffIds: string[];
             stars: number;
+            scale: number;
         } | null;
         names: Record<string, string>;
         guildId: string;
@@ -674,6 +749,16 @@ export declare class SupportTicketsService {
         unassignedEscalatedAt: Date | null;
         resolvedAt: Date | null;
         userMessageNotifiedAt: Date | null;
+        automationDisabled: boolean;
+        automationPausedUntil: Date | null;
+        lastCreatorMessageAt: Date | null;
+        lastStaffMessageAt: Date | null;
+        creatorRemindedAt: Date | null;
+        teamRemindedAt: Date | null;
+        noResponseSentAt: Date | null;
+        closeRequestById: string | null;
+        closeRequestApprovals: string[];
+        closeAnswers: Prisma.JsonValue;
     }>;
     /** Auswahllisten für Discord-Menüs (Priorität, Status, Kategorie, Gründe, Zugriff). */
     options(actor: TicketActor, id: string): Promise<{
@@ -730,6 +815,7 @@ export declare class SupportTicketsService {
         close: {
             mode: string;
             source: string;
+            form: TicketQuestion[];
         };
     }>;
     /** Schließen-Auswahl für den Bot (auch für Ersteller ohne Konto). */
@@ -738,6 +824,19 @@ export declare class SupportTicketsService {
         source: string;
         reasons: string[];
         closed: boolean;
+        form: boolean;
+    }>;
+    /** Schließformular der Kategorie als Discord-Formular (Bot). */
+    closeFormModal(id: string): Promise<{
+        modal: null;
+    } | {
+        modal: import("@enrp/shared").FormModalSpec;
+    }>;
+    /** Ticket zu einem Discord-Kanal (Slash-Befehle im Ticket-Kanal). */
+    byChannel(channelId: string): Promise<{
+        id: string;
+        closedAt: Date | null;
+        creatorId: string;
     }>;
     transcripts(userId: string, f: {
         q?: string;
@@ -781,32 +880,8 @@ export declare class SupportTicketsService {
      */
     transcriptAccess(userId: string, ticketId: string, need: 'view' | 'export' | 'json'): Promise<'staff' | 'creator'>;
     /** Ein Transkript (Version) für Ansicht/Download; `userId` null = Bot-Dienst (Zustellung in Discord). */
-    transcript(userId: string | null, id: string, need?: 'view' | 'export' | 'json'): Promise<{
-        id: string;
-        status: string;
-        createdById: string | null;
-        createdAt: Date;
-        version: number;
-        trigger: string;
-        lastError: string | null;
-        text: string;
-        data: Prisma.JsonValue | null;
-        createdByName: string | null;
-        creatorId: string;
-        creatorName: string;
-        claimers: string[];
-        attempts: number;
-        ticketId: string;
-        ticketNumber: number;
-        categoryName: string;
-        statusName: string;
-        html: string;
-        sizeBytes: number;
-        jobKey: string | null;
-        nextAttemptAt: Date | null;
-        completedAt: Date | null;
-        sha256: string | null;
-        notify: Prisma.JsonValue;
+    transcript(userId: string | null, id: string, need?: 'view' | 'export' | 'json'): Promise<TicketTranscript & {
+        who: 'staff' | 'creator' | 'bot';
     }>;
     /** Versionen eines Tickets für die Transkript-Seite `/transcript/EMD-000123`. */
     transcriptsByRef(userId: string, ref: string): Promise<{
@@ -864,30 +939,83 @@ export declare class SupportTicketsService {
     deleteTranscript(actor: TicketActor, id: string): Promise<{
         ok: boolean;
     }>;
-    stats(userId: string): Promise<{
+    /**
+     * Statistiken – ausschließlich aus gespeicherten Ticket-Daten berechnet (nur sichtbare Tickets): Mengen, Tage/Wochen, Antwort- und
+     * Bearbeitungszeiten (Ø, Median, p90), Mitarbeiter, Bewertungen, Auslastung, Aktivitäts-Heatmap (Wochentag × Stunde) und Ranglisten.
+     */
+    stats(userId: string, f?: {
+        guildId?: string;
+        days?: number;
+    }): Promise<{
         names: Record<string, string>;
         total: number;
         open: number;
         closed: number;
         archived: number;
+        inProgress: number;
+        unassigned: number;
         today: number;
         week: number;
         month: number;
         avgFirstResponseMinutes: number | null;
+        medianFirstResponseMinutes: number | null;
+        p90FirstResponseMinutes: number | null;
         avgCloseMinutes: number | null;
+        medianCloseMinutes: number | null;
+        p90CloseMinutes: number | null;
         escalations: number;
         perCategory: {
             id: string;
             name: string;
+            emoji: string | null;
             total: number;
             open: number;
+            capacity: number;
+            capacityAction: string;
+            load: number | null;
+            level: import("@enrp/shared").LoadLevel;
         }[];
         perStaff: {
+            discordId: string;
             tickets: number;
             closed: number;
-            discordId: string;
+            closedBy: number;
+            avgFirstResponseMinutes: number | null;
+            medianFirstResponseMinutes: number | null;
         }[];
+        perDay: {
+            day: string;
+            created: number;
+            closed: number;
+        }[];
+        perWeek: {
+            week: string;
+            created: number;
+            closed: number;
+        }[];
+        heatmap: number[][];
+        timezone: string;
+        leaderboards: {
+            handled: {
+                discordId: string;
+                value: number;
+            }[];
+            closed: {
+                discordId: string;
+                value: number;
+            }[];
+            fastest: {
+                discordId: string;
+                value: number;
+            }[];
+            rated: {
+                discordId: string;
+                value: number;
+                count: number;
+            }[];
+        };
         ratings: {
+            scale: number;
             count: number;
             average: number | null;
             positive: number;
@@ -903,8 +1031,14 @@ export declare class SupportTicketsService {
                 count: number;
                 average: number | null;
             }[];
+            trend: {
+                month: string;
+                count: number;
+                average: number | null;
+            }[];
         };
     }>;
+    /** Bewertungen zusammenfassen; ältere Bewertungen anderer Skalen werden auf die aktuelle Skala umgerechnet. */
     private ratingSummary;
     ratings(userId: string, f: {
         stars?: number;
@@ -914,6 +1048,7 @@ export declare class SupportTicketsService {
     }): Promise<{
         total: number;
         summary: {
+            scale: number;
             count: number;
             average: number | null;
             positive: number;
@@ -926,6 +1061,11 @@ export declare class SupportTicketsService {
             perCategory: {
                 id: string;
                 name: string;
+                count: number;
+                average: number | null;
+            }[];
+            trend: {
+                month: string;
                 count: number;
                 average: number | null;
             }[];
@@ -940,11 +1080,13 @@ export declare class SupportTicketsService {
             id: string;
             createdAt: Date;
             categoryId: string;
+            answers: Prisma.JsonValue;
             creatorId: string;
             comment: string | null;
             ticketId: string;
             staffIds: string[];
             stars: number;
+            scale: number;
         }[];
     }>;
     /** Offene Ticket-Channels (der Bot schneidet nur dort Nachrichten mit). */
@@ -954,6 +1096,46 @@ export declare class SupportTicketsService {
     publishPanel(actor: TicketActor, id: string, channelId?: string | null): Promise<{
         ok: boolean;
         updating: boolean;
+    }>;
+    /** Panel speichern; bei Aktivieren/Deaktivieren eines veröffentlichten Panels die Discord-Nachricht sofort anpassen. */
+    savePanelAndSync(actor: Parameters<TicketConfigService['savePanel']>[0], id: string, d: Parameters<TicketConfigService['savePanel']>[2]): Promise<{
+        guildId: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        color: number;
+        title: string;
+        description: string;
+        active: boolean;
+        name: string;
+        position: number;
+        internalNote: string;
+        channelId: string | null;
+        messageId: string | null;
+        emoji: string | null;
+        thumbnailUrl: string | null;
+        imageUrl: string | null;
+        bannerUrl: string | null;
+        footer: string | null;
+        footerIconUrl: string | null;
+        authorName: string | null;
+        authorIconUrl: string | null;
+        style: string;
+        placeholder: string;
+        categoryIds: string[];
+        allowedRoleIds: string[];
+        showLoad: boolean;
+        messageChannelId: string | null;
+        publishedAt: Date | null;
+        publishError: string | null;
+        channelNameFormat: string | null;
+        mentionRoleIds: string[];
+        maxOpen: number;
+        automation: Prisma.JsonValue;
+    }>;
+    /** Bereits veröffentlichtes Panel neu zeichnen (z. B. nach Aktivieren/Deaktivieren) – ohne Kanalwechsel. */
+    refreshPublishedPanel(id: string): Promise<{
+        ok: boolean;
     }>;
     panelPosted(id: string, channelId: string, messageId: string): Promise<{
         ok: boolean;
@@ -1026,6 +1208,10 @@ export declare class SupportTicketsService {
         expired: number;
         alerted: number;
         unclaimed: number;
+        creatorReminded: number;
+        teamReminded: number;
+        autoReplied: number;
+        requestClosed: number;
     }>;
     /**
      * SLA und Eskalation (nur mit eingestellten Zielzeiten): Erinnerung an die Zuständigen (wiederholt nach Einstellung),

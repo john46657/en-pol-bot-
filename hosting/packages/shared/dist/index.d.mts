@@ -36,7 +36,7 @@ declare const PERMISSION_CATALOG: {
     readonly academy: readonly ["view", "manage"];
     readonly sek: readonly ["view", "report", "manage"];
     readonly qualifications: readonly ["view", "decide", "delete", "manage"];
-    readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits"];
+    readonly ticket: readonly ["view", "create", "claim", "close", "reopen", "delete", "add_user", "remove_user", "change_status", "change_priority", "change_category", "rename", "move", "lock", "escalate", "transcript", "transcript_delete", "internal_notes", "rate", "manage", "settings", "assign", "archive", "change_department", "transcript_export", "transcript_manage", "departments", "audit", "bypass_limits", "forward", "remind", "automation"];
     /**
      * Funk-Whitelist für den externen Funkdienst: view = ansehen, grant = freischalten/verlängern/aktivieren, suspend = sperren
      * und entsperren, remove = Freigabe entziehen/archivieren, requests = Anträge bearbeiten, roles = Rollenregeln,
@@ -296,6 +296,30 @@ declare const TICKET_ACTIONS: {
         readonly style: "danger";
         readonly state: "closed";
         readonly permission: "ticket.delete";
+    };
+    /** Ticket-Ersteller an eine ausstehende Antwort erinnern (Nachricht im Ticket + DM). */
+    readonly remind: {
+        readonly label: "Ersteller erinnern";
+        readonly emoji: "⏰";
+        readonly style: "secondary";
+        readonly state: "open";
+        readonly permission: "ticket.remind";
+    };
+    /** Weiterleiten an ein Teammitglied, eine Team-Rolle oder eine andere Kategorie (Verlauf bleibt erhalten). */
+    readonly forward: {
+        readonly label: "Weiterleiten";
+        readonly emoji: "📨";
+        readonly style: "secondary";
+        readonly state: "open";
+        readonly permission: "ticket.forward";
+    };
+    /** Automatisierungen für dieses Ticket pausieren / dauerhaft ausschalten / wieder einschalten. */
+    readonly automation: {
+        readonly label: "Automatik";
+        readonly emoji: "⚙️";
+        readonly style: "secondary";
+        readonly state: "open";
+        readonly permission: "ticket.automation";
     };
 };
 type TicketAction = keyof typeof TICKET_ACTIONS;
@@ -1778,7 +1802,6 @@ declare const MODULES: readonly [{
     readonly key: "support";
     readonly name: "Support-Tickets";
     readonly description: "Ticket-System für Discord";
-    readonly off: true;
     readonly permissionPrefixes: ["ticket"];
 }, {
     readonly key: "sek";
@@ -5525,6 +5548,102 @@ declare function slaState(t: SlaInput, now?: Date): {
 };
 
 /**
+ * Ticket-System – Erweiterungen (Panels mit eigenen Limits/Automatik, Auslastung, Automatisierungen je Ticket,
+ * Bewertungsskala, Statistik-Hilfen). Reine Funktionen: gleiche Regeln in API, Bot und Dashboard.
+ */
+type LoadLevel = 'none' | 'normal' | 'warn' | 'full';
+/** Warnanzeige ab diesem Anteil der Auslastungsgrenze, „voll“ ab 100 %. */
+declare const LOAD_WARN_RATIO = 0.8;
+/** Auslastung einer Kategorie: ohne Grenze `none`, unter 80 % `normal`, ab 80 % `warn`, ab 100 % `full`. */
+declare function loadLevel(open: number, capacity: number): LoadLevel;
+declare const LOAD_DOT: Record<LoadLevel, string>;
+declare const LOAD_LABEL: Record<LoadLevel, string>;
+/** Verhalten bei voller Auslastung: neue Tickets verhindern oder trotzdem öffnen (mit Hinweis an Ersteller und Team). */
+declare const CAPACITY_ACTIONS: {
+    readonly BLOCK: "Neue Tickets verhindern";
+    readonly WARN: "Trotzdem öffnen, mit Hinweis";
+};
+type CapacityAction = keyof typeof CAPACITY_ACTIONS;
+/**
+ * Alle Automatisierungen eines Tickets. Minuten-Werte: 0 = aus.
+ * Panels legen Standardwerte fest; eine Kategorie übernimmt sie (`automationSource = PANEL`) oder nutzt eigene Werte (`CATEGORY`).
+ */
+interface TicketAutomation {
+    /** automatisch schließen nach so vielen Minuten ohne Aktivität */
+    autoCloseMinutes: number;
+    /** Warnung so viele Minuten vor dem automatischen Schließen */
+    autoCloseWarnMinutes: number;
+    /** Ersteller erinnern, wenn er so lange nicht auf das Team geantwortet hat */
+    creatorReminderMinutes: number;
+    /** Team erinnern, wenn ein Ticket so lange ohne Antwort des Teams ist (nicht übernommene Tickets) */
+    teamReminderMinutes: number;
+    /** Bearbeiter markieren, wenn ein übernommenes Ticket so lange ruht; nach derselben Zeit freigeben */
+    staffAlertMinutes: number;
+    /** Übernahme freigeben nach so vielen Minuten ohne Aktivität */
+    autoUnclaimMinutes: number;
+    /** erstes Teammitglied, das schreibt, übernimmt das Ticket */
+    autoClaimOnMessage: boolean;
+    /** nach bestätigter Schließungsanfrage automatisch schließen */
+    closeRequestCloses: boolean;
+    /** Schließungsanfrage ohne Reaktion nach so vielen Minuten: Ticket schließen */
+    closeRequestTimeoutMinutes: number;
+    /** automatische Antwort an den Ersteller, wenn das Team so lange nicht reagiert hat */
+    noResponseMinutes: number;
+}
+declare const AUTOMATION_KEYS: readonly ["autoCloseMinutes", "autoCloseWarnMinutes", "creatorReminderMinutes", "teamReminderMinutes", "staffAlertMinutes", "autoUnclaimMinutes", "autoClaimOnMessage", "closeRequestCloses", "closeRequestTimeoutMinutes", "noResponseMinutes"];
+declare const AUTOMATION_LABELS: Record<keyof TicketAutomation, string>;
+declare const DEFAULT_AUTOMATION: TicketAutomation;
+declare const AUTOMATION_SOURCES: {
+    readonly CATEGORY: "Eigene Werte der Kategorie";
+    readonly PANEL: "Standardwerte des Panels übernehmen";
+};
+type AutomationSource = keyof typeof AUTOMATION_SOURCES;
+/** Gespeicherte (evtl. unvollständige/alte) Panel-Werte sicher lesen. */
+declare function parseAutomation(raw: unknown): TicketAutomation;
+/** Wirksame Automatik eines Tickets: Kategorie-Werte oder (bei `PANEL`) die Standardwerte des Panels, aus dem das Ticket stammt. */
+declare function effectiveAutomation(cat: Partial<TicketAutomation> & {
+    automationSource?: string | null;
+}, panelAutomation?: unknown): TicketAutomation;
+/** Läuft die Automatik für dieses Ticket? (dauerhaft aus oder bis zu einem Zeitpunkt pausiert) – gespeichert, übersteht Neustarts. */
+declare function automationActive(t: {
+    automationDisabled?: boolean | null;
+    automationPausedUntil?: Date | string | null;
+}, now?: Date): boolean;
+/** Wer eine Schließungsanfrage bestätigen muss. */
+declare const CLOSE_REQUEST_APPROVERS: {
+    readonly CREATOR: "Ersteller";
+    readonly STAFF: "Zuständiger Mitarbeiter";
+    readonly BOTH: "Ersteller und zuständiger Mitarbeiter";
+    readonly ANY: "Ersteller oder zuständiger Mitarbeiter";
+};
+type CloseRequestApprovers = keyof typeof CLOSE_REQUEST_APPROVERS;
+/** Sind alle erforderlichen Bestätigungen da? `creator`/`staff`: hat der Ersteller bzw. ein zuständiger Mitarbeiter bestätigt. */
+declare function closeRequestComplete(mode: string, a: {
+    creator: boolean;
+    staff: boolean;
+}): boolean;
+declare const RATING_SCALE_MIN = 2;
+declare const RATING_SCALE_MAX = 10;
+/** Beschriftung eines Bewertungs-Buttons: 1–5 als Sterne, größere Skalen als Zahl. */
+declare const ratingLabel: (n: number, scale: number) => string;
+/** Bewertung auf eine andere Skala umrechnen (z. B. 8/10 → 4/5), auf zwei Stellen gerundet. */
+declare const normalizeRating: (stars: number, scale: number, to?: number) => number;
+/** positiv/negativ unabhängig von der Skala (oberes bzw. unteres Drittel). */
+declare const ratingTone: (stars: number, scale: number) => "positive" | "neutral" | "negative";
+declare function median(xs: number[]): number | null;
+/** Perzentil (lineare Interpolation, wie Excel PERZENTIL.INKL); leere Liste → null. */
+declare function percentile(xs: number[], p: number): number | null;
+/** Wochentag (0 = Montag … 6 = Sonntag) und Stunde einer Zeit in einer Zeitzone (für die Aktivitäts-Heatmap). */
+declare function weekdayHour(d: Date, timeZone: string): {
+    weekday: number;
+    hour: number;
+};
+/** Kalendertag (JJJJ-MM-TT) in einer Zeitzone. */
+declare const ticketDayKey: (d: Date, timeZone: string) => string;
+/** Montag der Woche (JJJJ-MM-TT) in einer Zeitzone. */
+declare function ticketWeekKey(d: Date, timeZone: string): string;
+
+/**
  * Persönliche Erinnerungen (`/remind-me in what dm`): Zeitangabe prüfen, DM-Option als Wahrheitswert auswerten,
  * Verschieben um 10 Minuten, 30 Minuten, 1 Stunde oder 1 Tag. Gemeinsam für Bot und API.
  */
@@ -5574,4 +5693,4 @@ declare function isTimeZone(tz: unknown): tz is string;
 /** Alle Zeitzonen der Laufzeit (für Auswahllisten); häufige zuerst, UTC immer enthalten. */
 declare function timeZones(): string[];
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseBool, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketNumber, ticketRef, timeZones, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, withHrDefaults };
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_LIMITS, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbField, type MbInteractive, type MbIssue, type MbMessage, type MbRow, type MbSelectOption, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, conditionMatches, csvCell, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, loadLevel, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbId, mbMessageSchema, mbRowSchema, mbSelectOptionSchema, mbSummary, mdtConfigSchema, median, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, normalizeRating, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseAutomation, parseBool, parseCsv, parseFormDate, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, percentile, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, ratingLabel, ratingTone, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults };

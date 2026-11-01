@@ -48,7 +48,8 @@ let TicketConfigService = class TicketConfigService {
     }
     categoryOut(c) {
         const buttons = (0, shared_1.ticketButtonsOf)((Array.isArray(c.buttons) && c.buttons.length ? c.buttons : (0, shared_1.defaultTicketButtons)()));
-        return { ...c, buttons, questions: (c.questions ?? []) };
+        const form = (v) => (Array.isArray(v) ? v : []);
+        return { ...c, buttons, questions: form(c.questions), closeForm: form(c.closeForm), ratingForm: form(c.ratingForm) };
     }
     statuses() { return this.prisma.ticketStatus.findMany({ orderBy: { position: 'asc' } }); }
     priorities() { return this.prisma.ticketPriority.findMany({ orderBy: { position: 'asc' } }); }
@@ -71,7 +72,7 @@ let TicketConfigService = class TicketConfigService {
         await this.checkRefs(d.defaultPriorityId, d.escalationPriorityId);
         if (d.departmentId && !(await this.prisma.ticketDepartment.count({ where: { id: d.departmentId } })))
             throw new errors_1.AppError('VALIDATION_FAILED', 'Unbekannte Abteilung.');
-        const data = { ...d, questions: json(d.questions), buttons: json(d.buttons.length ? d.buttons : (0, shared_1.defaultTicketButtons)()) };
+        const data = { ...d, questions: json(d.questions), closeForm: json(d.closeForm), ratingForm: json(d.ratingForm), buttons: json(d.buttons.length ? d.buttons : (0, shared_1.defaultTicketButtons)()) };
         // Formular versionieren: geänderte Fragen = neue Version; eingereichte Tickets behalten ihre Antworten samt Bezeichnungen
         const c = await this.prisma.$transaction(async (tx) => {
             if (!id) {
@@ -119,7 +120,7 @@ let TicketConfigService = class TicketConfigService {
     }
     async duplicateCategory(actor, id) {
         const rest = omit(await this.prisma.ticketCategory.findUniqueOrThrow({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Ticket-Art nicht gefunden.'); }), ['id', 'createdAt', 'updatedAt']);
-        const c = await this.prisma.ticketCategory.create({ data: { ...rest, name: `${rest.name} (Kopie)`, questions: json(rest.questions), buttons: json(rest.buttons) } });
+        const c = await this.prisma.ticketCategory.create({ data: { ...rest, name: `${rest.name} (Kopie)`, questions: json(rest.questions), closeForm: json(rest.closeForm), ratingForm: json(rest.ratingForm), buttons: json(rest.buttons) } });
         await this.record(actor, 'category.duplicate', 'TicketCategory', c.id, { from: id });
         return this.categoryOut(c);
     }
@@ -139,18 +140,25 @@ let TicketConfigService = class TicketConfigService {
     async savePanel(actor, id, d) {
         if (d.categoryIds.length && (await this.prisma.ticketCategory.count({ where: { id: { in: d.categoryIds } } })) !== new Set(d.categoryIds).size)
             throw new errors_1.AppError('VALIDATION_FAILED', 'Das Panel enthält eine unbekannte Ticket-Art.');
-        const p = id ? await this.prisma.ticketPanel.update({ where: { id }, data: d }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); })
-            : await this.prisma.ticketPanel.create({ data: d });
-        await this.record(actor, id ? 'panel.update' : 'panel.create', 'TicketPanel', p.id, { name: p.name });
+        const data = { ...d, automation: json(d.automation) };
+        const before = id ? await this.prisma.ticketPanel.findUnique({ where: { id }, select: { active: true } }) : null;
+        const p = id ? await this.prisma.ticketPanel.update({ where: { id }, data }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); })
+            : await this.prisma.ticketPanel.create({ data });
+        await this.record(actor, id ? 'panel.update' : 'panel.create', 'TicketPanel', p.id, { name: p.name, active: p.active, maxOpen: p.maxOpen });
+        if (before && before.active !== p.active)
+            await this.record(actor, p.active ? 'panel.activate' : 'panel.deactivate', 'TicketPanel', p.id, { name: p.name });
         return p;
     }
     async duplicatePanel(actor, id) {
         const rest = omit(await this.prisma.ticketPanel.findUniqueOrThrow({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); }), ['id', 'createdAt', 'updatedAt', 'messageId', 'messageChannelId']);
-        const p = await this.prisma.ticketPanel.create({ data: { ...rest, name: `${rest.name} (Kopie)` } });
+        const p = await this.prisma.ticketPanel.create({ data: { ...rest, name: `${rest.name} (Kopie)`, automation: json(rest.automation), publishedAt: null, publishError: null } });
         await this.record(actor, 'panel.duplicate', 'TicketPanel', p.id, { from: id });
         return p;
     }
+    /** Löschen nur ohne historische Tickets – sonst deaktivieren (Tickets bleiben ihrem Panel zugeordnet). */
     async deletePanel(actor, id) {
+        if (await this.prisma.supportTicket.count({ where: { panelId: id } }))
+            throw new errors_1.AppError('CONFLICT', 'Über dieses Panel wurden bereits Tickets geöffnet. Deaktiviere es stattdessen – so bleiben Tickets und Statistiken zugeordnet.');
         await this.prisma.ticketPanel.delete({ where: { id } }).catch(() => { throw new errors_1.AppError('NOT_FOUND', 'Panel nicht gefunden.'); });
         await this.record(actor, 'panel.delete', 'TicketPanel', id);
     }

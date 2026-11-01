@@ -42,8 +42,15 @@ const LABEL = {
     status_changed: 'Status geändert', category_changed: 'Kategorie geändert', department_changed: 'Abteilung geändert', renamed: 'Umbenannt', moved: 'Verschoben', locked: 'Gesperrt',
     unlocked: 'Entsperrt', escalated: 'Eskaliert', closed: 'Geschlossen', reopened: 'Wieder geöffnet', archived: 'Archiviert', info_requested: 'Rückfrage an den Nutzer',
     rated: 'Bewertet', access_expired: 'Zugriff abgelaufen', auto_warning: 'Inaktivitäts-Warnung', deleted: 'Gelöscht', close_requested: 'Schließen angefragt',
-    close_request_accepted: 'Schließen bestätigt', close_request_declined: 'Schließen abgelehnt',
+    close_request_accepted: 'Schließen bestätigt', close_request_declined: 'Schließen abgelehnt', close_request_approved: 'Schließen teilweise bestätigt',
+    forwarded: 'Weitergeleitet', reminder_sent: 'Ersteller erinnert', automation_changed: 'Automatik geändert', team_reminder: 'Team-Erinnerung',
+    no_response_reply: 'Automatische Antwort', capacity_warning: 'Auslastungsgrenze überschritten', note_added: 'Interne Notiz', staff_alert: 'Bearbeiter erinnert',
+    sla_reminder: 'SLA-Erinnerung', sla_escalated: 'SLA-Eskalation', unassigned_escalated: 'Unzugewiesen gemeldet', routing_warning: 'Zuständigkeit fehlt',
 };
+/** In der Team-Fassung zusätzlich sichtbar; nur Verwaltungsrauschen (Transkript-Aufträge) bleibt auch dort weg. */
+const STAFF_HIDDEN = new Set(['transcript_created', 'transcript_requested', 'transcript_deleted', 'transcript_viewed', 'note_added']);
+/** Übernahme-/Weiterleitungshistorie */
+const HISTORY = new Set(['claimed', 'claim_transferred', 'unclaimed', 'assigned', 'forwarded', 'category_changed', 'department_changed']);
 /**
  * Transkripte als Hintergrund-Aufträge: beim Schließen wird nur ein Auftrag angelegt (die Nachrichten liegen bereits in der
  * Datenbank, nichts geht verloren), die Erstellung läuft danach mit begrenzten Wiederholungen. Jede Erstellung ist eine neue
@@ -141,7 +148,7 @@ let TicketTranscriptService = class TicketTranscriptService {
         try {
             const r = await this.render(job.ticketId, job.version);
             const tr = await this.prisma.ticketTranscript.update({ where: { id }, data: {
-                    status: 'DONE', html: r.html, text: r.text, data: r.data, sha256: r.sha256, sizeBytes: Buffer.byteLength(r.html),
+                    status: 'DONE', html: r.html, text: r.text, staffHtml: r.staffHtml, staffText: r.staffText, data: r.data, sha256: r.sha256, sizeBytes: Buffer.byteLength(r.html),
                     categoryName: r.meta.category, statusName: r.meta.status, claimers: r.meta.claimers, completedAt: new Date(), nextAttemptAt: null, lastError: null,
                 } });
             await this.prisma.ticketLog.create({ data: { ticketId: job.ticketId, action: 'transcript_created', actorName: job.createdByName, detail: { transcriptId: id, version: job.version, trigger: job.trigger } } });
@@ -176,9 +183,15 @@ let TicketTranscriptService = class TicketTranscriptService {
         const effect = { type: 'transcript', transcriptId: tr.id, channelIds: n.channelIds ?? [], userId: n.userId ?? null, filename: `transkript-${ref}-v${tr.version}.html`, message };
         await (0, guild_context_1.runInGuild)(guildId, () => this.discord.enqueue('tickets', 'ticket.effects', { effects: [effect] }, { always: true })).catch((e) => this.log.warn(`transcript delivery: ${e.message}`));
     }
-    /** Transkript aus den gespeicherten Daten erzeugen (ohne interne Notizen und interne Ereignisse). */
+    /**
+     * Transkript aus den gespeicherten Daten erzeugen – zwei Fassungen: für den Ersteller (ohne interne Notizen/Ereignisse und ohne
+     * Schließformular) und für das Team (mit allem). Discord-Dateien und der Ersteller bekommen immer die Fassung ohne Notizen.
+     */
     async render(ticketId, version) {
         const t = await this.prisma.supportTicket.findUniqueOrThrow({ where: { id: ticketId } });
+        const [notes, rating] = await Promise.all([
+            this.prisma.ticketNote.findMany({ where: { ticketId }, orderBy: { createdAt: 'asc' } }), this.prisma.ticketRating.findUnique({ where: { ticketId } }),
+        ]);
         const [cat, status, priority, dept, messages, logs, access, settings, tz] = await Promise.all([
             this.prisma.ticketCategory.findUnique({ where: { id: t.categoryId } }), this.prisma.ticketStatus.findUnique({ where: { id: t.statusId } }),
             t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : null,
@@ -203,14 +216,24 @@ let TicketTranscriptService = class TicketTranscriptService {
             }
             entries.push({ kind: 'message', at: m.createdAt, author: m.authorName, authorId: m.authorId, avatar: m.authorAvatar, staff: m.isStaff, bot: m.isBot, content: m.content, attachments: atts, embeds: m.embeds ?? [] });
         }
+        const staffEntries = [...entries];
+        const history = [];
+        const who = (v) => { const x = String(v ?? '—'); return names.get(x) ?? x; };
         for (const g of logs) {
-            if (INTERNAL_EVENTS.has(g.action))
-                continue;
             const det = g.detail;
-            const extra = det.to ? `: ${String(det.from ?? '—')} → ${String(det.to)}` : det.reason ? `: ${String(det.reason)}` : det.target ? `: ${names.get(String(det.target)) ?? String(det.target)}` : '';
-            entries.push({ kind: 'event', at: g.createdAt, text: `${LABEL[g.action] ?? g.action}${extra} · ${g.actorName ?? 'System'}` });
+            const extra = det.to ? `: ${det.from ? `${who(det.from)} → ` : ''}${det.kind === 'role' ? `Rolle ${String(det.to)}` : who(det.to)}` : det.reason ? `: ${String(det.reason)}` : det.target ? `: ${who(det.target)}` : '';
+            const ev = { kind: 'event', at: g.createdAt, text: `${LABEL[g.action] ?? g.action}${extra} · ${g.actorName ?? 'System'}` };
+            if (HISTORY.has(g.action))
+                history.push({ at: g.createdAt, text: ev.text });
+            if (!STAFF_HIDDEN.has(g.action))
+                staffEntries.push(ev);
+            if (!INTERNAL_EVENTS.has(g.action) && !['forwarded', 'automation_changed', 'team_reminder', 'capacity_warning', 'close_request_approved'].includes(g.action))
+                entries.push(ev);
         }
+        for (const n of notes)
+            staffEntries.push({ kind: 'note', at: n.createdAt, author: n.authorName, text: n.text });
         entries.sort((a, b) => a.at.getTime() - b.at.getTime());
+        staffEntries.sort((a, b) => a.at.getTime() - b.at.getTime());
         const generatedAt = new Date();
         const base = {
             ref, subject: t.subject, department: dept?.name ?? null, version,
@@ -219,11 +242,20 @@ let TicketTranscriptService = class TicketTranscriptService {
             createdAt: t.createdAt, closedAt: t.closedAt, closedBy: t.closedByName, closeReason: t.closeReason, generatedAt, timezone: tz,
             answers: (t.answers ?? []).map((a) => ({ label: a.label, value: a.value })), entries,
         };
-        // strukturierte Daten (JSON-Export) ohne eingebettete Bilder; SHA-256 darüber = Integritätsnachweis der Version
-        const data = { ...base, entries: entries.map((e) => (e.kind === 'event' ? e : { ...e, attachments: e.attachments.map((a) => ({ name: a.name, size: a.size, contentType: a.contentType })) })), createdAt: t.createdAt.toISOString(), closedAt: t.closedAt?.toISOString() ?? null, generatedAt: generatedAt.toISOString() };
-        const sha256 = (0, node_crypto_1.createHash)('sha256').update(JSON.stringify(data)).digest('hex');
-        const full = { ...base, sha256 };
-        return { html: (0, transcript_1.renderTranscript)(full), text: (0, transcript_1.renderTranscriptText)(full), data: { ...data, sha256 }, sha256, meta: { ref, guildId: t.guildId, category: cat?.name ?? '—', status: status?.name ?? '—', claimers: t.claimers } };
+        const ratingOut = rating ? { stars: rating.stars, scale: rating.scale, comment: rating.comment, answers: (rating.answers ?? []).map((a) => ({ label: a.label, value: a.value })) } : null;
+        const pub = { ...base, rating: ratingOut };
+        const staff = { ...base, staffView: true, entries: staffEntries, history, rating: ratingOut, closeAnswers: (t.closeAnswers ?? []).map((a) => ({ label: a.label, value: a.value })) };
+        // strukturierte Daten (JSON-Export, nur Team) ohne eingebettete Bilder; SHA-256 darüber = Integritätsnachweis der jeweiligen Fassung
+        const dataOf = (d) => ({ ...d, entries: d.entries.map((e) => (e.kind === 'message' ? { ...e, attachments: e.attachments.map((a) => ({ name: a.name, size: a.size, contentType: a.contentType })) } : e)), createdAt: t.createdAt.toISOString(), closedAt: t.closedAt?.toISOString() ?? null, generatedAt: generatedAt.toISOString() });
+        const pubData = dataOf(pub), staffData = dataOf(staff);
+        const pubSha = (0, node_crypto_1.createHash)('sha256').update(JSON.stringify(pubData)).digest('hex');
+        const staffSha = (0, node_crypto_1.createHash)('sha256').update(JSON.stringify(staffData)).digest('hex');
+        const pubFull = { ...pub, sha256: pubSha }, staffFull = { ...staff, sha256: staffSha };
+        return {
+            html: (0, transcript_1.renderTranscript)(pubFull), text: (0, transcript_1.renderTranscriptText)(pubFull), staffHtml: (0, transcript_1.renderTranscript)(staffFull), staffText: (0, transcript_1.renderTranscriptText)(staffFull),
+            // JSON-Export und Prüfsumme der Datenbank-Zeile: Fassung ohne Notizen (wie bisher); die Team-Fassung trägt ihre eigene Prüfsumme
+            data: { ...pubData, sha256: pubSha }, sha256: pubSha, meta: { ref, guildId: t.guildId, category: cat?.name ?? '—', status: status?.name ?? '—', claimers: t.claimers },
+        };
     }
     async timezone() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'org.timezone' } }))?.value;

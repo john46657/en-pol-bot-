@@ -61,6 +61,8 @@ export declare class TicketTranscriptService {
             completedAt: Date | null;
             sha256: string | null;
             notify: Prisma.JsonValue;
+            staffHtml: string;
+            staffText: string;
         };
         created: boolean;
     }>;
@@ -91,6 +93,8 @@ export declare class TicketTranscriptService {
         completedAt: Date | null;
         sha256: string | null;
         notify: Prisma.JsonValue;
+        staffHtml: string;
+        staffText: string;
     }>;
     /** Fällige Aufträge abarbeiten (auch nach einem Neustart hängengebliebene). Mehrere Instanzen sperren sich gegenseitig aus. */
     processDue(now?: Date, limit?: number): Promise<{
@@ -100,13 +104,23 @@ export declare class TicketTranscriptService {
     private runJob;
     /** Fertiges Transkript in Discord zustellen (Datei + Link zur Online-Ansicht); Fehler dabei ändern das Transkript nicht. */
     private deliver;
-    /** Transkript aus den gespeicherten Daten erzeugen (ohne interne Notizen und interne Ereignisse). */
+    /**
+     * Transkript aus den gespeicherten Daten erzeugen – zwei Fassungen: für den Ersteller (ohne interne Notizen/Ereignisse und ohne
+     * Schließformular) und für das Team (mit allem). Discord-Dateien und der Ersteller bekommen immer die Fassung ohne Notizen.
+     */
     render(ticketId: string, version: number): Promise<{
         html: string;
         text: string;
+        staffHtml: string;
+        staffText: string;
         data: {
             sha256: string;
             entries: ({
+                kind: "note";
+                at: Date;
+                author: string;
+                text: string;
+            } | {
                 kind: "event";
                 at: Date;
                 text: string;
@@ -156,6 +170,24 @@ export declare class TicketTranscriptService {
             answers: {
                 label: string;
                 value: string;
+            }[];
+            staffView?: boolean;
+            closeAnswers?: {
+                label: string;
+                value: string;
+            }[];
+            rating?: {
+                stars: number;
+                scale: number;
+                comment: string | null;
+                answers: {
+                    label: string;
+                    value: string;
+                }[];
+            } | null;
+            history?: {
+                at: Date;
+                text: string;
             }[];
         };
         sha256: string;

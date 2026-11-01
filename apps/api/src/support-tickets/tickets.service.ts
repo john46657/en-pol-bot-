@@ -7,7 +7,8 @@ import path from 'node:path';
 import {
   renderTicketText, ticketChannelName, ticketNumber, TICKET_ACTIONS, ticketButtonsOf, ticketRef, parseTicketRef, validateForm, formModal, planFormSteps, activeFields,
   checkStatusChange, statusPermission, slaState, FORM_FILE_TYPES,
-  type ComponentButton, type ComponentSelect, type EmbedSpec, type FormAnswer, type FormFile, type FormRawValue, type MessageSpec, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketVars,
+  effectiveAutomation, automationActive, loadLevel, LOAD_DOT, LOAD_LABEL, closeRequestComplete, ratingLabel, normalizeRating, ratingTone, median, percentile, weekdayHour, ticketDayKey, ticketWeekKey,
+  type TicketAutomation, type ComponentButton, type ComponentSelect, type EmbedSpec, type FormAnswer, type FormFile, type FormRawValue, type MessageSpec, type TicketAction, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketVars,
 } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionService } from '../authz/permission.service';
@@ -24,7 +25,7 @@ import type { NotifyEvent, TicketSettings } from './config.schemas';
 /** Wer handelt: Mitarbeiter (System-Benutzer), Ticket-Ersteller über den Bot oder die Automatik. */
 export interface TicketActor { userId: string | null; discordId: string | null; name: string; viaBot: boolean; system?: boolean; /** Korrelations-ID (Automatik) */ requestId?: string }
 type Category = Awaited<ReturnType<TicketConfigService['category']>>;
-interface Loaded { t: SupportTicket; cat: Category; status: TicketStatus; priority: TicketPriority | null; settings: TicketSettings; tz: string; dept: TicketDepartment | null }
+interface Loaded { t: SupportTicket; cat: Category; status: TicketStatus; priority: TicketPriority | null; settings: TicketSettings; tz: string; dept: TicketDepartment | null; /** wirksame Automatik (Kategorie bzw. Panel) */ auto: TicketAutomation }
 
 const MAX_ATTACHMENT = 8 * 1024 * 1024;
 /** angefangene Discord-Formulare verfallen nach so vielen Minuten */
@@ -37,13 +38,15 @@ const NOTIFY_LABEL: Record<string, string> = {
 };
 
 export type ActionInput =
-  | { action: 'close'; reason?: string } | { action: 'close_request' } | { action: 'reopen' } | { action: 'claim' } | { action: 'unclaim'; targetId?: string }
+  | { action: 'close'; reason?: string; answers?: Record<string, FormRawValue> } | { action: 'close_request' } | { action: 'reopen' } | { action: 'claim' } | { action: 'unclaim'; targetId?: string }
   | { action: 'add_access'; targetId: string; kind: 'USER' | 'ROLE'; minutes?: number } | { action: 'remove_access'; targetId: string }
   | { action: 'priority'; priorityId: string } | { action: 'status'; statusId: string } | { action: 'category'; categoryId: string }
   | { action: 'rename'; name: string } | { action: 'move'; parentId: string | null } | { action: 'transcript' }
   | { action: 'lock' } | { action: 'unlock' } | { action: 'escalate' } | { action: 'note'; text: string } | { action: 'rating' } | { action: 'delete' } | { action: 'reply'; text: string }
   | { action: 'assign'; targetId: string } | { action: 'department'; departmentId: string } | { action: 'request_info'; text: string } | { action: 'archive' }
-  | { action: 'transcript_retry'; transcriptId: string };
+  | { action: 'transcript_retry'; transcriptId: string }
+  | { action: 'remind'; text?: string } | { action: 'forward'; target: 'USER' | 'ROLE' | 'CATEGORY'; targetId: string; note?: string }
+  | { action: 'automation'; mode: 'pause' | 'disable' | 'enable'; minutes?: number } | { action: 'close_request_answer'; accept: boolean };
 
 export interface OpenInput {
   categoryId: string; panelId?: string | null; guildId: string; discordId: string; discordName: string; memberRoleIds: string[];
@@ -54,17 +57,17 @@ export interface OpenInput {
 }
 
 /** Welches Recht welche API-Aktion braucht (Katalog in @enrp/shared). */
-const PERM: Record<Exclude<ActionInput['action'], 'reply' | 'assign' | 'department' | 'request_info' | 'archive' | 'transcript_retry'>, TicketAction> = {
-  close: 'close', close_request: 'close_request', reopen: 'reopen', claim: 'claim', unclaim: 'unclaim', add_access: 'add_user', remove_access: 'remove_user', priority: 'priority', status: 'status',
+const PERM: Record<Exclude<ActionInput['action'], 'reply' | 'assign' | 'department' | 'request_info' | 'archive' | 'transcript_retry' | 'close_request_answer'>, TicketAction> = {
+  remind: 'remind', forward: 'forward', automation: 'automation', close: 'close', close_request: 'close_request', reopen: 'reopen', claim: 'claim', unclaim: 'unclaim', add_access: 'add_user', remove_access: 'remove_user', priority: 'priority', status: 'status',
   category: 'category', rename: 'rename', move: 'move', transcript: 'transcript', lock: 'lock', unlock: 'unlock', escalate: 'escalate', note: 'note', rating: 'rating', delete: 'delete',
 };
 /** Rechte der neuen Aktionen. Antworten/Rückfragen: wer Tickets bearbeiten (übernehmen) darf. */
-const EXTRA_PERM: Record<'reply' | 'assign' | 'department' | 'request_info' | 'archive' | 'transcript_retry', string> = {
-  reply: 'ticket.claim', assign: 'ticket.assign', department: 'ticket.change_department', request_info: 'ticket.claim', archive: 'ticket.archive', transcript_retry: 'ticket.transcript_manage',
+const EXTRA_PERM: Record<'reply' | 'assign' | 'department' | 'request_info' | 'archive' | 'transcript_retry' | 'close_request_answer', string> = {
+  close_request_answer: 'ticket.claim', reply: 'ticket.claim', assign: 'ticket.assign', department: 'ticket.change_department', request_info: 'ticket.claim', archive: 'ticket.archive', transcript_retry: 'ticket.transcript_manage',
 };
 export const permissionFor = (a: ActionInput['action']) => (a in EXTRA_PERM ? EXTRA_PERM[a as keyof typeof EXTRA_PERM] : TICKET_ACTIONS[PERM[a as keyof typeof PERM]].permission);
 /** Aktionen, die zusätzlich ins (unveränderliche) Audit-Protokoll gehören. */
-const AUDITED = new Set(['created', 'claimed', 'claim_transferred', 'unclaimed', 'assigned', 'department_changed', 'category_changed', 'priority_changed', 'status_changed', 'note_added', 'closed', 'reopened', 'archived', 'deleted', 'user_added', 'user_removed', 'role_added', 'role_removed', 'escalated', 'locked', 'unlocked', 'info_requested', 'transcript_requested', 'transcript_retry', 'routing_warning']);
+const AUDITED = new Set(['created', 'claimed', 'claim_transferred', 'unclaimed', 'assigned', 'department_changed', 'category_changed', 'priority_changed', 'status_changed', 'note_added', 'closed', 'reopened', 'archived', 'deleted', 'user_added', 'user_removed', 'role_added', 'role_removed', 'escalated', 'locked', 'unlocked', 'info_requested', 'transcript_requested', 'transcript_retry', 'routing_warning', 'forwarded', 'reminder_sent', 'automation_changed', 'close_requested', 'close_request_accepted', 'close_request_declined', 'close_request_approved', 'rated']);
 
 /**
  * Support-Ticket-System. Das System entscheidet (Rechte, Regeln, Daten, Protokoll), der Bot führt die Discord-Seite aus (Effekte).
@@ -103,11 +106,12 @@ export class SupportTicketsService {
   private async load(id: string): Promise<Loaded> {
     const t = await this.prisma.supportTicket.findUnique({ where: { id } });
     if (!t || t.deletedAt) throw new AppError('NOT_FOUND', 'Ticket nicht gefunden.');
-    const [cat, status, priority, settings, tz, dept] = await Promise.all([
+    const [cat, status, priority, settings, tz, dept, panel] = await Promise.all([
       this.config.category(t.categoryId), this.prisma.ticketStatus.findUniqueOrThrow({ where: { id: t.statusId } }),
       t.priorityId ? this.prisma.ticketPriority.findUnique({ where: { id: t.priorityId } }) : Promise.resolve(null), this.settingsFor(t.guildId), this.timezone(), this.config.department(t.departmentId),
+      t.panelId ? this.prisma.ticketPanel.findUnique({ where: { id: t.panelId }, select: { automation: true } }) : Promise.resolve(null),
     ]);
-    return { t, cat, status, priority, settings, tz, dept };
+    return { t, cat, status, priority, settings, tz, dept, auto: effectiveAutomation(cat, panel?.automation) };
   }
 
   private vars(l: Pick<Loaded, 't' | 'cat' | 'status' | 'priority' | 'tz'> & { settings?: TicketSettings }, extra: TicketVars = {}): TicketVars {
@@ -145,6 +149,7 @@ export class SupportTicketsService {
       ...(l.dept ? [{ name: 'Abteilung', value: `${l.dept.emoji ? `${l.dept.emoji} ` : ''}${l.dept.name}`, inline: true }] : []),
       { name: l.cat.claimMode === 'PRIMARY' && l.t.claimers.length > 1 ? 'Bearbeiter (Haupt + Helfer)' : 'Bearbeiter', value: v['{staff}']!, inline: true },
       ...(l.t.locked ? [{ name: 'Gesperrt', value: '⛔ Der Ersteller kann nicht schreiben.', inline: false }] : []),
+      ...(!closed && !automationActive(l.t) ? [{ name: 'Automatik', value: l.t.automationDisabled ? '⏸️ für dieses Ticket ausgeschaltet' : `⏸️ pausiert bis ${this.fmt(l.t.automationPausedUntil, l.tz)}`, inline: false }] : []),
     ];
     const embed: EmbedSpec = {
       title: renderTicketText(l.cat.welcomeTitle || '🎫 {category}', v).slice(0, 256),
@@ -154,8 +159,9 @@ export class SupportTicketsService {
     };
     return { embeds: [embed], buttons: buttons.slice(0, 25) };
   }
-  /** n = ohne Grund, m = Formular, s = Auswahl (feste Gründe). */
+  /** n = ohne Grund, m = Formular, s = Auswahl (feste Gründe), f = eigenes Schließformular der Kategorie. */
   private closeMode(cat: Category) {
+    if (activeFields(cat.closeForm).length) return 'f';
     if (cat.closeReasonMode === 'NONE') return 'n';
     return cat.closeReasonSource === 'CUSTOM' ? 'm' : 's';
   }
@@ -301,9 +307,10 @@ export class SupportTicketsService {
   }
 
   /** Nach dem Speichern: Protokoll, Hinweis auf fehlende Zuständigkeit, Formular-Anhänge, Panel-Auslastung, Benachrichtigungen. */
-  private async finishCreate({ l, effects, warning }: Awaited<ReturnType<SupportTicketsService['create']>>, d: OpenInput, actor: TicketActor) {
+  private async finishCreate({ l, effects, warning, overloaded }: Awaited<ReturnType<SupportTicketsService['create']>>, d: OpenInput, actor: TicketActor) {
     const { t, cat, settings } = l;
     const ref = this.ref(t.number, settings);
+    if (overloaded) await this.logAction(l, 'capacity_warning', { ...actor, system: true }, { capacity: cat.capacity }, effects, `🔴 Kategorie über der Auslastungsgrenze (${cat.capacity})`);
     await this.logAction(l, 'created', actor, { category: cat.name, by: actor.discordId === d.discordId ? 'creator' : actor.name, ...(d.form ? { formVersion: d.form.version } : {}) }, effects, `🎫 Ticket erstellt von ${mention(d.discordId)} (${cat.name})`);
     if (warning) {
       // sichtbarer Hinweis (Log-Kanal, Ticket-Verlauf, Audit) ohne Inhalte des Tickets
@@ -332,15 +339,29 @@ export class SupportTicketsService {
   }
 
   private async checkCanOpen(cat: Category, d: { panelId?: string | null; discordId: string; memberRoleIds: string[]; guildId: string }, db: Prisma.TransactionClient | PrismaService = this.prisma) {
+    const panel = d.panelId ? await db.ticketPanel.findUnique({ where: { id: d.panelId } }) : null;
     if (d.panelId) {
-      const panel = await db.ticketPanel.findUnique({ where: { id: d.panelId } });
-      if (panel?.allowedRoleIds.length && !panel.allowedRoleIds.some((r) => d.memberRoleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Du darfst dieses Ticket-Panel nicht benutzen.');
+      if (!panel) throw new AppError('NOT_FOUND', 'Dieses Ticket-Panel gibt es nicht mehr.');
+      if (!panel.active) throw new AppError('CONFLICT', 'Dieses Ticket-Panel ist derzeit deaktiviert.');
+      if (panel.guildId && panel.guildId !== d.guildId) throw new AppError('CONFLICT', 'Dieses Ticket-Panel gibt es auf diesem Server nicht.');
+      // nur Kategorien, die im Panel stehen (manipulierte Interaktionen öffnen keine fremden Kategorien)
+      if (!panel.categoryIds.includes(cat.id)) throw new AppError('CONFLICT', 'Diese Ticket-Art ist in diesem Panel nicht verfügbar.');
+      if (panel.allowedRoleIds.length && !panel.allowedRoleIds.some((r) => d.memberRoleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Du darfst dieses Ticket-Panel nicht benutzen.');
     }
     if (cat.requiredRoleIds.length && !cat.requiredRoleIds.some((r) => d.memberRoleIds.includes(r))) throw new AppError('PERMISSION_DENIED', 'Dir fehlt die nötige Rolle für diese Ticket-Art.');
     if (cat.allowedUserIds.length && !cat.allowedUserIds.includes(d.discordId)) throw new AppError('PERMISSION_DENIED', 'Du darfst diese Ticket-Art nicht öffnen.');
     // Berechtigte Mitarbeiter (verknüpftes Konto mit ticket.bypass_limits) umgehen Limits und Cooldown
     const link = await db.discordLink.findUnique({ where: { discordId: d.discordId } });
     if (link && (await this.perms.has(link.userId, 'ticket.bypass_limits'))) return;
+    // Auslastungsgrenze: bei BLOCK keine neuen Tickets, sobald die Kategorie voll ist (WARN: öffnen mit Hinweis, siehe create)
+    if (cat.capacity > 0 && cat.capacityAction === 'BLOCK') {
+      const open = await db.supportTicket.count({ where: { categoryId: cat.id, closedAt: null, deletedAt: null } });
+      if (loadLevel(open, cat.capacity) === 'full') throw new AppError('CONFLICT', `„${cat.name}“ ist gerade voll ausgelastet (${open}/${cat.capacity} offene Tickets). Bitte versuche es später erneut.`);
+    }
+    if (panel && panel.maxOpen > 0) {
+      const viaPanel = await db.supportTicket.count({ where: { creatorId: d.discordId, panelId: panel.id, closedAt: null, deletedAt: null } });
+      if (viaPanel >= panel.maxOpen) throw new AppError('CONFLICT', `Du hast bereits ${viaPanel} offene${viaPanel === 1 ? 's' : ''} Ticket${viaPanel === 1 ? '' : 's'} über dieses Panel – mehr als ${panel.maxOpen} gleichzeitig sind nicht möglich.`);
+    }
     if (cat.maxOpen > 0) {
       const open = await db.supportTicket.findMany({ where: { creatorId: d.discordId, categoryId: cat.id, closedAt: null, deletedAt: null }, select: { channelId: true } });
       if (open.length >= cat.maxOpen) throw new AppError('CONFLICT', `Du hast bereits ${open.length} offene${open.length === 1 ? 's' : ''} Ticket${open.length === 1 ? '' : 's'} dieser Art${open[0]?.channelId ? `: <#${open[0].channelId}>` : ''}.`);
@@ -376,21 +397,28 @@ export class SupportTicketsService {
       firstResponseDueAt: sla.firstDueAt, resolveDueAt: sla.resolveDueAt,
       ...(d.form ? { formVersion: d.form.version, answers: answers.map(({ files, ...a }) => ({ ...a, ...(files?.length ? { files: files.map((f) => ({ name: f.name, size: f.size, contentType: f.contentType })) } : {}) })) as unknown as Prisma.InputJsonValue, questionIndex: (cat.questions as TicketQuestion[]).length } : { formVersion: cat.formVersion }),
     } });
-    const [settings, tz] = await Promise.all([this.settingsFor(d.guildId), this.timezone()]);
-    const name = ticketChannelName(cat.channelNameFormat, this.vars({ t, cat, status, priority, tz, settings }));
+    const [settings, tz, panel, openNow] = await Promise.all([
+      this.settingsFor(d.guildId), this.timezone(), d.panelId ? tx.ticketPanel.findUnique({ where: { id: d.panelId } }) : Promise.resolve(null),
+      cat.capacity > 0 ? tx.supportTicket.count({ where: { categoryId: cat.id, closedAt: null, deletedAt: null, id: { not: t.id } } }) : Promise.resolve(0),
+    ]);
+    const name = ticketChannelName(panel?.channelNameFormat || cat.channelNameFormat, this.vars({ t, cat, status, priority, tz, settings }));
     t = await tx.supportTicket.update({ where: { id: t.id }, data: { name } });
-    const l: Loaded = { t, cat, status, priority, settings, tz, dept };
+    const l: Loaded = { t, cat, status, priority, settings, tz, dept, auto: effectiveAutomation(cat, panel?.automation) };
     const effects: TicketEffect[] = [];
     const { responsible, warning } = await this.routing(cat, dept, settings);
     const staffRoles = [...new Set([...responsible, ...cat.extraRoleIds])];
     const control = this.control(l);
     const mentionText = renderTicketText(cat.mentionText || '', this.vars(l)).trim();
-    const prioRoles = priority?.notifyRoleIds.filter((r) => staffRoles.includes(r)) ?? []; // dringend: nur Rollen mit Zugriff pingen
+    // dringend bzw. Team-Erwähnung des Panels: nur Rollen mit Zugriff pingen (keine Benachrichtigung ohne Einsicht)
+    const prioRoles = [...new Set([...(priority?.notifyRoleIds ?? []), ...(panel?.mentionRoleIds ?? [])])].filter((r) => staffRoles.includes(r));
     // neues Ticket: Ersteller und zuständige Rollen werden gepingt
     control.content = [mention(d.discordId), ...(cat.mentionStaff ? responsible.map((r) => `<@&${r}>`) : []), ...prioRoles.filter((r) => !cat.mentionStaff || !responsible.includes(r)).map((r) => `<@&${r}>`), mentionText].filter(Boolean).join(' ');
     control.mentionUsers = [d.discordId];
     control.mentionRoles = [...new Set([...(cat.mentionStaff ? responsible : []), ...prioRoles])];
     const messages: MessageSpec[] = [];
+    // WARN: Kategorie war schon voll – Ticket entsteht trotzdem, mit Hinweis (BLOCK hat das Öffnen vorher verhindert)
+    const overloaded = cat.capacity > 0 && openNow >= cat.capacity;
+    if (overloaded) messages.push({ embeds: [{ description: `🔴 Hohe Auslastung: In „${cat.name}“ sind gerade sehr viele Tickets offen (${openNow + 1}/${cat.capacity}). Die Antwort kann etwas länger dauern.`, color: 0xef4444 }] });
     if (d.form) {
       messages.push({ embeds: [{ title: `📝 Angaben · ${this.ref(t.number, settings)}`, color: cat.color, fields: answers.slice(0, 25).map((a) => ({ name: a.label.slice(0, 256), value: (a.value || '—').slice(0, 1024) })), footer: `Formular-Version ${d.form.version}` }] });
       const hasFileField = activeFields(cat.questions as TicketQuestion[]).some((q) => q.type === 'FILE');
@@ -401,9 +429,9 @@ export class SupportTicketsService {
     }
     effects.unshift({
       type: 'create', ticketId: t.id, guildId: d.guildId, name, parentId: cat.discordCategoryId, topic: `Ticket ${this.ref(t.number, settings)} · ${cat.name}${cat.confidential ? '' : ` · ${d.discordName} (${d.discordId})`}`,
-      viewers: [{ id: d.discordId, kind: 'user', send: true }, ...staffRoles.map((id) => ({ id, kind: 'role' as const, send: true }))], control, messages,
+      viewers: [{ id: d.discordId, kind: 'user', send: true }, ...cat.extraUserIds.filter((u) => u !== d.discordId).map((id) => ({ id, kind: 'user' as const, send: true })), ...staffRoles.map((id) => ({ id, kind: 'role' as const, send: true }))], control, messages,
     });
-    return { l, effects, warning };
+    return { l, effects, warning, overloaded };
   }
 
   /** Ticket aus dem Dashboard für einen Discord-Benutzer öffnen (Recht ticket.create). */
@@ -477,33 +505,57 @@ export class SupportTicketsService {
   }
 
   /** Ersteller schließt sein eigenes Ticket (falls in der Kategorie erlaubt). */
-  async creatorClose(id: string, discordId: string, reason: string | undefined) {
+  async creatorClose(id: string, discordId: string, reason: string | undefined, answers?: Record<string, FormRawValue>) {
     const l = await this.load(id);
     if (l.t.creatorId !== discordId) throw new AppError('PERMISSION_DENIED', 'Dazu fehlt dir die Berechtigung.');
     if (!l.cat.creatorCanClose) throw new AppError('PERMISSION_DENIED', 'Dieses Ticket kann nur das Team schließen.');
     const effects: TicketEffect[] = [];
-    const message = await this.perform(l, { userId: l.t.creatorUserId, discordId, name: l.t.creatorName, viaBot: true }, { action: 'close', reason }, effects);
+    const message = await this.perform(l, { userId: l.t.creatorUserId, discordId, name: l.t.creatorName, viaBot: true }, { action: 'close', reason, answers }, effects);
     return { ok: true, message, effects };
   }
 
-  /** Antwort des Erstellers auf „Schließen anfragen“. */
+  /**
+   * Antwort auf „Schließen anfragen“ – je nach Kategorie vom Ersteller und/oder dem zuständigen Mitarbeiter (Bearbeiter; ohne Bearbeiter
+   * der anfragende Mitarbeiter). Eine Ablehnung beendet die Anfrage, ohne zu schließen. Erst wenn alle nötigen Bestätigungen da sind,
+   * wird (falls eingestellt) geschlossen. Jede Antwort wird protokolliert.
+   */
   async closeRequestAnswer(id: string, discordId: string, accept: boolean) {
     const l = await this.load(id);
-    if (l.t.creatorId !== discordId) throw new AppError('PERMISSION_DENIED', 'Nur der Ersteller kann das beantworten.');
+    const mode = l.cat.closeRequestApprovers;
+    const isCreator = l.t.creatorId === discordId;
+    const responsible = l.t.claimers.length ? l.t.claimers : l.t.closeRequestById ? [l.t.closeRequestById] : [];
+    const isStaff = !isCreator && responsible.includes(discordId);
+    if (mode === 'CREATOR' ? !isCreator : !isCreator && !isStaff) throw new AppError('PERMISSION_DENIED', mode === 'CREATOR' ? 'Nur der Ersteller kann das beantworten.' : 'Nur der Ersteller oder der zuständige Mitarbeiter kann das beantworten.');
     this.requireOpen(l);
     if (!l.t.closeRequestedAt) throw new AppError('CONFLICT', 'Es gibt keine offene Anfrage zum Schließen.');
     const effects: TicketEffect[] = [];
-    await this.prisma.supportTicket.update({ where: { id }, data: { closeRequestedAt: null, lastActivityAt: new Date() } });
-    const creator: TicketActor = { userId: l.t.creatorUserId, discordId, name: l.t.creatorName, viaBot: true };
-    if (accept && l.cat.closeRequestCloses) {
-      await this.close(l, creator, 'Vom Ersteller bestätigt (Schließen angefragt)', effects);
+    const who: TicketActor = isCreator ? { userId: l.t.creatorUserId, discordId, name: l.t.creatorName, viaBot: true } : { userId: (await this.prisma.discordLink.findUnique({ where: { discordId } }))?.userId ?? null, discordId, name: (await this.discordNames([discordId]))[discordId] ?? discordId, viaBot: true };
+    const role = isCreator ? 'creator' : 'staff';
+    const ch = l.t.channelId;
+    const tellStaff = (text: string, color: number) => { if (ch) effects.push({ type: 'post', channelId: ch, message: { content: l.t.claimers.map(mention).join(' ') || undefined, mentionUsers: l.t.claimers, embeds: [{ description: text, color }] } }); };
+    if (!accept) {
+      // Ablehnung: Anfrage beenden, Ticket bleibt offen (nie schließen)
+      await this.prisma.supportTicket.update({ where: { id }, data: { closeRequestedAt: null, closeRequestApprovals: [], closeRequestById: null, lastActivityAt: new Date() } });
+      tellStaff(`✖️ ${mention(discordId)} möchte das Ticket **offen lassen**.`, 0x64748b);
+      await this.logAction(l, 'close_request_declined', who, { by: role }, effects, `✖️ Schließungsanfrage abgelehnt (${isCreator ? 'Ersteller' : 'Mitarbeiter'})`);
+      return { ok: true, message: 'Alles klar, das Ticket bleibt offen.', effects: await this.dispatch(effects, true) };
+    }
+    const approvals = [...new Set([...l.t.closeRequestApprovals, `${role}:${discordId}`])];
+    const done = closeRequestComplete(mode, { creator: approvals.some((a) => a.startsWith('creator:')), staff: approvals.some((a) => a.startsWith('staff:')) });
+    if (!done) {
+      await this.prisma.supportTicket.update({ where: { id }, data: { closeRequestApprovals: approvals, lastActivityAt: new Date() } });
+      tellStaff(`✅ ${mention(discordId)} hat bestätigt – es fehlt noch die Bestätigung ${isCreator ? 'des zuständigen Mitarbeiters' : 'des Erstellers'}.`, 0x22c55e);
+      await this.logAction(l, 'close_request_approved', who, { by: role }, effects, `✅ Schließungsanfrage bestätigt (${isCreator ? 'Ersteller' : 'Mitarbeiter'}) – wartet auf weitere Bestätigung`);
+      return { ok: true, message: 'Danke! Es fehlt noch eine weitere Bestätigung.', effects: await this.dispatch(effects, true) };
+    }
+    await this.prisma.supportTicket.update({ where: { id }, data: { closeRequestedAt: null, closeRequestApprovals: [], closeRequestById: null, lastActivityAt: new Date() } });
+    await this.logAction(l, 'close_request_accepted', who, { by: role }, effects, `✅ Schließungsanfrage bestätigt (${isCreator ? 'Ersteller' : 'Mitarbeiter'})`);
+    if (l.auto.closeRequestCloses) {
+      await this.close(await this.load(id), who, 'Schließungsanfrage bestätigt', effects);
       return { ok: true, message: 'Ticket geschlossen – danke!', effects: await this.dispatch(effects, true) };
     }
-    const ch = l.t.channelId;
-    if (ch) effects.push({ type: 'post', channelId: ch, message: { content: l.t.claimers.map(mention).join(' ') || undefined, mentionUsers: l.t.claimers,
-      embeds: [{ description: accept ? `✅ ${mention(discordId)} ist einverstanden – das Ticket kann geschlossen werden.` : `✖️ ${mention(discordId)} möchte das Ticket **offen lassen**.`, color: accept ? 0x22c55e : 0x64748b }] } });
-    await this.logAction(l, accept ? 'close_request_accepted' : 'close_request_declined', creator, {}, effects);
-    return { ok: true, message: accept ? 'Danke! Das Team schließt das Ticket.' : 'Alles klar, das Ticket bleibt offen.', effects: await this.dispatch(effects, true) };
+    tellStaff(`✅ ${mention(discordId)} ist einverstanden – das Ticket kann geschlossen werden.`, 0x22c55e);
+    return { ok: true, message: 'Danke! Das Team schließt das Ticket.', effects: await this.dispatch(effects, true) };
   }
 
   /** Ersteller fügt eine Person hinzu (wenn in der Kategorie erlaubt). */
@@ -518,7 +570,9 @@ export class SupportTicketsService {
 
   /** Ticketauslastung: Panels mit „Auslastung anzeigen“, die diese Kategorie enthalten, neu zeichnen. */
   private async panelLoad(categoryId: string, effects: TicketEffect[]) {
-    const panels = await this.prisma.ticketPanel.findMany({ where: { showLoad: true, messageId: { not: null }, categoryIds: { has: categoryId } } });
+    const cat = await this.prisma.ticketCategory.findUnique({ where: { id: categoryId }, select: { capacity: true, capacityAction: true } });
+    const capacityMatters = !!cat && cat.capacity > 0 && cat.capacityAction === 'BLOCK';
+    const panels = await this.prisma.ticketPanel.findMany({ where: { ...(capacityMatters ? {} : { showLoad: true }), messageId: { not: null }, categoryIds: { has: categoryId } } });
     for (const p of panels) effects.push({ type: 'panel', panelId: p.id, channelId: p.messageChannelId!, messageId: p.messageId, message: await this.panelMessage(p.id) });
   }
 
@@ -583,18 +637,88 @@ export class SupportTicketsService {
     switch (input.action) {
       case 'close': {
         this.requireOpen(l);
-        const reason = input.reason?.trim() || null;
+        let reason = input.reason?.trim() || null;
+        // eigenes Schließformular der Kategorie: serverseitig prüfen (Pflichtfelder, Längen, Auswahl); Feld „reason“ = Schließungsgrund
+        const fields = activeFields(l.cat.closeForm);
+        let closeAnswers: FormAnswer[] = [];
+        if (fields.length && !actor.system) {
+          const v = validateForm(fields, input.answers ?? {}, {});
+          if (!v.ok) throw new AppError('VALIDATION_FAILED', `Schließformular: ${Object.entries(v.errors).map(([k, m]) => `${fields.find((f) => f.id === k)?.label ?? k}: ${m}`).join(' · ')}`);
+          closeAnswers = v.answers.map(({ files: _f, ...a }) => a);
+          reason = reason ?? closeAnswers.find((a) => a.questionId === 'reason')?.value ?? null;
+        }
         if (l.cat.closeReasonMode === 'REQUIRED' && !reason) throw new AppError('VALIDATION_FAILED', 'Bitte einen Grund für das Schließen angeben.');
-        await this.close(l, actor, l.cat.closeReasonMode === 'NONE' ? null : reason, effects);
+        if (closeAnswers.length) await this.prisma.supportTicket.update({ where: { id: t.id }, data: { closeAnswers: closeAnswers as unknown as Prisma.InputJsonValue } });
+        await this.close(l, actor, l.cat.closeReasonMode === 'NONE' && !closeAnswers.length ? null : reason, effects);
         return 'Ticket geschlossen.';
       }
       case 'close_request': {
         this.requireOpen(l);
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { closeRequestedAt: new Date() } });
-        post({ content: mention(t.creatorId), mentionUsers: [t.creatorId], embeds: [{ title: '❓ Kann dieses Ticket geschlossen werden?', description: `${this.actorTag(actor)} möchte das Ticket schließen. Ist dein Anliegen erledigt?`, color: 0xf59e0b }],
+        if (t.closeRequestedAt) throw new AppError('CONFLICT', 'Es läuft bereits eine Schließungsanfrage.');
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { closeRequestedAt: new Date(), closeRequestById: actor.discordId, closeRequestApprovals: [] } });
+        const mode = l.cat.closeRequestApprovers;
+        const staffTargets = (t.claimers.length ? t.claimers : actor.discordId ? [actor.discordId] : []).filter((x) => x !== t.creatorId);
+        const pings = mode === 'STAFF' ? staffTargets : mode === 'CREATOR' ? [t.creatorId] : [t.creatorId, ...staffTargets];
+        const need = { CREATOR: 'Der Ersteller', STAFF: 'Der zuständige Mitarbeiter', BOTH: 'Ersteller **und** zuständiger Mitarbeiter', ANY: 'Ersteller **oder** zuständiger Mitarbeiter' }[mode] ?? 'Der Ersteller';
+        const timeout = l.auto.closeRequestTimeoutMinutes > 0 && automationActive(t) ? `\n-# Ohne Antwort wird das Ticket nach ${l.auto.closeRequestTimeoutMinutes} Minuten automatisch geschlossen.` : '';
+        post({ content: pings.map(mention).join(' '), mentionUsers: pings, embeds: [{ title: '❓ Kann dieses Ticket geschlossen werden?', description: `${this.actorTag(actor)} möchte das Ticket schließen. Ist das Anliegen erledigt?\n-# ${need} muss bestätigen.${timeout}`, color: 0xf59e0b }],
           buttons: [{ id: `tk:creq:${t.id}:yes`, label: 'Ja, schließen', emoji: '✅', style: 'success' }, { id: `tk:creq:${t.id}:no`, label: 'Nein, offen lassen', emoji: '✖️', style: 'secondary' }] });
-        await this.logAction(l, 'close_requested', actor, {}, effects, `❓ Schließen angefragt von ${this.actorTag(actor)}`);
-        return 'Der Ersteller wurde gefragt.';
+        await this.logAction(l, 'close_requested', actor, { approvers: mode }, effects, `❓ Schließen angefragt von ${this.actorTag(actor)}`);
+        return mode === 'STAFF' ? 'Schließungsanfrage gesendet.' : 'Der Ersteller wurde gefragt.';
+      }
+      case 'close_request_answer': {
+        if (!actor.discordId) throw new AppError('VALIDATION_FAILED', 'Dein Konto ist nicht mit Discord verknüpft.');
+        const r = await this.closeRequestAnswer(t.id, actor.discordId, input.accept);
+        effects.push(...r.effects);
+        return r.message;
+      }
+      case 'remind': {
+        this.requireOpen(l);
+        if (t.creatorRemindedAt && Date.now() - t.creatorRemindedAt.getTime() < 10 * 60_000) throw new AppError('CONFLICT', 'Der Ersteller wurde gerade erst erinnert (höchstens alle 10 Minuten).');
+        const text = (input.text?.trim() || renderTicketText(l.cat.creatorReminderMessage || '⏰ {user}, das Team wartet auf deine Antwort in diesem Ticket.', this.vars(l))).slice(0, 1500);
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { creatorRemindedAt: new Date() } });
+        post({ content: mention(t.creatorId), mentionUsers: [t.creatorId], embeds: [{ description: text, color: 0xeab308, footer: `Erinnerung von ${actor.name}` }] });
+        effects.push({ type: 'dm', userId: t.creatorId, message: { embeds: [{ title: `⏰ Erinnerung · Ticket ${this.ref(t.number, l.settings)}`, description: `${text}${ch ? `\n\nZum Ticket: <#${ch}>` : ''}`, color: 0xeab308 }] } });
+        await this.logAction(l, 'reminder_sent', actor, { auto: false }, effects, `⏰ Ersteller erinnert von ${this.actorTag(actor)}`);
+        return 'Der Ersteller wurde erinnert (im Ticket und per DM).';
+      }
+      case 'forward': {
+        this.requireOpen(l);
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (input.target === 'CATEGORY' ? !uuid.test(input.targetId) : !/^\d{15,25}$/.test(input.targetId)) throw new AppError('VALIDATION_FAILED', 'Ungültiges Ziel der Weiterleitung.');
+        if (input.target === 'CATEGORY') {
+          const msg = await this.changeCategory(l, actor, input.targetId, 'ticket.forward', effects, refresh, post);
+          await this.forwardNote(l, actor, input.note);
+          await this.logAction(l, 'forwarded', actor, { kind: 'category', from: l.cat.name, to: msg }, effects, `📨 Weitergeleitet an Kategorie ${msg}`);
+          return `Weitergeleitet an ${msg}.`;
+        }
+        if (input.target === 'USER') {
+          await this.assignTo(l, actor, input.targetId, effects, refresh, post, 'forwarded');
+          await this.forwardNote(l, actor, input.note);
+          return 'Ticket weitergeleitet.';
+        }
+        // an eine Team-Rolle: Rolle bekommt Zugriff (vertraulich nur durch die Leitung) und wird benachrichtigt
+        if (!/^\d{15,25}$/.test(input.targetId)) throw new AppError('VALIDATION_FAILED', 'Ungültige Rollen-ID.');
+        if (l.cat.confidential && !actor.system && !(actor.userId && (await this.perms.has(actor.userId, 'ticket.manage')))) throw new AppError('PERMISSION_DENIED', 'Vertrauliche Tickets kann nur die Leitung (ticket.manage) an weitere Rollen weiterleiten.');
+        if (input.targetId === l.t.guildId) throw new AppError('VALIDATION_FAILED', '@everyone kann kein Ticket bekommen.');
+        await this.prisma.ticketAccess.upsert({ where: { ticketId_targetId: { ticketId: t.id, targetId: input.targetId } }, create: { ticketId: t.id, targetId: input.targetId, kind: 'ROLE', addedById: actor.discordId }, update: { kind: 'ROLE', expiresAt: null } });
+        if (ch) effects.push({ type: 'access', channelId: ch, targetId: input.targetId, kind: 'role', view: true, send: true });
+        post({ content: `<@&${input.targetId}>`, mentionRoles: [input.targetId], embeds: [{ description: `📨 Dieses Ticket wurde an <@&${input.targetId}> weitergeleitet (von ${this.actorTag(actor)}).`, color: l.cat.color }] });
+        await this.forwardNote(l, actor, input.note);
+        await this.logAction(l, 'forwarded', actor, { kind: 'role', to: input.targetId, target: input.targetId }, effects, `📨 Weitergeleitet an <@&${input.targetId}>`);
+        return 'Ticket an die Rolle weitergeleitet.';
+      }
+      case 'automation': {
+        const now = new Date();
+        const data = input.mode === 'enable' ? { automationDisabled: false, automationPausedUntil: null }
+          : input.mode === 'disable' ? { automationDisabled: true, automationPausedUntil: null }
+          : { automationDisabled: false, automationPausedUntil: new Date(now.getTime() + Math.min(Math.max(input.minutes ?? 60, 1), 60 * 24 * 30) * 60_000) };
+        if (input.mode === 'pause' && !input.minutes) throw new AppError('VALIDATION_FAILED', 'Bitte eine Dauer für die Pause angeben.');
+        await this.prisma.supportTicket.update({ where: { id: t.id }, data });
+        await refresh();
+        const text = input.mode === 'enable' ? 'wieder eingeschaltet' : input.mode === 'disable' ? 'dauerhaft ausgeschaltet' : `pausiert bis ${this.fmt(data.automationPausedUntil, l.tz)}`;
+        await this.logAction(l, 'automation_changed', actor, { mode: input.mode, until: data.automationPausedUntil?.toISOString() ?? null }, effects, `⚙️ Automatik ${text}`);
+        return `Automatik für dieses Ticket ${text}.`;
       }
       case 'reopen': {
         if (!this.isClosed(l)) throw new AppError('CONFLICT', 'Das Ticket ist bereits offen.');
@@ -704,22 +828,9 @@ export class SupportTicketsService {
         return `Status: ${s.name}`;
       }
       case 'category': {
-        const to = await this.config.category(input.categoryId);
-        if (to.id === l.cat.id) throw new AppError('CONFLICT', 'Das Ticket ist bereits in dieser Kategorie.');
-        if (to.archivedAt) throw new AppError('CONFLICT', 'Diese Kategorie ist archiviert.');
-        // neue Abteilung: die der Zielkategorie (sonst bleibt die bisherige)
-        const toDept = to.departmentId ? await this.config.department(to.departmentId) : l.dept;
-        await this.assertCan(actor, 'ticket.change_category', to, toDept, t);
-        await this.assertConfidentialMove(actor, l, to);
-        await this.moveRoleAccess(l, to, toDept, effects);
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { categoryId: to.id, departmentId: toDept?.id ?? null } });
-        if (ch && to.discordCategoryId && to.discordCategoryId !== l.cat.discordCategoryId) effects.push({ type: 'move', channelId: ch, parentId: to.discordCategoryId });
-        const removed = await this.revalidateClaimers(l, to, toDept, effects);
-        await refresh();
-        if (removed.length) post({ embeds: [{ description: `↩️ ${removed.map(mention).join(', ')} ${removed.length === 1 ? 'hat' : 'haben'} keinen Zugriff auf die neue Kategorie und wurde${removed.length === 1 ? '' : 'n'} als Bearbeiter entfernt.`, color: 0x64748b }] });
-        post({ content: to.mentionStaff ? to.staffRoleIds.map((r) => `<@&${r}>`).join(' ') || undefined : undefined, mentionRoles: to.mentionStaff ? to.staffRoleIds : [], embeds: [{ description: `🗂️ Kategorie geändert: **${l.cat.name}** → **${to.name}**`, color: to.color }] });
-        await this.logAction(l, 'category_changed', actor, { from: l.cat.name, to: to.name }, effects, `🗂️ Kategorie → ${to.name}`);
-        return `Kategorie: ${to.name}`;
+        const name = await this.changeCategory(l, actor, input.categoryId, 'ticket.change_category', effects, refresh, post);
+        await this.logAction(l, 'category_changed', actor, { from: l.cat.name, to: name }, effects, `🗂️ Kategorie → ${name}`);
+        return `Kategorie: ${name}`;
       }
       case 'rename': {
         const name = ticketChannelName(input.name, this.vars(l));
@@ -749,20 +860,7 @@ export class SupportTicketsService {
       }
       case 'assign': {
         this.requireOpen(l);
-        const userId = await this.staffWithAccess(input.targetId, l.cat, l.dept);
-        if (!userId) throw new AppError('VALIDATION_FAILED', 'Diese Person ist kein Teammitglied mit Zugriff auf Tickets dieser Art (Discord-Konto verknüpft, Recht ticket.claim, passende Rolle).');
-        if (t.claimers[0] === input.targetId && (l.cat.claimMode !== 'MULTI' || t.claimers.length === 1)) throw new AppError('CONFLICT', 'Diese Person bearbeitet das Ticket bereits.');
-        const claimers = l.cat.claimMode === 'SINGLE' ? [input.targetId] : [input.targetId, ...t.claimers.filter((c) => c !== input.targetId)];
-        const claimedStatus = l.status.isDefault ? await this.prisma.ticketStatus.findFirst({ where: { isClaimed: true, kind: 'OPEN' } }) : null;
-        await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? this.statusData(l, claimedStatus) : {}) } });
-        if (ch) {
-          for (const old of t.claimers.filter((c) => !claimers.includes(c))) if (l.cat.claimLocksChat) effects.push({ type: 'access', channelId: ch, targetId: old, kind: 'user', view: null });
-          if (l.cat.claimLocksChat) effects.push({ type: 'access', channelId: ch, targetId: input.targetId, kind: 'user', view: true, send: true });
-        }
-        const fresh = await refresh();
-        post({ content: mention(input.targetId), mentionUsers: [input.targetId], embeds: [{ description: `🧭 ${mention(input.targetId)} ist jetzt zuständig (zugewiesen von ${this.actorTag(actor)}).`, color: l.cat.color }] });
-        await this.logAction(l, 'assigned', actor, { from: t.claimers.join(', ') || null, to: input.targetId, claimers }, effects, `🧭 Zugewiesen an ${mention(input.targetId)}`);
-        await this.queueNotify(fresh, 'assigned', effects, `🧭 Dir wurde Ticket **${this.ref(t.number, l.settings)}** zugewiesen (${l.cat.name}).`, [input.targetId]);
+        await this.assignTo(l, actor, input.targetId, effects, refresh, post, 'assigned');
         return 'Ticket zugewiesen.';
       }
       case 'department': {
@@ -859,6 +957,67 @@ export class SupportTicketsService {
     }
   }
 
+  /**
+   * Kategorie wechseln (auch beim Weiterleiten): Zugriff auf die Zielkategorie prüfen, Kanalrechte von alter auf neue Zuständigkeit
+   * umstellen, Bearbeiter ohne Zugriff entfernen. Verlauf, Antworten, Notizen und Protokoll bleiben unverändert erhalten.
+   */
+  private async changeCategory(l: Loaded, actor: TicketActor, categoryId: string, perm: string, effects: TicketEffect[], refresh: () => Promise<Loaded>, post: (m: MessageSpec) => void) {
+    const { t } = l;
+    const ch = t.channelId;
+    const to = await this.config.category(categoryId);
+    if (to.id === l.cat.id) throw new AppError('CONFLICT', 'Das Ticket ist bereits in dieser Kategorie.');
+    if (to.archivedAt) throw new AppError('CONFLICT', 'Diese Kategorie ist archiviert.');
+    if (to.guildId && to.guildId !== t.guildId) throw new AppError('CONFLICT', 'Diese Kategorie gibt es auf dem Server des Tickets nicht.');
+    // neue Abteilung: die der Zielkategorie (sonst bleibt die bisherige)
+    const toDept = to.departmentId ? await this.config.department(to.departmentId) : l.dept;
+    await this.assertCan(actor, perm, to, toDept, t);
+    await this.assertConfidentialMove(actor, l, to);
+    await this.moveRoleAccess(l, to, toDept, effects);
+    // zusätzliche Personen: alte entfernen (außer Ersteller/hinzugefügte), neue hinzufügen
+    if (ch) {
+      const added = new Set((await this.prisma.ticketAccess.findMany({ where: { ticketId: t.id, kind: 'USER' } })).map((a) => a.targetId));
+      for (const u of l.cat.extraUserIds) if (!to.extraUserIds.includes(u) && u !== t.creatorId && !added.has(u) && !t.claimers.includes(u)) effects.push({ type: 'access', channelId: ch, targetId: u, kind: 'user', view: null });
+      for (const u of to.extraUserIds) if (!l.cat.extraUserIds.includes(u) && u !== t.creatorId) effects.push({ type: 'access', channelId: ch, targetId: u, kind: 'user', view: true, send: true });
+    }
+    await this.prisma.supportTicket.update({ where: { id: t.id }, data: { categoryId: to.id, departmentId: toDept?.id ?? null } });
+    if (ch && to.discordCategoryId && to.discordCategoryId !== l.cat.discordCategoryId) effects.push({ type: 'move', channelId: ch, parentId: to.discordCategoryId });
+    const removed = await this.revalidateClaimers(l, to, toDept, effects);
+    await refresh();
+    if (removed.length) post({ embeds: [{ description: `↩️ ${removed.map(mention).join(', ')} ${removed.length === 1 ? 'hat' : 'haben'} keinen Zugriff auf die neue Kategorie und wurde${removed.length === 1 ? '' : 'n'} als Bearbeiter entfernt.`, color: 0x64748b }] });
+    post({ content: to.mentionStaff ? to.staffRoleIds.map((r) => `<@&${r}>`).join(' ') || undefined : undefined, mentionRoles: to.mentionStaff ? to.staffRoleIds : [], embeds: [{ description: `🗂️ Kategorie geändert: **${l.cat.name}** → **${to.name}**`, color: to.color }] });
+    await this.panelLoad(l.cat.id, effects);
+    await this.panelLoad(to.id, effects);
+    return to.name;
+  }
+
+  /** Zuständigkeit an ein Teammitglied geben (Zuweisen bzw. Weiterleiten an eine Person) – nur an Mitarbeiter mit Zugriff. */
+  private async assignTo(l: Loaded, actor: TicketActor, targetId: string, effects: TicketEffect[], refresh: () => Promise<Loaded>, post: (m: MessageSpec) => void, action: 'assigned' | 'forwarded') {
+    const { t } = l;
+    const ch = t.channelId;
+    const userId = await this.staffWithAccess(targetId, l.cat, l.dept);
+    if (!userId) throw new AppError('VALIDATION_FAILED', 'Diese Person ist kein Teammitglied mit Zugriff auf Tickets dieser Art (Discord-Konto verknüpft, Recht ticket.claim, passende Rolle).');
+    if (t.claimers[0] === targetId && (l.cat.claimMode !== 'MULTI' || t.claimers.length === 1)) throw new AppError('CONFLICT', 'Diese Person bearbeitet das Ticket bereits.');
+    const claimers = l.cat.claimMode === 'SINGLE' ? [targetId] : [targetId, ...t.claimers.filter((c) => c !== targetId)];
+    const claimedStatus = l.status.isDefault ? await this.prisma.ticketStatus.findFirst({ where: { isClaimed: true, kind: 'OPEN' } }) : null;
+    await this.prisma.supportTicket.update({ where: { id: t.id }, data: { claimers, ...(claimedStatus ? this.statusData(l, claimedStatus) : {}) } });
+    if (ch) {
+      for (const old of t.claimers.filter((c) => !claimers.includes(c))) if (l.cat.claimLocksChat) effects.push({ type: 'access', channelId: ch, targetId: old, kind: 'user', view: null });
+      // Zuständige Person sieht das Ticket immer (auch wenn ihre Rolle über eine Abteilung kommt)
+      effects.push({ type: 'access', channelId: ch, targetId, kind: 'user', view: true, send: true });
+    }
+    const fresh = await refresh();
+    const verb = action === 'forwarded' ? 'weitergeleitet' : 'zugewiesen';
+    post({ content: mention(targetId), mentionUsers: [targetId], embeds: [{ description: `🧭 ${mention(targetId)} ist jetzt zuständig (${verb} von ${this.actorTag(actor)}).`, color: l.cat.color }] });
+    await this.logAction(l, action, actor, { kind: 'user', from: t.claimers.join(', ') || null, to: targetId, target: targetId, claimers }, effects, `${action === 'forwarded' ? '📨 Weitergeleitet' : '🧭 Zugewiesen'} an ${mention(targetId)}`);
+    await this.queueNotify(fresh, 'assigned', effects, `🧭 Dir wurde Ticket **${this.ref(t.number, l.settings)}** ${verb} (${l.cat.name}).`, [targetId]);
+  }
+
+  /** Begleittext einer Weiterleitung: als interne Notiz (nie für den Ersteller sichtbar). */
+  private async forwardNote(l: Loaded, actor: TicketActor, note?: string) {
+    const text = note?.trim();
+    if (text) await this.prisma.ticketNote.create({ data: { ticketId: l.t.id, authorId: actor.discordId, authorUserId: actor.userId, authorName: actor.name, text: `📨 Weiterleitung: ${text}`.slice(0, 4000) } });
+  }
+
   /** Schließen (auch für Ersteller und Automatik): Status, Rechte, CLOSED-Anzeige, Transcript, Bewertung, Löschplanung. */
   private async close(l: Loaded, actor: TicketActor, reason: string | null, effects: TicketEffect[]) {
     const { t } = l;
@@ -899,51 +1058,95 @@ export class SupportTicketsService {
     }
   }
 
+  /** Bewertungs-DM: Skala aus den Einstellungen (1–5 als Sterne, sonst Zahlen); mit Bewertungsformular öffnet ein Klick das Formular („:f“). */
   private ratingRequest(l: Loaded, reason?: string | null): TicketEffect {
     const v = this.vars(l, { '{reason}': reason ? `Grund: ${reason}` : '' });
+    const scale = l.settings.ratingScale;
+    const form = activeFields(l.cat.ratingForm).length ? ':f' : '';
     return { type: 'dm', userId: l.t.creatorId, message: {
-      embeds: [{ title: `⭐ ${l.cat.ratingQuestion}`, description: renderTicketText(l.settings.ratingMessage, v), color: 0xfacc15 }],
-      buttons: [1, 2, 3, 4, 5].map((n) => ({ id: `tk:rate:${l.t.id}:${n}`, label: '⭐'.repeat(n), style: n >= 4 ? 'success' : n <= 2 ? 'danger' : 'secondary' })),
+      embeds: [{ title: `⭐ ${l.cat.ratingQuestion}`, description: renderTicketText(l.settings.ratingMessage, v), color: 0xfacc15, footer: `Skala 1–${scale}` }],
+      buttons: Array.from({ length: scale }, (_, i) => i + 1).map((n) => { const tone = ratingTone(n, scale); return { id: `tk:rate:${l.t.id}:${n}${form}`, label: ratingLabel(n, scale), style: tone === 'positive' ? 'success' : tone === 'negative' ? 'danger' : 'secondary' }; }),
     } };
   }
 
   // ================= Bewertung =================
-  async rate(id: string, discordId: string, stars: number) {
+  /** Bewertungsformular als Discord-Formular (Bot), Titel mit der gewählten Bewertung. */
+  async ratingForm(id: string, discordId: string, stars: number) {
+    const t = await this.prisma.supportTicket.findUnique({ where: { id } });
+    if (!t || t.creatorId !== discordId) throw new AppError('NOT_FOUND', 'Ticket nicht gefunden.');
+    const [cat, settings] = await Promise.all([this.config.category(t.categoryId), this.config.settings()]);
+    const fields = activeFields(cat.ratingForm);
+    if (!fields.length) return { modal: null };
+    return { modal: formModal(`tk:ratefm:${id}:${stars}`, `Bewertung ${stars}/${settings.ratingScale}`, fields) };
+  }
+
+  /**
+   * Bewertung des Erstellers (einmal je Ticket). Skala aus den Einstellungen; ein Bewertungsformular wird serverseitig geprüft,
+   * das Feld „comment“ wird als Begründung übernommen.
+   */
+  async rate(id: string, discordId: string, stars: number, values?: Record<string, FormRawValue>) {
     const t = await this.prisma.supportTicket.findUnique({ where: { id } });
     if (!t) throw new AppError('NOT_FOUND', 'Ticket nicht gefunden.');
     if (t.creatorId !== discordId) throw new AppError('PERMISSION_DENIED', 'Nur der Ersteller kann das Ticket bewerten.');
+    if (!t.closedAt) throw new AppError('CONFLICT', 'Bewerten geht erst nach dem Schließen.');
     if (await this.prisma.ticketRating.findUnique({ where: { ticketId: id } })) throw new AppError('CONFLICT', 'Du hast dieses Ticket bereits bewertet.');
-    await this.prisma.ticketRating.create({ data: { ticketId: id, categoryId: t.categoryId, creatorId: discordId, staffIds: t.claimers, stars } });
-    await this.prisma.ticketLog.create({ data: { ticketId: id, action: 'rated', actorId: discordId, actorName: t.creatorName, detail: { stars } } });
-    const settings = await this.config.settings();
-    await this.postRating(t, stars, null, settings);
-    return { ok: true, thanks: settings.ratingThanks };
+    const [settings, cat] = await Promise.all([this.config.settings(), this.config.category(t.categoryId)]);
+    const scale = settings.ratingScale;
+    if (!Number.isInteger(stars) || stars < 1 || stars > scale) throw new AppError('VALIDATION_FAILED', `Bitte eine Bewertung von 1 bis ${scale} wählen.`);
+    const fields = activeFields(cat.ratingForm);
+    let answers: FormAnswer[] = [];
+    if (fields.length && values) {
+      const v = validateForm(fields, values, {});
+      if (!v.ok) throw new AppError('VALIDATION_FAILED', Object.entries(v.errors).map(([k, m]) => `${fields.find((f) => f.id === k)?.label ?? k}: ${m}`).join(' · '));
+      answers = v.answers.map(({ files: _f, ...a }) => a);
+    } else if (fields.some((f) => f.required)) throw new AppError('VALIDATION_FAILED', 'Bitte fülle das Bewertungsformular aus.');
+    const comment = answers.find((a) => a.questionId === 'comment')?.value?.slice(0, 1000) || null;
+    try {
+      await this.prisma.ticketRating.create({ data: { ticketId: id, categoryId: t.categoryId, creatorId: discordId, staffIds: t.claimers, stars, scale, comment, answers: answers as unknown as Prisma.InputJsonValue } });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw new AppError('CONFLICT', 'Du hast dieses Ticket bereits bewertet.');
+      throw e;
+    }
+    await this.prisma.ticketLog.create({ data: { ticketId: id, action: 'rated', actorId: discordId, actorName: t.creatorName, detail: { stars, scale } } });
+    await this.auditTicket({ userId: t.creatorUserId, discordId, name: t.creatorName, viaBot: true }, 'rated', t, { stars, scale });
+    await this.postRating(t, stars, comment, settings, scale, answers);
+    if (settings.logChannelId) await this.dispatch([{ type: 'post', channelId: settings.logChannelId, message: { embeds: [{ description: `**${this.ref(t.number, settings)}** · ⭐ Bewertung abgegeben (${stars}/${scale})`, color: 0x64748b }] } }], false);
+    return { ok: true, thanks: settings.ratingThanks, hasForm: fields.length > 0 };
   }
   async rateComment(id: string, discordId: string, comment: string) {
     const r = await this.prisma.ticketRating.findUnique({ where: { ticketId: id } });
     if (!r || r.creatorId !== discordId) throw new AppError('NOT_FOUND', 'Keine Bewertung gefunden.');
+    if (r.comment) throw new AppError('CONFLICT', 'Zu dieser Bewertung gibt es bereits eine Begründung.');
     await this.prisma.ticketRating.update({ where: { ticketId: id }, data: { comment } });
     const t = await this.prisma.supportTicket.findUnique({ where: { id } });
-    if (t) await this.postRating(t, r.stars, comment, await this.config.settings());
+    if (t) await this.postRating(t, r.stars, comment, await this.config.settings(), r.scale, [], true);
     return { ok: true };
   }
 
-  /** Bewertung in den Team-Channel (alles) und den öffentlichen Channel (gewählte Werte); Kommentar kommt als eigene Nachricht. */
-  private async postRating(t: SupportTicket, stars: number, comment: string | null, settings: TicketSettings) {
+  /**
+   * Interner Bewertungs-Log (alles inkl. Formularantworten) und optional öffentlicher Log – dort NUR die unter Allgemein → Bewertungen
+   * freigegebenen Werte (nie Formularantworten) und erst ab der eingestellten Mindestbewertung. Nachgereichte Begründung: eigene Nachricht.
+   */
+  private async postRating(t: SupportTicket, stars: number, comment: string | null, settings: TicketSettings, scale = 5, answers: FormAnswer[] = [], commentOnly = false) {
     if (!settings.ratingChannelId && !settings.ratingPublicChannelId) return;
-    const cat = await this.prisma.ticketCategory.findUnique({ where: { id: t.categoryId }, select: { name: true } });
+    const cat = await this.prisma.ticketCategory.findUnique({ where: { id: t.categoryId }, select: { name: true, confidential: true } });
     const mins = t.closedAt ? Math.round((t.closedAt.getTime() - t.createdAt.getTime()) / 60_000) : null;
     const dur = mins === null ? '—' : mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`;
     const all: Record<string, { name: string; value: string }> = {
       creator: { name: 'Ersteller', value: mention(t.creatorId) }, category: { name: 'Kategorie', value: cat?.name ?? '—' },
       staff: { name: 'Bearbeiter', value: t.claimers.map(mention).join(', ') || '—' }, duration: { name: 'Bearbeitungszeit', value: dur },
-      ...(comment ? { comment: { name: 'Kommentar', value: comment.slice(0, 1024) } } : {}),
+      ...(comment ? { comment: { name: 'Begründung', value: comment.slice(0, 1024) } } : {}),
     };
-    const embed = (keys: string[]): MessageSpec => ({ embeds: [{ title: comment ? `💬 Kommentar zur Bewertung · Ticket #${ticketNumber(t.number)}` : `${'⭐'.repeat(stars)} Bewertung · Ticket #${ticketNumber(t.number)}`, color: 0xfacc15,
-      fields: keys.filter((k) => all[k]).map((k) => ({ ...all[k]!, inline: k !== 'comment' })) }] });
+    const ref = this.ref(t.number, settings);
+    const score = scale <= 5 ? '⭐'.repeat(stars) : `${stars}/${scale}`;
+    const embed = (keys: string[], extra: { name: string; value: string }[] = []): MessageSpec => ({ embeds: [{ title: commentOnly ? `💬 Begründung zur Bewertung · Ticket ${ref}` : `${score} Bewertung · Ticket ${ref}`, color: 0xfacc15,
+      fields: [...keys.filter((k) => all[k]).map((k) => ({ ...all[k]!, inline: k !== 'comment' })), ...extra].slice(0, 25) }] });
     const effects: TicketEffect[] = [];
-    if (settings.ratingChannelId) effects.push({ type: 'post', channelId: settings.ratingChannelId, message: embed(['creator', 'category', 'staff', 'duration', 'comment']) });
-    if (settings.ratingPublicChannelId && (!comment || settings.ratingPublicFields.includes('comment'))) effects.push({ type: 'post', channelId: settings.ratingPublicChannelId, message: embed(comment ? ['comment'] : settings.ratingPublicFields) });
+    const formFields = answers.filter((a) => a.questionId !== 'comment').map((a) => ({ name: a.label.slice(0, 256), value: (a.value || '—').slice(0, 1024) }));
+    if (settings.ratingChannelId) effects.push({ type: 'post', channelId: settings.ratingChannelId, message: embed(['creator', 'category', 'staff', 'duration', 'comment'], formFields) });
+    // öffentlich: vertrauliche Kategorien nie; nur freigegebene Felder; Mindestbewertung
+    const publicOk = settings.ratingPublicChannelId && !cat?.confidential && stars >= settings.ratingPublicMinStars;
+    if (publicOk && (!commentOnly || settings.ratingPublicFields.includes('comment'))) effects.push({ type: 'post', channelId: settings.ratingPublicChannelId!, message: embed(commentOnly ? ['comment'] : settings.ratingPublicFields.filter((f) => f !== 'comment' || !!comment)) });
     await this.dispatch(effects, false);
   }
 
@@ -960,12 +1163,13 @@ export class SupportTicketsService {
       create: { ticketId: t.id, discordId: d.discordMessageId, authorId: d.authorId, authorName: d.authorName.slice(0, 100), authorAvatar: d.authorAvatar ?? null, isStaff: staff, isBot: d.isBot, content: d.content.slice(0, 8000), attachments: attachments as unknown as Prisma.InputJsonValue, embeds: d.embeds.slice(0, 5) as unknown as Prisma.InputJsonValue },
       update: { content: d.content.slice(0, 8000) },
     });
-    if (!d.isBot) await this.prisma.supportTicket.update({ where: { id: t.id }, data: { lastActivityAt: new Date(), warnedAt: null, staffAlertedAt: null, ...(staff && !t.firstResponseAt ? { firstResponseAt: new Date() } : {}) } });
+    const now = new Date();
+    if (!d.isBot) await this.prisma.supportTicket.update({ where: { id: t.id }, data: { lastActivityAt: now, warnedAt: null, staffAlertedAt: null, ...(staff ? { lastStaffMessageAt: now } : d.authorId === t.creatorId ? { lastCreatorMessageAt: now } : {}), ...(staff && !t.firstResponseAt ? { firstResponseAt: now } : {}) } });
     if (!d.isBot && d.authorId === t.creatorId && !t.closedAt) await this.onCreatorMessage(t.id).catch((e: Error) => this.log.warn(`creator message ${t.id}: ${e.message}`));
     // Auto-Claim: erstes Teammitglied, das schreibt, übernimmt (nur mit Recht ticket.claim)
     if (staff && !t.claimers.length && !t.closedAt) {
       const l = await this.load(t.id);
-      const link = l.cat.autoClaimOnMessage ? await this.prisma.discordLink.findUnique({ where: { discordId: d.authorId } }) : null;
+      const link = l.auto.autoClaimOnMessage && automationActive(l.t) ? await this.prisma.discordLink.findUnique({ where: { discordId: d.authorId } }) : null;
       if (link && !this.isClosed(l) && (await this.perms.has(link.userId, 'ticket.claim'))) {
         const effects: TicketEffect[] = [];
         await this.perform(l, { userId: link.userId, discordId: d.authorId, name: d.authorName, viaBot: false }, { action: 'claim' }, effects).catch(() => undefined);
@@ -1173,12 +1377,16 @@ export class SupportTicketsService {
       this.prisma.ticketRating.findUnique({ where: { ticketId: id } }), this.settingsFor(t.guildId),
       t.formVersion ? this.prisma.ticketFormVersion.findUnique({ where: { categoryId_version: { categoryId: t.categoryId, version: t.formVersion } }, select: { version: true, createdAt: true } }) : null,
     ]);
-    const names = await this.discordNames([...t.claimers, ...access.filter((a) => a.kind === 'USER').map((a) => a.targetId)]);
+    const names = await this.discordNames([...t.claimers, ...access.filter((a) => a.kind === 'USER').map((a) => a.targetId), ...(t.closedById ? [t.closedById] : [])]);
     const sla = slaState({ ...t, firstResponseMinutes: priority?.firstResponseMinutes ?? null, resolutionMinutes: priority?.resolutionMinutes ?? null });
+    const panel = t.panelId ? await this.prisma.ticketPanel.findUnique({ where: { id: t.panelId }, select: { id: true, name: true, automation: true } }) : null;
+    const automation = { ...effectiveAutomation(cat, panel?.automation), active: automationActive(t), disabled: t.automationDisabled, pausedUntil: t.automationPausedUntil, source: cat.automationSource };
     return {
       ...t, number: ticketNumber(t.number), ref: this.ref(t.number, settings), transcriptUrl: webUrl(`/transcript/${this.ref(t.number, settings)}`),
+      ratingScale: rating?.scale ?? settings.ratingScale,
       category: { id: cat.id, name: cat.name, emoji: cat.emoji, claimMode: cat.claimMode, closeReasonMode: cat.closeReasonMode, closeReasonSource: cat.closeReasonSource, allowReopen: cat.allowReopen, confidential: cat.confidential, active: cat.active && !cat.archivedAt },
-      department: dept ? { id: dept.id, name: dept.name, emoji: dept.emoji } : null, formVersion, sla,
+      department: dept ? { id: dept.id, name: dept.name, emoji: dept.emoji } : null, formVersion, sla, automation, panel: panel ? { id: panel.id, name: panel.name } : null,
+      closeForm: activeFields(cat.closeForm), closeRequest: t.closeRequestedAt ? { at: t.closeRequestedAt, by: t.closeRequestById, approvals: t.closeRequestApprovals, approvers: cat.closeRequestApprovers } : null,
       status, priority, access, messages, notes, logs, transcripts, rating, names,
     };
   }
@@ -1196,14 +1404,28 @@ export class SupportTicketsService {
       // nur erlaubte Statuswechsel anbieten (zentrale Regel)
       closed, statuses: statuses.filter((s) => s.id !== l.status.id && !checkStatusChange(l.status, s, 'status')), priorities, categories: categories.filter((c) => c.id !== l.cat.id), reasons, access,
       departments: departments.filter((d) => d.id !== l.t.departmentId),
-      close: { mode: l.cat.closeReasonMode, source: l.cat.closeReasonSource },
+      close: { mode: l.cat.closeReasonMode, source: l.cat.closeReasonSource, form: activeFields(l.cat.closeForm) },
     };
   }
 
   /** Schließen-Auswahl für den Bot (auch für Ersteller ohne Konto). */
   async closeOptions(id: string) {
     const l = await this.load(id);
-    return { mode: l.cat.closeReasonMode, source: l.cat.closeReasonSource, reasons: (await this.config.reasons()).map((r) => r.text), closed: this.isClosed(l) };
+    return { mode: l.cat.closeReasonMode, source: l.cat.closeReasonSource, reasons: (await this.config.reasons()).map((r) => r.text), closed: this.isClosed(l), form: activeFields(l.cat.closeForm).length > 0 };
+  }
+  /** Schließformular der Kategorie als Discord-Formular (Bot). */
+  async closeFormModal(id: string) {
+    const l = await this.load(id);
+    this.requireOpen(l);
+    const fields = activeFields(l.cat.closeForm);
+    if (!fields.length) return { modal: null };
+    return { modal: formModal(`tk:closefm:${id}`, 'Ticket schließen', fields) };
+  }
+  /** Ticket zu einem Discord-Kanal (Slash-Befehle im Ticket-Kanal). */
+  async byChannel(channelId: string) {
+    const t = await this.prisma.supportTicket.findFirst({ where: { channelId, deletedAt: null }, select: { id: true, creatorId: true, closedAt: true } });
+    if (!t) throw new AppError('NOT_FOUND', 'Dieser Kanal ist kein Ticket. Nutze den Befehl im Ticket-Kanal.');
+    return t;
   }
 
   async transcripts(userId: string, f: { q?: string; categoryName?: string; creator?: string; staff?: string; status?: string; from?: Date; to?: Date; number?: number; page: number; pageSize: number }) {
@@ -1248,16 +1470,17 @@ export class SupportTicketsService {
   }
 
   /** Ein Transkript (Version) für Ansicht/Download; `userId` null = Bot-Dienst (Zustellung in Discord). */
-  async transcript(userId: string | null, id: string, need: 'view' | 'export' | 'json' = 'view') {
+  async transcript(userId: string | null, id: string, need: 'view' | 'export' | 'json' = 'view'): Promise<TicketTranscript & { who: 'staff' | 'creator' | 'bot' }> {
     const tr = await this.prisma.ticketTranscript.findUnique({ where: { id } });
     if (!tr) throw new AppError('NOT_FOUND', 'Transkript nicht gefunden oder kein Zugriff.');
+    let who: 'staff' | 'creator' | 'bot' = 'bot';
     if (userId) {
-      const who = await this.transcriptAccess(userId, tr.ticketId, need);
+      who = await this.transcriptAccess(userId, tr.ticketId, need);
       const t = await this.prisma.supportTicket.findUnique({ where: { id: tr.ticketId }, select: { id: true, guildId: true, number: true } });
       if (t) await this.auditTicket({ userId, discordId: null, name: '', viaBot: false }, need === 'view' ? 'transcript_viewed' : 'transcript_exported', t, { ref: this.ref(t.number, await this.settingsFor(t.guildId)), transcriptId: tr.id, version: tr.version, as: who, format: need });
     }
     if (tr.status !== 'DONE') throw new AppError('CONFLICT', tr.status === 'FAILED' ? 'Die Erstellung dieses Transkripts ist fehlgeschlagen – bitte erneut versuchen.' : 'Das Transkript wird noch erstellt. Bitte in einem Moment erneut versuchen.');
-    return tr;
+    return { ...tr, who };
   }
 
   /** Versionen eines Tickets für die Transkript-Seite `/transcript/EMD-000123`. */
@@ -1305,44 +1528,88 @@ export class SupportTicketsService {
     return { ok: true };
   }
 
-  async stats(userId: string) {
-    const [visibleTickets, visible] = await Promise.all([this.visibleWhere(userId), this.visibleCategoryIds(userId)]);
-    const where: Prisma.SupportTicketWhereInput = visibleTickets ?? {};
+  /**
+   * Statistiken – ausschließlich aus gespeicherten Ticket-Daten berechnet (nur sichtbare Tickets): Mengen, Tage/Wochen, Antwort- und
+   * Bearbeitungszeiten (Ø, Median, p90), Mitarbeiter, Bewertungen, Auslastung, Aktivitäts-Heatmap (Wochentag × Stunde) und Ranglisten.
+   */
+  async stats(userId: string, f: { guildId?: string; days?: number } = {}) {
+    const [visibleTickets, visible, tz, settings] = await Promise.all([this.visibleWhere(userId), this.visibleCategoryIds(userId), this.timezone(), this.config.settings()]);
+    const where: Prisma.SupportTicketWhereInput = { deletedAt: null, ...(f.guildId ? { guildId: f.guildId } : {}), ...(visibleTickets ? { AND: [visibleTickets] } : {}) };
     const now = new Date();
     const day = new Date(now); day.setHours(0, 0, 0, 0);
     const week = new Date(day); week.setDate(day.getDate() - ((day.getDay() + 6) % 7));
     const month = new Date(day.getFullYear(), day.getMonth(), 1);
-    const [statuses, cats, tickets, ratings] = await Promise.all([
-      this.prisma.ticketStatus.findMany(), this.prisma.ticketCategory.findMany({ select: { id: true, name: true } }),
-      this.prisma.supportTicket.findMany({ where, select: { categoryId: true, statusId: true, claimers: true, createdAt: true, closedAt: true, firstResponseAt: true, escalatedAt: true } }),
-      this.prisma.ticketRating.findMany({ where: visible ? { categoryId: { in: visible } } : {} }),
+    const [statuses, cats, tickets] = await Promise.all([
+      this.prisma.ticketStatus.findMany(), this.prisma.ticketCategory.findMany({ select: { id: true, name: true, emoji: true, capacity: true, capacityAction: true } }),
+      this.prisma.supportTicket.findMany({ where, select: { id: true, categoryId: true, statusId: true, claimers: true, createdAt: true, closedAt: true, closedById: true, firstResponseAt: true, escalatedAt: true } }),
     ]);
+    const ids = new Set(tickets.map((t) => t.id));
+    const ratings = (await this.prisma.ticketRating.findMany({ where: visible ? { categoryId: { in: visible } } : {} })).filter((r) => ids.has(r.ticketId));
     const kind = new Map(statuses.map((s) => [s.id, s.kind]));
     const avg = (xs: number[]) => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
-    const perCategory = cats.map((c) => ({ id: c.id, name: c.name, total: tickets.filter((t) => t.categoryId === c.id).length, open: tickets.filter((t) => t.categoryId === c.id && kind.get(t.statusId) === 'OPEN').length })).filter((c) => c.total);
-    const staff = new Map<string, { tickets: number; closed: number }>();
-    for (const t of tickets) for (const s of t.claimers) { const e = staff.get(s) ?? { tickets: 0, closed: 0 }; e.tickets++; if (t.closedAt) e.closed++; staff.set(s, e); }
-    const ratingSummary = this.ratingSummary(ratings, cats);
+    const round = (x: number | null) => (x === null ? null : Math.round(x));
+    const firstResp = tickets.filter((t) => t.firstResponseAt).map((t) => (t.firstResponseAt!.getTime() - t.createdAt.getTime()) / 60_000);
+    const handling = tickets.filter((t) => t.closedAt).map((t) => (t.closedAt!.getTime() - t.createdAt.getTime()) / 60_000);
+    const isOpen = (t: { statusId: string }) => kind.get(t.statusId) === 'OPEN';
+    const perCategory = cats.map((c) => {
+      const mine = tickets.filter((t) => t.categoryId === c.id);
+      const open = mine.filter(isOpen).length;
+      return { id: c.id, name: c.name, emoji: c.emoji, total: mine.length, open, capacity: c.capacity, capacityAction: c.capacityAction, load: c.capacity ? Math.round((open / c.capacity) * 100) : null, level: loadLevel(open, c.capacity) };
+    }).filter((c) => c.total || c.capacity);
+    // Mitarbeiter: übernommene/geschlossene Tickets, Ø erste Antwort der übernommenen Tickets
+    const staff = new Map<string, { tickets: number; closed: number; closedBy: number; resp: number[] }>();
+    const entry = (id: string) => { const e = staff.get(id) ?? { tickets: 0, closed: 0, closedBy: 0, resp: [] }; staff.set(id, e); return e; };
+    for (const t of tickets) {
+      for (const sId of t.claimers) { const e = entry(sId); e.tickets++; if (t.closedAt) e.closed++; if (t.firstResponseAt && sId === t.claimers[0]) e.resp.push((t.firstResponseAt.getTime() - t.createdAt.getTime()) / 60_000); }
+      if (t.closedById && t.closedAt) entry(t.closedById).closedBy++;
+    }
+    // Tage (letzte 30) und Wochen (letzte 12) in der Zeitzone der Organisation
+    const days: { day: string; created: number; closed: number }[] = [];
+    for (let i = 29; i >= 0; i--) days.push({ day: ticketDayKey(new Date(now.getTime() - i * 86_400_000), tz), created: 0, closed: 0 });
+    const weeks: { week: string; created: number; closed: number }[] = [];
+    for (let i = 11; i >= 0; i--) { const k = ticketWeekKey(new Date(now.getTime() - i * 7 * 86_400_000), tz); if (!weeks.some((w) => w.week === k)) weeks.push({ week: k, created: 0, closed: 0 }); }
+    const heatmap = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+    for (const t of tickets) {
+      const d = days.find((x) => x.day === ticketDayKey(t.createdAt, tz)); if (d) d.created++;
+      const w = weeks.find((x) => x.week === ticketWeekKey(t.createdAt, tz)); if (w) w.created++;
+      if (t.closedAt) { const dc = days.find((x) => x.day === ticketDayKey(t.closedAt!, tz)); if (dc) dc.closed++; const wc = weeks.find((x) => x.week === ticketWeekKey(t.closedAt!, tz)); if (wc) wc.closed++; }
+      const { weekday, hour } = weekdayHour(t.createdAt, tz);
+      if (weekday >= 0) heatmap[weekday]![hour]!++;
+    }
+    const ratingSummary = this.ratingSummary(ratings, cats, settings.ratingScale);
+    const perStaff = [...staff.entries()].map(([discordId, v]) => ({ discordId, tickets: v.tickets, closed: v.closed, closedBy: v.closedBy, avgFirstResponseMinutes: avg(v.resp), medianFirstResponseMinutes: round(median(v.resp)) })).sort((a, b) => b.tickets - a.tickets);
     const names = await this.discordNames([...staff.keys(), ...ratingSummary.perStaff.map((s) => s.discordId)]);
     return {
-      names, total: tickets.length, open: tickets.filter((t) => kind.get(t.statusId) === 'OPEN').length, closed: tickets.filter((t) => kind.get(t.statusId) === 'CLOSED').length, archived: tickets.filter((t) => kind.get(t.statusId) === 'ARCHIVED').length,
+      names, total: tickets.length, open: tickets.filter(isOpen).length, closed: tickets.filter((t) => kind.get(t.statusId) === 'CLOSED').length, archived: tickets.filter((t) => kind.get(t.statusId) === 'ARCHIVED').length,
+      inProgress: tickets.filter((t) => isOpen(t) && t.claimers.length).length, unassigned: tickets.filter((t) => isOpen(t) && !t.claimers.length).length,
       today: tickets.filter((t) => t.createdAt >= day).length, week: tickets.filter((t) => t.createdAt >= week).length, month: tickets.filter((t) => t.createdAt >= month).length,
-      avgFirstResponseMinutes: avg(tickets.filter((t) => t.firstResponseAt).map((t) => (t.firstResponseAt!.getTime() - t.createdAt.getTime()) / 60_000)),
-      avgCloseMinutes: avg(tickets.filter((t) => t.closedAt).map((t) => (t.closedAt!.getTime() - t.createdAt.getTime()) / 60_000)),
+      avgFirstResponseMinutes: avg(firstResp), medianFirstResponseMinutes: round(median(firstResp)), p90FirstResponseMinutes: round(percentile(firstResp, 90)),
+      avgCloseMinutes: avg(handling), medianCloseMinutes: round(median(handling)), p90CloseMinutes: round(percentile(handling, 90)),
       escalations: tickets.filter((t) => t.escalatedAt).length,
-      perCategory, perStaff: [...staff.entries()].map(([discordId, v]) => ({ discordId, ...v })).sort((a, b) => b.tickets - a.tickets),
+      perCategory, perStaff, perDay: days, perWeek: weeks, heatmap, timezone: tz,
+      leaderboards: {
+        handled: perStaff.slice(0, 10).map((x) => ({ discordId: x.discordId, value: x.tickets })),
+        closed: [...perStaff].sort((a, b) => b.closedBy - a.closedBy).filter((x) => x.closedBy).slice(0, 10).map((x) => ({ discordId: x.discordId, value: x.closedBy })),
+        fastest: perStaff.filter((x) => x.medianFirstResponseMinutes !== null).sort((a, b) => a.medianFirstResponseMinutes! - b.medianFirstResponseMinutes!).slice(0, 10).map((x) => ({ discordId: x.discordId, value: x.medianFirstResponseMinutes! })),
+        rated: ratingSummary.perStaff.filter((x) => x.count >= 3).slice(0, 10).map((x) => ({ discordId: x.discordId, value: x.average ?? 0, count: x.count })),
+      },
       ratings: ratingSummary,
     };
   }
 
-  private ratingSummary(ratings: { stars: number; staffIds: string[]; categoryId: string }[], cats: { id: string; name: string }[]) {
+  /** Bewertungen zusammenfassen; ältere Bewertungen anderer Skalen werden auf die aktuelle Skala umgerechnet. */
+  private ratingSummary(ratings: { stars: number; scale?: number; staffIds: string[]; categoryId: string; createdAt?: Date }[], cats: { id: string; name: string }[], scale = 5) {
+    const norm = (r: { stars: number; scale?: number }) => normalizeRating(r.stars, r.scale ?? 5, scale);
     const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 100) / 100 : null);
     const staff = new Map<string, number[]>();
-    for (const r of ratings) for (const s of r.staffIds) staff.set(s, [...(staff.get(s) ?? []), r.stars]);
+    for (const r of ratings) for (const s of r.staffIds) staff.set(s, [...(staff.get(s) ?? []), norm(r)]);
+    const byMonth = new Map<string, number[]>();
+    for (const r of ratings) if (r.createdAt) { const k = r.createdAt.toISOString().slice(0, 7); byMonth.set(k, [...(byMonth.get(k) ?? []), norm(r)]); }
     return {
-      count: ratings.length, average: avg(ratings.map((r) => r.stars)), positive: ratings.filter((r) => r.stars >= 4).length, negative: ratings.filter((r) => r.stars <= 2).length,
+      scale, count: ratings.length, average: avg(ratings.map(norm)), positive: ratings.filter((r) => ratingTone(r.stars, r.scale ?? 5) === 'positive').length, negative: ratings.filter((r) => ratingTone(r.stars, r.scale ?? 5) === 'negative').length,
       perStaff: [...staff.entries()].map(([discordId, xs]) => ({ discordId, count: xs.length, average: avg(xs) })).sort((a, b) => (b.average ?? 0) - (a.average ?? 0)),
-      perCategory: cats.map((c) => { const xs = ratings.filter((r) => r.categoryId === c.id).map((r) => r.stars); return { id: c.id, name: c.name, count: xs.length, average: avg(xs) }; }).filter((c) => c.count),
+      perCategory: cats.map((c) => { const xs = ratings.filter((r) => r.categoryId === c.id).map(norm); return { id: c.id, name: c.name, count: xs.length, average: avg(xs) }; }).filter((c) => c.count),
+      trend: [...byMonth.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-12).map(([month, xs]) => ({ month, count: xs.length, average: avg(xs) })),
     };
   }
 
@@ -1354,7 +1621,7 @@ export class SupportTicketsService {
       this.prisma.ticketRating.findMany({ where: visible ? { categoryId: { in: visible } } : {} }), this.prisma.ticketCategory.findMany({ select: { id: true, name: true } }),
     ]);
     const tickets = await this.prisma.supportTicket.findMany({ where: { id: { in: items.map((i) => i.ticketId) } }, select: { id: true, number: true, creatorName: true } });
-    const summary = this.ratingSummary(all, cats);
+    const summary = this.ratingSummary(all, cats, (await this.config.settings()).ratingScale);
     return { total, summary, names: await this.discordNames(summary.perStaff.map((s) => s.discordId)), items: items.map((r) => ({ ...r, ticket: tickets.find((t) => t.id === r.ticketId) ? { number: ticketNumber(tickets.find((t) => t.id === r.ticketId)!.number), creatorName: tickets.find((t) => t.id === r.ticketId)!.creatorName } : null, category: cats.find((c) => c.id === r.categoryId)?.name ?? '—' })) };
   }
 
@@ -1369,15 +1636,22 @@ export class SupportTicketsService {
     if (!p) throw new AppError('NOT_FOUND', 'Panel nicht gefunden.');
     const cats = (await this.prisma.ticketCategory.findMany({ where: { id: { in: p.categoryIds }, active: true, archivedAt: null } })).sort((a, b) => p.categoryIds.indexOf(a.id) - p.categoryIds.indexOf(b.id));
     const embed: EmbedSpec = { title: [p.emoji, p.title].filter(Boolean).join(' ') || undefined, description: p.description || undefined, color: p.color, thumbnail: p.thumbnailUrl ?? undefined, image: p.bannerUrl ?? p.imageUrl ?? undefined, footer: p.footer ?? undefined, footerIcon: p.footerIconUrl ?? undefined, author: p.authorName ?? undefined, authorIcon: p.authorIconUrl ?? undefined };
+    // Auslastung je Kategorie (🟢 unter 80 % · 🟡 ab 80 % · 🔴 ab 100 %); volle Kategorien mit „verhindern“ sind nicht wählbar
+    const counts = cats.some((c) => c.capacity > 0) || p.showLoad ? await this.prisma.supportTicket.groupBy({ by: ['categoryId'], where: { categoryId: { in: cats.map((c) => c.id) }, closedAt: null, deletedAt: null }, _count: { _all: true } }) : [];
+    const openOf = new Map(counts.map((c) => [c.categoryId, c._count._all]));
+    const level = (c: typeof cats[number]) => loadLevel(openOf.get(c.id) ?? 0, c.capacity);
+    const blocked = (c: typeof cats[number]) => c.capacityAction === 'BLOCK' && level(c) === 'full';
     if (p.showLoad && cats.length) {
-      // offene Tickets je Kategorie (🟢 frei · 🟡 ab 75 % · 🔴 voll)
-      const counts = await this.prisma.supportTicket.groupBy({ by: ['categoryId'], where: { categoryId: { in: cats.map((c) => c.id) }, closedAt: null, deletedAt: null }, _count: { _all: true } });
-      const n = new Map(counts.map((c) => [c.categoryId, c._count._all]));
       embed.fields = [{ name: '📊 Ticketauslastung', value: cats.slice(0, 25).map((c) => {
-        const open = n.get(c.id) ?? 0, cap = c.capacity;
-        const dot = !cap ? '🔵' : open >= cap ? '🔴' : open >= cap * 0.75 ? '🟡' : '🟢';
-        return `${dot} ${c.emoji ? `${c.emoji} ` : ''}**${c.name}** – ${open}${cap ? `/${cap}` : ''} offen`;
+        const open = openOf.get(c.id) ?? 0, cap = c.capacity, lv = level(c);
+        return `${LOAD_DOT[lv]} ${c.emoji ? `${c.emoji} ` : ''}**${c.name}** – ${open}${cap ? `/${cap}` : ''} offen${lv === 'warn' || lv === 'full' ? ` · ${LOAD_LABEL[lv]}` : ''}`;
       }).join('\n').slice(0, 1024) }];
+    }
+    if (!p.active) {
+      // deaktiviert: Nachricht bleibt stehen, Auswahl ist gesperrt (das System lehnt Öffnungen zusätzlich ab)
+      embed.fields = [...(embed.fields ?? []), { name: '⛔ Derzeit deaktiviert', value: 'Über dieses Panel können gerade keine Tickets geöffnet werden.' }];
+      if (p.style === 'DROPDOWN') return { embeds: [embed], select: { id: `tk:open:${p.id}`, placeholder: 'Derzeit deaktiviert', options: [{ label: 'Derzeit deaktiviert', value: 'off' }] }, buttons: [] };
+      return { embeds: [embed], buttons: cats.slice(0, 25).map((c) => ({ id: `tk:open:${p.id}:${c.id}`, label: c.name.slice(0, 80), emoji: c.emoji ?? undefined, style: 'secondary' as const, disabled: true })) };
     }
     // Kategorien mit Formular: Kennzeichen „:f“, damit der Bot das Discord-Formular sofort öffnen kann (erste Antwort)
     const form = (c: typeof cats[number]) => c.formMode === 'MODAL' && activeFields(c.questions as unknown as TicketQuestion[]).length > 0;
@@ -1387,11 +1661,11 @@ export class SupportTicketsService {
       for (let i = 0; i < Math.min(cats.length, 100); i += 25) {
         const chunk = cats.slice(i, i + 25);
         selects.push({ id: i ? `tk:open:${p.id}:~${i / 25}` : `tk:open:${p.id}`, placeholder: (cats.length > 25 ? `${p.placeholder} (${i + 1}–${i + chunk.length})` : p.placeholder).slice(0, 150),
-          options: chunk.map((c) => ({ label: c.name.slice(0, 100), value: form(c) ? `${c.id}:f` : c.id, description: c.description.slice(0, 100) || undefined, emoji: c.emoji ?? undefined })) });
+          options: chunk.map((c) => ({ label: c.name.slice(0, 100), value: form(c) ? `${c.id}:f` : c.id, description: (blocked(c) ? '🔴 voll ausgelastet – derzeit keine neuen Tickets' : c.description).slice(0, 100) || undefined, emoji: c.emoji ?? undefined })) });
       }
       return { embeds: [embed], select: selects[0], selects: selects.slice(1) };
     }
-    return { embeds: [embed], buttons: cats.slice(0, 25).map((c) => ({ id: `tk:open:${p.id}:${c.id}${form(c) ? ':f' : ''}`, label: c.name.slice(0, 80), emoji: c.emoji ?? undefined, style: (['primary', 'secondary', 'success', 'danger'].includes(c.buttonStyle) ? c.buttonStyle : 'secondary') as ComponentButton['style'] })) };
+    return { embeds: [embed], buttons: cats.slice(0, 25).map((c) => ({ id: `tk:open:${p.id}:${c.id}${form(c) ? ':f' : ''}`, label: `${c.name.slice(0, 70)}${blocked(c) ? ' (voll)' : ''}`, emoji: c.emoji ?? undefined, disabled: blocked(c) || undefined, style: (['primary', 'secondary', 'success', 'danger'].includes(c.buttonStyle) ? c.buttonStyle : 'secondary') as ComponentButton['style'] })) };
   }
   /** Panel in Discord senden bzw. vorhandenes Panel aktualisieren. */
   async publishPanel(actor: TicketActor, id: string, channelId?: string | null) {
@@ -1405,6 +1679,21 @@ export class SupportTicketsService {
     const update = p.messageId && p.messageChannelId === target ? p.messageId : null;
     await this.discord.enqueue('tickets', 'ticket.effects', { effects: [{ type: 'panel', panelId: id, channelId: target, messageId: update, message }] }, { always: true });
     return { ok: true, updating: !!update };
+  }
+  /** Panel speichern; bei Aktivieren/Deaktivieren eines veröffentlichten Panels die Discord-Nachricht sofort anpassen. */
+  async savePanelAndSync(actor: Parameters<TicketConfigService['savePanel']>[0], id: string, d: Parameters<TicketConfigService['savePanel']>[2]) {
+    const before = await this.prisma.ticketPanel.findUnique({ where: { id }, select: { active: true } });
+    const p = await this.config.savePanel(actor, id, d);
+    if (before && before.active !== p.active && p.messageId) await this.refreshPublishedPanel(id).catch((e: Error) => this.log.warn(`panel refresh ${id}: ${e.message}`));
+    return p;
+  }
+
+  /** Bereits veröffentlichtes Panel neu zeichnen (z. B. nach Aktivieren/Deaktivieren) – ohne Kanalwechsel. */
+  async refreshPublishedPanel(id: string) {
+    const p = await this.prisma.ticketPanel.findUnique({ where: { id } });
+    if (!p?.messageId || !p.messageChannelId) return { ok: false };
+    await this.discord.enqueue('tickets', 'ticket.effects', { effects: [{ type: 'panel', panelId: id, channelId: p.messageChannelId, messageId: p.messageId, message: await this.panelMessage(id) }] }, { always: true });
+    return { ok: true };
   }
   async panelPosted(id: string, channelId: string, messageId: string) {
     await this.prisma.ticketPanel.update({ where: { id }, data: { messageChannelId: channelId, messageId, publishedAt: new Date(), publishError: null } }).catch(() => undefined);
@@ -1535,40 +1824,82 @@ export class SupportTicketsService {
       expired++;
     }
     const openIds = (await this.prisma.ticketStatus.findMany({ where: { kind: 'OPEN' } })).map((s) => s.id);
-    const cats = await this.prisma.ticketCategory.findMany({ where: { autoCloseMinutes: { gt: 0 } } });
-    for (const c of cats) {
-      const idleSince = new Date(now.getTime() - (c.autoCloseMinutes - Math.min(c.autoCloseWarnMinutes, c.autoCloseMinutes)) * 60_000);
-      for (const t of await this.prisma.supportTicket.findMany({ where: { categoryId: c.id, statusId: { in: openIds }, deletedAt: null, closedAt: null, channelId: { not: null }, lastActivityAt: { lte: idleSince } } })) {
-        const idle = (now.getTime() - t.lastActivityAt.getTime()) / 60_000;
-        const l = await this.load(t.id);
-        if (idle >= c.autoCloseMinutes) { await this.close(l, sys, 'Automatisch geschlossen (keine Aktivität)', effects); closed++; }
-        else if (c.autoCloseWarnMinutes > 0 && !t.warnedAt) {
-          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { warnedAt: now } });
-          effects.push({ type: 'post', channelId: t.channelId!, message: { content: mention(t.creatorId), mentionUsers: [t.creatorId], embeds: [{ description: renderTicketText(c.autoCloseMessage || '⏰ Dieses Ticket wird bald wegen Inaktivität geschlossen.', this.vars(l)), color: 0xf59e0b }] } });
-          await this.prisma.ticketLog.create({ data: { ticketId: t.id, action: 'auto_warning', actorName: sys.name } });
-          warned++;
+    // Automatik je Ticket: wirksame Werte (Kategorie bzw. Panel); pausierte/ausgeschaltete Tickets werden übersprungen (gespeichert → auch nach Neustart)
+    const [cats, panels] = await Promise.all([this.prisma.ticketCategory.findMany(), this.prisma.ticketPanel.findMany({ select: { id: true, automation: true } })]);
+    const catById = new Map(cats.map((c) => [c.id, c])), panelAuto = new Map(panels.map((p) => [p.id, p.automation]));
+    let alerted = 0, unclaimed = 0, reminded = 0, teamReminded = 0, autoReplied = 0, requestClosed = 0;
+    const rows = await this.prisma.supportTicket.findMany({ where: { statusId: { in: openIds }, deletedAt: null, closedAt: null, channelId: { not: null } }, orderBy: { lastActivityAt: 'asc' }, take: 2000 });
+    const min = (d: Date | null | undefined) => (d ? (now.getTime() - d.getTime()) / 60_000 : Infinity);
+    for (const t of rows) {
+      const c = catById.get(t.categoryId);
+      if (!c || !automationActive(t, now)) continue;
+      const a = effectiveAutomation(c, t.panelId ? panelAuto.get(t.panelId) : undefined);
+      try {
+        const idle = min(t.lastActivityAt);
+        // 1) Schließungsanfrage ohne Reaktion → schließen
+        if (a.closeRequestTimeoutMinutes > 0 && t.closeRequestedAt && min(t.closeRequestedAt) >= a.closeRequestTimeoutMinutes) {
+          const l = await this.load(t.id);
+          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { closeRequestedAt: null, closeRequestApprovals: [], closeRequestById: null } });
+          await this.close(l, sys, 'Schließungsanfrage ohne Antwort – automatisch geschlossen', effects);
+          requestClosed++; closed++;
+          continue;
         }
-      }
-    }
-    // Auto-Team-Alert (Bearbeiter markieren, nach derselben Zeit freigeben) und Auto-Unclaim
-    let alerted = 0, unclaimed = 0;
-    for (const c of await this.prisma.ticketCategory.findMany({ where: { OR: [{ staffAlertMinutes: { gt: 0 } }, { autoUnclaimMinutes: { gt: 0 } }] } })) {
-      const first = Math.min(...[c.staffAlertMinutes, c.autoUnclaimMinutes].filter((m) => m > 0));
-      for (const t of await this.prisma.supportTicket.findMany({ where: { categoryId: c.id, statusId: { in: openIds }, deletedAt: null, closedAt: null, channelId: { not: null }, claimers: { isEmpty: false }, lastActivityAt: { lte: new Date(now.getTime() - first * 60_000) } } })) {
-        const idle = (now.getTime() - t.lastActivityAt.getTime()) / 60_000;
-        const alertedFor = t.staffAlertedAt ? (now.getTime() - t.staffAlertedAt.getTime()) / 60_000 : 0;
-        const unclaim = (c.autoUnclaimMinutes > 0 && idle >= c.autoUnclaimMinutes) || (c.staffAlertMinutes > 0 && !!t.staffAlertedAt && alertedFor >= c.staffAlertMinutes);
-        if (unclaim) {
-          for (const target of t.claimers) await this.perform(await this.load(t.id), sys, { action: 'unclaim', targetId: target }, effects).catch((e: Error) => this.log.warn(`auto-unclaim ${t.id}: ${e.message}`));
-          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { staffAlertedAt: null } });
-          unclaimed++;
-        } else if (c.staffAlertMinutes > 0 && !t.staffAlertedAt && idle >= c.staffAlertMinutes) {
-          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { staffAlertedAt: now } });
-          effects.push({ type: 'post', channelId: t.channelId!, message: { content: t.claimers.map(mention).join(' '), mentionUsers: t.claimers, embeds: [{ description: `⏰ Dieses Ticket wartet seit ${Math.round(idle)} Minuten. Bitte kümmere dich darum – sonst wird es in ${c.staffAlertMinutes} Minuten automatisch freigegeben.`, color: 0xf59e0b }] } });
-          await this.prisma.ticketLog.create({ data: { ticketId: t.id, action: 'staff_alert', actorName: sys.name } });
-          alerted++;
+        // 2) Inaktivität → Warnung, dann schließen
+        if (a.autoCloseMinutes > 0) {
+          const warnAt = a.autoCloseMinutes - Math.min(a.autoCloseWarnMinutes, a.autoCloseMinutes);
+          if (idle >= a.autoCloseMinutes) { await this.close(await this.load(t.id), sys, 'Automatisch geschlossen (keine Aktivität)', effects); closed++; continue; }
+          if (a.autoCloseWarnMinutes > 0 && !t.warnedAt && idle >= warnAt) {
+            const l = await this.load(t.id);
+            await this.prisma.supportTicket.update({ where: { id: t.id }, data: { warnedAt: now } });
+            effects.push({ type: 'post', channelId: t.channelId!, message: { content: mention(t.creatorId), mentionUsers: [t.creatorId], embeds: [{ description: renderTicketText(c.autoCloseMessage || '⏰ Dieses Ticket wird bald wegen Inaktivität geschlossen.', this.vars(l)), color: 0xf59e0b }] } });
+            await this.prisma.ticketLog.create({ data: { ticketId: t.id, action: 'auto_warning', actorName: sys.name } });
+            warned++;
+          }
         }
-      }
+        // 3) Bearbeiter-Erinnerung (danach Freigabe) und Auto-Unclaim – nur übernommene Tickets
+        if (t.claimers.length && (a.staffAlertMinutes > 0 || a.autoUnclaimMinutes > 0)) {
+          const alertedFor = t.staffAlertedAt ? min(t.staffAlertedAt) : 0;
+          const unclaim = (a.autoUnclaimMinutes > 0 && idle >= a.autoUnclaimMinutes) || (a.staffAlertMinutes > 0 && !!t.staffAlertedAt && alertedFor >= a.staffAlertMinutes);
+          if (unclaim) {
+            for (const target of t.claimers) await this.perform(await this.load(t.id), sys, { action: 'unclaim', targetId: target }, effects).catch((e: Error) => this.log.warn(`auto-unclaim ${t.id}: ${e.message}`));
+            await this.prisma.supportTicket.update({ where: { id: t.id }, data: { staffAlertedAt: null } });
+            unclaimed++;
+          } else if (a.staffAlertMinutes > 0 && !t.staffAlertedAt && idle >= a.staffAlertMinutes) {
+            await this.prisma.supportTicket.update({ where: { id: t.id }, data: { staffAlertedAt: now } });
+            effects.push({ type: 'post', channelId: t.channelId!, message: { content: t.claimers.map(mention).join(' '), mentionUsers: t.claimers, embeds: [{ description: `⏰ Dieses Ticket wartet seit ${Math.round(idle)} Minuten. Bitte kümmere dich darum – sonst wird es in ${a.staffAlertMinutes} Minuten automatisch freigegeben.`, color: 0xf59e0b }] } });
+            await this.prisma.ticketLog.create({ data: { ticketId: t.id, action: 'staff_alert', actorName: sys.name } });
+            alerted++;
+          }
+        }
+        // 4) Erinnerung an den Ersteller: Team hat zuletzt geschrieben, Ersteller antwortet seit X Minuten nicht (einmal je Team-Nachricht)
+        if (a.creatorReminderMinutes > 0 && t.lastStaffMessageAt && (!t.lastCreatorMessageAt || t.lastCreatorMessageAt < t.lastStaffMessageAt)
+          && min(t.lastStaffMessageAt) >= a.creatorReminderMinutes && (!t.creatorRemindedAt || t.creatorRemindedAt < t.lastStaffMessageAt)) {
+          const l = await this.load(t.id);
+          const text = renderTicketText(c.creatorReminderMessage || '⏰ {user}, das Team wartet auf deine Antwort in diesem Ticket.', this.vars(l));
+          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { creatorRemindedAt: now } });
+          effects.push({ type: 'post', channelId: t.channelId!, message: { content: mention(t.creatorId), mentionUsers: [t.creatorId], embeds: [{ description: text, color: 0xeab308 }] } });
+          effects.push({ type: 'dm', userId: t.creatorId, message: { embeds: [{ title: `⏰ Erinnerung · Ticket ${this.ref(t.number, l.settings)}`, description: `${text}\n\nZum Ticket: <#${t.channelId}>`, color: 0xeab308 }] } });
+          await this.logAction(l, 'reminder_sent', sys, { auto: true }, effects, '⏰ Ersteller automatisch erinnert');
+          reminded++;
+        }
+        // 5) Team-Erinnerung: nicht übernommen und noch keine Antwort des Teams
+        if (a.teamReminderMinutes > 0 && !t.claimers.length && !t.firstResponseAt && !t.teamRemindedAt && min(t.createdAt) >= a.teamReminderMinutes) {
+          const l = await this.load(t.id);
+          const roles = (await this.routing(l.cat, l.dept, l.settings)).responsible;
+          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { teamRemindedAt: now } });
+          effects.push({ type: 'post', channelId: t.channelId!, message: { content: roles.map((r) => `<@&${r}>`).join(' ') || undefined, mentionRoles: roles, embeds: [{ description: `🔔 Dieses Ticket wartet seit ${Math.round(min(t.createdAt))} Minuten auf das Team und ist noch nicht übernommen.`, color: 0xf59e0b }] } });
+          await this.logAction(l, 'team_reminder', sys, {}, effects, '🔔 Team-Erinnerung (nicht übernommen)');
+          teamReminded++;
+        }
+        // 6) Automatische Antwort, wenn das Team nicht reagiert (einmal je Ticket)
+        if (a.noResponseMinutes > 0 && !t.firstResponseAt && !t.noResponseSentAt && min(t.createdAt) >= a.noResponseMinutes) {
+          const l = await this.load(t.id);
+          await this.prisma.supportTicket.update({ where: { id: t.id }, data: { noResponseSentAt: now } });
+          effects.push({ type: 'post', channelId: t.channelId!, message: { embeds: [{ description: renderTicketText(c.noResponseMessage || 'Danke für deine Geduld, {user}! Das Team meldet sich so schnell wie möglich.', this.vars(l)), color: 0x3b82f6, footer: 'Automatische Nachricht' }] } });
+          await this.logAction(l, 'no_response_reply', sys, {}, effects, '🤖 Automatische Antwort (keine Reaktion des Teams)');
+          autoReplied++;
+        }
+      } catch (e) { this.log.warn(`automation ${t.id}: ${e instanceof Error ? e.message : e}`); }
     }
     for (const t of await this.prisma.supportTicket.findMany({ where: { deleteAt: { lte: now }, deletedAt: null } })) {
       const l = await this.load(t.id);
@@ -1582,7 +1913,7 @@ export class SupportTicketsService {
     if (sla.reminded || sla.escalated) this.log.log(JSON.stringify(sla));
     if (settings.transcriptRetentionDays > 0) await this.prisma.ticketTranscript.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - settings.transcriptRetentionDays * 86_400_000) } } });
     await this.dispatch(effects, false);
-    return { closed, warned, deleted, expired, alerted, unclaimed, ...sla };
+    return { closed, warned, deleted, expired, alerted, unclaimed, creatorReminded: reminded, teamReminded, autoReplied, requestClosed, ...sla };
   }
 
   /**

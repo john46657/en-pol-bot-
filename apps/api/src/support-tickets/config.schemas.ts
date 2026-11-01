@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TICKET_ACTION_KEYS, QUESTION_TYPES, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, STATUS_KINDS, TICKET_STATUS_KEYS } from '@enrp/shared';
+import { TICKET_ACTION_KEYS, QUESTION_TYPES, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, STATUS_KINDS, TICKET_STATUS_KEYS, CAPACITY_ACTIONS, CLOSE_REQUEST_APPROVERS, AUTOMATION_SOURCES, RATING_SCALE_MIN, RATING_SCALE_MAX, FORM_FIELDS_PER_MODAL } from '@enrp/shared';
 
 const snowflake = z.string().regex(/^\d{15,25}$/, 'Discord-ID (15–25 Ziffern)');
 const ids = z.array(snowflake).max(50).default([]);
@@ -28,6 +28,16 @@ export const buttonSchema = z.object({
 });
 
 const guildOpt = optId;
+const minutes = (max = 60 * 24 * 30) => z.number().int().min(0).max(max).default(0);
+/** Formular beim Schließen bzw. bei der Bewertung: ein Discord-Formular (höchstens 5 Felder). */
+const smallForm = z.array(questionSchema).max(FORM_FIELDS_PER_MODAL, `Höchstens ${FORM_FIELDS_PER_MODAL} Felder (Discord-Formular).`).default([])
+  .refine((q) => new Set(q.map((x) => x.id)).size === q.length, 'Die IDs der Felder müssen eindeutig sein.');
+/** Standardwerte der Automatisierungen eines Panels. */
+export const automationSchema = z.object({
+  autoCloseMinutes: minutes(60 * 24 * 90), autoCloseWarnMinutes: minutes(), creatorReminderMinutes: minutes(), teamReminderMinutes: minutes(),
+  staffAlertMinutes: minutes(), autoUnclaimMinutes: minutes(), autoClaimOnMessage: z.boolean().default(false), closeRequestCloses: z.boolean().default(true),
+  closeRequestTimeoutMinutes: minutes(), noResponseMinutes: minutes(),
+}).default({});
 export const categorySchema = z.object({
   /** Discord-Server, auf dem es diese Ticket-Art gibt (leer = alle Server). */
   guildId: guildOpt,
@@ -60,6 +70,14 @@ export const categorySchema = z.object({
   // Premium: Abteilung, Vertraulichkeit, Formular vor dem Erstellen, Eskalation unzugewiesener Tickets
   departmentId: z.string().uuid().nullable().optional().transform((v) => v ?? null), confidential: z.boolean().default(false),
   formMode: z.enum(['CHANNEL', 'MODAL']).default('CHANNEL'), escalateUnassignedMinutes: z.number().int().min(0).max(60 * 24 * 30).default(0),
+  // Ticket-System-Erweiterung: Zusatzpersonen, Auslastung, Formulare beim Schließen/Bewerten, Schließungsanfrage, Automatik
+  extraUserIds: ids, capacityAction: enumOf(CAPACITY_ACTIONS).default('BLOCK'),
+  closeForm: smallForm, ratingForm: smallForm, closeRequestApprovers: enumOf(CLOSE_REQUEST_APPROVERS).default('CREATOR'),
+  automationSource: enumOf(AUTOMATION_SOURCES).default('CATEGORY'),
+  creatorReminderMinutes: minutes(), creatorReminderMessage: z.string().trim().max(1000).default('⏰ {user}, das Team wartet auf deine Antwort in diesem Ticket.'),
+  teamReminderMinutes: minutes(), noResponseMinutes: minutes(),
+  noResponseMessage: z.string().trim().max(1000).default('Danke für deine Geduld, {user}! Das Team ist gerade ausgelastet und meldet sich so schnell wie möglich.'),
+  closeRequestTimeoutMinutes: minutes(),
 });
 export type CategoryInput = z.infer<typeof categorySchema>;
 
@@ -72,6 +90,9 @@ export const panelSchema = z.object({
   channelId: optId,
   // Discord: höchstens 25 Buttons; Dropdown: je Menü 25 Einträge, bis zu 4 Menüs
   categoryIds: z.array(z.string().uuid()).max(100).default([]), allowedRoleIds: ids, showLoad: z.boolean().default(false), position: z.number().int().min(0).max(1000).default(0),
+  internalNote: z.string().trim().max(1000).default(''), active: z.boolean().default(true),
+  channelNameFormat: z.string().trim().max(90).nullish().transform((v) => v || null), mentionRoleIds: ids,
+  maxOpen: z.number().int().min(0).max(100).default(0), automation: automationSchema,
 }).refine((p) => p.style !== 'BUTTONS' || p.categoryIds.length <= 25, { message: 'Discord erlaubt höchstens 25 Buttons – nutze bei mehr Kategorien ein Dropdown (bis 100).', path: ['categoryIds'] });
 export type PanelInput = z.infer<typeof panelSchema>;
 
@@ -147,6 +168,11 @@ export const settingsSchema = z.object({
   /** Benachrichtigung „neue Nachricht des Nutzers“ höchstens alle … Minuten je Ticket */
   userMessageNotifyMinutes: z.number().int().min(1).max(60 * 24).default(10),
   notifications: notifySchema,
+  // ---- Bewertungen ----
+  /** Bewertungsskala (2–10); 1–5 erscheinen als Sterne, größere Skalen als Zahlen */
+  ratingScale: z.number().int().min(RATING_SCALE_MIN).max(RATING_SCALE_MAX).default(5),
+  /** öffentlichen Bewertungs-Log nur ab dieser Bewertung (0 = alle) – z. B. nur gute Bewertungen öffentlich */
+  ratingPublicMinStars: z.number().int().min(0).max(RATING_SCALE_MAX).default(0),
 });
 export type TicketSettings = z.infer<typeof settingsSchema>;
 export const DEFAULT_SETTINGS: TicketSettings = settingsSchema.parse({});

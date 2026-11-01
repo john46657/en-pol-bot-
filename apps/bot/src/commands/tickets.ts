@@ -24,11 +24,12 @@ const staff = (c: Ctx, id: string, body: Record<string, unknown>) => c.api.asUse
 const options = (c: Ctx, id: string) => c.api.asUser<Options>(c.discordId, 'GET', `/support-tickets/${id}/options`);
 
 /** Schließen: als Mitarbeiter, sonst als Ersteller (falls die Kategorie das erlaubt). */
-async function close(c: Ctx, id: string, reason?: string): Promise<Reply> {
-  try { return await run(c, await staff(c, id, { action: 'close', ...(reason ? { reason } : {}) })); }
+async function close(c: Ctx, id: string, reason?: string, answers?: Record<string, string | string[] | boolean>): Promise<Reply> {
+  const body = { ...(reason ? { reason } : {}), ...(answers ? { answers } : {}) };
+  try { return await run(c, await staff(c, id, { action: 'close', ...body })); }
   catch (e) {
     if (!(e instanceof BotApiError) || (e.status !== 401 && e.status !== 403)) return fail(e);
-    try { return await run(c, await c.api.service<R>('POST', `/bot/support-tickets/${id}/creator-close`, { discordId: c.discordId, ...(reason ? { reason } : {}) })); }
+    try { return await run(c, await c.api.service<R>('POST', `/bot/support-tickets/${id}/creator-close`, { discordId: c.discordId, ...body })); }
     catch (e2) { return fail(e2); }
   }
 }
@@ -71,7 +72,9 @@ const addPicker = (id: string, minutes: number): Reply => ({
 /** Alle Ticket-Interaktionen: `tk:<aktion>:<ticketId|panelId>:…` */
 export const TICKET_INTERACTION: InteractionDef = {
   prefix: 'tk',
-  opensModal: (a, values) => ['ans', 'rename', 'note', 'ratec', 'closem', 'formopen', 'formstep'].includes(a[0] ?? '') || (a[0] === 'close' && a[2] === 'm')
+  opensModal: (a, values) => ['ans', 'rename', 'note', 'ratec', 'closem', 'formopen', 'formstep', 'closefo'].includes(a[0] ?? '') || (a[0] === 'close' && (a[2] === 'm' || a[2] === 'f'))
+    // Bewertung mit Bewertungsformular („:f“) → Formular ist die erste Antwort
+    || (a[0] === 'rate' && a[3] === 'f')
     // Panel: Kategorie mit Formular („:f“) → das Formular ist die erste Antwort
     || (a[0] === 'open' && (a[3] === 'f' || (!UUID.test(a[2] ?? '') && !!values?.[0]?.endsWith(':f')))),
   async run(c): Promise<Reply> {
@@ -135,7 +138,12 @@ export const TICKET_INTERACTION: InteractionDef = {
         case 'anss': return answer(c, id, rest[0] ?? '', c.values ?? []);
         case 'skip': return answer(c, id, rest[0] ?? '', null);
         // ---- Schließen ----
-        case 'close': {
+        case 'close': case 'closefo': {
+          // eigenes Schließformular der Kategorie (Discord-Formular; Prüfung im System)
+          if (rest[0] === 'f' || action === 'closefo') {
+            const r = await c.api.service<{ modal: FormModalSpec | null }>('GET', `/bot/support-tickets/${id}/close-form`);
+            if (r.modal) return toModal(r.modal);
+          }
           if (rest[0] === 'n') return close(c, id);
           if (rest[0] === 'm') return { modal: { id: `tk:closemodal:${id}`, title: 'Ticket schließen', fields: [{ id: 'reason', label: 'Warum wird dieses Ticket geschlossen?', paragraph: true, required: false, maxLength: 500 }] } };
           const o = await c.api.service<{ mode: string; source: string; reasons: string[]; closed: boolean }>('GET', `/bot/support-tickets/${id}/close-options`);
@@ -151,9 +159,29 @@ export const TICKET_INTERACTION: InteractionDef = {
         case 'closemodal': return close(c, id, (f.reason ?? '').trim() || undefined);
         case 'closer': return close(c, id, c.values?.[0]);
         case 'closen': return close(c, id);
+        case 'closefm': return close(c, id, undefined, c.modal?.values);
         // ---- Einfache Mitarbeiter-Aktionen ----
-        case 'claim': case 'unclaim': case 'lock': case 'unlock': case 'escalate': case 'transcript': case 'reopen': case 'rating': case 'close_request':
+        case 'claim': case 'unclaim': case 'lock': case 'unlock': case 'escalate': case 'transcript': case 'reopen': case 'rating': case 'close_request': case 'remind':
           return run(c, await staff(c, id, { action }));
+        // ---- Weiterleiten: Teammitglied, Team-Rolle oder andere Kategorie (Verlauf bleibt erhalten) ----
+        case 'forward': {
+          const o = await options(c, id); // Rechte + Kategorien
+          return { ephemeral: true, embeds: [{ title: '📨 Ticket weiterleiten', description: 'An ein Teammitglied, eine Team-Rolle oder eine andere Kategorie. Der gesamte Verlauf bleibt erhalten.', color: COLORS.info }],
+            selects: [
+              { id: `tk:fwu:${id}`, placeholder: 'An Teammitglied …', kind: 'user', min: 1, max: 1, options: [] },
+              { id: `tk:fwr:${id}`, placeholder: 'An Team-Rolle …', kind: 'role', min: 1, max: 1, options: [] },
+              ...(o.categories.length ? [{ id: `tk:fwc:${id}`, placeholder: 'An Kategorie …', options: o.categories.slice(0, 25).map((x) => ({ label: clip(x.name, 100), value: x.id, ...(emojiOf(x.emoji) ? { emoji: emojiOf(x.emoji)! } : {}) })) }] : []),
+            ] };
+        }
+        case 'fwu': case 'fwr': case 'fwc':
+          return run(c, await staff(c, id, { action: 'forward', target: action === 'fwu' ? 'USER' : action === 'fwr' ? 'ROLE' : 'CATEGORY', targetId: c.values?.[0] ?? '' }));
+        // ---- Automatik für dieses Ticket ----
+        case 'automation': return { ephemeral: true, embeds: [{ title: '⚙️ Automatik für dieses Ticket', description: 'Erinnerungen, automatisches Schließen/Freigeben usw. für **dieses** Ticket pausieren oder ausschalten. Die Einstellung bleibt auch nach einem Neustart erhalten.', color: COLORS.info }],
+          buttons: [
+            { id: `tk:auto:${id}:pause:60`, label: '1 Stunde pausieren', emoji: '⏸️', style: 'secondary' }, { id: `tk:auto:${id}:pause:1440`, label: '24 Stunden pausieren', emoji: '⏸️', style: 'secondary' },
+            { id: `tk:auto:${id}:disable`, label: 'Dauerhaft aus', emoji: '⛔', style: 'danger' }, { id: `tk:auto:${id}:enable`, label: 'Wieder an', emoji: '▶️', style: 'success' },
+          ] };
+        case 'auto': return run(c, await staff(c, id, { action: 'automation', mode: rest[0], ...(rest[0] === 'pause' ? { minutes: Number(rest[1]) || 60 } : {}) }));
         // ---- Antwort des Erstellers auf „Schließen anfragen“ ----
         case 'creq': {
           const r = await c.api.service<R>('POST', `/bot/support-tickets/${id}/close-request`, { discordId: c.discordId, accept: rest[0] === 'yes' });
@@ -215,10 +243,19 @@ export const TICKET_INTERACTION: InteractionDef = {
         case 'notem': return run(c, await staff(c, id, { action: 'note', text: f.text ?? '' }));
         // ---- Bewertung (per DM an den Ersteller) ----
         case 'rate': {
+          if (rest[1] === 'f') {
+            // Bewertungsformular (Begründung usw.) – die Bewertung wird erst mit dem Formular gespeichert
+            const m = await c.api.service<{ modal: FormModalSpec | null }>('GET', `/bot/support-tickets/${id}/rating-form?discordId=${c.discordId}&stars=${Number(rest[0]) || 0}`);
+            if (m.modal) return toModal(m.modal);
+          }
           const r = await c.api.service<{ thanks: string }>('POST', `/bot/support-tickets/${id}/rating`, { discordId: c.discordId, stars: Number(rest[0]) });
-          return { ...okReply(r.thanks), buttons: [{ id: `tk:ratec:${id}`, label: 'Kommentar hinzufügen', emoji: '💬', style: 'secondary' }], update: { embeds: [{ title: `⭐ ${'⭐'.repeat(Math.max(0, Number(rest[0]) - 1))} bewertet`, description: 'Danke für dein Feedback!', color: COLORS.success }] } };
+          return { ...okReply(r.thanks), buttons: [{ id: `tk:ratec:${id}`, label: 'Begründung hinzufügen', emoji: '💬', style: 'secondary' }], update: { embeds: [{ title: `⭐ ${Number(rest[0])} – bewertet`, description: 'Danke für dein Feedback!', color: COLORS.success }] } };
         }
-        case 'ratec': return { modal: { id: `tk:ratecm:${id}`, title: 'Kommentar zur Bewertung', fields: [{ id: 'comment', label: 'Wie zufrieden warst du mit dem Support?', paragraph: true, required: true, maxLength: 1000 }] } };
+        case 'ratefm': {
+          const r = await c.api.service<{ thanks: string }>('POST', `/bot/support-tickets/${id}/rating`, { discordId: c.discordId, stars: Number(rest[0]), values: c.modal?.values ?? {} });
+          return okReply(r.thanks);
+        }
+        case 'ratec': return { modal: { id: `tk:ratecm:${id}`, title: 'Begründung zur Bewertung', fields: [{ id: 'comment', label: 'Warum diese Bewertung? (optional)', paragraph: true, required: true, maxLength: 1000 }] } };
         case 'ratecm': { await c.api.service('POST', `/bot/support-tickets/${id}/rating-comment`, { discordId: c.discordId, comment: f.comment ?? '' }); return okReply('Danke für deinen Kommentar!'); }
         default: return errorReply('Unbekannte Aktion.');
       }
@@ -252,6 +289,80 @@ export const TICKET_COMMAND: CommandDef = {
         embeds: [{ title: member ? '🎫 Ticket für ein Mitglied öffnen' : '🎫 Ticket öffnen', description: member ? `Für <@${member}> – wähle die Ticket-Art.` : 'Wähle die passende Ticket-Art.', color: COLORS.info }],
         select: { id: member ? `tk:for:${member}` : 'tk:open:cmd', placeholder: 'Ticket-Art wählen …', options },
       };
+    } catch (e) { return fail(e); }
+  },
+};
+
+// ---------------- /ticket: Ticket-Aktionen per Slash-Befehl im Ticket-Kanal ----------------
+const TICKET_SUBS = {
+  claim: 'Ticket übernehmen', unclaim: 'Ticket freigeben', schliessen: 'Ticket schließen', anfrage: 'Schließungsanfrage senden', weiterleiten: 'Ticket weiterleiten (Mitglied, Rolle oder Kategorie)',
+  hinzufuegen: 'Person zum Ticket hinzufügen', entfernen: 'Person aus dem Ticket entfernen', umbenennen: 'Ticket-Kanal umbenennen', erinnern: 'Ticket-Ersteller erinnern',
+  notiz: 'Private Teamnotiz (nie für den Ersteller sichtbar)', automatik: 'Automatisierungen für dieses Ticket pausieren/aus/an', oeffnen: 'Ticket im Auftrag eines Mitglieds öffnen',
+} as const;
+/** Ticket des aktuellen Kanals (Slash-Befehle laufen im Ticket-Kanal). */
+async function currentTicket(c: Ctx) {
+  if (!c.channelId) throw new BotApiError(404, 'NOT_FOUND', 'Nutze den Befehl im Ticket-Kanal.');
+  return c.api.service<{ id: string }>('GET', `/bot/support-tickets/by-channel/${c.channelId}`);
+}
+export const TICKET_ADMIN_COMMAND: CommandDef = {
+  name: 'ticket', description: 'Ticket-Aktionen im Ticket-Kanal (Rechte wie im Dashboard)',
+  subcommands: [
+    { name: 'claim', description: TICKET_SUBS.claim }, { name: 'unclaim', description: TICKET_SUBS.unclaim },
+    { name: 'schliessen', description: TICKET_SUBS.schliessen, options: [{ name: 'grund', description: 'Schließungsgrund', type: 'string', maxLength: 500 }] },
+    { name: 'anfrage', description: TICKET_SUBS.anfrage },
+    { name: 'weiterleiten', description: TICKET_SUBS.weiterleiten, options: [
+      { name: 'mitglied', description: 'An dieses Teammitglied', type: 'user' }, { name: 'rolle', description: 'An diese Team-Rolle', type: 'role' },
+      { name: 'kategorie', description: 'In diese Kategorie', type: 'string', autocomplete: true }, { name: 'notiz', description: 'Interne Notiz zur Weiterleitung', type: 'string', maxLength: 1000 },
+    ] },
+    { name: 'hinzufuegen', description: TICKET_SUBS.hinzufuegen, options: [{ name: 'mitglied', description: 'Person', type: 'user', required: true }] },
+    { name: 'entfernen', description: TICKET_SUBS.entfernen, options: [{ name: 'mitglied', description: 'Person', type: 'user', required: true }] },
+    { name: 'umbenennen', description: TICKET_SUBS.umbenennen, options: [{ name: 'name', description: 'Neuer Name (Platzhalter erlaubt, z. B. support-{username})', type: 'string', required: true, maxLength: 90 }] },
+    { name: 'erinnern', description: TICKET_SUBS.erinnern, options: [{ name: 'text', description: 'Eigener Erinnerungstext (optional)', type: 'string', maxLength: 1500 }] },
+    { name: 'notiz', description: TICKET_SUBS.notiz, options: [{ name: 'text', description: 'Notiz', type: 'string', required: true, maxLength: 4000 }] },
+    { name: 'automatik', description: TICKET_SUBS.automatik, options: [{ name: 'modus', description: 'Was tun?', type: 'string', required: true, choices: [
+      { name: '1 Stunde pausieren', value: 'pause60' }, { name: '24 Stunden pausieren', value: 'pause1440' }, { name: '7 Tage pausieren', value: 'pause10080' }, { name: 'Dauerhaft ausschalten', value: 'disable' }, { name: 'Wieder einschalten', value: 'enable' },
+    ] }] },
+    { name: 'oeffnen', description: TICKET_SUBS.oeffnen, options: [{ name: 'mitglied', description: 'Für dieses Mitglied', type: 'user', required: true }] },
+  ],
+  async complete(c, option, value) {
+    if (option !== 'kategorie' || !c.guildId) return [];
+    const all = await c.api.service<OpenableCategory[]>('GET', `/bot/support-tickets/categories?guildId=${c.guildId}`).catch(() => []);
+    return all.filter((x) => x.name.toLowerCase().includes(value.toLowerCase())).slice(0, 25).map((x) => ({ name: x.name, value: x.id }));
+  },
+  async run(c): Promise<Reply> {
+    if (!c.guildId) return errorReply('Tickets gibt es nur auf einem Server.');
+    const sub = String(c.opts._sub ?? '');
+    try {
+      if (sub === 'oeffnen') return await TICKET_COMMAND.run({ ...c, opts: { mitglied: c.opts.mitglied } });
+      const { id } = await currentTicket(c);
+      const str = (k: string) => (typeof c.opts[k] === 'string' && (c.opts[k] as string).trim() ? (c.opts[k] as string).trim() : undefined);
+      switch (sub) {
+        case 'claim': case 'unclaim': return run(c, await staff(c, id, { action: sub }));
+        case 'anfrage': return run(c, await staff(c, id, { action: 'close_request' }));
+        case 'schliessen': {
+          // mit Schließformular: Formular über einen Button (Slash-Befehle können hier kein Formular zeigen)
+          const o = await c.api.service<{ form?: boolean; closed: boolean }>('GET', `/bot/support-tickets/${id}/close-options`);
+          if (o.closed) return errorReply('Das Ticket ist bereits geschlossen.');
+          if (o.form) return { ephemeral: true, embeds: [{ title: '🔒 Ticket schließen', description: 'Für diese Kategorie gibt es ein Schließformular.', color: COLORS.danger }], buttons: [{ id: `tk:closefo:${id}`, label: 'Schließformular ausfüllen', emoji: '📝', style: 'danger' }] };
+          return close(c, id, str('grund'));
+        }
+        case 'weiterleiten': {
+          const target = str('mitglied') ? { target: 'USER', targetId: str('mitglied') } : str('rolle') ? { target: 'ROLE', targetId: str('rolle') } : str('kategorie') ? { target: 'CATEGORY', targetId: str('kategorie') } : null;
+          if (!target) return errorReply('Bitte ein Ziel angeben: Mitglied, Rolle oder Kategorie.');
+          return run(c, await staff(c, id, { action: 'forward', ...target, ...(str('notiz') ? { note: str('notiz') } : {}) }));
+        }
+        case 'hinzufuegen': return run(c, await staff(c, id, { action: 'add_access', targetId: str('mitglied'), kind: 'USER' }));
+        case 'entfernen': return run(c, await staff(c, id, { action: 'remove_access', targetId: str('mitglied') }));
+        case 'umbenennen': return run(c, await staff(c, id, { action: 'rename', name: str('name') ?? '' }));
+        case 'erinnern': return run(c, await staff(c, id, { action: 'remind', ...(str('text') ? { text: str('text') } : {}) }));
+        case 'notiz': return run(c, await staff(c, id, { action: 'note', text: str('text') ?? '' }));
+        case 'automatik': {
+          const m = str('modus') ?? '';
+          const body = m.startsWith('pause') ? { mode: 'pause', minutes: Number(m.slice(5)) || 60 } : { mode: m === 'disable' ? 'disable' : 'enable' };
+          return run(c, await staff(c, id, { action: 'automation', ...body }));
+        }
+        default: return errorReply('Unbekannter Unterbefehl.');
+      }
     } catch (e) { return fail(e); }
   },
 };

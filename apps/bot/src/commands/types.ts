@@ -88,7 +88,7 @@ export interface Ctx {
   /** Name, Profilbild und Status des Bots ändern (/botprofil). */
   botProfile?: BotProfileActions;
 }
-export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user' | 'attachment'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number; /** Vorschläge beim Tippen über `CommandDef.complete` (nur Text-Optionen). */ autocomplete?: boolean }
+export interface OptionDef { name: string; description: string; type: 'string' | 'integer' | 'number' | 'boolean' | 'user' | 'role' | 'attachment'; required?: boolean; choices?: { name: string; value: string }[]; maxLength?: number; min?: number; max?: number; /** Vorschläge beim Tippen über `CommandDef.complete` (nur Text-Optionen). */ autocomplete?: boolean }
 /** Unterbefehl (`/leave manage`): Name landet in `opts._sub`, seine Optionen wie gewohnt in `opts`. */
 export interface SubcommandDef { name: string; description: string; options?: OptionDef[] }
 export interface CommandDef {

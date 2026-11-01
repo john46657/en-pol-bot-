@@ -6,12 +6,13 @@ import { useAuth } from '../../lib/auth';
 import { DataTable, useDebounced, useTablePageSize } from '../../components/DataTable';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 import { GuildTag, useGuilds, useServer } from '../../lib/guilds';
-import { duration, errText, hex, label, TRANSCRIPT_STATUS, useTicketConfig, type RatingSummary, type TicketOverview, type TicketRow, type TicketStats, type TranscriptVersion } from '../../lib/tickets';
+import { duration, errText, hex, label, TRANSCRIPT_STATUS, useTicketConfig, type Board, type RatingSummary, type TicketOverview, type TicketRow, type TicketStats, type TranscriptVersion } from '../../lib/tickets';
+import { LOAD_DOT, LOAD_LABEL, loadLevel, type LoadLevel } from '@enrp/shared';
 const TicketSetup = lazy(() => import('./TicketSetup').then((m) => ({ default: m.TicketSetup })));
 
-const TAB = { list: 'Tickets', transcripts: 'Transkripte', stats: 'Statistik', audit: 'Audit', panels: 'Panels', categories: 'Kategorien & Formulare', departments: 'Abteilungen', lifecycle: 'Status & SLA', settings: 'Allgemein' } as const;
+const TAB = { overview: 'Übersicht', list: 'Tickets', transcripts: 'Transkripte', ratings: 'Bewertungen', stats: 'Statistik', audit: 'Audit', panels: 'Panels', categories: 'Kategorien', forms: 'Formulare', automations: 'Automatisierungen', departments: 'Abteilungen', lifecycle: 'Status & SLA', settings: 'Allgemein' } as const;
 type TabKey = keyof typeof TAB;
-const SETUP: TabKey[] = ['panels', 'categories', 'lifecycle', 'settings'];
+const SETUP: TabKey[] = ['panels', 'categories', 'forms', 'automations', 'lifecycle', 'settings'];
 
 /** Support-Tickets: Übersicht, Transkripte, Statistik und die komplette Einrichtung des Ticket-Systems. */
 export function SupportTickets() {
@@ -25,11 +26,13 @@ export function SupportTickets() {
       <PageHeader title="Ticket-Center" subtitle="Discord-Ticketsystem – Tickets bearbeiten, Transkripte, Statistik und die komplette Einrichtung (Panels, Kategorien, Formulare, Abteilungen, SLA)." />
       <Tabs tabs={keys.map((k) => TAB[k])} active={TAB[tab]} onChange={(t) => go(keys.find((k) => TAB[k] === t)!)} />
       <div className="mt-4">
+        {tab === 'overview' && <Overview />}
+        {tab === 'ratings' && <Ratings />}
         {tab === 'list' && <TicketList />}
         {tab === 'transcripts' && <Transcripts />}
         {tab === 'stats' && <Statistics />}
         {tab === 'audit' && <AuditLog />}
-        {(SETUP.includes(tab) || tab === 'departments') && <TicketSetup section={tab as 'panels' | 'categories' | 'settings' | 'departments' | 'lifecycle'} />}
+        {(SETUP.includes(tab) || tab === 'departments') && <TicketSetup section={tab as 'panels' | 'categories' | 'settings' | 'departments' | 'lifecycle' | 'forms' | 'automations'} />}
       </div>
     </>
   );
@@ -101,7 +104,8 @@ function TicketList() {
             <div className="w-40"><Select aria-label="Kategorie" value={f.categoryId} onChange={(e) => set({ categoryId: e.target.value })}><option value="">Alle Kategorien</option>{c?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-36"><Select aria-label="Status" value={f.statusId} onChange={(e) => set({ statusId: e.target.value })}><option value="">Alle Status</option>{c?.statuses.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
             <div className="w-36"><Select aria-label="Priorität" value={f.priorityId} onChange={(e) => set({ priorityId: e.target.value })}><option value="">Alle Prioritäten</option>{c?.priorities.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
-            <div className="w-36"><Select aria-label="Team" value={f.claimer} onChange={(e) => set({ claimer: e.target.value })}><option value="">Alle Teammitglieder</option><option value="me">Von mir übernommen</option></Select></div>
+            <div className="w-36"><Select aria-label="Team" value={f.claimer === 'me' || !f.claimer ? f.claimer : 'id'} onChange={(e) => set({ claimer: e.target.value === 'id' ? '' : e.target.value })}><option value="">Alle Bearbeiter</option><option value="me">Von mir übernommen</option></Select></div>
+            <div className="w-44"><Input aria-label="Bearbeiter (Discord-ID)" placeholder="Bearbeiter (Discord-ID)" inputMode="numeric" value={f.claimer === 'me' ? '' : f.claimer} onChange={(e) => { const v = e.target.value.trim(); set({ claimer: /^\d{15,25}$/.test(v) || !v ? v : f.claimer }); }} /></div>
             <div className="w-36"><Input aria-label="Ersteller" placeholder="Ersteller" value={f.creator} onChange={(e) => set({ creator: e.target.value })} /></div>
             <div className="w-36"><Input aria-label="Von" type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></div>
             <div className="w-36"><Input aria-label="Bis" type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></div>
@@ -190,43 +194,149 @@ function Transcripts() {
 }
 
 const Who = ({ id, names }: { id: string; names: Record<string, string> }) => (names[id] ? <span>{names[id]}</span> : <span className="font-mono text-xs">{id}</span>);
-const stars = (n: number | null) => (n === null ? '—' : `${'★'.repeat(Math.round(n))}${'☆'.repeat(5 - Math.round(n))} ${n}`);
+const stars = (n: number | null, scale = 5) => (n === null ? '—' : scale <= 5 ? `${'★'.repeat(Math.round(n))}${'☆'.repeat(Math.max(0, scale - Math.round(n)))} ${n}` : `${n}/${scale}`);
 function RatingCards({ s, names = {} }: { s: RatingSummary; names?: Record<string, string> }) {
   return (
     <div className="grid gap-3 md:grid-cols-3">
       <Card title="Gesamt">
-        <p className="text-2xl font-semibold">{stars(s.average)}</p>
-        <p className="text-sm text-muted">{s.count} Bewertungen · {s.positive} positiv (4–5★) · {s.negative} negativ (1–2★)</p>
+        <p className="text-2xl font-semibold">{stars(s.average, s.scale)}</p>
+        <p className="text-sm text-muted">{s.count} Bewertungen · {s.positive} positiv · {s.negative} negativ{s.scale ? ` · Skala 1–${s.scale}` : ''}</p>
       </Card>
-      <Card title="Pro Teammitglied">{s.perStaff.length ? <ul className="grid gap-1 text-sm">{s.perStaff.slice(0, 10).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={names} /><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
-      <Card title="Pro Kategorie">{s.perCategory.length ? <ul className="grid gap-1 text-sm">{s.perCategory.map((x) => <li key={x.id} className="flex justify-between gap-2"><span>{x.name}</span><span>{stars(x.average)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
+      <Card title="Pro Teammitglied">{s.perStaff.length ? <ul className="grid gap-1 text-sm">{s.perStaff.slice(0, 10).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={names} /><span>{stars(x.average, s.scale)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
+      <Card title="Pro Kategorie">{s.perCategory.length ? <ul className="grid gap-1 text-sm">{s.perCategory.map((x) => <li key={x.id} className="flex justify-between gap-2"><span>{x.name}</span><span>{stars(x.average, s.scale)} ({x.count})</span></li>)}</ul> : <p className="text-sm text-muted">—</p>}</Card>
+    </div>
+  );
+}
+
+const LEVEL_TONE: Record<LoadLevel, 'neutral' | 'success' | 'warning' | 'danger'> = { none: 'neutral', normal: 'success', warn: 'warning', full: 'danger' };
+const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const useStats = () => { const [server] = useServer(); return useQuery({ queryKey: ['ticket-stats', server], queryFn: () => api<TicketStats>('/support-tickets/stats', { query: { guildId: server || undefined } }), refetchInterval: 60_000 }); };
+/** Einfache Balken (eine Reihe je Wert) – Werte stehen immer als Zahl daneben. */
+function Bars({ rows, label: l }: { rows: { key: string; label: string; a: number; b?: number }[]; label: string }) {
+  const max = Math.max(1, ...rows.map((r) => Math.max(r.a, r.b ?? 0)));
+  return (
+    <ul className="grid gap-1 text-xs" aria-label={l}>{rows.map((r) => (
+      <li key={r.key} className="grid grid-cols-[4.5rem_1fr_3.5rem] items-center gap-2">
+        <span className="text-muted">{r.label}</span>
+        <span className="grid gap-0.5"><span className="h-2 rounded bg-primary" style={{ width: `${(r.a / max) * 100}%` }} />{r.b !== undefined && <span className="h-2 rounded bg-success/70" style={{ width: `${(r.b / max) * 100}%` }} />}</span>
+        <span className="text-right tabular-nums">{r.a}{r.b !== undefined ? ` / ${r.b}` : ''}</span>
+      </li>
+    ))}</ul>
+  );
+}
+function Heatmap({ m }: { m: number[][] }) {
+  const max = Math.max(1, ...m.flat());
+  return (
+    <div className="overflow-x-auto">
+      <table className="text-[10px]" aria-label="Neue Tickets nach Wochentag und Uhrzeit"><thead><tr><th />{Array.from({ length: 24 }, (_, h) => <th key={h} className="px-0.5 font-normal text-muted">{h % 3 === 0 ? h : ''}</th>)}</tr></thead>
+        <tbody>{m.map((row, d) => <tr key={d}><th className="pr-1 text-left font-normal text-muted">{WEEKDAYS[d]}</th>{row.map((n, h) => <td key={h} title={`${WEEKDAYS[d]} ${h}:00 – ${n} Tickets`}><span className="block h-4 w-4 rounded-sm bg-primary" style={{ opacity: n ? 0.15 + (n / max) * 0.85 : 0.05 }} /></td>)}</tr>)}</tbody></table>
+    </div>
+  );
+}
+function Leaderboard({ title, rows, names, unit }: { title: string; rows: Board[]; names: Record<string, string>; unit: (v: number) => string }) {
+  return <Card title={title}>{rows.length ? <ol className="grid gap-1 text-sm">{rows.map((x, i) => <li key={x.discordId} className="flex justify-between gap-2"><span>{i + 1}. <Who id={x.discordId} names={names} /></span><span className="tabular-nums">{unit(x.value)}</span></li>)}</ol> : <p className="text-sm text-muted">Noch keine Daten.</p>}</Card>;
+}
+
+/** Übersicht: offene/geschlossene/bearbeitete/nicht zugewiesene Tickets, Tickets je Kategorie mit Auslastung, Antwort-/Bearbeitungszeit, Bewertung. */
+function Overview() {
+  const s = useStats();
+  if (s.isLoading) return <SkeletonRows />;
+  if (s.error) return <ErrorState error={s.error} onRetry={() => void s.refetch()} />;
+  const d = s.data!;
+  const kpi: [string, string | number][] = [['Offen', d.open], ['Geschlossen', d.closed], ['In Bearbeitung', d.inProgress ?? '—'], ['Nicht zugewiesen', d.unassigned ?? '—'], ['Ø erste Antwort', duration(d.avgFirstResponseMinutes)], ['Ø Bearbeitungszeit', duration(d.avgCloseMinutes)], ['Ø Bewertung', d.ratings.average === null ? '—' : `${d.ratings.average} / ${d.ratings.scale ?? 5}`], ['Heute neu', d.today]];
+  return (
+    <div className="grid gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{kpi.map(([k, v]) => <Card key={k}><p className="text-xs text-muted">{k}</p><p className="text-xl font-semibold">{v}</p></Card>)}</div>
+      <Card title="Tickets nach Kategorie">
+        {!d.perCategory.length ? <EmptyState text="Noch keine Tickets." /> : <ul className="grid gap-2 text-sm">{d.perCategory.map((c) => (
+          <li key={c.id} className="flex flex-wrap items-center justify-between gap-2"><span>{c.emoji ? `${c.emoji} ` : ''}{c.name}</span>
+            <span className="flex items-center gap-2"><span className="tabular-nums">{c.open} offen · {c.total} gesamt</span>{c.capacity ? <Badge tone={LEVEL_TONE[c.level ?? loadLevel(c.open, c.capacity)]}>{LOAD_DOT[c.level ?? 'none']} {c.load}% · {LOAD_LABEL[c.level ?? 'none']}</Badge> : null}</span></li>
+        ))}</ul>}
+      </Card>
     </div>
   );
 }
 
 function Statistics() {
-  const s = useQuery({ queryKey: ['ticket-stats'], queryFn: () => api<TicketStats>('/support-tickets/stats') });
+  const s = useStats();
   if (s.isLoading) return <SkeletonRows />;
   if (s.error) return <ErrorState error={s.error} onRetry={() => void s.refetch()} />;
   const d = s.data!;
   if (!d.total) return <EmptyState text="Noch keine Tickets." hint="Die Statistik erscheint, sobald das erste Ticket geöffnet wurde." />;
-  const kpi: [string, string | number][] = [['Gesamt', d.total], ['Offen', d.open], ['Geschlossen', d.closed], ['Archiviert', d.archived], ['Heute', d.today], ['Diese Woche', d.week], ['Dieser Monat', d.month], ['Eskalationen', d.escalations], ['Ø erste Antwort', duration(d.avgFirstResponseMinutes)], ['Ø bis zum Schließen', duration(d.avgCloseMinutes)]];
+  const kpi: [string, string | number][] = [
+    ['Gesamt', d.total], ['Offen', d.open], ['Geschlossen', d.closed], ['Archiviert', d.archived], ['Heute', d.today], ['Diese Woche', d.week], ['Dieser Monat', d.month], ['Eskalationen', d.escalations],
+    ['Ø erste Antwort', duration(d.avgFirstResponseMinutes)], ['Median erste Antwort', duration(d.medianFirstResponseMinutes ?? null)], ['p90 erste Antwort', duration(d.p90FirstResponseMinutes ?? null)],
+    ['Ø Bearbeitungszeit', duration(d.avgCloseMinutes)], ['Median Bearbeitungszeit', duration(d.medianCloseMinutes ?? null)], ['p90 Bearbeitungszeit', duration(d.p90CloseMinutes ?? null)],
+  ];
   const max = Math.max(1, ...d.perCategory.map((c) => c.total));
+  const lb = d.leaderboards;
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{kpi.map(([k, v]) => <Card key={k}><p className="text-xs text-muted">{k}</p><p className="text-xl font-semibold">{v}</p></Card>)}</div>
+      <p className="text-xs text-muted">Alle Werte werden aus den gespeicherten Tickets berechnet (nur Tickets, die du sehen darfst){d.timezone ? ` · Zeitzone ${d.timezone}` : ''}. Erste Antwort = erste Nachricht/Aktion des Teams.</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">{kpi.map(([k, v]) => <Card key={k}><p className="text-xs text-muted">{k}</p><p className="text-xl font-semibold">{v}</p></Card>)}</div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {d.perDay && <Card title="Tickets pro Tag (30 Tage) – neu / geschlossen"><Bars label="Tickets pro Tag" rows={d.perDay.slice(-14).map((x) => ({ key: x.day, label: x.day.slice(5).split('-').reverse().join('.'), a: x.created, b: x.closed }))} /><p className="mt-2 text-xs text-muted">Letzte 14 Tage angezeigt · 30 Tage: {d.perDay.reduce((a, x) => a + x.created, 0)} neu, {d.perDay.reduce((a, x) => a + x.closed, 0)} geschlossen</p></Card>}
+        {d.perWeek && <Card title="Tickets pro Woche (12 Wochen) – neu / geschlossen"><Bars label="Tickets pro Woche" rows={d.perWeek.map((x) => ({ key: x.week, label: `KW ab ${x.week.slice(5).split('-').reverse().join('.')}`, a: x.created, b: x.closed }))} /></Card>}
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Card title="Tickets pro Kategorie">
+        <Card title="Auslastung und Tickets pro Kategorie">
           <ul className="grid gap-2 text-sm">{d.perCategory.map((c) => (
-            <li key={c.id}><div className="flex justify-between"><span>{c.name}</span><span>{c.total} <span className="text-muted">({c.open} offen)</span></span></div>
+            <li key={c.id}><div className="flex justify-between gap-2"><span>{c.name}</span><span>{c.total} <span className="text-muted">({c.open} offen{c.capacity ? ` von ${c.capacity} · ${c.load}%` : ''})</span> {c.capacity ? LOAD_DOT[c.level ?? 'none'] : ''}</span></div>
               <div className="mt-1 h-2 rounded bg-panel-2"><div className="h-2 rounded bg-primary" style={{ width: `${(c.total / max) * 100}%` }} /></div></li>
           ))}</ul>
         </Card>
-        <Card title="Aktivste Teammitglieder (übernommene Tickets)">
-          {d.perStaff.length ? <ul className="grid gap-1 text-sm">{d.perStaff.slice(0, 15).map((x) => <li key={x.discordId} className="flex justify-between gap-2"><Who id={x.discordId} names={d.names} /><span>{x.tickets} <Badge tone="success">{x.closed} geschlossen</Badge></span></li>)}</ul> : <p className="text-sm text-muted">Noch keine übernommenen Tickets.</p>}
+        <Card title="Tickets pro Mitarbeiter">
+          {d.perStaff.length ? <ul className="grid gap-1 text-sm">{d.perStaff.slice(0, 15).map((x) => <li key={x.discordId} className="flex flex-wrap justify-between gap-2"><Who id={x.discordId} names={d.names} /><span>{x.tickets} übernommen <Badge tone="success">{x.closed} erledigt</Badge>{x.medianFirstResponseMinutes != null && <span className="ml-1 text-xs text-muted">Median 1. Antwort {duration(x.medianFirstResponseMinutes)}</span>}</span></li>)}</ul> : <p className="text-sm text-muted">Noch keine übernommenen Tickets.</p>}
         </Card>
       </div>
+      {d.heatmap && <Card title="Aktivitäts-Heatmap (neue Tickets nach Wochentag und Uhrzeit)"><Heatmap m={d.heatmap} /></Card>}
+      {lb && <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Leaderboard title="🏆 Meiste Tickets" rows={lb.handled} names={d.names} unit={(v) => `${v}`} />
+        <Leaderboard title="🔒 Meiste geschlossen" rows={lb.closed} names={d.names} unit={(v) => `${v}`} />
+        <Leaderboard title="⚡ Schnellste erste Antwort (Median)" rows={lb.fastest} names={d.names} unit={(v) => duration(v)} />
+        <Leaderboard title="⭐ Beste Bewertung (ab 3)" rows={lb.rated} names={d.names} unit={(v) => `${v}`} />
+      </div>}
       <RatingCards s={d.ratings} names={d.names} />
+    </div>
+  );
+}
+
+interface RatingRow { id: string; ticketId: string; stars: number; scale: number; comment: string | null; answers: { label: string; value: string }[]; createdAt: string; staffIds: string[]; category: string; ticket: { number: string; creatorName: string } | null }
+/** Bewertungen: Durchschnitt, je Kategorie/Mitarbeiter, Verlauf und alle Einzelbewertungen. */
+function Ratings() {
+  const nav = useNavigate();
+  const cfg = useTicketConfig();
+  const [f, setF] = useState({ categoryId: '', stars: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useTablePageSize();
+  const query = { categoryId: f.categoryId || undefined, stars: f.stars || undefined, page, pageSize };
+  const list = useQuery({ queryKey: ['ticket-ratings', query], queryFn: () => api<{ total: number; items: RatingRow[]; summary: RatingSummary; names: Record<string, string> }>('/support-tickets/ratings', { query }) });
+  const sum = list.data?.summary;
+  const scale = cfg.data?.settings?.ratingScale ?? sum?.scale ?? 5;
+  return (
+    <div className="grid gap-4">
+      {sum && <RatingCards s={sum} names={list.data!.names} />}
+      {sum?.trend?.length ? <Card title="Bewertungsverlauf (je Monat)"><Bars label="Bewertungsverlauf" rows={sum.trend.map((t) => ({ key: t.month, label: t.month.split('-').reverse().join('.'), a: t.count }))} /><p className="mt-2 text-xs text-muted">{sum.trend.map((t) => `${t.month.split('-').reverse().join('.')}: Ø ${t.average ?? '—'}`).join(' · ')}</p></Card> : null}
+      <p className="text-xs text-muted">Öffentlicher und interner Bewertungs-Log werden unter <b>Allgemein → Bewertungen</b> eingestellt (Kanäle, freigegebene Angaben, Skala).</p>
+      <DataTable<RatingRow>
+        columns={[
+          { key: 'createdAt', label: 'Zeit', render: (r) => fmt(r.createdAt) },
+          { key: 'ticket', label: 'Ticket', render: (r) => (r.ticket ? `#${r.ticket.number}` : '—') },
+          { key: 'category', label: 'Kategorie' },
+          { key: 'stars', label: 'Bewertung', render: (r) => <span className="tabular-nums">{r.stars}/{r.scale}</span> },
+          { key: 'staff', label: 'Bearbeiter', render: (r) => r.staffIds.map((x) => list.data?.names[x] ?? x).join(', ') || '—' },
+          { key: 'comment', label: 'Begründung / Formular', render: (r) => <span className="text-xs">{[r.comment, ...r.answers.filter((a) => a.label !== 'comment').map((a) => `${a.label}: ${a.value}`)].filter(Boolean).join(' · ').slice(0, 200) || '—'}</span> },
+        ]}
+        rows={list.data?.items ?? []} total={list.data?.total ?? 0} page={page} pageSize={pageSize} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }}
+        loading={list.isLoading} error={list.error} onRetry={() => void list.refetch()} onRowClick={(r) => void nav(`/support-tickets/${r.ticketId}`)}
+        empty={{ text: 'Noch keine Bewertungen.' }}
+        toolbar={(
+          <div className="flex flex-wrap gap-2">
+            <div className="w-44"><Select aria-label="Kategorie" value={f.categoryId} onChange={(e) => { setF({ ...f, categoryId: e.target.value }); setPage(1); }}><option value="">Alle Kategorien</option>{cfg.data?.categories.map((x) => <option key={x.id} value={x.id}>{label(x)}</option>)}</Select></div>
+            <div className="w-36"><Select aria-label="Bewertung" value={f.stars} onChange={(e) => { setF({ ...f, stars: e.target.value }); setPage(1); }}><option value="">Alle Bewertungen</option>{Array.from({ length: scale }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}/{scale}</option>)}</Select></div>
+          </div>
+        )}
+      />
     </div>
   );
 }
