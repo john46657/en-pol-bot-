@@ -35,9 +35,14 @@ describe('Systemstatus', () => {
     expect(byKey(r.body, 'mdt').detail).toMatch(/dieselbe API, Anmeldung und Rechte/);
     expect(byKey(r.body, 'discord-bot')).toMatchObject({ state: 'error' }); // nicht verbunden → nie „ok“
     expect(byKey(r.body, 'ai')).toMatchObject({ state: 'off' });
-    expect(byKey(r.body, 'erlc')).toMatchObject({ state: 'off' });
-    expect(byKey(r.body, 'radio').detail).toMatch(/keine Funkübertragung/);
-    expect(r.body.overall).toBe('error');
+    // ohne aktive ER:LC-Server „nicht eingerichtet“, sonst nie „off“ (andere Testdateien können Server angelegt haben)
+    const erlcActive = await prisma.erlcServer.count({ where: { active: true } });
+    expect(byKey(r.body, 'erlc').state === 'off').toBe(erlcActive === 0);
+    // Funkdienst: ohne Zello-Work-API nie „ok“ (andere Testdateien können eine manuelle Anbindung angelegt haben)
+    const radio = await prisma.radioIntegration.findUnique({ where: { id: 'default' } });
+    if (!radio || radio.provider !== 'ZELLO_WORK') expect(byKey(r.body, 'radio').state).toBe('off');
+    if (!radio || radio.provider === 'NONE') expect(byKey(r.body, 'radio').detail).toMatch(/keine Funkübertragung/);
+    expect(r.body.overall).toBe('error'); // Bot noch nicht gemeldet
     expect(r.body.checks.some((c: Check) => c.group === 'Konfiguration')).toBe(false); // Diagnose nur auf Anfrage
     // Bot meldet sich (fragt die Outbox ab) → verbunden
     expect((await request(app.getHttpServer()).get('/api/v1/bot/outbox?limit=1').set('Authorization', `Bot ${BOT}`)).status).toBe(200);
@@ -46,10 +51,12 @@ describe('Systemstatus', () => {
 
   it('counts undeliverable Discord messages as a warning', async () => {
     const a = (await login(app, 'sys_admin')).agent;
+    const failed = () => prisma.discordOutbox.count({ where: { sentAt: null, attempts: { gte: 5 }, createdAt: { gte: new Date(Date.now() - 86_400_000) } } });
+    const before = await failed();
     await prisma.discordOutbox.create({ data: { type: 'x.test', channelKey: 'dispatch', payload: {}, attempts: 5, lastError: 'Missing Access' } });
     const c = byKey((await a.get('/api/v1/system/status')).body, 'discord-delivery');
     expect(c.state).toBe('warn');
-    expect(c.detail).toMatch(/1 in 24 h endgültig fehlgeschlagen/);
+    expect(c.detail).toContain(`${before + 1} in 24 h endgültig fehlgeschlagen`);
     expect(JSON.stringify(c)).not.toContain('Missing Access');
   });
 
