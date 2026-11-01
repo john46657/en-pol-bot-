@@ -315,8 +315,27 @@ export function renderOutboxEmbeds(type: string, p: Record<string, unknown>): Em
     return embeds;
   }
   if (type === 'academy.course') return [academyCourseEmbed(p)];
+  if (type === 'application.ai_review') return [aiReviewNoticeEmbed(p)];
   const e = renderOutbox(type, p);
   return e ? [e] : null;
+}
+
+/**
+ * Kurze Meldung der automatischen KI-Prüfung im Bewerbungskanal: nur Empfehlung und Richtwert – keine Antworten, keine
+ * Begründungen. Ausführlich (nur für Prüfer) über den Button „KI-Prüfung“ oder im Dashboard. Entscheidet nie.
+ */
+const AI_REC = { geeignet: ['🟢', 'Geeignet für den nächsten Schritt'], rueckfragen_noetig: ['🟡', 'Rückfragen nötig'], manuelle_pruefung: ['🟠', 'Manuelle Prüfung'] } as const;
+export function aiReviewNoticeEmbed(p: Record<string, unknown>): EmbedData {
+  const number = clip(plain(p.number ?? ''), 60);
+  if (p.ok !== true) return { title: `⚠️ KI-Analyse ${number} fehlgeschlagen`, color: COLORS.warning, description: clip(`${plain(p.error ?? 'Unbekannter Fehler.')}
+Die Bewerbung ist unverändert und kann manuell oder über **KI-Prüfung** erneut analysiert werden.`, 4000), footer: 'KI-Entscheidungshilfe · EN Polizei' };
+  const rec = AI_REC[p.recommendation as keyof typeof AI_REC] ?? ['⚪', 'Unbekannt'];
+  const score = typeof p.score === 'number' && Number.isInteger(p.score) && p.score >= 0 && p.score <= 10 ? `${p.score}/10` : 'nicht beurteilbar';
+  return {
+    title: `🤖 KI-Analyse ${number} abgeschlossen`, color: p.recommendation === 'geeignet' ? COLORS.success : COLORS.warning,
+    fields: [{ name: 'Empfehlung', value: `${rec[0]} ${rec[1]}`, inline: true }, { name: 'Richtwert', value: score, inline: true }],
+    description: '-# Entscheidungshilfe – kein Urteil. Die Entscheidung trifft immer ein Mensch.', footer: 'KI-Entscheidungshilfe · EN Polizei',
+  };
 }
 
 /** Ankündigung eines Akademie-Kurses (Rollen-Ping kommt über `pingRoleIds`). */
@@ -341,6 +360,11 @@ export function outboxButtons(type: string, p: Record<string, unknown>): ButtonS
     { id: `leave:xdecide:${p.id}:APPROVED`, label: 'Annehmen', style: 'success', emoji: '✔️' }, { id: `leave:xreason:${p.id}:DENIED`, label: 'Ablehnen', style: 'danger', emoji: '✖️' },
   ];
   if (type === 'academy.course' && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
+  // automatische KI-Prüfung: Details nur privat für den klickenden Prüfer (gleiche Rechte wie im Dashboard)
+  if (type === 'application.ai_review' && (p.kind === 'p' || p.kind === 'q') && typeof p.id === 'string' && /^[0-9a-f-]{36}$/i.test(p.id)) return [
+    { id: `quali:ai:${p.kind}:${p.id}`, label: p.ok === true ? 'Details (privat)' : 'Erneut analysieren', emoji: '🤖', style: 'secondary' },
+    ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary' as const, url: p.dashboardUrl }] : []),
+  ];
   // Fahndung / Einsatz: Link ins Dashboard
   if (/^wanted\./.test(type) && typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl)) return [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary', url: p.dashboardUrl }];
   const kind = type === 'qualification.submitted' ? 'q' : type === 'application.submitted' ? 'p' : null;
@@ -352,6 +376,8 @@ export function outboxButtons(type: string, p: Record<string, unknown>): ButtonS
     { id: `quali:reason:${kind}:${id}:ACCEPTED`, label: 'Annehmen mit Grund', style: 'success' },
     { id: `quali:reason:${kind}:${id}:REJECTED`, label: 'Ablehnen mit Grund', style: 'danger' },
     ...(discordId ? [{ id: `quali:history:${discordId}`, label: 'Verlauf', style: 'primary' as const }, { id: `quali:ticket:${kind}:${id}`, label: 'Ticket mit Bewerber öffnen', emoji: '🎫', style: 'secondary' as const }] : []),
+    // KI-Bewerbungsprüfung (nur wenn auf dem Server ein KI-Schlüssel hinterlegt ist); Ergebnis nur privat für den Prüfer
+    ...(p.aiReview === true ? [{ id: `quali:ai:${kind}:${id}`, label: 'KI-Prüfung', emoji: '🤖', style: 'secondary' as const }] : []),
     ...(typeof p.dashboardUrl === 'string' && /^https?:\/\//.test(p.dashboardUrl) ? [{ id: 'link', label: 'Im Dashboard ansehen', style: 'secondary' as const, url: p.dashboardUrl }] : []),
   ];
 }

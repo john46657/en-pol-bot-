@@ -26,5 +26,6 @@ export * from './application-panels';
 export * from './ai-check';
 export * from './ticket-premium';
 export * from './ticket-suite';
+export * from './ai-review';
 export * from './reminders';
 export * from './timezones';
