@@ -48,6 +48,7 @@ const BOT_USER_ROUTES: [string, RegExp][] = [
   ['GET', /^\/shiftplan(\/mine)?$/], ['GET', new RegExp(`^/shiftplan/${UUID}$`)], ['POST', new RegExp(`^/shiftplan/${UUID}/(signup|withdraw|report)$`)],
   ['POST', new RegExp(`^/leave/${UUID}/review$`)],
   ['GET', /^\/calendar\/upcoming$/], ['GET', new RegExp(`^/calendar/${UUID}$`)], ['POST', new RegExp(`^/calendar/${UUID}/respond$`)],
+  ['GET', /^\/documents$/], ['GET', /^\/notifications\/(preferences|feed)$/], ['PUT', /^\/notifications\/preferences$/],
   ['GET', /^\/hr\/requests\/(mine|targets)$/], ['POST', /^\/hr\/requests\/self$/], ['POST', new RegExp(`^/hr/requests/${UUID}/(answer|withdraw)$`)],
   ['POST', /^\/support-tickets$/], ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
 ];

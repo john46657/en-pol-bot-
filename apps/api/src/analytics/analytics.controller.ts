@@ -1,4 +1,8 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Put, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { CurrentActor } from '../authz/decorators';
+import type { Actor } from '../audit/audit.service';
+import { periodQ, statsConfigSchema, StatsService } from './stats.service';
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { can } from '@enrp/shared';
@@ -14,7 +18,23 @@ const q = z.object({ days: z.coerce.number().int().min(1).max(366).default(30) }
 @ApiTags('analytics')
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService) {}
+  constructor(private readonly prisma: PrismaService, private readonly perms: PermissionService, private readonly stats: StatsService) {}
+
+  // ───────────── Statistiken & Ranglisten (Verwaltung 3.0) ─────────────
+  /** Eigene Statistik (jeder Angemeldete); mit `userId` eine andere Person – nur analytics.personal_all (im Service geprüft). */
+  @Get('personal') @RequirePermission('dashboard.view')
+  personal(@CurrentActor() a: Actor, @Query(zodBody(periodQ.extend({ userId: z.string().uuid().optional() }))) q: z.infer<typeof periodQ> & { userId?: string }) { return this.stats.personal(a, q, q.userId); }
+  @Get('team') @RequirePermission('analytics.view')
+  team(@CurrentActor() a: Actor, @Query(zodBody(periodQ)) q: z.infer<typeof periodQ>) { return this.stats.overview(a, q); }
+  @Get('leaderboards') @RequirePermission('analytics.leaderboard')
+  leaderboards(@CurrentActor() a: Actor, @Query(zodBody(periodQ)) q: z.infer<typeof periodQ>) { return this.stats.leaderboards(a, q); }
+  @Get('export') @RequirePermission('analytics.export')
+  async export(@CurrentActor() a: Actor, @Query(zodBody(periodQ)) q: z.infer<typeof periodQ>, @Res() res: Response) {
+    res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="statistik.csv"' }).send(`\uFEFF${await this.stats.exportCsv(a, q)}`);
+  }
+  @Get('config') @RequirePermission('analytics.view') config() { return this.stats.config(); }
+  @Put('config') @RequirePermission('settings.manage')
+  saveConfig(@CurrentActor() a: Actor, @Body(zodBody(statsConfigSchema)) b: z.infer<typeof statsConfigSchema>) { return this.stats.saveConfig(a, b); }
 
   @Get('overview') @RequirePermission('analytics.view')
   async overview(@CurrentUser() u: AuthUser, @Query(zodBody(q)) f: z.infer<typeof q>) {

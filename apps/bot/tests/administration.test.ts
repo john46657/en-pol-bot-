@@ -124,3 +124,20 @@ describe('/termine und Besprechungs-Buttons', () => {
     expect(commandsForServer(COMMANDS, ['planning']).some((c) => c.name === 'termine')).toBe(false);
   });
 });
+
+describe('/dokument und /benachrichtigungen', () => {
+  it('Dokumente nur privat, als Link, vertrauliche gekennzeichnet; Suche geht an die API', async () => {
+    const { api, calls } = fakeApi({ 'GET /documents': { items: [{ id: 'd', title: 'Regelwerk', categoryLabel: 'Regelwerk', description: null, currentVersion: 2, access: 'ROLES', url: 'https://polizei.example/documents?id=d', updatedAt: '' }] } });
+    const r = await byName('dokument')!.run(ctx(api, { suche: 'regel' }));
+    expect(r.ephemeral).toBe(true);
+    expect(r.embeds?.[0]?.description).toMatch(/\[Regelwerk\]\(https:\/\/polizei\.example\/documents\?id=d\).*🔒/);
+    expect(calls[0]?.path).toBe('/documents?q=regel');
+    expect(r.files).toBeUndefined();
+  });
+  it('DM an/aus behält die übrigen Einstellungen', async () => {
+    const { api, calls } = fakeApi({ 'GET /notifications/preferences': { muted: ['ticket.new'], important: [], dmEvents: [], reminders: false, dm: false }, 'PUT /notifications/preferences': {} });
+    const r = await byName('benachrichtigungen')!.run(ctx(api, { dm: true }));
+    expect(JSON.stringify(r)).toMatch(/per DM/);
+    expect(calls[1]).toMatchObject({ method: 'PUT', body: { dm: true, muted: ['ticket.new'], reminders: false } });
+  });
+});

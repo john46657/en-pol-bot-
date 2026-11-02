@@ -256,4 +256,24 @@ export const MEETING_INTERACTION: InteractionDef = {
   },
 };
 
-export const ADMINISTRATION_COMMANDS: CommandDef[] = [SHIFTPLAN_COMMAND, REQUEST_COMMAND, EVENTS_COMMAND];
+// ───────────── Dokumente ─────────────
+
+interface DocRow { id: string; title: string; categoryLabel: string; description: string | null; currentVersion: number; access: string; url: string; updatedAt: string }
+export const DOCUMENT_COMMAND: CommandDef = {
+  name: 'dokument', description: 'Freigegebene Dokumente finden (Antwort nur für dich, Link ins Dashboard)',
+  options: [
+    { name: 'suche', description: 'Titel oder Stichwort', type: 'string', maxLength: 100 },
+    { name: 'kategorie', description: 'Kategorie', type: 'string', choices: [['DIRECTIVE', 'Dienstanweisung'], ['RULES', 'Regelwerk'], ['TRAINING', 'Ausbildungsunterlage'], ['EXAM', 'Prüfungsunterlage'], ['DISPATCH', 'Leitstelleninformation'], ['POLICY', 'Interne Richtlinie'], ['TEMPLATE', 'Vorlage'], ['OTHER', 'Sonstiges']].map(([value, name]) => ({ name: name!, value: value! })) },
+  ],
+  async run(c) {
+    try {
+      const q = str(c, 'suche'), cat = str(c, 'kategorie');
+      const r = await c.api.asUser<{ items: DocRow[] }>(c.discordId, 'GET', `/documents?${new URLSearchParams({ ...(q ? { q } : {}), ...(cat ? { category: cat } : {}) }).toString()}`);
+      if (!r.items.length) return { ephemeral: true, embeds: [{ title: '📄 Dokumente', description: q ? `Nichts zu „${plain(q)}“ gefunden (oder kein Zugriff).` : 'Keine Dokumente für dich freigegeben.', color: COLORS.neutral }] };
+      // Immer privat und nur als Link: die Datei selbst gibt es nur nach Anmeldung (Zugriff wird dort erneut geprüft und protokolliert)
+      return { ephemeral: true, embeds: [{ title: '📄 Dokumente', color: COLORS.info, description: clip(r.items.slice(0, 15).map((d) => `**[${plain(d.title)}](${d.url})** · ${plain(d.categoryLabel)} · v${d.currentVersion}${d.access !== 'ALL' ? ' · 🔒' : ''}${d.description ? `\n-# ${plain(clip(d.description, 120))}` : ''}`).join('\n'), 4000), footer: r.items.length > 15 ? `${r.items.length - 15} weitere – Suche eingrenzen` : 'Öffnen im Dashboard (Anmeldung nötig)' }] };
+    } catch (e) { return mapError(e); }
+  },
+};
+
+export const ADMINISTRATION_COMMANDS: CommandDef[] = [SHIFTPLAN_COMMAND, REQUEST_COMMAND, EVENTS_COMMAND, DOCUMENT_COMMAND];
