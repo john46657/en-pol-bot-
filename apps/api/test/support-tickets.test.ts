@@ -139,6 +139,8 @@ describe('opening a ticket from Discord', () => {
     const job = await prisma.ticketTranscript.findFirstOrThrow({ where: { ticketId: id }, orderBy: { version: 'desc' } });
     expect(job.status).toBe('PENDING');
     await prisma.discordOutbox.deleteMany({ where: { type: 'ticket.effects' } });
+    // nur diesen Auftrag prüfen: liegengebliebene Aufträge anderer Testdateien (Retry-Wartezeit) können je nach Laufzeit fällig sein
+    await prisma.ticketTranscript.updateMany({ where: { ticketId: { not: id }, status: { in: ['PENDING', 'RUNNING'] } }, data: { status: 'FAILED' } });
     expect(await app.get(TicketTranscriptService).processDue()).toMatchObject({ done: 1 });
     const out = await prisma.discordOutbox.findMany({ where: { type: 'ticket.effects' } });
     const tr = out.flatMap((o) => (o.payload as { effects: TicketEffect[] }).effects).find((e): e is Extract<TicketEffect, { type: 'transcript' }> => e.type === 'transcript')!;
@@ -174,6 +176,8 @@ describe('opening a ticket from Discord', () => {
     expect(tr.total).toBe(1);
     expect((await staff.get(`/api/v1/support-tickets/transcripts/${tr.items[0].id}`)).headers['content-security-policy']).toContain('sandbox');
     expect((await staff.delete(`/api/v1/support-tickets/transcripts/${tr.items[0].id}`)).status).toBe(403);
+    // Statistik gilt für alle Tickets: Bewertungen anderer Testdateien (je nach Reihenfolge vorher gelaufen) herausnehmen
+    await prisma.ticketRating.deleteMany({ where: { ticketId: { not: id } } });
     const stats = (await staff.get('/api/v1/support-tickets/stats')).body;
     expect(stats).toMatchObject({ escalations: 1, ratings: { count: 1, average: 4, positive: 1 } });
     // Mitarbeiter ohne Zugriff auf die Kategorie sieht nichts

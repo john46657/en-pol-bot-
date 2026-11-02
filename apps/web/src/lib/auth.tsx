@@ -8,6 +8,8 @@ import { allServersChosen, getServer, setServer, subscribeServer } from './serve
 export interface Profile { id: string; username: string; displayName: string; robloxUserId: string | null; robloxUsername: string | null; roles: string[]; permissions: string[]; lastLogin: string | null; twoFactor?: boolean; guildId?: string | null; servers?: string[]; globalAdmin?: boolean; /** Auf dem gewählten Server ausgeschaltete Module. */ modulesOff?: string[]; /** Gewählter Server nicht freigeschaltet: nur das Grundsystem geht. */ serverDisabled?: boolean }
 interface AuthCtx { user: Profile | null; loading: boolean; can: (p: string) => boolean; login: (u: string, p: string) => Promise<{ ticket: string } | void>; loginTwoFactor: (ticket: string, code: string) => Promise<void>; logout: () => Promise<void> }
 const Ctx = createContext<AuthCtx | null>(null);
+/** Vorübergehender Fehler: Netzwerk, Serverfehler (5xx) oder Anfragelimit (429) – nicht „abgemeldet“/„keine Rechte“. */
+const isTransient = (e: unknown) => !(e instanceof ApiError) || e.status >= 500 || e.status === 429;
 
 /**
  * Frontend-Checks dienen nur der UI. Die verbindliche Prüfung erfolgt immer im Backend.
@@ -17,7 +19,8 @@ const Ctx = createContext<AuthCtx | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const server = useSyncExternalStore(subscribeServer, getServer, getServer);
-  const q = useQuery({ queryKey: ['me'], queryFn: () => api<Profile>('/auth/me'), retry: false, staleTime: 30_000, refetchInterval: 5_000 });
+  // Kurze Störungen (Neustart, 502 vom Panel-Proxy, Anfragelimit, Netzwerk) mehrfach wiederholen statt sofort aufzugeben
+  const q = useQuery({ queryKey: ['me'], queryFn: () => api<Profile>('/auth/me'), retry: (n, e) => isTransient(e) && n < 3, retryDelay: (n) => Math.min(1000 * 2 ** n, 8000), staleTime: 30_000, refetchInterval: 5_000 });
   const user = q.data ?? null;
   useEffect(() => {
     setUnauthenticatedHandler((reason) => {
@@ -58,7 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, q.isLoading, login, loginTwoFactor, logout]);
   // Öffentliche Seiten (Datenschutz, Nutzungsbedingungen) gehen auch, wenn der Server gerade nicht antwortet
   const publicPage = /^\/(datenschutz|nutzungsbedingungen)\/?$/.test(window.location.pathname);
-  if (q.error && !publicPage && !(q.error instanceof ApiError && q.error.status === 401)) return <div role="alert" className="p-8 text-danger">Server nicht erreichbar. Bitte versuch es später erneut.</div>;
+  // Nur wenn noch nie ein Anmeldestatus geladen wurde: Fehlerseite. Scheitert später eine einzelne Abfrage, bleibt die Oberfläche
+  // mit dem zuletzt bekannten Stand stehen (die nächste Abfrage nach 5 s holt ihn neu) – sonst „stürzt“ die Seite bei jedem Aussetzer ab.
+  if (q.error && q.data === undefined && !publicPage && !(q.error instanceof ApiError && q.error.status === 401)) return <div role="alert" className="p-8 text-danger">Server nicht erreichbar. Bitte versuch es später erneut.</div>;
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

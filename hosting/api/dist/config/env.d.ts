@@ -17,6 +17,8 @@ declare const schema: z.ZodObject<{
     /** Verzeichnis mit dem gebauten Web-Frontend; wenn gesetzt, liefert die API es selbst aus (Ein-Prozess-Betrieb). */
     WEB_DIST: z.ZodOptional<z.ZodString>;
     LOGIN_RATE_LIMIT: z.ZodDefault<z.ZodNumber>;
+    /** Allgemeines Anfragelimit pro Minute und IP. Die Oberfläche fragt viele Daten alle 5 s ab (eine Dashboard-Seite ≈ 180/min). */
+    RATE_LIMIT: z.ZodDefault<z.ZodNumber>;
     SESSION_TTL_HOURS: z.ZodDefault<z.ZodNumber>;
     WEB_ORIGIN: z.ZodDefault<z.ZodString>;
     STORAGE_DIR: z.ZodDefault<z.ZodString>;
@@ -45,6 +47,7 @@ declare const schema: z.ZodObject<{
     DATABASE_URL: string;
     SESSION_SECRET: string;
     LOGIN_RATE_LIMIT: number;
+    RATE_LIMIT: number;
     SESSION_TTL_HOURS: number;
     WEB_ORIGIN: string;
     STORAGE_DIR: string;
@@ -75,6 +78,7 @@ declare const schema: z.ZodObject<{
     COOKIE_SECURE?: "true" | "false" | undefined;
     WEB_DIST?: string | undefined;
     LOGIN_RATE_LIMIT?: number | undefined;
+    RATE_LIMIT?: number | undefined;
     SESSION_TTL_HOURS?: number | undefined;
     WEB_ORIGIN?: string | undefined;
     STORAGE_DIR?: string | undefined;

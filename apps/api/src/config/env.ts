@@ -18,6 +18,8 @@ const schema = z.object({
   /** Verzeichnis mit dem gebauten Web-Frontend; wenn gesetzt, liefert die API es selbst aus (Ein-Prozess-Betrieb). */
   WEB_DIST: z.string().optional(),
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
+  /** Allgemeines Anfragelimit pro Minute und IP. Die Oberfläche fragt viele Daten alle 5 s ab (eine Dashboard-Seite ≈ 180/min). */
+  RATE_LIMIT: z.coerce.number().int().positive().default(1200),
   SESSION_TTL_HOURS: z.coerce.number().positive().default(12),
   WEB_ORIGIN: z.string().default('http://localhost:5173'),
   STORAGE_DIR: z.string().default('./uploads'),
