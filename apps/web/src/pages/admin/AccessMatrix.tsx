@@ -42,7 +42,7 @@ export function AccessMatrix() {
                   return (
                     <td key={r.id} className="p-1">
                       {editable && !r.system ? (
-                        <Select aria-label={`${r.name}: ${a.key}`} className="!py-1 text-xs" value={lvl === 'custom' ? '' : lvl} onChange={(e) => e.target.value && setPending({ role: r, area: a, level: e.target.value as AccessLevel })}>
+                        <Select aria-label={`${r.name}: ${a.key}`} className="!py-1 min-w-[8.5rem] text-xs" value={lvl === 'custom' ? '' : lvl} onChange={(e) => e.target.value && setPending({ role: r, area: a, level: e.target.value as AccessLevel })}>
                           {lvl === 'custom' && <option value="">Individuell</option>}
                           {ACCESS_LEVELS.map((l) => <option key={l} value={l}>{ACCESS_LEVEL_LABEL[l]}</option>)}
                         </Select>

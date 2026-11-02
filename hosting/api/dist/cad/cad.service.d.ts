@@ -566,8 +566,8 @@ export declare class CadService {
             userId: string;
             entityId: string | null;
             archivedAt: Date | null;
-            entityType: string | null;
             body: string | null;
+            entityType: string | null;
             readAt: Date | null;
         }[];
         history: never[] | {

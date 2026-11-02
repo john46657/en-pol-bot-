@@ -462,8 +462,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         transfers: {
@@ -478,8 +479,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         requests: {
@@ -517,8 +519,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         warnings: {
@@ -534,8 +537,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         notes: {
@@ -550,8 +554,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
@@ -566,8 +571,9 @@ export declare class HrController {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[];
         trainings: ({
@@ -719,8 +725,9 @@ export declare class HrController {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
-        data: import("@prisma/client/runtime/library").JsonValue | null;
+        confidential: boolean;
         summary: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         deletedAt: Date | null;
     }>;
     editRecord(a: Actor, id: string, b: z.infer<typeof editRecord>): Promise<{
@@ -734,8 +741,9 @@ export declare class HrController {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
-        data: import("@prisma/client/runtime/library").JsonValue | null;
+        confidential: boolean;
         summary: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         deletedAt: Date | null;
     }>;
     deleteRecord(a: Actor, id: string, b: z.infer<typeof reason>): Promise<void>;

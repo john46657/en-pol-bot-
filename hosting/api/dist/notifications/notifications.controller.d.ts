@@ -54,8 +54,8 @@ export declare class NotificationsController {
             userId: string;
             entityId: string | null;
             archivedAt: Date | null;
-            entityType: string | null;
             body: string | null;
+            entityType: string | null;
             readAt: Date | null;
         }[];
         total: number;

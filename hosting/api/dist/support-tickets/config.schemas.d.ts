@@ -918,6 +918,7 @@ export declare const categorySchema: z.ZodObject<{
         min?: number | undefined;
         max?: number | undefined;
     }[];
+    confidential: boolean;
     departmentId: string | null;
     emoji: string | null;
     channelNameFormat: string;
@@ -969,7 +970,6 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes: number;
     staffAlertMinutes: number;
     closeRequestCloses: boolean;
-    confidential: boolean;
     formMode: "CHANNEL" | "MODAL";
     escalateUnassignedMinutes: number;
     extraUserIds: string[];
@@ -1033,6 +1033,7 @@ export declare const categorySchema: z.ZodObject<{
         min?: number | undefined;
         max?: number | undefined;
     }[] | undefined;
+    confidential?: boolean | undefined;
     departmentId?: string | null | undefined;
     emoji?: string | null | undefined;
     channelNameFormat?: string | undefined;
@@ -1086,7 +1087,6 @@ export declare const categorySchema: z.ZodObject<{
     autoUnclaimMinutes?: number | undefined;
     staffAlertMinutes?: number | undefined;
     closeRequestCloses?: boolean | undefined;
-    confidential?: boolean | undefined;
     formMode?: "CHANNEL" | "MODAL" | undefined;
     escalateUnassignedMinutes?: number | undefined;
     extraUserIds?: string[] | undefined;
@@ -1639,12 +1639,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dm: boolean;
         dashboard: boolean;
     };
-    claimed: {
+    assigned: {
         channel: boolean;
         dm: boolean;
         dashboard: boolean;
     };
-    assigned: {
+    claimed: {
         channel: boolean;
         dm: boolean;
         dashboard: boolean;
@@ -1695,12 +1695,12 @@ export declare const notifySchema: z.ZodDefault<z.ZodObject<{
         dm?: boolean | undefined;
         dashboard?: boolean | undefined;
     } | undefined;
-    claimed?: {
+    assigned?: {
         channel?: boolean | undefined;
         dm?: boolean | undefined;
         dashboard?: boolean | undefined;
     } | undefined;
-    assigned?: {
+    claimed?: {
         channel?: boolean | undefined;
         dm?: boolean | undefined;
         dashboard?: boolean | undefined;
@@ -1939,12 +1939,12 @@ export declare const settingsSchema: z.ZodObject<{
             dm: boolean;
             dashboard: boolean;
         };
-        claimed: {
+        assigned: {
             channel: boolean;
             dm: boolean;
             dashboard: boolean;
         };
-        assigned: {
+        claimed: {
             channel: boolean;
             dm: boolean;
             dashboard: boolean;
@@ -1995,12 +1995,12 @@ export declare const settingsSchema: z.ZodObject<{
             dm?: boolean | undefined;
             dashboard?: boolean | undefined;
         } | undefined;
-        claimed?: {
+        assigned?: {
             channel?: boolean | undefined;
             dm?: boolean | undefined;
             dashboard?: boolean | undefined;
         } | undefined;
-        assigned?: {
+        claimed?: {
             channel?: boolean | undefined;
             dm?: boolean | undefined;
             dashboard?: boolean | undefined;
@@ -2058,12 +2058,12 @@ export declare const settingsSchema: z.ZodObject<{
             dm: boolean;
             dashboard: boolean;
         };
-        claimed: {
+        assigned: {
             channel: boolean;
             dm: boolean;
             dashboard: boolean;
         };
-        assigned: {
+        claimed: {
             channel: boolean;
             dm: boolean;
             dashboard: boolean;
@@ -2140,12 +2140,12 @@ export declare const settingsSchema: z.ZodObject<{
             dm?: boolean | undefined;
             dashboard?: boolean | undefined;
         } | undefined;
-        claimed?: {
+        assigned?: {
             channel?: boolean | undefined;
             dm?: boolean | undefined;
             dashboard?: boolean | undefined;
         } | undefined;
-        assigned?: {
+        claimed?: {
             channel?: boolean | undefined;
             dm?: boolean | undefined;
             dashboard?: boolean | undefined;

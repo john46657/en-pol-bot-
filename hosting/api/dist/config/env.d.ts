@@ -34,6 +34,8 @@ declare const schema: z.ZodObject<{
     ADMIN_DISCORD_IDS: z.ZodOptional<z.ZodString>;
     /** Schlüssel für die Verschlüsselung der ER:LC-Server-Keys (mind. 32 Zeichen). Leer = abgeleitet aus SESSION_SECRET. */
     ERLC_SECRET_KEY: z.ZodOptional<z.ZodString>;
+    /** Backup-Center: Schlüssel für die Verschlüsselung der Daten-Backups (64 Hex-Zeichen = 256 Bit). Leer = Backups unverschlüsselt (wird im Backup-Center deutlich angezeigt). */
+    BACKUP_ENCRYPTION_KEY: z.ZodOptional<z.ZodString>;
     /** `false` = ER:LC-Server nicht automatisch abrufen (z. B. Testsystem). */
     ERLC_POLLING: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
 }, "strip", z.ZodTypeAny, {
@@ -59,6 +61,7 @@ declare const schema: z.ZodObject<{
     DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
     ERLC_SECRET_KEY?: string | undefined;
+    BACKUP_ENCRYPTION_KEY?: string | undefined;
     ERLC_POLLING?: "true" | "false" | undefined;
 }, {
     DATABASE_URL: string;
@@ -83,6 +86,7 @@ declare const schema: z.ZodObject<{
     DISCORD_GUILD_ID?: string | undefined;
     ADMIN_DISCORD_IDS?: string | undefined;
     ERLC_SECRET_KEY?: string | undefined;
+    BACKUP_ENCRYPTION_KEY?: string | undefined;
     ERLC_POLLING?: "true" | "false" | undefined;
 }>;
 export type Env = z.infer<typeof schema>;

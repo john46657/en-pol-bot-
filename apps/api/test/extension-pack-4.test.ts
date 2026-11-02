@@ -304,7 +304,7 @@ describe('Backup-Center 2.0', () => {
     expect(mod.status).toBe(201);
     ids.helpBackup = mod.body.name;
     // Beschädigung erkennen
-    const broken = Buffer.from(raw); broken[broken.length - 5] ^= 0xff;
+    const broken = Buffer.from(raw); broken[broken.length - 5] = (broken[broken.length - 5] ?? 0) ^ 0xff;
     await writeFile(file.replace(b.body.name, cfg.body.name), broken);
     const v = await admin.post(`/api/v1/backups/data/${cfg.body.name}/verify`);
     expect(v.body.status).toBe('CORRUPT');

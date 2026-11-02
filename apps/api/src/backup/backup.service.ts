@@ -409,7 +409,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
       return { table: m.name, inBackup: (body.tables?.[m.name] ?? []).length, current, newer };
     })));
     const newerRows = tables.reduce((n, t) => n + t.newer, 0);
-    if (newerRows) warnings.push(`${newerRows} Datensätze wurden nach dem Backup angelegt oder geändert und gehen beim Wiederherstellen verloren.`);
+    if (newerRows) warnings.push(newerRows === 1 ? '1 Datensatz wurde nach dem Backup angelegt oder geändert und geht beim Wiederherstellen verloren.' : `${newerRows} Datensätze wurden nach dem Backup angelegt oder geändert und gehen beim Wiederherstellen verloren.`);
     return { createdAt: body.createdAt ?? null, version: body.version, migration: body.migration ?? null, scope: body.scope ?? 'DATABASE', modules: body.modules ?? [], files: body.files?.length ?? 0, tables: tables.filter((t) => t.inBackup || t.current), newerRows, warnings, blockers, restorable: !blockers.length };
   }
 
@@ -423,7 +423,7 @@ export class BackupService implements OnModuleInit, OnModuleDestroy {
     if (!raw?.length) throw new AppError('VALIDATION_FAILED', 'Keine Backup-Datei.');
     const plan = await this.plan(source, opts.groups);
     if (plan.blockers.length) throw new AppError(plan.blockers[0]!.startsWith('Das Backup passt nicht') ? 'VALIDATION_FAILED' : 'CONFLICT', plan.blockers[0]!, { plan });
-    if (plan.newerRows && !opts.acknowledgeNewer) throw new AppError('CONFLICT', `Seit dem Backup wurden ${plan.newerRows} Datensätze angelegt oder geändert. Zum Überschreiben ausdrücklich bestätigen.`, { reason: 'NEWER_DATA', plan });
+    if (plan.newerRows && !opts.acknowledgeNewer) throw new AppError('CONFLICT', `Seit dem Backup ${plan.newerRows === 1 ? 'wurde 1 Datensatz' : `wurden ${plan.newerRows} Datensätze`} angelegt oder geändert. Zum Überschreiben ausdrücklich bestätigen.`, { reason: 'NEWER_DATA', plan });
     const body = this.decode(raw);
     const order = this.restoreTables(body, opts.groups);
     const full = !opts.groups?.length && (body.scope ?? 'DATABASE') !== 'CONFIG' && body.scope !== 'MODULE';

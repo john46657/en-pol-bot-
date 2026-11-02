@@ -80188,15 +80188,17 @@ var PERMISSION_CATALOG = {
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
   wanted: ["view", "create", "edit", "activate", "clear"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
-  personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
+  personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline", "view_unit", "notes_view", "notes_create", "notes_confidential", "documents"],
+  /** Qualifikationsregister (Personalakte 2.0): view = ansehen, grant = vergeben/bestätigen, revoke = ruhen lassen/entziehen, manage = Katalog verwalten */
+  qualification: ["view", "grant", "revoke", "manage"],
   /** Beförderungssystem */
   promotion: ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage"],
   /** Versetzungen zwischen Abteilungen */
   transfer: ["view", "create", "approve", "reject"],
   /** Ausbildungen und Zertifikate */
-  training: ["view", "create", "manage"],
+  training: ["view", "create", "manage", "materials"],
   /** Prüfungen */
-  exam: ["view", "create", "manage", "grade"],
+  exam: ["view", "create", "manage", "grade", "conduct", "results"],
   warning: ["view", "create", "manage"],
   awards: ["view", "create", "manage"],
   /** Dienstnummern-System */
@@ -80228,6 +80230,12 @@ var PERMISSION_CATALOG = {
   roles: ["view", "manage"],
   /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
   servers: ["view", "manage"],
+  /** Organigramm: view = ansehen, edit = Einheiten bearbeiten/Personen zuordnen, hierarchy = Struktur (übergeordnete Einheit, Führung) ändern */
+  org: ["view", "edit", "hierarchy"],
+  /** Backup-Center: Daten-Backups enthalten alle Server – zusätzlich nur für globale Systemadministratoren. */
+  backup: ["view", "create", "download", "verify", "archive", "restore", "settings"],
+  /** Hilfe-Center (Wissensdatenbank): view = veröffentlichte Artikel lesen, manage = Artikel/Kategorien bearbeiten (auch Entwürfe) */
+  help: ["view", "manage"],
   /** Module je Server an/aus und deren Einstellungen */
   modules: ["view", "manage"],
   /**
@@ -80630,14 +80638,15 @@ function periodLabel(period, start2) {
 var LINE_LONG = "\u23AF".repeat(20);
 var LINE_SHORT = "\u23AF".repeat(12);
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "backup", "help"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
   { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
   { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
-  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave", "qualification"] },
+  { key: "org", name: "Organigramm", description: "Organisationsstruktur: F\xFChrung, Abteilungen, Dienstgruppen, Zust\xE4ndigkeiten", permissionPrefixes: ["org"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
@@ -80654,6 +80663,8 @@ var BOT_COMMAND_MODULES = {
   team: "shift_logs",
   dienstpanel: "shift_logs",
   teamliste: "shift_logs",
+  personal: "personnel",
+  organigramm: "org",
   abmeldung: "personnel",
   leave: "personnel",
   ausbildung: "personnel",
@@ -80957,13 +80968,109 @@ var loggingConfigSchema = external_exports.object({
   /** Abweichung je Typ: eigener Kanal oder 'off' (aus); fehlt = Kanal der Kategorie */
   types: external_exports.record(external_exports.string().max(80), external_exports.union([sf4, external_exports.literal("off"), external_exports.literal("on")])).default({})
 });
+var ORG_UNIT_KINDS = ["LEADERSHIP", "DEPUTY_LEADERSHIP", "DEPARTMENT", "DUTY_GROUP", "UNIT", "OTHER"];
+var orgUnitSchema = external_exports.object({
+  name: external_exports.string().trim().min(2).max(80),
+  kind: external_exports.enum(ORG_UNIT_KINDS),
+  parentId: external_exports.string().uuid().nullable().optional(),
+  description: external_exports.string().max(2e3).nullable().optional(),
+  responsibilities: external_exports.string().max(2e3).nullable().optional(),
+  /** Verknüpfung mit einer Abteilung aus den Personal-Einstellungen: Mitglieder = Personalakten mit dieser Abteilung (keine doppelte Pflege). */
+  departmentName: external_exports.string().max(64).nullable().optional(),
+  leaderPersonnelId: external_exports.string().uuid().nullable().optional(),
+  deputyPersonnelId: external_exports.string().uuid().nullable().optional(),
+  color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
+  position: external_exports.number().int().min(0).max(1e4).optional()
+});
+var qualificationDefSchema = external_exports.object({
+  name: external_exports.string().trim().min(2).max(80),
+  description: external_exports.string().max(1e3).nullable().optional(),
+  color: external_exports.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
+  /** in der Leitstelle/MDT zur Einsatzkoordination anzeigen */
+  operational: external_exports.boolean().default(true),
+  /** Gültigkeit in Tagen (leer = unbegrenzt) */
+  validDays: external_exports.number().int().min(1).max(3650).nullable().optional(),
+  /**
+   * Bei bestandener Ausbildung/Prüfung direkt aktiv (true) oder erst nach Bestätigung durch jemanden mit `qualification.grant` (false, Standard).
+   * Bestehen ist eine bestätigte Leistung – aber die Freigabe bleibt standardmäßig eine bewusste menschliche Entscheidung.
+   */
+  autoGrant: external_exports.boolean().default(false),
+  active: external_exports.boolean().default(true)
+});
+var practicalCriterionSchema = external_exports.object({
+  id: external_exports.string().min(1).max(40),
+  label: external_exports.string().trim().min(1).max(200),
+  description: external_exports.string().max(1e3).optional(),
+  maxPoints: external_exports.number().int().min(1).max(100),
+  /** Pflichtkriterium: muss mindestens `minPoints` erreichen, sonst nicht bestanden */
+  required: external_exports.boolean().default(false),
+  minPoints: external_exports.number().int().min(0).max(100).optional()
+});
+var practicalExamSchema = external_exports.object({
+  title: external_exports.string().trim().min(2).max(120),
+  description: external_exports.string().max(4e3).nullable().optional(),
+  /** Prüfungsaufgaben (Szenario, Ablauf) */
+  tasks: external_exports.string().max(8e3).nullable().optional(),
+  criteria: external_exports.array(practicalCriterionSchema).min(1).max(50),
+  /** Bestehensgrenze in Punkten */
+  passPoints: external_exports.number().int().min(0).max(5e3),
+  examinerIds: external_exports.array(external_exports.string().uuid()).max(50).default([]),
+  trainingId: external_exports.string().uuid().nullable().optional(),
+  qualificationDefId: external_exports.string().uuid().nullable().optional(),
+  active: external_exports.boolean().default(true)
+}).refine((e) => e.passPoints <= e.criteria.reduce((s, c) => s + c.maxPoints, 0), { message: "Die Bestehensgrenze ist h\xF6her als die erreichbare Punktzahl.", path: ["passPoints"] }).refine((e) => new Set(e.criteria.map((c) => c.id)).size === e.criteria.length, { message: "Kriterien-IDs m\xFCssen eindeutig sein.", path: ["criteria"] }).refine((e) => e.criteria.every((c) => c.minPoints === void 0 || c.minPoints <= c.maxPoints), { message: "Mindestpunkte eines Kriteriums d\xFCrfen die H\xF6chstpunkte nicht \xFCbersteigen.", path: ["criteria"] });
+var LEARNING_KINDS = ["TEXT", "RULES", "GUIDE", "MEDIA", "QUIZ"];
+var learningMaterialSchema = external_exports.object({
+  title: external_exports.string().trim().min(2).max(120),
+  kind: external_exports.enum(LEARNING_KINDS),
+  body: external_exports.string().max(5e4).default(""),
+  mediaIds: external_exports.array(external_exports.string().uuid()).max(20).default([]),
+  trainingIds: external_exports.array(external_exports.string().uuid()).max(50).default([]),
+  qualificationDefId: external_exports.string().uuid().nullable().optional(),
+  /** Wissensabfrage: verknüpfte (Theorie-)Prüfung */
+  examId: external_exports.string().uuid().nullable().optional(),
+  published: external_exports.boolean().default(false)
+});
+var HELP_ARTICLE_KINDS = ["ARTICLE", "GUIDE", "FAQ"];
+var HELP_ARTICLE_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+var helpCategorySchema = external_exports.object({ name: external_exports.string().trim().min(2).max(80), description: external_exports.string().max(500).nullable().optional(), icon: external_exports.string().max(8).nullable().optional(), position: external_exports.number().int().min(0).max(1e4).optional() });
+var helpArticleSchema = external_exports.object({
+  title: external_exports.string().trim().min(3).max(160),
+  categoryId: external_exports.string().uuid().nullable().optional(),
+  kind: external_exports.enum(HELP_ARTICLE_KINDS).default("ARTICLE"),
+  summary: external_exports.string().max(500).nullable().optional(),
+  body: external_exports.string().max(1e5).default(""),
+  mediaIds: external_exports.array(external_exports.string().uuid()).max(20).default([]),
+  tags: external_exports.array(external_exports.string().trim().min(1).max(30)).max(20).default([]),
+  status: external_exports.enum(HELP_ARTICLE_STATUSES).default("DRAFT"),
+  /** Änderungsgrund (Änderungsverlauf) */
+  changeNote: external_exports.string().max(300).optional()
+});
+var BACKUP_FREQUENCIES = ["off", "hourly", "daily", "weekly", "monthly"];
+var backupScheduleSchema = external_exports.object({
+  frequency: external_exports.enum(BACKUP_FREQUENCIES).default("hourly"),
+  /** Uhrzeit (UTC-Stunde) für täglich/wöchentlich/monatlich */
+  hour: external_exports.number().int().min(0).max(23).default(3),
+  /** 0 = Sonntag … 6 = Samstag (wöchentlich) */
+  weekday: external_exports.number().int().min(0).max(6).default(1),
+  /** Tag im Monat (monatlich, 1–28) */
+  monthDay: external_exports.number().int().min(1).max(28).default(1)
+});
 var backupConfigSchema = external_exports.object({
   /** Dashboard-Daten stündlich automatisch sichern */
   dataAuto: external_exports.boolean().default(true),
   /** Discord-Server täglich automatisch sichern */
   discordAuto: external_exports.boolean().default(false),
   /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
-  keep: external_exports.number().int().min(1).max(60).default(14)
+  keep: external_exports.number().int().min(1).max(60).default(14),
+  /** Backup-Center 2.0: Zeitplan der automatischen Daten-Backups (Standard: stündlich wie bisher) */
+  schedule: backupScheduleSchema.default({}),
+  /** Umfang der automatischen Backups */
+  autoScope: external_exports.enum(["FULL", "DATABASE"]).default("DATABASE"),
+  /** Backups verschlüsseln (AES-256-GCM), sofern BACKUP_ENCRYPTION_KEY gesetzt ist */
+  encrypt: external_exports.boolean().default(true),
+  /** Statusmeldung (Erfolg/Fehler) an Systemadministratoren: Dashboard + optional privater Discord-Kanal */
+  statusChannelId: external_exports.string().regex(/^\d{15,25}$/).nullable().default(null)
 });
 var option = external_exports.object({ key: external_exports.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: external_exports.string().trim().min(1).max(40) });
 var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
@@ -81399,6 +81506,7 @@ function formatReminderDuration(ms) {
   const parts = [d && `${d} ${d === 1 ? "Tag" : "Tage"}`, h && `${h} ${h === 1 ? "Stunde" : "Stunden"}`, m && `${m} ${m === 1 ? "Minute" : "Minuten"}`].filter(Boolean);
   return parts.join(" ") || "0 Minuten";
 }
+var ACCESS_AREAS = Object.keys(PERMISSION_CATALOG);
 
 // apps/bot/src/staff-lists.ts
 function createStaffLists(client2, api2, log = console.log) {
@@ -86428,11 +86536,114 @@ async function restorePresence(p, log = console.error) {
   return ok.presence;
 }
 
+// apps/bot/src/commands/extension4.ts
+var DUTY = { ON_DUTY: "\u{1F7E2} Im Dienst", BREAK: "\u{1F7E1} Pause", OFF_DUTY: "\u26AB Au\xDFer Dienst" };
+var ROLE = { LEADER: "F\xFChrung", DEPUTY: "Stellvertretung", MEMBER: "Mitglied" };
+var QSTAT = { ACTIVE: "\u{1F7E2}", PENDING: "\u{1F7E1} zur Best\xE4tigung", SUSPENDED: "\u23F8\uFE0F ruht", REVOKED: "\u26D4 entzogen", EXPIRED: "\u231B abgelaufen" };
+var day = (iso) => iso ? `<t:${Math.floor(Date.parse(iso) / 1e3)}:d>` : "\u2014";
+function orgLines(units) {
+  const kids = /* @__PURE__ */ new Map();
+  const ids = new Set(units.map((u) => u.id));
+  for (const u of units) {
+    const p = u.parentId && ids.has(u.parentId) ? u.parentId : null;
+    kids.set(p, [...kids.get(p) ?? [], u]);
+  }
+  const out = [];
+  const walk = (p, depth) => {
+    for (const u of kids.get(p) ?? []) {
+      if (depth > 6 || out.includes(u.id)) continue;
+      out.push(`${"\u3000".repeat(depth)}${depth ? "\u2514 " : ""}**${plain(u.name)}** \u2013 ${u.leader ? plain(u.leader.name) : "ohne Leitung"}${u.deputy ? ` (Stv. ${plain(u.deputy.name)})` : ""}`);
+      walk(u.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
+var EXTENSION4_COMMANDS = [
+  {
+    name: "personal",
+    description: "Personalauskunft (gesch\xFCtzt) oder eigene Qualifikationen",
+    subcommands: [
+      { name: "akte", description: "Dienstliche Auskunft zu einem Mitglied (nur mit Berechtigung)", options: [{ name: "mitglied", description: "Wer?", type: "user", required: true }] },
+      { name: "qualifikationen", description: "Deine eigenen Qualifikationen" }
+    ],
+    async run(c) {
+      try {
+        if (c.opts._sub === "qualifikationen") {
+          const list3 = await c.api.asUser(c.discordId, "GET", "/qualification-registry/mine");
+          if (!list3.length) return { ephemeral: true, content: "F\xFCr dich sind noch keine Qualifikationen eingetragen." };
+          return { ephemeral: true, embeds: [{ title: "\u{1F396}\uFE0F Deine Qualifikationen", color: 1982639, description: list3.map((q2) => `${QSTAT[q2.status] ?? q2.status} **${plain(q2.name)}**${q2.expiresAt ? ` \xB7 g\xFCltig bis ${day(q2.expiresAt)}` : ""}`).join("\n").slice(0, 4e3) }] };
+        }
+        const id3 = String(c.opts.mitglied ?? "");
+        if (!/^\d{15,25}$/.test(id3)) return errorReply("Bitte ein Mitglied w\xE4hlen.");
+        const p = await c.api.asUser(c.discordId, "GET", `/personnel-file/lookup?discordId=${id3}`);
+        return { ephemeral: true, embeds: [{
+          title: `\u{1F5C2}\uFE0F ${plain(p.name)}`,
+          color: 1982639,
+          fields: [
+            { name: "Rang", value: plain(p.rank ?? "\u2014"), inline: true },
+            { name: "Abteilung", value: plain(p.department ?? "\u2014"), inline: true },
+            { name: "Dienstnummer", value: plain(p.serviceNumber ?? "\u2014"), inline: true },
+            { name: "Personalstatus", value: plain(p.status), inline: true },
+            { name: "Dienststatus", value: DUTY[p.dutyStatus.status] ?? p.dutyStatus.status, inline: true },
+            { name: "Eintritt", value: day(p.joinDate), inline: true },
+            { name: "Zugeh\xF6rigkeit", value: (p.units.map((u) => `${plain(u.name)} (${ROLE[u.role] ?? u.role})${u.supervisor ? ` \u2013 F\xFChrung: ${plain(u.supervisor)}` : ""}`).join("\n") || "\u2014").slice(0, 1024) },
+            { name: "Qualifikationen (einsatzrelevant)", value: (p.qualifications.map(plain).join(", ") || "\u2014").slice(0, 1024) }
+          ],
+          footer: "Vertrauliche Personalinformationen nur im Dashboard. Abruf wird protokolliert."
+        }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  },
+  {
+    name: "organigramm",
+    description: "F\xFChrungsstruktur und Ansprechpartner anzeigen",
+    async run(c) {
+      try {
+        const units = await c.api.asUser(c.discordId, "GET", "/org/summary");
+        const lines = orgLines(units);
+        if (!lines.length) return { ephemeral: true, content: "Im Organigramm ist noch nichts hinterlegt." };
+        let text = "";
+        let cut = 0;
+        for (const l of lines) {
+          if (text.length + l.length + 1 > 3900) {
+            cut++;
+            continue;
+          }
+          text += `${l}
+`;
+        }
+        return { ephemeral: true, embeds: [{ title: "\u{1F3DB}\uFE0F Organigramm", description: text, color: 1981066, footer: cut ? `${cut} weitere Einheiten \u2013 vollst\xE4ndig im Dashboard` : "Vollst\xE4ndig im Dashboard unter Organigramm" }] };
+      } catch (e) {
+        return mapError(e);
+      }
+    }
+  }
+];
+async function helpSearch(c) {
+  try {
+    const term = String(c.opts.suche ?? "").trim();
+    const r = await c.api.asUser(c.discordId, "GET", `/help/articles${term ? `?q=${encodeURIComponent(term)}` : ""}`);
+    if (!r.rows.length) return { ephemeral: true, content: term ? `Zu \u201E${plain(term)}\u201C gibt es noch keinen Artikel. Bei einem technischen Problem: \`/support\` bzw. das Support-Panel nutzen.` : "Im Hilfe-Center ist noch nichts ver\xF6ffentlicht." };
+    if (r.rows.length === 1 || r.rows[0].title.toLowerCase() === term.toLowerCase()) {
+      const a = await c.api.asUser(c.discordId, "GET", `/help/articles/${r.rows[0].slug}`);
+      return { ephemeral: true, embeds: [{ title: `\u2753 ${plain(a.title)}`.slice(0, 256), description: `${a.summary ? `*${plain(a.summary)}*
+
+` : ""}${a.body}`.slice(0, 4e3), color: COLORS.info, footer: "Hilfe-Center" }] };
+    }
+    return { ephemeral: true, embeds: [{ title: `\u2753 Hilfe-Center${term ? ` \u2013 \u201E${plain(term)}\u201C` : ""}`.slice(0, 256), color: COLORS.info, description: r.rows.slice(0, 10).map((a) => `\u2022 **${plain(a.title)}**${a.summary ? ` \u2013 ${plain(a.summary)}` : ""}`).join("\n").slice(0, 4e3), footer: `${r.total} Treffer \u2013 genauer suchen, um einen Artikel direkt zu \xF6ffnen` }] };
+  } catch (e) {
+    return mapError(e);
+  }
+}
+
 // apps/bot/src/commands/index.ts
 var hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
 var q = (s) => encodeURIComponent(s.trim());
 var str3 = (c, k) => String(c.opts[k] ?? "").trim();
-var DUTY = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
+var DUTY2 = { an: "ON_DUTY", pause: "BREAK", aus: "OFF_DUTY" };
 var choices2 = (m) => Object.keys(m).map((k) => ({ name: k.replace("_", " "), value: k }));
 var CHANNEL = { team: "TEAM", dispatch: "DISPATCH" };
 var COMMANDS = [
@@ -86487,11 +86698,13 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   })),
   {
     name: "hilfe",
-    description: "Zeigt alle Befehle",
-    async run() {
+    description: "Zeigt alle Befehle \u2013 mit \u201Esuche\u201C durchsucht er das Hilfe-Center",
+    options: [{ name: "suche", description: "Hilfe-Center durchsuchen, z. B. \u201EDienst anmelden\u201C", type: "string", maxLength: 100 }],
+    async run(c) {
+      if (String(c.opts.suche ?? "").trim()) return helpSearch(c);
       return { ephemeral: true, embeds: [{ title: "EN Polizei \u2014 Befehle", color: COLORS.info, fields: [
         { name: "Konto", value: "`/dashboard` `/panel` `/benachrichtigungen`" },
-        { name: "Abfragen", value: "`/team`" },
+        { name: "Abfragen", value: "`/team` `/personal akte` `/personal qualifikationen` `/organigramm` `/hilfe suche:` (Hilfe-Center)" },
         { name: "Dienst & Leitstelle", value: "`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`" },
         { name: "Erfassen", value: "`/dienstbericht` `/dienstbericht liste`" },
         { name: "Leitung & Team", value: "`/ausbildung` `/verwarnen` `/funkfreigabe` `/teamliste` `/dienstpanel` `/teamchance` `/roblox`" },
@@ -86506,9 +86719,9 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   {
     name: "dienst",
     description: "Setzt deinen Dienststatus",
-    options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY) }],
+    options: [{ name: "status", description: "Neuer Status", type: "string", required: true, choices: choices2(DUTY2) }],
     async run(c) {
-      const status3 = DUTY[str3(c, "status")];
+      const status3 = DUTY2[str3(c, "status")];
       if (!status3) return errorReply("Unbekannter Status.");
       if (status3 === "ON_DUTY") {
         const pick2 = await shiftPicker(c);
@@ -86606,7 +86819,8 @@ ${url}`, color: COLORS.info }], buttons: [{ id: "link", label: "Dashboard \xF6ff
   ...BACKUP_COMMANDS,
   ...EXAM_COMMANDS,
   ...BOT_PROFILE_COMMANDS,
-  ...REMINDER_COMMANDS
+  ...REMINDER_COMMANDS,
+  ...EXTENSION4_COMMANDS
 ];
 var byName = (n) => COMMANDS.find((c) => c.name === n);
 

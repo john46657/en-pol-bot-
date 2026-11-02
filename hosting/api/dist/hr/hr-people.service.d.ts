@@ -111,8 +111,9 @@ export declare class HrPeopleService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: Prisma.JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: Prisma.JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         transfers: {
@@ -127,8 +128,9 @@ export declare class HrPeopleService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: Prisma.JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: Prisma.JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         requests: {
@@ -166,8 +168,9 @@ export declare class HrPeopleService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: Prisma.JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: Prisma.JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         warnings: {
@@ -183,8 +186,9 @@ export declare class HrPeopleService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: Prisma.JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: Prisma.JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         notes: {
@@ -199,8 +203,9 @@ export declare class HrPeopleService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: Prisma.JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: Prisma.JsonValue | null;
             deletedAt: Date | null;
         }[] | null;
         recommendations: {
@@ -215,8 +220,9 @@ export declare class HrPeopleService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: Prisma.JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: Prisma.JsonValue | null;
             deletedAt: Date | null;
         }[];
         trainings: ({
@@ -407,8 +413,9 @@ export declare class HrPeopleService {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
-        data: Prisma.JsonValue | null;
+        confidential: boolean;
         summary: string;
+        data: Prisma.JsonValue | null;
         deletedAt: Date | null;
     }>;
     /** Aktive Verwarnungen einer Person (nicht zurückgenommen, nicht abgelaufen). */
@@ -466,8 +473,9 @@ export declare class HrPeopleService {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
-        data: Prisma.JsonValue | null;
+        confidential: boolean;
         summary: string;
+        data: Prisma.JsonValue | null;
         deletedAt: Date | null;
     }>;
     deleteRecord(actor: Actor, recordId: string, reason?: string): Promise<void>;

@@ -13,10 +13,12 @@ const users_controller_1 = require("./users.controller");
 const roles_controller_1 = require("./roles.controller");
 const users_service_1 = require("./users.service");
 const roles_service_1 = require("./roles.service");
+const access_matrix_controller_1 = require("./access-matrix.controller");
+const access_matrix_service_1 = require("./access-matrix.service");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
-    (0, common_1.Module)({ imports: [auth_module_1.AuthModule], controllers: [users_controller_1.UsersController, roles_controller_1.RolesController], providers: [users_service_1.UsersService, roles_service_1.RolesService], exports: [users_service_1.UsersService, roles_service_1.RolesService] })
+    (0, common_1.Module)({ imports: [auth_module_1.AuthModule], controllers: [users_controller_1.UsersController, roles_controller_1.RolesController, access_matrix_controller_1.AccessMatrixController], providers: [users_service_1.UsersService, roles_service_1.RolesService, access_matrix_service_1.AccessMatrixService], exports: [users_service_1.UsersService, roles_service_1.RolesService] })
 ], UsersModule);
 //# sourceMappingURL=users.module.js.map

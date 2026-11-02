@@ -16,6 +16,7 @@ const zod_1 = require("zod");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const hr_core_service_1 = require("./hr-core.service");
+const qualification_registry_service_1 = require("./qualification-registry.service");
 exports.trainingSchema = zod_1.z.object({
     name: zod_1.z.string().trim().min(1).max(100), description: zod_1.z.string().max(3000).nullable().default(null), requirements: zod_1.z.string().max(1000).nullable().default(null),
     instructorIds: zod_1.z.array(zod_1.z.string().uuid()).max(30).default([]), duration: zod_1.z.string().max(60).nullable().default(null), active: zod_1.z.boolean().default(true), examRequired: zod_1.z.boolean().default(false),
@@ -35,9 +36,11 @@ const certNo = () => `Z-${new Date().getUTCFullYear()}-${Array.from({ length: 6 
 let HrTrainingService = class HrTrainingService {
     core;
     perms;
-    constructor(core, perms) {
+    quals;
+    constructor(core, perms, quals) {
         this.core = core;
         this.perms = perms;
+        this.quals = quals;
     }
     get prisma() { return this.core.prisma; }
     // ---------------- Ausbildungen ----------------
@@ -99,6 +102,9 @@ let HrTrainingService = class HrTrainingService {
             await this.core.audit.record(actor, { action: 'training.progress', module: 'training', entityType: 'HrTrainingProgress', entityId: r.id, before, after: r }, tx);
             return r;
         });
+        // Qualifikationsregister: mit dieser Ausbildung verknüpfte Qualifikationen (ohne autoGrant zur Bestätigung)
+        if (passed && before?.status !== 'PASSED')
+            await this.quals.fromAchievement('TRAINING', { trainingId: t.id }, p.id, row.id, actor.userId).catch(() => []);
         if (passed && before?.status !== 'PASSED')
             await this.core.notify('training.passed', { memberUserId: p.userId, title: `🎓 Ausbildung bestanden: ${t.name}`, entityType: 'Personnel', entityId: p.id, publicText: `**${p.user.displayName}** hat die Ausbildung **${t.name}** bestanden.`, dmText: `Glückwunsch! Du hast die Ausbildung **${t.name}** bestanden.${row.certificateNo ? `\nZertifikat: ${row.certificateNo}` : ''}`, color: 0x22c55e });
         return row;
@@ -123,6 +129,6 @@ let HrTrainingService = class HrTrainingService {
 exports.HrTrainingService = HrTrainingService;
 exports.HrTrainingService = HrTrainingService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, permission_service_1.PermissionService, qualification_registry_service_1.QualificationRegistryService])
 ], HrTrainingService);
 //# sourceMappingURL=hr-training.service.js.map

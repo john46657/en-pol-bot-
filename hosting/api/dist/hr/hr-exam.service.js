@@ -17,6 +17,7 @@ const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const web_url_1 = require("../common/web-url");
 const hr_core_service_1 = require("./hr-core.service");
+const qualification_registry_service_1 = require("./qualification-registry.service");
 const GRACE_MS = 30_000;
 const shuffled = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) {
     const j = (0, node_crypto_1.randomInt)(i + 1);
@@ -33,9 +34,11 @@ const derange = (n) => { let r = shuffled(range(n)); for (let i = 0; i < 5 && n 
 let HrExamService = class HrExamService {
     core;
     perms;
-    constructor(core, perms) {
+    quals;
+    constructor(core, perms, quals) {
         this.core = core;
         this.perms = perms;
+        this.quals = quals;
     }
     get prisma() { return this.core.prisma; }
     // ---------------- Rechte ----------------
@@ -393,6 +396,7 @@ let HrExamService = class HrExamService {
         await this.prisma.personnelRecord.create({ data: { personnelId: a.personnelId, type: 'EXAM', summary: `Prüfung „${a.exam.title}“: ${a.passed ? 'bestanden' : 'nicht bestanden'} (${pct} %)`, data: { examId: a.examId, attemptId: a.id, score: a.score, maxScore: a.maxScore, passed: a.passed }, createdById: a.gradedById ?? a.personnel.userId } });
         if (!a.passed || wasPassed)
             return;
+        await this.quals.fromAchievement('EXAM', { examId: a.examId }, a.personnelId, attemptId, a.gradedById).catch(() => []);
         await this.core.notify('exam.passed', { memberUserId: a.personnel.userId, title: `📝 Prüfung bestanden: ${a.exam.title}`, entityType: 'Personnel', entityId: a.personnelId, publicText: `**${a.personnel.user.displayName}** hat die Prüfung **${a.exam.title}** bestanden.`, dmText: `Glückwunsch! Du hast die Prüfung **${a.exam.title}** bestanden (${pct} %).`, color: 0x22c55e });
         if (a.exam.trainingId) {
             const t = await this.prisma.hrTrainingProgress.findUnique({ where: { trainingId_personnelId: { trainingId: a.exam.trainingId, personnelId: a.personnelId } } });
@@ -471,6 +475,6 @@ let HrExamService = class HrExamService {
 exports.HrExamService = HrExamService;
 exports.HrExamService = HrExamService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, permission_service_1.PermissionService, qualification_registry_service_1.QualificationRegistryService])
 ], HrExamService);
 //# sourceMappingURL=hr-exam.service.js.map

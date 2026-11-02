@@ -304,8 +304,8 @@ export declare class FleetController {
         name: string;
         erlcName: string;
         department: string | null;
-        internalCode: string | null;
         tags: string[];
+        internalCode: string | null;
         imageId: string | null;
     }[]>;
     suggestions(): Promise<{
@@ -322,8 +322,8 @@ export declare class FleetController {
         name: string;
         erlcName: string;
         department: string | null;
-        internalCode: string | null;
         tags: string[];
+        internalCode: string | null;
         imageId: string | null;
     }>;
     updateModel(a: Actor, id: string, b: Partial<FleetModelInput>): Promise<{
@@ -336,8 +336,8 @@ export declare class FleetController {
         name: string;
         erlcName: string;
         department: string | null;
-        internalCode: string | null;
         tags: string[];
+        internalCode: string | null;
         imageId: string | null;
     }>;
     deleteModel(a: Actor, id: string): Promise<void>;

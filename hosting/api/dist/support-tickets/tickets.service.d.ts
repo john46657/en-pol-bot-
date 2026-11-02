@@ -503,8 +503,8 @@ export declare class SupportTicketsService {
             category: {
                 id: string;
                 name: string;
-                emoji: string | null;
                 confidential: boolean;
+                emoji: string | null;
             } | null;
             department: {
                 id: string;
@@ -712,9 +712,9 @@ export declare class SupportTicketsService {
         lastActivityAt: Date;
         closedAt: Date | null;
         name: string;
+        archivedAt: Date | null;
         categoryId: string;
         channelId: string | null;
-        archivedAt: Date | null;
         answers: Prisma.JsonValue;
         panelId: string | null;
         controlMessageId: string | null;
@@ -1110,6 +1110,7 @@ export declare class SupportTicketsService {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1126,7 +1127,6 @@ export declare class SupportTicketsService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
         mentionRoleIds: string[];

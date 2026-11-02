@@ -153,11 +153,11 @@ declare const actionSchema: z.ZodDiscriminatedUnion<"action", [z.ZodObject<{
     action: z.ZodLiteral<"move">;
     parentId: z.ZodNullable<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    action: "move";
     parentId: string | null;
+    action: "move";
 }, {
-    action: "move";
     parentId: string | null;
+    action: "move";
 }>, z.ZodObject<{
     action: z.ZodLiteral<"transcript">;
 }, "strip", z.ZodTypeAny, {
@@ -616,6 +616,7 @@ export declare class SupportTicketsController {
             name: string;
             position: number;
             questions: import("@prisma/client/runtime/library").JsonValue;
+            confidential: boolean;
             archivedAt: Date | null;
             departmentId: string | null;
             formVersion: number;
@@ -665,7 +666,6 @@ export declare class SupportTicketsController {
             autoUnclaimMinutes: number;
             staffAlertMinutes: number;
             closeRequestCloses: boolean;
-            confidential: boolean;
             formMode: string;
             escalateUnassignedMinutes: number;
             extraUserIds: string[];
@@ -698,6 +698,7 @@ export declare class SupportTicketsController {
             name: string;
             position: number;
             internalNote: string;
+            publishedAt: Date | null;
             channelId: string | null;
             messageId: string | null;
             emoji: string | null;
@@ -714,7 +715,6 @@ export declare class SupportTicketsController {
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            publishedAt: Date | null;
             publishError: string | null;
             channelNameFormat: string | null;
             mentionRoleIds: string[];
@@ -769,12 +769,12 @@ export declare class SupportTicketsController {
                     dm: boolean;
                     dashboard: boolean;
                 };
-                claimed: {
+                assigned: {
                     channel: boolean;
                     dm: boolean;
                     dashboard: boolean;
                 };
-                assigned: {
+                claimed: {
                     channel: boolean;
                     dm: boolean;
                     dashboard: boolean;
@@ -867,12 +867,12 @@ export declare class SupportTicketsController {
                 dm: boolean;
                 dashboard: boolean;
             };
-            claimed: {
+            assigned: {
                 channel: boolean;
                 dm: boolean;
                 dashboard: boolean;
             };
-            assigned: {
+            claimed: {
                 channel: boolean;
                 dm: boolean;
                 dashboard: boolean;
@@ -943,6 +943,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -992,7 +993,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -1024,6 +1024,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -1073,7 +1074,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -1105,6 +1105,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -1154,7 +1155,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -1188,6 +1188,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1204,7 +1205,6 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
         mentionRoleIds: string[];
@@ -1224,6 +1224,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1240,7 +1241,6 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
         mentionRoleIds: string[];
@@ -1259,6 +1259,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
         messageId: string | null;
         emoji: string | null;
@@ -1275,7 +1276,6 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
         mentionRoleIds: string[];
@@ -1395,6 +1395,7 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         questions: import("@prisma/client/runtime/library").JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -1444,7 +1445,6 @@ export declare class SupportTicketsController {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -1504,8 +1504,8 @@ export declare class SupportTicketsController {
             category: {
                 id: string;
                 name: string;
-                emoji: string | null;
                 confidential: boolean;
+                emoji: string | null;
             } | null;
             department: {
                 id: string;
@@ -1938,9 +1938,9 @@ export declare class SupportTicketsController {
         lastActivityAt: Date;
         closedAt: Date | null;
         name: string;
+        archivedAt: Date | null;
         categoryId: string;
         channelId: string | null;
-        archivedAt: Date | null;
         answers: import("@prisma/client/runtime/library").JsonValue;
         panelId: string | null;
         controlMessageId: string | null;
