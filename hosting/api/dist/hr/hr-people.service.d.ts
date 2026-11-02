@@ -144,6 +144,9 @@ export declare class HrPeopleService {
             reason: string;
             kind: string;
             personnelId: string;
+            queries: Prisma.JsonValue;
+            reviewerId: string | null;
+            origin: string;
             fromValue: string | null;
             toValue: string;
             achievements: string | null;

@@ -106,7 +106,9 @@ export declare class TicketConfigService {
             name: string;
             position: number;
             internalNote: string;
+            publishedAt: Date | null;
             channelId: string | null;
+            mentionRoleIds: string[];
             messageId: string | null;
             emoji: string | null;
             thumbnailUrl: string | null;
@@ -122,10 +124,8 @@ export declare class TicketConfigService {
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            publishedAt: Date | null;
             publishError: string | null;
             channelNameFormat: string | null;
-            mentionRoleIds: string[];
             maxOpen: number;
             automation: Prisma.JsonValue;
         }[];
@@ -692,7 +692,9 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -708,10 +710,8 @@ export declare class TicketConfigService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: Prisma.JsonValue;
     }>;
@@ -727,7 +727,9 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -743,10 +745,8 @@ export declare class TicketConfigService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: Prisma.JsonValue;
     }>;

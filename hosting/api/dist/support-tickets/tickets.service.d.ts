@@ -712,9 +712,9 @@ export declare class SupportTicketsService {
         lastActivityAt: Date;
         closedAt: Date | null;
         name: string;
-        categoryId: string;
         channelId: string | null;
         archivedAt: Date | null;
+        categoryId: string;
         answers: Prisma.JsonValue;
         panelId: string | null;
         controlMessageId: string | null;
@@ -1110,7 +1110,9 @@ export declare class SupportTicketsService {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1126,10 +1128,8 @@ export declare class SupportTicketsService {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: Prisma.JsonValue;
     }>;

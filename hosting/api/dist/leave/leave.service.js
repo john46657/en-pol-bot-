@@ -19,6 +19,7 @@ const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const numbering_1 = require("../common/numbering");
 const web_url_1 = require("../common/web-url");
+const notify_service_1 = require("../notifications/notify.service");
 const KEY = 'leave.config';
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
 /** Abmeldungen (wie bei Melonly/ERM): Freigabe-Channel, Log-Channel, Rolle „abgemeldet“. */
@@ -29,8 +30,12 @@ exports.leaveConfigSchema = zod_1.z.object({
     roleIds: zod_1.z.array(sf).max(25).default([]),
     /** Längste erlaubte Abmeldung in Tagen. */
     maxDays: zod_1.z.number().int().min(1).max(365).default(90),
+    /** Grund im Log-Kanal zeigen? Standard aus: Abwesenheitsgründe sind sensibel und gehören nicht in einen Kanal, den viele lesen. */
+    logReason: zod_1.z.boolean().default(false),
 });
-exports.LEAVE_STATUSES = ['PENDING', 'APPROVED', 'DENIED', 'CANCELLED', 'ENDED'];
+exports.LEAVE_STATUSES = ['PENDING', 'IN_REVIEW', 'APPROVED', 'DENIED', 'CANCELLED', 'ENDED'];
+/** Offen = eingereicht oder in Prüfung */
+const OPEN = ['PENDING', 'IN_REVIEW'];
 const DAY = 86_400_000;
 const include = { user: { select: { displayName: true } } };
 let LeaveService = class LeaveService {
@@ -38,11 +43,13 @@ let LeaveService = class LeaveService {
     audit;
     discord;
     perms;
-    constructor(prisma, audit, discord, perms) {
+    notify;
+    constructor(prisma, audit, discord, perms, notify) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.perms = perms;
+        this.notify = notify;
     }
     async config() {
         const v = (await this.prisma.systemSetting.findUnique({ where: { key: KEY } }))?.value;
@@ -71,6 +78,7 @@ let LeaveService = class LeaveService {
             id: r.id, number: r.number, userId: r.userId, name: r.user.displayName, discordId: r.discordId,
             startsAt: r.startsAt, endsAt: r.endsAt, reason: r.reason, type: r.type, comment: r.comment, status: r.status, active, guildId: r.guildId,
             decidedAt: r.decidedAt, decisionReason: r.decisionReason, decidedByName: r.decidedByName ?? null, endedAt: r.endedAt, createdAt: r.createdAt,
+            reviewerId: r.reviewerId, reviewerName: r.reviewerName ?? null, reviewStartedAt: r.reviewStartedAt,
             days: Math.max(1, Math.round((r.endsAt.getTime() - r.startsAt.getTime()) / DAY)),
             extensionMinutes: r.extensionMinutes, extensionReason: r.extensionReason, extensionRequestedAt: r.extensionRequestedAt,
         };
@@ -93,7 +101,10 @@ let LeaveService = class LeaveService {
     async log(cfg, r, event, extra = {}) {
         if (!cfg.logChannelId)
             return;
-        await this.discord.enqueue('duty', 'leave.log', this.payload(r, { event, channelId: cfg.logChannelId, ...extra }), { always: true });
+        const p = this.payload(r, { event, channelId: cfg.logChannelId, ...extra });
+        if (!cfg.logReason)
+            delete p.reason; // Grund bleibt intern (Freigabe-Kanal und Dashboard)
+        await this.discord.enqueue('duty', 'leave.log', p, { always: true });
     }
     async roles(r, add, remove, reason) {
         const discordId = r.discordId;
@@ -124,6 +135,8 @@ let LeaveService = class LeaveService {
         // DM „Abmeldung ausstehend“ an die Person (wie Trident)
         if (r.discordId)
             await this.discord.enqueue('duty', 'leave.pending', this.payload(r, await this.server(r.guildId)), { always: true });
+        // Prüfer im Dashboard benachrichtigen (ohne Grund im Titel)
+        await this.notify.emitPermission('leave.requested', 'leave.manage', { title: `🗓️ Abmeldung ${r.number}: ${r.user.displayName}`, link: `/leave?id=${r.id}`, entityType: 'LeaveRequest', entityId: r.id, dedupeKey: r.id }, { exceptUserId: actor.userId });
         return this.view(r);
     }
     async create(actor, userId, d) {
@@ -139,7 +152,7 @@ let LeaveService = class LeaveService {
             throw new errors_1.AppError('VALIDATION_FAILED', 'Der Beginn darf höchstens einen Tag zurückliegen.');
         if (d.endsAt.getTime() - d.startsAt.getTime() > cfg.maxDays * DAY)
             throw new errors_1.AppError('VALIDATION_FAILED', `Eine Abmeldung darf höchstens ${cfg.maxDays} Tage lang sein.`);
-        const overlap = await this.prisma.leaveRequest.findFirst({ where: { userId, status: { in: ['PENDING', 'APPROVED'] }, startsAt: { lt: d.endsAt }, endsAt: { gt: d.startsAt } } });
+        const overlap = await this.prisma.leaveRequest.findFirst({ where: { userId, status: { in: [...OPEN, 'APPROVED'] }, startsAt: { lt: d.endsAt }, endsAt: { gt: d.startsAt } } });
         if (overlap)
             throw new errors_1.AppError('CONFLICT', `Für diesen Zeitraum gibt es schon eine Abmeldung (${overlap.number}).`, { existingId: overlap.id });
         return this.prisma.$transaction(async (tx) => {
@@ -159,13 +172,14 @@ let LeaveService = class LeaveService {
             ...(f.status === 'ACTIVE' ? { status: 'APPROVED', startsAt: { lte: now }, endsAt: { gt: now } }
                 : f.status === 'UPCOMING' ? { status: 'APPROVED', startsAt: { gt: now } }
                     // Kalender: offene und genehmigte Abmeldungen, die in den nächsten 4 Wochen (ab gestern) liegen
-                    : f.status === 'CALENDAR' ? { status: { in: ['PENDING', 'APPROVED'] }, endsAt: { gte: new Date(now.getTime() - 86_400_000) }, startsAt: { lte: new Date(now.getTime() + 28 * 86_400_000) } }
-                        : f.status && f.status !== 'ALL' ? { status: f.status } : {}),
+                    : f.status === 'CALENDAR' ? { status: { in: [...OPEN, 'APPROVED'] }, endsAt: { gte: new Date(now.getTime() - 86_400_000) }, startsAt: { lte: new Date(now.getTime() + 28 * 86_400_000) } }
+                        : f.status === 'PENDING' ? { status: { in: OPEN } } // „Offen“ zeigt auch Anträge in Prüfung
+                            : f.status && f.status !== 'ALL' ? { status: f.status } : {}),
         };
         const rows = await this.withDiscord(await this.prisma.leaveRequest.findMany({ where, include, orderBy: [{ startsAt: 'desc' }], take: 200 }));
-        const deciders = await this.prisma.user.findMany({ where: { id: { in: rows.map((r) => r.decidedById).filter((x) => !!x) } }, select: { id: true, displayName: true } });
+        const deciders = await this.prisma.user.findMany({ where: { id: { in: rows.flatMap((r) => [r.decidedById, r.reviewerId]).filter((x) => !!x) } }, select: { id: true, displayName: true } });
         const name = new Map(deciders.map((u) => [u.id, u.displayName]));
-        return { all, ...(member ? { member: { userId: member.id, name: member.displayName } } : {}), items: rows.map((r) => this.view({ ...r, decidedByName: r.decidedById ? name.get(r.decidedById) ?? null : null })) };
+        return { all, ...(member ? { member: { userId: member.id, name: member.displayName } } : {}), items: rows.map((r) => this.view({ ...r, decidedByName: r.decidedById ? name.get(r.decidedById) ?? null : null, reviewerName: r.reviewerId ? name.get(r.reviewerId) ?? null : null })) };
     }
     async load(id) {
         const r = await this.prisma.leaveRequest.findUnique({ where: { id }, include });
@@ -175,13 +189,13 @@ let LeaveService = class LeaveService {
     }
     async decide(actor, id, status, reason) {
         const r = await this.load(id);
-        if (r.status !== 'PENDING')
+        if (!OPEN.includes(r.status))
             throw new errors_1.AppError('CONFLICT', `Über diese Abmeldung wurde schon entschieden (${r.status}).`);
         if (status === 'APPROVED' && r.endsAt.getTime() <= Date.now())
             throw new errors_1.AppError('CONFLICT', 'Diese Abmeldung ist schon abgelaufen.');
         const by = await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } });
         const updated = await this.prisma.$transaction(async (tx) => {
-            const n = await tx.leaveRequest.updateMany({ where: { id, status: 'PENDING' }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
+            const n = await tx.leaveRequest.updateMany({ where: { id, status: { in: OPEN } }, data: { status, decidedById: actor.userId, decidedAt: new Date(), decisionReason: reason || null } });
             if (!n.count)
                 throw new errors_1.AppError('CONFLICT', 'Über diese Abmeldung wurde gerade schon entschieden.');
             await this.audit.record(actor, { action: `leave.${status === 'APPROVED' ? 'approve' : 'deny'}`, module: 'leave', entityType: 'LeaveRequest', entityId: id, after: { status, reason: reason ?? null } }, tx);
@@ -193,16 +207,49 @@ let LeaveService = class LeaveService {
             await this.discord.enqueue('duty', 'leave.decided', this.payload(updated, { ...extra, ...(await this.server(updated.guildId)) }), { always: true });
         await this.log(cfg, updated, status === 'APPROVED' ? 'approved' : 'denied', extra);
         await this.discord.markDecided('leave', id, actor, status === 'APPROVED' ? 'ACCEPTED' : 'REJECTED', reason);
-        if (status === 'APPROVED')
+        // Dashboard/MDT-Benachrichtigung an die Person (die DM schickt der Bot bereits selbst → hier keine zweite)
+        await this.notify.emit(status === 'APPROVED' ? 'leave.approved' : 'leave.decided', [updated.userId], { title: `${status === 'APPROVED' ? '✅ Abmeldung genehmigt' : '❌ Abmeldung abgelehnt'}: ${updated.number}`, body: reason || undefined, link: `/leave?id=${id}`, entityType: 'LeaveRequest', entityId: id, dedupeKey: `${id}:${status}`, dm: false });
+        if (status === 'APPROVED') {
+            await this.flagShiftConflicts(updated);
             await this.tick();
+        }
         return { ...this.view({ ...updated, decidedByName: by?.displayName ?? null }) };
+    }
+    /** „In Prüfung“ nehmen: Prüfer wird eingetragen (zuständiger Prüfer); entschieden wird danach wie gewohnt. */
+    async review(actor, id) {
+        const r = await this.load(id);
+        if (r.status !== 'PENDING')
+            throw new errors_1.AppError('CONFLICT', r.status === 'IN_REVIEW' ? 'Diese Abmeldung ist schon in Prüfung.' : 'Über diese Abmeldung wurde schon entschieden.');
+        if (r.userId === actor.userId)
+            throw new errors_1.AppError('CONFLICT', 'Die eigene Abmeldung kannst du nicht prüfen.');
+        await this.prisma.$transaction(async (tx) => {
+            const n = await tx.leaveRequest.updateMany({ where: { id, status: 'PENDING' }, data: { status: 'IN_REVIEW', reviewerId: actor.userId, reviewStartedAt: new Date() } });
+            if (!n.count)
+                throw new errors_1.AppError('CONFLICT', 'Die Abmeldung wurde gerade schon übernommen.');
+            await this.audit.record(actor, { action: 'leave.review', module: 'leave', entityType: 'LeaveRequest', entityId: id, before: { status: 'PENDING' }, after: { status: 'IN_REVIEW' } }, tx);
+        });
+        await this.notify.emit('leave.decided', [r.userId], { title: `🔎 Abmeldung ${r.number} ist in Prüfung`, link: `/leave?id=${id}`, entityType: 'LeaveRequest', entityId: id, dedupeKey: `${id}:IN_REVIEW`, dm: false });
+        const after = await this.load(id);
+        const me = await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } });
+        return this.view({ ...after, reviewerName: me?.displayName ?? null });
+    }
+    /**
+     * Genehmigte Abwesenheit ↔ Schichtplan: Zuweisungen in diesem Zeitraum bleiben bestehen (nichts wird automatisch geändert),
+     * die Schichtleitung erfährt es aber sofort – ohne Grund.
+     */
+    async flagShiftConflicts(r) {
+        const hits = await this.prisma.shiftAssignment.findMany({ where: { userId: r.userId, status: 'ACTIVE', shift: { status: { in: ['DRAFT', 'PUBLISHED'] }, startsAt: { lt: r.endsAt }, endsAt: { gt: r.startsAt } } }, include: { shift: { select: { id: true, name: true, leaderId: true, createdById: true } } } });
+        for (const h of hits) {
+            const to = [...new Set([h.shift.leaderId, h.shift.createdById].filter((x) => !!x))];
+            await this.notify.emit('shift.changed', to, { title: `⚠️ ${r.user.displayName} ist während „${h.shift.name}“ abgemeldet`, link: `/shiftplan?id=${h.shift.id}`, entityType: 'PlannedShift', entityId: h.shift.id, dedupeKey: `${h.shift.id}:leave:${r.id}`, dm: false });
+        }
     }
     /** Zurückziehen (eigene) bzw. vorzeitig beenden (Leitung). Eine laufende Abmeldung endet sofort und die Rolle wird entfernt. */
     async cancel(actor, id) {
         const r = await this.load(id);
         if (r.userId !== actor.userId && !(await this.perms.has(actor.userId, 'leave.manage')))
             throw new errors_1.AppError('PERMISSION_DENIED', 'Das ist nicht deine Abmeldung.');
-        if (!['PENDING', 'APPROVED'].includes(r.status))
+        if (![...OPEN, 'APPROVED'].includes(r.status))
             throw new errors_1.AppError('CONFLICT', 'Diese Abmeldung ist schon abgeschlossen.');
         const running = r.status === 'APPROVED' && r.startsAt.getTime() <= Date.now();
         const status = running ? 'ENDED' : 'CANCELLED';
@@ -215,7 +262,7 @@ let LeaveService = class LeaveService {
         if (r.roleApplied)
             await this.roles(updated, [], cfg.roleIds, `Abmeldung ${r.number} beendet`);
         await this.log(cfg, updated, running ? 'ended_early' : 'cancelled');
-        if (r.status === 'PENDING')
+        if (OPEN.includes(r.status))
             await this.discord.markDecided('leave', id, actor, 'WITHDRAWN'); // offener Antrag zurückgezogen → Buttons weg
         if (r.extensionMinutes)
             await this.discord.markDecided('extension', id, actor, 'WITHDRAWN'); // offene Verlängerung erledigt sich mit
@@ -225,7 +272,7 @@ let LeaveService = class LeaveService {
     async checkExtension(cfg, r, endsAt) {
         if (endsAt.getTime() - r.startsAt.getTime() > cfg.maxDays * DAY)
             throw new errors_1.AppError('VALIDATION_FAILED', `Eine Abmeldung darf höchstens ${cfg.maxDays} Tage lang sein.`);
-        const overlap = await this.prisma.leaveRequest.findFirst({ where: { id: { not: r.id }, userId: r.userId, status: { in: ['PENDING', 'APPROVED'] }, startsAt: { lt: endsAt }, endsAt: { gt: r.endsAt } } });
+        const overlap = await this.prisma.leaveRequest.findFirst({ where: { id: { not: r.id }, userId: r.userId, status: { in: [...OPEN, 'APPROVED'] }, startsAt: { lt: endsAt }, endsAt: { gt: r.endsAt } } });
         if (overlap)
             throw new errors_1.AppError('CONFLICT', `Die Verlängerung überschneidet sich mit ${overlap.number}.`);
     }
@@ -248,11 +295,11 @@ let LeaveService = class LeaveService {
         const manager = await this.perms.has(actor.userId, 'leave.manage');
         if (r.userId !== actor.userId && !manager)
             throw new errors_1.AppError('PERMISSION_DENIED', 'Das ist nicht deine Abmeldung.');
-        if (!['PENDING', 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now())
+        if (![...OPEN, 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now())
             throw new errors_1.AppError('CONFLICT', 'Diese Abmeldung ist schon abgeschlossen.');
         const cfg = await this.config();
         await this.checkExtension(cfg, r, new Date(r.endsAt.getTime() + minutes * 60_000));
-        if (manager || r.status === 'PENDING') {
+        if (manager || OPEN.includes(r.status)) {
             const by = r.userId === actor.userId ? null : (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName ?? null;
             return { ...this.view(await this.apply(actor, r, minutes, reason, by, cfg)), extensionPending: false };
         }
@@ -275,7 +322,7 @@ let LeaveService = class LeaveService {
         const r = await this.load(id);
         if (!r.extensionMinutes)
             throw new errors_1.AppError('CONFLICT', 'Für diese Abmeldung wartet keine Verlängerung (mehr).');
-        if (!['PENDING', 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now())
+        if (![...OPEN, 'APPROVED'].includes(r.status) || r.endsAt.getTime() <= Date.now())
             throw new errors_1.AppError('CONFLICT', 'Diese Abmeldung ist schon abgeschlossen.');
         const cfg = await this.config();
         const by = (await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } }))?.displayName ?? null;
@@ -330,6 +377,6 @@ let LeaveService = class LeaveService {
 exports.LeaveService = LeaveService;
 exports.LeaveService = LeaveService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, permission_service_1.PermissionService, notify_service_1.NotifyService])
 ], LeaveService);
 //# sourceMappingURL=leave.service.js.map

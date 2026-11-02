@@ -19,10 +19,10 @@ declare const PERMISSION_CATALOG: {
     readonly wanted: readonly ["view", "create", "edit", "activate", "clear"];
     /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
     readonly personnel: readonly ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"];
-    /** Beförderungssystem */
-    readonly promotion: readonly ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage"];
-    /** Versetzungen zwischen Abteilungen */
-    readonly transfer: readonly ["view", "create", "approve", "reject"];
+    /** Beförderungssystem; `request` = für sich selbst beantragen (Discord/Dashboard), `create` = für andere */
+    readonly promotion: readonly ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage", "request"];
+    /** Versetzungen zwischen Abteilungen; `request` = eigene Versetzung beantragen, `review` = prüfen/Rückfragen stellen */
+    readonly transfer: readonly ["view", "create", "approve", "reject", "request", "review"];
     /** Ausbildungen und Zertifikate */
     readonly training: readonly ["view", "create", "manage"];
     /** Prüfungen */
@@ -50,7 +50,20 @@ declare const PERMISSION_CATALOG: {
     /** Tages-/Wochenberichte nach Vorlagen (Dashboard + Discord) */
     readonly dutyreports: readonly ["view", "create", "view_all", "edit_all", "review", "manage"];
     readonly communication: readonly ["view", "send", "moderate"];
-    readonly analytics: readonly ["view"];
+    /** Statistiken: view = Übersicht, leaderboard = Ranglisten, personal_all = Statistiken aller Personen, export = CSV-Export */
+    readonly analytics: readonly ["view", "leaderboard", "personal_all", "export"];
+    /** Schichtplanung (geplante Schichten; die Stempeluhr bleibt unter `team`): view = Plan sehen, signup = selbst an-/abmelden, manage = planen/zuweisen/veröffentlichen */
+    readonly shiftplan: readonly ["view", "signup", "manage"];
+    /** Zentraler Kalender: view = Termine sehen und teilnehmen, manage = Termine anlegen/ändern/absagen */
+    readonly calendar: readonly ["view", "manage"];
+    /** Besprechungen: view = eigene/öffentliche sehen, organize = anlegen/Teilnehmer/Anwesenheit, minutes = Protokolle schreiben, view_private = private Protokolle lesen */
+    readonly meetings: readonly ["view", "organize", "minutes", "view_private"];
+    /** Ankündigungsmanager (Discord): create = Entwürfe, publish = veröffentlichen/planen/zurückziehen, mention = Rollen erwähnen (nie @everyone) */
+    readonly announce: readonly ["view", "create", "publish", "mention", "manage"];
+    /** Dokumentenverwaltung: upload = hochladen/neue Version, manage = Kategorien/Zugriff/Archiv/Wiederherstellen, confidential = vertrauliche Dokumente */
+    readonly documents: readonly ["view", "upload", "manage", "confidential"];
+    /** Zentrale Benachrichtigungen: manage = Systemmeldungen und Zustellregeln (persönliche Einstellungen braucht kein Recht) */
+    readonly notifications: readonly ["manage"];
     readonly audit: readonly ["view", "export"];
     readonly studio: readonly ["view", "manage"];
     readonly settings: readonly ["view", "manage"];
@@ -1176,6 +1189,7 @@ declare const staffListSchema: z.ZodObject<{
     autoUpdate: z.ZodDefault<z.ZodBoolean>;
     image: z.ZodDefault<z.ZodUnion<[z.ZodString, z.ZodLiteral<"">]>>;
 }, "strip", z.ZodTypeAny, {
+    mention: boolean;
     title: string;
     id: string;
     name: string;
@@ -1190,7 +1204,6 @@ declare const staffListSchema: z.ZodObject<{
     }[];
     emptyText: string;
     dividerText: string;
-    mention: boolean;
     onlyHighest: boolean;
     bullet: string;
     footer: string;
@@ -1200,6 +1213,7 @@ declare const staffListSchema: z.ZodObject<{
 }, {
     id: string;
     name: string;
+    mention?: boolean | undefined;
     title?: string | undefined;
     guildId?: string | null | undefined;
     channelId?: string | null | undefined;
@@ -1212,7 +1226,6 @@ declare const staffListSchema: z.ZodObject<{
     }[] | undefined;
     emptyText?: string | undefined;
     dividerText?: string | undefined;
-    mention?: boolean | undefined;
     onlyHighest?: boolean | undefined;
     bullet?: string | undefined;
     footer?: string | undefined;
@@ -1758,7 +1771,7 @@ declare const MODULES: readonly [{
     readonly name: "Grundsystem";
     readonly description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server";
     readonly system: true;
-    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"];
+    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "notifications"];
 }, {
     readonly key: "cad";
     readonly name: "CAD-Leitstelle";
@@ -1814,6 +1827,21 @@ declare const MODULES: readonly [{
     readonly name: "Embed Builder";
     readonly description: "Discord-Nachrichten und Embeds bauen (JSON-Editor, Vorlagen), über den Bot oder Webhooks senden, gesendete Nachrichten bearbeiten, Versandhistorie";
     readonly permissionPrefixes: ["messagebuilder"];
+}, {
+    readonly key: "planning";
+    readonly name: "Dienstplanung";
+    readonly description: "Schichtplanung, Kalender und Besprechungen";
+    readonly permissionPrefixes: ["shiftplan", "calendar", "meetings"];
+}, {
+    readonly key: "announcements";
+    readonly name: "Ankündigungen";
+    readonly description: "Ankündigungen über den Bot veröffentlichen, planen und zurückziehen (ohne Lesebestätigung)";
+    readonly permissionPrefixes: ["announce"];
+}, {
+    readonly key: "documents";
+    readonly name: "Dokumente";
+    readonly description: "Dokumentenverwaltung mit Versionen und Zugriffsgruppen";
+    readonly permissionPrefixes: ["documents"];
 }, {
     readonly key: "communication";
     readonly name: "Kommunikation";
@@ -1983,7 +2011,7 @@ declare const stageSchema: z.ZodObject<{
     name: string;
     roleIds?: string[] | undefined;
 }>;
-declare const REQUEST_STATUSES: readonly ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
+declare const REQUEST_STATUSES: readonly ["OPEN", "IN_REVIEW", "NEEDS_INFO", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
 type RequestStatus = (typeof REQUEST_STATUSES)[number];
 declare const requestStatusDefSchema: z.ZodObject<{
     label: z.ZodString;
@@ -2154,7 +2182,7 @@ declare const hrConfigSchema: z.ZodObject<{
         announceTemplate: z.ZodDefault<z.ZodString>;
         announceColor: z.ZodDefault<z.ZodString>;
         /** eigene Namen/Emojis für die Status */
-        statusLabels: z.ZodDefault<z.ZodRecord<z.ZodEnum<["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"]>, z.ZodObject<{
+        statusLabels: z.ZodDefault<z.ZodRecord<z.ZodEnum<["OPEN", "IN_REVIEW", "NEEDS_INFO", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"]>, z.ZodObject<{
             label: z.ZodString;
             emoji: z.ZodString;
         }, "strip", z.ZodTypeAny, {
@@ -2179,7 +2207,7 @@ declare const hrConfigSchema: z.ZodObject<{
         announceChannelId: string | null;
         announceTemplate: string;
         announceColor: string;
-        statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+        statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
             label: string;
             emoji: string;
         }>>;
@@ -2198,7 +2226,7 @@ declare const hrConfigSchema: z.ZodObject<{
         announceChannelId?: string | null | undefined;
         announceTemplate?: string | undefined;
         announceColor?: string | undefined;
-        statusLabels?: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+        statusLabels?: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
             label: string;
             emoji: string;
         }>> | undefined;
@@ -2355,7 +2383,7 @@ declare const hrConfigSchema: z.ZodObject<{
         announceChannelId: string | null;
         announceTemplate: string;
         announceColor: string;
-        statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+        statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
             label: string;
             emoji: string;
         }>>;
@@ -2383,6 +2411,12 @@ declare const hrConfigSchema: z.ZodObject<{
         public: boolean;
         discordRoleId: string | null;
     }[];
+    notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
+        dashboard: boolean;
+        dm: boolean;
+        roleIds: string[];
+        channelId: string | null;
+    }>>;
     sections: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
         visible: boolean;
         sensitive: boolean;
@@ -2426,12 +2460,6 @@ declare const hrConfigSchema: z.ZodObject<{
     addedDefaults: string[];
     warningCategories: string[];
     showAbsenceInTeam: boolean;
-    notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
-        dashboard: boolean;
-        dm: boolean;
-        roleIds: string[];
-        channelId: string | null;
-    }>>;
     certificate: {
         organisation: string;
         logo: string;
@@ -2461,7 +2489,7 @@ declare const hrConfigSchema: z.ZodObject<{
         announceChannelId?: string | null | undefined;
         announceTemplate?: string | undefined;
         announceColor?: string | undefined;
-        statusLabels?: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+        statusLabels?: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
             label: string;
             emoji: string;
         }>> | undefined;
@@ -2489,6 +2517,12 @@ declare const hrConfigSchema: z.ZodObject<{
         public?: boolean | undefined;
         discordRoleId?: string | null | undefined;
     }[] | undefined;
+    notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
+        dashboard?: boolean | undefined;
+        dm?: boolean | undefined;
+        roleIds?: string[] | undefined;
+        channelId?: string | null | undefined;
+    }>> | undefined;
     sections?: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
         visible: boolean;
         sensitive: boolean;
@@ -2532,12 +2566,6 @@ declare const hrConfigSchema: z.ZodObject<{
     addedDefaults?: string[] | undefined;
     warningCategories?: string[] | undefined;
     showAbsenceInTeam?: boolean | undefined;
-    notifications?: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
-        dashboard?: boolean | undefined;
-        dm?: boolean | undefined;
-        roleIds?: string[] | undefined;
-        channelId?: string | null | undefined;
-    }>> | undefined;
     certificate?: {
         organisation?: string | undefined;
         logo?: string | undefined;
@@ -7071,4 +7099,247 @@ declare function isTimeZone(tz: unknown): tz is string;
 /** Alle Zeitzonen der Laufzeit (für Auswahllisten); häufige zuerst, UTC immer enthalten. */
 declare function timeZones(): string[];
 
-export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessageJson, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, type FromJsonOptions, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, type JsonError, type JsonParseResult, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_EXAMPLE_TEMPLATES, MB_LIMITS, MB_TEMPLATE_EXPORT_FORMAT, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbExampleTemplate, type MbField, type MbInteractive, type MbIssue, type MbJsonIssue, type MbJsonResult, type MbMessage, type MbRow, type MbSelectOption, type MbTemplateExport, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NO_TICKET_BUTTON, OFF_MODULES, PERIOD_LABEL, PERMISSION_CATALOG, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, type SlaInput, type StaffList, type StaffMember, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, can, canDelegate, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, conditionMatches, csvCell, customIdsOf, dangerLevelOf, defaultTicketButtons, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, lineCol, loadLevel, localMidnight, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbFromDiscordJson, mbId, mbMessageSchema, mbParseJsonText, mbRowSchema, mbSelectOptionSchema, mbSummary, mbTemplateExportSchema, mbToDiscordJson, mbToDiscordJsonText, mdtConfigSchema, median, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextWeekStart, normalizeField, normalizeRating, notifyRuleSchema, onErlcMap, panelFieldSchema, panelUnits, parseAutomation, parseBool, parseCsv, parseFormDate, parseJsonWithPosition, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, percentile, periodEnd, periodLabel, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankSchema, ratingLabel, ratingTone, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults };
+/**
+ * Verwaltungsmodule (Erweiterungspaket 3.0): Schichtplanung, Kalender, Besprechungen, Ankündigungen, Dokumente,
+ * zentrale Benachrichtigungen und Statistiken. Hier liegen nur Konstanten und reine Funktionen (ohne Datenbank),
+ * damit API, Bot und Dashboard dieselben Regeln verwenden und sie einzeln getestet werden können.
+ */
+declare const ORG_TIME_ZONE = "Europe/Berlin";
+/** Lokale Bestandteile eines Zeitpunkts in einer Zeitzone (Monat 1–12, Wochentag 1 = Montag … 7 = Sonntag). */
+declare function localParts(at: Date, timeZone?: string): {
+    y: number;
+    m: number;
+    d: number;
+    h: number;
+    min: number;
+    wd: number;
+};
+/**
+ * Lokale Wanduhrzeit (y, m, d, h, min) in `timeZone` → UTC-Zeitpunkt. Berücksichtigt Sommer-/Winterzeit; Tagesüberlauf (d = 32) ist erlaubt.
+ * Bei der übersprungenen Stunde (Umstellung im Frühjahr) wird die Zeit eine Stunde später genommen.
+ */
+declare function zonedTime(y: number, m: number, d: number, h: number, min: number, timeZone?: string): Date;
+/** Lokales Datum `YYYY-MM-DD` eines Zeitpunkts. */
+declare const localDate: (at: Date, timeZone?: string) => string;
+/** Überschneiden sich zwei Zeiträume [aStart, aEnd) und [bStart, bEnd)? Berührung an der Grenze zählt nicht. */
+declare const overlaps: (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) => boolean;
+declare const RECURRENCE_FREQS: readonly ["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY"];
+type RecurrenceFreq = (typeof RECURRENCE_FREQS)[number];
+interface RecurrenceRule {
+    freq: RecurrenceFreq; /** Anzahl Termine inklusive des ersten (1–52) */
+    count: number;
+}
+/** Höchstzahl Wiederholungen je Serie – schützt vor versehentlich riesigen Serien. */
+declare const MAX_OCCURRENCES = 52;
+/**
+ * Termine einer Serie. Die lokale Uhrzeit bleibt gleich (18:00 bleibt 18:00, auch über die Zeitumstellung);
+ * die Dauer bleibt in Minuten gleich. Monatlich: gleicher Tag im Monat, fehlt er (31.), wird der Monat übersprungen.
+ */
+declare function expandRecurrence(startsAt: Date, endsAt: Date, rule: RecurrenceRule, timeZone?: string): {
+    startsAt: Date;
+    endsAt: Date;
+}[];
+declare const PLANNED_SHIFT_STATUSES: readonly ["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"];
+type PlannedShiftStatus = (typeof PLANNED_SHIFT_STATUSES)[number];
+declare const PLANNED_SHIFT_STATUS_LABEL: Record<PlannedShiftStatus, string>;
+/** Besetzungsstand einer Schicht. */
+declare function coverage(assigned: number, min: number, max: number | null): {
+    assigned: number;
+    min: number;
+    max: number | null;
+    state: "UNDER" | "OK" | "FULL";
+    missing: number;
+    free: number | null;
+};
+/**
+ * Abgleich Leitstelle: geplante Besetzung ↔ tatsächlicher Dienststatus. Abwesende (genehmigte Abmeldung) erscheinen
+ * getrennt – ohne Grund. Jede Person landet genau in einer Gruppe.
+ */
+declare function compareStaffing(planned: readonly string[], onDuty: readonly string[], absent?: readonly string[]): {
+    plannedPresent: string[];
+    plannedMissing: string[];
+    plannedAbsent: string[];
+    unplannedPresent: string[];
+};
+declare const EVENT_CATEGORIES: readonly ["MEETING", "TRAINING", "EXAM", "SHIFT", "EVENT", "INTERNAL", "DEADLINE"];
+type EventCategory = (typeof EVENT_CATEGORIES)[number];
+declare const EVENT_CATEGORY_LABEL: Record<EventCategory, string>;
+declare const EVENT_STATUSES: readonly ["SCHEDULED", "CANCELLED", "DONE"];
+/** Teilnahme: INVITED (zugewiesen), ACCEPTED (zugesagt), DECLINED (abgesagt), EXCUSED (Abwesenheit gemeldet); nach dem Termin ATTENDED/ABSENT. */
+declare const PARTICIPANT_STATUSES: readonly ["INVITED", "ACCEPTED", "DECLINED", "EXCUSED", "ATTENDED", "ABSENT"];
+type ParticipantStatus = (typeof PARTICIPANT_STATUSES)[number];
+declare const PARTICIPANT_STATUS_LABEL: Record<ParticipantStatus, string>;
+/** Erlaubte Erinnerungszeitpunkte in Minuten vor Beginn. */
+declare const REMINDER_CHOICES: readonly [10, 15, 30, 60, 120, 1440, 2880, 10080];
+declare const MEETING_TASK_STATUSES: readonly ["OPEN", "DONE", "CANCELLED"];
+/**
+ * Welche Erinnerungen sind jetzt fällig? `sent` = bereits verschickte Vorlaufzeiten. Eine Erinnerung, die beim Neustart
+ * verpasst wurde, kommt noch, solange der Termin nicht begonnen hat – aber nur die jeweils kürzeste (keine Flut).
+ */
+declare function dueReminders(startsAt: Date, minutesBefore: readonly number[], sent: readonly number[], now?: Date): number[];
+/** Alle fälligen (inkl. übersprungener längerer) – zum Markieren als erledigt, damit sie nicht später noch einzeln kommen. */
+declare const passedReminders: (startsAt: Date, minutesBefore: readonly number[], sent: readonly number[], now?: Date) => number[];
+/** Darf sich jemand (noch) an-/abmelden? */
+declare function canRespond(e: {
+    status: string;
+    startsAt: Date;
+    maxParticipants: number | null;
+}, accepted: number, already: boolean, now?: Date): string | null;
+declare const ANNOUNCEMENT_TYPES: readonly ["GENERAL", "DIRECTIVE", "TRAINING", "MEETING", "MAINTENANCE", "SYSTEM"];
+type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
+declare const ANNOUNCEMENT_TYPE_INFO: Record<AnnouncementType, {
+    label: string;
+    color: string;
+    emoji: string;
+}>;
+declare const ANNOUNCEMENT_STATUSES: readonly ["DRAFT", "SCHEDULED", "PUBLISHED", "RETRACTED", "FAILED"];
+declare const ANNOUNCEMENT_RECURRENCE: readonly ["NONE", "DAILY", "WEEKLY", "MONTHLY"];
+/** Höchstens so viele Rollen dürfen in einer Ankündigung erwähnt (gepingt) werden. @everyone/@here sind nie möglich. */
+declare const MAX_MENTION_ROLES = 3;
+interface AnnouncementContent {
+    title: string;
+    description: string;
+    color?: string | null;
+    imageUrl?: string | null;
+    thumbnailUrl?: string | null;
+    footer?: string | null;
+    timestamp?: boolean;
+    fields?: {
+        name: string;
+        value: string;
+        inline?: boolean;
+    }[];
+    links?: {
+        label: string;
+        url: string;
+    }[];
+}
+/**
+ * Discord-Nachricht einer Ankündigung (gleiches Format wie der Embed Builder/`message.post`). Erwähnt werden nur
+ * die ausdrücklich gewählten Rollen (höchstens `MAX_MENTION_ROLES`), nie @everyone/@here – Text wird entschärft.
+ */
+declare function announcementMessage(type: AnnouncementType, c: AnnouncementContent, mentionRoleIds?: readonly string[], opts?: {
+    retracted?: boolean;
+}): {
+    buttons?: {
+        id: string;
+        label: string;
+        style: "secondary";
+        url: string;
+    }[] | undefined;
+    embeds: {
+        timestamp?: string | undefined;
+        footer: string;
+        fields?: {
+            name: string;
+            value: string;
+            inline: boolean;
+        }[] | undefined;
+        thumbnail?: string | undefined;
+        image?: string | undefined;
+        title: string;
+        description: string;
+        color: number;
+    }[];
+    content?: string | undefined;
+    mentionRoles?: string[] | undefined;
+};
+/** Nächster Termin einer wiederkehrenden Ankündigung (gleiche lokale Uhrzeit). */
+declare function nextRecurrence(from: Date, recurrence: (typeof ANNOUNCEMENT_RECURRENCE)[number], timeZone?: string): Date | null;
+declare const DOCUMENT_CATEGORIES: readonly ["DIRECTIVE", "RULES", "TRAINING", "EXAM", "DISPATCH", "POLICY", "TEMPLATE", "OTHER"];
+type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
+declare const DOCUMENT_CATEGORY_LABEL: Record<DocumentCategory, string>;
+/** Zugriffsgruppe: ALL = alle mit documents.view, ROLES = nur bestimmte Rollen (+ Verwalter), CONFIDENTIAL = nur documents.confidential. */
+declare const DOCUMENT_ACCESS: readonly ["ALL", "ROLES", "CONFIDENTIAL"];
+type DocumentAccess = (typeof DOCUMENT_ACCESS)[number];
+/** Erlaubte Dateitypen für Dokumente (Inhalt wird zusätzlich per Signatur geprüft und nie ausgeführt). */
+declare const DOCUMENT_MIME_TYPES: readonly ["application/pdf", "text/plain", "image/png", "image/jpeg", "image/webp"];
+declare const DOCUMENT_MAX_BYTES: number;
+/** Darf jemand ein Dokument sehen? `manage` = documents.manage, `confidential` = documents.confidential. */
+declare function canSeeDocument(d: {
+    access: string;
+    roleIds: readonly string[];
+    status: string;
+}, u: {
+    view: boolean;
+    manage: boolean;
+    confidential: boolean;
+    roleIds: readonly string[];
+}): boolean;
+type NotificationChannel = 'dashboard' | 'discord' | 'mdt' | 'cad';
+interface NotificationEventDef {
+    key: string;
+    label: string;
+    group: string; /** Wichtig = auch im MDT/in der Leitstelle sichtbar */
+    important?: boolean;
+    channels: NotificationChannel[]; /** Darf Discord-DM bekommen (sofern der Benutzer zustimmt) */
+    dm?: boolean;
+}
+/** Ereigniskatalog: einheitliche Schlüssel für alle vier Anwendungen. */
+declare const NOTIFICATION_EVENTS: readonly NotificationEventDef[];
+declare const notificationEvent: (key: string) => NotificationEventDef | undefined;
+/** Persönliche Einstellungen (UserSettings.preferences.notifications). Fehlende Werte = Standard. */
+interface NotificationPrefs {
+    muted?: string[];
+    important?: string[];
+    dm?: boolean;
+    dmEvents?: string[];
+    reminders?: boolean;
+}
+/**
+ * Zustellung je Empfänger: Dashboard (gespeichert, außer stummgeschaltet), DM nur mit Zustimmung (`dm: true`) und nur
+ * für DM-fähige Ereignisse; `dmEvents` schränkt weiter ein. Erinnerungen lassen sich insgesamt abschalten.
+ */
+declare function deliveryFor(eventKey: string, prefs: NotificationPrefs | null | undefined): {
+    store: boolean;
+    dm: boolean;
+    important: boolean;
+};
+declare const STAT_PERIODS: readonly ["today", "week", "month", "year", "custom"];
+type StatPeriod = (typeof STAT_PERIODS)[number];
+/** Zeitraum (lokale Tage) → [from, to). Woche beginnt Montag. `custom`: from/to als YYYY-MM-DD (to inklusive). */
+declare function periodRange(period: StatPeriod, now?: Date, custom?: {
+    from?: string;
+    to?: string;
+}, timeZone?: string): {
+    from: Date;
+    to: Date;
+};
+/** Minuten einer Sitzung innerhalb [from, to) (laufende Sitzungen bis `now`). */
+declare function minutesWithin(startedAt: Date, endedAt: Date | null, from: Date, to: Date, now?: Date): number;
+/**
+ * Ranglisten-Kennzahlen: nur Zählwerte aus gespeicherten Daten, keine Bewertung von Qualität oder Leistung.
+ * `perm`: zusätzlich nötiges Fachrecht, damit sensible Bereiche nicht über die Rangliste sichtbar werden.
+ */
+declare const LEADERBOARD_METRICS: readonly [{
+    readonly key: "dutyMinutes";
+    readonly label: "Dienstzeit";
+    readonly unit: "Minuten";
+}, {
+    readonly key: "trainings";
+    readonly label: "Abgeschlossene Ausbildungen";
+    readonly unit: "Ausbildungen";
+}, {
+    readonly key: "dutyReports";
+    readonly label: "Dienstberichte";
+    readonly unit: "Berichte";
+}, {
+    readonly key: "tickets";
+    readonly label: "Ticketbearbeitungen";
+    readonly unit: "Tickets";
+}, {
+    readonly key: "meetings";
+    readonly label: "Besprechungsteilnahmen";
+    readonly unit: "Teilnahmen";
+}];
+type LeaderboardMetric = (typeof LEADERBOARD_METRICS)[number]['key'];
+/** Rangliste mit gleichen Plätzen bei Gleichstand (1, 2, 2, 4). Nullwerte erscheinen nicht. */
+declare function rankRows<T extends {
+    value: number;
+}>(rows: readonly T[], limit?: number): (T & {
+    place: number;
+})[];
+/** CSV mit Semikolon (Excel, deutsch); Formeln werden entschärft (CSV-Injection). */
+declare function toCsv(header: readonly string[], rows: readonly (readonly (string | number | null | undefined)[])[]): string;
+
+export { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, ANNOUNCEMENT_RECURRENCE, ANNOUNCEMENT_STATUSES, ANNOUNCEMENT_TYPES, ANNOUNCEMENT_TYPE_INFO, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnnouncementContent, type AnnouncementType, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_PARTS, BACKUP_PART_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DOCUMENT_ACCESS, DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABEL, DOCUMENT_MAX_BYTES, DOCUMENT_MIME_TYPES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessageJson, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DocumentAccess, type DocumentCategory, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVENT_CATEGORIES, EVENT_CATEGORY_LABEL, EVENT_STATUSES, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EventCategory, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, type FromJsonOptions, HR_EVENTS, HR_EVENT_LABEL, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, type JsonError, type JsonParseResult, LEADERBOARD_METRICS, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LeaderboardMetric, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MAX_MENTION_ROLES, MAX_OCCURRENCES, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_EXAMPLE_TEMPLATES, MB_LIMITS, MB_TEMPLATE_EXPORT_FORMAT, MEETING_TASK_STATUSES, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbExampleTemplate, type MbField, type MbInteractive, type MbIssue, type MbJsonIssue, type MbJsonResult, type MbMessage, type MbRow, type MbSelectOption, type MbTemplateExport, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NOTIFICATION_EVENTS, NO_TICKET_BUTTON, type NotificationChannel, type NotificationEventDef, type NotificationPrefs, OFF_MODULES, ORG_TIME_ZONE, PARTICIPANT_STATUSES, PARTICIPANT_STATUS_LABEL, PERIOD_LABEL, PERMISSION_CATALOG, PLANNED_SHIFT_STATUSES, PLANNED_SHIFT_STATUS_LABEL, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type ParticipantStatus, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PlannedShiftStatus, type PostalCalibration, type PostalSample, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUESTION_TYPES, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, RECURRENCE_FREQS, REMINDER_CHOICES, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type RecurrenceFreq, type RecurrenceRule, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, STAT_PERIODS, type SlaInput, type StaffList, type StaffMember, type StatPeriod, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accountAge, activeFields, ageOf, aiCheck, announcementMessage, applyCallCalibration, applyPanelParts, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, can, canDelegate, canRespond, canSeeDocument, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, compareStaffing, conditionMatches, coverage, csvCell, customIdsOf, dangerLevelOf, defaultTicketButtons, deliveryFor, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dueReminders, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, expandRecurrence, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, lineCol, loadLevel, localDate, localMidnight, localParts, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbFromDiscordJson, mbId, mbMessageSchema, mbParseJsonText, mbRowSchema, mbSelectOptionSchema, mbSummary, mbTemplateExportSchema, mbToDiscordJson, mbToDiscordJsonText, mdtConfigSchema, median, minutesWithin, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextRecurrence, nextWeekStart, normalizeField, normalizeRating, notificationEvent, notifyRuleSchema, onErlcMap, overlaps, panelFieldSchema, panelUnits, parseAutomation, parseBool, parseCsv, parseFormDate, parseJsonWithPosition, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, passedReminders, percentile, periodEnd, periodLabel, periodRange, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, qualiPanelParts, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankRows, rankSchema, ratingLabel, ratingTone, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, toCsv, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults, zonedTime };

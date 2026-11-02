@@ -46,6 +46,25 @@ export declare class MediaService {
         size: number;
         hash: string;
     }[]>;
+    /**
+     * Dokumentenverwaltung: Datei lesen, NACHDEM der Dokumenten-Service die Zugriffsgruppe geprüft hat. „Document“ steht bewusst
+     * nicht in READ – über /media/:id ist so eine Datei nie abrufbar (Zugriffsrechte ließen sich sonst umgehen).
+     */
+    readDocumentFile(id: string): Promise<{
+        media: {
+            id: string;
+            createdAt: Date;
+            originalName: string;
+            mime: string;
+            size: number;
+            hash: string;
+            storageKey: string;
+            uploaderId: string;
+            linkedType: string | null;
+            linkedId: string | null;
+        };
+        data: NonSharedBuffer;
+    }>;
     /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */
     welcomeBanner(id: string): Promise<{
         mime: string;

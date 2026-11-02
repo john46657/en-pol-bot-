@@ -22,7 +22,7 @@ beforeAll(async () => {
   admin = (await login(app, 'ac_admin')).agent; lead = (await login(app, 'ac_lead')).agent; sup = (await login(app, 'ac_sup')).agent;
   m1 = (await login(app, 'ac_m1')).agent; m2 = (await login(app, 'ac_m2')).agent;
 });
-afterAll(async () => { await app.close(); });
+afterAll(async () => { await prisma.systemSetting.deleteMany({ where: { key: { in: ['stats.config', 'announce.config'] } } }); await app.close(); });
 
 const ann = (o: Record<string, unknown> = {}) => ({ type: 'DIRECTIVE', channelId: CH, content: { title: 'Neue Dienstanweisung', description: 'Bitte @everyone beachten', links: [{ label: 'Details', url: 'https://example.org/x' }] }, ...o });
 
@@ -91,12 +91,13 @@ describe('Ankündigungen', () => {
 
 describe('Dokumente', () => {
   it('Upload mit Typ-/Signaturprüfung; nur Berechtigte', async () => {
+    const docsBefore = await prisma.document.count();
     expect((await m1.post('/api/v1/documents').field('title', 'Regelwerk').field('category', 'RULES').attach('file', PDF, { filename: 'r.pdf', contentType: 'application/pdf' })).status).toBe(403);
     const fake = await lead.post('/api/v1/documents').field('title', 'Gefälscht').field('category', 'RULES').attach('file', Buffer.from('<script>alert(1)</script>'), { filename: 'x.pdf', contentType: 'application/pdf' });
     expect(fake.status).toBe(400);
     const html = await lead.post('/api/v1/documents').field('title', 'HTML').field('category', 'RULES').attach('file', Buffer.from('<html></html>'), { filename: 'x.html', contentType: 'text/html' });
     expect(html.status).toBe(400);
-    expect(await prisma.document.count()).toBe(0); // fehlgeschlagene Uploads hinterlassen nichts
+    expect(await prisma.document.count()).toBe(docsBefore); // fehlgeschlagene Uploads hinterlassen nichts
     const ok = await lead.post('/api/v1/documents').field('title', 'Regelwerk 2026').field('category', 'RULES').field('description', 'Gültig ab 1.1.').attach('file', PDF, { filename: 'regelwerk.pdf', contentType: 'application/pdf' });
     expect(ok.status).toBe(201);
     expect(ok.body).toMatchObject({ currentVersion: 1, access: 'ALL' });
@@ -142,7 +143,7 @@ describe('Dokumente', () => {
     expect((await sup.get(`/api/v1/documents/${ids.d1}`)).status).toBe(404);
     expect((await lead.get('/api/v1/documents?archived=true')).body.items.map((d: { id: string }) => d.id)).toContain(ids.d1);
     await lead.post(`/api/v1/documents/${ids.d1}/archive`).send({ archived: false });
-    expect((await lead.get('/api/v1/documents?q=regelwerk')).body.items).toHaveLength(1);
+    expect((await lead.get('/api/v1/documents?q=regelwerk 2026')).body.items.map((d: { id: string }) => d.id)).toEqual([ids.d1]);
   });
 });
 
@@ -174,7 +175,7 @@ describe('Statistiken und Ranglisten', () => {
     const csv = await lead.get('/api/v1/analytics/export?period=month');
     expect(csv.status).toBe(200);
     expect(csv.text).toMatch(/ac_m1;2;/);
-    expect(await prisma.auditLog.count({ where: { action: 'analytics.export' } })).toBe(1);
+    expect(await prisma.auditLog.count({ where: { action: 'analytics.export', actorUserId: ids.lead } })).toBe(1);
   });
 });
 

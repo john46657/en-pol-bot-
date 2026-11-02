@@ -45,6 +45,9 @@ const ShiftPlan = lazy(() => import('./pages/ShiftPlan').then((m) => ({ default:
 const CalendarPage = lazy(() => import('./pages/Calendar').then((m) => ({ default: m.Calendar })));
 const Meetings = lazy(() => import('./pages/Meetings').then((m) => ({ default: m.Meetings })));
 const MyRequests = lazy(() => import('./pages/MyRequests').then((m) => ({ default: m.MyRequests })));
+const Announcements = lazy(() => import('./pages/Announcements').then((m) => ({ default: m.Announcements })));
+const Documents = lazy(() => import('./pages/Documents').then((m) => ({ default: m.Documents })));
+const Statistics = lazy(() => import('./pages/Statistics').then((m) => ({ default: m.Statistics })));
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
 const RadioWhitelist = lazy(() => import('./pages/RadioWhitelist').then((m) => ({ default: m.RadioWhitelist })));
@@ -284,6 +287,9 @@ export function App() {
           <Route path="shiftplan" element={<Guard perm="shiftplan.view"><ShiftPlan /></Guard>} />
           <Route path="calendar" element={<Guard perm="calendar.view"><CalendarPage /></Guard>} />
           <Route path="meetings" element={<Guard perm="meetings.view"><Meetings /></Guard>} />
+          <Route path="announcements" element={<Guard perm="announce.view"><Announcements /></Guard>} />
+          <Route path="documents" element={<Guard perm="documents.view"><Documents /></Guard>} />
+          <Route path="statistics" element={<Guard perm="dashboard.view"><Statistics /></Guard>} />
           <Route path="my-requests" element={<Guard perm="promotion.request|transfer.request"><MyRequests /></Guard>} />
           <Route path="admin/danger-level" element={<Guard perm="settings.manage" area="dashboard.settings.view"><DangerSettingsPage /></Guard>} />
           <Route path="admin/legal-codes" element={<Guard perm="settings.view" area="dashboard.settings.view"><LegalCodes /></Guard>} />

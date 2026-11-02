@@ -13,7 +13,7 @@ const ids: Record<string, string> = {};
 const H = 3_600_000;
 const at = (h: number) => new Date(Date.now() + h * H).toISOString();
 const http = () => request(app.getHttpServer());
-const D1 = '310000000000000001';
+const D1 = '397320000000000001';
 const bot = { Authorization: `Bot ${TOKEN}`, 'X-Discord-User': D1 };
 
 beforeAll(async () => {

@@ -36,7 +36,7 @@ const SIGNATURES = {
 };
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE = { FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Vehicle: 'vehicles.edit' };
+const WRITE = { Document: 'documents.upload', FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Vehicle: 'vehicles.edit' };
 const READ = { FleetModel: 'fleet.view', WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Vehicle: 'vehicles.view' };
 let MediaService = class MediaService {
     prisma;
@@ -81,6 +81,16 @@ let MediaService = class MediaService {
     }
     list(actor, linkedType, linkedId) {
         return this.perms.assert(actor.userId, READ[linkedType] ?? '!none').then(() => this.prisma.media.findMany({ where: { linkedType, linkedId }, select: { id: true, originalName: true, mime: true, size: true, hash: true, createdAt: true }, orderBy: { createdAt: 'desc' } }));
+    }
+    /**
+     * Dokumentenverwaltung: Datei lesen, NACHDEM der Dokumenten-Service die Zugriffsgruppe geprüft hat. „Document“ steht bewusst
+     * nicht in READ – über /media/:id ist so eine Datei nie abrufbar (Zugriffsrechte ließen sich sonst umgehen).
+     */
+    async readDocumentFile(id) {
+        const m = await this.prisma.media.findUnique({ where: { id } });
+        if (!m || m.linkedType !== 'Document')
+            throw new errors_1.AppError('NOT_FOUND', 'Datei nicht gefunden.');
+        return { media: m, data: await (0, promises_1.readFile)(node_path_1.default.join(this.dir, m.storageKey)) };
     }
     /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */
     welcomeBanner(id) { return this.botImage(id, ['WelcomeBanner'], 'banner', false); }

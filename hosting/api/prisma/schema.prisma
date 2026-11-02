@@ -657,8 +657,11 @@ model LeaveRequest {
   startsAt             DateTime
   endsAt               DateTime
   reason               String
-  status               String    @default("PENDING") // PENDING | APPROVED | DENIED | CANCELLED | ENDED
+  status               String    @default("PENDING") // PENDING | IN_REVIEW | APPROVED | DENIED | CANCELLED | ENDED
   guildId              String?
+  /// Zuständiger Prüfer (übernimmt mit „In Prüfung“)
+  reviewerId           String?   @db.Uuid
+  reviewStartedAt      DateTime?
   decidedById          String?   @db.Uuid
   decidedAt            DateTime?
   decisionReason       String?
@@ -817,11 +820,20 @@ model Notification {
   body       String?
   entityType String?
   entityId   String?
+  /// Ereignis aus dem Katalog (NOTIFICATION_EVENTS), z. B. `shift.changed`; null = ältere/freie Benachrichtigung
+  event      String?
+  /// Direkter Link zum Datensatz im Dashboard (relativ, z. B. /shiftplan?id=…)
+  link       String?
+  /// wichtig = auch im MDT/in der Leitstelle hervorgehoben
+  important  Boolean   @default(false)
+  /// Schutz vor doppelten Benachrichtigungen (gleiches Ereignis, gleicher Datensatz, gleicher Anlass) – je Benutzer eindeutig
+  dedupeKey  String?
   readAt     DateTime?
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, dedupeKey])
   @@index([userId, readAt])
 }
 
@@ -2034,7 +2046,13 @@ model HrRequest {
   number       String    @unique
   kind         String // PROMOTION | TRANSFER
   personnelId  String    @db.Uuid
-  status       String    @default("OPEN") // OPEN | IN_REVIEW | APPROVED | REJECTED | DEFERRED | EXECUTED | CANCELLED
+  status       String    @default("OPEN") // OPEN | IN_REVIEW | NEEDS_INFO | APPROVED | REJECTED | DEFERRED | EXECUTED | CANCELLED
+  /// Rückfragen an den Antragsteller: [{ id, askedById, askedByName, question, askedAt, answer, answeredAt }]
+  queries      Json      @default("[]")
+  /// Zuständiger Prüfer (übernimmt mit „In Prüfung“)
+  reviewerId   String?   @db.Uuid
+  /// SELF = selbst beantragt (Discord/Dashboard), STAFF = von der Leitung angelegt
+  origin       String    @default("STAFF")
   fromValue    String?
   toValue      String
   reason       String
@@ -2786,4 +2804,259 @@ model MessageBuilderMessage {
 
   @@index([guildId, createdAt])
   @@index([messageId])
+}
+
+// ───────────── Verwaltung 3.0: Schichtplanung, Kalender, Besprechungen, Ankündigungen, Dokumente ─────────────
+
+/// Geplante Schicht (Dienstplan). Unabhängig von der Stempeluhr (DutySession): Plan ≠ tatsächlicher Dienst.
+/// Wird nie gelöscht, sobald es Nachweise gibt (vergangen oder Teilnehmer) – dann nur absagen.
+model PlannedShift {
+  id           String            @id @default(uuid()) @db.Uuid
+  serverId     String?           @db.Uuid
+  name         String
+  startsAt     DateTime
+  endsAt       DateTime
+  /// Zeitzone der Planung (Anzeige/Wiederholung), Standard Europe/Berlin
+  timezone     String            @default("Europe/Berlin")
+  /// Abteilung (Einstellungen → Personal → Abteilungen); null = abteilungsübergreifend
+  department   String?
+  description  String?
+  leaderId     String?           @db.Uuid
+  /// Einheit/Rufname für die Schicht (optional, Anzeige im MDT)
+  unit         String?
+  minStaff     Int               @default(1)
+  maxStaff     Int?
+  /// DRAFT | PUBLISHED | CANCELLED | COMPLETED
+  status       String            @default("DRAFT")
+  cancelReason String?
+  /// gleiche ID für alle Schichten einer Serie (wiederkehrende Planung)
+  seriesId     String?           @db.Uuid
+  createdById  String            @db.Uuid
+  publishedAt  DateTime?
+  version      Int               @default(1)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  assignments  ShiftAssignment[]
+
+  @@index([serverId, startsAt])
+  @@index([status, startsAt])
+  @@index([seriesId])
+}
+
+/// Zuweisung/Anmeldung zu einer geplanten Schicht. Abmeldungen bleiben als WITHDRAWN erhalten (Historie).
+model ShiftAssignment {
+  id          String       @id @default(uuid()) @db.Uuid
+  shiftId     String       @db.Uuid
+  userId      String       @db.Uuid
+  /// ASSIGNED (von der Leitung) | SIGNUP (selbst angemeldet)
+  source      String       @default("ASSIGNED")
+  /// ACTIVE | WITHDRAWN
+  status      String       @default("ACTIVE")
+  createdById String?      @db.Uuid
+  createdAt   DateTime     @default(now())
+  withdrawnAt DateTime?
+  shift       PlannedShift @relation(fields: [shiftId], references: [id], onDelete: Restrict)
+
+  @@unique([shiftId, userId])
+  @@index([userId, status])
+}
+
+/// Zentraler Kalender. Schichten erscheinen virtuell aus PlannedShift (keine Kopie → keine Doppeleinträge).
+/// `idempotencyKey`: dieselbe Anlage aus Dashboard/Discord gleichzeitig ergibt genau einen Termin.
+model CalendarEvent {
+  id              String                @id @default(uuid()) @db.Uuid
+  serverId        String?               @db.Uuid
+  title           String
+  description     String?
+  /// MEETING | TRAINING | EXAM | SHIFT | EVENT | INTERNAL | DEADLINE
+  category        String
+  startsAt        DateTime
+  endsAt          DateTime
+  allDay          Boolean               @default(false)
+  location        String?
+  department      String?
+  organizerId     String                @db.Uuid
+  /// SCHEDULED | CANCELLED | DONE
+  status          String                @default("SCHEDULED")
+  cancelReason    String?
+  /// Minuten vor Beginn, z. B. [1440, 60]
+  reminders       Int[]                 @default([])
+  maxParticipants Int?
+  /// Teilnahme frei (jeder mit calendar.view darf sich anmelden) oder nur Eingeladene
+  openSignup      Boolean               @default(true)
+  seriesId        String?               @db.Uuid
+  idempotencyKey  String?               @unique
+  version         Int                   @default(1)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  participants    CalendarParticipant[]
+  reminderLogs    CalendarReminderLog[]
+  meeting         Meeting?
+
+  @@index([serverId, startsAt])
+  @@index([status, startsAt])
+  @@index([seriesId])
+}
+
+model CalendarParticipant {
+  id          String        @id @default(uuid()) @db.Uuid
+  eventId     String        @db.Uuid
+  userId      String        @db.Uuid
+  /// INVITED | ACCEPTED | DECLINED | EXCUSED | ATTENDED | ABSENT
+  status      String        @default("INVITED")
+  note        String?
+  respondedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  event       CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, userId])
+  @@index([userId, status])
+}
+
+/// Versandte Erinnerungen (genau einmal je Termin und Vorlaufzeit – übersteht Neustarts, mehrere Instanzen).
+model CalendarReminderLog {
+  id            String        @id @default(uuid()) @db.Uuid
+  eventId       String        @db.Uuid
+  /// Beginn, für den erinnert wurde – nach dem Verschieben kommen Erinnerungen erneut, alte Einträge bleiben
+  startsAt      DateTime
+  minutesBefore Int
+  sentAt        DateTime      @default(now())
+  recipients    Int           @default(0)
+  event         CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, startsAt, minutesBefore])
+}
+
+/// Besprechung = Kalendertermin (Kategorie MEETING) + Besprechungsdaten. Teilnehmer/Anwesenheit über CalendarParticipant.
+model Meeting {
+  id               String        @id @default(uuid()) @db.Uuid
+  serverId         String?       @db.Uuid
+  eventId          String        @unique @db.Uuid
+  discordChannelId String?
+  mandatory        Boolean       @default(false)
+  /// private Protokolle sehen nur Organisator, Protokollführer und meetings.view_private
+  private          Boolean       @default(false)
+  agenda           String?
+  notes            String?
+  decisions        String?
+  followUp         String?
+  conductedAt      DateTime?
+  minutesById      String?       @db.Uuid
+  version          Int           @default(1)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  event            CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  tasks            MeetingTask[]
+
+  @@index([serverId])
+}
+
+model MeetingTask {
+  id          String    @id @default(uuid()) @db.Uuid
+  meetingId   String    @db.Uuid
+  title       String
+  assigneeId  String?   @db.Uuid
+  dueAt       DateTime?
+  /// OPEN | DONE | CANCELLED
+  status      String    @default("OPEN")
+  createdById String    @db.Uuid
+  doneAt      DateTime?
+  createdAt   DateTime  @default(now())
+  meeting     Meeting   @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+
+  @@index([assigneeId, status])
+}
+
+/// Ankündigung (Discord über den Bot). Keine Lesebestätigung, keine Abstimmung. Zurückgezogene bleiben erhalten.
+model Announcement {
+  id                  String                 @id @default(uuid()) @db.Uuid
+  serverId            String?                @db.Uuid
+  /// GENERAL | DIRECTIVE | TRAINING | MEETING | MAINTENANCE | SYSTEM
+  type                String                 @default("GENERAL")
+  title               String
+  /// Inhalt (Beschreibung, Farbe, Bilder, Felder, Link-Buttons, Footer, Zeitstempel)
+  content             Json
+  channelId           String
+  /// Zielgruppe: SERVER | ROLES | DEPARTMENTS (nur Kennzeichnung + Erwähnungen; der Kanal bestimmt die Sichtbarkeit)
+  audience            String                 @default("SERVER")
+  audienceRoleIds     String[]               @default([])
+  audienceDepartments String[]               @default([])
+  /// Rollen, die gepingt werden (höchstens 3, Recht announce.mention); @everyone/@here nie
+  mentionRoleIds      String[]               @default([])
+  /// DRAFT | SCHEDULED | PUBLISHED | RETRACTED | FAILED
+  status              String                 @default("DRAFT")
+  scheduledAt         DateTime?
+  /// NONE | DAILY | WEEKLY | MONTHLY
+  recurrence          String                 @default("NONE")
+  publishedAt         DateTime?
+  retractedAt         DateTime?
+  retractReason       String?
+  templateName        String?
+  createdById         String                 @db.Uuid
+  version             Int                    @default(1)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  deliveries          AnnouncementDelivery[]
+
+  @@index([serverId, status])
+  @@index([status, scheduledAt])
+}
+
+/// Versandhistorie: jede Veröffentlichung (auch Wiederholungen) und jedes Zurückziehen.
+model AnnouncementDelivery {
+  id             String       @id @default(uuid()) @db.Uuid
+  announcementId String       @db.Uuid
+  /// PUBLISH | UPDATE | RETRACT
+  kind           String
+  /// eindeutiger Merker der Discord-Nachricht (bot.state.<stateKey>)
+  stateKey       String
+  actorId        String?      @db.Uuid
+  /// Wiederholungslauf: geplanter Zeitpunkt – verhindert doppelte Veröffentlichung bei Neustart/mehreren Instanzen
+  slot           DateTime?
+  createdAt      DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Restrict)
+
+  @@unique([announcementId, kind, slot])
+  @@index([announcementId, createdAt])
+}
+
+/// Dokument (Metadaten). Dateien liegen als Media; jede Version bleibt erhalten.
+model Document {
+  id             String            @id @default(uuid()) @db.Uuid
+  serverId       String?           @db.Uuid
+  title          String
+  category       String
+  description    String?
+  /// ALL | ROLES | CONFIDENTIAL
+  access         String            @default("ALL")
+  /// Dashboard-Rollen mit Zugriff (bei ROLES)
+  roleIds        String[]          @default([])
+  /// ACTIVE | ARCHIVED
+  status         String            @default("ACTIVE")
+  currentVersion Int               @default(1)
+  createdById    String            @db.Uuid
+  updatedById    String?           @db.Uuid
+  archivedAt     DateTime?
+  version        Int               @default(1)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  versions       DocumentVersion[]
+
+  @@index([serverId, status, category])
+}
+
+model DocumentVersion {
+  id           String   @id @default(uuid()) @db.Uuid
+  documentId   String   @db.Uuid
+  number       Int
+  mediaId      String   @db.Uuid
+  note         String?
+  /// Wiederherstellung: aus welcher Version kopiert
+  restoredFrom Int?
+  createdById  String   @db.Uuid
+  createdAt    DateTime @default(now())
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
+
+  @@unique([documentId, number])
 }

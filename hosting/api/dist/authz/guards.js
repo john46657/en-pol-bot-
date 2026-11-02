@@ -54,6 +54,12 @@ const BOT_USER_ROUTES = [
     ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
     ['GET', /^\/duty-reports(\/templates)?$/], ['GET', new RegExp(`^/duty-reports/templates/${UUID}/prefill$`)], ['GET', /^\/duty-reports\/[A-Za-z0-9-]{1,40}$/],
     ['POST', /^\/duty-reports$/], ['PATCH', new RegExp(`^/duty-reports/${UUID}$`)], ['POST', new RegExp(`^/duty-reports/${UUID}/review$`)],
+    // Verwaltung 3.0: Schichtplan (ansehen, eigene Schichten, an-/abmelden, Änderung melden) – Rechte prüft die API
+    ['GET', /^\/shiftplan(\/mine)?$/], ['GET', new RegExp(`^/shiftplan/${UUID}$`)], ['POST', new RegExp(`^/shiftplan/${UUID}/(signup|withdraw|report)$`)],
+    ['POST', new RegExp(`^/leave/${UUID}/review$`)],
+    ['GET', /^\/calendar\/upcoming$/], ['GET', new RegExp(`^/calendar/${UUID}$`)], ['POST', new RegExp(`^/calendar/${UUID}/respond$`)],
+    ['GET', /^\/documents$/], ['GET', /^\/notifications\/(preferences|feed)$/], ['PUT', /^\/notifications\/preferences$/],
+    ['GET', /^\/hr\/requests\/(mine|targets)$/], ['POST', /^\/hr\/requests\/self$/], ['POST', new RegExp(`^/hr/requests/${UUID}/(answer|withdraw)$`)],
     ['POST', /^\/support-tickets$/], ['POST', new RegExp(`^/support-tickets/${UUID}/actions$`)], ['GET', new RegExp(`^/support-tickets/${UUID}/options$`)],
 ];
 let AuthGuard = class AuthGuard {

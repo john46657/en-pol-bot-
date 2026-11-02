@@ -46,6 +46,11 @@ Der Bot (`apps/bot`, TypeScript, discord.js 14) ist ein **schlanker Client der S
 | `/funkantrag` | Antrag auf Funkfreigabe (Formular: Begründung, Dienstgrad, Abteilung) – auch ohne Dashboard-Konto; Entscheidung per DM | jedes Mitglied (Discord-ID der Interaktion) |
 | `/funkstatus` | Eigener Status in der Funk-Whitelist (aktiv, gesperrt, abgelaufen, offener Antrag) | jedes Mitglied |
 | `/support [mitglied]` | Support-Ticket öffnen (Auswahl der Ticket-Art); mit `mitglied` öffnet das Team ein Ticket für jemand anderen | öffnen: jeder (Voraussetzungen der Ticket-Art) · für andere: `ticket.create` |
+| `/schichtplan anzeigen\|meine\|uebersicht\|anmelden\|abmelden\|melden` | Schichtplan ansehen, selbst an-/abmelden, Änderung melden ([verwaltung.md](verwaltung.md)) | `shiftplan.view` / `shiftplan.signup` |
+| `/termine liste\|anmelden\|absagen` | kommende Termine/Besprechungen, zusagen, absagen, Abwesenheit melden | `calendar.view` |
+| `/antrag befoerderung\|versetzung\|status\|antworten\|zurueckziehen` | eigener Beförderungs-/Versetzungsantrag, Status, Rückfragen | `promotion.request` / `transfer.request` |
+| `/dokument [suche] [kategorie]` | freigegebene Dokumente finden (privat, nur Links) | `documents.view` + Zugriffsgruppe |
+| `/benachrichtigungen dm:` | Benachrichtigungen per DM an/aus | – |
 | `/roblox name` | Roblox-Benutzer suchen (Name → ID, Profil-Link) | – |
 
 Bewusst **nicht** über Discord möglich: Berichte freigeben/ablehnen, Fahndungen aufheben, Beschwerden bearbeiten, Personal-, Benutzer-, Rollen- und Audit-Funktionen. Das bleibt im Web.

@@ -12,8 +12,8 @@ export declare class EmbedsController {
         title: string;
         description: string;
         name: string;
-        channelId: string | null;
         content: string;
+        channelId: string | null;
         footer: string;
         fields: {
             name: string;
@@ -44,8 +44,8 @@ export declare class EmbedsController {
         title: string;
         description: string;
         name: string;
-        channelId: string | null;
         content: string;
+        channelId: string | null;
         footer: string;
         fields: {
             name: string;
@@ -76,8 +76,8 @@ export declare class EmbedsController {
         title: string;
         description: string;
         name: string;
-        channelId: string | null;
         content: string;
+        channelId: string | null;
         footer: string;
         fields: {
             name: string;

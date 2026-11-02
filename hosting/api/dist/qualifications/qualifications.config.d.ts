@@ -618,6 +618,7 @@ export declare const unitSchema: z.ZodObject<{
     key: string;
     description?: string | undefined;
     enabled?: boolean | undefined;
+    channelId?: string | undefined;
     settings?: {
         mode?: "DM" | "WEB" | undefined;
         messages?: {
@@ -648,7 +649,6 @@ export declare const unitSchema: z.ZodObject<{
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
-    channelId?: string | undefined;
     roleId?: string | undefined;
     pingRoleIds?: string[] | undefined;
     panel?: "quali" | "apply" | undefined;
@@ -858,6 +858,7 @@ export declare const policeSchema: z.ZodObject<{
     description?: string | undefined;
     name?: string | undefined;
     enabled?: boolean | undefined;
+    channelId?: string | undefined;
     settings?: {
         mode?: "DM" | "WEB" | undefined;
         messages?: {
@@ -888,7 +889,6 @@ export declare const policeSchema: z.ZodObject<{
         timeLimitMinutes?: number | undefined;
         onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
     } | undefined;
-    channelId?: string | undefined;
     pingRoleIds?: string[] | undefined;
     acceptedChannelId?: string | undefined;
     deniedChannelId?: string | undefined;
@@ -1210,6 +1210,7 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -1240,7 +1241,6 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         panel?: "quali" | "apply" | undefined;
@@ -1306,6 +1306,7 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -1336,7 +1337,6 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         panel?: "quali" | "apply" | undefined;
@@ -1545,6 +1545,7 @@ export declare const configSchema: z.ZodObject<{
         description?: string | undefined;
         name?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -1575,7 +1576,6 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -1688,6 +1688,7 @@ export declare const configSchema: z.ZodObject<{
         key: string;
         description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -1718,7 +1719,6 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         panel?: "quali" | "apply" | undefined;
@@ -1731,6 +1731,7 @@ export declare const configSchema: z.ZodObject<{
         description?: string | undefined;
         name?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -1761,7 +1762,6 @@ export declare const configSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2087,6 +2087,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -2117,7 +2118,6 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         panel?: "quali" | "apply" | undefined;
@@ -2183,6 +2183,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -2213,7 +2214,6 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         panel?: "quali" | "apply" | undefined;
@@ -2422,6 +2422,7 @@ export declare const saveSchema: z.ZodObject<{
         description?: string | undefined;
         name?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -2452,7 +2453,6 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;
@@ -2670,6 +2670,7 @@ export declare const saveSchema: z.ZodObject<{
         key: string;
         description?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -2700,7 +2701,6 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         roleId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         panel?: "quali" | "apply" | undefined;
@@ -2713,6 +2713,7 @@ export declare const saveSchema: z.ZodObject<{
         description?: string | undefined;
         name?: string | undefined;
         enabled?: boolean | undefined;
+        channelId?: string | undefined;
         settings?: {
             mode?: "DM" | "WEB" | undefined;
             messages?: {
@@ -2743,7 +2744,6 @@ export declare const saveSchema: z.ZodObject<{
             timeLimitMinutes?: number | undefined;
             onLeave?: "DENY" | "NONE" | "WITHDRAW" | undefined;
         } | undefined;
-        channelId?: string | undefined;
         pingRoleIds?: string[] | undefined;
         acceptedChannelId?: string | undefined;
         deniedChannelId?: string | undefined;

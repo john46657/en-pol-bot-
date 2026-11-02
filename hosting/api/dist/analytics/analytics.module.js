@@ -9,10 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsModule = void 0;
 const common_1 = require("@nestjs/common");
 const analytics_controller_1 = require("./analytics.controller");
+const stats_service_1 = require("./stats.service");
 let AnalyticsModule = class AnalyticsModule {
 };
 exports.AnalyticsModule = AnalyticsModule;
 exports.AnalyticsModule = AnalyticsModule = __decorate([
-    (0, common_1.Module)({ controllers: [analytics_controller_1.AnalyticsController] })
+    (0, common_1.Module)({ controllers: [analytics_controller_1.AnalyticsController], providers: [stats_service_1.StatsService], exports: [stats_service_1.StatsService] })
 ], AnalyticsModule);
 //# sourceMappingURL=analytics.module.js.map

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.interactionFor = exports.INTERACTIONS = exports.FEATURE_COMMANDS = void 0;
 exports.shiftPicker = shiftPicker;
+const administration_1 = require("./administration");
 const api_1 = require("../api");
 const format_1 = require("../format");
 const errors_1 = require("./errors");
@@ -226,6 +227,9 @@ exports.INTERACTIONS = [
     trainings_1.TRAINING_INTERACTION,
     shifts_1.SHIFT_INTERACTION,
     reminders_1.REMINDER_INTERACTION,
+    administration_1.SHIFTPLAN_INTERACTION,
+    administration_1.CALENDAR_INTERACTION,
+    administration_1.MEETING_INTERACTION,
 ];
 const interactionFor = (customId) => {
     const [prefix, ...args] = customId.split(':');

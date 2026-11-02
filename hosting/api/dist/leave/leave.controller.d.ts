@@ -27,15 +27,15 @@ declare const requestBody: z.ZodObject<{
     forDiscordId?: string | undefined;
 }>;
 declare const listQ: z.ZodObject<{
-    status: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "DENIED", "CANCELLED", "ENDED", "ACTIVE", "UPCOMING", "CALENDAR", "ALL"]>>;
+    status: z.ZodOptional<z.ZodEnum<["PENDING", "IN_REVIEW", "APPROVED", "DENIED", "CANCELLED", "ENDED", "ACTIVE", "UPCOMING", "CALENDAR", "ALL"]>>;
     mine: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
     discordId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "CALENDAR" | "ALL" | undefined;
+    status?: "DENIED" | "PENDING" | "IN_REVIEW" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "CALENDAR" | "ALL" | undefined;
     discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }, {
-    status?: "DENIED" | "PENDING" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "CALENDAR" | "ALL" | undefined;
+    status?: "DENIED" | "PENDING" | "IN_REVIEW" | "APPROVED" | "CANCELLED" | "ENDED" | "ACTIVE" | "UPCOMING" | "CALENDAR" | "ALL" | undefined;
     discordId?: string | undefined;
     mine?: "true" | "false" | undefined;
 }>;
@@ -67,6 +67,7 @@ export declare class LeaveController {
         roleIds: string[];
         enabled: boolean;
         maxDays: number;
+        logReason: boolean;
         approvalChannelId?: string | null | undefined;
         logChannelId?: string | null | undefined;
     }>;
@@ -74,6 +75,7 @@ export declare class LeaveController {
         roleIds: string[];
         enabled: boolean;
         maxDays: number;
+        logReason: boolean;
         approvalChannelId?: string | null | undefined;
         logChannelId?: string | null | undefined;
     }>;
@@ -97,6 +99,9 @@ export declare class LeaveController {
             decidedByName: string | null;
             endedAt: Date | null;
             createdAt: Date;
+            reviewerId: string | null;
+            reviewerName: string | null;
+            reviewStartedAt: Date | null;
             days: number;
             extensionMinutes: number | null;
             extensionReason: string | null;
@@ -127,6 +132,9 @@ export declare class LeaveController {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -151,6 +159,9 @@ export declare class LeaveController {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -177,6 +188,9 @@ export declare class LeaveController {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -202,6 +216,37 @@ export declare class LeaveController {
         decisionReason: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
+        days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
+    }>;
+    /** Leitung: Antrag „In Prüfung“ nehmen (zuständiger Prüfer). */
+    review(a: Actor, id: string): Promise<{
+        id: string;
+        number: string;
+        userId: string;
+        name: string;
+        discordId: string | null;
+        startsAt: Date;
+        endsAt: Date;
+        reason: string;
+        type: string | null;
+        comment: string | null;
+        status: string;
+        active: boolean;
+        guildId: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
+        decidedByName: string | null;
+        endedAt: Date | null;
+        createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -227,6 +272,9 @@ export declare class LeaveController {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;

@@ -23,6 +23,10 @@ __export(index_exports, {
   AI_CHECK_HINT: () => AI_CHECK_HINT,
   AI_CHECK_LEVEL_LABEL: () => AI_CHECK_LEVEL_LABEL,
   ALL_PERMISSIONS: () => ALL_PERMISSIONS,
+  ANNOUNCEMENT_RECURRENCE: () => ANNOUNCEMENT_RECURRENCE,
+  ANNOUNCEMENT_STATUSES: () => ANNOUNCEMENT_STATUSES,
+  ANNOUNCEMENT_TYPES: () => ANNOUNCEMENT_TYPES,
+  ANNOUNCEMENT_TYPE_INFO: () => ANNOUNCEMENT_TYPE_INFO,
   APPLICATION_STATUSES: () => APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS: () => APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES: () => APPLICATION_VARIABLES,
@@ -68,6 +72,11 @@ __export(index_exports, {
   DN_STATUSES: () => DN_STATUSES,
   DN_STATUS_LABEL: () => DN_STATUS_LABEL,
   DN_VARIABLES: () => DN_VARIABLES,
+  DOCUMENT_ACCESS: () => DOCUMENT_ACCESS,
+  DOCUMENT_CATEGORIES: () => DOCUMENT_CATEGORIES,
+  DOCUMENT_CATEGORY_LABEL: () => DOCUMENT_CATEGORY_LABEL,
+  DOCUMENT_MAX_BYTES: () => DOCUMENT_MAX_BYTES,
+  DOCUMENT_MIME_TYPES: () => DOCUMENT_MIME_TYPES,
   DRIVER_HINT: () => DRIVER_HINT,
   DRIVER_STATES: () => DRIVER_STATES,
   DUTY_STATUSES: () => DUTY_STATUSES,
@@ -81,6 +90,9 @@ __export(index_exports, {
   ERLC_POSTALS: () => ERLC_POSTALS,
   ERLC_STATUSES: () => ERLC_STATUSES,
   ERLC_STATUS_LABEL: () => ERLC_STATUS_LABEL,
+  EVENT_CATEGORIES: () => EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABEL: () => EVENT_CATEGORY_LABEL,
+  EVENT_STATUSES: () => EVENT_STATUSES,
   EXAM_ATTEMPT_STATUSES: () => EXAM_ATTEMPT_STATUSES,
   EXAM_ATTEMPT_STATUS_LABEL: () => EXAM_ATTEMPT_STATUS_LABEL,
   EXAM_EXPORT_FORMAT: () => EXAM_EXPORT_FORMAT,
@@ -101,6 +113,7 @@ __export(index_exports, {
   HR_EVENT_LABEL: () => HR_EVENT_LABEL,
   InvalidTransitionError: () => InvalidTransitionError,
   JOIN_LOG_TOLERANCE_MS: () => JOIN_LOG_TOLERANCE_MS,
+  LEADERBOARD_METRICS: () => LEADERBOARD_METRICS,
   LEGACY_DANGER: () => LEGACY_DANGER,
   LOAD_DOT: () => LOAD_DOT,
   LOAD_LABEL: () => LOAD_LABEL,
@@ -110,18 +123,27 @@ __export(index_exports, {
   LOG_TYPES: () => LOG_TYPES,
   MAX_FORM_OPTIONS: () => MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS: () => MAX_FORM_QUESTIONS,
+  MAX_MENTION_ROLES: () => MAX_MENTION_ROLES,
+  MAX_OCCURRENCES: () => MAX_OCCURRENCES,
   MB_BUTTON_STYLES: () => MB_BUTTON_STYLES,
   MB_DEFAULT_CATEGORIES: () => MB_DEFAULT_CATEGORIES,
   MB_EXAMPLE_TEMPLATES: () => MB_EXAMPLE_TEMPLATES,
   MB_LIMITS: () => MB_LIMITS,
   MB_TEMPLATE_EXPORT_FORMAT: () => MB_TEMPLATE_EXPORT_FORMAT,
+  MEETING_TASK_STATUSES: () => MEETING_TASK_STATUSES,
   MODULES: () => MODULES,
   MODULE_KEYS: () => MODULE_KEYS,
   MUSIC_TRACKS: () => MUSIC_TRACKS,
+  NOTIFICATION_EVENTS: () => NOTIFICATION_EVENTS,
   NO_TICKET_BUTTON: () => NO_TICKET_BUTTON,
   OFF_MODULES: () => OFF_MODULES,
+  ORG_TIME_ZONE: () => ORG_TIME_ZONE,
+  PARTICIPANT_STATUSES: () => PARTICIPANT_STATUSES,
+  PARTICIPANT_STATUS_LABEL: () => PARTICIPANT_STATUS_LABEL,
   PERIOD_LABEL: () => PERIOD_LABEL,
   PERMISSION_CATALOG: () => PERMISSION_CATALOG,
+  PLANNED_SHIFT_STATUSES: () => PLANNED_SHIFT_STATUSES,
+  PLANNED_SHIFT_STATUS_LABEL: () => PLANNED_SHIFT_STATUS_LABEL,
   POLICE_APPLICATION_KEY: () => POLICE_APPLICATION_KEY,
   POSITION_HINT: () => POSITION_HINT,
   PRIORITIES: () => PRIORITIES,
@@ -138,6 +160,8 @@ __export(index_exports, {
   RADIO_GRANT_STATUS_LABEL: () => RADIO_GRANT_STATUS_LABEL,
   RATING_SCALE_MAX: () => RATING_SCALE_MAX,
   RATING_SCALE_MIN: () => RATING_SCALE_MIN,
+  RECURRENCE_FREQS: () => RECURRENCE_FREQS,
+  REMINDER_CHOICES: () => REMINDER_CHOICES,
   REMINDER_MAX_MS: () => REMINDER_MAX_MS,
   REMINDER_MAX_PENDING: () => REMINDER_MAX_PENDING,
   REMINDER_MIN_MS: () => REMINDER_MIN_MS,
@@ -157,6 +181,7 @@ __export(index_exports, {
   ROBLOX_VERIFICATION_STATUSES: () => ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS: () => STATUS_KINDS,
   STATUS_LABEL: () => STATUS_LABEL,
+  STAT_PERIODS: () => STAT_PERIODS,
   TICKET_ACTIONS: () => TICKET_ACTIONS,
   TICKET_ACTION_KEYS: () => TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS: () => TICKET_PLACEHOLDERS,
@@ -188,6 +213,7 @@ __export(index_exports, {
   activeFields: () => activeFields,
   ageOf: () => ageOf,
   aiCheck: () => aiCheck,
+  announcementMessage: () => announcementMessage,
   applyCallCalibration: () => applyCallCalibration,
   applyPanelParts: () => applyPanelParts,
   areaGrantsFor: () => areaGrantsFor,
@@ -197,6 +223,8 @@ __export(index_exports, {
   backupConfigSchema: () => backupConfigSchema,
   can: () => can,
   canDelegate: () => canDelegate,
+  canRespond: () => canRespond,
+  canSeeDocument: () => canSeeDocument,
   canTransition: () => canTransition,
   checkAnswer: () => checkAnswer,
   checkStatusChange: () => checkStatusChange,
@@ -204,15 +232,19 @@ __export(index_exports, {
   cloneWithNewIds: () => cloneWithNewIds,
   closeRequestComplete: () => closeRequestComplete,
   commandsForServer: () => commandsForServer,
+  compareStaffing: () => compareStaffing,
   conditionMatches: () => conditionMatches,
+  coverage: () => coverage,
   csvCell: () => csvCell,
   customIdsOf: () => customIdsOf,
   dangerLevelOf: () => dangerLevelOf,
   defaultTicketButtons: () => defaultTicketButtons,
+  deliveryFor: () => deliveryFor,
   departmentSchema: () => departmentSchema,
   describeDiscordError: () => describeDiscordError,
   diffPresence: () => diffPresence,
   dnSettingsSchema: () => dnSettingsSchema,
+  dueReminders: () => dueReminders,
   dutyTimeText: () => dutyTimeText,
   effectiveAutomation: () => effectiveAutomation,
   effectivePermissions: () => effectivePermissions,
@@ -224,6 +256,7 @@ __export(index_exports, {
   examExportSchema: () => examExportSchema,
   examProblems: () => examProblems,
   examSchema: () => examSchema,
+  expandRecurrence: () => expandRecurrence,
   fieldOptions: () => fieldOptions,
   fieldValue: () => fieldValue,
   fillTemplate: () => fillTemplate,
@@ -269,7 +302,9 @@ __export(index_exports, {
   isoWeek: () => isoWeek,
   lineCol: () => lineCol,
   loadLevel: () => loadLevel,
+  localDate: () => localDate,
   localMidnight: () => localMidnight,
+  localParts: () => localParts2,
   localTime: () => localTime,
   logCategoryOf: () => logCategoryOf,
   logChannelFor: () => logChannelFor,
@@ -295,16 +330,20 @@ __export(index_exports, {
   mbToDiscordJsonText: () => mbToDiscordJsonText,
   mdtConfigSchema: () => mdtConfigSchema,
   median: () => median,
+  minutesWithin: () => minutesWithin,
   missingBotPerms: () => missingBotPerms,
   moduleDef: () => moduleDef,
   moduleDependencyError: () => moduleDependencyError,
   moduleOfPermission: () => moduleOfPermission,
   newVoiceRoom: () => newVoiceRoom,
+  nextRecurrence: () => nextRecurrence,
   nextWeekStart: () => nextWeekStart,
   normalizeField: () => normalizeField,
   normalizeRating: () => normalizeRating,
+  notificationEvent: () => notificationEvent,
   notifyRuleSchema: () => notifyRuleSchema,
   onErlcMap: () => onErlcMap,
+  overlaps: () => overlaps,
   panelFieldSchema: () => panelFieldSchema,
   panelUnits: () => panelUnits,
   parseAutomation: () => parseAutomation,
@@ -316,9 +355,11 @@ __export(index_exports, {
   parseQuestions: () => parseQuestions,
   parseReminderDuration: () => parseReminderDuration,
   parseTicketRef: () => parseTicketRef,
+  passedReminders: () => passedReminders,
   percentile: () => percentile,
   periodEnd: () => periodEnd,
   periodLabel: () => periodLabel,
+  periodRange: () => periodRange,
   periodStart: () => periodStart,
   personDetailsSchema: () => personDetailsSchema,
   pixelToGame: () => pixelToGame,
@@ -333,6 +374,7 @@ __export(index_exports, {
   questionSchema: () => questionSchema,
   radioRoleSyncAction: () => radioRoleSyncAction,
   rangeSchema: () => rangeSchema,
+  rankRows: () => rankRows,
   rankSchema: () => rankSchema,
   ratingLabel: () => ratingLabel,
   ratingTone: () => ratingTone,
@@ -365,6 +407,7 @@ __export(index_exports, {
   ticketRef: () => ticketRef,
   ticketWeekKey: () => ticketWeekKey,
   timeZones: () => timeZones,
+  toCsv: () => toCsv,
   toDiscordPayload: () => toDiscordPayload,
   toPartialEmoji: () => toPartialEmoji,
   triggerMatches: () => triggerMatches,
@@ -379,7 +422,8 @@ __export(index_exports, {
   weekStartOf: () => weekStartOf,
   weekTotals: () => weekTotals,
   weekdayHour: () => weekdayHour,
-  withHrDefaults: () => withHrDefaults
+  withHrDefaults: () => withHrDefaults,
+  zonedTime: () => zonedTime
 });
 module.exports = __toCommonJS(index_exports);
 
@@ -402,10 +446,10 @@ var PERMISSION_CATALOG = {
   wanted: ["view", "create", "edit", "activate", "clear"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
-  /** Beförderungssystem */
-  promotion: ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage"],
-  /** Versetzungen zwischen Abteilungen */
-  transfer: ["view", "create", "approve", "reject"],
+  /** Beförderungssystem; `request` = für sich selbst beantragen (Discord/Dashboard), `create` = für andere */
+  promotion: ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage", "request"],
+  /** Versetzungen zwischen Abteilungen; `request` = eigene Versetzung beantragen, `review` = prüfen/Rückfragen stellen */
+  transfer: ["view", "create", "approve", "reject", "request", "review"],
   /** Ausbildungen und Zertifikate */
   training: ["view", "create", "manage"],
   /** Prüfungen */
@@ -433,7 +477,20 @@ var PERMISSION_CATALOG = {
   /** Tages-/Wochenberichte nach Vorlagen (Dashboard + Discord) */
   dutyreports: ["view", "create", "view_all", "edit_all", "review", "manage"],
   communication: ["view", "send", "moderate"],
-  analytics: ["view"],
+  /** Statistiken: view = Übersicht, leaderboard = Ranglisten, personal_all = Statistiken aller Personen, export = CSV-Export */
+  analytics: ["view", "leaderboard", "personal_all", "export"],
+  /** Schichtplanung (geplante Schichten; die Stempeluhr bleibt unter `team`): view = Plan sehen, signup = selbst an-/abmelden, manage = planen/zuweisen/veröffentlichen */
+  shiftplan: ["view", "signup", "manage"],
+  /** Zentraler Kalender: view = Termine sehen und teilnehmen, manage = Termine anlegen/ändern/absagen */
+  calendar: ["view", "manage"],
+  /** Besprechungen: view = eigene/öffentliche sehen, organize = anlegen/Teilnehmer/Anwesenheit, minutes = Protokolle schreiben, view_private = private Protokolle lesen */
+  meetings: ["view", "organize", "minutes", "view_private"],
+  /** Ankündigungsmanager (Discord): create = Entwürfe, publish = veröffentlichen/planen/zurückziehen, mention = Rollen erwähnen (nie @everyone) */
+  announce: ["view", "create", "publish", "mention", "manage"],
+  /** Dokumentenverwaltung: upload = hochladen/neue Version, manage = Kategorien/Zugriff/Archiv/Wiederherstellen, confidential = vertrauliche Dokumente */
+  documents: ["view", "upload", "manage", "confidential"],
+  /** Zentrale Benachrichtigungen: manage = Systemmeldungen und Zustellregeln (persönliche Einstellungen braucht kein Recht) */
+  notifications: ["manage"],
   audit: ["view", "export"],
   studio: ["view", "manage"],
   settings: ["view", "manage"],
@@ -1916,7 +1973,7 @@ function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
 
 // src/modules.ts
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "notifications"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
@@ -1928,6 +1985,9 @@ var MODULES = [
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
   { key: "message_builder", name: "Embed Builder", description: "Discord-Nachrichten und Embeds bauen (JSON-Editor, Vorlagen), \xFCber den Bot oder Webhooks senden, gesendete Nachrichten bearbeiten, Versandhistorie", permissionPrefixes: ["messagebuilder"] },
+  { key: "planning", name: "Dienstplanung", description: "Schichtplanung, Kalender und Besprechungen", permissionPrefixes: ["shiftplan", "calendar", "meetings"] },
+  { key: "announcements", name: "Ank\xFCndigungen", description: "Ank\xFCndigungen \xFCber den Bot ver\xF6ffentlichen, planen und zur\xFCckziehen (ohne Lesebest\xE4tigung)", permissionPrefixes: ["announce"] },
+  { key: "documents", name: "Dokumente", description: "Dokumentenverwaltung mit Versionen und Zugriffsgruppen", permissionPrefixes: ["documents"] },
   { key: "communication", name: "Kommunikation", description: "Nachrichten, Funk-Codes, Funk-Whitelist", permissionPrefixes: ["communication", "radio", "radiowhitelist"] }
 ];
 var MODULE_KEYS = MODULES.map((m) => m.key);
@@ -1963,6 +2023,11 @@ var BOT_COMMAND_MODULES = {
   leave: "personnel",
   ausbildung: "personnel",
   verwarnen: "personnel",
+  antrag: "personnel",
+  schichtplan: "planning",
+  termine: "planning",
+  besprechung: "planning",
+  dokument: "documents",
   teamchance: "applications",
   support: "support",
   ticket: "support",
@@ -2041,7 +2106,7 @@ var HR_EVENT_LABEL = {
   "exam.submitted": "Pr\xFCfung abgegeben (wartet auf Bewertung)"
 };
 var stageSchema = import_zod3.z.object({ id: uuid, name: import_zod3.z.string().trim().min(1).max(60), roleIds: import_zod3.z.array(uuid).max(20).default([]) });
-var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
+var REQUEST_STATUSES = ["OPEN", "IN_REVIEW", "NEEDS_INFO", "APPROVED", "REJECTED", "DEFERRED", "EXECUTED", "CANCELLED"];
 var requestStatusDefSchema = import_zod3.z.object({ label: import_zod3.z.string().max(40), emoji: import_zod3.z.string().max(16) });
 var WARNING_TEMPLATE = "Wer: {mitglied}\nGrund: {grund}\nVerwarnungen: {anzahl}/{grenze}";
 var OLD_WARNING_TEMPLATE = "**Wer:** {mitglied}\n**Grund:** {grund}\n**Verwarnungen:** {anzahl}/{grenze}";
@@ -2168,6 +2233,7 @@ function withHrDefaults(v) {
 var REQUEST_STATUS_DEFAULT = {
   OPEN: { label: "Offen", emoji: "\u{1F7E1}" },
   IN_REVIEW: { label: "In Pr\xFCfung", emoji: "\u{1F535}" },
+  NEEDS_INFO: { label: "R\xFCckfrage erforderlich", emoji: "\u2753" },
   APPROVED: { label: "Genehmigt", emoji: "\u{1F7E2}" },
   REJECTED: { label: "Abgelehnt", emoji: "\u{1F534}" },
   DEFERRED: { label: "Zur\xFCckgestellt", emoji: "\u26AB" },
@@ -4324,11 +4390,230 @@ function timeZones() {
   }
   return [.../* @__PURE__ */ new Set([...common, ...all])];
 }
+
+// src/administration.ts
+var ORG_TIME_ZONE = "Europe/Berlin";
+function localParts2(at, timeZone = ORG_TIME_ZONE) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", hourCycle: "h23", weekday: "short" }).formatToParts(at).map((x) => [x.type, x.value]));
+  return { y: Number(p.year), m: Number(p.month), d: Number(p.day), h: Number(p.hour), min: Number(p.minute), wd: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.weekday) + 1 };
+}
+function zonedTime(y, m, d, h, min, timeZone = ORG_TIME_ZONE) {
+  const guess = Date.UTC(y, m - 1, d, h, min);
+  let t2 = guess;
+  for (let i = 0; i < 3; i++) {
+    const l = localParts2(new Date(t2), timeZone);
+    const shown = Date.UTC(l.y, l.m - 1, l.d, l.h, l.min);
+    const next = t2 + (guess - shown);
+    if (next === t2) break;
+    t2 = next;
+  }
+  return new Date(t2);
+}
+var localDate = (at, timeZone = ORG_TIME_ZONE) => {
+  const l = localParts2(at, timeZone);
+  return `${l.y}-${String(l.m).padStart(2, "0")}-${String(l.d).padStart(2, "0")}`;
+};
+var overlaps = (aStart, aEnd, bStart, bEnd) => aStart.getTime() < bEnd.getTime() && bStart.getTime() < aEnd.getTime();
+var RECURRENCE_FREQS = ["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY"];
+var MAX_OCCURRENCES = 52;
+function expandRecurrence(startsAt, endsAt, rule, timeZone = ORG_TIME_ZONE) {
+  const count = Math.max(1, Math.min(MAX_OCCURRENCES, Math.floor(rule.count)));
+  const dur = endsAt.getTime() - startsAt.getTime();
+  const s = localParts2(startsAt, timeZone);
+  const out = [];
+  for (let i = 0, guard = 0; out.length < count && guard < count * 3; i++, guard++) {
+    let start;
+    if (rule.freq === "MONTHLY") {
+      const probe = new Date(Date.UTC(s.y, s.m - 1 + i, 1));
+      const y = probe.getUTCFullYear(), m = probe.getUTCMonth() + 1;
+      const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+      if (s.d > days) continue;
+      start = zonedTime(y, m, s.d, s.h, s.min, timeZone);
+    } else {
+      const step = rule.freq === "DAILY" ? 1 : rule.freq === "WEEKLY" ? 7 : 14;
+      start = zonedTime(s.y, s.m, s.d + i * step, s.h, s.min, timeZone);
+    }
+    out.push({ startsAt: start, endsAt: new Date(start.getTime() + dur) });
+  }
+  return out;
+}
+var PLANNED_SHIFT_STATUSES = ["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"];
+var PLANNED_SHIFT_STATUS_LABEL = { DRAFT: "Entwurf", PUBLISHED: "Ver\xF6ffentlicht", CANCELLED: "Abgesagt", COMPLETED: "Abgeschlossen" };
+function coverage(assigned, min, max) {
+  const state = assigned < min ? "UNDER" : max !== null && assigned >= max ? "FULL" : "OK";
+  return { assigned, min, max, state, missing: Math.max(0, min - assigned), free: max === null ? null : Math.max(0, max - assigned) };
+}
+function compareStaffing(planned, onDuty, absent = []) {
+  const p = new Set(planned), d = new Set(onDuty), a = new Set(absent);
+  return {
+    plannedPresent: [...p].filter((u) => d.has(u)),
+    plannedMissing: [...p].filter((u) => !d.has(u) && !a.has(u)),
+    plannedAbsent: [...p].filter((u) => !d.has(u) && a.has(u)),
+    unplannedPresent: [...d].filter((u) => !p.has(u))
+  };
+}
+var EVENT_CATEGORIES = ["MEETING", "TRAINING", "EXAM", "SHIFT", "EVENT", "INTERNAL", "DEADLINE"];
+var EVENT_CATEGORY_LABEL = { MEETING: "Dienstbesprechung", TRAINING: "Ausbildung", EXAM: "Pr\xFCfung", SHIFT: "Schicht", EVENT: "Veranstaltung", INTERNAL: "Interner Termin", DEADLINE: "Frist" };
+var EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "DONE"];
+var PARTICIPANT_STATUSES = ["INVITED", "ACCEPTED", "DECLINED", "EXCUSED", "ATTENDED", "ABSENT"];
+var PARTICIPANT_STATUS_LABEL = { INVITED: "Eingeladen", ACCEPTED: "Zugesagt", DECLINED: "Abgesagt", EXCUSED: "Abwesenheit gemeldet", ATTENDED: "Anwesend", ABSENT: "Nicht erschienen" };
+var REMINDER_CHOICES = [10, 15, 30, 60, 120, 1440, 2880, 10080];
+var MEETING_TASK_STATUSES = ["OPEN", "DONE", "CANCELLED"];
+function dueReminders(startsAt, minutesBefore, sent, now = /* @__PURE__ */ new Date()) {
+  if (startsAt.getTime() <= now.getTime()) return [];
+  const due = [...new Set(minutesBefore)].filter((m) => !sent.includes(m) && startsAt.getTime() - m * 6e4 <= now.getTime()).sort((a, b) => a - b);
+  return due.length ? [due[0]] : [];
+}
+var passedReminders = (startsAt, minutesBefore, sent, now = /* @__PURE__ */ new Date()) => [...new Set(minutesBefore)].filter((m) => !sent.includes(m) && startsAt.getTime() - m * 6e4 <= now.getTime());
+function canRespond(e, accepted, already, now = /* @__PURE__ */ new Date()) {
+  if (e.status !== "SCHEDULED") return "Der Termin findet nicht (mehr) statt.";
+  if (e.startsAt.getTime() <= now.getTime()) return "Der Termin hat schon begonnen.";
+  if (!already && e.maxParticipants !== null && accepted >= e.maxParticipants) return "Alle Pl\xE4tze sind vergeben.";
+  return null;
+}
+var ANNOUNCEMENT_TYPES = ["GENERAL", "DIRECTIVE", "TRAINING", "MEETING", "MAINTENANCE", "SYSTEM"];
+var ANNOUNCEMENT_TYPE_INFO = {
+  GENERAL: { label: "Allgemeine Information", color: "#3b82f6", emoji: "\u2139\uFE0F" },
+  DIRECTIVE: { label: "Dienstanweisung", color: "#f59e0b", emoji: "\u{1F4DC}" },
+  TRAINING: { label: "Ausbildung", color: "#22c55e", emoji: "\u{1F393}" },
+  MEETING: { label: "Besprechung", color: "#8b5cf6", emoji: "\u{1F5D3}\uFE0F" },
+  MAINTENANCE: { label: "Wartung", color: "#64748b", emoji: "\u{1F6E0}\uFE0F" },
+  SYSTEM: { label: "Wichtige Systemmeldung", color: "#ef4444", emoji: "\u26A0\uFE0F" }
+};
+var ANNOUNCEMENT_STATUSES = ["DRAFT", "SCHEDULED", "PUBLISHED", "RETRACTED", "FAILED"];
+var ANNOUNCEMENT_RECURRENCE = ["NONE", "DAILY", "WEEKLY", "MONTHLY"];
+var MAX_MENTION_ROLES = 3;
+function announcementMessage(type, c, mentionRoleIds = [], opts = {}) {
+  const info = ANNOUNCEMENT_TYPE_INFO[type];
+  const safe = (t2) => t2.replace(/@(everyone|here)/gi, "@\u200B$1");
+  const roles = [...new Set(mentionRoleIds)].filter((r) => /^\d{15,25}$/.test(r)).slice(0, MAX_MENTION_ROLES);
+  const color3 = parseInt((c.color && /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : opts.retracted ? "#64748b" : info.color).slice(1), 16);
+  const httpsOnly = (u) => u && /^https:\/\//i.test(u) ? u : void 0;
+  return {
+    ...roles.length && !opts.retracted ? { content: roles.map((r) => `<@&${r}>`).join(" "), mentionRoles: roles } : {},
+    embeds: [{
+      title: `${opts.retracted ? "\u21A9\uFE0F Zur\xFCckgezogen: " : `${info.emoji} `}${safe(c.title)}`.slice(0, 256),
+      description: (opts.retracted ? "~~Diese Ank\xFCndigung wurde zur\xFCckgezogen.~~" : safe(c.description)).slice(0, 4e3) || "\u200B",
+      color: color3,
+      ...opts.retracted ? {} : {
+        ...httpsOnly(c.imageUrl) ? { image: httpsOnly(c.imageUrl) } : {},
+        ...httpsOnly(c.thumbnailUrl) ? { thumbnail: httpsOnly(c.thumbnailUrl) } : {},
+        ...c.fields?.length ? { fields: c.fields.slice(0, 25).map((f) => ({ name: safe(f.name).slice(0, 256) || "\u200B", value: safe(f.value).slice(0, 1024) || "\u200B", inline: !!f.inline })) } : {}
+      },
+      footer: (c.footer ? safe(c.footer) : info.label).slice(0, 2048),
+      ...c.timestamp !== false ? { timestamp: (/* @__PURE__ */ new Date()).toISOString() } : {}
+    }],
+    ...!opts.retracted && c.links?.length ? { buttons: c.links.filter((l) => httpsOnly(l.url)).slice(0, 5).map((l, i) => ({ id: `link-${i}`, label: l.label.slice(0, 80), style: "secondary", url: l.url })) } : {}
+  };
+}
+function nextRecurrence(from, recurrence, timeZone = ORG_TIME_ZONE) {
+  if (recurrence === "NONE") return null;
+  const freq = recurrence === "DAILY" ? "DAILY" : recurrence === "WEEKLY" ? "WEEKLY" : "MONTHLY";
+  return expandRecurrence(from, from, { freq, count: 2 }, timeZone)[1]?.startsAt ?? null;
+}
+var DOCUMENT_CATEGORIES = ["DIRECTIVE", "RULES", "TRAINING", "EXAM", "DISPATCH", "POLICY", "TEMPLATE", "OTHER"];
+var DOCUMENT_CATEGORY_LABEL = { DIRECTIVE: "Dienstanweisung", RULES: "Regelwerk", TRAINING: "Ausbildungsunterlage", EXAM: "Pr\xFCfungsunterlage", DISPATCH: "Leitstelleninformation", POLICY: "Interne Richtlinie", TEMPLATE: "Vorlage", OTHER: "Sonstiges" };
+var DOCUMENT_ACCESS = ["ALL", "ROLES", "CONFIDENTIAL"];
+var DOCUMENT_MIME_TYPES = ["application/pdf", "text/plain", "image/png", "image/jpeg", "image/webp"];
+var DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+function canSeeDocument(d, u) {
+  if (!u.view && !u.manage) return false;
+  if (d.status === "ARCHIVED" && !u.manage) return false;
+  if (d.access === "CONFIDENTIAL") return u.confidential;
+  if (d.access === "ROLES") return u.manage || u.confidential || d.roleIds.some((r) => u.roleIds.includes(r));
+  return true;
+}
+var NOTIFICATION_EVENTS = [
+  { key: "application.new", label: "Neue Bewerbung", group: "Bewerbungen", channels: ["dashboard"] },
+  { key: "application.check.done", label: "KI-Check abgeschlossen", group: "Bewerbungen", channels: ["dashboard"] },
+  { key: "application.check.failed", label: "KI-Check fehlgeschlagen", group: "Bewerbungen", channels: ["dashboard"] },
+  { key: "ticket.new", label: "Neues Ticket", group: "Tickets", channels: ["dashboard"] },
+  { key: "ticket.assigned", label: "Ticket zugewiesen", group: "Tickets", channels: ["dashboard"], dm: true },
+  { key: "ticket.closed", label: "Ticket geschlossen", group: "Tickets", channels: ["dashboard"] },
+  { key: "shift.new", label: "Neue Schicht", group: "Schichtplanung", channels: ["dashboard", "mdt"], dm: true },
+  { key: "shift.changed", label: "Schicht\xE4nderung", group: "Schichtplanung", important: true, channels: ["dashboard", "mdt", "cad"], dm: true },
+  { key: "leave.requested", label: "Urlaubsantrag", group: "Abwesenheit", channels: ["dashboard"] },
+  { key: "leave.approved", label: "Genehmigte Abwesenheit", group: "Abwesenheit", channels: ["dashboard", "mdt"], dm: true },
+  { key: "leave.decided", label: "Entscheidung \xFCber Abwesenheit", group: "Abwesenheit", channels: ["dashboard", "mdt"], dm: true },
+  { key: "promotion.requested", label: "Bef\xF6rderungsantrag", group: "Personal", channels: ["dashboard"] },
+  { key: "transfer.requested", label: "Versetzungsantrag", group: "Personal", channels: ["dashboard"] },
+  { key: "hr.request.query", label: "R\xFCckfrage zu deinem Antrag", group: "Personal", important: true, channels: ["dashboard", "mdt"], dm: true },
+  { key: "hr.request.decided", label: "Entscheidung \xFCber deinen Antrag", group: "Personal", channels: ["dashboard", "mdt"], dm: true },
+  { key: "calendar.new", label: "Neuer Termin", group: "Kalender", channels: ["dashboard", "mdt"], dm: true },
+  { key: "calendar.changed", label: "Termin\xE4nderung", group: "Kalender", important: true, channels: ["dashboard", "mdt", "cad"], dm: true },
+  { key: "calendar.reminder", label: "Terminerinnerung", group: "Kalender", channels: ["dashboard", "mdt"], dm: true },
+  { key: "meeting.reminder", label: "Besprechungserinnerung", group: "Besprechungen", important: true, channels: ["dashboard", "mdt", "cad"], dm: true },
+  { key: "meeting.task", label: "Aufgabe aus Besprechung", group: "Besprechungen", channels: ["dashboard", "mdt"], dm: true },
+  { key: "announcement.new", label: "Neue Ank\xFCndigung", group: "Ank\xFCndigungen", channels: ["dashboard", "mdt", "cad"] },
+  { key: "document.new", label: "Neues Dokument", group: "Dokumente", channels: ["dashboard", "mdt"] },
+  { key: "system.error", label: "Systemfehler", group: "System", important: true, channels: ["dashboard", "cad"] },
+  { key: "backup.failed", label: "Backup fehlgeschlagen", group: "System", important: true, channels: ["dashboard"] },
+  { key: "connection.problem", label: "Verbindungsproblem", group: "System", important: true, channels: ["dashboard", "cad"] }
+];
+var notificationEvent = (key3) => NOTIFICATION_EVENTS.find((e) => e.key === key3);
+function deliveryFor(eventKey, prefs) {
+  const def = notificationEvent(eventKey);
+  const p = prefs ?? {};
+  const isReminder = eventKey.endsWith(".reminder");
+  if (isReminder && p.reminders === false) return { store: false, dm: false, important: false };
+  const muted = (p.muted ?? []).includes(eventKey);
+  const important = !!def?.important || (p.important ?? []).includes(eventKey);
+  const dm = !!def?.dm && p.dm === true && (!p.dmEvents?.length || p.dmEvents.includes(eventKey)) && !muted;
+  return { store: !muted, dm, important };
+}
+var STAT_PERIODS = ["today", "week", "month", "year", "custom"];
+function periodRange(period, now = /* @__PURE__ */ new Date(), custom, timeZone = ORG_TIME_ZONE) {
+  const l = localParts2(now, timeZone);
+  if (period === "custom") {
+    const parse = (s) => s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split("-").map(Number) : null;
+    const f = parse(custom?.from), t2 = parse(custom?.to);
+    if (!f || !t2) throw new Error("Zeitraum: Beginn und Ende angeben (JJJJ-MM-TT).");
+    const from = zonedTime(f[0], f[1], f[2], 0, 0, timeZone), to = zonedTime(t2[0], t2[1], t2[2] + 1, 0, 0, timeZone);
+    if (to.getTime() <= from.getTime()) throw new Error("Zeitraum: Das Ende muss nach dem Beginn liegen.");
+    if (to.getTime() - from.getTime() > 400 * 864e5) throw new Error("Zeitraum: h\xF6chstens ein Jahr.");
+    return { from, to };
+  }
+  if (period === "today") return { from: zonedTime(l.y, l.m, l.d, 0, 0, timeZone), to: zonedTime(l.y, l.m, l.d + 1, 0, 0, timeZone) };
+  if (period === "week") return { from: zonedTime(l.y, l.m, l.d - (l.wd - 1), 0, 0, timeZone), to: zonedTime(l.y, l.m, l.d - (l.wd - 1) + 7, 0, 0, timeZone) };
+  if (period === "month") return { from: zonedTime(l.y, l.m, 1, 0, 0, timeZone), to: zonedTime(l.y, l.m + 1, 1, 0, 0, timeZone) };
+  return { from: zonedTime(l.y, 1, 1, 0, 0, timeZone), to: zonedTime(l.y + 1, 1, 1, 0, 0, timeZone) };
+}
+function minutesWithin(startedAt, endedAt, from, to, now = /* @__PURE__ */ new Date()) {
+  const s = Math.max(startedAt.getTime(), from.getTime()), e = Math.min((endedAt ?? now).getTime(), to.getTime());
+  return e > s ? (e - s) / 6e4 : 0;
+}
+var LEADERBOARD_METRICS = [
+  { key: "dutyMinutes", label: "Dienstzeit", unit: "Minuten" },
+  { key: "trainings", label: "Abgeschlossene Ausbildungen", unit: "Ausbildungen" },
+  { key: "dutyReports", label: "Dienstberichte", unit: "Berichte" },
+  { key: "tickets", label: "Ticketbearbeitungen", unit: "Tickets" },
+  { key: "meetings", label: "Besprechungsteilnahmen", unit: "Teilnahmen" }
+];
+function rankRows(rows, limit = 25) {
+  const sorted = rows.filter((r) => r.value > 0).sort((a, b) => b.value - a.value);
+  const out = [];
+  sorted.forEach((r, i) => {
+    out.push({ ...r, place: i > 0 && sorted[i - 1].value === r.value ? out[i - 1].place : i + 1 });
+  });
+  return out.slice(0, limit);
+}
+function toCsv(header, rows) {
+  const cell = (v) => {
+    let s = v === null || v === void 0 ? "" : String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [header, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   AI_CHECK_HINT,
   AI_CHECK_LEVEL_LABEL,
   ALL_PERMISSIONS,
+  ANNOUNCEMENT_RECURRENCE,
+  ANNOUNCEMENT_STATUSES,
+  ANNOUNCEMENT_TYPES,
+  ANNOUNCEMENT_TYPE_INFO,
   APPLICATION_STATUSES,
   APPLICATION_TRANSITIONS,
   APPLICATION_VARIABLES,
@@ -4374,6 +4659,11 @@ function timeZones() {
   DN_STATUSES,
   DN_STATUS_LABEL,
   DN_VARIABLES,
+  DOCUMENT_ACCESS,
+  DOCUMENT_CATEGORIES,
+  DOCUMENT_CATEGORY_LABEL,
+  DOCUMENT_MAX_BYTES,
+  DOCUMENT_MIME_TYPES,
   DRIVER_HINT,
   DRIVER_STATES,
   DUTY_STATUSES,
@@ -4387,6 +4677,9 @@ function timeZones() {
   ERLC_POSTALS,
   ERLC_STATUSES,
   ERLC_STATUS_LABEL,
+  EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABEL,
+  EVENT_STATUSES,
   EXAM_ATTEMPT_STATUSES,
   EXAM_ATTEMPT_STATUS_LABEL,
   EXAM_EXPORT_FORMAT,
@@ -4407,6 +4700,7 @@ function timeZones() {
   HR_EVENT_LABEL,
   InvalidTransitionError,
   JOIN_LOG_TOLERANCE_MS,
+  LEADERBOARD_METRICS,
   LEGACY_DANGER,
   LOAD_DOT,
   LOAD_LABEL,
@@ -4416,18 +4710,27 @@ function timeZones() {
   LOG_TYPES,
   MAX_FORM_OPTIONS,
   MAX_FORM_QUESTIONS,
+  MAX_MENTION_ROLES,
+  MAX_OCCURRENCES,
   MB_BUTTON_STYLES,
   MB_DEFAULT_CATEGORIES,
   MB_EXAMPLE_TEMPLATES,
   MB_LIMITS,
   MB_TEMPLATE_EXPORT_FORMAT,
+  MEETING_TASK_STATUSES,
   MODULES,
   MODULE_KEYS,
   MUSIC_TRACKS,
+  NOTIFICATION_EVENTS,
   NO_TICKET_BUTTON,
   OFF_MODULES,
+  ORG_TIME_ZONE,
+  PARTICIPANT_STATUSES,
+  PARTICIPANT_STATUS_LABEL,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
+  PLANNED_SHIFT_STATUSES,
+  PLANNED_SHIFT_STATUS_LABEL,
   POLICE_APPLICATION_KEY,
   POSITION_HINT,
   PRIORITIES,
@@ -4444,6 +4747,8 @@ function timeZones() {
   RADIO_GRANT_STATUS_LABEL,
   RATING_SCALE_MAX,
   RATING_SCALE_MIN,
+  RECURRENCE_FREQS,
+  REMINDER_CHOICES,
   REMINDER_MAX_MS,
   REMINDER_MAX_PENDING,
   REMINDER_MIN_MS,
@@ -4463,6 +4768,7 @@ function timeZones() {
   ROBLOX_VERIFICATION_STATUSES,
   STATUS_KINDS,
   STATUS_LABEL,
+  STAT_PERIODS,
   TICKET_ACTIONS,
   TICKET_ACTION_KEYS,
   TICKET_PLACEHOLDERS,
@@ -4494,6 +4800,7 @@ function timeZones() {
   activeFields,
   ageOf,
   aiCheck,
+  announcementMessage,
   applyCallCalibration,
   applyPanelParts,
   areaGrantsFor,
@@ -4503,6 +4810,8 @@ function timeZones() {
   backupConfigSchema,
   can,
   canDelegate,
+  canRespond,
+  canSeeDocument,
   canTransition,
   checkAnswer,
   checkStatusChange,
@@ -4510,15 +4819,19 @@ function timeZones() {
   cloneWithNewIds,
   closeRequestComplete,
   commandsForServer,
+  compareStaffing,
   conditionMatches,
+  coverage,
   csvCell,
   customIdsOf,
   dangerLevelOf,
   defaultTicketButtons,
+  deliveryFor,
   departmentSchema,
   describeDiscordError,
   diffPresence,
   dnSettingsSchema,
+  dueReminders,
   dutyTimeText,
   effectiveAutomation,
   effectivePermissions,
@@ -4530,6 +4843,7 @@ function timeZones() {
   examExportSchema,
   examProblems,
   examSchema,
+  expandRecurrence,
   fieldOptions,
   fieldValue,
   fillTemplate,
@@ -4575,7 +4889,9 @@ function timeZones() {
   isoWeek,
   lineCol,
   loadLevel,
+  localDate,
   localMidnight,
+  localParts,
   localTime,
   logCategoryOf,
   logChannelFor,
@@ -4601,16 +4917,20 @@ function timeZones() {
   mbToDiscordJsonText,
   mdtConfigSchema,
   median,
+  minutesWithin,
   missingBotPerms,
   moduleDef,
   moduleDependencyError,
   moduleOfPermission,
   newVoiceRoom,
+  nextRecurrence,
   nextWeekStart,
   normalizeField,
   normalizeRating,
+  notificationEvent,
   notifyRuleSchema,
   onErlcMap,
+  overlaps,
   panelFieldSchema,
   panelUnits,
   parseAutomation,
@@ -4622,9 +4942,11 @@ function timeZones() {
   parseQuestions,
   parseReminderDuration,
   parseTicketRef,
+  passedReminders,
   percentile,
   periodEnd,
   periodLabel,
+  periodRange,
   periodStart,
   personDetailsSchema,
   pixelToGame,
@@ -4639,6 +4961,7 @@ function timeZones() {
   questionSchema,
   radioRoleSyncAction,
   rangeSchema,
+  rankRows,
   rankSchema,
   ratingLabel,
   ratingTone,
@@ -4671,6 +4994,7 @@ function timeZones() {
   ticketRef,
   ticketWeekKey,
   timeZones,
+  toCsv,
   toDiscordPayload,
   toPartialEmoji,
   triggerMatches,
@@ -4685,5 +5009,6 @@ function timeZones() {
   weekStartOf,
   weekTotals,
   weekdayHour,
-  withHrDefaults
+  withHrDefaults,
+  zonedTime
 });

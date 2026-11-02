@@ -9,15 +9,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HrRequestsService = void 0;
+exports.HrRequestsService = exports.HR_REQUEST_STATUS_LABEL = void 0;
 const common_1 = require("@nestjs/common");
 const shared_1 = require("@enrp/shared");
 const permission_service_1 = require("../authz/permission.service");
 const errors_1 = require("../common/errors");
 const numbering_1 = require("../common/numbering");
 const hr_core_service_1 = require("./hr-core.service");
+const notify_service_1 = require("../notifications/notify.service");
+const node_crypto_1 = require("node:crypto");
 const P = (k) => (k === 'PROMOTION' ? 'promotion' : 'transfer');
-const OPEN = ['OPEN', 'IN_REVIEW', 'DEFERRED'];
+const OPEN = ['OPEN', 'IN_REVIEW', 'DEFERRED', 'NEEDS_INFO'];
+exports.HR_REQUEST_STATUS_LABEL = { OPEN: 'Eingereicht', IN_REVIEW: 'In Prüfung', NEEDS_INFO: 'Rückfrage erforderlich', DEFERRED: 'Zurückgestellt', APPROVED: 'Genehmigt', REJECTED: 'Abgelehnt', EXECUTED: 'Durchgeführt', CANCELLED: 'Zurückgezogen' };
 /**
  * Beförderungs- und Versetzungsanträge: Antrag → Prüfung → Genehmigungsstufen → Durchführung
  * (Rang/Abteilung, Discord-/Dashboard-Rollen, Personalakte, Historie, Audit, Benachrichtigung).
@@ -25,9 +28,11 @@ const OPEN = ['OPEN', 'IN_REVIEW', 'DEFERRED'];
 let HrRequestsService = class HrRequestsService {
     core;
     perms;
-    constructor(core, perms) {
+    notify;
+    constructor(core, perms, notify) {
         this.core = core;
         this.perms = perms;
+        this.notify = notify;
     }
     get prisma() { return this.core.prisma; }
     stagesOf(cfg, kind) { return kind === 'PROMOTION' ? cfg.promotion.stages : cfg.transfer.stages; }
@@ -102,6 +107,14 @@ let HrRequestsService = class HrRequestsService {
         }
         return { ok: true, why: null };
     }
+    /** Rückfragen stellen: wer prüfen oder entscheiden darf – nie beim eigenen Antrag. */
+    async mayQuery(userId, r) {
+        const k = P(r.kind);
+        const me = await this.prisma.personnel.findFirst({ where: { userId }, select: { id: true } });
+        if (me?.id === r.personnelId)
+            return false;
+        return (await this.perms.has(userId, r.kind === 'PROMOTION' ? 'promotion.review' : 'transfer.review')) || (await this.perms.has(userId, `${k}.approve`));
+    }
     async abilities(userId, r, cfg) {
         const k = P(r.kind), open = OPEN.includes(r.status);
         const approve = open ? await this.mayApprove(userId, r, cfg) : { ok: false, why: null };
@@ -111,11 +124,15 @@ let HrRequestsService = class HrRequestsService {
             execute: r.status === 'APPROVED' && (await this.perms.has(userId, r.kind === 'PROMOTION' ? 'promotion.execute' : 'transfer.approve')),
             edit: open && (r.requesterId === userId || (await this.perms.has(userId, r.kind === 'PROMOTION' ? 'promotion.edit' : 'transfer.approve'))),
             cancel: open && (r.requesterId === userId || (await this.perms.has(userId, `${k}.reject`))),
+            query: open && r.status !== 'NEEDS_INFO' && (await this.mayQuery(userId, r)),
         };
     }
     async create(actor, d) {
-        const cfg = await this.core.config();
         await this.perms.assert(actor.userId, `${P(d.kind)}.create`);
+        return this.createUnchecked(actor, d);
+    }
+    async createUnchecked(actor, d) {
+        const cfg = await this.core.config();
         const p = await this.prisma.personnel.findUnique({ where: { id: d.personnelId }, include: { user: { select: { displayName: true } } } });
         if (!p)
             throw new errors_1.AppError('NOT_FOUND', 'Personalakte nicht gefunden.');
@@ -193,7 +210,7 @@ let HrRequestsService = class HrRequestsService {
         const approvedCount = approvals.filter((a) => a.decision === 'APPROVE').length;
         const status = decision === 'APPROVE' ? (approvedCount >= this.needed(cfg, kind) ? 'APPROVED' : 'IN_REVIEW') : decision === 'REJECT' ? 'REJECTED' : decision === 'REVIEW' ? 'IN_REVIEW' : decision === 'DEFER' ? 'DEFERRED' : 'CANCELLED';
         const after = await this.prisma.$transaction(async (tx) => {
-            const upd = await tx.hrRequest.updateMany({ where: { id, version: r.version }, data: { approvals: approvals, status, ...(['APPROVED', 'REJECTED', 'CANCELLED'].includes(status) ? { decidedAt: new Date() } : {}), version: { increment: 1 } } });
+            const upd = await tx.hrRequest.updateMany({ where: { id, version: r.version }, data: { approvals: approvals, status, ...(decision === 'REVIEW' && !r.reviewerId ? { reviewerId: actor.userId } : {}), ...(['APPROVED', 'REJECTED', 'CANCELLED'].includes(status) ? { decidedAt: new Date() } : {}), version: { increment: 1 } } });
             if (!upd.count)
                 throw new errors_1.AppError('CONFLICT', 'Der Antrag wurde inzwischen geändert. Bitte neu laden.');
             await this.core.audit.record(actor, { action: `${P(kind)}.request.${decision.toLowerCase()}`, module: P(kind), entityType: 'HrRequest', entityId: id, before: { status: r.status }, after: { status, stage: stage?.name ?? null }, reason: comment }, tx);
@@ -202,6 +219,7 @@ let HrRequestsService = class HrRequestsService {
         const to = kind === 'PROMOTION' ? (await this.prisma.hrRank.findUnique({ where: { id: r.toValue } }))?.name ?? r.toValue : r.toValue;
         if (status === 'APPROVED') {
             await this.core.notify(kind === 'PROMOTION' ? 'promotion.approved' : 'transfer.approved', { memberUserId: kind === 'TRANSFER' ? r.personnel.userId : null, title: `${kind === 'PROMOTION' ? 'Beförderung' : 'Versetzung'} genehmigt: ${r.personnel.user.displayName} → ${to}`, entityType: 'HrRequest', entityId: id, dmText: kind === 'TRANSFER' ? `Deine Versetzung nach **${to}** wurde genehmigt.` : undefined });
+            await this.notify.emit('hr.request.decided', [r.personnel.userId], { title: `✅ ${kind === 'PROMOTION' ? 'Beförderungsantrag' : 'Versetzungsantrag'} ${r.number} genehmigt`, link: `/my-requests?id=${id}`, entityType: 'HrRequest', entityId: id, dedupeKey: `${id}:APPROVED`, dm: false });
             if ((kind === 'PROMOTION' && cfg.promotion.autoExecute) || (kind === 'TRANSFER' && cfg.transfer.autoExecute))
                 return this.execute(actor, id, true);
         }
@@ -280,6 +298,124 @@ let HrRequestsService = class HrRequestsService {
         }
         return this.prisma.hrRequest.findUniqueOrThrow({ where: { id } });
     }
+    // ───────────── Selbstanträge, Rückfragen, eigene Anträge ─────────────
+    /** Eigene Personalakte (Server der Anfrage). */
+    async ownPersonnel(actor) {
+        const p = await this.prisma.personnel.findFirst({ where: { userId: actor.userId, employmentStatus: { notIn: ['RESIGNED', 'TERMINATED'] } }, include: { user: { select: { displayName: true } } } });
+        if (!p)
+            throw new errors_1.AppError('NOT_FOUND', 'Für dich gibt es (auf diesem Server) keine Personalakte – bitte bei der Personalabteilung melden.');
+        return p;
+    }
+    /** Mögliche Ziele für einen eigenen Antrag: nächste Ränge mit Voraussetzungs-Prüfung, andere Abteilungen. */
+    async targets(actor) {
+        const p = await this.ownPersonnel(actor);
+        const cfg = await this.core.config();
+        const current = await this.core.rankByName(p.rank);
+        const canPromo = await this.perms.has(actor.userId, 'promotion.request'), canTransfer = await this.perms.has(actor.userId, 'transfer.request');
+        const ranks = canPromo ? await Promise.all((await this.core.nextRanks(current)).map(async (r) => ({ id: r.id, name: r.name, check: await this.core.evaluate(p.id, r) }))) : [];
+        return {
+            personnelId: p.id, rank: p.rank, department: p.team, canPromotion: canPromo, canTransfer,
+            ranks: ranks.map((r) => ({ id: r.id, name: r.name, eligible: r.check.eligible, met: r.check.met, total: r.check.total, missing: r.check.results.filter((x) => !x.met).map((x) => x.label) })),
+            departments: canTransfer ? cfg.departments.filter((d) => d.name !== p.team).map((d) => d.name) : [],
+            requireRequirements: cfg.promotion.requireRequirements,
+        };
+    }
+    /**
+     * Antrag für sich selbst (Dashboard oder Discord). Beförderung nur mit erfüllten Voraussetzungen; ausgeführt wird
+     * erst nach ausdrücklicher Genehmigung durch eine berechtigte Führungskraft (nie automatisch aus dem Antrag heraus).
+     */
+    async createSelf(actor, d) {
+        await this.perms.assert(actor.userId, `${P(d.kind)}.request`);
+        if (d.reason.trim().length < 10)
+            throw new errors_1.AppError('VALIDATION_FAILED', 'Bitte begründe den Antrag (mindestens 10 Zeichen).');
+        const p = await this.ownPersonnel(actor);
+        if (d.kind === 'PROMOTION') {
+            const target = await this.prisma.hrRank.findUnique({ where: { id: d.to } });
+            if (!target?.active)
+                throw new errors_1.AppError('VALIDATION_FAILED', 'Zielrang nicht gefunden oder inaktiv.');
+            const c = await this.core.evaluate(p.id, target);
+            if (!c.eligible)
+                throw new errors_1.AppError('CONFLICT', `Die Voraussetzungen für „${target.name}“ sind noch nicht erfüllt (${c.met}/${c.total}): ${c.results.filter((x) => !x.met).map((x) => x.label).join(', ')}`);
+        }
+        // gleiche Prüfungen wie bei Anträgen der Leitung (Ziel gültig, kein laufender Antrag …)
+        const r = await this.createUnchecked(actor, { kind: d.kind, personnelId: p.id, to: d.to, reason: d.reason, achievements: d.achievements });
+        await this.prisma.hrRequest.update({ where: { id: r.id }, data: { origin: 'SELF' } });
+        return this.prisma.hrRequest.findUniqueOrThrow({ where: { id: r.id } });
+    }
+    /** Eigene Anträge (ohne interne Notizen und ohne Namen der Genehmiger-Kommentare zu verbergen – Kommentare sind Begründungen). */
+    async mine(actor) {
+        const own = await this.prisma.personnel.findMany({ where: { userId: actor.userId }, select: { id: true } });
+        const rows = await this.prisma.hrRequest.findMany({ where: { personnelId: { in: own.map((x) => x.id) } }, orderBy: { createdAt: 'desc' }, take: 50 });
+        const ranks = await this.core.ranks();
+        const label = (k, v) => (k === 'PROMOTION' ? ranks.find((x) => x.id === v)?.name ?? v : v);
+        return rows.map((r) => ({
+            id: r.id, number: r.number, kind: r.kind, status: r.status, statusLabel: exports.HR_REQUEST_STATUS_LABEL[r.status] ?? r.status, origin: r.origin, reason: r.reason, achievements: r.achievements,
+            fromLabel: label(r.kind, r.fromValue), toLabel: label(r.kind, r.toValue), createdAt: r.createdAt, decidedAt: r.decidedAt, executedAt: r.executedAt,
+            decisions: r.approvals.filter((a) => a.decision !== 'DEFER' || !!a.comment).map((a) => ({ decision: a.decision, comment: a.comment, at: a.at, by: a.name })),
+            queries: r.queries, openQuery: r.queries.find((q) => !q.answer) ?? null,
+            canWithdraw: OPEN.includes(r.status),
+        }));
+    }
+    /** Rückfrage stellen → Status „Rückfrage erforderlich“; der Antragsteller wird benachrichtigt (DM nur mit Zustimmung). */
+    async query(actor, id, question) {
+        const r = await this.prisma.hrRequest.findUnique({ where: { id }, include: { personnel: { select: { userId: true } } } });
+        if (!r)
+            throw new errors_1.AppError('NOT_FOUND', 'Antrag nicht gefunden.');
+        await this.perms.assert(actor.userId, `${P(r.kind)}.view`);
+        if (!OPEN.includes(r.status) || r.status === 'NEEDS_INFO')
+            throw new errors_1.AppError('CONFLICT', r.status === 'NEEDS_INFO' ? 'Es wartet schon eine Rückfrage auf Antwort.' : 'Der Antrag ist abgeschlossen.');
+        if (!(await this.mayQuery(actor.userId, r)))
+            throw new errors_1.AppError('PERMISSION_DENIED', 'Rückfragen stellen darf nur, wer Anträge prüft (nie beim eigenen Antrag).');
+        const me = await this.prisma.user.findUnique({ where: { id: actor.userId }, select: { displayName: true } });
+        const q = { id: (0, node_crypto_1.randomUUID)(), askedById: actor.userId, askedByName: me?.displayName ?? '—', question: question.trim(), askedAt: new Date().toISOString(), answer: null, answeredAt: null };
+        await this.prisma.$transaction(async (tx) => {
+            const n = await tx.hrRequest.updateMany({ where: { id, version: r.version }, data: { status: 'NEEDS_INFO', queries: [...r.queries, q], ...(r.reviewerId ? {} : { reviewerId: actor.userId }), version: { increment: 1 } } });
+            if (!n.count)
+                throw new errors_1.AppError('CONFLICT', 'Der Antrag wurde inzwischen geändert. Bitte neu laden.');
+            await this.core.audit.record(actor, { action: `${P(r.kind)}.request.query`, module: P(r.kind), entityType: 'HrRequest', entityId: id, before: { status: r.status }, after: { status: 'NEEDS_INFO' } }, tx);
+        });
+        await this.notify.emit('hr.request.query', [r.personnel.userId], { title: `❓ Rückfrage zu deinem Antrag ${r.number}`, body: q.question, link: `/my-requests?id=${id}`, entityType: 'HrRequest', entityId: id, dedupeKey: q.id, dmText: `Zu deinem Antrag **${r.number}** gibt es eine Rückfrage:
+> ${q.question.slice(0, 800)}
+
+Antworten: im Dashboard oder mit \`/antrag antworten\`.` });
+        return this.get(actor, id);
+    }
+    /** Antragsteller beantwortet die offene Rückfrage → zurück „In Prüfung“; wer gefragt hat, wird benachrichtigt. */
+    async answer(actor, id, answer) {
+        const r = await this.prisma.hrRequest.findUnique({ where: { id }, include: { personnel: { select: { userId: true } } } });
+        if (!r || r.personnel.userId !== actor.userId)
+            throw new errors_1.AppError('NOT_FOUND', 'Antrag nicht gefunden.');
+        if (r.status !== 'NEEDS_INFO')
+            throw new errors_1.AppError('CONFLICT', 'Zu diesem Antrag ist keine Rückfrage offen.');
+        const qs = r.queries;
+        const open = qs.find((q) => !q.answer);
+        if (!open)
+            throw new errors_1.AppError('CONFLICT', 'Zu diesem Antrag ist keine Rückfrage offen.');
+        const next = qs.map((q) => (q.id === open.id ? { ...q, answer: answer.trim(), answeredAt: new Date().toISOString() } : q));
+        await this.prisma.$transaction(async (tx) => {
+            const n = await tx.hrRequest.updateMany({ where: { id, version: r.version, status: 'NEEDS_INFO' }, data: { status: 'IN_REVIEW', queries: next, version: { increment: 1 } } });
+            if (!n.count)
+                throw new errors_1.AppError('CONFLICT', 'Der Antrag wurde inzwischen geändert. Bitte neu laden.');
+            await this.core.audit.record(actor, { action: `${P(r.kind)}.request.answer`, module: P(r.kind), entityType: 'HrRequest', entityId: id, before: { status: 'NEEDS_INFO' }, after: { status: 'IN_REVIEW' } }, tx);
+        });
+        await this.notify.emit('hr.request.query', [open.askedById], { title: `💬 Antwort auf deine Rückfrage zu ${r.number}`, body: answer.trim(), link: `/promotions?id=${id}`, entityType: 'HrRequest', entityId: id, dedupeKey: `${open.id}:answer` });
+        return (await this.mine(actor)).find((x) => x.id === id);
+    }
+    /** Antragsteller zieht den eigenen Antrag zurück. */
+    async withdraw(actor, id) {
+        const r = await this.prisma.hrRequest.findUnique({ where: { id }, include: { personnel: { select: { userId: true } } } });
+        if (!r || (r.personnel.userId !== actor.userId && r.requesterId !== actor.userId))
+            throw new errors_1.AppError('NOT_FOUND', 'Antrag nicht gefunden.');
+        if (!OPEN.includes(r.status))
+            throw new errors_1.AppError('CONFLICT', 'Der Antrag ist schon abgeschlossen.');
+        await this.prisma.$transaction(async (tx) => {
+            const n = await tx.hrRequest.updateMany({ where: { id, status: { in: OPEN } }, data: { status: 'CANCELLED', decidedAt: new Date(), version: { increment: 1 } } });
+            if (!n.count)
+                throw new errors_1.AppError('CONFLICT', 'Der Antrag ist schon abgeschlossen.');
+            await this.core.audit.record(actor, { action: `${P(r.kind)}.request.withdraw`, module: P(r.kind), entityType: 'HrRequest', entityId: id, before: { status: r.status }, after: { status: 'CANCELLED' } }, tx);
+        });
+        return (await this.mine(actor)).find((x) => x.id === id);
+    }
     /** Kennzahlen für die Übersicht „🎖️ Beförderungen“. */
     async stats() {
         const [byStatus, recent] = await Promise.all([
@@ -292,6 +428,6 @@ let HrRequestsService = class HrRequestsService {
 exports.HrRequestsService = HrRequestsService;
 exports.HrRequestsService = HrRequestsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, permission_service_1.PermissionService, notify_service_1.NotifyService])
 ], HrRequestsService);
 //# sourceMappingURL=hr-requests.service.js.map

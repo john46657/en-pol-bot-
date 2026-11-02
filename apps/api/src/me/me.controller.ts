@@ -1,3 +1,4 @@
+import { NOTIFICATION_EVENTS } from '@enrp/shared';
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
@@ -30,6 +31,16 @@ export class MeController {
 
   @Put('preferences') @RequirePermission('dashboard.view')
   async setPreferences(@CurrentActor() a: Actor, @Body(zodBody(prefsBody)) b: z.infer<typeof prefsBody>) {
+    // Ereignis-Benachrichtigungen (DM, wichtig, Erinnerungen, stumme Ereignisse) verwaltet /notifications/preferences –
+    // hier die Serverwerte behalten, damit ein Autosave mit älterem Stand sie nicht überschreibt
+    const cur = ((await this.prisma.userSettings.findUnique({ where: { userId: a.userId! }, select: { preferences: true } }))?.preferences ?? {}) as { notifications?: Record<string, unknown> };
+    const own = cur.notifications ?? {};
+    const isEvent = (k: unknown) => typeof k === 'string' && NOTIFICATION_EVENTS.some((e) => e.key === k);
+    if (b.preferences.notifications) {
+      const legacy = (b.preferences.notifications.muted ?? []).filter((k) => !isEvent(k));
+      const events = (Array.isArray(own.muted) ? own.muted : []).filter(isEvent) as string[];
+      b.preferences.notifications = { ...b.preferences.notifications, muted: [...legacy, ...events], ...(own.dm !== undefined ? { dm: own.dm as boolean } : {}), ...(own.dmEvents ? { dmEvents: own.dmEvents as string[] } : {}), ...(own.important ? { important: own.important as string[] } : {}), ...(own.reminders !== undefined ? { reminders: own.reminders as boolean } : {}) };
+    } else if (cur.notifications) (b.preferences as Record<string, unknown>).notifications = cur.notifications;
     const value = b.preferences as Prisma.InputJsonValue;
     await this.prisma.userSettings.upsert({ where: { userId: a.userId! }, create: { userId: a.userId!, preferences: value }, update: { preferences: value } });
     return { preferences: b.preferences, savedAt: new Date() };

@@ -44,7 +44,7 @@ export class NotificationsController {
   async preferences(@CurrentUser() u: AuthUser) {
     const p = ((await this.prisma.userSettings.findUnique({ where: { userId: u.id }, select: { preferences: true } }))?.preferences as { notifications?: NotificationPrefs } | null)?.notifications ?? {};
     const linked = !!(await this.prisma.discordLink.findUnique({ where: { userId: u.id } }));
-    return { muted: p.muted ?? [], important: p.important ?? [], dm: p.dm === true, dmEvents: p.dmEvents ?? [], reminders: p.reminders !== false, discordLinked: linked };
+    return { muted: (p.muted ?? []).filter((k) => NOTIFICATION_EVENTS.some((e) => e.key === k)), important: p.important ?? [], dm: p.dm === true, dmEvents: p.dmEvents ?? [], reminders: p.reminders !== false, discordLinked: linked };
   }
   @Put('preferences')
   async savePreferences(@CurrentActor() a: Actor, @Body(zodBody(prefsBody)) b: z.infer<typeof prefsBody>) {
@@ -52,7 +52,9 @@ export class NotificationsController {
     await this.prisma.$transaction(async (tx) => {
       const cur = ((await tx.userSettings.findUnique({ where: { userId: a.userId! }, select: { preferences: true } }))?.preferences ?? {}) as Record<string, unknown>;
       const old = (cur.notifications ?? {}) as Record<string, unknown>;
-      const value = { ...cur, notifications: { ...old, ...b } } as Prisma.InputJsonValue;
+      // ältere Benachrichtigungsarten (Persönlich → Benachrichtigungen) in `muted` bleiben erhalten
+      const legacy = (Array.isArray(old.muted) ? old.muted : []).filter((k): k is string => typeof k === 'string' && !NOTIFICATION_EVENTS.some((e) => e.key === k));
+      const value = { ...cur, notifications: { ...old, ...b, muted: [...new Set([...legacy, ...b.muted])] } } as Prisma.InputJsonValue;
       await tx.userSettings.upsert({ where: { userId: a.userId! }, create: { userId: a.userId!, preferences: value }, update: { preferences: value } });
       await this.audit.record(a, { action: 'notification.preferences', module: 'notifications', entityType: 'User', entityId: a.userId!, after: { dm: b.dm, muted: b.muted.length, reminders: b.reminders } }, tx);
     });

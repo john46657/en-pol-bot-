@@ -59,8 +59,8 @@ export declare class HrTrainingSessionsService {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -95,8 +95,8 @@ export declare class HrTrainingSessionsService {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -134,8 +134,8 @@ export declare class HrTrainingSessionsService {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -170,8 +170,8 @@ export declare class HrTrainingSessionsService {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -206,8 +206,8 @@ export declare class HrTrainingSessionsService {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -270,8 +270,8 @@ export declare class HrTrainingSessionsService {
             duration: string | null;
             trainingId: string | null;
             instructorId: string | null;
-            channelId: string | null;
             startsAt: Date;
+            channelId: string | null;
             forRank: string | null;
             promoteRankId: string | null;
             maxSignups: number | null;

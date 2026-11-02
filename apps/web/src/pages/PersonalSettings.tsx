@@ -11,6 +11,7 @@ import { useStudio } from '../lib/studio';
 import { QUICK_ACTIONS } from './Dashboard';
 import { Button, Card, Input, PageHeader, Select } from '../components/ui';
 import { TwoFactorCard } from '../components/TwoFactorCard';
+import { NotificationSettings } from '../components/NotificationCenter';
 import { PasswordCard, SessionsCard } from '../components/AccountSecurity';
 
 const ACCENT_PRESETS = ['#5865F2', '#7289DA', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
@@ -105,6 +106,7 @@ export function PersonalSettings() {
           <div className="mb-2"><Toggle label="Neue Benachrichtigungen als Popup zeigen" checked={p.notifications.toasts !== false} onChange={(v) => update({ notifications: { ...p.notifications, toasts: v } })} /></div>
           <div className="grid gap-1.5 sm:grid-cols-2">{NOTIFICATION_TYPES.map(([t, l]) => <Toggle key={t} label={l} checked={!p.notifications.muted.includes(t)} onChange={(on) => update({ notifications: { ...p.notifications, muted: on ? p.notifications.muted.filter((x) => x !== t) : [...p.notifications.muted, t] } })} />)}</div>
         </Card>
+        <Card title="🔔 Benachrichtigungen nach Ereignis (alle Anwendungen)"><NotificationSettings /></Card>
         <Card title="⭐ Favoriten & Schnellzugriff">
           <p className="mb-2 text-xs text-muted">Favoriten erscheinen oben im Menü und im Favoriten-Widget (auch über ☆ im Menü).</p>
           <div className="grid gap-1.5 sm:grid-cols-2">{navItems.map((n) => <Toggle key={n.path} label={tr(n.label, p.language)} checked={p.favorites.some((x) => navFor([n], x))} onChange={(on) => update({ favorites: on ? [...p.favorites, n.path] : p.favorites.filter((x) => !navFor([n], x)) })} />)}</div>

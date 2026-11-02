@@ -16,7 +16,7 @@ const H = 3_600_000;
 const at = (h: number) => new Date(Date.now() + h * H).toISOString();
 const http = () => request(app.getHttpServer());
 const bot = (discordId: string) => ({ Authorization: `Bot ${TOKEN}`, 'X-Discord-User': discordId });
-const D1 = '300000000000000001';
+const D1 = '397310000000000001';
 
 beforeAll(async () => {
   process.env.BOT_API_TOKEN = TOKEN;
@@ -34,6 +34,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   delete process.env.BOT_API_TOKEN;
+  await prisma.systemSetting.deleteMany({ where: { key: { in: ['leave.config', 'shiftplan.config', 'notifications.rules'] } } }); // andere Testdateien erwarten die Standardwerte
   await app.close();
 });
 
