@@ -30,3 +30,4 @@ export * from './ticket-premium';
 export * from './ticket-suite';
 export * from './reminders';
 export * from './timezones';
+export * from './administration';

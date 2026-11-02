@@ -650,6 +650,7 @@ export declare const sendSchema: z.ZodObject<{
     confirm: z.ZodLiteral<true>;
 }, "strip", z.ZodTypeAny, {
     name: string;
+    channelId: string | null;
     data: {
         messages: {
             id: string;
@@ -731,7 +732,6 @@ export declare const sendSchema: z.ZodObject<{
             avatarUrl: string;
         };
     };
-    channelId: string | null;
     documentId: string | null;
     mode: "test" | "bot" | "webhook";
     webhookId: string | null;

@@ -39,14 +39,26 @@ declare const prefsBody: z.ZodObject<{
         timezone: z.ZodEffects<z.ZodOptional<z.ZodString>, string | undefined, unknown>;
         dateFormat: z.ZodOptional<z.ZodEnum<["DD.MM.YYYY", "YYYY-MM-DD", "MM/DD/YYYY"]>>;
         notifications: z.ZodOptional<z.ZodObject<{
-            muted: z.ZodArray<z.ZodString, "many">;
+            muted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
             toasts: z.ZodOptional<z.ZodBoolean>;
+            dm: z.ZodOptional<z.ZodBoolean>;
+            dmEvents: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            reminders: z.ZodOptional<z.ZodBoolean>;
+            important: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
             muted: string[];
+            reminders?: boolean | undefined;
+            dm?: boolean | undefined;
+            important?: string[] | undefined;
             toasts?: boolean | undefined;
+            dmEvents?: string[] | undefined;
         }, {
-            muted: string[];
+            reminders?: boolean | undefined;
+            dm?: boolean | undefined;
+            important?: string[] | undefined;
+            muted?: string[] | undefined;
             toasts?: boolean | undefined;
+            dmEvents?: string[] | undefined;
         }>>;
         favorites: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         quickActions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -230,11 +242,15 @@ declare const prefsBody: z.ZodObject<{
             showDuration?: boolean | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
-        theme?: "system" | "dark" | "light" | undefined;
         timezone?: string | undefined;
+        theme?: "system" | "dark" | "light" | undefined;
         notifications?: {
             muted: string[];
+            reminders?: boolean | undefined;
+            dm?: boolean | undefined;
+            important?: string[] | undefined;
             toasts?: boolean | undefined;
+            dmEvents?: string[] | undefined;
         } | undefined;
         cad?: {
             erlcServerId?: string | undefined;
@@ -308,11 +324,15 @@ declare const prefsBody: z.ZodObject<{
             } | undefined;
         } | undefined;
     }, {
-        theme?: "system" | "dark" | "light" | undefined;
         timezone?: unknown;
+        theme?: "system" | "dark" | "light" | undefined;
         notifications?: {
-            muted: string[];
+            reminders?: boolean | undefined;
+            dm?: boolean | undefined;
+            important?: string[] | undefined;
+            muted?: string[] | undefined;
             toasts?: boolean | undefined;
+            dmEvents?: string[] | undefined;
         } | undefined;
         cad?: {
             erlcServerId?: string | undefined;
@@ -388,11 +408,15 @@ declare const prefsBody: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     preferences: {
-        theme?: "system" | "dark" | "light" | undefined;
         timezone?: string | undefined;
+        theme?: "system" | "dark" | "light" | undefined;
         notifications?: {
             muted: string[];
+            reminders?: boolean | undefined;
+            dm?: boolean | undefined;
+            important?: string[] | undefined;
             toasts?: boolean | undefined;
+            dmEvents?: string[] | undefined;
         } | undefined;
         cad?: {
             erlcServerId?: string | undefined;
@@ -468,11 +492,15 @@ declare const prefsBody: z.ZodObject<{
     };
 }, {
     preferences: {
-        theme?: "system" | "dark" | "light" | undefined;
         timezone?: unknown;
+        theme?: "system" | "dark" | "light" | undefined;
         notifications?: {
-            muted: string[];
+            reminders?: boolean | undefined;
+            dm?: boolean | undefined;
+            important?: string[] | undefined;
+            muted?: string[] | undefined;
             toasts?: boolean | undefined;
+            dmEvents?: string[] | undefined;
         } | undefined;
         cad?: {
             erlcServerId?: string | undefined;
@@ -705,11 +733,15 @@ export declare class MeController {
     }>;
     setPreferences(a: Actor, b: z.infer<typeof prefsBody>): Promise<{
         preferences: {
-            theme?: "system" | "dark" | "light" | undefined;
             timezone?: string | undefined;
+            theme?: "system" | "dark" | "light" | undefined;
             notifications?: {
                 muted: string[];
+                reminders?: boolean | undefined;
+                dm?: boolean | undefined;
+                important?: string[] | undefined;
                 toasts?: boolean | undefined;
+                dmEvents?: string[] | undefined;
             } | undefined;
             cad?: {
                 erlcServerId?: string | undefined;

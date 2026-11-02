@@ -18,6 +18,7 @@ export declare class PanelsController {
             channelId: string;
             messageId: string;
         } | null;
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -32,7 +33,6 @@ export declare class PanelsController {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;
@@ -41,6 +41,7 @@ export declare class PanelsController {
         image: string;
     }[]>;
     saveStaff(a: Actor, id: string, b: StaffList): Promise<{
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -55,7 +56,6 @@ export declare class PanelsController {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;
@@ -65,6 +65,7 @@ export declare class PanelsController {
     }>;
     removeStaff(a: Actor, id: string): Promise<void>;
     dupStaff(a: Actor, id: string): Promise<{
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -79,7 +80,6 @@ export declare class PanelsController {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;
@@ -263,6 +263,7 @@ export declare class BotPanelsController {
     private readonly s;
     constructor(s: PanelsService);
     staff(): Promise<{
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -277,7 +278,6 @@ export declare class BotPanelsController {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;

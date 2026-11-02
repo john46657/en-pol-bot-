@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, type Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
 import { PermissionService } from '../authz/permission.service';
+import { NotifyService } from '../notifications/notify.service';
 /** Abmeldungen (wie bei Melonly/ERM): Freigabe-Channel, Log-Channel, Rolle „abgemeldet“. */
 export declare const leaveConfigSchema: z.ZodObject<{
     enabled: z.ZodDefault<z.ZodBoolean>;
@@ -11,10 +12,13 @@ export declare const leaveConfigSchema: z.ZodObject<{
     roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     /** Längste erlaubte Abmeldung in Tagen. */
     maxDays: z.ZodDefault<z.ZodNumber>;
+    /** Grund im Log-Kanal zeigen? Standard aus: Abwesenheitsgründe sind sensibel und gehören nicht in einen Kanal, den viele lesen. */
+    logReason: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     roleIds: string[];
     enabled: boolean;
     maxDays: number;
+    logReason: boolean;
     approvalChannelId?: string | null | undefined;
     logChannelId?: string | null | undefined;
 }, {
@@ -23,20 +27,23 @@ export declare const leaveConfigSchema: z.ZodObject<{
     approvalChannelId?: string | null | undefined;
     logChannelId?: string | null | undefined;
     maxDays?: number | undefined;
+    logReason?: boolean | undefined;
 }>;
 export type LeaveConfig = z.infer<typeof leaveConfigSchema>;
-export declare const LEAVE_STATUSES: readonly ["PENDING", "APPROVED", "DENIED", "CANCELLED", "ENDED"];
+export declare const LEAVE_STATUSES: readonly ["PENDING", "IN_REVIEW", "APPROVED", "DENIED", "CANCELLED", "ENDED"];
 export declare class LeaveService {
     private readonly prisma;
     private readonly audit;
     private readonly discord;
     private readonly perms;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, perms: PermissionService);
+    private readonly notify;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, perms: PermissionService, notify: NotifyService);
     config(): Promise<LeaveConfig>;
     saveConfig(actor: Actor, input: LeaveConfig): Promise<{
         roleIds: string[];
         enabled: boolean;
         maxDays: number;
+        logReason: boolean;
         approvalChannelId?: string | null | undefined;
         logChannelId?: string | null | undefined;
     }>;
@@ -79,6 +86,9 @@ export declare class LeaveService {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -109,6 +119,9 @@ export declare class LeaveService {
             decidedByName: string | null;
             endedAt: Date | null;
             createdAt: Date;
+            reviewerId: string | null;
+            reviewerName: string | null;
+            reviewStartedAt: Date | null;
             days: number;
             extensionMinutes: number | null;
             extensionReason: string | null;
@@ -140,11 +153,47 @@ export declare class LeaveService {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
         extensionRequestedAt: Date | null;
     }>;
+    /** „In Prüfung“ nehmen: Prüfer wird eingetragen (zuständiger Prüfer); entschieden wird danach wie gewohnt. */
+    review(actor: Actor, id: string): Promise<{
+        id: string;
+        number: string;
+        userId: string;
+        name: string;
+        discordId: string | null;
+        startsAt: Date;
+        endsAt: Date;
+        reason: string;
+        type: string | null;
+        comment: string | null;
+        status: string;
+        active: boolean;
+        guildId: string | null;
+        decidedAt: Date | null;
+        decisionReason: string | null;
+        decidedByName: string | null;
+        endedAt: Date | null;
+        createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
+        days: number;
+        extensionMinutes: number | null;
+        extensionReason: string | null;
+        extensionRequestedAt: Date | null;
+    }>;
+    /**
+     * Genehmigte Abwesenheit ↔ Schichtplan: Zuweisungen in diesem Zeitraum bleiben bestehen (nichts wird automatisch geändert),
+     * die Schichtleitung erfährt es aber sofort – ohne Grund.
+     */
+    private flagShiftConflicts;
     /** Zurückziehen (eigene) bzw. vorzeitig beenden (Leitung). Eine laufende Abmeldung endet sofort und die Rolle wird entfernt. */
     cancel(actor: Actor, id: string): Promise<{
         id: string;
@@ -165,6 +214,9 @@ export declare class LeaveService {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -197,6 +249,9 @@ export declare class LeaveService {
         decidedByName: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;
@@ -222,6 +277,9 @@ export declare class LeaveService {
         decisionReason: string | null;
         endedAt: Date | null;
         createdAt: Date;
+        reviewerId: string | null;
+        reviewerName: string | null;
+        reviewStartedAt: Date | null;
         days: number;
         extensionMinutes: number | null;
         extensionReason: string | null;

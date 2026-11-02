@@ -559,6 +559,7 @@ export declare class CadService {
             text: string;
         }[];
         notifications: {
+            link: string | null;
             id: string;
             createdAt: Date;
             type: string;
@@ -568,6 +569,9 @@ export declare class CadService {
             archivedAt: Date | null;
             entityType: string | null;
             body: string | null;
+            event: string | null;
+            important: boolean;
+            dedupeKey: string | null;
             readAt: Date | null;
         }[];
         history: never[] | {

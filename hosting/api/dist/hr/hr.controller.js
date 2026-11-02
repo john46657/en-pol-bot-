@@ -252,6 +252,9 @@ const reqQ = zod_1.z.object({ kind: kind.optional(), status: zod_1.z.string().ma
 const createR = zod_1.z.object({ kind, personnelId: uuid, to: zod_1.z.string().min(1).max(64), reason: zod_1.z.string().trim().max(2000).default(''), achievements: zod_1.z.string().max(4000).optional(), internalNote: zod_1.z.string().max(2000).optional(), attachments: zod_1.z.array(uuid).max(10).optional() });
 const editR = zod_1.z.object({ reason: zod_1.z.string().trim().min(1).max(2000).optional(), achievements: zod_1.z.string().max(4000).nullable().optional(), internalNote: zod_1.z.string().max(2000).nullable().optional(), attachments: zod_1.z.array(uuid).max(10).optional(), version: zod_1.z.number().int().optional() });
 const decide = zod_1.z.object({ decision: zod_1.z.enum(['APPROVE', 'REJECT', 'REVIEW', 'DEFER', 'CANCEL']), comment: zod_1.z.string().max(1000).optional() });
+const selfR = zod_1.z.object({ kind, to: zod_1.z.string().min(1).max(64), reason: zod_1.z.string().trim().min(10).max(2000), achievements: zod_1.z.string().trim().max(4000).optional() });
+const queryR = zod_1.z.object({ question: zod_1.z.string().trim().min(5).max(1000) });
+const answerR = zod_1.z.object({ answer: zod_1.z.string().trim().min(2).max(2000) });
 let HrRequestsController = class HrRequestsController {
     s;
     constructor(s) {
@@ -260,10 +263,20 @@ let HrRequestsController = class HrRequestsController {
     /** Liste braucht promotion.view ODER transfer.view – geprüft je Art */
     list(a, q) { return this.s.list(a, q); }
     stats() { return this.s.stats(); }
+    /** Eigene Anträge (Beamte, Dashboard „Meine Anträge“ und Discord /antrag status) – nur die eigenen, daher nur Grundrecht */
+    mine(a) { return this.s.mine(a); }
+    /** Mögliche Ziele für einen eigenen Antrag (Ränge mit Voraussetzungen, Abteilungen); Recht wird je Art im Service geprüft */
+    targets(a) { return this.s.targets(a); }
+    /** Eigener Antrag: promotion.request bzw. transfer.request (geprüft im Service je Art) */
+    createSelf(a, b) { return this.s.createSelf(a, b); }
     get(a, id) { return this.s.get(a, id); }
     create(a, b) { return this.s.create(a, b); }
     edit(a, id, b) { return this.s.edit(a, id, b); }
     decide(a, id, b) { return this.s.decide(a, id, b.decision, b.comment); }
+    query(a, id, b) { return this.s.query(a, id, b.question); }
+    /** Antragsteller: Rückfrage beantworten / eigenen Antrag zurückziehen (nur eigene – im Service geprüft) */
+    answer(a, id, b) { return this.s.answer(a, id, b.answer); }
+    withdraw(a, id) { return this.s.withdraw(a, id); }
     execute(a, id) { return this.s.execute(a, id); }
 };
 exports.HrRequestsController = HrRequestsController;
@@ -283,6 +296,31 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], HrRequestsController.prototype, "stats", null);
+__decorate([
+    (0, common_1.Get)('mine'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HrRequestsController.prototype, "mine", null);
+__decorate([
+    (0, common_1.Get)('targets'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HrRequestsController.prototype, "targets", null);
+__decorate([
+    (0, common_1.Post)('self'),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(selfR))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], HrRequestsController.prototype, "createSelf", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.RequirePermission)('personnel.view'),
@@ -322,6 +360,38 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], HrRequestsController.prototype, "decide", null);
+__decorate([
+    (0, common_1.Post)(':id/query'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('personnel.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(queryR))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], HrRequestsController.prototype, "query", null);
+__decorate([
+    (0, common_1.Post)(':id/answer'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(answerR))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
+    __metadata("design:returntype", void 0)
+], HrRequestsController.prototype, "answer", null);
+__decorate([
+    (0, common_1.Post)(':id/withdraw'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrRequestsController.prototype, "withdraw", null);
 __decorate([
     (0, common_1.Post)(':id/execute'),
     (0, common_1.HttpCode)(200),

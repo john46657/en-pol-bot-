@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeController = void 0;
+const shared_1 = require("@enrp/shared");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
@@ -41,6 +42,18 @@ let MeController = class MeController {
         return { preferences: s?.preferences ?? {}, layouts: s?.layouts ?? null, updatedAt: new Date() };
     }
     async setPreferences(a, b) {
+        // Ereignis-Benachrichtigungen (DM, wichtig, Erinnerungen, stumme Ereignisse) verwaltet /notifications/preferences –
+        // hier die Serverwerte behalten, damit ein Autosave mit älterem Stand sie nicht überschreibt
+        const cur = ((await this.prisma.userSettings.findUnique({ where: { userId: a.userId }, select: { preferences: true } }))?.preferences ?? {});
+        const own = cur.notifications ?? {};
+        const isEvent = (k) => typeof k === 'string' && shared_1.NOTIFICATION_EVENTS.some((e) => e.key === k);
+        if (b.preferences.notifications) {
+            const legacy = (b.preferences.notifications.muted ?? []).filter((k) => !isEvent(k));
+            const events = (Array.isArray(own.muted) ? own.muted : []).filter(isEvent);
+            b.preferences.notifications = { ...b.preferences.notifications, muted: [...legacy, ...events], ...(own.dm !== undefined ? { dm: own.dm } : {}), ...(own.dmEvents ? { dmEvents: own.dmEvents } : {}), ...(own.important ? { important: own.important } : {}), ...(own.reminders !== undefined ? { reminders: own.reminders } : {}) };
+        }
+        else if (cur.notifications)
+            b.preferences.notifications = cur.notifications;
         const value = b.preferences;
         await this.prisma.userSettings.upsert({ where: { userId: a.userId }, create: { userId: a.userId, preferences: value }, update: { preferences: value } });
         return { preferences: b.preferences, savedAt: new Date() };

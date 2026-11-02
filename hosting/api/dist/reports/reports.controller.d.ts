@@ -27,13 +27,13 @@ declare const edit: z.ZodObject<{
     changeSummary: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     version: number;
-    changeSummary: string;
     content: Record<string, unknown>;
+    changeSummary: string;
     title?: string | undefined;
 }, {
     version: number;
-    changeSummary: string;
     content: Record<string, unknown>;
+    changeSummary: string;
     title?: string | undefined;
 }>;
 declare const reason: z.ZodObject<{
@@ -52,10 +52,10 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "REJECTED" | "APPROVED" | "SUBMITTED" | "ARCHIVED" | "DRAFT" | "UNDER_REVIEW" | undefined;
+    status?: "REJECTED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "ARCHIVED" | "UNDER_REVIEW" | undefined;
     q?: string | undefined;
 }, {
-    status?: "REJECTED" | "APPROVED" | "SUBMITTED" | "ARCHIVED" | "DRAFT" | "UNDER_REVIEW" | undefined;
+    status?: "REJECTED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "ARCHIVED" | "UNDER_REVIEW" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -90,8 +90,8 @@ export declare class ReportsController {
                 version: number;
                 authorId: string;
                 reportId: string;
-                changeSummary: string;
                 content: import("@prisma/client/runtime/library").JsonValue;
+                changeSummary: string;
                 contentHash: string;
             }[];
         } & {

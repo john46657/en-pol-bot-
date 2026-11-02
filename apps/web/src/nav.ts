@@ -1,5 +1,5 @@
 import { moduleOfPermission, OFF_MODULES } from '@enrp/shared';
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { CalendarDays, FolderOpen, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -44,6 +44,7 @@ export const NAV: NavItem[] = [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
     { path: '/promotions', label: 'Beförderungen', perm: 'promotion.view' },
+    { path: '/my-requests', label: 'Meine Anträge', perm: 'promotion.request|transfer.request' },
     { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
     { path: '/admin/personnel', label: 'Einstellungen', perm: 'personnel.view', area: 'dashboard.settings.view' },
   ]),
@@ -57,11 +58,20 @@ export const NAV: NavItem[] = [
     { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
     { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
   ]),
+  grp('Dienstplanung', CalendarDays, 'Organisation', [
+    { path: '/shiftplan', label: 'Schichtplan', perm: 'shiftplan.view' },
+    { path: '/calendar', label: 'Kalender', perm: 'calendar.view' },
+    { path: '/meetings', label: 'Besprechungen', perm: 'meetings.view' },
+  ]),
   grp('Abmeldungen', CalendarOff, 'Organisation', [
     { path: '/leave', label: 'Abmeldungen', perm: 'leave.request' },
     { path: '/admin/leave', label: 'Einstellungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
-  { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
+  grp('Statistiken', BarChart3, 'Organisation', [
+    { path: '/statistics', label: 'Statistik & Ranglisten', perm: 'dashboard.view' },
+    { path: '/analytics', label: 'Einsatz-Statistik', perm: 'analytics.view' },
+  ]),
+  { path: '/documents', label: 'Dokumente', icon: FolderOpen, perm: 'documents.view', group: 'Organisation', keywords: 'dienstanweisung regelwerk richtlinie vorlage' },
   grp('Benutzer & Rollen', Users, 'Administration', [
     { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
     { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
@@ -73,6 +83,7 @@ export const NAV: NavItem[] = [
     { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/welcome', label: 'Willkommen & Abschied', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/message-builder', label: 'Embed Builder', perm: 'messagebuilder.view' },
+    { path: '/announcements', label: 'Ankündigungen', perm: 'announce.view' },
   ]),
   grp('Protokolle', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },

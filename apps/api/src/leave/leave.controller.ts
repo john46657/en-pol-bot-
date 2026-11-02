@@ -32,6 +32,9 @@ export class LeaveController {
   /** Leitung: über eine beantragte Verlängerung entscheiden. */
   @Post(':id/extension-decision') @HttpCode(200) @RequirePermission('leave.manage')
   decideExtension(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decision)) b: z.infer<typeof decision>) { return this.s.decideExtension(a, id, b.status, b.reason); }
+  /** Leitung: Antrag „In Prüfung“ nehmen (zuständiger Prüfer). */
+  @Post(':id/review') @HttpCode(200) @RequirePermission('leave.manage')
+  review(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.review(a, id); }
   /** Eigene zurückziehen; Leitung (leave.manage) kann jede beenden. */
   @Post(':id/cancel') @HttpCode(200) @RequirePermission('leave.request')
   cancel(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.cancel(a, id); }

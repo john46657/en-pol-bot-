@@ -37,15 +37,28 @@ export declare const preferencesSchema: z.ZodObject<{
     /** Ungültige Zeitzone (alter Wert) wird verworfen statt das Speichern aller Einstellungen zu blockieren. */
     timezone: z.ZodEffects<z.ZodOptional<z.ZodString>, string | undefined, unknown>;
     dateFormat: z.ZodOptional<z.ZodEnum<["DD.MM.YYYY", "YYYY-MM-DD", "MM/DD/YYYY"]>>;
+    /** Benachrichtigungen: stumm, Toasts; DMs nur mit ausdrücklicher Zustimmung (`dm`), optional auf Ereignisse beschränkt; Erinnerungen an/aus; zusätzlich wichtige Ereignisse */
     notifications: z.ZodOptional<z.ZodObject<{
-        muted: z.ZodArray<z.ZodString, "many">;
+        muted: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         toasts: z.ZodOptional<z.ZodBoolean>;
+        dm: z.ZodOptional<z.ZodBoolean>;
+        dmEvents: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        reminders: z.ZodOptional<z.ZodBoolean>;
+        important: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         muted: string[];
+        reminders?: boolean | undefined;
+        dm?: boolean | undefined;
+        important?: string[] | undefined;
         toasts?: boolean | undefined;
+        dmEvents?: string[] | undefined;
     }, {
-        muted: string[];
+        reminders?: boolean | undefined;
+        dm?: boolean | undefined;
+        important?: string[] | undefined;
+        muted?: string[] | undefined;
         toasts?: boolean | undefined;
+        dmEvents?: string[] | undefined;
     }>>;
     favorites: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     quickActions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
@@ -232,11 +245,15 @@ export declare const preferencesSchema: z.ZodObject<{
         showDuration?: boolean | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    theme?: "system" | "dark" | "light" | undefined;
     timezone?: string | undefined;
+    theme?: "system" | "dark" | "light" | undefined;
     notifications?: {
         muted: string[];
+        reminders?: boolean | undefined;
+        dm?: boolean | undefined;
+        important?: string[] | undefined;
         toasts?: boolean | undefined;
+        dmEvents?: string[] | undefined;
     } | undefined;
     cad?: {
         erlcServerId?: string | undefined;
@@ -310,11 +327,15 @@ export declare const preferencesSchema: z.ZodObject<{
         } | undefined;
     } | undefined;
 }, {
-    theme?: "system" | "dark" | "light" | undefined;
     timezone?: unknown;
+    theme?: "system" | "dark" | "light" | undefined;
     notifications?: {
-        muted: string[];
+        reminders?: boolean | undefined;
+        dm?: boolean | undefined;
+        important?: string[] | undefined;
+        muted?: string[] | undefined;
         toasts?: boolean | undefined;
+        dmEvents?: string[] | undefined;
     } | undefined;
     cad?: {
         erlcServerId?: string | undefined;

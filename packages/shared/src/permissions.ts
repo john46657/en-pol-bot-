@@ -17,10 +17,10 @@ export const PERMISSION_CATALOG = {
   wanted: ['view', 'create', 'edit', 'activate', 'clear'],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
   personnel: ['view', 'view_sensitive', 'create', 'edit', 'delete', 'promote', 'discipline'],
-  /** Beförderungssystem */
-  promotion: ['view', 'create', 'edit', 'review', 'approve', 'reject', 'execute', 'manage_ranks', 'manage_requirements', 'view_history', 'manage_settings', 'manage'],
-  /** Versetzungen zwischen Abteilungen */
-  transfer: ['view', 'create', 'approve', 'reject'],
+  /** Beförderungssystem; `request` = für sich selbst beantragen (Discord/Dashboard), `create` = für andere */
+  promotion: ['view', 'create', 'edit', 'review', 'approve', 'reject', 'execute', 'manage_ranks', 'manage_requirements', 'view_history', 'manage_settings', 'manage', 'request'],
+  /** Versetzungen zwischen Abteilungen; `request` = eigene Versetzung beantragen, `review` = prüfen/Rückfragen stellen */
+  transfer: ['view', 'create', 'approve', 'reject', 'request', 'review'],
   /** Ausbildungen und Zertifikate */
   training: ['view', 'create', 'manage'],
   /** Prüfungen */
@@ -48,7 +48,20 @@ export const PERMISSION_CATALOG = {
   /** Tages-/Wochenberichte nach Vorlagen (Dashboard + Discord) */
   dutyreports: ['view', 'create', 'view_all', 'edit_all', 'review', 'manage'],
   communication: ['view', 'send', 'moderate'],
-  analytics: ['view'],
+  /** Statistiken: view = Übersicht, leaderboard = Ranglisten, personal_all = Statistiken aller Personen, export = CSV-Export */
+  analytics: ['view', 'leaderboard', 'personal_all', 'export'],
+  /** Schichtplanung (geplante Schichten; die Stempeluhr bleibt unter `team`): view = Plan sehen, signup = selbst an-/abmelden, manage = planen/zuweisen/veröffentlichen */
+  shiftplan: ['view', 'signup', 'manage'],
+  /** Zentraler Kalender: view = Termine sehen und teilnehmen, manage = Termine anlegen/ändern/absagen */
+  calendar: ['view', 'manage'],
+  /** Besprechungen: view = eigene/öffentliche sehen, organize = anlegen/Teilnehmer/Anwesenheit, minutes = Protokolle schreiben, view_private = private Protokolle lesen */
+  meetings: ['view', 'organize', 'minutes', 'view_private'],
+  /** Ankündigungsmanager (Discord): create = Entwürfe, publish = veröffentlichen/planen/zurückziehen, mention = Rollen erwähnen (nie @everyone) */
+  announce: ['view', 'create', 'publish', 'mention', 'manage'],
+  /** Dokumentenverwaltung: upload = hochladen/neue Version, manage = Kategorien/Zugriff/Archiv/Wiederherstellen, confidential = vertrauliche Dokumente */
+  documents: ['view', 'upload', 'manage', 'confidential'],
+  /** Zentrale Benachrichtigungen: manage = Systemmeldungen und Zustellregeln (persönliche Einstellungen braucht kein Recht) */
+  notifications: ['manage'],
   audit: ['view', 'export'],
   studio: ['view', 'manage'],
   settings: ['view', 'manage'],

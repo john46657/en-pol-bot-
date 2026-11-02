@@ -22,7 +22,7 @@ const SIGNATURES: Record<string, (b: Buffer) => boolean> = {
 };
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE: Record<string, string> = { FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Vehicle: 'vehicles.edit' };
+const WRITE: Record<string, string> = { Document: 'documents.upload', FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Vehicle: 'vehicles.edit' };
 const READ: Record<string, string> = { FleetModel: 'fleet.view', WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Vehicle: 'vehicles.view' };
 
 @Injectable()
@@ -60,6 +60,16 @@ export class MediaService {
 
   list(actor: Actor, linkedType: string, linkedId: string) {
     return this.perms.assert(actor.userId!, READ[linkedType] ?? '!none').then(() => this.prisma.media.findMany({ where: { linkedType, linkedId }, select: { id: true, originalName: true, mime: true, size: true, hash: true, createdAt: true }, orderBy: { createdAt: 'desc' } }));
+  }
+
+  /**
+   * Dokumentenverwaltung: Datei lesen, NACHDEM der Dokumenten-Service die Zugriffsgruppe geprüft hat. „Document“ steht bewusst
+   * nicht in READ – über /media/:id ist so eine Datei nie abrufbar (Zugriffsrechte ließen sich sonst umgehen).
+   */
+  async readDocumentFile(id: string) {
+    const m = await this.prisma.media.findUnique({ where: { id } });
+    if (!m || m.linkedType !== 'Document') throw new AppError('NOT_FOUND', 'Datei nicht gefunden.');
+    return { media: m, data: await readFile(path.join(this.dir, m.storageKey)) };
   }
 
   /** Für den Bot (ohne Benutzer): nur als Willkommens-Banner hochgeladene Bilder. */

@@ -8,7 +8,7 @@ import { ChannelPicker, RolePicker } from '../../components/DiscordPickers';
 import { Button, Card, ErrorState, Input, SkeletonRows } from '../../components/ui';
 import { Box, ModuleHeader } from './Shifts';
 
-export interface LeaveConfig { enabled: boolean; approvalChannelId?: string | null; logChannelId?: string | null; roleIds: string[]; maxDays: number }
+export interface LeaveConfig { enabled: boolean; approvalChannelId?: string | null; logChannelId?: string | null; roleIds: string[]; maxDays: number; logReason?: boolean }
 
 /** Admin → Leave of Absences: Freigabe-Channel, Log-Channel, Rolle „abgemeldet“ (wie bei Melonly/ERM). */
 export function LeaveSettings() {
@@ -38,6 +38,7 @@ export function LeaveSettings() {
           <Box title="Freigabe-Kanal" desc="Wähle einen Kanal für die Freigabe von Abmeldungen (Buttons Genehmigen / Ablehnen)"><ChannelPicker ariaLabel="Freigabe-Kanal" disabled={!manage} value={cfg.approvalChannelId} onChange={(id) => set({ approvalChannelId: id })} /></Box>
           <Box title="Log-Kanal" desc="Wähle einen Kanal für Abmeldungs-Logs (genehmigt, begonnen, beendet …)"><ChannelPicker ariaLabel="Log-Kanal" disabled={!manage} value={cfg.logChannelId} onChange={(id) => set({ logChannelId: id })} /></Box>
           <Box title="Abgemeldet-Rolle" desc="Wähle eine Rolle für abgemeldete Mitglieder (vom Beginn bis zum Ende)"><RolePicker ariaLabel="Abgemeldet-Rolle" disabled={!manage} value={cfg.roleIds} onChange={(ids) => set({ roleIds: ids })} /></Box>
+          <Box title="Grund im Log-Kanal" desc="Aus (empfohlen): Abwesenheitsgründe sind sensibel und bleiben im Freigabe-Kanal und im Dashboard."><label className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={!manage} checked={!!cfg.logReason} onChange={(e) => set({ logReason: e.target.checked })} />Grund auch im Log-Kanal zeigen</label></Box>
           <Box title="Maximale Dauer" desc="Längste Abmeldung, die man beantragen kann (Tage)"><Input aria-label="Maximale Dauer in Tagen" type="number" min={1} max={365} disabled={!manage} value={cfg.maxDays} onChange={(e) => set({ maxDays: Math.floor(Number(e.target.value) || 0) })} /></Box>
         </div>
         <p className="mt-3 text-xs text-muted">Mitglieder beantragen Abmeldungen mit <code>/abmeldung</code> in Discord oder unter <b>Organisation → Abmeldungen</b>. Personen mit dem Recht <code>leave.manage</code> genehmigen oder lehnen sie mit den Buttons im Freigabe-Kanal oder im Dashboard ab.</p>

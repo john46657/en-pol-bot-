@@ -698,7 +698,9 @@ export declare class SupportTicketsController {
             name: string;
             position: number;
             internalNote: string;
+            publishedAt: Date | null;
             channelId: string | null;
+            mentionRoleIds: string[];
             messageId: string | null;
             emoji: string | null;
             thumbnailUrl: string | null;
@@ -714,10 +716,8 @@ export declare class SupportTicketsController {
             allowedRoleIds: string[];
             showLoad: boolean;
             messageChannelId: string | null;
-            publishedAt: Date | null;
             publishError: string | null;
             channelNameFormat: string | null;
-            mentionRoleIds: string[];
             maxOpen: number;
             automation: import("@prisma/client/runtime/library").JsonValue;
         }[];
@@ -1188,7 +1188,9 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1204,10 +1206,8 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
@@ -1224,7 +1224,9 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1240,10 +1242,8 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
@@ -1259,7 +1259,9 @@ export declare class SupportTicketsController {
         name: string;
         position: number;
         internalNote: string;
+        publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1275,10 +1277,8 @@ export declare class SupportTicketsController {
         allowedRoleIds: string[];
         showLoad: boolean;
         messageChannelId: string | null;
-        publishedAt: Date | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
@@ -1938,9 +1938,9 @@ export declare class SupportTicketsController {
         lastActivityAt: Date;
         closedAt: Date | null;
         name: string;
-        categoryId: string;
         channelId: string | null;
         archivedAt: Date | null;
+        categoryId: string;
         answers: import("@prisma/client/runtime/library").JsonValue;
         panelId: string | null;
         controlMessageId: string | null;
@@ -2206,8 +2206,8 @@ declare const botMessage: z.ZodObject<{
         url: string;
         contentType?: string | null | undefined;
     }[];
-    channelId: string;
     content: string;
+    channelId: string;
     authorName: string;
     isBot: boolean;
     embeds: {
@@ -2218,8 +2218,8 @@ declare const botMessage: z.ZodObject<{
     authorAvatar?: string | null | undefined;
 }, {
     authorId: string;
-    channelId: string;
     content: string;
+    channelId: string;
     authorName: string;
     isBot: boolean;
     discordMessageId: string;

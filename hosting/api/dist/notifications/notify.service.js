@@ -12,9 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotifyService = void 0;
 const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
 const realtime_service_1 = require("../realtime/realtime.service");
+const web_url_1 = require("../common/web-url");
+/** Ältere Benachrichtigungsarten → Ereignis im zentralen Katalog (für Filter, MDT/Leitstelle und Einstellungen). */
+const LEGACY_EVENT = { APPLICATION: 'application.new', TICKET_CLAIMED: 'ticket.assigned' };
 /** Wie viele Empfänger höchstens je Ereignis (Schutz vor Massen-Benachrichtigungen). */
 const MAX_RECIPIENTS = 500;
 /**
@@ -35,7 +39,8 @@ let NotifyService = class NotifyService {
         if (!ids.length)
             return;
         try {
-            await this.prisma.notification.createMany({ data: ids.map((userId) => ({ userId, type: n.type, title: n.title.slice(0, 200), body: n.body?.slice(0, 1000), entityType: n.entityType, entityId: n.entityId })) });
+            const event = LEGACY_EVENT[n.type] ?? null;
+            await this.prisma.notification.createMany({ data: ids.map((userId) => ({ userId, type: n.type, event, important: !!(event && (0, shared_1.notificationEvent)(event)?.important), title: n.title.slice(0, 200), body: n.body?.slice(0, 1000), entityType: n.entityType, entityId: n.entityId })) });
             for (const id of ids)
                 this.rt.publishToUser(id, 'notification.new', { type: n.type, title: n.title.slice(0, 200) });
         }
@@ -95,6 +100,86 @@ let NotifyService = class NotifyService {
         }
         catch (e) {
             this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`);
+        }
+    }
+    /** Persönliche Benachrichtigungs-Einstellungen (UserSettings.preferences.notifications). */
+    async prefsOf(userIds) {
+        const rows = await this.prisma.userSettings.findMany({ where: { userId: { in: userIds } }, select: { userId: true, preferences: true } });
+        return new Map(rows.map((r) => [r.userId, (r.preferences?.notifications ?? {})]));
+    }
+    /** Vom Administrator abgeschaltete Ereignisse (notifications.manage). */
+    async disabledEvents() {
+        const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'notifications.rules' } }))?.value;
+        return Array.isArray(v?.disabled) ? v.disabled.filter((x) => typeof x === 'string') : [];
+    }
+    /**
+     * Zentrale Zustellung für Dashboard, MDT, Leitstelle und Discord: speichert je Empfänger (außer stummgeschaltet),
+     * meldet offene Dashboards sofort, schickt eine DM nur mit Zustimmung des Empfängers. Mit `dedupeKey` kommt dieselbe
+     * Benachrichtigung nie doppelt (auch nicht als DM) – z. B. wenn Dashboard und Discord gleichzeitig dieselbe Aktion auslösen.
+     * Fehler stören den Fachprozess nie. Liefert die Anzahl neu gespeicherter Benachrichtigungen.
+     */
+    async emit(event, userIds, n) {
+        try {
+            const def = (0, shared_1.notificationEvent)(event);
+            if (!def) {
+                this.log.warn(`unknown notification event ${event}`);
+                return 0;
+            }
+            if ((await this.disabledEvents()).includes(event))
+                return 0;
+            const ids = [...new Set(userIds.filter(Boolean))].slice(0, MAX_RECIPIENTS);
+            if (!ids.length)
+                return 0;
+            const prefs = await this.prefsOf(ids);
+            const users = await this.prisma.user.findMany({ where: { id: { in: ids }, active: true }, select: { id: true } });
+            const active = new Set(users.map((u) => u.id));
+            const created = [], dms = [];
+            for (const userId of ids) {
+                if (!active.has(userId))
+                    continue;
+                const d = (0, shared_1.deliveryFor)(event, prefs.get(userId));
+                if (!d.store && !d.dm)
+                    continue;
+                let fresh = true;
+                if (d.store) {
+                    try {
+                        await this.prisma.notification.create({ data: { userId, type: def.group.toUpperCase().slice(0, 40), event, important: d.important, title: n.title.slice(0, 200), body: n.body?.slice(0, 1000), link: n.link?.slice(0, 300), entityType: n.entityType, entityId: n.entityId, dedupeKey: n.dedupeKey ? `${event}:${n.dedupeKey}`.slice(0, 200) : null } });
+                        created.push(userId);
+                    }
+                    catch (e) {
+                        if (e instanceof client_1.Prisma.PrismaClientKnownRequestError && e.code === 'P2002')
+                            fresh = false; // schon benachrichtigt
+                        else
+                            throw e;
+                    }
+                }
+                if (d.dm && fresh && n.dm !== false)
+                    dms.push(userId);
+            }
+            for (const id of created)
+                this.rt.publishToUser(id, 'notification.new', { type: event, title: n.title.slice(0, 200), important: !!def.important });
+            if (dms.length) {
+                const links = await this.prisma.discordLink.findMany({ where: { userId: { in: dms } }, select: { discordId: true } });
+                const text = (n.dmText ?? n.title).slice(0, 3500);
+                const url = n.link ? (0, web_url_1.webUrl)(n.link) : null;
+                if (links.length)
+                    await this.prisma.discordOutbox.createMany({ data: links.map((l) => ({ type: 'bot.dm', channelKey: 'duty', payload: { discordId: l.discordId, message: { embeds: [{ title: def.label.slice(0, 256), description: `${text}${url ? `\n\n[Im Dashboard öffnen](${url})` : ''}`, color: def.important ? 0xf59e0b : 0x3b82f6, footer: 'Benachrichtigung · Einstellungen im Dashboard unter Persönlich' }] } } })) });
+            }
+            return created.length;
+        }
+        catch (e) {
+            this.log.warn(`notification ${event} failed: ${e instanceof Error ? e.message : e}`);
+            return 0;
+        }
+    }
+    /** Wie `emit`, an alle mit einem Recht (im Server der Anfrage). */
+    async emitPermission(event, permission, n, opts = {}) {
+        try {
+            return await this.emit(event, await this.usersWith(permission, opts), n);
+        }
+        catch (e) {
+            this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`);
+            return 0;
         }
     }
 };

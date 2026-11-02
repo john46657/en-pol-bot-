@@ -39,7 +39,7 @@ export declare class HrCoreService {
             announceChannelId: string | null;
             announceTemplate: string;
             announceColor: string;
-            statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
                 label: string;
                 emoji: string;
             }>>;
@@ -67,6 +67,12 @@ export declare class HrCoreService {
             public: boolean;
             discordRoleId: string | null;
         }[];
+        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
+            dashboard: boolean;
+            dm: boolean;
+            roleIds: string[];
+            channelId: string | null;
+        }>>;
         sections: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
             visible: boolean;
             sensitive: boolean;
@@ -110,12 +116,6 @@ export declare class HrCoreService {
         addedDefaults: string[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
-        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
-            dashboard: boolean;
-            dm: boolean;
-            roleIds: string[];
-            channelId: string | null;
-        }>>;
         certificate: {
             organisation: string;
             logo: string;
