@@ -162,7 +162,7 @@ export declare class HrController {
             announceChannelId: string | null;
             announceTemplate: string;
             announceColor: string;
-            statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
                 label: string;
                 emoji: string;
             }>>;
@@ -190,6 +190,12 @@ export declare class HrController {
             public: boolean;
             discordRoleId: string | null;
         }[];
+        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
+            dashboard: boolean;
+            dm: boolean;
+            roleIds: string[];
+            channelId: string | null;
+        }>>;
         sections: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
             visible: boolean;
             sensitive: boolean;
@@ -233,12 +239,6 @@ export declare class HrController {
         addedDefaults: string[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
-        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
-            dashboard: boolean;
-            dm: boolean;
-            roleIds: string[];
-            channelId: string | null;
-        }>>;
         certificate: {
             organisation: string;
             logo: string;
@@ -275,7 +275,7 @@ export declare class HrController {
             announceChannelId: string | null;
             announceTemplate: string;
             announceColor: string;
-            statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "DEFERRED" | "EXECUTED", {
+            statusLabels: Partial<Record<"CANCELLED" | "APPROVED" | "REJECTED" | "OPEN" | "IN_REVIEW" | "NEEDS_INFO" | "DEFERRED" | "EXECUTED", {
                 label: string;
                 emoji: string;
             }>>;
@@ -303,6 +303,12 @@ export declare class HrController {
             public: boolean;
             discordRoleId: string | null;
         }[];
+        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
+            dashboard: boolean;
+            dm: boolean;
+            roleIds: string[];
+            channelId: string | null;
+        }>>;
         sections: Partial<Record<"history" | "awards" | "rank" | "overview" | "promotions" | "trainings" | "exams" | "warnings" | "absences" | "transfers" | "servicenumbers" | "notes", {
             visible: boolean;
             sensitive: boolean;
@@ -346,12 +352,6 @@ export declare class HrController {
         addedDefaults: string[];
         warningCategories: string[];
         showAbsenceInTeam: boolean;
-        notifications: Partial<Record<"promotion.requested" | "promotion.approved" | "promotion.rejected" | "promotion.executed" | "transfer.requested" | "transfer.approved" | "transfer.rejected" | "warning.created" | "award.granted" | "training.passed" | "exam.passed" | "exam.submitted", {
-            dashboard: boolean;
-            dm: boolean;
-            roleIds: string[];
-            channelId: string | null;
-        }>>;
         certificate: {
             organisation: string;
             logo: string;
@@ -497,6 +497,9 @@ export declare class HrController {
             reason: string;
             kind: string;
             personnelId: string;
+            queries: import("@prisma/client/runtime/library").JsonValue;
+            reviewerId: string | null;
+            origin: string;
             fromValue: string | null;
             toValue: string;
             achievements: string | null;
@@ -912,6 +915,36 @@ declare const decide: z.ZodObject<{
     decision: "REVIEW" | "APPROVE" | "REJECT" | "DEFER" | "CANCEL";
     comment?: string | undefined;
 }>;
+declare const selfR: z.ZodObject<{
+    kind: z.ZodEnum<["PROMOTION", "TRANSFER"]>;
+    to: z.ZodString;
+    reason: z.ZodString;
+    achievements: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    reason: string;
+    kind: "PROMOTION" | "TRANSFER";
+    to: string;
+    achievements?: string | undefined;
+}, {
+    reason: string;
+    kind: "PROMOTION" | "TRANSFER";
+    to: string;
+    achievements?: string | undefined;
+}>;
+declare const queryR: z.ZodObject<{
+    question: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    question: string;
+}, {
+    question: string;
+}>;
+declare const answerR: z.ZodObject<{
+    answer: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    answer: string;
+}, {
+    answer: string;
+}>;
 export declare class HrRequestsController {
     private readonly s;
     constructor(s: HrRequestsService);
@@ -940,6 +973,9 @@ export declare class HrRequestsController {
         reason: string;
         kind: string;
         personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
@@ -963,6 +999,75 @@ export declare class HrRequestsController {
             summary: string;
             at: Date;
         }[];
+    }>;
+    /** Eigene Anträge (Beamte, Dashboard „Meine Anträge“ und Discord /antrag status) – nur die eigenen, daher nur Grundrecht */
+    mine(a: Actor): Promise<{
+        id: string;
+        number: string;
+        kind: string;
+        status: string;
+        statusLabel: string;
+        origin: string;
+        reason: string;
+        achievements: string | null;
+        fromLabel: string | null;
+        toLabel: string | null;
+        createdAt: Date;
+        decidedAt: Date | null;
+        executedAt: Date | null;
+        decisions: {
+            decision: "REVIEW" | "APPROVE" | "REJECT" | "DEFER";
+            comment: string | null;
+            at: string;
+            by: string;
+        }[];
+        queries: import("./hr-requests.service").Query[];
+        openQuery: import("./hr-requests.service").Query | null;
+        canWithdraw: boolean;
+    }[]>;
+    /** Mögliche Ziele für einen eigenen Antrag (Ränge mit Voraussetzungen, Abteilungen); Recht wird je Art im Service geprüft */
+    targets(a: Actor): Promise<{
+        personnelId: string;
+        rank: string | null;
+        department: string | null;
+        canPromotion: boolean;
+        canTransfer: boolean;
+        ranks: {
+            id: string;
+            name: string;
+            eligible: boolean;
+            met: number;
+            total: number;
+            missing: string[];
+        }[];
+        departments: string[];
+        requireRequirements: boolean;
+    }>;
+    /** Eigener Antrag: promotion.request bzw. transfer.request (geprüft im Service je Art) */
+    createSelf(a: Actor, b: z.infer<typeof selfR>): Promise<{
+        number: string;
+        serverId: string | null;
+        id: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        reason: string;
+        kind: string;
+        personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
+        fromValue: string | null;
+        toValue: string;
+        achievements: string | null;
+        internalNote: string | null;
+        attachments: string[];
+        requesterId: string;
+        approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
+        executedById: string | null;
+        executedAt: Date | null;
     }>;
     get(a: Actor, id: string): Promise<{
         internalNote: string | null;
@@ -989,6 +1094,7 @@ export declare class HrRequestsController {
             execute: boolean;
             edit: boolean;
             cancel: boolean;
+            query: boolean;
         };
         personnel: {
             user: {
@@ -1009,6 +1115,9 @@ export declare class HrRequestsController {
         reason: string;
         kind: string;
         personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
@@ -1030,6 +1139,9 @@ export declare class HrRequestsController {
         reason: string;
         kind: string;
         personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
@@ -1052,6 +1164,9 @@ export declare class HrRequestsController {
         reason: string;
         kind: string;
         personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
@@ -1074,6 +1189,9 @@ export declare class HrRequestsController {
         reason: string;
         kind: string;
         personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
@@ -1085,6 +1203,114 @@ export declare class HrRequestsController {
         executedById: string | null;
         executedAt: Date | null;
     }>;
+    query(a: Actor, id: string, b: z.infer<typeof queryR>): Promise<{
+        internalNote: string | null;
+        requesterName: string;
+        fromLabel: string | null;
+        toLabel: string;
+        check: import("@enrp/shared").PromotionCheck | null;
+        stages: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        }[];
+        needed: number;
+        next: {
+            roleIds: string[];
+            id: string;
+            name: string;
+        } | null;
+        can: {
+            approve: boolean;
+            approveWhy: string | null;
+            reject: boolean;
+            review: boolean;
+            execute: boolean;
+            edit: boolean;
+            cancel: boolean;
+            query: boolean;
+        };
+        personnel: {
+            user: {
+                displayName: string;
+            };
+            id: string;
+            userId: string;
+            team: string | null;
+            rank: string | null;
+        };
+        number: string;
+        serverId: string | null;
+        id: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        version: number;
+        reason: string;
+        kind: string;
+        personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
+        fromValue: string | null;
+        toValue: string;
+        achievements: string | null;
+        attachments: string[];
+        requesterId: string;
+        approvals: import("@prisma/client/runtime/library").JsonValue;
+        decidedAt: Date | null;
+        executedById: string | null;
+        executedAt: Date | null;
+    }>;
+    /** Antragsteller: Rückfrage beantworten / eigenen Antrag zurückziehen (nur eigene – im Service geprüft) */
+    answer(a: Actor, id: string, b: z.infer<typeof answerR>): Promise<{
+        id: string;
+        number: string;
+        kind: string;
+        status: string;
+        statusLabel: string;
+        origin: string;
+        reason: string;
+        achievements: string | null;
+        fromLabel: string | null;
+        toLabel: string | null;
+        createdAt: Date;
+        decidedAt: Date | null;
+        executedAt: Date | null;
+        decisions: {
+            decision: "REVIEW" | "APPROVE" | "REJECT" | "DEFER";
+            comment: string | null;
+            at: string;
+            by: string;
+        }[];
+        queries: import("./hr-requests.service").Query[];
+        openQuery: import("./hr-requests.service").Query | null;
+        canWithdraw: boolean;
+    } | undefined>;
+    withdraw(a: Actor, id: string): Promise<{
+        id: string;
+        number: string;
+        kind: string;
+        status: string;
+        statusLabel: string;
+        origin: string;
+        reason: string;
+        achievements: string | null;
+        fromLabel: string | null;
+        toLabel: string | null;
+        createdAt: Date;
+        decidedAt: Date | null;
+        executedAt: Date | null;
+        decisions: {
+            decision: "REVIEW" | "APPROVE" | "REJECT" | "DEFER";
+            comment: string | null;
+            at: string;
+            by: string;
+        }[];
+        queries: import("./hr-requests.service").Query[];
+        openQuery: import("./hr-requests.service").Query | null;
+        canWithdraw: boolean;
+    } | undefined>;
     execute(a: Actor, id: string): Promise<{
         number: string;
         serverId: string | null;
@@ -1096,6 +1322,9 @@ export declare class HrRequestsController {
         reason: string;
         kind: string;
         personnelId: string;
+        queries: import("@prisma/client/runtime/library").JsonValue;
+        reviewerId: string | null;
+        origin: string;
         fromValue: string | null;
         toValue: string;
         achievements: string | null;
@@ -2473,8 +2702,8 @@ export declare class HrTrainingSessionsController {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2509,8 +2738,8 @@ export declare class HrTrainingSessionsController {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2545,8 +2774,8 @@ export declare class HrTrainingSessionsController {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2581,8 +2810,8 @@ export declare class HrTrainingSessionsController {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2619,8 +2848,8 @@ export declare class HrTrainingSessionsController {
         duration: string | null;
         trainingId: string | null;
         instructorId: string | null;
-        channelId: string | null;
         startsAt: Date;
+        channelId: string | null;
         forRank: string | null;
         promoteRankId: string | null;
         maxSignups: number | null;
@@ -2656,8 +2885,8 @@ export declare class HrTrainingSessionsController {
             duration: string | null;
             trainingId: string | null;
             instructorId: string | null;
-            channelId: string | null;
             startsAt: Date;
+            channelId: string | null;
             forRank: string | null;
             promoteRankId: string | null;
             maxSignups: number | null;

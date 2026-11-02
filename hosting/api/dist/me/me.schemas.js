@@ -29,7 +29,11 @@ exports.preferencesSchema = zod_1.z.object({
     /** Ungültige Zeitzone (alter Wert) wird verworfen statt das Speichern aller Einstellungen zu blockieren. */
     timezone: zod_1.z.preprocess((v) => ((0, shared_1.isTimeZone)(v) ? v : undefined), zod_1.z.string().max(64).optional()),
     dateFormat: zod_1.z.enum(['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']).optional(),
-    notifications: zod_1.z.object({ muted: zod_1.z.array(zod_1.z.string().max(40)).max(50), toasts: zod_1.z.boolean().optional() }).optional(),
+    /** Benachrichtigungen: stumm, Toasts; DMs nur mit ausdrücklicher Zustimmung (`dm`), optional auf Ereignisse beschränkt; Erinnerungen an/aus; zusätzlich wichtige Ereignisse */
+    notifications: zod_1.z.object({
+        muted: zod_1.z.array(zod_1.z.string().max(40)).max(60).default([]), toasts: zod_1.z.boolean().optional(),
+        dm: zod_1.z.boolean().optional(), dmEvents: zod_1.z.array(zod_1.z.string().max(40)).max(60).optional(), reminders: zod_1.z.boolean().optional(), important: zod_1.z.array(zod_1.z.string().max(40)).max(60).optional(),
+    }).optional(),
     favorites: zod_1.z.array(path).max(30).optional(),
     quickActions: zod_1.z.array(zod_1.z.string().max(40)).max(20).optional(),
     /** Zeilen pro Tabellenseite (große Seiten werden virtualisiert dargestellt). */

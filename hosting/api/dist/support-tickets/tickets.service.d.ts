@@ -1112,6 +1112,7 @@ export declare class SupportTicketsService {
         internalNote: string;
         publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1129,7 +1130,6 @@ export declare class SupportTicketsService {
         messageChannelId: string | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: Prisma.JsonValue;
     }>;

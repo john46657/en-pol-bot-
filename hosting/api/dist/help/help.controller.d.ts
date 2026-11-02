@@ -9,13 +9,13 @@ declare const listQ: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["DRAFT", "PUBLISHED", "ARCHIVED"]>>;
     page: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    status?: "ARCHIVED" | "PUBLISHED" | "DRAFT" | undefined;
+    status?: "DRAFT" | "PUBLISHED" | "ARCHIVED" | undefined;
     kind?: "GUIDE" | "ARTICLE" | "FAQ" | undefined;
     categoryId?: string | undefined;
     page?: number | undefined;
     q?: string | undefined;
 }, {
-    status?: "ARCHIVED" | "PUBLISHED" | "DRAFT" | undefined;
+    status?: "DRAFT" | "PUBLISHED" | "ARCHIVED" | undefined;
     kind?: "GUIDE" | "ARTICLE" | "FAQ" | undefined;
     categoryId?: string | undefined;
     page?: number | undefined;

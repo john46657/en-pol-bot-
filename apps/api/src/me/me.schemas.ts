@@ -28,7 +28,11 @@ export const preferencesSchema = z.object({
   /** Ungültige Zeitzone (alter Wert) wird verworfen statt das Speichern aller Einstellungen zu blockieren. */
   timezone: z.preprocess((v) => (isTimeZone(v) ? v : undefined), z.string().max(64).optional()),
   dateFormat: z.enum(['DD.MM.YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']).optional(),
-  notifications: z.object({ muted: z.array(z.string().max(40)).max(50), toasts: z.boolean().optional() }).optional(),
+  /** Benachrichtigungen: stumm, Toasts; DMs nur mit ausdrücklicher Zustimmung (`dm`), optional auf Ereignisse beschränkt; Erinnerungen an/aus; zusätzlich wichtige Ereignisse */
+  notifications: z.object({
+    muted: z.array(z.string().max(40)).max(60).default([]), toasts: z.boolean().optional(),
+    dm: z.boolean().optional(), dmEvents: z.array(z.string().max(40)).max(60).optional(), reminders: z.boolean().optional(), important: z.array(z.string().max(40)).max(60).optional(),
+  }).optional(),
   favorites: z.array(path).max(30).optional(),
   quickActions: z.array(z.string().max(40)).max(20).optional(),
   /** Zeilen pro Tabellenseite (große Seiten werden virtualisiert dargestellt). */

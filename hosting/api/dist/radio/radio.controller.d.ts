@@ -24,12 +24,12 @@ declare const listQ: z.ZodObject<{
     q: z.ZodOptional<z.ZodString>;
     status: z.ZodDefault<z.ZodEnum<["active", "suspended", "expired", "pending", "disabled", "revoked", "all", "open"]>>;
 }, "strip", z.ZodTypeAny, {
-    status: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked";
+    status: "active" | "disabled" | "all" | "pending" | "open" | "suspended" | "expired" | "revoked";
     page: number;
     pageSize: number;
     q?: string | undefined;
 }, {
-    status?: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked" | undefined;
+    status?: "active" | "disabled" | "all" | "pending" | "open" | "suspended" | "expired" | "revoked" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
@@ -254,14 +254,14 @@ declare const requestsB: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             color: string;
             title: string;
-            text: string;
             channelId: string | null;
+            text: string;
             buttonLabel: string;
         }, {
             color: string;
             title: string;
-            text: string;
             channelId: string | null;
+            text: string;
             buttonLabel: string;
         }>;
         form: z.ZodEffects<z.ZodEffects<z.ZodObject<{
@@ -355,8 +355,8 @@ declare const requestsB: z.ZodObject<{
         panel: {
             color: string;
             title: string;
-            text: string;
             channelId: string | null;
+            text: string;
             buttonLabel: string;
         };
         form: {
@@ -378,8 +378,8 @@ declare const requestsB: z.ZodObject<{
         panel: {
             color: string;
             title: string;
-            text: string;
             channelId: string | null;
+            text: string;
             buttonLabel: string;
         };
         form: {
@@ -404,8 +404,8 @@ declare const requestsB: z.ZodObject<{
         panel: {
             color: string;
             title: string;
-            text: string;
             channelId: string | null;
+            text: string;
             buttonLabel: string;
         };
         form: {
@@ -430,8 +430,8 @@ declare const requestsB: z.ZodObject<{
         panel: {
             color: string;
             title: string;
-            text: string;
             channelId: string | null;
+            text: string;
             buttonLabel: string;
         };
         form: {
@@ -487,9 +487,9 @@ declare const integrationB: z.ZodObject<{
 declare const exportQ: z.ZodObject<{
     status: z.ZodDefault<z.ZodEnum<["active", "suspended", "expired", "pending", "disabled", "revoked", "all", "open"]>>;
 }, "strip", z.ZodTypeAny, {
-    status: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked";
+    status: "active" | "disabled" | "all" | "pending" | "open" | "suspended" | "expired" | "revoked";
 }, {
-    status?: "active" | "all" | "pending" | "open" | "disabled" | "suspended" | "expired" | "revoked" | undefined;
+    status?: "active" | "disabled" | "all" | "pending" | "open" | "suspended" | "expired" | "revoked" | undefined;
 }>;
 declare const importB: z.ZodObject<{
     csv: z.ZodString;

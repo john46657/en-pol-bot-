@@ -20,6 +20,7 @@ export declare class PanelsService {
             channelId: string;
             messageId: string;
         } | null;
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -34,7 +35,6 @@ export declare class PanelsService {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;
@@ -43,6 +43,7 @@ export declare class PanelsService {
         image: string;
     }[]>;
     saveStaff(actor: Actor, doc: StaffList): Promise<{
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -57,7 +58,6 @@ export declare class PanelsService {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;
@@ -67,6 +67,7 @@ export declare class PanelsService {
     }>;
     removeStaff(actor: Actor, id: string): Promise<void>;
     duplicateStaff(actor: Actor, id: string): Promise<{
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -81,7 +82,6 @@ export declare class PanelsService {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;
@@ -266,6 +266,7 @@ export declare class PanelsService {
     }[]>;
     removeSubmission(actor: Actor, id: string): Promise<void>;
     botStaffLists(): Promise<{
+        mention: boolean;
         title: string;
         id: string;
         name: string;
@@ -280,7 +281,6 @@ export declare class PanelsService {
         }[];
         emptyText: string;
         dividerText: string;
-        mention: boolean;
         onlyHighest: boolean;
         bullet: string;
         footer: string;

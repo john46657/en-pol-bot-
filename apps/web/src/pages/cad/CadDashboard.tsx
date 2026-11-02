@@ -1,3 +1,4 @@
+import { DispatchPlanningPanel } from '../../components/WorkspacePanels';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -53,6 +54,7 @@ export function CadDashboard() {
       <PageHeader title="Leitstelle" subtitle="CAD-Übersicht – aktualisiert sich live"
         actions={<span className="flex items-center gap-3"><span className="inline-flex items-center gap-1.5 text-xs text-muted"><span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-success" />Stand {new Date(q.dataUpdatedAt).toLocaleTimeString('de-DE')}</span><Button variant="secondary" size="sm" onClick={() => setEditing(true)}><Settings2 size={14} /> Ansicht anpassen</Button></span>} />
       <SetupChecklist d={d} />
+      <DispatchPlanningPanel />
       {/* Lage auf einen Blick: Einsätze, Notrufe und die gewählten Kennzahlen */}
       <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Tile label="Aktive Einsätze" value={d.incidents.length} hint={d.incidents.length ? `${d.incidents.filter((i) => i.priority === cfg.priorities[0]?.key).length} mit höchster Priorität` : 'alles ruhig'} to="/cad/incidents" tone={d.incidents.length ? 'warning' : 'success'} />

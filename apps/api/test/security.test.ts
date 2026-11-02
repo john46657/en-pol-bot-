@@ -22,7 +22,7 @@ const AUTH_ONLY_ALLOWLIST = new Set([
   'LocksController.status', 'LocksController.acquire', 'LocksController.release', // Recht je Datensatzart im Service
   'AuthController.discordLink', // discordLink: verknüpft nur das eigene Konto
   'AuthController.servers', 'AuthController.discordAddServer', // eigene Server-Übersicht; „+“ nur für eigene Discord-Server mit Verwaltungsrecht (Freischaltung nur durch globale Admins)
-  'NotificationsController.list', 'NotificationsController.readAll', 'NotificationsController.read', 'NotificationsController.archive', // immer per userId gefiltert
+  'NotificationsController.list', 'NotificationsController.readAll', 'NotificationsController.read', 'NotificationsController.archive', 'NotificationsController.events', 'NotificationsController.preferences', 'NotificationsController.savePreferences', 'NotificationsController.feed', // immer per userId gefiltert (Katalog ist öffentlich für Angemeldete)
   'SearchController.search', 'StudioController.config', 'DiscordController.link', 'DiscordController.linkCode', 'DiscordController.unlinkSelf', 'AnalyticsController.overview', // pro Entität/Kennzahl geprüft
   'ExportController.export', 'MediaController.upload', 'MediaController.list', 'MediaController.download', // Service-Ebene
 ]);

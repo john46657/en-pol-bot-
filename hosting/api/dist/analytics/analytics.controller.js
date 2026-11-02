@@ -14,22 +14,36 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsController = void 0;
 const common_1 = require("@nestjs/common");
+const decorators_1 = require("../authz/decorators");
+const stats_service_1 = require("./stats.service");
 const swagger_1 = require("@nestjs/swagger");
 const zod_1 = require("zod");
 const shared_1 = require("@enrp/shared");
 const prisma_service_1 = require("../prisma/prisma.service");
 const permission_service_1 = require("../authz/permission.service");
-const decorators_1 = require("../authz/decorators");
+const decorators_2 = require("../authz/decorators");
 const zod_pipe_1 = require("../common/zod.pipe");
 const q = zod_1.z.object({ days: zod_1.z.coerce.number().int().min(1).max(366).default(30) });
 /** Jede Kennzahl wird nur ausgeliefert, wenn der Benutzer die zugehörige Fachpermission besitzt. */
 let AnalyticsController = class AnalyticsController {
     prisma;
     perms;
-    constructor(prisma, perms) {
+    stats;
+    constructor(prisma, perms, stats) {
         this.prisma = prisma;
         this.perms = perms;
+        this.stats = stats;
     }
+    // ───────────── Statistiken & Ranglisten (Verwaltung 3.0) ─────────────
+    /** Eigene Statistik (jeder Angemeldete); mit `userId` eine andere Person – nur analytics.personal_all (im Service geprüft). */
+    personal(a, q) { return this.stats.personal(a, q, q.userId); }
+    team(a, q) { return this.stats.overview(a, q); }
+    leaderboards(a, q) { return this.stats.leaderboards(a, q); }
+    async export(a, q, res) {
+        res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="statistik.csv"' }).send(`\uFEFF${await this.stats.exportCsv(a, q)}`);
+    }
+    config() { return this.stats.config(); }
+    saveConfig(a, b) { return this.stats.saveConfig(a, b); }
     async overview(u, f) {
         const ctx = await this.perms.contextFor(u.id);
         const since = new Date(Date.now() - f.days * 86_400_000);
@@ -96,9 +110,62 @@ let AnalyticsController = class AnalyticsController {
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
+    (0, common_1.Get)('personal'),
+    (0, decorators_2.RequirePermission)('dashboard.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(stats_service_1.periodQ.extend({ userId: zod_1.z.string().uuid().optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "personal", null);
+__decorate([
+    (0, common_1.Get)('team'),
+    (0, decorators_2.RequirePermission)('analytics.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(stats_service_1.periodQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "team", null);
+__decorate([
+    (0, common_1.Get)('leaderboards'),
+    (0, decorators_2.RequirePermission)('analytics.leaderboard'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(stats_service_1.periodQ))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "leaderboards", null);
+__decorate([
+    (0, common_1.Get)('export'),
+    (0, decorators_2.RequirePermission)('analytics.export'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(stats_service_1.periodQ))),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0, Object]),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "export", null);
+__decorate([
+    (0, common_1.Get)('config'),
+    (0, decorators_2.RequirePermission)('analytics.view'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "config", null);
+__decorate([
+    (0, common_1.Put)('config'),
+    (0, decorators_2.RequirePermission)('settings.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(stats_service_1.statsConfigSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, void 0]),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "saveConfig", null);
+__decorate([
     (0, common_1.Get)('overview'),
-    (0, decorators_1.RequirePermission)('analytics.view'),
-    __param(0, (0, decorators_1.CurrentUser)()),
+    (0, decorators_2.RequirePermission)('analytics.view'),
+    __param(0, (0, decorators_2.CurrentUser)()),
     __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(q))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, void 0]),
@@ -106,8 +173,8 @@ __decorate([
 ], AnalyticsController.prototype, "overview", null);
 __decorate([
     (0, common_1.Get)('trend'),
-    (0, decorators_1.RequirePermission)('analytics.view'),
-    __param(0, (0, decorators_1.CurrentUser)()),
+    (0, decorators_2.RequirePermission)('analytics.view'),
+    __param(0, (0, decorators_2.CurrentUser)()),
     __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(q))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, void 0]),
@@ -116,6 +183,6 @@ __decorate([
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('analytics'),
     (0, common_1.Controller)('analytics'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, permission_service_1.PermissionService, stats_service_1.StatsService])
 ], AnalyticsController);
 //# sourceMappingURL=analytics.controller.js.map

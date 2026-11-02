@@ -39,7 +39,7 @@ export const HR_EVENT_LABEL: Record<HrEvent, string> = {
 };
 
 export const stageSchema = z.object({ id: uuid, name: z.string().trim().min(1).max(60), roleIds: z.array(uuid).max(20).default([]) });
-export const REQUEST_STATUSES = ['OPEN', 'IN_REVIEW', 'APPROVED', 'REJECTED', 'DEFERRED', 'EXECUTED', 'CANCELLED'] as const;
+export const REQUEST_STATUSES = ['OPEN', 'IN_REVIEW', 'NEEDS_INFO', 'APPROVED', 'REJECTED', 'DEFERRED', 'EXECUTED', 'CANCELLED'] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 export const requestStatusDefSchema = z.object({ label: z.string().max(40), emoji: z.string().max(16) });
 
@@ -164,7 +164,7 @@ export function withHrDefaults(v: unknown): HrConfig {
 }
 
 export const REQUEST_STATUS_DEFAULT: Record<RequestStatus, { label: string; emoji: string }> = {
-  OPEN: { label: 'Offen', emoji: '🟡' }, IN_REVIEW: { label: 'In Prüfung', emoji: '🔵' }, APPROVED: { label: 'Genehmigt', emoji: '🟢' }, REJECTED: { label: 'Abgelehnt', emoji: '🔴' },
+  OPEN: { label: 'Offen', emoji: '🟡' }, IN_REVIEW: { label: 'In Prüfung', emoji: '🔵' }, NEEDS_INFO: { label: 'Rückfrage erforderlich', emoji: '❓' }, APPROVED: { label: 'Genehmigt', emoji: '🟢' }, REJECTED: { label: 'Abgelehnt', emoji: '🔴' },
   DEFERRED: { label: 'Zurückgestellt', emoji: '⚫' }, EXECUTED: { label: 'Durchgeführt', emoji: '🎖️' }, CANCELLED: { label: 'Abgebrochen', emoji: '✖️' },
 };
 

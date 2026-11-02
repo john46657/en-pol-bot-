@@ -700,6 +700,7 @@ export declare class SupportTicketsController {
             internalNote: string;
             publishedAt: Date | null;
             channelId: string | null;
+            mentionRoleIds: string[];
             messageId: string | null;
             emoji: string | null;
             thumbnailUrl: string | null;
@@ -717,7 +718,6 @@ export declare class SupportTicketsController {
             messageChannelId: string | null;
             publishError: string | null;
             channelNameFormat: string | null;
-            mentionRoleIds: string[];
             maxOpen: number;
             automation: import("@prisma/client/runtime/library").JsonValue;
         }[];
@@ -1190,6 +1190,7 @@ export declare class SupportTicketsController {
         internalNote: string;
         publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1207,7 +1208,6 @@ export declare class SupportTicketsController {
         messageChannelId: string | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
@@ -1226,6 +1226,7 @@ export declare class SupportTicketsController {
         internalNote: string;
         publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1243,7 +1244,6 @@ export declare class SupportTicketsController {
         messageChannelId: string | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
@@ -1261,6 +1261,7 @@ export declare class SupportTicketsController {
         internalNote: string;
         publishedAt: Date | null;
         channelId: string | null;
+        mentionRoleIds: string[];
         messageId: string | null;
         emoji: string | null;
         thumbnailUrl: string | null;
@@ -1278,7 +1279,6 @@ export declare class SupportTicketsController {
         messageChannelId: string | null;
         publishError: string | null;
         channelNameFormat: string | null;
-        mentionRoleIds: string[];
         maxOpen: number;
         automation: import("@prisma/client/runtime/library").JsonValue;
     }>;
@@ -2206,8 +2206,8 @@ declare const botMessage: z.ZodObject<{
         url: string;
         contentType?: string | null | undefined;
     }[];
-    channelId: string;
     content: string;
+    channelId: string;
     authorName: string;
     isBot: boolean;
     embeds: {
@@ -2218,8 +2218,8 @@ declare const botMessage: z.ZodObject<{
     authorAvatar?: string | null | undefined;
 }, {
     authorId: string;
-    channelId: string;
     content: string;
+    channelId: string;
     authorName: string;
     isBot: boolean;
     discordMessageId: string;

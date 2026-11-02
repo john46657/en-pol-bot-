@@ -1449,6 +1449,7 @@ export declare const updateDocSchema: z.ZodObject<{
     version: number;
     name: string;
     categoryId: string | null;
+    channelId: string | null;
     data: {
         messages: {
             id: string;
@@ -1530,7 +1531,6 @@ export declare const updateDocSchema: z.ZodObject<{
             avatarUrl: string;
         };
     };
-    channelId: string | null;
 }, {
     version: number;
     name: string;

@@ -17,6 +17,8 @@ exports.SERVER_SCOPED_MODELS = new Set([
     'SekMember', 'SekReport', 'RadioWhitelist', 'Workflow', 'Conversation',
     // Erweiterungspaket 4.0
     'PersonnelDocument', 'QualificationDefinition', 'PersonnelQualification', 'HrLearningMaterial', 'HrPracticalExam', 'OrgUnit', 'HelpCategory', 'HelpArticle',
+    // Verwaltung 3.0 (Unterlagen wie Zuweisungen, Teilnehmer, Versionen nur über ihren Elterndatensatz erreichbar)
+    'PlannedShift', 'CalendarEvent', 'Meeting', 'Announcement', 'Document',
 ]);
 /** CAD/ER:LC-Daten, die über die Discord-Server-ID (`guildId`) einem Server gehören. */
 exports.GUILD_SCOPED_MODELS = new Set(['ErlcServer', 'CadRadioMessage', 'CadHandover', 'CadIncidentStat', 'ErlcWantedHit',

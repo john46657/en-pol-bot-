@@ -1199,6 +1199,7 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     position: number;
     internalNote: string;
     channelId: string | null;
+    mentionRoleIds: string[];
     emoji: string | null;
     thumbnailUrl: string | null;
     imageUrl: string | null;
@@ -1213,7 +1214,6 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     allowedRoleIds: string[];
     showLoad: boolean;
     channelNameFormat: string | null;
-    mentionRoleIds: string[];
     maxOpen: number;
     automation: {
         autoCloseMinutes: number;
@@ -1237,6 +1237,7 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     position?: number | undefined;
     internalNote?: string | undefined;
     channelId?: string | null | undefined;
+    mentionRoleIds?: string[] | undefined;
     emoji?: string | null | undefined;
     thumbnailUrl?: string | null | undefined;
     imageUrl?: string | null | undefined;
@@ -1251,7 +1252,6 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
     channelNameFormat?: string | null | undefined;
-    mentionRoleIds?: string[] | undefined;
     maxOpen?: number | undefined;
     automation?: {
         autoCloseMinutes?: number | undefined;
@@ -1275,6 +1275,7 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     position: number;
     internalNote: string;
     channelId: string | null;
+    mentionRoleIds: string[];
     emoji: string | null;
     thumbnailUrl: string | null;
     imageUrl: string | null;
@@ -1289,7 +1290,6 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     allowedRoleIds: string[];
     showLoad: boolean;
     channelNameFormat: string | null;
-    mentionRoleIds: string[];
     maxOpen: number;
     automation: {
         autoCloseMinutes: number;
@@ -1313,6 +1313,7 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     position?: number | undefined;
     internalNote?: string | undefined;
     channelId?: string | null | undefined;
+    mentionRoleIds?: string[] | undefined;
     emoji?: string | null | undefined;
     thumbnailUrl?: string | null | undefined;
     imageUrl?: string | null | undefined;
@@ -1327,7 +1328,6 @@ export declare const panelSchema: z.ZodEffects<z.ZodObject<{
     allowedRoleIds?: string[] | undefined;
     showLoad?: boolean | undefined;
     channelNameFormat?: string | null | undefined;
-    mentionRoleIds?: string[] | undefined;
     maxOpen?: number | undefined;
     automation?: {
         autoCloseMinutes?: number | undefined;

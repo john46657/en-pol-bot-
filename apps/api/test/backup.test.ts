@@ -76,6 +76,33 @@ describe('Backups', () => {
     expect(await prisma.permission.findUnique({ where: { key: 'polls.view' } })).toBeNull();
   });
 
+  it('dashboard data: Verwaltungsmodule (Schichten, Termine, Besprechungen, Ankündigungen, Dokumente) werden gesichert und wiederhergestellt', async () => {
+    const admin = (await login(app, 'bk_admin')).agent;
+    const u = await prisma.user.findFirstOrThrow({ where: { username: 'bk_off' } });
+    const shift = await prisma.plannedShift.create({ data: { name: 'BK-Schicht', startsAt: new Date(Date.now() + 86_400_000), endsAt: new Date(Date.now() + 90_000_000), createdById: u.id, status: 'PUBLISHED', assignments: { create: { userId: u.id } } } });
+    const ev = await prisma.calendarEvent.create({ data: { title: 'BK-Termin', category: 'MEETING', startsAt: new Date(Date.now() + 86_400_000), endsAt: new Date(Date.now() + 90_000_000), organizerId: u.id, reminders: [60], participants: { create: { userId: u.id, status: 'ACCEPTED' } }, reminderLogs: { create: { startsAt: new Date(Date.now() + 86_400_000), minutesBefore: 1440 } } } });
+    const m = await prisma.meeting.create({ data: { eventId: ev.id, notes: 'BK-Protokoll', tasks: { create: { title: 'BK-Aufgabe', createdById: u.id } } } });
+    const a = await prisma.announcement.create({ data: { title: 'BK-Ankündigung', content: { title: 'BK', description: 'x' }, channelId: '430000000000000001', createdById: u.id, status: 'PUBLISHED', deliveries: { create: { kind: 'PUBLISH', stateKey: 'ann-bk' } } } });
+    const media = await prisma.media.create({ data: { originalName: 'bk.pdf', mime: 'application/pdf', size: 1, hash: 'x', storageKey: 'bk-test.pdf', uploaderId: u.id, linkedType: 'Document' } });
+    const d = await prisma.document.create({ data: { title: 'BK-Dokument', category: 'RULES', createdById: u.id, versions: { create: [{ number: 1, mediaId: media.id, createdById: u.id }, { number: 2, mediaId: media.id, createdById: u.id }] }, currentVersion: 2 } });
+    const made = await admin.post('/api/v1/backups/data');
+    expect(made.status).toBe(201);
+    // danach geändert/gelöscht → nach dem Wiederherstellen wieder alter Stand
+    await prisma.shiftAssignment.updateMany({ where: { shiftId: shift.id }, data: { status: 'WITHDRAWN' } });
+    await prisma.documentVersion.deleteMany({ where: { documentId: d.id, number: 2 } });
+    await prisma.meetingTask.deleteMany({ where: { meetingId: m.id } });
+    // Backup-Center 2.0: nach dem Backup geänderte Daten werden nur nach ausdrücklicher Bestätigung überschrieben
+    const res = await admin.post(`/api/v1/backups/data/${made.body.name}/restore`).send({ confirm: 'WIEDERHERSTELLEN', acknowledgeNewer: true });
+    expect(res.status).toBe(200);
+    expect((await prisma.shiftAssignment.findFirstOrThrow({ where: { shiftId: shift.id } })).status).toBe('ACTIVE');
+    expect(await prisma.documentVersion.count({ where: { documentId: d.id } })).toBe(2);
+    expect(await prisma.meetingTask.count({ where: { meetingId: m.id } })).toBe(1);
+    expect((await prisma.meeting.findUniqueOrThrow({ where: { id: m.id } })).notes).toBe('BK-Protokoll');
+    expect(await prisma.calendarParticipant.count({ where: { eventId: ev.id } })).toBe(1);
+    expect(await prisma.calendarReminderLog.count({ where: { eventId: ev.id } })).toBe(1);
+    expect(await prisma.announcementDelivery.count({ where: { announcementId: a.id } })).toBe(1);
+  });
+
   it('hourly data backups: last 48 hours kept in full, older ones thinned to one per day for `keep` days', () => {
     const now = new Date('2026-10-20T12:00:00Z');
     const list = Array.from({ length: 24 * 6 }, (_, i) => ({ createdAt: new Date(now.getTime() - i * 60 * 60_000).toISOString() }));

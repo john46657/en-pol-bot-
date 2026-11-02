@@ -1079,6 +1079,7 @@ export declare class CadController {
             text: string;
         }[];
         notifications: {
+            link: string | null;
             id: string;
             createdAt: Date;
             type: string;
@@ -1088,6 +1089,9 @@ export declare class CadController {
             archivedAt: Date | null;
             body: string | null;
             entityType: string | null;
+            event: string | null;
+            important: boolean;
+            dedupeKey: string | null;
             readAt: Date | null;
         }[];
         history: never[] | {

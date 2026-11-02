@@ -3,7 +3,7 @@
 Personalakte 2.0 · Ausbildungs- und Prüfungssystem 2.0 · Organigramm · Zentraler Berechtigungseditor · Backup-Center 2.0 · Support- und Hilfe-Center
 
 Das Paket **erweitert** das bestehende System. Es ersetzt keine Funktion, entfernt nichts und verändert keine vorhandenen Daten
-(Migration `20261203100000_extension_pack_4` ist rein additiv). Nicht wieder eingeführt: altes Modul „Beamtenprofile und Laufbahn“,
+(Migration `20261204100000_extension_pack_4` ist rein additiv). Nicht wieder eingeführt: altes Modul „Beamtenprofile und Laufbahn“,
 Vorgangsverwaltung, KI-Lageassistent. Es gibt keine automatischen Beförderungen, Versetzungen oder Antragsentscheidungen und keine
 vorgegebenen (erfundenen) Ränge, Abteilungen, Qualifikationen oder Ausbildungsaufgaben – alles legen berechtigte Personen an.
 
@@ -41,6 +41,7 @@ werden keine doppelten Personen angelegt (eine Akte je Benutzer und Server, Anla
   mit Akten- und Vertraulichkeitsprüfung; jeder Abruf wird protokolliert.
 - Inhalte vertraulicher Vermerke werden nicht ins Audit-Log kopiert. Die bisherige Notizen-Ansicht zeigt vertrauliche Vermerke nur mit `personnel.notes_confidential`.
 - Personalstatus-Änderungen benachrichtigen die betroffene Person privat (Dashboard, neutraler Text).
+- Abgrenzung zu „Verwaltung 3.0“ ([verwaltung.md](verwaltung.md)): dessen Modul **Dokumente** verwaltet allgemeine Unterlagen (Dienstanweisungen, Regelwerke, Vorlagen) mit Versionen; die Dokumente der Personalakte gehören zu genau einer Person und sind durch die Personalakten-Rechte geschützt.
 
 ## Ausbildungs- und Prüfungssystem 2.0
 
@@ -156,7 +157,7 @@ Lesen `help.view` (nur veröffentlichte), Bearbeiten `help.manage`. Es sind kein
 | POST | `/backups/data/:name/verify` · `/archive` · `/plan` · `/restore` | `backup.verify`/`archive`/`restore` + global |
 | GET/POST/PUT | `/help/categories[/:id]`, `/help/articles[/:idOrSlug]`, GET `/help/articles/:id/revisions` | `help.view` / `help.manage` |
 
-## Datenbank (Migration `20261203100000_extension_pack_4`)
+## Datenbank (Migration `20261204100000_extension_pack_4`)
 
 Neue Tabellen: `PersonnelRecordRevision`, `PersonnelDocument`, `QualificationDefinition`, `PersonnelQualification`, `HrLearningMaterial`,
 `HrPracticalExam`, `HrPracticalAssessment`, `OrgUnit`, `OrgAssignment`, `BackupRecord`, `HelpCategory`, `HelpArticle`, `HelpArticleRevision`.

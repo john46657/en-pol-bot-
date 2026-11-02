@@ -64,8 +64,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     title: string;
     description: string;
     name: string;
-    channelId: string | null;
     content: string;
+    channelId: string | null;
     footer: string;
     fields: {
         name: string;
@@ -95,8 +95,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    channelId?: string | null | undefined;
     content?: string | undefined;
+    channelId?: string | null | undefined;
     footer?: string | undefined;
     fields?: {
         name: string;
@@ -126,8 +126,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     title: string;
     description: string;
     name: string;
-    channelId: string | null;
     content: string;
+    channelId: string | null;
     footer: string;
     fields: {
         name: string;
@@ -157,8 +157,8 @@ export declare const embedSchema: z.ZodEffects<z.ZodObject<{
     color?: string | undefined;
     title?: string | undefined;
     description?: string | undefined;
-    channelId?: string | null | undefined;
     content?: string | undefined;
+    channelId?: string | null | undefined;
     footer?: string | undefined;
     fields?: {
         name: string;
@@ -199,8 +199,8 @@ export declare class EmbedsService {
         title: string;
         description: string;
         name: string;
-        channelId: string | null;
         content: string;
+        channelId: string | null;
         footer: string;
         fields: {
             name: string;
@@ -231,8 +231,8 @@ export declare class EmbedsService {
         title: string;
         description: string;
         name: string;
-        channelId: string | null;
         content: string;
+        channelId: string | null;
         footer: string;
         fields: {
             name: string;

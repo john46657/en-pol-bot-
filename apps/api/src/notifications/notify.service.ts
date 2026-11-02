@@ -1,10 +1,30 @@
 import { currentGuild } from '../common/guild-context';
 import { Injectable, Logger } from '@nestjs/common';
-import { can } from '@enrp/shared';
+import { Prisma } from '@prisma/client';
+import { can, deliveryFor, notificationEvent, type NotificationPrefs } from '@enrp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { webUrl } from '../common/web-url';
 
 export interface NotifyInput { type: string; title: string; body?: string; entityType?: string; entityId?: string }
+/** Ältere Benachrichtigungsarten → Ereignis im zentralen Katalog (für Filter, MDT/Leitstelle und Einstellungen). */
+const LEGACY_EVENT: Record<string, string> = { APPLICATION: 'application.new', TICKET_CLAIMED: 'ticket.assigned' };
+
+/** Benachrichtigung über den zentralen Ereigniskatalog (`NOTIFICATION_EVENTS`). */
+export interface EmitInput {
+  title: string;
+  /** Text im Dashboard. Sensible Inhalte nur hier – nie in `dmText`, wenn sie nicht in eine DM gehören. */
+  body?: string;
+  /** Relativer Link zum Datensatz, z. B. `/shiftplan?id=…` */
+  link?: string;
+  entityType?: string; entityId?: string;
+  /** Anlass – zusammen mit dem Ereignis und dem Empfänger eindeutig: dieselbe Benachrichtigung kommt nie doppelt. */
+  dedupeKey?: string;
+  /** Text der Discord-DM (nur bei Zustimmung des Empfängers). Standard: Titel + Link, ohne `body`. */
+  dmText?: string;
+  /** false: keine DM (z. B. wenn der Fachprozess schon selbst eine DM schickt) */
+  dm?: boolean;
+}
 
 /** Wie viele Empfänger höchstens je Ereignis (Schutz vor Massen-Benachrichtigungen). */
 const MAX_RECIPIENTS = 500;
@@ -23,7 +43,8 @@ export class NotifyService {
     const ids = [...new Set(userIds)].slice(0, MAX_RECIPIENTS);
     if (!ids.length) return;
     try {
-      await this.prisma.notification.createMany({ data: ids.map((userId) => ({ userId, type: n.type, title: n.title.slice(0, 200), body: n.body?.slice(0, 1000), entityType: n.entityType, entityId: n.entityId })) });
+      const event = LEGACY_EVENT[n.type] ?? null;
+      await this.prisma.notification.createMany({ data: ids.map((userId) => ({ userId, type: n.type, event, important: !!(event && notificationEvent(event)?.important), title: n.title.slice(0, 200), body: n.body?.slice(0, 1000), entityType: n.entityType, entityId: n.entityId })) });
       for (const id of ids) this.rt.publishToUser(id, 'notification.new', { type: n.type, title: n.title.slice(0, 200) });
     } catch (e) { this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`); }
   }
@@ -68,5 +89,66 @@ export class NotifyService {
 
   async notifyPermission(permission: string, n: NotifyInput, opts: { guildId?: string | null; exceptUserId?: string | null } = {}) {
     try { await this.notify(await this.usersWith(permission, opts), n); } catch (e) { this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`); }
+  }
+
+  /** Persönliche Benachrichtigungs-Einstellungen (UserSettings.preferences.notifications). */
+  async prefsOf(userIds: string[]): Promise<Map<string, NotificationPrefs>> {
+    const rows = await this.prisma.userSettings.findMany({ where: { userId: { in: userIds } }, select: { userId: true, preferences: true } });
+    return new Map(rows.map((r) => [r.userId, ((r.preferences as { notifications?: NotificationPrefs } | null)?.notifications ?? {})]));
+  }
+
+  /** Vom Administrator abgeschaltete Ereignisse (notifications.manage). */
+  async disabledEvents(): Promise<string[]> {
+    const v = (await this.prisma.systemSetting.findUnique({ where: { key: 'notifications.rules' } }))?.value as { disabled?: unknown } | null;
+    return Array.isArray(v?.disabled) ? v.disabled.filter((x): x is string => typeof x === 'string') : [];
+  }
+
+  /**
+   * Zentrale Zustellung für Dashboard, MDT, Leitstelle und Discord: speichert je Empfänger (außer stummgeschaltet),
+   * meldet offene Dashboards sofort, schickt eine DM nur mit Zustimmung des Empfängers. Mit `dedupeKey` kommt dieselbe
+   * Benachrichtigung nie doppelt (auch nicht als DM) – z. B. wenn Dashboard und Discord gleichzeitig dieselbe Aktion auslösen.
+   * Fehler stören den Fachprozess nie. Liefert die Anzahl neu gespeicherter Benachrichtigungen.
+   */
+  async emit(event: string, userIds: string[], n: EmitInput): Promise<number> {
+    try {
+      const def = notificationEvent(event);
+      if (!def) { this.log.warn(`unknown notification event ${event}`); return 0; }
+      if ((await this.disabledEvents()).includes(event)) return 0;
+      const ids = [...new Set(userIds.filter(Boolean))].slice(0, MAX_RECIPIENTS);
+      if (!ids.length) return 0;
+      const prefs = await this.prefsOf(ids);
+      const users = await this.prisma.user.findMany({ where: { id: { in: ids }, active: true }, select: { id: true } });
+      const active = new Set(users.map((u) => u.id));
+      const created: string[] = [], dms: string[] = [];
+      for (const userId of ids) {
+        if (!active.has(userId)) continue;
+        const d = deliveryFor(event, prefs.get(userId));
+        if (!d.store && !d.dm) continue;
+        let fresh = true;
+        if (d.store) {
+          try {
+            await this.prisma.notification.create({ data: { userId, type: def.group.toUpperCase().slice(0, 40), event, important: d.important, title: n.title.slice(0, 200), body: n.body?.slice(0, 1000), link: n.link?.slice(0, 300), entityType: n.entityType, entityId: n.entityId, dedupeKey: n.dedupeKey ? `${event}:${n.dedupeKey}`.slice(0, 200) : null } });
+            created.push(userId);
+          } catch (e) {
+            if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') fresh = false; // schon benachrichtigt
+            else throw e;
+          }
+        }
+        if (d.dm && fresh && n.dm !== false) dms.push(userId);
+      }
+      for (const id of created) this.rt.publishToUser(id, 'notification.new', { type: event, title: n.title.slice(0, 200), important: !!def.important });
+      if (dms.length) {
+        const links = await this.prisma.discordLink.findMany({ where: { userId: { in: dms } }, select: { discordId: true } });
+        const text = (n.dmText ?? n.title).slice(0, 3500);
+        const url = n.link ? webUrl(n.link) : null;
+        if (links.length) await this.prisma.discordOutbox.createMany({ data: links.map((l) => ({ type: 'bot.dm', channelKey: 'duty', payload: { discordId: l.discordId, message: { embeds: [{ title: def.label.slice(0, 256), description: `${text}${url ? `\n\n[Im Dashboard öffnen](${url})` : ''}`, color: def.important ? 0xf59e0b : 0x3b82f6, footer: 'Benachrichtigung · Einstellungen im Dashboard unter Persönlich' }] } } as unknown as Prisma.InputJsonValue })) });
+      }
+      return created.length;
+    } catch (e) { this.log.warn(`notification ${event} failed: ${e instanceof Error ? e.message : e}`); return 0; }
+  }
+
+  /** Wie `emit`, an alle mit einem Recht (im Server der Anfrage). */
+  async emitPermission(event: string, permission: string, n: EmitInput, opts: { guildId?: string | null; exceptUserId?: string | null } = {}) {
+    try { return await this.emit(event, await this.usersWith(permission, opts), n); } catch (e) { this.log.warn(`notification failed: ${e instanceof Error ? e.message : e}`); return 0; }
   }
 }

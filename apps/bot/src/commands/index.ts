@@ -15,6 +15,7 @@ import { EXAM_COMMANDS } from './exams';
 import { BOT_PROFILE_COMMANDS } from './bot-profile';
 import { REMINDER_COMMANDS } from './reminders';
 import { EXTENSION4_COMMANDS, helpSearch } from './extension4';
+import { ADMINISTRATION_COMMANDS } from './administration';
 import { COLORS, EmbedData, errorReply, label, listEmbed, okReply, plain, Row } from '../format';
 import type { CommandDef, Ctx } from './types';
 
@@ -80,6 +81,7 @@ export const COMMANDS: CommandDef[] = [
         { name: 'Abfragen', value: '`/team` `/personal akte` `/personal qualifikationen` `/organigramm` `/hilfe suche:` (Hilfe-Center)' },
         { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`' },
         { name: 'Erfassen', value: '`/dienstbericht` `/dienstbericht liste`' },
+        { name: 'Dienstplanung & Verwaltung', value: '`/schichtplan anzeigen|meine|uebersicht|anmelden|abmelden|melden` `/termine liste|anmelden|absagen` `/antrag befoerderung|versetzung|status|antworten|zurueckziehen` `/dokument` `/benachrichtigungen dm:`' },
         { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/funkfreigabe` `/teamliste` `/dienstpanel` `/teamchance` `/roblox`' },
         { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
         { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`' },
@@ -151,9 +153,15 @@ export const COMMANDS: CommandDef[] = [
     },
   },
   {
-    name: 'benachrichtigungen', description: 'Zeigt deine ungelesenen Benachrichtigungen',
+    name: 'benachrichtigungen', description: 'Zeigt deine ungelesenen Benachrichtigungen (optional: Discord-DMs an/aus)',
+    options: [{ name: 'dm', description: 'Benachrichtigungen zusätzlich per Direktnachricht erhalten?', type: 'boolean' }],
     async run(c) {
       try {
+        if (typeof c.opts.dm === 'boolean') {
+          const cur = await c.api.asUser<Record<string, unknown>>(c.discordId, 'GET', '/notifications/preferences');
+          await c.api.asUser(c.discordId, 'PUT', '/notifications/preferences', { muted: cur.muted ?? [], important: cur.important ?? [], dmEvents: cur.dmEvents ?? [], reminders: cur.reminders !== false, dm: c.opts.dm });
+          return okReply(c.opts.dm ? '🔔 Du bekommst Benachrichtigungen jetzt auch per DM (Schichten, Termine, Anträge …). Feineinstellung im Dashboard unter Persönlich.' : '🔕 Keine Benachrichtigungen mehr per DM. Im Dashboard bleiben sie sichtbar.');
+        }
         const r = await c.api.asUser<{ items: Row[]; unread: number }>(c.discordId, 'GET', '/notifications?filter=unread&pageSize=10');
         return { ephemeral: true, embeds: [listEmbed(`🔔 Ungelesen (${r.unread})`, r.items.map((n) => `• ${plain(n.title)}`), 'Keine ungelesenen Benachrichtigungen.')] };
       } catch (e) { return mapError(e); }
@@ -174,6 +182,7 @@ export const COMMANDS: CommandDef[] = [
   ...BOT_PROFILE_COMMANDS,
   ...REMINDER_COMMANDS,
   ...EXTENSION4_COMMANDS,
+  ...ADMINISTRATION_COMMANDS,
 ];
 
 export { mapError };

@@ -8,13 +8,13 @@ export declare const serverWeeklyResetSchema: z.ZodObject<{
 }, "strict", z.ZodTypeAny, {
     enabled: boolean;
     channelId: string | null;
-    topN: number;
     mention: boolean;
+    topN: number;
 }, {
     enabled?: boolean | undefined;
     channelId?: string | null | undefined;
-    topN?: number | undefined;
     mention?: boolean | undefined;
+    topN?: number | undefined;
 }>;
 /**
  * Einstellungen je Modul: NUR hier definierte Felder sind erlaubt (`strict`). Sie steuern Verhalten (Kanäle, Wochen-Reset …),

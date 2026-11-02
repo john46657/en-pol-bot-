@@ -66,6 +66,7 @@ exports.PER_SERVER_SETTING_KEYS = [
     'cad.config', 'mdt.config', 'fleet.config', 'welcome.config', 'voice-support.rooms', 'verify.config', 'verify.panel', 'tickets.settings', 'shifts.config',
     'logging.config', 'leave.config', 'hr.config', 'embeds.messages', 'danger.current', 'danger.config', 'dienstnummer.settings', 'academy.config', 'radio.discord',
     'messagebuilder.channels', 'auth.discord', 'org.timezone', 'org.dateFormat',
+    'shiftplan.config', 'calendar.config', 'announce.config', 'notifications.rules',
 ];
 /** Erst später je Server getrennt: bestehende Server bekommen einmalig den bisherigen gemeinsamen Wert als eigene Kopie. */
 exports.LATER_PER_SERVER_KEYS = ['auth.discord', 'org.timezone', 'org.dateFormat'];

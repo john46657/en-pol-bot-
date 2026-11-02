@@ -266,13 +266,13 @@ export declare const cadConfigSchema: z.ZodObject<{
         guildId: string;
         id: string;
         enabled: boolean;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
+        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
         channelIds: string[];
         pingRoleIds: string[];
     }, {
         guildId: string;
         id: string;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
+        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
         channelIds: string[];
         enabled?: boolean | undefined;
         pingRoleIds?: string[] | undefined;
@@ -367,7 +367,7 @@ export declare const cadConfigSchema: z.ZodObject<{
         guildId: string;
         id: string;
         enabled: boolean;
-        event: "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "announcement" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
+        event: "announcement" | "radio" | "handover" | "incident.created" | "incident.status" | "incident.assigned" | "incident.closed" | "incident.feedback" | "incident.support" | "call.received" | "wanted.hit" | "wanted.possible" | "wanted.erlc";
         channelIds: string[];
         pingRoleIds: string[];
     }[];

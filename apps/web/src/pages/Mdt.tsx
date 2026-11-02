@@ -1,3 +1,4 @@
+import { MdtDutyPanel } from '../components/WorkspacePanels';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
@@ -71,6 +72,7 @@ export function Mdt() {
         </div>
       </Card>
 
+      <MdtDutyPanel />
       <Card title="Schnellaktionen" className="mb-4">
         {quick.length === 0 ? <p className="text-sm text-muted">Für deine Rolle sind keine Anlege-Aktionen verfügbar.</p> : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

@@ -38,6 +38,8 @@ let LeaveController = class LeaveController {
     extend(a, id, b) { return this.s.extend(a, id, b.minutes, b.reason); }
     /** Leitung: über eine beantragte Verlängerung entscheiden. */
     decideExtension(a, id, b) { return this.s.decideExtension(a, id, b.status, b.reason); }
+    /** Leitung: Antrag „In Prüfung“ nehmen (zuständiger Prüfer). */
+    review(a, id) { return this.s.review(a, id); }
     /** Eigene zurückziehen; Leitung (leave.manage) kann jede beenden. */
     cancel(a, id) { return this.s.cancel(a, id); }
 };
@@ -109,6 +111,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], LeaveController.prototype, "decideExtension", null);
+__decorate([
+    (0, common_1.Post)(':id/review'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('leave.manage'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], LeaveController.prototype, "review", null);
 __decorate([
     (0, common_1.Post)(':id/cancel'),
     (0, common_1.HttpCode)(200),
