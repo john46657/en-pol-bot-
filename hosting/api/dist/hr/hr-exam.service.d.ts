@@ -3,13 +3,15 @@ import { type ExamInput } from '@enrp/shared';
 import { PermissionService } from '../authz/permission.service';
 import type { Actor } from '../audit/audit.service';
 import { HrCoreService } from './hr-core.service';
+import { QualificationRegistryService } from './qualification-registry.service';
 /** Zustand einer Prüfung für die angemeldete Person. */
 export type ExamState = 'AVAILABLE' | 'IN_PROGRESS' | 'PASSED' | 'PENDING' | 'WAITING' | 'NO_ATTEMPTS' | 'LOCKED' | 'NOT_YET' | 'CLOSED' | 'INACTIVE' | 'NO_QUESTIONS' | 'NO_PROFILE';
 /** Prüfungen: Verwaltung, Ablauf (Start → Zwischenspeichern → Abgabe), Bewertung, Annullieren und Auswertung. */
 export declare class HrExamService {
     private readonly core;
     private readonly perms;
-    constructor(core: HrCoreService, perms: PermissionService);
+    private readonly quals;
+    constructor(core: HrCoreService, perms: PermissionService, quals: QualificationRegistryService);
     private get prisma();
     private gradesAll;
     private canGrade;

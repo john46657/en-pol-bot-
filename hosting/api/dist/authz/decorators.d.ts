@@ -13,6 +13,9 @@ export declare const BotService: () => import("@nestjs/common").CustomDecorator<
 export declare const ServiceAuthorized: () => import("@nestjs/common").CustomDecorator<string>;
 /** Alle genannten Permissions werden benötigt. */
 export declare const RequirePermission: (...p: PermissionKey[]) => import("@nestjs/common").CustomDecorator<string>;
+export declare const ANY_PERMISSION_KEY = "anyPermissions";
+/** Mindestens EINE der genannten Permissions wird benötigt (z. B. `personnel.view` ODER `personnel.view_unit`; die Feinprüfung macht der Service). */
+export declare const RequireAnyPermission: (...p: PermissionKey[]) => import("@nestjs/common").CustomDecorator<string>;
 export declare const DISCORD_MANAGER_KEY = "discordManager";
 /**
  * Discord-Buttons an Bewerbungen: wer im Discord eine der eingestellten Manager-Rollen (Setup → Role Config) hat, darf die

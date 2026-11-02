@@ -1087,8 +1087,8 @@ export declare class CadController {
             userId: string;
             entityId: string | null;
             archivedAt: Date | null;
-            entityType: string | null;
             body: string | null;
+            entityType: string | null;
             event: string | null;
             important: boolean;
             dedupeKey: string | null;

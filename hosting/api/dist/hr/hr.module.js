@@ -17,16 +17,21 @@ const hr_requests_service_1 = require("./hr-requests.service");
 const hr_training_service_1 = require("./hr-training.service");
 const hr_exam_service_1 = require("./hr-exam.service");
 const service_numbers_service_1 = require("./service-numbers.service");
+const org_module_1 = require("../org/org.module");
+const hr_ext_controller_1 = require("./hr-ext.controller");
+const personnel_file_service_1 = require("./personnel-file.service");
+const qualification_registry_service_1 = require("./qualification-registry.service");
+const training_ext_service_1 = require("./training-ext.service");
 /** Personal- & Verwaltungssystem: Personalakte, Ränge/Beförderungen, Versetzungen, Ausbildungen/Prüfungen, Dienstnummern. */
 let HrModule = class HrModule {
 };
 exports.HrModule = HrModule;
 exports.HrModule = HrModule = __decorate([
     (0, common_1.Module)({
-        imports: [backup_module_1.BackupModule],
-        controllers: [hr_controller_1.HrController, hr_controller_1.HrExamController, hr_controller_1.HrRequestsController, hr_controller_1.HrTrainingController, hr_controller_1.HrTrainingSessionsController, hr_controller_1.BotTrainingSessionsController, hr_controller_1.ServiceNumbersController],
-        providers: [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService, hr_requests_service_1.HrRequestsService, hr_training_service_1.HrTrainingService, hr_exam_service_1.HrExamService, hr_training_sessions_service_1.HrTrainingSessionsService, service_numbers_service_1.ServiceNumbersService],
-        exports: [hr_core_service_1.HrCoreService, service_numbers_service_1.ServiceNumbersService],
+        imports: [backup_module_1.BackupModule, org_module_1.OrgModule],
+        controllers: [hr_controller_1.HrController, hr_controller_1.HrExamController, hr_controller_1.HrRequestsController, hr_controller_1.HrTrainingController, hr_controller_1.HrTrainingSessionsController, hr_controller_1.BotTrainingSessionsController, hr_controller_1.ServiceNumbersController, hr_ext_controller_1.PersonnelFileController, hr_ext_controller_1.QualificationRegistryController, hr_ext_controller_1.TrainingExtController],
+        providers: [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService, hr_requests_service_1.HrRequestsService, hr_training_service_1.HrTrainingService, hr_exam_service_1.HrExamService, hr_training_sessions_service_1.HrTrainingSessionsService, service_numbers_service_1.ServiceNumbersService, qualification_registry_service_1.QualificationRegistryService, personnel_file_service_1.PersonnelFileService, training_ext_service_1.TrainingExtService],
+        exports: [hr_core_service_1.HrCoreService, service_numbers_service_1.ServiceNumbersService, qualification_registry_service_1.QualificationRegistryService, personnel_file_service_1.PersonnelFileService],
     })
 ], HrModule);
 //# sourceMappingURL=hr.module.js.map

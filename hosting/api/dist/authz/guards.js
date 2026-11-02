@@ -54,6 +54,8 @@ const BOT_USER_ROUTES = [
     ['POST', new RegExp(`^/cad/calls/${UUID}/(claim|close|incident|assign)$`)], ['POST', new RegExp(`^/cad/incidents/${UUID}/(status|units)$`)],
     ['GET', /^\/duty-reports(\/templates)?$/], ['GET', new RegExp(`^/duty-reports/templates/${UUID}/prefill$`)], ['GET', /^\/duty-reports\/[A-Za-z0-9-]{1,40}$/],
     ['POST', /^\/duty-reports$/], ['PATCH', new RegExp(`^/duty-reports/${UUID}$`)], ['POST', new RegExp(`^/duty-reports/${UUID}/review$`)],
+    // Erweiterungspaket 4.0: Personal-Auskunft, Organigramm, Hilfe-Center, Qualifikationen (Rechte prüft die API)
+    ['GET', /^\/personnel-file\/lookup$/], ['GET', /^\/org\/summary$/], ['GET', /^\/help\/articles$/], ['GET', /^\/help\/articles\/[a-z0-9-]{1,80}$/], ['GET', /^\/qualification-registry\/mine$/],
     // Verwaltung 3.0: Schichtplan (ansehen, eigene Schichten, an-/abmelden, Änderung melden) – Rechte prüft die API
     ['GET', /^\/shiftplan(\/mine)?$/], ['GET', new RegExp(`^/shiftplan/${UUID}$`)], ['POST', new RegExp(`^/shiftplan/${UUID}/(signup|withdraw|report)$`)],
     ['POST', new RegExp(`^/leave/${UUID}/review$`)],
@@ -164,9 +166,23 @@ let PermissionGuard = class PermissionGuard {
         if (ctx.getType() !== 'http')
             return true;
         const required = this.reflector.getAllAndOverride(decorators_1.PERMISSION_KEY, [ctx.getHandler(), ctx.getClass()]);
+        const any = this.reflector.getAllAndOverride(decorators_1.ANY_PERMISSION_KEY, [ctx.getHandler(), ctx.getClass()]);
+        if (any?.length) {
+            const req = ctx.switchToHttp().getRequest();
+            if (!req.user)
+                throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
+            for (const p of any)
+                if ((await this.authz.authorize(req.user.id, (0, guild_context_1.currentGuild)(), p)).allowed)
+                    return required?.length ? this.checkAll(req, required, ctx) : true;
+            // keine erlaubt → wie gewohnt verweigern (inkl. Protokoll)
+            await this.authz.assert(req.user.id, (0, guild_context_1.currentGuild)(), any[0], {}, { requestId: req.requestId, ip: req.ip });
+        }
         if (!required?.length)
             return true;
         const req = ctx.switchToHttp().getRequest();
+        return this.checkAll(req, required, ctx);
+    }
+    async checkAll(req, required, ctx) {
         if (!req.user)
             throw new errors_1.AppError('UNAUTHENTICATED', 'Bitte melde dich an.');
         const manager = this.reflector.getAllAndOverride(decorators_1.DISCORD_MANAGER_KEY, [ctx.getHandler(), ctx.getClass()]);

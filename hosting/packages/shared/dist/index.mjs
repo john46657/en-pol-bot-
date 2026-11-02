@@ -16,15 +16,17 @@ var PERMISSION_CATALOG = {
   complaints: ["view", "create", "assign", "investigate", "resolve", "close"],
   wanted: ["view", "create", "edit", "activate", "clear"],
   /** view_sensitive: geschützte Daten (Verwarnungen, interne Notizen, Abwesenheitsgründe, Historie) */
-  personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline"],
+  personnel: ["view", "view_sensitive", "create", "edit", "delete", "promote", "discipline", "view_unit", "notes_view", "notes_create", "notes_confidential", "documents"],
+  /** Qualifikationsregister (Personalakte 2.0): view = ansehen, grant = vergeben/bestätigen, revoke = ruhen lassen/entziehen, manage = Katalog verwalten */
+  qualification: ["view", "grant", "revoke", "manage"],
   /** Beförderungssystem; `request` = für sich selbst beantragen (Discord/Dashboard), `create` = für andere */
   promotion: ["view", "create", "edit", "review", "approve", "reject", "execute", "manage_ranks", "manage_requirements", "view_history", "manage_settings", "manage", "request"],
   /** Versetzungen zwischen Abteilungen; `request` = eigene Versetzung beantragen, `review` = prüfen/Rückfragen stellen */
   transfer: ["view", "create", "approve", "reject", "request", "review"],
   /** Ausbildungen und Zertifikate */
-  training: ["view", "create", "manage"],
+  training: ["view", "create", "manage", "materials"],
   /** Prüfungen */
-  exam: ["view", "create", "manage", "grade"],
+  exam: ["view", "create", "manage", "grade", "conduct", "results"],
   warning: ["view", "create", "manage"],
   awards: ["view", "create", "manage"],
   /** Dienstnummern-System */
@@ -69,6 +71,12 @@ var PERMISSION_CATALOG = {
   roles: ["view", "manage"],
   /** Multi-Server: Server-Stammdaten/Mitgliedschaften (Registrierung, Deaktivierung, Archivierung nur globale Systemadministratoren) */
   servers: ["view", "manage"],
+  /** Organigramm: view = ansehen, edit = Einheiten bearbeiten/Personen zuordnen, hierarchy = Struktur (übergeordnete Einheit, Führung) ändern */
+  org: ["view", "edit", "hierarchy"],
+  /** Backup-Center: Daten-Backups enthalten alle Server – zusätzlich nur für globale Systemadministratoren. */
+  backup: ["view", "create", "download", "verify", "archive", "restore", "settings"],
+  /** Hilfe-Center (Wissensdatenbank): view = veröffentlichte Artikel lesen, manage = Artikel/Kategorien bearbeiten (auch Entwürfe) */
+  help: ["view", "manage"],
   /** Module je Server an/aus und deren Einstellungen */
   modules: ["view", "manage"],
   /**
@@ -637,13 +645,13 @@ function postalPosition(text) {
   const p = postal ? ERLC_POSTALS[postal] : void 0;
   return postal && p ? { postal, x: p[0], z: p[1] } : null;
 }
-var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z11]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z11 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
+var postalLabels = (width, height) => Object.entries(ERLC_POSTALS).map(([k, [x, z12]]) => ({ k, px: (x + ERLC_MAP_SIZE / 2) * width / ERLC_MAP_SIZE, py: (z12 + ERLC_MAP_SIZE / 2) * height / ERLC_MAP_SIZE }));
 function postalMatchRate(m, samples) {
   const labels = postalLabels(m.width, m.height);
   const known = samples.filter((s) => ERLC_POSTALS[s[2]]);
   if (!known.length) return 0;
-  const hits = known.filter(([x, z11, k]) => {
-    const px = m.originX + x * m.scale, py = m.originY + z11 * m.scale;
+  const hits = known.filter(([x, z12, k]) => {
+    const px = m.originX + x * m.scale, py = m.originY + z12 * m.scale;
     let best = labels[0], d = Infinity;
     for (const l of labels) {
       const dd2 = (l.px - px) ** 2 + (l.py - py) ** 2;
@@ -666,9 +674,9 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
     const scale = pts2.reduce((a, p) => a + (p.x - mx) * (p.lx - mlx) + (p.z - mz) * (p.ly - mly), 0) / den;
     return { scale, originX: mlx - scale * mx, originY: mly - scale * mz };
   };
-  let pts = samples.flatMap(([x, z11, k]) => {
+  let pts = samples.flatMap(([x, z12, k]) => {
     const l = labels.get(k);
-    return l && Number.isFinite(x) && Number.isFinite(z11) ? [{ x, z: z11, lx: l.px, ly: l.py, k }] : [];
+    return l && Number.isFinite(x) && Number.isFinite(z12) ? [{ x, z: z12, lx: l.px, ly: l.py, k }] : [];
   });
   const enough = (p) => p.length >= 20 && new Set(p.map((q) => q.k)).size >= 6 && Math.max(...p.map((q) => q.x)) - Math.min(...p.map((q) => q.x)) >= 1e3 && Math.max(...p.map((q) => q.z)) - Math.min(...p.map((q) => q.z)) >= 1e3;
   if (!enough(pts)) return null;
@@ -686,8 +694,8 @@ function fitPostalCalibration(samples, width = ERLC_MAP_SIZE, height = ERLC_MAP_
   const out = { scale: r(f.scale, 4), originX: r(f.originX), originY: r(f.originY) };
   return { ...out, n: pts.length, postals: new Set(pts.map((p) => p.k)).size, match: postalMatchRate({ width, height, ...out }, samples) };
 }
-var gameToPixel = (m, x, z11) => ({ px: m.originX + x * m.scale, py: m.originY + z11 * m.scale });
-var onErlcMap = (x, z11) => typeof x === "number" && typeof z11 === "number" && Number.isFinite(x) && Number.isFinite(z11) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z11) <= ERLC_MAP_SIZE / 2;
+var gameToPixel = (m, x, z12) => ({ px: m.originX + x * m.scale, py: m.originY + z12 * m.scale });
+var onErlcMap = (x, z12) => typeof x === "number" && typeof z12 === "number" && Number.isFinite(x) && Number.isFinite(z12) && Math.abs(x) <= ERLC_MAP_SIZE / 2 && Math.abs(z12) <= ERLC_MAP_SIZE / 2;
 function poiForPlace(place, pois) {
   const norm2 = (v) => v.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
   const p = place ? norm2(place) : "";
@@ -726,10 +734,10 @@ function fitExact(pairs) {
     const worst = Math.max(...from.map((f, i) => Math.abs(a * f + b - to[i])));
     return worst <= 60 && a > 0 ? { a, b } : null;
   };
-  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z11 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
-  return x && z11 ? { ax: x.a, bx: x.b, az: z11.a, bz: z11.b, n: pairs.length } : null;
+  const x = axis(pairs.map((p) => p.px), pairs.map((p) => p.cx)), z12 = axis(pairs.map((p) => p.pz), pairs.map((p) => p.cz));
+  return x && z12 ? { ax: x.a, bx: x.b, az: z12.a, bz: z12.b, n: pairs.length } : null;
 }
-var applyCallCalibration = (c, x, z11) => ({ x: c.ax * x + c.bx, z: c.az * z11 + c.bz });
+var applyCallCalibration = (c, x, z12) => ({ x: c.ax * x + c.bx, z: c.az * z12 + c.bz });
 var pixelToGame = (m, px, py) => ({ x: (px - m.originX) / m.scale, z: (py - m.originY) / m.scale });
 var ERLC_FEATURES = ["players", "staff", "queue", "vehicles", "emergencyCalls", "modCalls", "joinLogs", "killLogs", "commandLogs", "commands", "webhook"];
 var ERLC_FEATURE_LABELS = {
@@ -1544,14 +1552,15 @@ function weekTotals(sessions, from, to, now = /* @__PURE__ */ new Date()) {
 
 // src/modules.ts
 var MODULES = [
-  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "notifications"] },
+  { key: "core", name: "Grundsystem", description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server", system: true, permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "notifications", "backup", "help"] },
   { key: "cad", name: "CAD-Leitstelle", description: "Eins\xE4tze, Einheiten, Notrufe, Karte, Funk, Polizeifahrzeuge", permissionPrefixes: ["cad", "fleet"] },
   { key: "mdt", name: "MDT", description: "Personen, Fahrzeuge, Haftbefehle, Bu\xDFgelder", permissionPrefixes: ["persons", "vehicles", "wanted", "tickets"] },
   { key: "dispatch", name: "Dispatch", description: "Einsatzverwaltung und Einheiten-Board", permissionPrefixes: ["dispatch", "incidents"] },
   { key: "reports", name: "Berichte", description: "Einsatzberichte, Tages-/Wochenberichte", permissionPrefixes: ["reports", "dutyreports"] },
   { key: "shift_logs", name: "Shift Logs", description: "Dienststatus, Schichten, Dienstzeiten, Wochenranglisten", permissionPrefixes: ["team"] },
   { key: "investigations", name: "Beschwerden", description: "Beschwerden", permissionPrefixes: ["complaints"] },
-  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave"] },
+  { key: "personnel", name: "Personal", description: "Personalakte, Bef\xF6rderungen, Ausbildung, Abmeldungen, Dienstnummern", permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave", "qualification"] },
+  { key: "org", name: "Organigramm", description: "Organisationsstruktur: F\xFChrung, Abteilungen, Dienstgruppen, Zust\xE4ndigkeiten", permissionPrefixes: ["org"] },
   { key: "applications", name: "Bewerbungen", description: "Bewerbungen, Qualifikationen, Academy, Team-Chance", permissionPrefixes: ["applications", "qualifications", "academy", "teamchance"] },
   { key: "support", name: "Support-Tickets", description: "Ticket-System f\xFCr Discord", permissionPrefixes: ["ticket"] },
   { key: "sek", name: "SEK", description: "Spezialeinsatzkommando", permissionPrefixes: ["sek"] },
@@ -1590,6 +1599,8 @@ var BOT_COMMAND_MODULES = {
   team: "shift_logs",
   dienstpanel: "shift_logs",
   teamliste: "shift_logs",
+  personal: "personnel",
+  organigramm: "org",
   abmeldung: "personnel",
   leave: "personnel",
   ausbildung: "personnel",
@@ -2412,26 +2423,245 @@ function logChannelFor(cfg, module, action) {
 }
 
 // src/backup.ts
+import { z as z7 } from "zod";
+
+// src/extension4.ts
 import { z as z6 } from "zod";
+var ORG_UNIT_KINDS = ["LEADERSHIP", "DEPUTY_LEADERSHIP", "DEPARTMENT", "DUTY_GROUP", "UNIT", "OTHER"];
+var ORG_UNIT_KIND_LABEL = {
+  LEADERSHIP: "Polizeif\xFChrung",
+  DEPUTY_LEADERSHIP: "Stellvertretende F\xFChrung",
+  DEPARTMENT: "Abteilung",
+  DUTY_GROUP: "Dienstgruppe",
+  UNIT: "Einheit",
+  OTHER: "Sonstige Einheit"
+};
+var orgUnitSchema = z6.object({
+  name: z6.string().trim().min(2).max(80),
+  kind: z6.enum(ORG_UNIT_KINDS),
+  parentId: z6.string().uuid().nullable().optional(),
+  description: z6.string().max(2e3).nullable().optional(),
+  responsibilities: z6.string().max(2e3).nullable().optional(),
+  /** Verknüpfung mit einer Abteilung aus den Personal-Einstellungen: Mitglieder = Personalakten mit dieser Abteilung (keine doppelte Pflege). */
+  departmentName: z6.string().max(64).nullable().optional(),
+  leaderPersonnelId: z6.string().uuid().nullable().optional(),
+  deputyPersonnelId: z6.string().uuid().nullable().optional(),
+  color: z6.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
+  position: z6.number().int().min(0).max(1e4).optional()
+});
+function orgDescendants(nodes, id3) {
+  const children = /* @__PURE__ */ new Map();
+  for (const n of nodes) if (n.parentId) children.set(n.parentId, [...children.get(n.parentId) ?? [], n.id]);
+  const out = /* @__PURE__ */ new Set();
+  const stack = [...children.get(id3) ?? []];
+  while (stack.length) {
+    const c = stack.pop();
+    if (out.has(c)) continue;
+    out.add(c);
+    stack.push(...children.get(c) ?? []);
+  }
+  return out;
+}
+function orgWouldCycle(nodes, id3, newParentId) {
+  if (!newParentId) return false;
+  if (newParentId === id3) return true;
+  return orgDescendants(nodes, id3).has(newParentId);
+}
+function orgAncestors(nodes, id3) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const out = [];
+  let cur = byId.get(id3)?.parentId ?? null;
+  while (cur && !out.includes(cur)) {
+    out.push(cur);
+    cur = byId.get(cur)?.parentId ?? null;
+  }
+  return out;
+}
+function buildOrgTree(nodes) {
+  const map = new Map(nodes.map((n) => [n.id, { ...n, children: [] }]));
+  const roots = [];
+  for (const n of map.values()) {
+    const p = n.parentId ? map.get(n.parentId) : void 0;
+    (p ? p.children : roots).push(n);
+  }
+  const sort = (l) => {
+    l.sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || String(a.name ?? "").localeCompare(String(b.name ?? ""), "de"));
+    l.forEach((c) => sort(c.children));
+  };
+  sort(roots);
+  return roots;
+}
+var QUALIFICATION_STATUSES = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"];
+var QUALIFICATION_STATUS_LABEL = { PENDING: "Zur Best\xE4tigung", ACTIVE: "Aktiv", SUSPENDED: "Ruht", REVOKED: "Entzogen", EXPIRED: "Abgelaufen" };
+var QUALIFICATION_SOURCES = ["MANUAL", "TRAINING", "EXAM", "PRACTICAL", "LEGACY"];
+var QUALIFICATION_SOURCE_LABEL = { MANUAL: "Manuell vergeben", TRAINING: "Ausbildung", EXAM: "Theoriepr\xFCfung", PRACTICAL: "Praktische Pr\xFCfung", LEGACY: "\xDCbernommen (Altbestand)" };
+function effectiveQualificationStatus(q, now = /* @__PURE__ */ new Date()) {
+  const s = QUALIFICATION_STATUSES.includes(q.status) ? q.status : "ACTIVE";
+  if (s === "ACTIVE" && q.expiresAt && new Date(q.expiresAt).getTime() < now.getTime()) return "EXPIRED";
+  return s;
+}
+var qualificationDefSchema = z6.object({
+  name: z6.string().trim().min(2).max(80),
+  description: z6.string().max(1e3).nullable().optional(),
+  color: z6.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
+  /** in der Leitstelle/MDT zur Einsatzkoordination anzeigen */
+  operational: z6.boolean().default(true),
+  /** Gültigkeit in Tagen (leer = unbegrenzt) */
+  validDays: z6.number().int().min(1).max(3650).nullable().optional(),
+  /**
+   * Bei bestandener Ausbildung/Prüfung direkt aktiv (true) oder erst nach Bestätigung durch jemanden mit `qualification.grant` (false, Standard).
+   * Bestehen ist eine bestätigte Leistung – aber die Freigabe bleibt standardmäßig eine bewusste menschliche Entscheidung.
+   */
+  autoGrant: z6.boolean().default(false),
+  active: z6.boolean().default(true)
+});
+var practicalCriterionSchema = z6.object({
+  id: z6.string().min(1).max(40),
+  label: z6.string().trim().min(1).max(200),
+  description: z6.string().max(1e3).optional(),
+  maxPoints: z6.number().int().min(1).max(100),
+  /** Pflichtkriterium: muss mindestens `minPoints` erreichen, sonst nicht bestanden */
+  required: z6.boolean().default(false),
+  minPoints: z6.number().int().min(0).max(100).optional()
+});
+var practicalExamSchema = z6.object({
+  title: z6.string().trim().min(2).max(120),
+  description: z6.string().max(4e3).nullable().optional(),
+  /** Prüfungsaufgaben (Szenario, Ablauf) */
+  tasks: z6.string().max(8e3).nullable().optional(),
+  criteria: z6.array(practicalCriterionSchema).min(1).max(50),
+  /** Bestehensgrenze in Punkten */
+  passPoints: z6.number().int().min(0).max(5e3),
+  examinerIds: z6.array(z6.string().uuid()).max(50).default([]),
+  trainingId: z6.string().uuid().nullable().optional(),
+  qualificationDefId: z6.string().uuid().nullable().optional(),
+  active: z6.boolean().default(true)
+}).refine((e) => e.passPoints <= e.criteria.reduce((s, c) => s + c.maxPoints, 0), { message: "Die Bestehensgrenze ist h\xF6her als die erreichbare Punktzahl.", path: ["passPoints"] }).refine((e) => new Set(e.criteria.map((c) => c.id)).size === e.criteria.length, { message: "Kriterien-IDs m\xFCssen eindeutig sein.", path: ["criteria"] }).refine((e) => e.criteria.every((c) => c.minPoints === void 0 || c.minPoints <= c.maxPoints), { message: "Mindestpunkte eines Kriteriums d\xFCrfen die H\xF6chstpunkte nicht \xFCbersteigen.", path: ["criteria"] });
+function scorePractical(criteria, scores, passPoints) {
+  const missing = [];
+  const invalid = [];
+  const failedRequired = [];
+  let total = 0;
+  let max = 0;
+  for (const c of criteria) {
+    max += c.maxPoints;
+    const s = scores[c.id];
+    if (!s || typeof s.points !== "number" || Number.isNaN(s.points)) {
+      missing.push(c.id);
+      continue;
+    }
+    if (s.points < 0 || s.points > c.maxPoints || !Number.isInteger(s.points)) {
+      invalid.push(c.id);
+      continue;
+    }
+    total += s.points;
+    if (c.required && s.points < (c.minPoints ?? Math.ceil(c.maxPoints / 2))) failedRequired.push(c.id);
+  }
+  const complete = !missing.length && !invalid.length;
+  return { total, max, complete, missing, invalid, failedRequired, passed: complete && total >= passPoints && !failedRequired.length, percent: max ? Math.round(total / max * 100) : 0 };
+}
+var LEARNING_KINDS = ["TEXT", "RULES", "GUIDE", "MEDIA", "QUIZ"];
+var LEARNING_KIND_LABEL = { TEXT: "Lerninhalt", RULES: "Regelwerk", GUIDE: "Interne Anleitung", MEDIA: "Bilder & Dokumente", QUIZ: "Wissensabfrage" };
+var learningMaterialSchema = z6.object({
+  title: z6.string().trim().min(2).max(120),
+  kind: z6.enum(LEARNING_KINDS),
+  body: z6.string().max(5e4).default(""),
+  mediaIds: z6.array(z6.string().uuid()).max(20).default([]),
+  trainingIds: z6.array(z6.string().uuid()).max(50).default([]),
+  qualificationDefId: z6.string().uuid().nullable().optional(),
+  /** Wissensabfrage: verknüpfte (Theorie-)Prüfung */
+  examId: z6.string().uuid().nullable().optional(),
+  published: z6.boolean().default(false)
+});
+var PERSONNEL_NOTE_CATEGORIES = ["Allgemein", "Leistung", "Gespr\xE4ch", "Ausbildung", "Dienstbetrieb", "Sonstiges"];
+var PERSONNEL_DOCUMENT_KINDS = ["PERSONNEL", "TRAINING", "EXAM", "OTHER"];
+var PERSONNEL_DOCUMENT_KIND_LABEL = { PERSONNEL: "Personalunterlage", TRAINING: "Ausbildungsnachweis", EXAM: "Pr\xFCfungsnachweis", OTHER: "Sonstiges Dokument" };
+var HELP_ARTICLE_KINDS = ["ARTICLE", "GUIDE", "FAQ"];
+var HELP_ARTICLE_KIND_LABEL = { ARTICLE: "Artikel", GUIDE: "Anleitung", FAQ: "H\xE4ufige Frage" };
+var HELP_ARTICLE_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+var HELP_ARTICLE_STATUS_LABEL = { DRAFT: "Entwurf", PUBLISHED: "Ver\xF6ffentlicht", ARCHIVED: "Archiviert" };
+var helpCategorySchema = z6.object({ name: z6.string().trim().min(2).max(80), description: z6.string().max(500).nullable().optional(), icon: z6.string().max(8).nullable().optional(), position: z6.number().int().min(0).max(1e4).optional() });
+var helpArticleSchema = z6.object({
+  title: z6.string().trim().min(3).max(160),
+  categoryId: z6.string().uuid().nullable().optional(),
+  kind: z6.enum(HELP_ARTICLE_KINDS).default("ARTICLE"),
+  summary: z6.string().max(500).nullable().optional(),
+  body: z6.string().max(1e5).default(""),
+  mediaIds: z6.array(z6.string().uuid()).max(20).default([]),
+  tags: z6.array(z6.string().trim().min(1).max(30)).max(20).default([]),
+  status: z6.enum(HELP_ARTICLE_STATUSES).default("DRAFT"),
+  /** Änderungsgrund (Änderungsverlauf) */
+  changeNote: z6.string().max(300).optional()
+});
+function helpSlug(title) {
+  return title.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "artikel";
+}
+var BACKUP_SCOPES = ["FULL", "DATABASE", "CONFIG", "FILES", "MODULE"];
+var BACKUP_SCOPE_LABEL = { FULL: "Vollst\xE4ndig (Datenbank + Dateien)", DATABASE: "Datenbank", CONFIG: "Konfiguration", FILES: "Dateien (Uploads)", MODULE: "Modul" };
+var BACKUP_FREQUENCIES = ["off", "hourly", "daily", "weekly", "monthly"];
+var backupScheduleSchema = z6.object({
+  frequency: z6.enum(BACKUP_FREQUENCIES).default("hourly"),
+  /** Uhrzeit (UTC-Stunde) für täglich/wöchentlich/monatlich */
+  hour: z6.number().int().min(0).max(23).default(3),
+  /** 0 = Sonntag … 6 = Samstag (wöchentlich) */
+  weekday: z6.number().int().min(0).max(6).default(1),
+  /** Tag im Monat (monatlich, 1–28) */
+  monthDay: z6.number().int().min(1).max(28).default(1)
+});
+function isBackupDue(s, last, now = /* @__PURE__ */ new Date()) {
+  if (s.frequency === "off") return false;
+  const age = last ? now.getTime() - last.getTime() : Infinity;
+  if (s.frequency === "hourly") return age > 50 * 6e4;
+  const slot = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), s.hour));
+  if (s.frequency === "weekly") slot.setUTCDate(slot.getUTCDate() - (now.getUTCDay() - s.weekday + 7) % 7);
+  if (s.frequency === "monthly") slot.setUTCDate(s.monthDay);
+  if (slot.getTime() > now.getTime()) {
+    if (s.frequency === "daily") slot.setUTCDate(slot.getUTCDate() - 1);
+    else if (s.frequency === "weekly") slot.setUTCDate(slot.getUTCDate() - 7);
+    else slot.setUTCMonth(slot.getUTCMonth() - 1);
+  }
+  return !last || last.getTime() < slot.getTime();
+}
+var BACKUP_MODULE_GROUPS = [
+  { key: "settings", label: "Einstellungen & Konfiguration", tables: ["SystemSetting"] },
+  { key: "help", label: "Hilfe-Center", tables: ["HelpCategory", "HelpArticle", "HelpArticleRevision"] },
+  { key: "org", label: "Organigramm", tables: ["OrgUnit", "OrgAssignment"] },
+  { key: "learning", label: "Lernmaterialien", tables: ["HrLearningMaterial"] },
+  { key: "practical", label: "Praktische Pr\xFCfungen", tables: ["HrPracticalExam", "HrPracticalAssessment"] },
+  { key: "permissions", label: "Rollen & Rechte", tables: ["Role", "Permission", "RolePermission", "UserRole", "UserPermissionOverride", "Group", "GroupRole", "GroupMember", "DiscordRoleMapping"] },
+  { key: "personnel", label: "Personal (Personalakten, Ausbildung, Pr\xFCfungen, Qualifikationen)", tables: ["Personnel", "PersonnelRecord", "PersonnelRecordRevision", "PersonnelDocument", "PersonnelQualification", "QualificationDefinition", "HrRank", "HrRequest", "HrTraining", "HrTrainingProgress", "HrExam", "HrExamAttempt", "HrTrainingSession"] },
+  { key: "support", label: "Support-Tickets", tables: ["SupportTicket", "TicketMessage", "TicketNote", "TicketLog", "TicketAccess", "TicketRating", "TicketTranscript"] }
+];
+var BACKUP_CONFIG_TABLES = ["SystemSetting", "Role", "Permission", "RolePermission", "Group", "GroupRole", "DiscordRoleMapping", "AppModule", "ServerModuleSetting", "DiscordServer", "HrRank", "QualificationDefinition", "OrgUnit", "HelpCategory"];
+
+// src/backup.ts
 var BACKUP_PARTS = ["roles", "channels", "settings"];
 var BACKUP_PART_LABEL = { roles: "Rollen", channels: "Kategorien & Kan\xE4le (mit Rechten)", settings: "Servereinstellungen (Name, Verifizierung, AFK \u2026)" };
-var backupConfigSchema = z6.object({
+var backupConfigSchema = z7.object({
   /** Dashboard-Daten stündlich automatisch sichern */
-  dataAuto: z6.boolean().default(true),
+  dataAuto: z7.boolean().default(true),
   /** Discord-Server täglich automatisch sichern */
-  discordAuto: z6.boolean().default(false),
+  discordAuto: z7.boolean().default(false),
   /** Dashboard-Daten: so viele Tage (je ein Backup, die letzten 48 Stunden alle); Discord: so viele Backups je Server */
-  keep: z6.number().int().min(1).max(60).default(14)
+  keep: z7.number().int().min(1).max(60).default(14),
+  /** Backup-Center 2.0: Zeitplan der automatischen Daten-Backups (Standard: stündlich wie bisher) */
+  schedule: backupScheduleSchema.default({}),
+  /** Umfang der automatischen Backups */
+  autoScope: z7.enum(["FULL", "DATABASE"]).default("DATABASE"),
+  /** Backups verschlüsseln (AES-256-GCM), sofern BACKUP_ENCRYPTION_KEY gesetzt ist */
+  encrypt: z7.boolean().default(true),
+  /** Statusmeldung (Erfolg/Fehler) an Systemadministratoren: Dashboard + optional privater Discord-Kanal */
+  statusChannelId: z7.string().regex(/^\d{15,25}$/).nullable().default(null)
 });
 
 // src/mdt.ts
-import { z as z7 } from "zod";
-var option = z7.object({ key: z7.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: z7.string().trim().min(1).max(40) });
+import { z as z8 } from "zod";
+var option = z8.object({ key: z8.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _"), label: z8.string().trim().min(1).max(40) });
 var unique = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
-var mdtConfigSchema = z7.object({
-  licenses: z7.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
-  flags: z7.array(option.extend({ tone: z7.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
-  genders: z7.array(z7.string().trim().min(1).max(30)).max(10)
+var mdtConfigSchema = z8.object({
+  licenses: z8.array(option).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  flags: z8.array(option.extend({ tone: z8.enum(["danger", "warning", "info", "neutral"]) })).max(30).refine(unique, "Schl\xFCssel doppelt"),
+  genders: z8.array(z8.string().trim().min(1).max(30)).max(10)
 });
 var DEFAULT_MDT_CONFIG = {
   licenses: [
@@ -2450,17 +2680,17 @@ var DEFAULT_MDT_CONFIG = {
   ],
   genders: ["M\xE4nnlich", "Weiblich", "Divers"]
 };
-var personDetailsSchema = z7.object({
-  fullName: z7.string().trim().max(80).nullish(),
-  dateOfBirth: z7.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
-  gender: z7.string().trim().max(30).nullish(),
-  phone: z7.string().trim().max(30).nullish(),
-  job: z7.string().trim().max(60).nullish(),
-  nationality: z7.string().trim().max(60).nullish(),
-  address: z7.string().trim().max(200).nullish(),
-  appearance: z7.object({ skinTone: z7.string().max(40).optional(), hairColor: z7.string().max(40).optional(), eyeColor: z7.string().max(40).optional(), height: z7.string().max(20).optional(), features: z7.string().max(300).optional() }).nullish(),
-  licenses: z7.array(z7.string().max(32)).max(30).optional(),
-  flags: z7.array(z7.string().max(32)).max(30).optional()
+var personDetailsSchema = z8.object({
+  fullName: z8.string().trim().max(80).nullish(),
+  dateOfBirth: z8.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum als JJJJ-MM-TT").nullish(),
+  gender: z8.string().trim().max(30).nullish(),
+  phone: z8.string().trim().max(30).nullish(),
+  job: z8.string().trim().max(60).nullish(),
+  nationality: z8.string().trim().max(60).nullish(),
+  address: z8.string().trim().max(200).nullish(),
+  appearance: z8.object({ skinTone: z8.string().max(40).optional(), hairColor: z8.string().max(40).optional(), eyeColor: z8.string().max(40).optional(), height: z8.string().max(20).optional(), features: z8.string().max(300).optional() }).nullish(),
+  licenses: z8.array(z8.string().max(32)).max(30).optional(),
+  flags: z8.array(z8.string().max(32)).max(30).optional()
 });
 function ageOf(dob, now = /* @__PURE__ */ new Date()) {
   if (!dob || !/^\d{4}-\d{2}-\d{2}/.test(dob)) return null;
@@ -2471,16 +2701,16 @@ function ageOf(dob, now = /* @__PURE__ */ new Date()) {
 }
 
 // src/fleet.ts
-import { z as z8 } from "zod";
-var key2 = z8.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _");
+import { z as z9 } from "zod";
+var key2 = z9.string().trim().min(1).max(32).regex(/^[A-Z0-9_]+$/, "Schl\xFCssel: nur A\u2013Z, 0\u20139 und _");
 var unique2 = (xs) => new Set(xs.map((x) => x.key)).size === xs.length;
-var fleetConfigSchema = z8.object({
-  categories: z8.array(z8.object({ key: key2, label: z8.string().trim().min(1).max(40), icon: z8.string().trim().min(1).max(8) })).min(1).max(30).refine(unique2, "Schl\xFCssel doppelt"),
-  internalStatuses: z8.array(z8.object({ key: key2, label: z8.string().trim().min(1).max(40), color: z8.string().regex(/^#[0-9a-fA-F]{6}$/) })).min(1).max(20).refine(unique2, "Schl\xFCssel doppelt"),
+var fleetConfigSchema = z9.object({
+  categories: z9.array(z9.object({ key: key2, label: z9.string().trim().min(1).max(40), icon: z9.string().trim().min(1).max(8) })).min(1).max(30).refine(unique2, "Schl\xFCssel doppelt"),
+  internalStatuses: z9.array(z9.object({ key: key2, label: z9.string().trim().min(1).max(40), color: z9.string().regex(/^#[0-9a-fA-F]{6}$/) })).min(1).max(20).refine(unique2, "Schl\xFCssel doppelt"),
   /** Mindestabstand zwischen zwei Abgleichen der Live-Fahrzeuge (Sekunden); der ER:LC-Abruf selbst läuft im eingestellten Server-Intervall. */
-  syncSeconds: z8.number().int().min(5).max(600),
+  syncSeconds: z9.number().int().min(5).max(600),
   /** Nicht mehr gemeldete Fahrzeuge ohne interne Daten nach so vielen Tagen löschen. */
-  keepInactiveDays: z8.number().int().min(1).max(90)
+  keepInactiveDays: z9.number().int().min(1).max(90)
 });
 var DEFAULT_FLEET_CONFIG = {
   categories: [
@@ -2508,27 +2738,27 @@ var DRIVER_STATES = {
 };
 var DRIVER_HINT = "ER:LC meldet nur, wer das Fahrzeug gespawnt hat (Besitzer) \u2013 nicht, wer gerade f\xE4hrt.";
 var POSITION_HINT = "Position des Besitzers laut ER:LC \u2013 keine Fahrzeugposition (die API liefert keine).";
-var fleetModelSchema = z8.object({
-  name: z8.string().trim().min(1).max(80),
+var fleetModelSchema = z9.object({
+  name: z9.string().trim().min(1).max(80),
   /** Modellname genau so, wie ER:LC ihn meldet (z. B. „Falcon Interceptor Utility 2019“) – darüber werden Live-Fahrzeuge zugeordnet. */
-  erlcName: z8.string().trim().min(1).max(120),
+  erlcName: z9.string().trim().min(1).max(120),
   category: key2,
-  description: z8.string().trim().max(1e3).nullish(),
-  internalCode: z8.string().trim().max(40).nullish(),
-  active: z8.boolean().optional(),
-  tags: z8.array(z8.string().trim().min(1).max(30)).max(20).optional(),
-  department: z8.string().trim().max(60).nullish()
+  description: z9.string().trim().max(1e3).nullish(),
+  internalCode: z9.string().trim().max(40).nullish(),
+  active: z9.boolean().optional(),
+  tags: z9.array(z9.string().trim().min(1).max(30)).max(20).optional(),
+  department: z9.string().trim().max(60).nullish()
 });
-var fleetInternalSchema = z8.object({
-  unitId: z8.string().uuid().nullish(),
+var fleetInternalSchema = z9.object({
+  unitId: z9.string().uuid().nullish(),
   internalStatus: key2.optional(),
-  internalCode: z8.string().trim().max(40).nullish(),
-  notes: z8.string().trim().max(3e3).nullish(),
-  tags: z8.array(z8.string().trim().min(1).max(30)).max(20).optional()
+  internalCode: z9.string().trim().max(40).nullish(),
+  notes: z9.string().trim().max(3e3).nullish(),
+  tags: z9.array(z9.string().trim().min(1).max(30)).max(20).optional()
 });
 
 // src/message-builder.ts
-import { z as z9 } from "zod";
+import { z as z10 } from "zod";
 var DISCORD_LIMITS = {
   content: 2e3,
   embedsPerMessage: 10,
@@ -2553,24 +2783,24 @@ var DISCORD_LIMITS = {
   webhookUsername: 80
 };
 var MB_LIMITS = { messagesPerGroup: 10, url: 2048, replyText: 2e3 };
-var str = (max) => z9.string().max(max).default("");
-var id2 = z9.string().min(1).max(64);
+var str = (max) => z10.string().max(max).default("");
+var id2 = z10.string().min(1).max(64);
 var MB_BUTTON_STYLES = ["primary", "secondary", "success", "danger"];
-var mbActionSchema = z9.discriminatedUnion("type", [
+var mbActionSchema = z10.discriminatedUnion("type", [
   /** Antwort nur für die klickende Person sichtbar (ephemeral). */
-  z9.object({ type: z9.literal("reply"), text: str(4e3) }),
+  z10.object({ type: z10.literal("reply"), text: str(4e3) }),
   /** Discord-Rolle der klickenden Person geben bzw. wieder nehmen (Umschalter). */
-  z9.object({ type: z9.literal("role"), roleId: str(32), mode: z9.enum(["toggle", "add", "remove"]).default("toggle") })
+  z10.object({ type: z10.literal("role"), roleId: str(32), mode: z10.enum(["toggle", "add", "remove"]).default("toggle") })
 ]);
-var mbButtonSchema = z9.object({
+var mbButtonSchema = z10.object({
   id: id2,
   /** link = öffnet eine URL (keine Interaktion nötig); action = führt eine definierte Aktion im Bot aus */
-  kind: z9.enum(["link", "action"]).default("link"),
+  kind: z10.enum(["link", "action"]).default("link"),
   label: str(500),
   emoji: str(100),
-  style: z9.enum(MB_BUTTON_STYLES).default("primary"),
+  style: z10.enum(MB_BUTTON_STYLES).default("primary"),
   url: str(4e3),
-  disabled: z9.boolean().default(false),
+  disabled: z10.boolean().default(false),
   action: mbActionSchema.default({ type: "reply", text: "" }),
   /**
    * Nur beim Bearbeiten einer aus Discord geladenen Nachricht: vorhandene custom_id eines fremden Buttons (z. B. Ticket-Panel)
@@ -2578,23 +2808,23 @@ var mbButtonSchema = z9.object({
    */
   keepCustomId: str(100)
 });
-var mbSelectOptionSchema = z9.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
-var mbRowSchema = z9.discriminatedUnion("type", [
-  z9.object({ id: id2, type: z9.literal("buttons"), buttons: z9.array(mbButtonSchema).max(25).default([]) }),
-  z9.object({
+var mbSelectOptionSchema = z10.object({ id: id2, label: str(500), description: str(500), emoji: str(100), action: mbActionSchema.default({ type: "reply", text: "" }) });
+var mbRowSchema = z10.discriminatedUnion("type", [
+  z10.object({ id: id2, type: z10.literal("buttons"), buttons: z10.array(mbButtonSchema).max(25).default([]) }),
+  z10.object({
     id: id2,
-    type: z9.literal("select"),
+    type: z10.literal("select"),
     placeholder: str(500),
-    disabled: z9.boolean().default(false),
-    options: z9.array(mbSelectOptionSchema).max(50).default([]),
+    disabled: z10.boolean().default(false),
+    options: z10.array(mbSelectOptionSchema).max(50).default([]),
     /** Mindest-/Höchstanzahl gewählter Optionen (Discord: 0–25 bzw. 1–25). minValues ≥ 1 = Pflichtauswahl. */
-    minValues: z9.number().int().min(0).max(25).default(1),
-    maxValues: z9.number().int().min(1).max(25).default(1),
+    minValues: z10.number().int().min(0).max(25).default(1),
+    maxValues: z10.number().int().min(1).max(25).default(1),
     keepCustomId: str(100)
   })
 ]);
-var mbFieldSchema = z9.object({ id: id2, name: str(2e3), value: str(4e3), inline: z9.boolean().default(false) });
-var mbEmbedSchema = z9.object({
+var mbFieldSchema = z10.object({ id: id2, name: str(2e3), value: str(4e3), inline: z10.boolean().default(false) });
+var mbEmbedSchema = z10.object({
   id: id2,
   title: str(2e3),
   url: str(4e3),
@@ -2609,22 +2839,22 @@ var mbEmbedSchema = z9.object({
   footerText: str(4e3),
   footerIconUrl: str(4e3),
   /** none = ohne, send = Zeitpunkt des Versands, custom = `timestampAt` */
-  timestamp: z9.enum(["none", "send", "custom"]).default("none"),
+  timestamp: z10.enum(["none", "send", "custom"]).default("none"),
   timestampAt: str(64),
-  fields: z9.array(mbFieldSchema).max(50).default([])
+  fields: z10.array(mbFieldSchema).max(50).default([])
 });
-var mbMessageSchema = z9.object({
+var mbMessageSchema = z10.object({
   id: id2,
   content: str(1e4),
-  embeds: z9.array(mbEmbedSchema).max(20).default([]),
-  rows: z9.array(mbRowSchema).max(10).default([]),
+  embeds: z10.array(mbEmbedSchema).max(20).default([]),
+  rows: z10.array(mbRowSchema).max(10).default([]),
   /** Wer wirklich gepingt wird. @everyone/@here nur, wenn ausdrücklich eingeschaltet. */
-  mentions: z9.object({ users: z9.boolean().default(true), roles: z9.boolean().default(false), everyone: z9.boolean().default(false) }).default({})
+  mentions: z10.object({ users: z10.boolean().default(true), roles: z10.boolean().default(false), everyone: z10.boolean().default(false) }).default({})
 });
-var mbDocumentDataSchema = z9.object({
-  messages: z9.array(mbMessageSchema).max(MB_LIMITS.messagesPerGroup).default([]),
+var mbDocumentDataSchema = z10.object({
+  messages: z10.array(mbMessageSchema).max(MB_LIMITS.messagesPerGroup).default([]),
   /** Name/Profilbild nur beim Versand über einen Webhook (der Bot sendet immer als er selbst). */
-  webhookProfile: z9.object({ username: str(200), avatarUrl: str(4e3) }).default({})
+  webhookProfile: z10.object({ username: str(200), avatarUrl: str(4e3) }).default({})
 });
 var counter = 0;
 var mbId = () => `${Date.now().toString(36)}${(counter++).toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -2883,7 +3113,7 @@ function describeDiscordError(e) {
 }
 
 // src/message-builder-json.ts
-import { z as z10 } from "zod";
+import { z as z11 } from "zod";
 function lineCol(text, offset) {
   let line = 1, col = 1;
   for (let i = 0; i < Math.min(offset, text.length); i++) {
@@ -3028,36 +3258,36 @@ function parseJsonWithPosition(text) {
     return { ok: false, error: { message: e.message, offset: e.at, ...lineCol(text, e.at) } };
   }
 }
-var emojiIn = z10.object({ id: z10.string().regex(/^\d{15,25}$/).nullish(), name: z10.string().max(100).nullish(), animated: z10.boolean().optional() }).nullish();
-var linkButtonIn = z10.object({ type: z10.literal(2), style: z10.literal(5), label: z10.string().optional(), emoji: emojiIn, url: z10.string(), disabled: z10.boolean().optional() });
-var actionButtonIn = z10.object({ type: z10.literal(2), style: z10.union([z10.literal(1), z10.literal(2), z10.literal(3), z10.literal(4)]), label: z10.string().optional(), emoji: emojiIn, custom_id: z10.string().min(1).max(100), disabled: z10.boolean().optional() });
-var selectIn = z10.object({
-  type: z10.literal(3),
-  custom_id: z10.string().min(1).max(100),
-  placeholder: z10.string().optional(),
-  disabled: z10.boolean().optional(),
-  min_values: z10.number().int().min(0).max(25).optional(),
-  max_values: z10.number().int().min(1).max(25).optional(),
-  options: z10.array(z10.object({ label: z10.string(), value: z10.string().min(1).max(100), description: z10.string().nullish(), emoji: emojiIn, default: z10.boolean().optional() })).max(25)
+var emojiIn = z11.object({ id: z11.string().regex(/^\d{15,25}$/).nullish(), name: z11.string().max(100).nullish(), animated: z11.boolean().optional() }).nullish();
+var linkButtonIn = z11.object({ type: z11.literal(2), style: z11.literal(5), label: z11.string().optional(), emoji: emojiIn, url: z11.string(), disabled: z11.boolean().optional() });
+var actionButtonIn = z11.object({ type: z11.literal(2), style: z11.union([z11.literal(1), z11.literal(2), z11.literal(3), z11.literal(4)]), label: z11.string().optional(), emoji: emojiIn, custom_id: z11.string().min(1).max(100), disabled: z11.boolean().optional() });
+var selectIn = z11.object({
+  type: z11.literal(3),
+  custom_id: z11.string().min(1).max(100),
+  placeholder: z11.string().optional(),
+  disabled: z11.boolean().optional(),
+  min_values: z11.number().int().min(0).max(25).optional(),
+  max_values: z11.number().int().min(1).max(25).optional(),
+  options: z11.array(z11.object({ label: z11.string(), value: z11.string().min(1).max(100), description: z11.string().nullish(), emoji: emojiIn, default: z11.boolean().optional() })).max(25)
 });
-var rowIn = z10.object({ type: z10.literal(1), components: z10.array(z10.unknown()).min(1).max(5) });
-var embedIn = z10.object({
-  title: z10.string().nullish(),
-  url: z10.string().nullish(),
-  description: z10.string().nullish(),
-  color: z10.number().int().min(0).max(16777215).nullish(),
-  timestamp: z10.string().nullish(),
-  author: z10.object({ name: z10.string(), url: z10.string().nullish(), icon_url: z10.string().nullish() }).nullish(),
-  footer: z10.object({ text: z10.string(), icon_url: z10.string().nullish() }).nullish(),
-  thumbnail: z10.object({ url: z10.string() }).nullish(),
-  image: z10.object({ url: z10.string() }).nullish(),
-  fields: z10.array(z10.object({ name: z10.string(), value: z10.string(), inline: z10.boolean().nullish() })).nullish()
+var rowIn = z11.object({ type: z11.literal(1), components: z11.array(z11.unknown()).min(1).max(5) });
+var embedIn = z11.object({
+  title: z11.string().nullish(),
+  url: z11.string().nullish(),
+  description: z11.string().nullish(),
+  color: z11.number().int().min(0).max(16777215).nullish(),
+  timestamp: z11.string().nullish(),
+  author: z11.object({ name: z11.string(), url: z11.string().nullish(), icon_url: z11.string().nullish() }).nullish(),
+  footer: z11.object({ text: z11.string(), icon_url: z11.string().nullish() }).nullish(),
+  thumbnail: z11.object({ url: z11.string() }).nullish(),
+  image: z11.object({ url: z11.string() }).nullish(),
+  fields: z11.array(z11.object({ name: z11.string(), value: z11.string(), inline: z11.boolean().nullish() })).nullish()
 });
-var messageIn = z10.object({
-  content: z10.string().nullish(),
-  embeds: z10.array(embedIn).nullish(),
-  components: z10.array(rowIn).nullish(),
-  allowed_mentions: z10.object({ parse: z10.array(z10.enum(["users", "roles", "everyone"])).optional() }).nullish()
+var messageIn = z11.object({
+  content: z11.string().nullish(),
+  embeds: z11.array(embedIn).nullish(),
+  components: z11.array(rowIn).nullish(),
+  allowed_mentions: z11.object({ parse: z11.array(z11.enum(["users", "roles", "everyone"])).optional() }).nullish()
 });
 var pathStr = (p) => p.reduce((s, k) => typeof k === "number" ? `${s}[${k}]` : s ? `${s}.${k}` : k, "");
 var emojiStr = (e) => !e ? "" : e.id ? `<${e.animated ? "a" : ""}:${e.name ?? "emoji"}:${e.id}>` : e.name ?? "";
@@ -3260,10 +3490,10 @@ function customIdsOf(components) {
   return out;
 }
 var MB_TEMPLATE_EXPORT_FORMAT = "enpol-embed-builder-templates";
-var mbTemplateExportSchema = z10.object({
-  format: z10.literal(MB_TEMPLATE_EXPORT_FORMAT),
-  version: z10.literal(1),
-  templates: z10.array(z10.object({ name: z10.string().trim().min(1).max(100), category: z10.string().trim().max(60).nullable().default(null), data: mbDocumentDataSchema })).min(1).max(200)
+var mbTemplateExportSchema = z11.object({
+  format: z11.literal(MB_TEMPLATE_EXPORT_FORMAT),
+  version: z11.literal(1),
+  templates: z11.array(z11.object({ name: z11.string().trim().min(1).max(100), category: z11.string().trim().max(60).nullable().default(null), data: mbDocumentDataSchema })).min(1).max(200)
 });
 
 // src/message-builder-examples.ts
@@ -3962,6 +4192,60 @@ function timeZones() {
   return [.../* @__PURE__ */ new Set([...common, ...all])];
 }
 
+// src/access-levels.ts
+var ACCESS_LEVELS = ["none", "view", "edit", "full", "blocked"];
+var ACCESS_LEVEL_LABEL = {
+  none: "Kein Zugriff",
+  view: "Nur ansehen",
+  edit: "Bearbeiten",
+  full: "Vollzugriff",
+  blocked: "Gesperrt",
+  custom: "Individuell"
+};
+var ACCESS_AREAS = Object.keys(PERMISSION_CATALOG);
+var VIEW = /^(view|view_.*|history|logs|results)$/;
+var ADMIN = /^(manage|manage_.*|delete|settings|restore|integration|roles|audit|transcript_delete|transcript_manage|bypass_limits|departments|hierarchy|notes_confidential|view_sensitive|edit_others|merge|erlc_command_critical)$/;
+function areaActions(area) {
+  return PERMISSION_CATALOG[area];
+}
+function accessLevelGrants(area, level) {
+  const actions = areaActions(area);
+  if (level === "none") return [];
+  if (level === "blocked") return [{ permission: `${area}.*`, effect: "DENY" }];
+  if (level === "full") return [{ permission: `${area}.*`, effect: "ALLOW" }];
+  const pick = actions.filter((a) => !ADMIN.test(a) && (VIEW.test(a) || level === "edit"));
+  return pick.map((a) => ({ permission: `${area}.${a}`, effect: "ALLOW" }));
+}
+function accessLevelOf(area, grants) {
+  const prefix = `${area}.`;
+  const relevant = grants.filter((g) => g.permission === "*" || g.permission === `${area}.*` || g.permission.startsWith(prefix));
+  if (!relevant.length) return "none";
+  if (relevant.some((g) => g.effect === "DENY" && (g.permission === `${area}.*` || g.permission === "*"))) return "blocked";
+  if (relevant.some((g) => g.effect === "DENY")) return "custom";
+  const allowed = new Set(areaActions(area).filter((a) => relevant.some((g) => grantMatches(g.permission, `${area}.${a}`))));
+  const same = (level) => {
+    const want = new Set(accessLevelGrants(area, level).flatMap((g) => areaActions(area).filter((a) => grantMatches(g.permission, `${area}.${a}`))));
+    return want.size === allowed.size && [...want].every((a) => allowed.has(a));
+  };
+  if (allowed.size === areaActions(area).length) return "full";
+  if (same("view") && allowed.size > 0) return "view";
+  if (same("edit")) return "edit";
+  return allowed.size ? "custom" : "none";
+}
+function applyAccessLevel(current, area, level) {
+  const prefix = `${area}.`;
+  const kept = current.filter((g) => !(g.permission === `${area}.*` || g.permission.startsWith(prefix)));
+  return [...kept, ...accessLevelGrants(area, level)];
+}
+function accessDiff(before, after) {
+  const k = (g) => `${g.effect}:${g.permission}`;
+  const b = new Set(before.map(k));
+  const a = new Set(after.map(k));
+  return { added: [...a].filter((x) => !b.has(x)), removed: [...b].filter((x) => !a.has(x)) };
+}
+var LOCKOUT_CRITICAL = ["roles.view", "roles.manage"];
+var isCatalogPermission = (p) => ALL_PERMISSIONS.includes(p);
+
 // src/administration.ts
 var ORG_TIME_ZONE = "Europe/Berlin";
 function localParts2(at, timeZone = ORG_TIME_ZONE) {
@@ -4177,6 +4461,9 @@ function toCsv(header, rows) {
   return [header, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
 }
 export {
+  ACCESS_AREAS,
+  ACCESS_LEVELS,
+  ACCESS_LEVEL_LABEL,
   AI_CHECK_HINT,
   AI_CHECK_LEVEL_LABEL,
   ALL_PERMISSIONS,
@@ -4191,8 +4478,13 @@ export {
   AUTOMATION_KEYS,
   AUTOMATION_LABELS,
   AUTOMATION_SOURCES,
+  BACKUP_CONFIG_TABLES,
+  BACKUP_FREQUENCIES,
+  BACKUP_MODULE_GROUPS,
   BACKUP_PARTS,
   BACKUP_PART_LABEL,
+  BACKUP_SCOPES,
+  BACKUP_SCOPE_LABEL,
   BOT_COMMAND_MODULES,
   CAD_EVENTS,
   CAD_EVENT_LABELS,
@@ -4266,15 +4558,22 @@ export {
   FORM_MAX_FILE_BYTES,
   FORM_PANEL_VARIABLES,
   FORM_QUESTION_TYPES,
+  HELP_ARTICLE_KINDS,
+  HELP_ARTICLE_KIND_LABEL,
+  HELP_ARTICLE_STATUSES,
+  HELP_ARTICLE_STATUS_LABEL,
   HR_EVENTS,
   HR_EVENT_LABEL,
   InvalidTransitionError,
   JOIN_LOG_TOLERANCE_MS,
   LEADERBOARD_METRICS,
+  LEARNING_KINDS,
+  LEARNING_KIND_LABEL,
   LEGACY_DANGER,
   LOAD_DOT,
   LOAD_LABEL,
   LOAD_WARN_RATIO,
+  LOCKOUT_CRITICAL,
   LOG_CATEGORIES,
   LOG_DEFAULT_OFF,
   LOG_TYPES,
@@ -4295,10 +4594,15 @@ export {
   NO_TICKET_BUTTON,
   OFF_MODULES,
   ORG_TIME_ZONE,
+  ORG_UNIT_KINDS,
+  ORG_UNIT_KIND_LABEL,
   PARTICIPANT_STATUSES,
   PARTICIPANT_STATUS_LABEL,
   PERIOD_LABEL,
   PERMISSION_CATALOG,
+  PERSONNEL_DOCUMENT_KINDS,
+  PERSONNEL_DOCUMENT_KIND_LABEL,
+  PERSONNEL_NOTE_CATEGORIES,
   PLANNED_SHIFT_STATUSES,
   PLANNED_SHIFT_STATUS_LABEL,
   POLICE_APPLICATION_KEY,
@@ -4309,6 +4613,10 @@ export {
   PROFILE_FIELD_LABEL,
   PROFILE_SECTIONS,
   PROFILE_SECTION_LABEL,
+  QUALIFICATION_SOURCES,
+  QUALIFICATION_SOURCE_LABEL,
+  QUALIFICATION_STATUSES,
+  QUALIFICATION_STATUS_LABEL,
   QUESTION_TYPES,
   RADIO_CSV_COLUMNS,
   RADIO_GRANT_SOURCES,
@@ -4366,18 +4674,25 @@ export {
   WORKFLOW_TRIGGERS,
   YES_NO,
   absenceTypeSchema,
+  accessDiff,
+  accessLevelGrants,
+  accessLevelOf,
   accountAge,
   activeFields,
   ageOf,
   aiCheck,
   announcementMessage,
+  applyAccessLevel,
   applyCallCalibration,
   applyPanelParts,
+  areaActions,
   areaGrantsFor,
   assertTransition,
   automationActive,
   awardDefSchema,
   backupConfigSchema,
+  backupScheduleSchema,
+  buildOrgTree,
   can,
   canDelegate,
   canRespond,
@@ -4405,6 +4720,7 @@ export {
   dutyTimeText,
   effectiveAutomation,
   effectivePermissions,
+  effectiveQualificationStatus,
   effectiveRadioStatus,
   embedChars,
   emptyMbDocument,
@@ -4435,6 +4751,9 @@ export {
   gradeAnswer,
   grantMatches,
   hasErrors,
+  helpArticleSchema,
+  helpCategorySchema,
+  helpSlug,
   hexColor,
   hireMappingSchema,
   hrConfigSchema,
@@ -4445,6 +4764,8 @@ export {
   infoPanelSchema,
   interactiveComponents,
   isAnswered,
+  isBackupDue,
+  isCatalogPermission,
   isDutyTimeField,
   isHttpUrl,
   isInputQuestion,
@@ -4457,6 +4778,7 @@ export {
   isValidEmoji,
   isValidRobloxUserId,
   isoWeek,
+  learningMaterialSchema,
   lineCol,
   loadLevel,
   localDate,
@@ -4500,6 +4822,10 @@ export {
   notificationEvent,
   notifyRuleSchema,
   onErlcMap,
+  orgAncestors,
+  orgDescendants,
+  orgUnitSchema,
+  orgWouldCycle,
   overlaps,
   panelFieldSchema,
   panelUnits,
@@ -4526,7 +4852,10 @@ export {
   policeReportFields,
   postalMatchRate,
   postalPosition,
+  practicalCriterionSchema,
+  practicalExamSchema,
   qualiPanelParts,
+  qualificationDefSchema,
   questionProblems,
   questionSchema,
   radioRoleSyncAction,
@@ -4549,6 +4878,7 @@ export {
   requirementSchema,
   resolvePermission,
   rolesMatch,
+  scorePractical,
   severitySchema,
   slaState,
   splitGaps,

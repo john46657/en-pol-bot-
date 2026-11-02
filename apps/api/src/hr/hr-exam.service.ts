@@ -7,6 +7,7 @@ import type { Actor } from '../audit/audit.service';
 import { AppError } from '../common/errors';
 import { webUrl } from '../common/web-url';
 import { HrCoreService } from './hr-core.service';
+import { QualificationRegistryService } from './qualification-registry.service';
 
 /** Gemischte Reihenfolge je Frage: o = Antworten/Einträge/linke Seite, m = rechte Seite (Zuordnung). */
 interface Shuffle { o?: Record<string, number[]>; m?: Record<string, number[]> }
@@ -28,7 +29,7 @@ const derange = (n: number) => { let r = shuffled(range(n)); for (let i = 0; i <
 /** Prüfungen: Verwaltung, Ablauf (Start → Zwischenspeichern → Abgabe), Bewertung, Annullieren und Auswertung. */
 @Injectable()
 export class HrExamService {
-  constructor(private readonly core: HrCoreService, private readonly perms: PermissionService) {}
+  constructor(private readonly core: HrCoreService, private readonly perms: PermissionService, private readonly quals: QualificationRegistryService) {}
   private get prisma() { return this.core.prisma; }
 
   // ---------------- Rechte ----------------
@@ -341,6 +342,7 @@ export class HrExamService {
     const pct = pctOf(a.score, a.maxScore) ?? 0;
     await this.prisma.personnelRecord.create({ data: { personnelId: a.personnelId, type: 'EXAM', summary: `Prüfung „${a.exam.title}“: ${a.passed ? 'bestanden' : 'nicht bestanden'} (${pct} %)`, data: { examId: a.examId, attemptId: a.id, score: a.score, maxScore: a.maxScore, passed: a.passed }, createdById: a.gradedById ?? a.personnel.userId } });
     if (!a.passed || wasPassed) return;
+    await this.quals.fromAchievement('EXAM', { examId: a.examId }, a.personnelId, attemptId, a.gradedById).catch(() => []);
     await this.core.notify('exam.passed', { memberUserId: a.personnel.userId, title: `📝 Prüfung bestanden: ${a.exam.title}`, entityType: 'Personnel', entityId: a.personnelId, publicText: `**${a.personnel.user.displayName}** hat die Prüfung **${a.exam.title}** bestanden.`, dmText: `Glückwunsch! Du hast die Prüfung **${a.exam.title}** bestanden (${pct} %).`, color: 0x22c55e });
     if (a.exam.trainingId) {
       const t = await this.prisma.hrTrainingProgress.findUnique({ where: { trainingId_personnelId: { trainingId: a.exam.trainingId, personnelId: a.personnelId } } });

@@ -22,8 +22,8 @@ const SIGNATURES: Record<string, (b: Buffer) => boolean> = {
 };
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt' };
 /** Welche Permission zum Anhängen/Ansehen an einem Entitätstyp nötig ist. */
-const WRITE: Record<string, string> = { Document: 'documents.upload', FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Vehicle: 'vehicles.edit' };
-const READ: Record<string, string> = { FleetModel: 'fleet.view', WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Vehicle: 'vehicles.view' };
+const WRITE: Record<string, string> = { PersonnelDocument: 'personnel.documents', HelpAsset: 'help.manage', LearningAsset: 'training.materials', Document: 'documents.upload', FleetModel: 'fleet.manage_catalog', WelcomeBanner: 'settings.manage', EmbedAsset: 'settings.manage', HrAttachment: 'personnel.view', CadMap: 'cad.manage_map', Report: 'reports.create', Complaint: 'complaints.create', Incident: 'incidents.edit', Person: 'persons.edit', Vehicle: 'vehicles.edit' };
+const READ: Record<string, string> = { /* Personalakten-Dokumente nur über /personnel-file/documents/:id/download (Akten- und Vertraulichkeitsprüfung) */ PersonnelDocument: '!none', HelpAsset: 'help.view', LearningAsset: 'training.view', FleetModel: 'fleet.view', WelcomeBanner: 'settings.view', EmbedAsset: 'settings.view', HrAttachment: 'personnel.view', CadMap: 'cad.view', Report: 'reports.view', Complaint: 'complaints.view', Incident: 'incidents.view', Person: 'persons.view', Vehicle: 'vehicles.view' };
 
 @Injectable()
 export class MediaService {
@@ -52,7 +52,8 @@ export class MediaService {
 
   async download(actor: Actor, id: string) {
     const m = await this.prisma.media.findUnique({ where: { id } });
-    const need = m?.linkedType ? READ[m.linkedType] : undefined;
+    // Personalakten-Dokumente nie über den allgemeinen Download (auch nicht mit `*`): nur /personnel-file/documents/:id/download
+    const need = m?.linkedType && m.linkedType !== 'PersonnelDocument' ? READ[m.linkedType] : undefined;
     // Ohne Leserecht auf die verknüpfte Entität verhält sich die Datei wie nicht vorhanden.
     if (!m || !need || !(await this.perms.has(actor.userId!, need))) throw new AppError('NOT_FOUND', 'Datei nicht gefunden.');
     return { media: m, data: await readFile(path.join(this.dir, m.storageKey)) };

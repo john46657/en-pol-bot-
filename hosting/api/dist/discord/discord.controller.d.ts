@@ -278,6 +278,7 @@ declare const voiceBody: z.ZodObject<{
         id: string;
         name: string;
         position: number;
+        parentId: string | null;
         members: {
             id: string;
             displayName: string;
@@ -290,13 +291,13 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        parentId: string | null;
         parentName: string | null;
     }, {
         guildId: string;
         id: string;
         name: string;
         position: number;
+        parentId: string | null;
         members: {
             id: string;
             displayName: string;
@@ -309,7 +310,6 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        parentId: string | null;
         parentName: string | null;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -318,6 +318,7 @@ declare const voiceBody: z.ZodObject<{
         id: string;
         name: string;
         position: number;
+        parentId: string | null;
         members: {
             id: string;
             displayName: string;
@@ -330,7 +331,6 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        parentId: string | null;
         parentName: string | null;
     }[];
 }, {
@@ -339,6 +339,7 @@ declare const voiceBody: z.ZodObject<{
         id: string;
         name: string;
         position: number;
+        parentId: string | null;
         members: {
             id: string;
             displayName: string;
@@ -351,7 +352,6 @@ declare const voiceBody: z.ZodObject<{
             streaming: boolean;
             since: string | null;
         }[];
-        parentId: string | null;
         parentName: string | null;
     }[];
 }>;

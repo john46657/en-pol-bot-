@@ -1448,8 +1448,8 @@ export declare const updateDocSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     version: number;
     name: string;
-    channelId: string | null;
     categoryId: string | null;
+    channelId: string | null;
     data: {
         messages: {
             id: string;
@@ -1615,8 +1615,8 @@ export declare const updateDocSchema: z.ZodObject<{
             avatarUrl?: string | undefined;
         } | undefined;
     };
-    channelId?: string | null | undefined;
     categoryId?: string | null | undefined;
+    channelId?: string | null | undefined;
 }>;
 export declare const copyDocSchema: z.ZodObject<{
     kind: z.ZodEnum<["DRAFT", "TEMPLATE"]>;

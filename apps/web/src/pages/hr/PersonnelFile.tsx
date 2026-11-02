@@ -11,6 +11,7 @@ import { onSaved, pendingBody, useAutosaveDraft } from '../../lib/autosave';
 import { fmtDate, requestStatus, statusInfo, useHrConfig, useRanks, type HrRank, type HrRecord, type HrRequest, type Profile } from '../../lib/hr';
 import { Avatar } from '../../components/TeamRoster';
 import { SaveStatus } from '../../components/SaveStatus';
+import { ActivityTab, DocumentsTab, NotesTab, QualificationsTab, ServiceTab, useFileSummary } from './PersonnelFileExt';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea, type Tone } from '../../components/ui';
 import { RankLabel } from './PersonnelOverview';
 
@@ -81,6 +82,8 @@ export function PersonnelFile() {
   const cfg = useHrConfig().data;
   const ranks = useRanks().data ?? [];
   const q = useQuery({ queryKey: ['hr-profile', id], queryFn: () => api<Profile>(`/hr/people/${id}`), enabled: !!id });
+  // Personalakte 2.0 (Dienst & Organisation, Qualifikationen, Vermerke, Dokumente, Aktivitäten)
+  const ext = useFileSummary(id ?? '', !!id);
   const [tab, setTab] = useState('Übersicht');
   const [del, setDel] = useState(false);
   const remove = useMutation({ mutationFn: () => api(`/hr/people/${id}`, { method: 'DELETE' }), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['hr-people'] }); nav('/personnel'); } });
@@ -102,6 +105,11 @@ export function PersonnelFile() {
     ['Notizen', !!s.notes && p.notes !== null],
     ['Empfehlungen', true],
     ['Historie', !!s.history && p.history !== null],
+    ['Dienst & Organisation', !!ext.data],
+    ['Qualifikationen', !!ext.data],
+    ['Vermerke', !!ext.data?.permissions.notes],
+    ['Dokumente', !!ext.data?.permissions.documents],
+    ['Aktivitäten', !!ext.data?.permissions.activity],
   ];
   const visible = tabs.filter(([, ok]) => ok).map(([t]) => t);
   const active = visible.includes(tab) ? tab : visible[0] ?? '';
@@ -157,6 +165,11 @@ export function PersonnelFile() {
       {active === 'Notizen' && <SimpleTab p={p} records={p.notes ?? []} type="NOTE" title="Notizen" label="Notiz" canAdd={can('personnel.edit')} canDelete={can('personnel.delete')} />}
       {active === 'Empfehlungen' && <SimpleTab p={p} records={p.recommendations} type="RECOMMENDATION" title="Empfehlungen" label="Empfehlung" canAdd={can('promotion.create')} canDelete={can('promotion.manage')} />}
       {active === 'Historie' && <HistoryTab p={p} />}
+      {ext.data && active === 'Dienst & Organisation' && <ServiceTab s={ext.data} />}
+      {ext.data && active === 'Qualifikationen' && <QualificationsTab s={ext.data} personnelId={p.id} />}
+      {ext.data && active === 'Vermerke' && <NotesTab s={ext.data} personnelId={p.id} />}
+      {ext.data && active === 'Dokumente' && <DocumentsTab s={ext.data} personnelId={p.id} />}
+      {ext.data && active === 'Aktivitäten' && <ActivityTab personnelId={p.id} />}
       {active !== 'Übersicht' && !visible.includes('Übersicht') && editCard}
 
       <ConfirmDialog open={del} danger title="Personalakte löschen" busy={remove.isPending} confirmLabel="Endgültig löschen" onClose={() => setDel(false)} onConfirm={() => remove.mutate()}

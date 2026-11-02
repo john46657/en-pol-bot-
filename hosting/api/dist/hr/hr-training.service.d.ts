@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PermissionService } from '../authz/permission.service';
 import type { Actor } from '../audit/audit.service';
 import { HrCoreService } from './hr-core.service';
+import { QualificationRegistryService } from './qualification-registry.service';
 export declare const trainingSchema: z.ZodObject<{
     name: z.ZodString;
     description: z.ZodDefault<z.ZodNullable<z.ZodString>>;
@@ -50,7 +51,8 @@ export declare const TRAINING_STATUSES: readonly ["NOT_STARTED", "IN_PROGRESS", 
 export declare class HrTrainingService {
     private readonly core;
     private readonly perms;
-    constructor(core: HrCoreService, perms: PermissionService);
+    private readonly quals;
+    constructor(core: HrCoreService, perms: PermissionService, quals: QualificationRegistryService);
     private get prisma();
     trainings(): Promise<{
         passed: number;

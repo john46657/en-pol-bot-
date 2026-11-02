@@ -24,8 +24,15 @@ const zod_pipe_1 = require("../common/zod.pipe");
 const errors_1 = require("../common/errors");
 const guild_context_1 = require("../common/guild-context");
 const sf = zod_1.z.string().regex(/^\d{15,25}$/);
-const fileName = zod_1.z.string().regex(/^[a-z-]+-\d{8}-\d{6}\.json\.gz$/);
-/** Administration → Backups. Daten-Backups enthalten alles (auch Konten) – nur mit settings.manage. */
+const fileName = zod_1.z.string().regex(/^[a-z-]+-\d{8}-\d{6}(-[a-z0-9]{4})?\.json\.gz(\.enc)?$/);
+const groups = zod_1.z.array(zod_1.z.enum(shared_1.BACKUP_MODULE_GROUPS.map((g) => g.key))).max(20).optional();
+const createBody = zod_1.z.object({ scope: zod_1.z.enum(shared_1.BACKUP_SCOPES).default('DATABASE'), modules: groups, note: zod_1.z.string().trim().max(300).optional(), kind: zod_1.z.enum(['manuell', 'vor-update']).default('manuell') }).partial().default({});
+const restoreBody = zod_1.z.object({ confirm: zod_1.z.literal('WIEDERHERSTELLEN'), groups, acknowledgeNewer: zod_1.z.boolean().optional() });
+/**
+ * Administration → Backup-Center. Daten-Backups enthalten alles (auch Konten): Recht `backup.*` UND globaler Systemadministrator.
+ * Wiederherstellen: Integrität → Version → Sicherung des aktuellen Stands → Umfang/Plan → Bestätigung „WIEDERHERSTELLEN“
+ * (neuere Daten zusätzlich `acknowledgeNewer`) → Einspielen → Protokoll → Prüfung.
+ */
 let BackupController = class BackupController {
     s;
     constructor(s) {
@@ -33,22 +40,29 @@ let BackupController = class BackupController {
     }
     async config(a) { await this.s.requireGlobal(a); return this.s.config(); }
     async saveConfig(a, b) { await this.s.requireGlobal(a); return this.s.saveConfig(a, b); }
-    async listData(a) { await this.s.requireGlobal(a); return this.s.listData(); }
-    async createData(a) { await this.s.requireGlobal(a); return this.s.createData(a, 'manuell'); }
+    /** Systemstatus (für MDT/Leitstelle/Bot nur über berechtigte Administratoren) */
+    async status(a) { await this.s.requireGlobal(a); return this.s.status(); }
+    async listData(a, q) { await this.s.requireGlobal(a); return this.s.listData({ archived: q.archived === '1' ? true : q.archived === 'all' ? undefined : q.archived === '0' ? false : undefined }); }
+    async createData(a, b) { await this.s.requireGlobal(a); return this.s.createData(a, b.kind ?? 'manuell', { scope: b.scope, modules: b.modules, note: b.note }); }
     async download(a, name, res) {
         await this.s.requireGlobal(a);
-        const buf = await this.s.readData(name);
-        res.setHeader('content-type', 'application/gzip');
+        const buf = await this.s.downloadData(a, name);
+        res.setHeader('content-type', name.endsWith('.enc') ? 'application/octet-stream' : 'application/gzip');
         res.setHeader('content-disposition', `attachment; filename="en-polizei-${name}"`);
+        res.setHeader('cache-control', 'no-store');
         res.send(buf);
     }
     async deleteData(a, name) { await this.s.requireGlobal(a); return this.s.deleteData(a, name); }
-    async restore(a, name, _b) { await this.s.requireGlobal(a); return this.s.restoreData(a, { name }); }
-    async restoreUpload(a, file, confirm) {
+    async verify(a, name) { await this.s.requireGlobal(a); return this.s.verify(a, name); }
+    async archive(a, name, b) { await this.s.requireGlobal(a); return this.s.setArchived(a, name, b.archived); }
+    /** Wiederherstellungsplan (ändert nichts) */
+    async plan(a, name, b) { await this.s.requireGlobal(a); return this.s.plan({ name }, b.groups); }
+    async restore(a, name, b) { await this.s.requireGlobal(a); return this.s.restoreData(a, { name }, { groups: b.groups, acknowledgeNewer: b.acknowledgeNewer }); }
+    async restoreUpload(a, file, confirm, ack) {
         await this.s.requireGlobal(a);
         if (confirm !== 'WIEDERHERSTELLEN')
             throw new errors_1.AppError('VALIDATION_FAILED', 'Zum Bestätigen „WIEDERHERSTELLEN“ eingeben.');
-        return this.s.restoreData(a, { buffer: file?.buffer });
+        return this.s.restoreData(a, { buffer: file?.buffer }, { acknowledgeNewer: ack === 'true' });
     }
     listDiscord(q) { return this.s.listDiscord((0, guild_context_1.targetGuild)(q.guildId) ?? undefined); }
     getDiscord(id) { return this.s.getDiscord(id); }
@@ -59,7 +73,7 @@ let BackupController = class BackupController {
 exports.BackupController = BackupController;
 __decorate([
     (0, common_1.Get)('config'),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -67,7 +81,7 @@ __decorate([
 ], BackupController.prototype, "config", null);
 __decorate([
     (0, common_1.Put)('config'),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.settings'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(shared_1.backupConfigSchema))),
     __metadata("design:type", Function),
@@ -75,24 +89,34 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BackupController.prototype, "saveConfig", null);
 __decorate([
-    (0, common_1.Get)('data'),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, common_1.Get)('status'),
+    (0, decorators_1.RequirePermission)('backup.view'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], BackupController.prototype, "status", null);
+__decorate([
+    (0, common_1.Get)('data'),
+    (0, decorators_1.RequirePermission)('backup.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Query)((0, zod_pipe_1.zodBody)(zod_1.z.object({ archived: zod_1.z.enum(['1', '0', 'all']).optional() })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], BackupController.prototype, "listData", null);
 __decorate([
     (0, common_1.Post)('data'),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.create'),
     __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Body)((0, zod_pipe_1.zodBody)(createBody))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, void 0]),
     __metadata("design:returntype", Promise)
 ], BackupController.prototype, "createData", null);
 __decorate([
     (0, common_1.Get)('data/:name'),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.download'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('name', (0, zod_pipe_1.zodBody)(fileName))),
     __param(2, (0, common_1.Res)()),
@@ -103,7 +127,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)('data/:name'),
     (0, common_1.HttpCode)(204),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.archive'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('name', (0, zod_pipe_1.zodBody)(fileName))),
     __metadata("design:type", Function),
@@ -111,26 +135,59 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BackupController.prototype, "deleteData", null);
 __decorate([
-    (0, common_1.Post)('data/:name/restore'),
+    (0, common_1.Post)('data/:name/verify'),
     (0, common_1.HttpCode)(200),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.verify'),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.Param)('name', (0, zod_pipe_1.zodBody)(fileName))),
-    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ confirm: zod_1.z.literal('WIEDERHERSTELLEN') })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], BackupController.prototype, "verify", null);
+__decorate([
+    (0, common_1.Post)('data/:name/archive'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('backup.archive'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('name', (0, zod_pipe_1.zodBody)(fileName))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ archived: zod_1.z.boolean().default(true) })))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], BackupController.prototype, "archive", null);
+__decorate([
+    (0, common_1.Post)('data/:name/plan'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('backup.restore'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('name', (0, zod_pipe_1.zodBody)(fileName))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(zod_1.z.object({ groups })))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], BackupController.prototype, "plan", null);
+__decorate([
+    (0, common_1.Post)('data/:name/restore'),
+    (0, common_1.HttpCode)(200),
+    (0, decorators_1.RequirePermission)('backup.restore'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('name', (0, zod_pipe_1.zodBody)(fileName))),
+    __param(2, (0, common_1.Body)((0, zod_pipe_1.zodBody)(restoreBody))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", Promise)
 ], BackupController.prototype, "restore", null);
 __decorate([
     (0, common_1.Post)('data-upload/restore'),
     (0, common_1.HttpCode)(200),
-    (0, decorators_1.RequirePermission)('settings.manage'),
+    (0, decorators_1.RequirePermission)('backup.restore'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: 500 * 1024 * 1024, files: 1 } })),
     __param(0, (0, decorators_1.CurrentActor)()),
     __param(1, (0, common_1.UploadedFile)()),
     __param(2, (0, common_1.Body)('confirm')),
+    __param(3, (0, common_1.Body)('acknowledgeNewer')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String]),
+    __metadata("design:paramtypes", [Object, Object, String, Object]),
     __metadata("design:returntype", Promise)
 ], BackupController.prototype, "restoreUpload", null);
 __decorate([

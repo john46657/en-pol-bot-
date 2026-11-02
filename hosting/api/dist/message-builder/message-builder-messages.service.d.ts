@@ -867,11 +867,11 @@ export declare const loadedSchema: z.ZodObject<{
         components?: unknown[] | undefined;
     } | undefined;
     error?: string | undefined;
+    parentId?: string | null | undefined;
     channelId?: string | undefined;
     channelName?: string | undefined;
     webhookId?: string | undefined;
     author?: "other" | "bot" | "webhook" | undefined;
-    parentId?: string | null | undefined;
 }, {
     ok: boolean;
     message?: {
@@ -880,11 +880,11 @@ export declare const loadedSchema: z.ZodObject<{
         components?: unknown[] | undefined;
     } | undefined;
     error?: string | undefined;
+    parentId?: string | null | undefined;
     channelId?: string | undefined;
     channelName?: string | undefined;
     webhookId?: string | undefined;
     author?: "other" | "bot" | "webhook" | undefined;
-    parentId?: string | null | undefined;
 }>;
 /**
  * Gespeicherte Discord-Nachrichten des Embed Builders: Links zu gesendeten Nachrichten, per Link geladene Bot-/Webhook-Nachrichten,

@@ -127,7 +127,8 @@ let HrPeopleService = class HrPeopleService {
             requests: requests.map((r) => ({ ...r, internalNote: sens ? r.internalNote : null, requesterName: deciders.get(r.requesterId) ?? '—' })),
             awards: sec('awards') ? rec(['AWARD']) : null,
             warnings: sec('warnings') && ((0, shared_1.can)(c, 'warning.view') || sens) ? rec(['WARNING', 'DISCIPLINE']).map((w) => ({ ...w, state: warnState(w) })) : null,
-            notes: sec('notes') && sens ? rec(['NOTE']) : null,
+            // vertrauliche Vermerke (Personalakte 2.0) nur mit personnel.notes_confidential
+            notes: sec('notes') && sens ? rec(['NOTE']).filter((n) => !n.confidential || (0, shared_1.can)(c, 'personnel.notes_confidential')) : null,
             recommendations: rec(['RECOMMENDATION']),
             trainings: sec('trainings') ? trainings : null,
             exams: sec('exams') ? attempts.map((a) => ({ ...a, answers: undefined })) : null,
@@ -186,6 +187,9 @@ let HrPeopleService = class HrPeopleService {
             if (d.status && d.status !== before.employmentStatus) {
                 const label = (k) => cfg.statuses.find((s) => s.key === k)?.label ?? k;
                 await tx.personnelRecord.create({ data: { personnelId: id, type: 'STATUS', summary: `Status: ${label(before.employmentStatus)} → ${label(d.status)}`, data: { from: before.employmentStatus, to: d.status }, createdById: actor.userId } });
+                // Personalakte 2.0: betroffene Person privat informieren (Dashboard; neutraler Text)
+                if (before.userId !== actor.userId)
+                    await tx.notification.create({ data: { userId: before.userId, type: 'PERSONNEL', title: `🗂️ Personalakte: Personalstatus ist jetzt „${label(d.status)}“`.slice(0, 200), entityType: 'Personnel', entityId: id } });
             }
             await this.core.audit.record(actor, { action: d.rank !== undefined ? 'personnel.rank.set' : 'personnel.update', module: 'personnel', entityType: 'Personnel', entityId: id, before, after }, tx);
             return after;

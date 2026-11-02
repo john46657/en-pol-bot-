@@ -18,6 +18,7 @@ const backup_1 = require("./backup");
 const exams_1 = require("./exams");
 const bot_profile_1 = require("./bot-profile");
 const reminders_1 = require("./reminders");
+const extension4_1 = require("./extension4");
 const administration_1 = require("./administration");
 const format_1 = require("../format");
 /** Minuten → „3 h 05 min“. */
@@ -77,11 +78,14 @@ exports.COMMANDS = [
         },
     })),
     {
-        name: 'hilfe', description: 'Zeigt alle Befehle',
-        async run() {
+        name: 'hilfe', description: 'Zeigt alle Befehle – mit „suche“ durchsucht er das Hilfe-Center',
+        options: [{ name: 'suche', description: 'Hilfe-Center durchsuchen, z. B. „Dienst anmelden“', type: 'string', maxLength: 100 }],
+        async run(c) {
+            if (String(c.opts.suche ?? '').trim())
+                return (0, extension4_1.helpSearch)(c);
             return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: format_1.COLORS.info, fields: [
                             { name: 'Konto', value: '`/dashboard` `/panel` `/benachrichtigungen`' },
-                            { name: 'Abfragen', value: '`/team`' },
+                            { name: 'Abfragen', value: '`/team` `/personal akte` `/personal qualifikationen` `/organigramm` `/hilfe suche:` (Hilfe-Center)' },
                             { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`' },
                             { name: 'Erfassen', value: '`/dienstbericht` `/dienstbericht liste`' },
                             { name: 'Dienstplanung & Verwaltung', value: '`/schichtplan anzeigen|meine|uebersicht|anmelden|abmelden|melden` `/termine liste|anmelden|absagen` `/antrag befoerderung|versetzung|status|antworten|zurueckziehen` `/dokument` `/benachrichtigungen dm:`' },
@@ -207,6 +211,7 @@ exports.COMMANDS = [
     ...exams_1.EXAM_COMMANDS,
     ...bot_profile_1.BOT_PROFILE_COMMANDS,
     ...reminders_1.REMINDER_COMMANDS,
+    ...extension4_1.EXTENSION4_COMMANDS,
     ...administration_1.ADMINISTRATION_COMMANDS,
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);

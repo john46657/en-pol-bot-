@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Download, Eye, RotateCcw, Trash2 } from 'lucide-react';
-import { BACKUP_PART_LABEL, BACKUP_PARTS, type BackupConfig, type BackupPart, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
+import { Archive, Download, Eye, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
+import { BACKUP_FREQUENCIES, BACKUP_MODULE_GROUPS, BACKUP_PART_LABEL, BACKUP_PARTS, BACKUP_SCOPE_LABEL, BACKUP_SCOPES, type BackupConfig, type BackupModuleKey, type BackupScope, type BackupPart, type BackupRestoreResult, type DiscordBackupData } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { errText } from '../../lib/tickets';
@@ -9,13 +9,14 @@ import { useGuilds, useServer } from '../../lib/guilds';
 import { Toggle } from '../../components/ApplicationSettings';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Input, Modal, PageHeader, Select, SkeletonRows, Tabs } from '../../components/ui';
 
-interface DataFile { name: string; kind: 'auto' | 'manuell' | 'vor-wiederherstellung'; size: number; createdAt: string }
+interface DataFile { name: string; kind: string; size: number; createdAt: string; encrypted: boolean; scope: BackupScope; modules: string[]; status: string; sha256: string | null; verifiedAt: string | null; verifyMessage: string | null; archivedAt: string | null; createdBy: string | null; rows: number | null; note: string | null; location: string }
 interface DiscordBackup { id: string; guildId: string; guildName: string; name: string; auto: boolean; status: 'PENDING' | 'READY' | 'FAILED'; stats: { roles: number; channels: number; categories: number } | null; error: string | null; createdAt: string; restoredAt: string | null; restoreResult: BackupRestoreResult | null }
 
 const fmt = (d: string) => new Date(d).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 const mb = (n: number) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
-const KIND: Record<DataFile['kind'], string> = { auto: 'automatisch', manuell: 'von Hand', 'vor-wiederherstellung': 'vor Wiederherstellung' };
+const KIND: Record<string, string> = { auto: 'automatisch', manuell: 'von Hand', 'vor-wiederherstellung': 'vor Wiederherstellung', 'vor-update': 'vor Update', 'vor-umstellung': 'vor Umstellung', 'vor-mehrserver': 'vor Mehrserver', 'vor-zusammenfuehrung': 'vor Zusammenführung' };
 const CONFIRM = 'WIEDERHERSTELLEN';
+const FREQ: Record<string, string> = { off: 'aus', hourly: 'stündlich', daily: 'täglich', weekly: 'wöchentlich', monthly: 'monatlich' };
 
 /** Administration → Backups: Discord-Server (wie Xenon) und Dashboard-Daten sichern und wiederherstellen. */
 export function Backups() {
@@ -28,13 +29,20 @@ export function Backups() {
   const c = cfg.data;
   return (
     <>
-      <PageHeader title="💾 Backups" subtitle="Discord-Server und Dashboard-Daten sichern – und bei Bedarf wiederherstellen." />
+      <PageHeader title="💾 Backup-Center" subtitle="Discord-Server und Dashboard-Daten sichern, prüfen, archivieren – und bei Bedarf kontrolliert wiederherstellen." />
       {c && (
         <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-line bg-panel p-3 text-sm">
-          <label className="flex items-center gap-2"><Toggle label="Dashboard-Daten stündlich sichern" checked={c.dataAuto} onChange={(v) => saveCfg.mutate({ ...c, dataAuto: v })} />Dashboard-Daten stündlich sichern</label>
+          <label className="flex items-center gap-2"><Toggle label="Dashboard-Daten automatisch sichern" checked={c.dataAuto} onChange={(v) => saveCfg.mutate({ ...c, dataAuto: v })} />Dashboard-Daten automatisch sichern</label>
           <label className="flex items-center gap-2"><Toggle label="Discord-Server täglich sichern" checked={c.discordAuto} onChange={(v) => saveCfg.mutate({ ...c, discordAuto: v })} />Discord-Server täglich sichern</label>
           <label className="flex items-center gap-2">Behalten<div className="w-20"><Select aria-label="Automatische Backups behalten" value={c.keep} onChange={(e) => saveCfg.mutate({ ...c, keep: Number(e.target.value) })}>{[3, 7, 14, 30, 60].map((n) => <option key={n} value={n}>{n}</option>)}</Select></div>Tage</label>
-          <p className="basis-full text-xs text-muted">Dashboard-Daten: die letzten 48 Stunden jede Stunde, davor ein Backup pro Tag. Discord: so viele Backups je Server.</p>
+          <label className="flex items-center gap-2">Zeitplan<Select aria-label="Zeitplan" className="w-36" value={c.schedule.frequency} onChange={(e) => saveCfg.mutate({ ...c, schedule: { ...c.schedule, frequency: e.target.value as BackupConfig['schedule']['frequency'] } })}>{BACKUP_FREQUENCIES.map((f) => <option key={f} value={f}>{FREQ[f]}</option>)}</Select></label>
+          {c.schedule.frequency !== 'hourly' && c.schedule.frequency !== 'off' && <label className="flex items-center gap-2">um (UTC)<Select aria-label="Stunde" className="w-20" value={c.schedule.hour} onChange={(e) => saveCfg.mutate({ ...c, schedule: { ...c.schedule, hour: Number(e.target.value) } })}>{Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}:00</option>)}</Select></label>}
+          {c.schedule.frequency === 'weekly' && <label className="flex items-center gap-2">am<Select aria-label="Wochentag" className="w-32" value={c.schedule.weekday} onChange={(e) => saveCfg.mutate({ ...c, schedule: { ...c.schedule, weekday: Number(e.target.value) } })}>{['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'].map((d, i) => <option key={d} value={i}>{d}</option>)}</Select></label>}
+          {c.schedule.frequency === 'monthly' && <label className="flex items-center gap-2">am<Select aria-label="Tag im Monat" className="w-20" value={c.schedule.monthDay} onChange={(e) => saveCfg.mutate({ ...c, schedule: { ...c.schedule, monthDay: Number(e.target.value) } })}>{Array.from({ length: 28 }, (_, d) => <option key={d} value={d + 1}>{d + 1}.</option>)}</Select></label>}
+          <label className="flex items-center gap-2">Umfang<Select aria-label="Umfang automatisch" className="w-44" value={c.autoScope} onChange={(e) => saveCfg.mutate({ ...c, autoScope: e.target.value as 'FULL' | 'DATABASE' })}><option value="DATABASE">Datenbank</option><option value="FULL">Datenbank + Dateien</option></Select></label>
+          <label className="flex items-center gap-2"><Toggle label="Verschlüsseln" checked={c.encrypt} onChange={(v) => saveCfg.mutate({ ...c, encrypt: v })} />Verschlüsseln</label>
+          <label className="flex items-center gap-2">Status-Kanal (Discord-ID)<Input aria-label="Status-Kanal" className="w-48" defaultValue={c.statusChannelId ?? ''} onBlur={(e) => { const v = e.target.value.trim(); if (v === (c.statusChannelId ?? '') || (v && !/^\d{15,25}$/.test(v))) return; saveCfg.mutate({ ...c, statusChannelId: v || null }); }} /></label>
+          <p className="basis-full text-xs text-muted">Automatische Dashboard-Backups laufen nach Zeitplan (stündlich: die letzten 48 Stunden jede Stunde, davor eines pro Tag). Archivierte Backups werden nie automatisch gelöscht. Vor Updates/Migrationen: „Vor Update“ wählen; auf dem VPS sichert deploy/update.sh zusätzlich die Datenbank. Statusmeldungen gehen an globale Administratoren und optional in einen privaten Kanal – ohne Inhalte.</p>
           {saveCfg.error && <span role="alert" className="text-danger">{errText(saveCfg.error)}</span>}
         </div>
       )}
@@ -143,54 +151,130 @@ function DiscordRestore({ backup, onClose, onDone }: { backup: DiscordBackup; on
   );
 }
 
+interface PlanRow { table: string; inBackup: number; current: number; newer: number }
+interface Plan { createdAt: string | null; migration: string | null; scope: BackupScope; modules: string[]; files: number; tables: PlanRow[]; newerRows: number; warnings: string[]; blockers: string[]; restorable: boolean }
+interface Status { encryptionAvailable: boolean; encryptionActive: boolean; lastBackupAt: string | null; lastOkAt: string | null; failed: number; location: string }
+const STATUS_TONE: Record<string, 'success' | 'danger' | 'warning' | 'neutral'> = { OK: 'success', CORRUPT: 'danger', MISSING: 'danger', FAILED: 'danger', CREATING: 'warning', UNVERIFIED: 'neutral' };
+const STATUS_TEXT: Record<string, string> = { OK: 'geprüft', CORRUPT: 'fehlerhaft', MISSING: 'Datei fehlt', FAILED: 'fehlgeschlagen', CREATING: 'wird erstellt', UNVERIFIED: 'ungeprüft' };
+
+/** Backup-Center 2.0: erstellen (Umfang wählbar), prüfen, archivieren, herunterladen, Wiederherstellung mit Plan. */
 function DataBackups() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['data-backups'], queryFn: () => api<DataFile[]>('/backups/data') });
+  const { can } = useAuth();
+  const [view, setView] = useState<'0' | '1'>('0');
+  const [term, setTerm] = useState('');
+  const q = useQuery({ queryKey: ['data-backups', view], queryFn: () => api<DataFile[]>('/backups/data', { query: { archived: view } }) });
+  const st = useQuery({ queryKey: ['backup-status'], queryFn: () => api<Status>('/backups/status') });
+  const [mk, setMk] = useState<{ scope: BackupScope; modules: BackupModuleKey[]; note: string; kind: 'manuell' | 'vor-update' }>({ scope: 'DATABASE', modules: [], note: '', kind: 'manuell' });
   const [restore, setRestore] = useState<{ name?: string; file?: File }>();
-  const [confirm, setConfirm] = useState('');
   const [del, setDel] = useState<string>();
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
-  const done = () => void qc.invalidateQueries({ queryKey: ['data-backups'] });
-  const create = useMutation({ mutationFn: () => api<{ name: string; rows: number }>('/backups/data', { method: 'POST' }), onSuccess: (r) => { setMsg({ ok: true, text: `Backup erstellt (${r.rows} Einträge).` }); done(); }, onError: (e) => setMsg({ ok: false, text: errText(e) }) });
+  const done = () => { void qc.invalidateQueries({ queryKey: ['data-backups'] }); void qc.invalidateQueries({ queryKey: ['backup-status'] }); };
+  const create = useMutation({ mutationFn: () => api<{ name: string; rows: number; encrypted: boolean }>('/backups/data', { method: 'POST', body: { scope: mk.scope, modules: mk.scope === 'MODULE' ? mk.modules : undefined, note: mk.note || undefined, kind: mk.kind } }), onSuccess: (r) => { setMsg({ ok: true, text: `Backup erstellt (${r.rows} Einträge${r.encrypted ? ', verschlüsselt' : ''}).` }); done(); }, onError: (e) => setMsg({ ok: false, text: errText(e) }) });
+  const verify = useMutation({ mutationFn: (n: string) => api<{ status: string; message: string }>(`/backups/data/${n}/verify`, { method: 'POST' }), onSuccess: (r) => { setMsg({ ok: r.status === 'OK', text: `Prüfung: ${r.message}` }); done(); } });
+  const archive = useMutation({ mutationFn: (x: { n: string; a: boolean }) => api(`/backups/data/${x.n}/archive`, { method: 'POST', body: { archived: x.a } }), onSuccess: done });
   const remove = useMutation({ mutationFn: (n: string) => api(`/backups/data/${n}`, { method: 'DELETE' }), onSuccess: () => { setDel(undefined); done(); } });
-  const run = useMutation({
-    mutationFn: () => {
-      if (restore?.file) { const fd = new FormData(); fd.append('file', restore.file); fd.append('confirm', confirm); return api<{ rows: number; safety: string }>('/backups/data-upload/restore', { method: 'POST', formData: fd }); }
-      return api<{ rows: number; safety: string }>(`/backups/data/${restore!.name}/restore`, { body: { confirm } });
-    },
-    onSuccess: (r) => { setRestore(undefined); setConfirm(''); setMsg({ ok: true, text: `Wiederhergestellt (${r.rows} Einträge). Der vorherige Stand liegt als „${r.safety}“ bereit.` }); done(); void qc.invalidateQueries(); },
-  });
+  const rows = (q.data ?? []).filter((f) => !term || [f.name, f.note, f.createdBy, f.scope].some((v) => v?.toLowerCase().includes(term.toLowerCase())));
   return (
     <div className="grid gap-3">
-      <Card title="Dashboard-Daten" actions={<Button size="sm" disabled={create.isPending} onClick={() => create.mutate()}>💾 Jetzt sichern</Button>}>
-        <p className="mb-2 text-xs text-muted">Alle Daten des Dashboards (Personal, Akten, Einsätze, Berichte, Bewerbungen, Tickets, Einstellungen, Konten …) als komprimierte Datei. Hochgeladene Dateien (Bilder, Anhänge) liegen im Speicherordner und sind nicht enthalten. Die Backups enthalten auch Konten – nur vertrauenswürdig weitergeben.</p>
+      {st.data && (
+        <div className="grid gap-2 sm:grid-cols-4">
+          <Card><p className="text-xs text-muted">Letztes Backup</p><p className="font-semibold">{st.data.lastBackupAt ? fmt(st.data.lastBackupAt) : '—'}</p></Card>
+          <Card><p className="text-xs text-muted">Letztes geprüftes</p><p className="font-semibold">{st.data.lastOkAt ? fmt(st.data.lastOkAt) : '—'}</p></Card>
+          <Card><p className="text-xs text-muted">Verschlüsselung</p><p className="font-semibold">{st.data.encryptionActive ? <Badge tone="success">aktiv (AES-256-GCM)</Badge> : st.data.encryptionAvailable ? <Badge tone="warning">abgeschaltet</Badge> : <Badge tone="danger">kein Schlüssel</Badge>}</p>{!st.data.encryptionAvailable && <p className="mt-1 text-xs text-muted">BACKUP_ENCRYPTION_KEY auf dem Server setzen.</p>}</Card>
+          <Card><p className="text-xs text-muted">Fehlerhafte Backups</p><p className="font-semibold">{st.data.failed ? <Badge tone="danger">{st.data.failed}</Badge> : <Badge tone="success">keine</Badge>}</p></Card>
+        </div>
+      )}
+      {can('backup.create') && (
+        <Card title="Backup erstellen">
+          <div className="flex flex-wrap items-end gap-3 text-sm">
+            <label className="grid gap-1">Umfang<Select aria-label="Umfang" value={mk.scope} onChange={(e) => setMk({ ...mk, scope: e.target.value as BackupScope })}>{BACKUP_SCOPES.map((x) => <option key={x} value={x}>{BACKUP_SCOPE_LABEL[x]}</option>)}</Select></label>
+            <label className="grid gap-1">Anlass<Select aria-label="Anlass" value={mk.kind} onChange={(e) => setMk({ ...mk, kind: e.target.value as 'manuell' | 'vor-update' })}><option value="manuell">Manuell</option><option value="vor-update">Vor Update/Migration</option></Select></label>
+            <label className="grid min-w-48 flex-1 gap-1">Notiz<Input value={mk.note} maxLength={300} onChange={(e) => setMk({ ...mk, note: e.target.value })} /></label>
+            <Button disabled={create.isPending || (mk.scope === 'MODULE' && !mk.modules.length)} onClick={() => create.mutate()}>💾 Jetzt sichern</Button>
+          </div>
+          {mk.scope === 'MODULE' && <div className="mt-2 flex flex-wrap gap-3 text-sm">{BACKUP_MODULE_GROUPS.map((g) => <label key={g.key} className="flex gap-1"><input type="checkbox" checked={mk.modules.includes(g.key)} onChange={() => setMk({ ...mk, modules: mk.modules.includes(g.key) ? mk.modules.filter((x) => x !== g.key) : [...mk.modules, g.key] })} />{g.label}</label>)}</div>}
+          <p className="mt-2 text-xs text-muted">Backups liegen nur im nicht öffentlichen Speicherordner der API und sind nur über geschützte Serverfunktionen erreichbar. Jede Datei bekommt eine SHA-256-Prüfsumme. Passwörter/2FA liegen ohnehin nur gehasht bzw. verschlüsselt vor.</p>
+        </Card>
+      )}
+      <Card title="Backups" actions={<div className="flex gap-2"><Input aria-label="Backups durchsuchen" placeholder="🔍 Suche" value={term} onChange={(e) => setTerm(e.target.value)} className="w-40" /><Select aria-label="Ansicht" value={view} onChange={(e) => setView(e.target.value as '0' | '1')}><option value="0">Aktuell</option><option value="1">Archiv</option></Select></div>}>
         {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mb-2 text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>}
-        {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !q.data?.length ? <EmptyState text="Noch keine Backups." /> : (
-          <ul className="divide-y divide-line">{q.data.map((f) => (
-            <li key={f.name} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-              <span className="min-w-0 flex-1"><b>{fmt(f.createdAt)}</b> <Badge tone={f.kind === 'auto' ? 'neutral' : f.kind === 'manuell' ? 'info' : 'warning'}>{KIND[f.kind]}</Badge> <span className="text-xs text-muted">{mb(f.size)}</span></span>
-              <a href={`/api/v1/backups/data/${f.name}`} className="inline-flex items-center rounded px-2 py-1 text-xs hover:bg-panel-2"><Download size={14} className="mr-1" />Herunterladen</a>
-              <Button size="sm" variant="secondary" onClick={() => { setConfirm(''); setRestore({ name: f.name }); }}><RotateCcw size={14} className="mr-1" />Wiederherstellen</Button>
-              <Button size="sm" variant="ghost" aria-label="Backup löschen" onClick={() => setDel(f.name)}><Trash2 size={14} /></Button>
-            </li>
-          ))}</ul>
+        {q.isLoading ? <SkeletonRows /> : q.error ? <ErrorState error={q.error} /> : !rows.length ? <EmptyState text="Keine Backups." /> : (
+          <div className="overflow-x-auto"><table className="w-full text-sm">
+            <thead><tr className="border-b border-line text-left text-xs text-muted"><th className="p-2">Name / Erstellt</th><th className="p-2">Typ</th><th className="p-2">Größe</th><th className="p-2">Status</th><th className="p-2">Ersteller</th><th className="p-2">Prüfsumme</th><th className="p-2" /></tr></thead>
+            <tbody>{rows.map((f) => (
+              <tr key={f.name} className="border-b border-line/60 align-top">
+                <td className="p-2"><b>{fmt(f.createdAt)}</b><span className="block text-xs text-muted [overflow-wrap:anywhere]">{f.name}</span>{f.note && <span className="block text-xs">{f.note}</span>}</td>
+                <td className="p-2"><Badge tone={f.kind === 'auto' ? 'neutral' : f.kind === 'manuell' ? 'info' : 'warning'}>{KIND[f.kind] ?? f.kind}</Badge><span className="block text-xs text-muted">{BACKUP_SCOPE_LABEL[f.scope]}{f.modules.length ? `: ${f.modules.join(', ')}` : ''}</span>{f.encrypted && <span className="block text-xs">🔒 verschlüsselt</span>}</td>
+                <td className="p-2 text-xs">{mb(f.size)}{f.rows !== null && <span className="block text-muted">{f.rows} Einträge</span>}</td>
+                <td className="p-2"><Badge tone={STATUS_TONE[f.status] ?? 'neutral'}>{STATUS_TEXT[f.status] ?? f.status}</Badge>{f.verifyMessage && f.status !== 'OK' && <span className="block text-xs text-danger">{f.verifyMessage}</span>}{f.verifiedAt && <span className="block text-xs text-muted">{fmt(f.verifiedAt)}</span>}</td>
+                <td className="p-2 text-xs">{f.createdBy ?? '—'}<span className="block text-muted">{f.location}</span></td>
+                <td className="p-2"><code className="text-xs">{f.sha256 ? `${f.sha256.slice(0, 12)}…` : '—'}</code></td>
+                <td className="p-2 text-right whitespace-nowrap">
+                  {can('backup.verify') && <Button size="sm" variant="ghost" disabled={verify.isPending} onClick={() => verify.mutate(f.name)}><ShieldCheck size={14} />Prüfen</Button>}
+                  {can('backup.download') && <a href={`/api/v1/backups/data/${f.name}`} className="inline-flex items-center rounded px-2 py-1 text-xs hover:bg-panel-2"><Download size={14} className="mr-1" />Laden</a>}
+                  {can('backup.restore') && <Button size="sm" variant="secondary" onClick={() => setRestore({ name: f.name })}><RotateCcw size={14} />Wiederherstellen</Button>}
+                  {can('backup.archive') && <Button size="sm" variant="ghost" onClick={() => archive.mutate({ n: f.name, a: !f.archivedAt })}><Archive size={14} />{f.archivedAt ? 'Zurückholen' : 'Archivieren'}</Button>}
+                  {can('backup.archive') && !f.archivedAt && <Button size="sm" variant="ghost" aria-label="Backup löschen" onClick={() => setDel(f.name)}><Trash2 size={14} /></Button>}
+                </td>
+              </tr>
+            ))}</tbody>
+          </table></div>
         )}
       </Card>
-      <Card title="Backup-Datei einspielen">
-        <p className="mb-2 text-xs text-muted">Eine heruntergeladene Backup-Datei (.json.gz) wieder einspielen – z. B. nach einem Umzug auf einen neuen Server.</p>
-        <input type="file" accept=".gz,.json,application/gzip,application/json" aria-label="Backup-Datei" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setConfirm(''); setRestore({ file }); } e.target.value = ''; }} className="text-sm" />
-      </Card>
-      {restore && (
-        <Modal open title="Dashboard-Daten wiederherstellen" onClose={() => setRestore(undefined)}>
-          <div className="grid gap-3 text-sm">
-            <p className="rounded-md border border-danger/40 bg-danger/10 p-2 text-xs"><b>Alle aktuellen Daten werden durch das Backup ersetzt</b> {restore.file ? `(Datei „${restore.file.name}“)` : ''}. Vorher wird automatisch der jetzige Stand gesichert. Angemeldete Benutzer bleiben angemeldet, das Audit-Log bleibt vollständig erhalten.</p>
-            <label className="grid gap-1">Zum Bestätigen <b>{CONFIRM}</b> eingeben<Input aria-label="Bestätigung" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>
-            {run.error && <p role="alert" className="text-danger">{errText(run.error)}</p>}
-            <div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setRestore(undefined)}>Abbrechen</Button><Button variant="danger" disabled={confirm !== CONFIRM || run.isPending} onClick={() => run.mutate()}>{run.isPending ? 'Wird eingespielt…' : 'Wiederherstellen'}</Button></div>
-          </div>
-        </Modal>
+      {can('backup.restore') && (
+        <Card title="Backup-Datei einspielen">
+          <p className="mb-2 text-xs text-muted">Eine heruntergeladene Backup-Datei (.json.gz oder verschlüsselt .json.gz.enc mit demselben Schlüssel) wieder einspielen – z. B. nach einem Umzug.</p>
+          <input type="file" accept=".gz,.enc,.json,application/gzip,application/json,application/octet-stream" aria-label="Backup-Datei" onChange={(e) => { const file = e.target.files?.[0]; if (file) setRestore({ file }); e.target.value = ''; }} className="text-sm" />
+        </Card>
       )}
-      <ConfirmDialog open={!!del} danger title="Backup löschen?" message="Die Backup-Datei wird endgültig gelöscht." confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del)} onClose={() => setDel(undefined)} />
+      {restore && <RestoreWizard source={restore} onClose={() => setRestore(undefined)} onDone={(text) => { setRestore(undefined); setMsg({ ok: true, text }); done(); void qc.invalidateQueries(); }} />}
+      <ConfirmDialog open={!!del} danger title="Backup löschen?" message="Die Backup-Datei wird endgültig gelöscht. Archivierte Backups lassen sich nicht löschen." confirmLabel="Löschen" busy={remove.isPending} onConfirm={() => del && remove.mutate(del)} onClose={() => setDel(undefined)} />
     </div>
+  );
+}
+
+/**
+ * Wiederherstellung in Schritten: Plan laden (Integrität, Version, Umfang, neuere Daten) → Umfang wählen (vollständig oder
+ * Bereiche) → ausdrücklich bestätigen (bei neueren Daten zusätzlich) → einspielen → Ergebnisprüfung anzeigen.
+ */
+function RestoreWizard({ source, onClose, onDone }: { source: { name?: string; file?: File }; onClose: () => void; onDone: (text: string) => void }) {
+  const [groups, setGroups] = useState<BackupModuleKey[]>([]);
+  const [confirm, setConfirm] = useState('');
+  const [ack, setAck] = useState(false);
+  const plan = useQuery({ queryKey: ['restore-plan', source.name, groups], queryFn: () => api<Plan>(`/backups/data/${source.name}/plan`, { method: 'POST', body: { groups: groups.length ? groups : undefined } }), enabled: !!source.name, retry: false });
+  const run = useMutation({
+    mutationFn: () => {
+      if (source.file) { const fd = new FormData(); fd.append('file', source.file); fd.append('confirm', confirm); fd.append('acknowledgeNewer', String(ack)); return api<{ rows: number; files: number; safety: string; check: { ok: boolean; mismatches: string[] } }>('/backups/data-upload/restore', { method: 'POST', formData: fd }); }
+      return api<{ rows: number; files: number; safety: string; check: { ok: boolean; mismatches: string[] } }>(`/backups/data/${source.name}/restore`, { body: { confirm, groups: groups.length ? groups : undefined, acknowledgeNewer: ack } });
+    },
+    onSuccess: (r) => onDone(`Wiederhergestellt: ${r.rows} Einträge, ${r.files} Dateien. Systemprüfung: ${r.check.ok ? 'in Ordnung' : `Abweichungen (${r.check.mismatches.join(', ')})`}. Der vorherige Stand liegt als „${r.safety}“ bereit.`),
+  });
+  const p = plan.data;
+  const needAck = !!p?.newerRows || !!source.file;
+  return (
+    <Modal open wide title="Daten wiederherstellen" onClose={onClose}>
+      <div className="grid gap-3 text-sm">
+        {source.name && (
+          <fieldset><legend className="mb-1 text-muted">Umfang (leer = alles aus dem Backup)</legend>
+            <div className="flex flex-wrap gap-3">{BACKUP_MODULE_GROUPS.map((g) => <label key={g.key} className="flex gap-1"><input type="checkbox" checked={groups.includes(g.key)} onChange={() => setGroups(groups.includes(g.key) ? groups.filter((x) => x !== g.key) : [...groups, g.key])} />{g.label}</label>)}</div></fieldset>
+        )}
+        {source.name && (plan.isLoading ? <SkeletonRows rows={3} /> : plan.error ? <p role="alert" className="text-danger">{errText(plan.error)}</p> : p && (
+          <div className="grid gap-2">
+            <p>Backup vom <b>{p.createdAt ? fmt(p.createdAt) : '—'}</b> · Version {p.migration ?? 'unbekannt'} · {BACKUP_SCOPE_LABEL[p.scope]}{p.files ? ` · ${p.files} Dateien` : ''}</p>
+            {p.blockers.map((b) => <p key={b} role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-2 text-xs">⛔ {b}</p>)}
+            {p.warnings.map((w) => <p key={w} className="rounded-md border border-warning/40 bg-warning/10 p-2 text-xs">⚠️ {w}</p>)}
+            <details><summary className="cursor-pointer text-muted">Betroffene Tabellen ({p.tables.length})</summary>
+              <table className="mt-1 w-full text-xs"><thead><tr className="text-left text-muted"><th>Tabelle</th><th>im Backup</th><th>aktuell</th><th>neuer als Backup</th></tr></thead><tbody>{p.tables.map((t) => <tr key={t.table}><td>{t.table}</td><td>{t.inBackup}</td><td>{t.current}</td><td className={t.newer ? 'text-warning' : ''}>{t.newer}</td></tr>)}</tbody></table></details>
+          </div>
+        ))}
+        {source.file && <p className="rounded-md border border-warning/40 bg-warning/10 p-2 text-xs">Hochgeladene Datei „{source.file.name}“: Integrität, Version und Umfang prüft der Server beim Einspielen; neuere Daten werden überschrieben.</p>}
+        <p className="rounded-md border border-danger/40 bg-danger/10 p-2 text-xs"><b>Die betroffenen Daten werden durch das Backup ersetzt.</b> Vorher wird automatisch der jetzige Stand gesichert. Sitzungen und das Audit-Log bleiben erhalten.</p>
+        {needAck && <label className="flex items-center gap-2"><input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />Mir ist bewusst, dass neuere Daten überschrieben werden.</label>}
+        <label className="grid gap-1">Zum Bestätigen <b>{CONFIRM}</b> eingeben<Input aria-label="Bestätigung" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>
+        {run.error && <p role="alert" className="text-danger">{errText(run.error)}</p>}
+        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>Abbrechen</Button><Button variant="danger" disabled={confirm !== CONFIRM || (needAck && !ack) || (!!p && !p.restorable) || run.isPending} onClick={() => run.mutate()}>{run.isPending ? 'Wird wiederhergestellt …' : 'Wiederherstellen'}</Button></div>
+      </div>
+    </Modal>
   );
 }

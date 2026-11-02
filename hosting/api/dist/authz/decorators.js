@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CurrentActor = exports.CurrentUser = exports.DiscordManagerAllows = exports.DISCORD_MANAGER_KEY = exports.RequirePermission = exports.ServiceAuthorized = exports.BotService = exports.Public = exports.SERVICE_AUTHORIZED_KEY = exports.BOT_SERVICE_KEY = exports.PERMISSION_KEY = exports.PUBLIC_KEY = void 0;
+exports.CurrentActor = exports.CurrentUser = exports.DiscordManagerAllows = exports.DISCORD_MANAGER_KEY = exports.RequireAnyPermission = exports.ANY_PERMISSION_KEY = exports.RequirePermission = exports.ServiceAuthorized = exports.BotService = exports.Public = exports.SERVICE_AUTHORIZED_KEY = exports.BOT_SERVICE_KEY = exports.PERMISSION_KEY = exports.PUBLIC_KEY = void 0;
 const common_1 = require("@nestjs/common");
 const common_2 = require("@nestjs/common");
 exports.PUBLIC_KEY = 'isPublic';
@@ -21,6 +21,10 @@ exports.ServiceAuthorized = ServiceAuthorized;
 /** Alle genannten Permissions werden benötigt. */
 const RequirePermission = (...p) => (0, common_1.SetMetadata)(exports.PERMISSION_KEY, p);
 exports.RequirePermission = RequirePermission;
+exports.ANY_PERMISSION_KEY = 'anyPermissions';
+/** Mindestens EINE der genannten Permissions wird benötigt (z. B. `personnel.view` ODER `personnel.view_unit`; die Feinprüfung macht der Service). */
+const RequireAnyPermission = (...p) => (0, common_1.SetMetadata)(exports.ANY_PERMISSION_KEY, p);
+exports.RequireAnyPermission = RequireAnyPermission;
 exports.DISCORD_MANAGER_KEY = 'discordManager';
 /**
  * Discord-Buttons an Bewerbungen: wer im Discord eine der eingestellten Manager-Rollen (Setup → Role Config) hat, darf die

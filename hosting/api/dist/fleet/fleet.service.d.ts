@@ -397,8 +397,8 @@ export declare class FleetService {
         name: string;
         erlcName: string;
         department: string | null;
-        internalCode: string | null;
         tags: string[];
+        internalCode: string | null;
         imageId: string | null;
     }[]>;
     /** Modellnamen, die ER:LC bisher gemeldet hat und die noch nicht im Katalog stehen (Vorschläge zum Übernehmen). */
@@ -417,8 +417,8 @@ export declare class FleetService {
         name: string;
         erlcName: string;
         department: string | null;
-        internalCode: string | null;
         tags: string[];
+        internalCode: string | null;
         imageId: string | null;
     }>;
     updateModel(actor: Actor, id: string, d: Partial<FleetModelInput>): Promise<{
@@ -431,8 +431,8 @@ export declare class FleetService {
         name: string;
         erlcName: string;
         department: string | null;
-        internalCode: string | null;
         tags: string[];
+        internalCode: string | null;
         imageId: string | null;
     }>;
     deleteModel(actor: Actor, id: string): Promise<void>;

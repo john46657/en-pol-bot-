@@ -24,6 +24,7 @@ export declare class TicketConfigService {
             name: string;
             position: number;
             questions: Prisma.JsonValue;
+            confidential: boolean;
             archivedAt: Date | null;
             departmentId: string | null;
             formVersion: number;
@@ -73,7 +74,6 @@ export declare class TicketConfigService {
             autoUnclaimMinutes: number;
             staffAlertMinutes: number;
             closeRequestCloses: boolean;
-            confidential: boolean;
             formMode: string;
             escalateUnassignedMinutes: number;
             extraUserIds: string[];
@@ -177,12 +177,12 @@ export declare class TicketConfigService {
                     dm: boolean;
                     dashboard: boolean;
                 };
-                claimed: {
+                assigned: {
                     channel: boolean;
                     dm: boolean;
                     dashboard: boolean;
                 };
-                assigned: {
+                claimed: {
                     channel: boolean;
                     dm: boolean;
                     dashboard: boolean;
@@ -338,6 +338,7 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -387,7 +388,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -421,6 +421,7 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -470,7 +471,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -512,6 +512,7 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -561,7 +562,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -609,6 +609,7 @@ export declare class TicketConfigService {
         name: string;
         position: number;
         questions: Prisma.JsonValue;
+        confidential: boolean;
         archivedAt: Date | null;
         departmentId: string | null;
         formVersion: number;
@@ -658,7 +659,6 @@ export declare class TicketConfigService {
         autoUnclaimMinutes: number;
         staffAlertMinutes: number;
         closeRequestCloses: boolean;
-        confidential: boolean;
         formMode: string;
         escalateUnassignedMinutes: number;
         extraUserIds: string[];
@@ -803,12 +803,12 @@ export declare class TicketConfigService {
                 dm: boolean;
                 dashboard: boolean;
             };
-            claimed: {
+            assigned: {
                 channel: boolean;
                 dm: boolean;
                 dashboard: boolean;
             };
-            assigned: {
+            claimed: {
                 channel: boolean;
                 dm: boolean;
                 dashboard: boolean;

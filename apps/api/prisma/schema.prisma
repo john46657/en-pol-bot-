@@ -539,31 +539,38 @@ model EvidenceTransfer {
 // ───────────── Personnel / Dienst ─────────────
 
 model Personnel {
-  id                 String               @id @default(uuid()) @db.Uuid
+  id                   String                   @id @default(uuid()) @db.Uuid
   /// Bereich des Discord-Servers (Akten-Bereich, siehe server-scope.ts); null = gemeinsamer Altbestand
-  serverId           String?              @db.Uuid
-  userId             String               @db.Uuid
-  rank               String?
-  team               String?
-  callsign           String?
+  serverId             String?                  @db.Uuid
+  userId               String                   @db.Uuid
+  rank                 String?
+  team                 String?
+  callsign             String?
   /// Büro (Liste unter Einstellungen → Teamstruktur)
-  office             String?
+  office               String?
   /// Dienstnummer
-  serviceNumber      String?
-  employmentStatus   String               @default("ACTIVE")
-  joinDate           DateTime             @default(now())
-  qualifications     String[]             @default([])
+  serviceNumber        String?
+  employmentStatus     String                   @default("ACTIVE")
+  joinDate             DateTime                 @default(now())
+  qualifications       String[]                 @default([])
   /// seit wann im aktuellen Rang (Beförderungsvoraussetzung „Mindestzeit im Rang“)
-  rankSince          DateTime             @default(now())
+  rankSince            DateTime                 @default(now())
   /// abgehakte frei definierte Voraussetzungen { <Voraussetzungs-ID>: true }
-  customChecks       Json                 @default("{}")
-  updatedAt          DateTime             @default(now()) @updatedAt
-  hrRequests         HrRequest[]
-  trainingProgress   HrTrainingProgress[]
-  examAttempts       HrExamAttempt[]
-  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  academyEnrollments AcademyEnrollment[]
-  records            PersonnelRecord[]
+  customChecks         Json                     @default("{}")
+  updatedAt            DateTime                 @default(now()) @updatedAt
+  hrRequests           HrRequest[]
+  trainingProgress     HrTrainingProgress[]
+  examAttempts         HrExamAttempt[]
+  user                 User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  academyEnrollments   AcademyEnrollment[]
+  records              PersonnelRecord[]
+  /// Personalakte 2.0
+  documents            PersonnelDocument[]
+  qualificationRecs    PersonnelQualification[]
+  orgAssignments       OrgAssignment[]
+  orgLeads             OrgUnit[]                @relation("OrgLeader")
+  orgDeputies          OrgUnit[]                @relation("OrgDeputy")
+  practicalAssessments HrPracticalAssessment[]
 
   @@unique([serverId, userId])
   @@unique([serverId, callsign])
@@ -572,23 +579,26 @@ model Personnel {
 
 /// Beförderungen, Auszeichnungen, Disziplinarmaßnahmen (nur mit personnel.* sichtbar).
 model PersonnelRecord {
-  id          String    @id @default(uuid()) @db.Uuid
-  personnelId String    @db.Uuid
-  type        String // PROMOTION | TRANSFER | AWARD | WARNING | DISCIPLINE | NOTE | RECOMMENDATION | SERVICE_NUMBER | STATUS | TRAINING | EXAM
-  summary     String
-  details     String?
+  id           String                    @id @default(uuid()) @db.Uuid
+  personnelId  String                    @db.Uuid
+  type         String // PROMOTION | TRANSFER | AWARD | WARNING | DISCIPLINE | NOTE | RECOMMENDATION | SERVICE_NUMBER | STATUS | TRAINING | EXAM
+  summary      String
+  details      String?
   /// strukturierte Angaben je Art (z. B. Beförderung: from/to/Antragsteller/Genehmiger; Verwarnung: Kategorie/Schweregrad)
-  data        Json?
+  data         Json?
   /// z. B. Verwarnung ACTIVE | EXPIRED | REVOKED
-  status      String?
-  expiresAt   DateTime?
-  attachments String[]  @default([])
-  createdById String    @db.Uuid
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  status       String?
+  expiresAt    DateTime?
+  attachments  String[]                  @default([])
+  createdById  String                    @db.Uuid
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @default(now()) @updatedAt
   /// weich gelöscht (nur mit Recht; bleibt im Audit nachvollziehbar)
-  deletedAt   DateTime?
-  personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  deletedAt    DateTime?
+  /// Personalakte 2.0: vertraulicher Vermerk (nur mit personnel.notes_confidential sichtbar)
+  confidential Boolean                   @default(false)
+  personnel    Personnel                 @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  revisions    PersonnelRecordRevision[]
 
   @@index([personnelId, createdAt])
   @@index([type, createdAt])
@@ -838,16 +848,17 @@ model Notification {
 }
 
 model Media {
-  id           String   @id @default(uuid()) @db.Uuid
-  originalName String
-  mime         String
-  size         Int
-  hash         String
-  storageKey   String   @unique
-  uploaderId   String   @db.Uuid
-  linkedType   String?
-  linkedId     String?
-  createdAt    DateTime @default(now())
+  id                 String              @id @default(uuid()) @db.Uuid
+  originalName       String
+  mime               String
+  size               Int
+  hash               String
+  storageKey         String              @unique
+  uploaderId         String              @db.Uuid
+  linkedType         String?
+  linkedId           String?
+  createdAt          DateTime            @default(now())
+  personnelDocuments PersonnelDocument[]
 
   @@index([linkedType, linkedId])
 }
@@ -3059,4 +3070,298 @@ model DocumentVersion {
   document     Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
 
   @@unique([documentId, number])
+}
+
+// ───────────── Erweiterungspaket 4.0: Personalakte 2.0, Qualifikationen, Ausbildung, Organigramm, Backup-Center, Hilfe-Center ─────────────
+
+/// Änderungsverlauf eines Personalvermerks: Stand VOR jeder Bearbeitung (nichts geht verloren).
+model PersonnelRecordRevision {
+  id           String          @id @default(uuid()) @db.Uuid
+  recordId     String          @db.Uuid
+  summary      String
+  details      String?
+  category     String?
+  confidential Boolean         @default(false)
+  editedById   String          @db.Uuid
+  reason       String?
+  createdAt    DateTime        @default(now())
+  record       PersonnelRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId, createdAt])
+}
+
+/// Dokument in der Personalakte (Datei liegt in Media, Verknüpfung `PersonnelDocument`). Wird archiviert, nie gelöscht.
+model PersonnelDocument {
+  id           String    @id @default(uuid()) @db.Uuid
+  serverId     String?   @db.Uuid
+  personnelId  String    @db.Uuid
+  mediaId      String    @db.Uuid
+  /// PERSONNEL | TRAINING | EXAM | OTHER
+  kind         String    @default("PERSONNEL")
+  title        String
+  note         String?
+  confidential Boolean   @default(false)
+  uploadedById String    @db.Uuid
+  createdAt    DateTime  @default(now())
+  archivedAt   DateTime?
+  archivedById String?   @db.Uuid
+  personnel    Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  media        Media     @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([personnelId, createdAt])
+  @@index([serverId])
+}
+
+/// Katalog der Qualifikationen (je Server). Nichts ist vorgegeben – angelegt wird nur, was Administratoren anlegen.
+model QualificationDefinition {
+  id          String                   @id @default(uuid()) @db.Uuid
+  serverId    String?                  @db.Uuid
+  name        String
+  description String?
+  color       String?
+  /// in Leitstelle/MDT zur Einsatzkoordination anzeigen
+  operational Boolean                  @default(true)
+  validDays   Int?
+  /// bei bestandener Leistung sofort aktiv (sonst „Zur Bestätigung“)
+  autoGrant   Boolean                  @default(false)
+  /// Ausbildungen/Theorieprüfungen, deren Bestehen diese Qualifikation erzeugt (praktische Prüfungen verknüpfen selbst)
+  trainingIds String[]                 @default([])
+  examIds     String[]                 @default([])
+  active      Boolean                  @default(true)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  records     PersonnelQualification[]
+
+  @@unique([serverId, name])
+}
+
+/// Qualifikation einer Person (Register). `Personnel.qualifications` (Namen) wird für bestehende Anzeigen mitgeführt.
+model PersonnelQualification {
+  id                String                   @id @default(uuid()) @db.Uuid
+  serverId          String?                  @db.Uuid
+  personnelId       String                   @db.Uuid
+  definitionId      String?                  @db.Uuid
+  name              String
+  /// PENDING | ACTIVE | SUSPENDED | REVOKED | EXPIRED
+  status            String                   @default("ACTIVE")
+  /// MANUAL | TRAINING | EXAM | PRACTICAL | LEGACY
+  source            String                   @default("MANUAL")
+  sourceId          String?
+  issuedAt          DateTime?
+  issuedById        String?                  @db.Uuid
+  expiresAt         DateTime?
+  note              String?
+  statusReason      String?
+  statusChangedAt   DateTime?
+  statusChangedById String?                  @db.Uuid
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  personnel         Personnel                @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+  definition        QualificationDefinition? @relation(fields: [definitionId], references: [id], onDelete: SetNull)
+
+  @@index([personnelId, status])
+  @@index([definitionId, status])
+  @@index([serverId])
+}
+
+/// Lernmaterial (Text, Regelwerk, Anleitung, Bilder/Dokumente, Wissensabfrage), verknüpfbar mit Ausbildungen und Qualifikationen.
+model HrLearningMaterial {
+  id                 String    @id @default(uuid()) @db.Uuid
+  serverId           String?   @db.Uuid
+  title              String
+  kind               String    @default("TEXT")
+  body               String    @default("")
+  mediaIds           String[]  @default([])
+  trainingIds        String[]  @default([])
+  qualificationDefId String?   @db.Uuid
+  examId             String?   @db.Uuid
+  published          Boolean   @default(false)
+  version            Int       @default(1)
+  createdById        String    @db.Uuid
+  updatedById        String?   @db.Uuid
+  archivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([serverId])
+}
+
+/// Praktische Prüfung (Vorlage mit Aufgaben und Bewertungskriterien).
+model HrPracticalExam {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  serverId           String?                 @db.Uuid
+  title              String
+  description        String?
+  tasks              String?
+  /// [{ id, label, description, maxPoints, required, minPoints }]
+  criteria           Json                    @default("[]")
+  passPoints         Int
+  examinerIds        String[]                @default([])
+  trainingId         String?                 @db.Uuid
+  qualificationDefId String?                 @db.Uuid
+  active             Boolean                 @default(true)
+  createdById        String                  @db.Uuid
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  assessments        HrPracticalAssessment[]
+
+  @@index([serverId])
+}
+
+/// Bewertung eines Prüflings in einer praktischen Prüfung (Kriterien beim Start eingefroren).
+model HrPracticalAssessment {
+  id              String          @id @default(uuid()) @db.Uuid
+  examId          String          @db.Uuid
+  personnelId     String          @db.Uuid
+  examinerId      String          @db.Uuid
+  /// OPEN | COMPLETED | CANCELLED
+  status          String          @default("OPEN")
+  criteria        Json
+  passPoints      Int
+  /// { [kriteriumId]: { points, note } }
+  scores          Json            @default("{}")
+  total           Int?
+  maxPoints       Int?
+  passed          Boolean?
+  remarks         String?
+  cancelledReason String?
+  startedAt       DateTime        @default(now())
+  completedAt     DateTime?
+  exam            HrPracticalExam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  personnel       Personnel       @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
+  @@index([examId, status])
+  @@index([personnelId])
+}
+
+/// Organisationseinheit (Organigramm). Wird deaktiviert, nie gelöscht – historische Zuordnungen bleiben nachvollziehbar.
+model OrgUnit {
+  id                String          @id @default(uuid()) @db.Uuid
+  serverId          String?         @db.Uuid
+  parentId          String?         @db.Uuid
+  name              String
+  /// LEADERSHIP | DEPUTY_LEADERSHIP | DEPARTMENT | DUTY_GROUP | UNIT | OTHER
+  kind              String
+  description       String?
+  responsibilities  String?
+  /// Abteilung aus den Personal-Einstellungen: Mitglieder = Personalakten dieser Abteilung (Versetzungen laufen weiter über Anträge)
+  departmentName    String?
+  leaderPersonnelId String?         @db.Uuid
+  deputyPersonnelId String?         @db.Uuid
+  color             String?
+  position          Int             @default(0)
+  active            Boolean         @default(true)
+  deactivatedAt     DateTime?
+  version           Int             @default(1)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  parent            OrgUnit?        @relation("OrgTree", fields: [parentId], references: [id], onDelete: NoAction)
+  children          OrgUnit[]       @relation("OrgTree")
+  leader            Personnel?      @relation("OrgLeader", fields: [leaderPersonnelId], references: [id], onDelete: SetNull)
+  deputy            Personnel?      @relation("OrgDeputy", fields: [deputyPersonnelId], references: [id], onDelete: SetNull)
+  assignments       OrgAssignment[]
+
+  @@index([serverId, parentId])
+}
+
+/// Zuordnung einer Person zu einer Einheit. Beenden setzt `endedAt` (Historie bleibt).
+model OrgAssignment {
+  id          String    @id @default(uuid()) @db.Uuid
+  unitId      String    @db.Uuid
+  personnelId String    @db.Uuid
+  function    String?
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  createdById String    @db.Uuid
+  endedById   String?   @db.Uuid
+  unit        OrgUnit   @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  personnel   Personnel @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
+  @@index([unitId, endedAt])
+  @@index([personnelId, endedAt])
+}
+
+/// Manifest eines Daten-Backups (Datei im Speicherordner): Prüfsumme, Verschlüsselung, Prüfergebnis, Archiv.
+model BackupRecord {
+  id            String    @id @default(uuid()) @db.Uuid
+  fileName      String    @unique
+  kind          String
+  /// FULL | DATABASE | CONFIG | FILES | MODULE
+  scope         String    @default("DATABASE")
+  modules       String[]  @default([])
+  sizeBytes     Int       @default(0)
+  sha256        String?
+  encrypted     Boolean   @default(false)
+  /// CREATING | OK | CORRUPT | MISSING | FAILED
+  status        String    @default("CREATING")
+  verifiedAt    DateTime?
+  verifyMessage String?
+  rows          Int?
+  migration     String?
+  formatVersion Int       @default(2)
+  error         String?
+  note          String?
+  archivedAt    DateTime?
+  archivedById  String?   @db.Uuid
+  createdById   String?   @db.Uuid
+  createdAt     DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+model HelpCategory {
+  id          String        @id @default(uuid()) @db.Uuid
+  serverId    String?       @db.Uuid
+  name        String
+  description String?
+  icon        String?
+  position    Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  articles    HelpArticle[]
+
+  @@unique([serverId, name])
+}
+
+/// Hilfe-Artikel (Artikel, Anleitung, FAQ). Veröffentlichungsstatus + Änderungsverlauf (HelpArticleRevision).
+model HelpArticle {
+  id          String                @id @default(uuid()) @db.Uuid
+  serverId    String?               @db.Uuid
+  categoryId  String?               @db.Uuid
+  slug        String
+  title       String
+  kind        String                @default("ARTICLE")
+  summary     String?
+  body        String                @default("")
+  mediaIds    String[]              @default([])
+  tags        String[]              @default([])
+  /// DRAFT | PUBLISHED | ARCHIVED
+  status      String                @default("DRAFT")
+  version     Int                   @default(1)
+  publishedAt DateTime?
+  createdById String                @db.Uuid
+  updatedById String?               @db.Uuid
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  category    HelpCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  revisions   HelpArticleRevision[]
+
+  @@unique([serverId, slug])
+  @@index([status])
+}
+
+model HelpArticleRevision {
+  id         String      @id @default(uuid()) @db.Uuid
+  articleId  String      @db.Uuid
+  version    Int
+  title      String
+  summary    String?
+  body       String
+  status     String
+  changeNote String?
+  editedById String      @db.Uuid
+  createdAt  DateTime    @default(now())
+  article    HelpArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, version])
 }

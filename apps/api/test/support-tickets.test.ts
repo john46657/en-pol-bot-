@@ -176,6 +176,8 @@ describe('opening a ticket from Discord', () => {
     expect(tr.total).toBe(1);
     expect((await staff.get(`/api/v1/support-tickets/transcripts/${tr.items[0].id}`)).headers['content-security-policy']).toContain('sandbox');
     expect((await staff.delete(`/api/v1/support-tickets/transcripts/${tr.items[0].id}`)).status).toBe(403);
+    // Statistik gilt für alle Tickets: Bewertungen anderer Testdateien (je nach Reihenfolge vorher gelaufen) herausnehmen
+    await prisma.ticketRating.deleteMany({ where: { ticketId: { not: id } } });
     const stats = (await staff.get('/api/v1/support-tickets/stats')).body;
     // Statistik gilt für den ganzen Server – andere Testdateien können dort ebenfalls Tickets/Bewertungen anlegen
     // (nur Tickets, die der Mitarbeiter sehen darf) → hier mindestens die eigene Eskalation und Bewertung

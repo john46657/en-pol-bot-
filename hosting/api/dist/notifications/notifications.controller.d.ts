@@ -125,8 +125,8 @@ export declare class NotificationsController {
             userId: string;
             entityId: string | null;
             archivedAt: Date | null;
-            entityType: string | null;
             body: string | null;
+            entityType: string | null;
             event: string | null;
             important: boolean;
             dedupeKey: string | null;
@@ -145,8 +145,8 @@ export declare class NotificationsController {
             userId: string;
             entityId: string | null;
             archivedAt: Date | null;
-            entityType: string | null;
             body: string | null;
+            entityType: string | null;
             event: string | null;
             important: boolean;
             dedupeKey: string | null;

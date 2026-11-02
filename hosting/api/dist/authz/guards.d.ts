@@ -29,6 +29,7 @@ export declare class PermissionGuard implements CanActivate {
     private readonly moduleRef;
     constructor(reflector: Reflector, authz: AuthorizationService, moduleRef: ModuleRef);
     canActivate(ctx: ExecutionContext): Promise<boolean>;
+    private checkAll;
     /** Bot-Klick mit Manager-Rolle der Bewerbung: fehlt NUR das Recht (Server, Mitgliedschaft, Modul passen), reicht die Rolle. */
     private discordManager;
 }

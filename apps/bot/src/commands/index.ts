@@ -14,6 +14,7 @@ import { BACKUP_COMMANDS } from './backup';
 import { EXAM_COMMANDS } from './exams';
 import { BOT_PROFILE_COMMANDS } from './bot-profile';
 import { REMINDER_COMMANDS } from './reminders';
+import { EXTENSION4_COMMANDS, helpSearch } from './extension4';
 import { ADMINISTRATION_COMMANDS } from './administration';
 import { COLORS, EmbedData, errorReply, label, listEmbed, okReply, plain, Row } from '../format';
 import type { CommandDef, Ctx } from './types';
@@ -71,11 +72,13 @@ export const COMMANDS: CommandDef[] = [
     },
   })),
   {
-    name: 'hilfe', description: 'Zeigt alle Befehle',
-    async run() {
+    name: 'hilfe', description: 'Zeigt alle Befehle – mit „suche“ durchsucht er das Hilfe-Center',
+    options: [{ name: 'suche', description: 'Hilfe-Center durchsuchen, z. B. „Dienst anmelden“', type: 'string', maxLength: 100 }],
+    async run(c) {
+      if (String(c.opts.suche ?? '').trim()) return helpSearch(c);
       return { ephemeral: true, embeds: [{ title: 'EN Polizei — Befehle', color: COLORS.info, fields: [
         { name: 'Konto', value: '`/dashboard` `/panel` `/benachrichtigungen`' },
-        { name: 'Abfragen', value: '`/team`' },
+        { name: 'Abfragen', value: '`/team` `/personal akte` `/personal qualifikationen` `/organigramm` `/hilfe suche:` (Hilfe-Center)' },
         { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`' },
         { name: 'Erfassen', value: '`/dienstbericht` `/dienstbericht liste`' },
         { name: 'Dienstplanung & Verwaltung', value: '`/schichtplan anzeigen|meine|uebersicht|anmelden|abmelden|melden` `/termine liste|anmelden|absagen` `/antrag befoerderung|versetzung|status|antworten|zurueckziehen` `/dokument` `/benachrichtigungen dm:`' },
@@ -178,6 +181,7 @@ export const COMMANDS: CommandDef[] = [
   ...EXAM_COMMANDS,
   ...BOT_PROFILE_COMMANDS,
   ...REMINDER_COMMANDS,
+  ...EXTENSION4_COMMANDS,
   ...ADMINISTRATION_COMMANDS,
 ];
 

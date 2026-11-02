@@ -13,13 +13,13 @@ export declare const docMeta: z.ZodObject<{
     roleIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     title: string;
-    category: "TRAINING" | "OTHER" | "DISPATCH" | "TEMPLATE" | "EXAM" | "DIRECTIVE" | "RULES" | "POLICY";
+    category: "OTHER" | "TRAINING" | "DISPATCH" | "TEMPLATE" | "EXAM" | "RULES" | "DIRECTIVE" | "POLICY";
     roleIds: string[];
     access: "ALL" | "ROLES" | "CONFIDENTIAL";
     description?: string | null | undefined;
 }, {
     title: string;
-    category: "TRAINING" | "OTHER" | "DISPATCH" | "TEMPLATE" | "EXAM" | "DIRECTIVE" | "RULES" | "POLICY";
+    category: "OTHER" | "TRAINING" | "DISPATCH" | "TEMPLATE" | "EXAM" | "RULES" | "DIRECTIVE" | "POLICY";
     description?: string | null | undefined;
     roleIds?: string[] | undefined;
     access?: "ALL" | "ROLES" | "CONFIDENTIAL" | undefined;
@@ -34,14 +34,14 @@ export declare const docForm: z.ZodObject<{
     note: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     title: string;
-    category: "TRAINING" | "OTHER" | "DISPATCH" | "TEMPLATE" | "EXAM" | "DIRECTIVE" | "RULES" | "POLICY";
+    category: "OTHER" | "TRAINING" | "DISPATCH" | "TEMPLATE" | "EXAM" | "RULES" | "DIRECTIVE" | "POLICY";
     access: "ALL" | "ROLES" | "CONFIDENTIAL";
     description?: string | undefined;
     roleIds?: string | undefined;
     note?: string | undefined;
 }, {
     title: string;
-    category: "TRAINING" | "OTHER" | "DISPATCH" | "TEMPLATE" | "EXAM" | "DIRECTIVE" | "RULES" | "POLICY";
+    category: "OTHER" | "TRAINING" | "DISPATCH" | "TEMPLATE" | "EXAM" | "RULES" | "DIRECTIVE" | "POLICY";
     description?: string | undefined;
     roleIds?: string | undefined;
     note?: string | undefined;

@@ -69,6 +69,15 @@ const ServiceNumbers = lazy(() => import('./pages/hr/ServiceNumbers').then((m) =
 const DutyReports = lazy(() => import('./pages/DutyReports').then((m) => ({ default: m.DutyReports })));
 const Offices = lazy(() => import('./pages/Offices').then((m) => ({ default: m.Offices })));
 const PersonalSettings = lazy(() => import('./pages/PersonalSettings').then((m) => ({ default: m.PersonalSettings })));
+const OrgPage = lazy(() => import('./pages/Org').then((m) => ({ default: m.OrgPage })));
+const HelpCenter = lazy(() => import('./pages/Help').then((m) => ({ default: m.HelpCenter })));
+const AccessMatrix = lazy(() => import('./pages/admin/AccessMatrix').then((m) => ({ default: m.AccessMatrix })));
+const MdtPersonnel = lazy(() => import('./pages/mdt/MdtPersonnel').then((m) => ({ default: m.MdtPersonnel })));
+const UnitPersonnelPage = lazy(() => import('./pages/hr/TrainingExt').then((m) => ({ default: m.UnitPersonnelPage })));
+const UnitFilePage = lazy(() => import('./pages/hr/TrainingExt').then((m) => ({ default: m.UnitFilePage })));
+const QualificationRegistryPage = lazy(() => import('./pages/hr/TrainingExt').then((m) => ({ default: m.QualificationRegistryPage })));
+const LearningMaterialsPage = lazy(() => import('./pages/hr/TrainingExt').then((m) => ({ default: m.LearningMaterialsPage })));
+const PracticalExamsPage = lazy(() => import('./pages/hr/TrainingExt').then((m) => ({ default: m.PracticalExamsPage })));
 const Studio = lazy(() => import('./pages/admin/Studio').then((m) => ({ default: m.Studio })));
 import * as R from './pages/resources';
 import { CadLayout } from './pages/cad/CadLayout';
@@ -188,6 +197,7 @@ export function App() {
           <Route path="incidents/:id" element={<Guard perm="incidents.view"><RecordPage cfg={{ ...R.records.incidents!, back: '/mdt/incidents' }} /></Guard>} />
           <Route path="roster" element={<Guard perm="team.view"><TeamList /></Guard>} />
           <Route path="officers" element={list(R.personnel, 'personnel.view')} />
+          <Route path="personnel" element={<Guard perm="team.view"><MdtPersonnel /></Guard>} />
           <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
         </Route>
         {/* CAD-Leitstelle: ebenfalls eigene Vollbild-Oberfläche */}
@@ -205,6 +215,7 @@ export function App() {
           <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
           <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
           <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
+          <Route path="personnel" element={<Guard perm="cad.view"><MdtPersonnel title="🧭 Qualifikationen & Führung" /></Guard>} />
           <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
           <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
           <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
@@ -213,6 +224,14 @@ export function App() {
           <Route index element={<Home />} />
           <Route path="servers" element={<ServerOverview />} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
+          <Route path="org" element={<Guard perm="org.view"><OrgPage /></Guard>} />
+          <Route path="help" element={<Guard perm="help.view"><HelpCenter /></Guard>} />
+          <Route path="admin/access-matrix" element={<Guard perm="roles.view" area="dashboard.settings.view"><AccessMatrix /></Guard>} />
+          <Route path="personnel/unit" element={<Guard perm="personnel.view_unit"><UnitPersonnelPage /></Guard>} />
+          <Route path="personnel/unit/:id" element={<Guard perm="personnel.view_unit"><UnitFilePage /></Guard>} />
+          <Route path="qualification-registry" element={<Guard perm="qualification.view|qualification.manage"><QualificationRegistryPage /></Guard>} />
+          <Route path="training/materials" element={<Guard perm="training.view"><LearningMaterialsPage /></Guard>} />
+          <Route path="training/practical" element={<Guard perm="exam.view|exam.conduct"><PracticalExamsPage /></Guard>} />
           <Route path="team" element={<Guard perm="team.view" area="dashboard.team.view"><Team /></Guard>} />
           <Route path="teamlist" element={<Guard perm="team.view" area="dashboard.team.view"><TeamList /></Guard>} />
           <Route path="staff-lists" element={<Guard perm="team.view" area="dashboard.team.view"><StaffLists /></Guard>} />
@@ -276,7 +295,7 @@ export function App() {
           <Route path="admin/shifts" element={<Guard perm="settings.view" area="dashboard.settings.view"><Shifts /></Guard>} />
           <Route path="admin/servers" element={<Guard perm="settings.view" area="dashboard.settings.view"><ServerLinks /></Guard>} />
           <Route path="admin/multi-server" element={<Guard perm="servers.view" area="dashboard.settings.view"><MultiServer /></Guard>} />
-          <Route path="admin/backups" element={<Guard perm="settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
+          <Route path="admin/backups" element={<Guard perm="backup.view|settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />
           <Route path="embed-builder" element={<Navigate to="/message-builder" replace />} />

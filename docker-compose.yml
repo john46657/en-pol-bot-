@@ -34,6 +34,8 @@ services:
       WEB_ORIGIN: https://${DOMAIN:?set DOMAIN in .env}
       STORAGE_DIR: /app/uploads
       BOT_API_TOKEN: ${BOT_API_TOKEN:-}
+      # Backup-Center: Verschlüsselung der Daten-Backups (64 Hex-Zeichen, openssl rand -hex 32)
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
     volumes:
       - uploads:/app/uploads
 

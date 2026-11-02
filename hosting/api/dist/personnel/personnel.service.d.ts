@@ -79,8 +79,9 @@ export declare class PersonnelService {
             expiresAt: Date | null;
             personnelId: string;
             attachments: string[];
-            data: import("@prisma/client/runtime/library").JsonValue | null;
+            confidential: boolean;
             summary: string;
+            data: import("@prisma/client/runtime/library").JsonValue | null;
             deletedAt: Date | null;
         }[];
     } & {
@@ -177,8 +178,9 @@ export declare class PersonnelService {
         expiresAt: Date | null;
         personnelId: string;
         attachments: string[];
-        data: import("@prisma/client/runtime/library").JsonValue | null;
+        confidential: boolean;
         summary: string;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
         deletedAt: Date | null;
     }>;
 }

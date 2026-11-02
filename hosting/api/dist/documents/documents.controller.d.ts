@@ -7,11 +7,11 @@ declare const listQ: z.ZodObject<{
     category: z.ZodOptional<z.ZodEnum<["DIRECTIVE", "RULES", "TRAINING", "EXAM", "DISPATCH", "POLICY", "TEMPLATE", "OTHER"]>>;
     archived: z.ZodOptional<z.ZodEnum<["true", "false"]>>;
 }, "strip", z.ZodTypeAny, {
-    category?: "TRAINING" | "OTHER" | "DISPATCH" | "TEMPLATE" | "EXAM" | "DIRECTIVE" | "RULES" | "POLICY" | undefined;
+    category?: "OTHER" | "TRAINING" | "DISPATCH" | "TEMPLATE" | "EXAM" | "RULES" | "DIRECTIVE" | "POLICY" | undefined;
     q?: string | undefined;
     archived?: "true" | "false" | undefined;
 }, {
-    category?: "TRAINING" | "OTHER" | "DISPATCH" | "TEMPLATE" | "EXAM" | "DIRECTIVE" | "RULES" | "POLICY" | undefined;
+    category?: "OTHER" | "TRAINING" | "DISPATCH" | "TEMPLATE" | "EXAM" | "RULES" | "DIRECTIVE" | "POLICY" | undefined;
     q?: string | undefined;
     archived?: "true" | "false" | undefined;
 }>;

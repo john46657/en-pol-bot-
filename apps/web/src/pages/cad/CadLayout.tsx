@@ -38,6 +38,7 @@ export const CAD_NAV: { group: string; items: CadNavItem[] }[] = [
   ] },
   { group: 'Dienst', items: [
     { to: '/cad/team', label: 'Teamübersicht', icon: Users },
+    { to: '/cad/personnel', label: 'Qualifikationen & Führung', icon: Users },
     { to: '/cad/handover', label: 'Schichtübergabe', icon: Activity },
     { to: '/cad/stats', label: 'Statistik', icon: BarChart3, perm: 'cad.view_stats' },
   ] },

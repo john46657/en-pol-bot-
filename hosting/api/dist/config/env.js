@@ -39,6 +39,8 @@ const schema = zod_1.z.object({
     ADMIN_DISCORD_IDS: zod_1.z.string().optional(),
     /** Schlüssel für die Verschlüsselung der ER:LC-Server-Keys (mind. 32 Zeichen). Leer = abgeleitet aus SESSION_SECRET. */
     ERLC_SECRET_KEY: zod_1.z.string().min(32).optional(),
+    /** Backup-Center: Schlüssel für die Verschlüsselung der Daten-Backups (64 Hex-Zeichen = 256 Bit). Leer = Backups unverschlüsselt (wird im Backup-Center deutlich angezeigt). */
+    BACKUP_ENCRYPTION_KEY: zod_1.z.string().regex(/^[0-9a-fA-F]{64}$/, 'BACKUP_ENCRYPTION_KEY muss 64 Hex-Zeichen haben (openssl rand -hex 32)').optional(),
     /** `false` = ER:LC-Server nicht automatisch abrufen (z. B. Testsystem). */
     ERLC_POLLING: zod_1.z.enum(['true', 'false']).optional(),
 });
