@@ -29,6 +29,7 @@ export const MDT_NAV: { group: string; items: Item[] }[] = [
   { group: 'Dienststelle', items: [
     { to: '/mdt/roster', label: 'Dienstliste', icon: Users, perm: 'team.view' },
     { to: '/mdt/officers', label: 'Beamte', icon: UserCheck, perm: 'personnel.view' },
+    { to: '/mdt/personnel', label: 'Personal & Qualifikationen', icon: Users, perm: 'team.view' },
     { to: '/mdt/settings', label: 'MDT-Einstellungen', icon: Settings, perm: 'settings.manage' },
   ] },
 ];

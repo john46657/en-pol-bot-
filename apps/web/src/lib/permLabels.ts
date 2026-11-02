@@ -8,7 +8,10 @@ export const MODULE_LABELS: Record<string, string> = {
   fleet: '🚓 Polizeifahrzeuge', radio: '📻 Funk-Codes', teamchance: '📣 Team-Chance', servers: '🖥️ Server', modules: '🧩 Module',
   messagebuilder: '✉️ Embed Builder',
   radiowhitelist: '🎙️ Funk-Whitelist',
+  qualification: '🎖️ Qualifikationsregister', org: '🏛️ Organigramm', backup: '💾 Backup-Center', help: '❓ Hilfe-Center',
 };
+/** Lesbarer Name eines Rechte-Bereichs (Präfix). */
+export const labelForArea = (area: string) => MODULE_LABELS[area] ?? area;
 
 export const ACTION_LABELS: Record<string, string> = {
   view_all: 'alle ansehen', edit_all: 'alle bearbeiten', view_sensitive: 'geschützte Daten sehen', execute: 'durchführen', manage_ranks: 'Ränge verwalten',
@@ -23,6 +26,8 @@ export const ACTION_LABELS: Record<string, string> = {
   discipline: 'Disziplinarmaßnahmen', request: 'beantragen', report: 'melden', send: 'senden', moderate: 'moderieren', export: 'exportieren',
   handover: 'Schichtübergabe erstellen/bestätigen', view_stats: 'Statistik ansehen',
   change_department: 'Abteilung wechseln', transcript_export: 'Transkript exportieren', transcript_manage: 'Transkript neu erzeugen/wiederholen', departments: 'Abteilungen verwalten', audit: 'Audit-Protokoll ansehen', bypass_limits: 'Ticket-Limits umgehen',
+  view_unit: 'Akten der eigenen Einheit ansehen', notes_view: 'Personalvermerke ansehen', notes_create: 'Personalvermerke erstellen', notes_confidential: 'vertrauliche Vermerke/Dokumente', documents: 'Dokumente verwalten',
+  materials: 'Lernmaterial verwalten', conduct: 'praktische Prüfungen abnehmen', results: 'Prüfungsergebnisse ansehen', hierarchy: 'Hierarchie bearbeiten', download: 'herunterladen', verify: 'prüfen', restore: 'wiederherstellen', revoke: 'ruhen lassen/entziehen',
   forward: 'weiterleiten', remind: 'Ersteller erinnern', automation: 'Automatik je Ticket pausieren/ausschalten',
   'tickets.view': 'Bereich Tickets', 'applications.view': 'Bereich Bewerbungen', 'team.view': 'Bereich Team', 'offices.view': 'Bereich Büros',
   'voice.view': 'Bereich Sprachkanäle', 'logs.view': 'Bereich Logs', 'settings.view': 'Bereich Einstellungen',

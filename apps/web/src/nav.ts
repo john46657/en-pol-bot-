@@ -1,5 +1,5 @@
 import { moduleOfPermission, OFF_MODULES } from '@enrp/shared';
-import { ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { CircleHelp, Network, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -42,6 +42,8 @@ export const NAV: NavItem[] = [
   { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
   grp('Personal', UserCheck, 'Organisation', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
+    { path: '/personnel/unit', label: 'Meine Einheit', perm: 'personnel.view_unit' },
+    { path: '/qualification-registry', label: 'Qualifikationen', perm: 'qualification.view|qualification.manage' },
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
     { path: '/promotions', label: 'Beförderungen', perm: 'promotion.view' },
     { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
@@ -49,6 +51,8 @@ export const NAV: NavItem[] = [
   ]),
   grp('Ausbildung', GraduationCap, 'Organisation', [
     { path: '/trainings', label: 'Ausbildungen & Prüfungen', perm: 'training.view|exam.view' },
+    { path: '/training/materials', label: 'Lernmaterial', perm: 'training.view' },
+    { path: '/training/practical', label: 'Praktische Prüfungen', perm: 'exam.view|exam.conduct' },
     { path: '/academy', label: 'Akademie', perm: 'academy.view' },
   ]),
   grp('Bewerbungen', ClipboardList, 'Organisation', [
@@ -61,10 +65,13 @@ export const NAV: NavItem[] = [
     { path: '/leave', label: 'Abmeldungen', perm: 'leave.request' },
     { path: '/admin/leave', label: 'Einstellungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
+  { path: '/org', label: 'Organigramm', icon: Network, perm: 'org.view', group: 'Organisation', keywords: 'abteilung dienstgruppe führung struktur' },
+  { path: '/help', label: 'Hilfe-Center', icon: CircleHelp, perm: 'help.view', group: 'Organisation', keywords: 'faq anleitung wissen hilfe' },
   { path: '/analytics', label: 'Statistiken', icon: BarChart3, perm: 'analytics.view', group: 'Organisation' },
   grp('Benutzer & Rollen', Users, 'Administration', [
     { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
     { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
+    { path: '/admin/access-matrix', label: 'Berechtigungsmatrix', perm: 'roles.view', area: 'dashboard.settings.view' },
   ]),
   { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration', keywords: 'allgemein discord kanäle anmeldung' },
   grp('Discord-Nachrichten', PanelTop, 'Administration', [
@@ -77,7 +84,7 @@ export const NAV: NavItem[] = [
   grp('Protokolle', ScrollText, 'Administration', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },
     { path: '/admin/logging', label: 'Logging (Discord)', perm: 'settings.view', area: 'dashboard.settings.view' },
-    { path: '/admin/backups', label: 'Backups', perm: 'settings.manage', area: 'dashboard.settings.view' },
+    { path: '/admin/backups', label: 'Backup-Center', perm: 'backup.view|settings.manage', area: 'dashboard.settings.view' },
   ]),
   { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },
   { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Account', keywords: 'design profil 2fa favoriten' },
