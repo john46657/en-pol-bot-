@@ -21,7 +21,7 @@ import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Forbidden, 
 interface Opt { id: string; label: string }
 type Kind = 'PROMOTION' | 'TRANSFER';
 const KIND_LABEL: Record<Kind, string> = { PROMOTION: 'Beförderung', TRANSFER: 'Versetzung' };
-const STATUS_TONE: Record<RequestStatus, Tone> = { OPEN: 'warning', IN_REVIEW: 'info', APPROVED: 'success', REJECTED: 'danger', DEFERRED: 'neutral', EXECUTED: 'primary', CANCELLED: 'neutral' };
+const STATUS_TONE: Record<RequestStatus, Tone> = { OPEN: 'warning', IN_REVIEW: 'info', NEEDS_INFO: 'warning', APPROVED: 'success', REJECTED: 'danger', DEFERRED: 'neutral', EXECUTED: 'primary', CANCELLED: 'neutral' };
 const DECISION_LABEL: Record<HrRequest['approvals'][number]['decision'], string> = { APPROVE: '✅ genehmigt', REJECT: '❌ abgelehnt', REVIEW: '🔵 in Prüfung genommen', DEFER: '⚫ zurückgestellt' };
 
 const useDashRoles = () => useQuery({ queryKey: ['roles'], queryFn: () => api<{ id: string; name: string }[]>('/roles'), staleTime: 60_000, retry: false });
@@ -211,6 +211,11 @@ function RequestDetail({ id, cfg, onClose }: { id: string; cfg: HrConfig | undef
     onSuccess: (_d, decision) => done({ APPROVE: 'Genehmigung gespeichert.', REJECT: 'Antrag abgelehnt.', REVIEW: 'Antrag ist jetzt in Prüfung.', DEFER: 'Antrag zurückgestellt.', CANCEL: 'Antrag abgebrochen.' }[decision]),
     onError: (e) => { setMsg(undefined); setErr(errText(e)); },
   });
+  const ask = useMutation({
+    mutationFn: () => api(`/hr/requests/${id}/query`, { body: { question: comment.trim() } }),
+    onSuccess: () => done('Rückfrage gestellt – der Antragsteller wird benachrichtigt.'),
+    onError: (e) => { setMsg(undefined); setErr(errText(e)); },
+  });
   const execute = useMutation({
     mutationFn: () => api(`/hr/requests/${id}/execute`, { method: 'POST' }),
     onSuccess: () => { setConfirmExec(false); done('Durchgeführt: Rang/Abteilung gesetzt, Rollen getauscht, Personalakte aktualisiert.'); },
@@ -223,7 +228,7 @@ function RequestDetail({ id, cfg, onClose }: { id: string; cfg: HrConfig | undef
   };
   const approved = r?.approvals.filter((a) => a.decision === 'APPROVE') ?? [];
   const busy = decide.isPending || execute.isPending;
-  const anyAction = !!r && (r.can.approve || r.can.reject || r.can.review || r.can.cancel || r.can.execute);
+  const anyAction = !!r && (r.can.approve || r.can.reject || r.can.review || r.can.cancel || r.can.execute || !!r.can.query);
 
   return (
     <Modal open wide title={r ? `${KIND_LABEL[r.kind]} ${r.number}` : 'Antrag'} onClose={onClose}>
@@ -294,19 +299,29 @@ function RequestDetail({ id, cfg, onClose }: { id: string; cfg: HrConfig | undef
             </ol>
           </section>
 
+          {!!r.queries?.length && (
+            <section aria-label="Rückfragen"><h3 className="mb-1 font-semibold">Rückfragen</h3>
+              <ul className="space-y-2">{r.queries.map((x) => (
+                <li key={x.id} className="rounded-md border border-line p-2"><p>❓ {x.question}</p><p className="text-xs text-muted">{x.askedByName} · {fmt(x.askedAt)}</p>
+                  {x.answer ? <p className="mt-1 border-l-2 border-success/50 pl-2">💬 {x.answer}<span className="block text-xs text-muted">{fmt(x.answeredAt)}</span></p> : <p className="mt-1 text-xs text-warning">Wartet auf Antwort des Antragstellers</p>}
+                </li>
+              ))}</ul>
+            </section>
+          )}
           {msg && <p role="status" className="rounded-md border border-success/40 bg-success/10 p-2 text-success">{msg}</p>}
           {err && <p role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-2 text-danger">{err}</p>}
           {!r.can.approve && r.can.approveWhy && <p className="text-xs text-muted">ℹ️ Genehmigen nicht möglich: {r.can.approveWhy}</p>}
 
           {anyAction && (
             <div className="grid gap-2 border-t border-line pt-3">
-              {(r.can.approve || r.can.reject || r.can.review) && (
+              {(r.can.approve || r.can.reject || r.can.review || r.can.query) && (
                 <Textarea aria-label="Kommentar" rows={2} maxLength={1000} placeholder="Kommentar (bei Ablehnen und Zurückstellen erforderlich)" value={comment} onChange={(e) => setComment(e.target.value)} />
               )}
               <div className="flex flex-wrap gap-2">
                 {r.can.approve && <Button disabled={busy} onClick={() => run('APPROVE')}>✅ Genehmigen</Button>}
                 {r.can.review && r.status !== 'IN_REVIEW' && <Button variant="secondary" disabled={busy} onClick={() => run('REVIEW')}>🔵 In Prüfung nehmen</Button>}
                 {r.can.review && r.status !== 'DEFERRED' && <Button variant="secondary" disabled={busy} onClick={() => run('DEFER')}>⚫ Zurückstellen</Button>}
+                {r.can.query && <Button variant="secondary" disabled={busy || ask.isPending} onClick={() => { if (comment.trim().length < 5) { setErr('Bitte die Rückfrage ins Kommentarfeld schreiben (mind. 5 Zeichen).'); return; } ask.mutate(); }}>❓ Rückfrage stellen</Button>}
                 {r.can.reject && <Button variant="danger" disabled={busy} onClick={() => run('REJECT')}>❌ Ablehnen</Button>}
                 {r.can.execute && <Button disabled={busy} onClick={() => setConfirmExec(true)}>🎖️ Durchführen</Button>}
                 {r.can.cancel && <Button variant="ghost" disabled={busy} onClick={() => run('CANCEL')}>Antrag abbrechen</Button>}

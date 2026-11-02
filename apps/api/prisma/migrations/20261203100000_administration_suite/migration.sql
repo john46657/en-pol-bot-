@@ -102,6 +102,7 @@ CREATE TABLE "CalendarParticipant" (
 CREATE TABLE "CalendarReminderLog" (
     "id" UUID NOT NULL,
     "eventId" UUID NOT NULL,
+    "startsAt" TIMESTAMP(3) NOT NULL,
     "minutesBefore" INTEGER NOT NULL,
     "sentAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "recipients" INTEGER NOT NULL DEFAULT 0,
@@ -254,7 +255,7 @@ CREATE INDEX "CalendarParticipant_userId_status_idx" ON "CalendarParticipant"("u
 CREATE UNIQUE INDEX "CalendarParticipant_eventId_userId_key" ON "CalendarParticipant"("eventId", "userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "CalendarReminderLog_eventId_minutesBefore_key" ON "CalendarReminderLog"("eventId", "minutesBefore");
+CREATE UNIQUE INDEX "CalendarReminderLog_eventId_startsAt_minutesBefore_key" ON "CalendarReminderLog"("eventId", "startsAt", "minutesBefore");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Meeting_eventId_key" ON "Meeting"("eventId");

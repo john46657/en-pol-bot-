@@ -42,6 +42,9 @@ const WelcomeSettings = lazy(() => import('./pages/admin/WelcomeSettings').then(
 const LeaveSettings = lazy(() => import('./pages/admin/LeaveSettings').then((m) => ({ default: m.LeaveSettings })));
 const Leave = lazy(() => import('./pages/Leave').then((m) => ({ default: m.Leave })));
 const ShiftPlan = lazy(() => import('./pages/ShiftPlan').then((m) => ({ default: m.ShiftPlan })));
+const CalendarPage = lazy(() => import('./pages/Calendar').then((m) => ({ default: m.Calendar })));
+const Meetings = lazy(() => import('./pages/Meetings').then((m) => ({ default: m.Meetings })));
+const MyRequests = lazy(() => import('./pages/MyRequests').then((m) => ({ default: m.MyRequests })));
 const TeamList = lazy(() => import('./pages/TeamList').then((m) => ({ default: m.TeamList })));
 const RadioCodes = lazy(() => import('./pages/RadioCodes').then((m) => ({ default: m.RadioCodes })));
 const RadioWhitelist = lazy(() => import('./pages/RadioWhitelist').then((m) => ({ default: m.RadioWhitelist })));
@@ -279,6 +282,9 @@ export function App() {
           <Route path="admin/leave" element={<Guard perm="settings.view" area="dashboard.settings.view"><LeaveSettings /></Guard>} />
           <Route path="leave" element={<Guard perm="leave.request"><Leave /></Guard>} />
           <Route path="shiftplan" element={<Guard perm="shiftplan.view"><ShiftPlan /></Guard>} />
+          <Route path="calendar" element={<Guard perm="calendar.view"><CalendarPage /></Guard>} />
+          <Route path="meetings" element={<Guard perm="meetings.view"><Meetings /></Guard>} />
+          <Route path="my-requests" element={<Guard perm="promotion.request|transfer.request"><MyRequests /></Guard>} />
           <Route path="admin/danger-level" element={<Guard perm="settings.manage" area="dashboard.settings.view"><DangerSettingsPage /></Guard>} />
           <Route path="admin/legal-codes" element={<Guard perm="settings.view" area="dashboard.settings.view"><LegalCodes /></Guard>} />
           <Route path="admin/settings" element={<Guard perm="settings.view" area="dashboard.settings.view"><Settings /></Guard>} />

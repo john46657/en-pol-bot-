@@ -61,6 +61,9 @@ const reqQ = z.object({ kind: kind.optional(), status: z.string().max(20).option
 const createR = z.object({ kind, personnelId: uuid, to: z.string().min(1).max(64), reason: z.string().trim().max(2000).default(''), achievements: z.string().max(4000).optional(), internalNote: z.string().max(2000).optional(), attachments: z.array(uuid).max(10).optional() });
 const editR = z.object({ reason: z.string().trim().min(1).max(2000).optional(), achievements: z.string().max(4000).nullable().optional(), internalNote: z.string().max(2000).nullable().optional(), attachments: z.array(uuid).max(10).optional(), version: z.number().int().optional() });
 const decide = z.object({ decision: z.enum(['APPROVE', 'REJECT', 'REVIEW', 'DEFER', 'CANCEL']), comment: z.string().max(1000).optional() });
+const selfR = z.object({ kind, to: z.string().min(1).max(64), reason: z.string().trim().min(10).max(2000), achievements: z.string().trim().max(4000).optional() });
+const queryR = z.object({ question: z.string().trim().min(5).max(1000) });
+const answerR = z.object({ answer: z.string().trim().min(2).max(2000) });
 
 @ApiTags('hr')
 @Controller('hr/requests')
@@ -69,10 +72,20 @@ export class HrRequestsController {
   /** Liste braucht promotion.view ODER transfer.view – geprüft je Art */
   @Get() @RequirePermission('personnel.view') list(@CurrentActor() a: Actor, @Query(zodBody(reqQ)) q: z.infer<typeof reqQ>) { return this.s.list(a, q); }
   @Get('stats') @RequirePermission('promotion.view') stats() { return this.s.stats(); }
+  /** Eigene Anträge (Beamte, Dashboard „Meine Anträge“ und Discord /antrag status) – nur die eigenen, daher nur Grundrecht */
+  @Get('mine') @RequirePermission('dashboard.view') mine(@CurrentActor() a: Actor) { return this.s.mine(a); }
+  /** Mögliche Ziele für einen eigenen Antrag (Ränge mit Voraussetzungen, Abteilungen); Recht wird je Art im Service geprüft */
+  @Get('targets') @RequirePermission('dashboard.view') targets(@CurrentActor() a: Actor) { return this.s.targets(a); }
+  /** Eigener Antrag: promotion.request bzw. transfer.request (geprüft im Service je Art) */
+  @Post('self') @RequirePermission('dashboard.view') createSelf(@CurrentActor() a: Actor, @Body(zodBody(selfR)) b: z.infer<typeof selfR>) { return this.s.createSelf(a, b); }
   @Get(':id') @RequirePermission('personnel.view') get(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.get(a, id); }
   @Post() @RequirePermission('personnel.view') create(@CurrentActor() a: Actor, @Body(zodBody(createR)) b: z.infer<typeof createR>) { return this.s.create(a, b); }
   @Patch(':id') @RequirePermission('personnel.view') edit(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(editR)) b: z.infer<typeof editR>) { return this.s.edit(a, id, b); }
   @Post(':id/decide') @HttpCode(200) @RequirePermission('personnel.view') decide(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(decide)) b: z.infer<typeof decide>) { return this.s.decide(a, id, b.decision, b.comment); }
+  @Post(':id/query') @HttpCode(200) @RequirePermission('personnel.view') query(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(queryR)) b: z.infer<typeof queryR>) { return this.s.query(a, id, b.question); }
+  /** Antragsteller: Rückfrage beantworten / eigenen Antrag zurückziehen (nur eigene – im Service geprüft) */
+  @Post(':id/answer') @HttpCode(200) @RequirePermission('dashboard.view') answer(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string, @Body(zodBody(answerR)) b: z.infer<typeof answerR>) { return this.s.answer(a, id, b.answer); }
+  @Post(':id/withdraw') @HttpCode(200) @RequirePermission('dashboard.view') withdraw(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.withdraw(a, id); }
   @Post(':id/execute') @HttpCode(200) @RequirePermission('personnel.view') execute(@CurrentActor() a: Actor, @Param('id', ParseUUIDPipe) id: string) { return this.s.execute(a, id); }
 }
 

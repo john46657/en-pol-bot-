@@ -44,6 +44,7 @@ export const NAV: NavItem[] = [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
     { path: '/warnings', label: 'Verwarnungen', perm: 'warning.view' },
     { path: '/promotions', label: 'Beförderungen', perm: 'promotion.view' },
+    { path: '/my-requests', label: 'Meine Anträge', perm: 'promotion.request|transfer.request' },
     { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
     { path: '/admin/personnel', label: 'Einstellungen', perm: 'personnel.view', area: 'dashboard.settings.view' },
   ]),
@@ -59,6 +60,8 @@ export const NAV: NavItem[] = [
   ]),
   grp('Dienstplanung', CalendarDays, 'Organisation', [
     { path: '/shiftplan', label: 'Schichtplan', perm: 'shiftplan.view' },
+    { path: '/calendar', label: 'Kalender', perm: 'calendar.view' },
+    { path: '/meetings', label: 'Besprechungen', perm: 'meetings.view' },
   ]),
   grp('Abmeldungen', CalendarOff, 'Organisation', [
     { path: '/leave', label: 'Abmeldungen', perm: 'leave.request' },

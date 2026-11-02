@@ -23,7 +23,8 @@ export interface HrRequest {
 }
 export interface HrRequestDetail extends HrRequest {
   check: PromotionCheck | null; stages: { id: string; name: string; roleIds: string[] }[]; needed: number; next: { id: string; name: string } | null;
-  can: { approve: boolean; approveWhy: string | null; reject: boolean; review: boolean; execute: boolean; edit: boolean; cancel: boolean };
+  can: { approve: boolean; approveWhy: string | null; reject: boolean; review: boolean; execute: boolean; edit: boolean; cancel: boolean; query?: boolean };
+  queries?: { id: string; askedByName: string; question: string; askedAt: string; answer: string | null; answeredAt: string | null }[]; origin?: string;
 }
 export interface Profile {
   id: string; userId: string; name: string; username: string; discordName: string | null; discordId: string | null; avatar: string | null; robloxName: string | null; robloxId: string | null;

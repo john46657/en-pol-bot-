@@ -76,3 +76,51 @@ describe('/schichtplan', () => {
     expect((await cmd.complete!(ctx(api, { _sub: 'abmelden' }), 'schicht', '')).map((x) => x.value)).toEqual([SID2]);
   });
 });
+
+describe('/antrag', () => {
+  const cmd = byName('antrag')!;
+  const RID = '33333333-3333-4333-8333-333333333333';
+  it('Beförderung beantragen schickt nur eigene Angaben; Voraussetzungen fehlen → Hinweis', async () => {
+    const { api, calls } = fakeApi({ 'POST /hr/requests/self': { number: 'BF-2026-ABC' } });
+    const r = await cmd.run(ctx(api, { _sub: 'befoerderung', rang: RID, begruendung: 'Ich habe genug Erfahrung.' }));
+    expect(JSON.stringify(r)).toMatch(/BF-2026-ABC/);
+    expect(calls[0]).toMatchObject({ method: 'POST', path: '/hr/requests/self', body: { kind: 'PROMOTION', to: RID, reason: 'Ich habe genug Erfahrung.' } });
+    const { api: a2 } = fakeApi({ 'POST /hr/requests/self': new BotApiError(409, 'CONFLICT', 'Die Voraussetzungen für „X“ sind noch nicht erfüllt (0/1): 30 Tage im aktuellen Rang') });
+    expect(JSON.stringify(await cmd.run(ctx(a2, { _sub: 'befoerderung', rang: RID, begruendung: 'Ich habe genug Erfahrung.' })))).toMatch(/Voraussetzungen/);
+  });
+  it('Status zeigt Rückfrage; antworten nur mit gültiger ID', async () => {
+    const { api, calls } = fakeApi({ 'GET /hr/requests/mine': [{ id: RID, number: 'BF-1', kind: 'PROMOTION', status: 'NEEDS_INFO', statusLabel: 'Rückfrage erforderlich', fromLabel: 'A', toLabel: 'B', createdAt: new Date().toISOString(), openQuery: { question: 'Warum?', askedByName: 'Chef' }, decisions: [], canWithdraw: true }], [`POST /hr/requests/${RID}/answer`]: { status: 'IN_REVIEW' } });
+    expect(JSON.stringify(await cmd.run(ctx(api, { _sub: 'status' })))).toMatch(/Rückfrage von Chef/);
+    expect(JSON.stringify(await cmd.run(ctx(api, { _sub: 'antworten', antrag: 'x', antwort: 'y' })))).toMatch(/aus der Liste/);
+    await cmd.run(ctx(api, { _sub: 'antworten', antrag: RID, antwort: 'Darum.' }));
+    expect(calls.at(-1)).toMatchObject({ method: 'POST', path: `/hr/requests/${RID}/answer`, body: { answer: 'Darum.' } });
+    expect((await cmd.complete!(ctx(api, { _sub: 'antworten' }), 'antrag', '')).map((x) => x.value)).toEqual([RID]);
+  });
+});
+
+describe('/termine und Besprechungs-Buttons', () => {
+  const EID = '44444444-4444-4444-8444-444444444444';
+  const ev = { id: EID, title: 'Führungsrunde', categoryLabel: 'Dienstbesprechung', startsAt: new Date(Date.now() + 3 * H).toISOString(), endsAt: new Date(Date.now() + 4 * H).toISOString(), allDay: false, location: null, status: 'SCHEDULED', myStatus: 'INVITED', mandatory: true, counts: { accepted: 0 }, maxParticipants: null, openSignup: true };
+  it('Liste mit Zusage-Auswahl; ohne offene Termine keine leere Auswahl', async () => {
+    const { api } = fakeApi({ 'GET /calendar/upcoming': [ev] });
+    const r = await byName('termine')!.run(ctx(api, { _sub: 'liste' }));
+    expect(r.embeds?.[0]?.description).toMatch(/Pflicht/);
+    expect(r.select?.id).toBe('cal:accept');
+    const { api: a2 } = fakeApi({ 'GET /calendar/upcoming': [{ ...ev, myStatus: 'ACCEPTED' }] });
+    expect((await byName('termine')!.run(ctx(a2, { _sub: 'liste' }))).select).toBeUndefined();
+  });
+  it('Buttons unter der Ankündigung: zusagen/absagen/abwesend über die API', async () => {
+    const { api, calls } = fakeApi({ [`POST /calendar/${EID}/respond`]: ev });
+    for (const [btn, status] of [['accept', 'ACCEPTED'], ['decline', 'DECLINED'], ['excuse', 'EXCUSED']] as const) {
+      const hit = interactionFor(`meet:${btn}:${EID}`)!;
+      await hit.def.run({ ...ctx(api, {}), args: hit.args } as never);
+      expect(calls.at(-1)).toMatchObject({ path: `/calendar/${EID}/respond`, body: { status } });
+    }
+    const bad = interactionFor('meet:accept:../../x')!;
+    expect(JSON.stringify(await bad.def.run({ ...ctx(api, {}), args: bad.args } as never))).toMatch(/aus der Liste/);
+  });
+  it('Module: /antrag gehört zu Personal, /termine zu Dienstplanung', () => {
+    expect(commandsForServer(COMMANDS, ['personnel']).some((c) => c.name === 'antrag')).toBe(false);
+    expect(commandsForServer(COMMANDS, ['planning']).some((c) => c.name === 'termine')).toBe(false);
+  });
+});

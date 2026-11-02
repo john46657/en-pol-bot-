@@ -126,4 +126,134 @@ export const SHIFTPLAN_INTERACTION: InteractionDef = {
   },
 };
 
-export const ADMINISTRATION_COMMANDS: CommandDef[] = [SHIFTPLAN_COMMAND];
+// ───────────── Anträge (Beförderung/Versetzung) ─────────────
+
+interface Targets { canPromotion: boolean; canTransfer: boolean; rank: string | null; department: string | null; ranks: { id: string; name: string; eligible: boolean; met: number; total: number; missing: string[] }[]; departments: string[] }
+interface MyRequest { id: string; number: string; kind: string; statusLabel: string; status: string; fromLabel: string | null; toLabel: string | null; createdAt: string; openQuery: { question: string; askedByName: string } | null; decisions: { decision: string; comment: string | null; by: string }[]; canWithdraw: boolean }
+const KIND = { befoerderung: 'PROMOTION', versetzung: 'TRANSFER' } as const;
+
+async function requestTargets(c: Ctx) { return c.api.asUser<Targets>(c.discordId, 'GET', '/hr/requests/targets'); }
+async function myRequests(c: Ctx) { return c.api.asUser<MyRequest[]>(c.discordId, 'GET', '/hr/requests/mine'); }
+
+export const REQUEST_COMMAND: CommandDef = {
+  name: 'antrag', description: 'Beförderung oder Versetzung beantragen, Status abrufen, Rückfragen beantworten',
+  subcommands: [
+    { name: 'befoerderung', description: 'Beförderung beantragen (nur mit erfüllten Voraussetzungen)', options: [{ name: 'rang', description: 'Gewünschter Rang', type: 'string', required: true, autocomplete: true, maxLength: 64 }, { name: 'begruendung', description: 'Begründung (mind. 10 Zeichen)', type: 'string', required: true, maxLength: 1500 }] },
+    { name: 'versetzung', description: 'Versetzung in eine andere Abteilung beantragen', options: [{ name: 'abteilung', description: 'Gewünschte Abteilung', type: 'string', required: true, autocomplete: true, maxLength: 64 }, { name: 'begruendung', description: 'Begründung (mind. 10 Zeichen)', type: 'string', required: true, maxLength: 1500 }] },
+    { name: 'status', description: 'Deine Anträge und ihr Status' },
+    { name: 'antworten', description: 'Offene Rückfrage zu deinem Antrag beantworten', options: [{ name: 'antrag', description: 'Antrag mit Rückfrage', type: 'string', required: true, autocomplete: true, maxLength: 64 }, { name: 'antwort', description: 'Deine Antwort', type: 'string', required: true, maxLength: 1500 }] },
+    { name: 'zurueckziehen', description: 'Eigenen offenen Antrag zurückziehen', options: [{ name: 'antrag', description: 'Antrag', type: 'string', required: true, autocomplete: true, maxLength: 64 }] },
+  ],
+  async complete(c, option, value) {
+    const v = value.toLowerCase();
+    try {
+      if (option === 'rang') return (await requestTargets(c)).ranks.filter((r) => r.name.toLowerCase().includes(v)).slice(0, 25).map((r) => ({ name: clip(`${r.name}${r.eligible ? ' ✅' : ` (${r.met}/${r.total} Voraussetzungen)`}`, 100), value: r.id }));
+      if (option === 'abteilung') return (await requestTargets(c)).departments.filter((d) => d.toLowerCase().includes(v)).slice(0, 25).map((d) => ({ name: clip(d, 100), value: d }));
+      if (option === 'antrag') {
+        const sub = String(c.opts._sub ?? '');
+        return (await myRequests(c)).filter((r) => (sub === 'antworten' ? !!r.openQuery : r.canWithdraw) && `${r.number} ${r.toLabel ?? ''}`.toLowerCase().includes(v)).slice(0, 25).map((r) => ({ name: clip(`${r.number} · ${r.kind === 'PROMOTION' ? 'Beförderung' : 'Versetzung'} → ${r.toLabel ?? '—'}`, 100), value: r.id }));
+      }
+    } catch { /* keine Vorschläge */ }
+    return [];
+  },
+  async run(c) {
+    const sub = String(c.opts._sub ?? 'status');
+    try {
+      if (sub === 'befoerderung' || sub === 'versetzung') {
+        const to = str(c, sub === 'befoerderung' ? 'rang' : 'abteilung');
+        const r = await c.api.asUser<{ number: string }>(c.discordId, 'POST', '/hr/requests/self', { kind: KIND[sub], to, reason: str(c, 'begruendung') });
+        return okReply(`📨 Dein ${sub === 'befoerderung' ? 'Beförderungs' : 'Versetzungs'}antrag **${plain(r.number)}** ist eingereicht. Eine berechtigte Führungskraft entscheidet – du bekommst Bescheid. Status: \`/antrag status\``);
+      }
+      if (sub === 'status') {
+        const rows = await myRequests(c);
+        if (!rows.length) return { ephemeral: true, embeds: [{ title: '📨 Deine Anträge', description: 'Du hast noch keine Anträge gestellt.', color: COLORS.neutral }] };
+        return { ephemeral: true, embeds: [{ title: '📨 Deine Anträge', color: COLORS.info, fields: rows.slice(0, 10).map((r) => ({
+          name: clip(`${r.number} · ${r.kind === 'PROMOTION' ? 'Beförderung' : 'Versetzung'} – ${r.statusLabel}`, 256),
+          value: clip([`${plain(r.fromLabel ?? '—')} → **${plain(r.toLabel ?? '—')}** · eingereicht ${ts(r.createdAt, 'd')}`, r.openQuery ? `❓ **Rückfrage von ${plain(r.openQuery.askedByName)}:** ${plain(r.openQuery.question)}\nAntworten: \`/antrag antworten\`` : null, ...r.decisions.filter((d) => d.comment && ['REJECT', 'APPROVE'].includes(d.decision)).map((d) => `${d.decision === 'REJECT' ? '❌' : '✅'} ${plain(d.by)}: ${plain(d.comment!)}`)].filter(Boolean).join('\n'), 1024),
+        })) }] };
+      }
+      if (sub === 'antworten') {
+        const id = str(c, 'antrag');
+        if (!uuid.test(id)) return errorReply('Bitte einen Antrag aus der Liste wählen.');
+        await c.api.asUser(c.discordId, 'POST', `/hr/requests/${id}/answer`, { answer: str(c, 'antwort') });
+        return okReply('Danke! Deine Antwort ist bei der prüfenden Person angekommen – der Antrag ist wieder in Prüfung.');
+      }
+      if (sub === 'zurueckziehen') {
+        const id = str(c, 'antrag');
+        if (!uuid.test(id)) return errorReply('Bitte einen Antrag aus der Liste wählen.');
+        await c.api.asUser(c.discordId, 'POST', `/hr/requests/${id}/withdraw`);
+        return okReply('Dein Antrag wurde zurückgezogen.');
+      }
+      return errorReply('Unbekannter Unterbefehl.');
+    } catch (e) {
+      if (e instanceof BotApiError && (e.status === 409 || e.status === 400)) return errorReply(e.message);
+      return mapError(e);
+    }
+  },
+};
+
+// ───────────── Termine & Besprechungen ─────────────
+
+interface EventRow { id: string; title: string; categoryLabel: string; startsAt: string; endsAt: string; allDay: boolean; location: string | null; status: string; myStatus: string | null; mandatory?: boolean; counts: { accepted: number }; maxParticipants: number | null; openSignup: boolean }
+const MY: Record<string, string> = { INVITED: '📨 eingeladen', ACCEPTED: '✅ zugesagt', DECLINED: '✖️ abgesagt', EXCUSED: '🌴 abwesend gemeldet' };
+
+async function respond(c: Ctx, id: string, status: 'ACCEPTED' | 'DECLINED' | 'EXCUSED'): Promise<Reply> {
+  if (!uuid.test(id)) return errorReply('Bitte einen Termin aus der Liste wählen.');
+  try {
+    const e = await c.api.asUser<EventRow>(c.discordId, 'POST', `/calendar/${id}/respond`, { status });
+    return okReply(`${status === 'ACCEPTED' ? '✅ Zugesagt' : status === 'DECLINED' ? '✖️ Abgesagt' : '🌴 Abwesenheit gemeldet'}: **${plain(e.title)}** (${ts(e.startsAt, 'f')}).`);
+  } catch (e) {
+    if (e instanceof BotApiError && e.status === 409) return errorReply(e.message);
+    return mapError(e);
+  }
+}
+
+export const EVENTS_COMMAND: CommandDef = {
+  name: 'termine', description: 'Kommende Termine und Besprechungen: ansehen, zusagen, absagen',
+  subcommands: [
+    { name: 'liste', description: 'Kommende Termine', options: [{ name: 'tage', description: 'Zeitraum in Tagen (Standard 14)', type: 'integer', min: 1, max: 60 }, { name: 'nur_meine', description: 'Nur Termine, zu denen du eingeladen bist', type: 'boolean' }] },
+    { name: 'anmelden', description: 'Für einen Termin zusagen', options: [{ name: 'termin', description: 'Termin', type: 'string', required: true, autocomplete: true, maxLength: 64 }] },
+    { name: 'absagen', description: 'Für einen Termin absagen bzw. Abwesenheit melden', options: [{ name: 'termin', description: 'Termin', type: 'string', required: true, autocomplete: true, maxLength: 64 }, { name: 'abwesend', description: 'Als Abwesenheit melden (statt einfach absagen)', type: 'boolean' }] },
+  ],
+  async complete(c, option, value) {
+    if (option !== 'termin') return [];
+    try {
+      const rows = await c.api.asUser<EventRow[]>(c.discordId, 'GET', '/calendar/upcoming?days=60');
+      return rows.filter((e) => e.title.toLowerCase().includes(value.toLowerCase())).slice(0, 25).map((e) => ({ name: clip(`${e.title} · ${new Date(e.startsAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`, 100), value: e.id }));
+    } catch { return []; }
+  },
+  async run(c) {
+    const sub = String(c.opts._sub ?? 'liste');
+    try {
+      if (sub === 'liste') {
+        const days = Number(c.opts.tage ?? 14);
+        const rows = await c.api.asUser<EventRow[]>(c.discordId, 'GET', `/calendar/upcoming?days=${days}&scope=${c.opts.nur_meine ? 'mine' : 'all'}`);
+        if (!rows.length) return { ephemeral: true, embeds: [{ title: '📅 Kommende Termine', description: 'Keine Termine in diesem Zeitraum.', color: COLORS.neutral }] };
+        const open = rows.filter((e) => e.myStatus !== 'ACCEPTED' && (e.openSignup || e.myStatus));
+        return {
+          ephemeral: true,
+          embeds: [{ title: `📅 Kommende Termine (${days} Tage)`, color: COLORS.info, description: clip(rows.slice(0, 15).map((e) => `**${plain(e.title)}** · ${plain(e.categoryLabel)}${e.mandatory ? ' · Pflicht' : ''}\n${e.allDay ? ts(e.startsAt, 'D') : ts(e.startsAt, 'f')}${e.location ? ` · ${plain(e.location)}` : ''}${e.myStatus ? ` · ${MY[e.myStatus] ?? e.myStatus}` : ''}`).join('\n\n'), 4000) }],
+          ...(open.length ? { select: { id: 'cal:accept', placeholder: 'Zusagen für …', options: open.slice(0, 25).map((e) => ({ label: clip(e.title, 90), value: e.id, description: clip(new Date(e.startsAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }), 90) })) } } : {}),
+        };
+      }
+      if (sub === 'anmelden') return respond(c, str(c, 'termin'), 'ACCEPTED');
+      if (sub === 'absagen') return respond(c, str(c, 'termin'), c.opts.abwesend ? 'EXCUSED' : 'DECLINED');
+      return errorReply('Unbekannter Unterbefehl.');
+    } catch (e) { return mapError(e); }
+  },
+};
+
+/** Auswahl aus `/termine liste` und Buttons unter Besprechungs-Ankündigungen (`meet:accept:<terminId>`). */
+export const CALENDAR_INTERACTION: InteractionDef = {
+  prefix: 'cal',
+  async run(c) { return c.args[0] === 'accept' ? respond(c, c.values?.[0] ?? '', 'ACCEPTED') : errorReply('Unbekannte Aktion.'); },
+};
+export const MEETING_INTERACTION: InteractionDef = {
+  prefix: 'meet',
+  async run(c) {
+    const status = ({ accept: 'ACCEPTED', decline: 'DECLINED', excuse: 'EXCUSED' } as const)[c.args[0] as 'accept' | 'decline' | 'excuse'];
+    return status ? respond(c, c.args[1] ?? '', status) : errorReply('Unbekannte Aktion.');
+  },
+};
+
+export const ADMINISTRATION_COMMANDS: CommandDef[] = [SHIFTPLAN_COMMAND, REQUEST_COMMAND, EVENTS_COMMAND];

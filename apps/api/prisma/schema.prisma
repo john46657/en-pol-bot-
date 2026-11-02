@@ -2918,12 +2918,14 @@ model CalendarParticipant {
 model CalendarReminderLog {
   id            String        @id @default(uuid()) @db.Uuid
   eventId       String        @db.Uuid
+  /// Beginn, für den erinnert wurde – nach dem Verschieben kommen Erinnerungen erneut, alte Einträge bleiben
+  startsAt      DateTime
   minutesBefore Int
   sentAt        DateTime      @default(now())
   recipients    Int           @default(0)
   event         CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
-  @@unique([eventId, minutesBefore])
+  @@unique([eventId, startsAt, minutesBefore])
 }
 
 /// Besprechung = Kalendertermin (Kategorie MEETING) + Besprechungsdaten. Teilnehmer/Anwesenheit über CalendarParticipant.

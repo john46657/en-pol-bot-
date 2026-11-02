@@ -1,4 +1,4 @@
-import { SHIFTPLAN_INTERACTION } from './administration';
+import { CALENDAR_INTERACTION, MEETING_INTERACTION, SHIFTPLAN_INTERACTION } from './administration';
 import { BotApiError } from '../api';
 import { clip, COLORS, DUTY_DE, errorReply, listEmbed, okReply, plain, type ButtonSpec, type DangerState, type EmbedData, type Reply, type Row } from '../format';
 import type { CommandDef, Ctx, InteractionDef } from './types';
@@ -192,6 +192,8 @@ export const INTERACTIONS: InteractionDef[] = [
   SHIFT_INTERACTION,
   REMINDER_INTERACTION,
   SHIFTPLAN_INTERACTION,
+  CALENDAR_INTERACTION,
+  MEETING_INTERACTION,
 ];
 
 export const interactionFor = (customId: string) => {

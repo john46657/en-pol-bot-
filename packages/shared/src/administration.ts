@@ -179,7 +179,7 @@ export function announcementMessage(type: AnnouncementType, c: AnnouncementConte
       footer: (c.footer ? safe(c.footer) : info.label).slice(0, 2048),
       ...(c.timestamp !== false ? { timestamp: new Date().toISOString() } : {}),
     }],
-    ...(!opts.retracted && c.links?.length ? { buttons: c.links.filter((l) => httpsOnly(l.url)).slice(0, 5).map((l) => ({ label: l.label.slice(0, 80), style: 'link' as const, url: l.url })) } : {}),
+    ...(!opts.retracted && c.links?.length ? { buttons: c.links.filter((l) => httpsOnly(l.url)).slice(0, 5).map((l, i) => ({ id: `link-${i}`, label: l.label.slice(0, 80), style: 'secondary' as const, url: l.url })) } : {}),
   };
 }
 

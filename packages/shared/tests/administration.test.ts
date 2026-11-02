@@ -80,7 +80,7 @@ describe('Ankündigungen', () => {
     expect(m.mentionRoles).toHaveLength(MAX_MENTION_ROLES);
     expect(JSON.stringify(m.embeds)).not.toMatch(/@everyone|@here/);
     expect(m.embeds[0]).not.toHaveProperty('image');
-    expect(m.buttons).toEqual([{ label: 'OK', style: 'link', url: 'https://example.org' }]);
+    expect(m.buttons).toEqual([{ id: 'link-0', label: 'OK', style: 'secondary', url: 'https://example.org' }]);
   });
   it('zurückgezogen: keine Erwähnung, grau, Hinweistext', () => {
     const m = announcementMessage('SYSTEM', { title: 'Wartung', description: 'x' }, ['111111111111111111'], { retracted: true });
