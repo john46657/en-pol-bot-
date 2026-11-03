@@ -106,7 +106,7 @@ function DangerSettings() {
       <Card title="Vorschau">
         <div className="rounded border-l-4 bg-panel-2 p-3 text-sm" style={{ borderColor: d.levels[0]?.color }}>
           <p className="mb-2 text-base font-bold">{d.panelTitle}</p><p className="whitespace-pre-wrap">{d.panelText}</p>
-          <div className="mt-3 flex flex-wrap gap-1">{d.levels.map((l) => <span key={l.key} className="rounded bg-danger px-2 py-1 text-xs text-white">{d.buttonEmoji || l.emoji} {l.name}</span>)}</div>
+          <div className="mt-3 flex flex-wrap gap-1">{d.levels.map((l) => <span key={l.key} className="rounded bg-danger px-2 py-1 text-xs text-danger-fg">{d.buttonEmoji || l.emoji} {l.name}</span>)}</div>
         </div>
       </Card>
       <Card title="Stufen" className="lg:col-span-2">

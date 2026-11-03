@@ -150,7 +150,7 @@ export function PersonnelOverview() {
             <option value="">Alle Abteilungen</option>{(data?.departments ?? cfg?.departments ?? []).map((d) => <option key={d.name}>{d.name}</option>)}
           </Select>
           <div className="flex rounded-md border border-line p-0.5" role="group" aria-label="Zustand">
-            {STATES.map(([k, label]) => <button key={k} type="button" aria-pressed={f.state === k} onClick={() => setF({ state: k })} className={`rounded px-2.5 py-1 text-sm ${f.state === k ? 'bg-primary text-white' : 'text-muted hover:text-fg'}`}>{label}</button>)}
+            {STATES.map(([k, label]) => <button key={k} type="button" aria-pressed={f.state === k} onClick={() => setF({ state: k })} className={`rounded px-2.5 py-1 text-sm ${f.state === k ? 'bg-primary text-primary-fg' : 'text-muted hover:text-fg'}`}>{label}</button>)}
           </div>
           <div className="ml-auto flex items-center gap-1" role="group" aria-label="Ansicht">
             {!phone && <><Button size="sm" variant={v.view === 'cards' ? 'primary' : 'secondary'} aria-pressed={v.view === 'cards'} onClick={() => setV({ ...v, view: 'cards' })}><LayoutGrid size={14} aria-hidden />Karten</Button>

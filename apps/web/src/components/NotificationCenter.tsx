@@ -36,7 +36,7 @@ export function NotificationCenter() {
   return (
     <>
       <Button variant="ghost" aria-label={`Benachrichtigungen (${unread} ungelesen)`} onClick={() => setOpen(true)} className="relative">
-        <Bell size={18} aria-hidden />{unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{unread > 99 ? '99+' : unread}</span>}
+        <Bell size={18} aria-hidden />{unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-danger-fg">{unread > 99 ? '99+' : unread}</span>}
       </Button>
       <Modal open={open} title="Benachrichtigungen" onClose={() => setOpen(false)}>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><Tabs tabs={FILTERS.map((f) => FILTER_LABEL[f])} active={FILTER_LABEL[tab]} onChange={(t) => setTab(FILTERS.find((f) => FILTER_LABEL[f] === t) ?? 'unread')} /><Button size="sm" variant="secondary" onClick={() => readAll.mutate()} disabled={!unread}>Alle als gelesen</Button></div>

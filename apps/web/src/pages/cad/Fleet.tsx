@@ -232,7 +232,7 @@ export function VehicleDetail({ id, onClose }: { id: string | null; onClose: () 
               </form>
             </section>
           )}
-          {d.incidents.length > 0 && <section><h3 className="mb-1 text-sm font-semibold">Einsätze</h3><ul className="space-y-0.5 text-sm">{d.incidents.map((i) => <li key={i.id}><Link className="hover:underline" to={`/cad/incidents?id=${i.id}`}><b>{i.number}</b> · {i.title}</Link></li>)}</ul></section>}
+          {d.incidents.length > 0 && <section><h3 className="mb-1 text-sm font-semibold">Einsätze</h3><ul className="space-y-0.5 text-sm">{d.incidents.map((i) => <li key={i.id}><Link className="hover:underline" to={`/cad/incidents?id=${i.id}`}><b className="font-mono">{i.number}</b> · {i.title}</Link></li>)}</ul></section>}
           <section><h3 className="mb-1 text-sm font-semibold">Verlauf</h3>
             {d.events.length ? <ul className="max-h-60 space-y-0.5 overflow-auto text-xs">{d.events.map((e) => <li key={e.id}><span className="text-muted">{fmt(e.createdAt)}</span> · <Badge tone={e.kind === 'INTERNAL' || e.kind === 'INCIDENT' ? 'primary' : 'info'}>{e.kind === 'INTERNAL' || e.kind === 'INCIDENT' ? 'intern' : 'ER:LC'}</Badge> {e.text}{e.actorName && <span className="text-muted"> – {e.actorName}</span>}</li>)}</ul> : <p className="text-sm text-muted">Kein Verlauf.</p>}
           </section>

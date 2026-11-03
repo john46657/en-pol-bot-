@@ -13,6 +13,7 @@ import { TeamRoster, useRoster } from '../components/TeamRoster';
 import { VoiceWidget } from '../components/VoiceWidget';
 import { RadioCodeList } from './RadioCodes';
 import { TeamChanceSummary } from './TeamChance';
+import { Lage } from './home/Lage';
 
 type Row = Record<string, unknown> & { id: string };
 interface WidgetDef { id: string; title: string; perms: string[]; to?: string; render: () => ReactNode }
@@ -136,7 +137,9 @@ export const WIDGETS: WidgetDef[] = [
   { id: 'reports', title: '📄 Offene Berichte', perms: ['reports.review'], to: '/reports', render: () => <Reports /> },
 ];
 
-/** Startseite aus Widgets. „Dashboard bearbeiten“: hinzufügen, entfernen, verschieben (Drag & Drop), Größe, minimieren, ausblenden; mehrere Layouts. Alles automatisch gespeichert. */
+const greeting = () => { const h = new Date().getHours(); return h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend'; };
+
+/** Startseite: oben die Lage (Leitstelle, Aufgaben, eigener Dienst), darunter Widgets. „Dashboard bearbeiten“: hinzufügen, entfernen, verschieben (Drag & Drop), Größe, minimieren, ausblenden; mehrere Layouts. Alles automatisch gespeichert. */
 export function Dashboard() {
   const { can, user } = useAuth();
   const { layouts, setLayouts, prefs, update, loading } = usePrefs();
@@ -162,7 +165,7 @@ export function Dashboard() {
 
   return (
     <>
-      <PageHeader title={`Willkommen, ${user?.displayName}`} subtitle={edit ? 'Bearbeiten: Widgets ziehen, Größe ändern, minimieren, ausblenden – wird automatisch gespeichert.' : undefined}
+      <PageHeader title={`${greeting()}, ${user?.displayName}`} subtitle={edit ? 'Bearbeiten: Widgets ziehen, Größe ändern, minimieren, ausblenden – wird automatisch gespeichert.' : undefined}
         actions={<div className="flex flex-wrap items-center gap-2">
           {layouts.items.length > 1 || edit ? <Select aria-label="Layout" className="w-auto py-1.5 text-sm" value={active.id} onChange={(e) => setLayouts({ ...layouts, active: e.target.value })}>{layouts.items.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select> : null}
           {customize && (edit ? <>
@@ -170,6 +173,8 @@ export function Dashboard() {
             <Button onClick={() => { void flush(); setEdit(false); }}>Fertig</Button>
           </> : <Button variant="secondary" onClick={() => setEdit(true)}>Dashboard bearbeiten</Button>)}
         </div>} />
+      {!edit && <Lage />}
+      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">Meine Widgets</h2>
       {edit && (
         <div className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-primary/50 p-3">
           <label className="text-xs text-muted">Layout-Name<Input className="mt-1 w-48 py-1 text-sm" value={active.name} maxLength={40} onChange={(e) => e.target.value.trim() && saveLayout({ ...active, name: e.target.value })} /></label>

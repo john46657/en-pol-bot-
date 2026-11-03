@@ -32,7 +32,7 @@ export function TrainingSessionsTab() {
   return (
     <div className="grid gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex overflow-hidden rounded-md border border-line text-sm" role="group" aria-label="Zeitraum">{(['upcoming', 'past'] as const).map((k) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => setScope(k)} className={`px-3 py-1.5 ${scope === k ? 'bg-primary text-white' : 'hover:bg-panel-2'}`}>{k === 'upcoming' ? 'Anstehend' : 'Vergangen'}</button>)}</div>
+        <div className="flex overflow-hidden rounded-md border border-line text-sm" role="group" aria-label="Zeitraum">{(['upcoming', 'past'] as const).map((k) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => setScope(k)} className={`px-3 py-1.5 ${scope === k ? 'bg-primary text-primary-fg' : 'hover:bg-panel-2'}`}>{k === 'upcoming' ? 'Anstehend' : 'Vergangen'}</button>)}</div>
         {can('training.create') && <Button className="ml-auto" onClick={() => setEdit('new')}><CalendarPlus size={16} className="mr-1" />Termin ansetzen</Button>}
       </div>
       <p className="text-xs text-muted">Auch in Discord: <code>/ausbildung ansetzen</code> im gewünschten Kanal. Die Ankündigung hat „Anmelden“/„Abmelden“ und einen Thread; nach dem Auswerten erscheint die Auswertung darunter.</p>

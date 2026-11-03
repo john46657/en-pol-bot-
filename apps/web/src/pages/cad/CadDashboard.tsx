@@ -6,8 +6,9 @@ import { ArrowDown, ArrowUp, Settings2 } from 'lucide-react';
 import { CAD_WIDGET_LABELS, CAD_WIDGETS } from '@enrp/shared';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { ago, ERLC_STATUS_TONE, optLabel, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
+import { ago, ERLC_STATUS_TONE, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
 import { Badge, Button, Card, ErrorState, Modal, PageHeader, SkeletonRows } from '../../components/ui';
+import { IncidentCard, StatTile, UnitRow } from '../../components/ops';
 import { MapView } from './MapView';
 import { DutyActivity } from '../../components/DutyActivity';
 
@@ -28,6 +29,9 @@ export function CadDashboard() {
   const available = d.units.filter((u) => u.status === cfg.unitStatuses[0]?.key && u.operational);
   const erlcLive = d.erlc.some((s) => s.status === 'CONNECTED' || s.status === 'LIMITED');
   const wide = new Set(['map', 'activeIncidents', 'units']);
+  const top = d.incidents.filter((i) => i.priority === cfg.priorities[0]?.key).length;
+  const prioIndex = (p: string) => { const i = cfg.priorities.findIndex((x) => x.key === p); return i < 0 ? 99 : i; };
+  const sorted = [...d.incidents].sort((a, b) => prioIndex(a.priority) - prioIndex(b.priority) || b.createdAt.localeCompare(a.createdAt));
   /** Kennzahl als kompakte Kachel (oben in einer Reihe statt einer großen Karte je Zahl). */
   const STATS: Record<string, () => { value: string | number; hint?: string; to?: string; tone?: 'danger' | 'success' | 'muted' }> = {
     availableUnits: () => ({ value: available.length, hint: `von ${d.units.length} Einheiten`, to: '/cad/units', tone: !d.units.length ? 'muted' : !available.length ? 'danger' : 'success' }),
@@ -36,13 +40,12 @@ export function CadDashboard() {
   };
   const Small = ({ text, hint }: { text: string; hint?: string }) => <p className="py-3 text-center text-sm text-muted">{text}{hint && <span className="mt-0.5 block text-xs">{hint}</span>}</p>;
   const W: Record<string, () => React.ReactNode> = {
-    activeIncidents: () => d.incidents.length ? <ul className="divide-y divide-line">{d.incidents.slice(0, 8).map((i) => (
-      <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm"><Link to={`/cad/incidents?id=${i.id}`} className="hover:underline"><b>{i.number}</b> · {i.title}</Link><span className="flex gap-1 text-xs"><span>{optLabel(cfg.priorities, i.priority)}</span><span className="text-muted">{optLabel(cfg.incidentStatuses, i.status)}</span></span></li>))}</ul>
+    activeIncidents: () => d.incidents.length ? <div className="grid gap-2">{sorted.slice(0, 8).map((i) => <IncidentCard key={i.id} inc={i} cfg={cfg} to={`/cad/incidents?id=${i.id}`} />)}</div>
       : <Small text="Keine aktiven Einsätze." hint={can('cad.create_incident') ? 'Neuer Einsatz über „Einsätze“ oder per Klick auf die Karte.' : undefined} />,
-    activeCalls: () => d.calls.length ? <ul className="space-y-1 text-sm">{d.calls.slice(0, 6).map((c) => <li key={c.id} className="rounded border-l-2 border-danger pl-2"><Link to={`/cad/calls?id=${c.id}`} className="hover:underline">🚨 #{c.callNumber} · {c.description ?? 'ohne Beschreibung'}</Link><span className="block text-xs text-muted">{c.positionDescriptor ?? '—'} · {ago(c.startedAt)}</span></li>)}</ul> : <Small text="Keine offenen Notrufe." hint={erlcLive ? undefined : 'Notrufe kommen automatisch aus ER:LC, sobald der Server verbunden ist.'} />,
+    activeCalls: () => d.calls.length ? <ul className="grid gap-2 text-sm">{d.calls.slice(0, 6).map((c) => <li key={c.id}><Link to={`/cad/calls?id=${c.id}`} className="block rounded-[10px] border border-danger bg-[color-mix(in_srgb,var(--color-danger)_12%,var(--color-panel))] px-3 py-2 hover:brightness-110"><span className="block font-semibold">Notruf <span className="font-mono">#{c.callNumber}</span> · {c.description ?? 'ohne Beschreibung'}</span><span className="block text-xs text-muted">{c.positionDescriptor ?? '—'} · {ago(c.startedAt)}</span></Link></li>)}</ul> : <Small text="Keine offenen Notrufe." hint={erlcLive ? undefined : 'Notrufe kommen automatisch aus ER:LC, sobald der Server verbunden ist.'} />,
     erlcStatus: () => d.erlc.length ? <ul className="space-y-1.5 text-sm">{d.erlc.map((s) => <li key={s.id} className="flex flex-wrap items-center justify-between gap-2"><span>{s.name}</span><Badge tone={ERLC_STATUS_TONE[s.status] ?? 'neutral'}>{STATUS_DE[s.status] ?? s.status}</Badge><span className="w-full text-xs text-muted">Abgleich {ago(s.lastSyncAt)}{s.latencyMs ? ` · ${s.latencyMs} ms` : ''}{s.lastError && s.status !== 'CONNECTED' ? ` · ${s.lastError}` : ''}</span></li>)}</ul> : <Small text="Kein ER:LC-Server verbunden." hint={can('cad.manage_erlc') ? 'CAD → Einstellungen → ER:LC Integration' : undefined} />,
     map: () => <MapView cfg={cfg} data={map.data} height="420px" compact />,
-    units: () => d.units.length ? <ul className="grid gap-1 text-sm sm:grid-cols-2">{d.units.map((u) => <li key={u.id} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1"><span className="font-medium">{u.icon ?? cfg.unitTypes.find((t) => t.key === u.type)?.emoji ?? '🚔'} {u.callsign}</span><span className="text-xs">{optLabel(cfg.unitStatuses, u.status)}{u.current ? ` · ${u.current.number}` : ''}</span></li>)}</ul> : <Small text="Keine Einheiten angelegt." hint={can('cad.manage_units') ? 'Einheiten → Neue Einheit' : undefined} />,
+    units: () => d.units.length ? <ul className="-m-3 grid sm:-m-4 md:grid-cols-2">{d.units.map((u) => <UnitRow key={u.id} unit={u} cfg={cfg} />)}</ul> : <Small text="Keine Einheiten angelegt." hint={can('cad.manage_units') ? 'Einheiten → Neue Einheit' : undefined} />,
     radio: () => d.radio.length ? <ul className="space-y-1 text-sm">{d.radio.slice(0, 8).map((r) => <li key={r.id}><b>{r.callsign ?? r.authorName ?? 'Funk'}:</b> „{r.text}“<span className="block text-xs text-muted">{ago(r.createdAt)}{r.incidentNumber ? ` · ${r.incidentNumber}` : ''}</span></li>)}</ul> : <Small text="Noch keine Funkmeldungen." />,
     dutyActivity: () => <DutyActivity />,
   };
@@ -51,22 +54,22 @@ export function CadDashboard() {
   const move = (i: number, dir: -1 | 1) => { const next = [...widgets]; const [x] = next.splice(i, 1); next.splice(i + dir, 0, x!); set({ widgets: next }); };
   return (
     <>
-      <PageHeader title="Leitstelle" subtitle="CAD-Übersicht – aktualisiert sich live"
+      <PageHeader title="Leitstelle" subtitle="Lage auf einen Blick – aktualisiert sich live"
         actions={<span className="flex items-center gap-3"><span className="inline-flex items-center gap-1.5 text-xs text-muted"><span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-success" />Stand {new Date(q.dataUpdatedAt).toLocaleTimeString('de-DE')}</span><Button variant="secondary" size="sm" onClick={() => setEditing(true)}><Settings2 size={14} /> Ansicht anpassen</Button></span>} />
-      <SetupChecklist d={d} />
-      <DispatchPlanningPanel />
       {/* Lage auf einen Blick: Einsätze, Notrufe und die gewählten Kennzahlen */}
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        <Tile label="Aktive Einsätze" value={d.incidents.length} hint={d.incidents.length ? `${d.incidents.filter((i) => i.priority === cfg.priorities[0]?.key).length} mit höchster Priorität` : 'alles ruhig'} to="/cad/incidents" tone={d.incidents.length ? 'warning' : 'success'} />
-        <Tile label="Offene Notrufe" value={d.calls.length} hint={d.calls.length ? `ältester ${ago(d.calls[d.calls.length - 1]!.startedAt)}` : 'keine'} to="/cad/calls" tone={d.calls.length ? 'danger' : 'success'} />
-        {stats.map((w) => { const x = STATS[w]!(); return <Tile key={w} label={CAD_WIDGET_LABELS[w] ?? w} value={x.value} hint={x.hint} to={x.to} tone={x.tone} />; })}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <StatTile label="Aktive Einsätze" value={d.incidents.length} hint={d.incidents.length ? `${top} mit höchster Priorität` : 'alles ruhig'} to="/cad/incidents" tone={top ? 'alarm' : 'neutral'} />
+        <StatTile label="Offene Notrufe" value={d.calls.length} hint={d.calls.length ? `ältester ${ago(d.calls[d.calls.length - 1]!.startedAt)}` : 'keine'} to="/cad/calls" tone={d.calls.length ? 'warn' : 'neutral'} />
+        {stats.map((w) => { const x = STATS[w]!(); return <StatTile key={w} label={CAD_WIDGET_LABELS[w] ?? w} value={x.value} hint={x.hint} to={x.to} tone={x.tone === 'danger' ? 'alarm' : 'neutral'} />; })}
       </div>
-      <div className={`grid gap-3 ${cad.compact ? 'md:grid-cols-3 xl:grid-cols-4' : 'md:grid-cols-2 xl:grid-cols-3'}`}>
+      <div className={`grid gap-4 ${cad.compact ? 'md:grid-cols-3 xl:grid-cols-4' : 'md:grid-cols-2 xl:grid-cols-3'}`}>
         {panels.map((w) => (
           <Card key={w} title={<span className="flex items-center gap-2">{CAD_WIDGET_LABELS[w]}{w === 'activeIncidents' && d.incidents.length > 0 && <Badge tone="warning">{d.incidents.length}</Badge>}{w === 'activeCalls' && d.calls.length > 0 && <Badge tone="danger">{d.calls.length}</Badge>}</span>}
             className={wide.has(w) ? 'md:col-span-2 xl:col-span-2' : undefined}>{W[w]!()}</Card>
         ))}
       </div>
+      <div className="mt-4"><DispatchPlanningPanel /></div>
+      <SetupChecklist d={d} />
       <Modal open={editing} title="Meine CAD-Ansicht" onClose={() => setEditing(false)}>
         <p className="mb-2 text-xs text-muted">Gilt nur für dich. Reihenfolge mit den Pfeilen, Kacheln an-/abwählen.</p>
         <ul className="space-y-1">{widgets.map((w, i) => (
@@ -78,20 +81,6 @@ export function CadDashboard() {
       </Modal>
     </>
   );
-}
-
-const TILE_TONE = { success: 'border-l-success', warning: 'border-l-warning', danger: 'border-l-danger', muted: 'border-l-line' } as const;
-/** Kennzahl-Kachel: große Zahl, Beschriftung, kurzer Hinweis; führt zur passenden Seite. */
-function Tile({ label, value, hint, to, tone = 'success' }: { label: string; value: string | number; hint?: string; to?: string; tone?: keyof typeof TILE_TONE }) {
-  const body = (
-    <>
-      <p className="truncate text-xs font-medium text-muted">{label}</p>
-      <p className={`text-2xl font-bold ${tone === 'muted' ? 'text-muted' : ''}`}>{value}</p>
-      {hint && <p className="truncate text-[11px] text-muted">{hint}</p>}
-    </>
-  );
-  const cls = `card block min-w-0 border border-line border-l-4 ${TILE_TONE[tone]} px-3 py-2 text-left`;
-  return to ? <Link to={to} className={`${cls} transition hover:bg-panel-2/60`}>{body}</Link> : <div className={cls}>{body}</div>;
 }
 
 /**
@@ -121,7 +110,7 @@ function SetupChecklist({ d }: { d: CadOverview }) {
   const doneCount = steps.filter((s) => s.done).length;
   const next = open[0]!;
   return (
-    <Card className="mb-3" title={`🧭 Einrichtung – ${doneCount} von ${steps.length} erledigt`} actions={<Button size="sm" variant="ghost" onClick={() => set({ setupHidden: true })}>Ausblenden</Button>}>
+    <Card className="mt-4" title={`🧭 Einrichtung – ${doneCount} von ${steps.length} erledigt`} actions={<Button size="sm" variant="ghost" onClick={() => set({ setupHidden: true })}>Ausblenden</Button>}>
       <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-panel-2" role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={doneCount} aria-label="Fortschritt der Einrichtung">
         <div className="h-full rounded-full bg-success transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
       </div>
@@ -129,7 +118,7 @@ function SetupChecklist({ d }: { d: CadOverview }) {
         const go = !s.done && can(s.perm);
         const inner = (
           <>
-            <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${s.done ? 'bg-success/20 text-success' : s === next ? 'bg-primary text-white' : 'border border-line text-muted'}`}>{s.done ? '✓' : i + 1}</span>
+            <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${s.done ? 'bg-success/20 text-success' : s === next ? 'bg-primary text-primary-fg' : 'border border-line text-muted'}`}>{s.done ? '✓' : i + 1}</span>
             <span className="min-w-0 flex-1">
               <span className={`block font-medium ${s.done ? 'text-muted line-through' : 'text-fg'}`}>{s.text}{s.optional && <span className="ml-1 text-xs font-normal text-muted">(optional)</span>}</span>
               {!s.done && <span className="block text-xs text-muted">{s.hint}{!can(s.perm) ? ' – dafür fehlt dir das Recht' : ''}</span>}
