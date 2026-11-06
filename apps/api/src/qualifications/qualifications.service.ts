@@ -3,6 +3,7 @@ import { hireEvents } from '../common/hire-events';
 import { settingsGuild } from '../common/guild-context';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { NotifyService } from '../notifications/notify.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
@@ -35,7 +36,7 @@ function panelMessage(p: ApplicationPanelParts): MessageSpec {
  */
 @Injectable()
 export class QualificationsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly discord: DiscordService, private readonly roblox: RobloxService, private readonly bans: ApplicationBansService, private readonly notify: NotifyService) {}
 
   /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
   private keyOf(base: string, guildId?: string | null) { const g = settingsGuild(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
@@ -225,10 +226,16 @@ export class QualificationsService {
   /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
   async memberLeft(guildId: string, discordId: string) {
     const open = await this.prisma.qualificationApplication.findMany({ where: { discordId, status: 'OPEN', OR: [{ guildId }, { guildId: null }] } });
-    let denied = 0, withdrawn = 0;
+    let flagged = 0, withdrawn = 0;
     for (const a of open) {
       const action = (await this.config(a.guildId)).units.find((u) => u.key === a.unit)?.settings.onLeave ?? 'NONE';
-      if (action === 'DENY') { await this.decide(LEFT_ACTOR, a.id, 'REJECTED', LEFT_REASON).then(() => denied++, () => undefined); continue; }
+      // Ablehnen entscheidet nie das System: „ablehnen“ (`DENY`) meldet den Austritt nur den Entscheidern, die Bewerbung bleibt offen
+      if (action === 'DENY') {
+        await this.notify.notifyPermission('qualifications.decide', { type: 'APPLICATION', title: `🚪 Bewerber hat den Server verlassen (${a.unit})`, body: 'Die Bewerbung ist weiter offen und wartet auf eure Entscheidung.', entityType: 'QualificationApplication', entityId: a.id }, { guildId: a.guildId });
+        await this.audit.record(LEFT_ACTOR, { action: 'qualifications.application.member_left', module: 'qualifications', entityType: 'QualificationApplication', entityId: a.id, reason: LEFT_REASON });
+        flagged++;
+        continue;
+      }
       if (action !== 'WITHDRAW') continue;
       const claimed = await this.prisma.$transaction(async (tx) => {
         const r = await tx.qualificationApplication.updateMany({ where: { id: a.id, status: 'OPEN' }, data: { status: 'WITHDRAWN', decidedAt: new Date(), decisionReason: LEFT_REASON } });
@@ -238,7 +245,7 @@ export class QualificationsService {
       if (claimed) await this.discord.markDecided('qualification', a.id, LEFT_ACTOR, 'WITHDRAWN', LEFT_REASON);
       withdrawn += claimed;
     }
-    return { denied, withdrawn };
+    return { flagged, withdrawn };
   }
 
   async decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED', reason?: string) {

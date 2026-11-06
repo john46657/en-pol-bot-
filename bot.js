@@ -85803,7 +85803,7 @@ function resultReply(v, cfg2, note2) {
   if (v.status === "VOIDED") return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u{1F4DD} ${clip(v.title, 200)} \u2013 annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain(v.voided.reason)}` : ""}. Er z\xE4hlt nicht als Versuch.` }, "warning")] };
   if (v.status === "SUBMITTED" || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg2, { title: `\u23F3 ${clip(v.title, 200)} \u2013 abgegeben`, description: `${note2 ? `${note2}
 
-` : ""}Deine Antworten sind gespeichert. Einige Fragen bewertet ein Pr\xFCfer \u2013 du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
+` : ""}Deine Antworten sind gespeichert. Ein Pr\xFCfer bewertet deine Abgabe \u2013 du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
   const r = v.result;
   const head = r.passed ? "\u2705 Bestanden" : "\u274C Nicht bestanden";
   const score = r.percent !== void 0 && r.percent !== null ? ` \u2013 **${r.percent} %** (${pts(r.score)} von ${pts(r.maxScore)} Punkten, n\xF6tig: ${v.passPercent} %)` : "";
@@ -87128,6 +87128,8 @@ var schema = external_exports.object({
   OUTBOX_POLL_SECONDS: external_exports.coerce.number().int().min(2).max(60).default(5),
   /** Wie oft Teamliste und Gefahrenstatus-Panel mit dem System abgeglichen werden (bearbeitet wird nur bei Änderungen). */
   LIVE_REFRESH_SECONDS: external_exports.coerce.number().int().min(5).max(3600).default(5),
+  /** Wartezeit je Nutzer und Slash-Befehl in Sekunden (0 = aus). Begrenzt nur die Bot-Nutzung. */
+  COMMAND_COOLDOWN_SECONDS: external_exports.coerce.number().int().min(0).max(60).default(3),
   /** Ordner für Bot-Sicherungen – absolut und AUSSERHALB des Bot-/Produktionsordners (Standard: ~/.en-polizei-bot/backups). */
   BOT_BACKUP_DIR: external_exports.string().min(1).optional()
 });
@@ -87996,12 +87998,37 @@ var BotBackupService = class {
   }
 };
 
+// apps/bot/src/cooldown.ts
+var MAX_ENTRIES = 1e4;
+function createCooldowns(seconds, now = Date.now) {
+  const ms = Math.max(0, seconds) * 1e3;
+  const last = /* @__PURE__ */ new Map();
+  return {
+    hit(userId, key4) {
+      if (ms === 0) return null;
+      const id3 = `${userId}:${key4}`;
+      const t2 = now();
+      const prev = last.get(id3);
+      if (prev !== void 0 && t2 - prev < ms) return Math.ceil((ms - (t2 - prev)) / 1e3);
+      if (last.size >= MAX_ENTRIES) {
+        for (const [k, v] of last) if (t2 - v >= ms) last.delete(k);
+        if (last.size >= MAX_ENTRIES) last.delete(last.keys().next().value);
+      }
+      last.delete(id3);
+      last.set(id3, t2);
+      return null;
+    }
+  };
+}
+var cooldownText = (left) => `\u23F3 Bitte kurz warten \u2013 du kannst diesen Befehl in ${left} Sekunde${left === 1 ? "" : "n"} wieder nutzen.`;
+
 // apps/bot/src/index.ts
 loadDotEnv();
 var cfg = loadConfig();
 registerSecrets([cfg.DISCORD_TOKEN, cfg.BOT_API_TOKEN]);
 installLogRedaction();
 var api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
+var cooldowns = createCooldowns(cfg.COMMAND_COOLDOWN_SECONDS);
 var guildConfig = new GuildConfigStore(apiKeyValue(api));
 var backupDir = cfg.BOT_BACKUP_DIR ? defaultBackupDir({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : defaultBackupDir({});
 var backupDirWarning = insideProduction(backupDir, [process.cwd(), ...typeof __dirname === "string" ? [__dirname] : []]) ? `Der Sicherungsordner ${backupDir} liegt im Bot-/Produktionsordner. Bitte BOT_BACKUP_DIR auf einen Ordner au\xDFerhalb setzen (die Kopie in der Datenbank besteht trotzdem).` : null;
@@ -88576,6 +88603,11 @@ async function handleCommand(i) {
     opts[o.name] = typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : void 0;
   }
   const policyKey = sub ? `${def.name} ${sub}` : def.name;
+  const wait = cooldowns.hit(i.user.id, policyKey);
+  if (wait !== null) {
+    await i.reply({ content: cooldownText(wait), flags: import_discord9.MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    return;
+  }
   if (def.opensModal) {
     const reply2 = await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
     if (reply2.modal) await i.showModal(toModal2(reply2.modal));

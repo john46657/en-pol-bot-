@@ -55,11 +55,11 @@ export declare class BotWelcomeController {
     }>;
     memberLeft(b: z.infer<typeof memberBody>): Promise<{
         applications: {
-            denied: number;
+            flagged: number;
             withdrawn: number;
         };
         qualifications: {
-            denied: number;
+            flagged: number;
             withdrawn: number;
         };
         tickets: {

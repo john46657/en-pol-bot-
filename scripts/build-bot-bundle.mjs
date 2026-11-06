@@ -40,6 +40,8 @@ API_URL=http://DEINE-IP-ODER-DOMAIN:PORT
 BOT_API_TOKEN=
 # Wie oft (Sekunden) neue Benachrichtigungen abgeholt werden
 OUTBOX_POLL_SECONDS=5
+# Wartezeit je Nutzer und Slash-Befehl in Sekunden (0 = aus)
+COMMAND_COOLDOWN_SECONDS=3
 # Optional: Ordner für Bot-Sicherungen (/backup) – absolut und AUSSERHALB dieses Bot-Ordners. Standard: ~/.en-polizei-bot/backups
 BOT_BACKUP_DIR=
 `);

@@ -16,6 +16,7 @@ const application_bans_service_1 = require("../application-bans/application-bans
 const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
+const notify_service_1 = require("../notifications/notify.service");
 const prisma_service_1 = require("../prisma/prisma.service");
 const audit_service_1 = require("../audit/audit.service");
 const discord_service_1 = require("../discord/discord.service");
@@ -49,12 +50,14 @@ let QualificationsService = class QualificationsService {
     discord;
     roblox;
     bans;
-    constructor(prisma, audit, discord, roblox, bans) {
+    notify;
+    constructor(prisma, audit, discord, roblox, bans, notify) {
         this.prisma = prisma;
         this.audit = audit;
         this.discord = discord;
         this.roblox = roblox;
         this.bans = bans;
+        this.notify = notify;
     }
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     keyOf(base, guildId) { const g = (0, guild_context_1.settingsGuild)(guildId); return g ? `${base}@${g}` : base; } // Gruppe mit geteilten Einstellungen → Haupt-Server
@@ -252,11 +255,14 @@ let QualificationsService = class QualificationsService {
     /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
     async memberLeft(guildId, discordId) {
         const open = await this.prisma.qualificationApplication.findMany({ where: { discordId, status: 'OPEN', OR: [{ guildId }, { guildId: null }] } });
-        let denied = 0, withdrawn = 0;
+        let flagged = 0, withdrawn = 0;
         for (const a of open) {
             const action = (await this.config(a.guildId)).units.find((u) => u.key === a.unit)?.settings.onLeave ?? 'NONE';
+            // Ablehnen entscheidet nie das System: „ablehnen“ (`DENY`) meldet den Austritt nur den Entscheidern, die Bewerbung bleibt offen
             if (action === 'DENY') {
-                await this.decide(decision_1.LEFT_ACTOR, a.id, 'REJECTED', decision_1.LEFT_REASON).then(() => denied++, () => undefined);
+                await this.notify.notifyPermission('qualifications.decide', { type: 'APPLICATION', title: `🚪 Bewerber hat den Server verlassen (${a.unit})`, body: 'Die Bewerbung ist weiter offen und wartet auf eure Entscheidung.', entityType: 'QualificationApplication', entityId: a.id }, { guildId: a.guildId });
+                await this.audit.record(decision_1.LEFT_ACTOR, { action: 'qualifications.application.member_left', module: 'qualifications', entityType: 'QualificationApplication', entityId: a.id, reason: decision_1.LEFT_REASON });
+                flagged++;
                 continue;
             }
             if (action !== 'WITHDRAW')
@@ -271,7 +277,7 @@ let QualificationsService = class QualificationsService {
                 await this.discord.markDecided('qualification', a.id, decision_1.LEFT_ACTOR, 'WITHDRAWN', decision_1.LEFT_REASON);
             withdrawn += claimed;
         }
-        return { denied, withdrawn };
+        return { flagged, withdrawn };
     }
     async decide(actor, id, status, reason) {
         const a = await this.prisma.qualificationApplication.findUnique({ where: { id } });
@@ -329,6 +335,6 @@ let QualificationsService = class QualificationsService {
 exports.QualificationsService = QualificationsService;
 exports.QualificationsService = QualificationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, discord_service_1.DiscordService, roblox_service_1.RobloxService, application_bans_service_1.ApplicationBansService, notify_service_1.NotifyService])
 ], QualificationsService);
 //# sourceMappingURL=qualifications.service.js.map

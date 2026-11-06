@@ -228,14 +228,14 @@ export declare class WelcomeService {
         name: string;
         data: string;
     }>;
-    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
+    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln (Bewerbungen werden dabei nie abgelehnt, nur gemeldet). Fehler eines Bereichs stoppen die anderen nicht. */
     memberLeft(guildId: string, discordId: string): Promise<{
         applications: {
-            denied: number;
+            flagged: number;
             withdrawn: number;
         };
         qualifications: {
-            denied: number;
+            flagged: number;
             withdrawn: number;
         };
         tickets: {

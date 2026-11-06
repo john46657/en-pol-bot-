@@ -126,9 +126,13 @@ export declare class ApplicationsService {
     }>;
     /** Angenommen → Personal-/Dienstnummern-Automatik (Einstellungen → Dienstnummern). */
     private hire;
-    /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
+    /**
+     * „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat.
+     * Ablehnen entscheidet nie das System: die Einstellung „ablehnen“ (`DENY`) benachrichtigt nur die Prüfer (`flagged`),
+     * die Bewerbung bleibt offen. „Zurückziehen“ (`WITHDRAW`) ist keine Entscheidung über die Person und bleibt erhalten.
+     */
     memberLeft(guildId: string, discordId: string): Promise<{
-        denied: number;
+        flagged: number;
         withdrawn: number;
     }>;
     list(p: PageQuery, status?: string, guildId?: string, order?: 'newest' | 'oldest'): Promise<{

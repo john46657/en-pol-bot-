@@ -30,6 +30,7 @@ const bot_backup_1 = require("./bot-backup");
 const access_1 = require("./access");
 const branding_1 = require("./branding");
 const safety_1 = require("./safety");
+const cooldown_1 = require("./cooldown");
 const bot_profile_1 = require("./commands/bot-profile");
 (0, config_1.loadDotEnv)();
 const cfg = (0, config_1.loadConfig)();
@@ -37,6 +38,8 @@ const cfg = (0, config_1.loadConfig)();
 (0, safety_1.registerSecrets)([cfg.DISCORD_TOKEN, cfg.BOT_API_TOKEN]);
 (0, safety_1.installLogRedaction)();
 const api = new api_1.HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
+/** Wartezeit je Nutzer und Slash-Befehl (COMMAND_COOLDOWN_SECONDS, 0 = aus). */
+const cooldowns = (0, cooldown_1.createCooldowns)(cfg.COMMAND_COOLDOWN_SECONDS);
 /** Einstellungen je Server (/setup) und Bot-Sicherungen (Datei außerhalb des Bot-Ordners + Kopie in der Datenbank). */
 const guildConfig = new guild_config_1.GuildConfigStore((0, guild_config_1.apiKeyValue)(api));
 const backupDir = cfg.BOT_BACKUP_DIR ? (0, bot_backup_1.defaultBackupDir)({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : (0, bot_backup_1.defaultBackupDir)({});
@@ -652,6 +655,11 @@ async function handleCommand(i) {
         opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
     }
     const policyKey = sub ? `${def.name} ${sub}` : def.name;
+    const wait = cooldowns.hit(i.user.id, policyKey);
+    if (wait !== null) {
+        await i.reply({ content: (0, cooldown_1.cooldownText)(wait), flags: discord_js_1.MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+        return;
+    }
     if (def.opensModal) {
         // Formulare müssen die erste Antwort sein – kein deferReply vorher.
         const reply = (await preflight(i.guildId, i.user.id, policyKey, (0, branding_1.moduleOfCommand)(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));

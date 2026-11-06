@@ -36,6 +36,7 @@ import { authorize, type AccessDeps, type MemberAccess } from './access';
 import { brandReply, moduleOfCommand, visibleCommands } from './branding';
 import type { GuildSnapshot } from './diagnostics';
 import { installLogRedaction, registerSecrets } from './safety';
+import { cooldownText, createCooldowns } from './cooldown';
 import type { BotRuntime } from './commands/types';
 import { restorePresence, toPresenceData, type BotProfileActions, type SavedPresence } from './commands/bot-profile';
 
@@ -45,6 +46,8 @@ const cfg = loadConfig();
 registerSecrets([cfg.DISCORD_TOKEN, cfg.BOT_API_TOKEN]);
 installLogRedaction();
 const api = new HttpApi(cfg.API_URL, cfg.BOT_API_TOKEN);
+/** Wartezeit je Nutzer und Slash-Befehl (COMMAND_COOLDOWN_SECONDS, 0 = aus). */
+const cooldowns = createCooldowns(cfg.COMMAND_COOLDOWN_SECONDS);
 /** Einstellungen je Server (/setup) und Bot-Sicherungen (Datei außerhalb des Bot-Ordners + Kopie in der Datenbank). */
 const guildConfig = new GuildConfigStore(apiKeyValue(api));
 const backupDir = cfg.BOT_BACKUP_DIR ? defaultBackupDir({ BOT_BACKUP_DIR: cfg.BOT_BACKUP_DIR }) : defaultBackupDir({});
@@ -566,6 +569,8 @@ async function handleCommand(i: ChatInputCommandInteraction) {
     const v = i.options.get(o.name)?.value; opts[o.name] = typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
   }
   const policyKey = sub ? `${def.name} ${sub}` : def.name;
+  const wait = cooldowns.hit(i.user.id, policyKey);
+  if (wait !== null) { await i.reply({ content: cooldownText(wait), flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } }); return; }
   if (def.opensModal) {
     // Formulare müssen die erste Antwort sein – kein deferReply vorher.
     const reply = (await preflight(i.guildId, i.user.id, policyKey, moduleOfCommand(def.name)).catch(() => DENIED)) ?? await safeRun(`command ${def.name}`, () => def.run({ ...baseCtx(i), opts, attachments }));
