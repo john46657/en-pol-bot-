@@ -67,10 +67,21 @@ describe('Prüfungen: überarbeitetes System', () => {
     // q2 halb richtig (1 von 3 Positionen → 1 Punkt), q3 falsch, q4 richtig → 3 von 7 = 43 % → nicht bestanden
     const sub = await cadet.post(`/api/v1/hr/attempts/${v.id}/submit`).send({ answers: { q1: '0', q2: ['0', '2', '1'], q3: ['1', '0'], q4: [' Fünfzig '] } });
     expect(sub.status).toBe(200);
-    expect(sub.body.result).toMatchObject({ score: 3, maxScore: 7, percent: 43, passed: false });
-    const q4 = sub.body.questions.find((q: { id: string }) => q.id === 'q4');
+    // „bestanden/nicht bestanden“ setzt nie das System – auch bei vollständig automatisch bewertbaren Fragen wartet der Versuch auf einen Prüfer
+    expect(sub.body.status).toBe('SUBMITTED');
+    expect(sub.body.result).toBeNull();
+    expect((await prisma.hrExamAttempt.findUniqueOrThrow({ where: { id: v.id } })).passed).toBeNull();
+    expect(await prisma.notification.count({ where: { userId: staffId, entityType: 'HrExamAttempt', entityId: v.id } })).toBe(1);
+    // Prüfer sieht die Punktvorschläge und bestätigt sie (ohne eigene Punkte = Vorschläge übernehmen)
+    const proposal = await staff.get(`/api/v1/hr/attempts/${v.id}`);
+    expect(proposal.body.questions.find((q: { id: string }) => q.id === 'q2').auto).toBe(1);
+    const confirmed = await staff.post(`/api/v1/hr/attempts/${v.id}/grade`).send({ scores: {} });
+    expect(confirmed.status).toBe(200);
+    expect(confirmed.body.result).toMatchObject({ score: 3, maxScore: 7, percent: 43, passed: false });
+    const review = await cadet.get(`/api/v1/hr/attempts/${v.id}`);
+    const q4 = review.body.questions.find((q: { id: string }) => q.id === 'q4');
     expect(q4).toMatchObject({ earned: 1, gaps: [['50', 'fünfzig']], explanation: 'StVO § 3' });
-    expect(sub.body.questions.find((q: { id: string }) => q.id === 'q2').earned).toBe(1);
+    expect(review.body.questions.find((q: { id: string }) => q.id === 'q2').earned).toBe(1);
 
     const again = (await cadet.get('/api/v1/hr/exams')).body.find((e: { id: string }) => e.id === id);
     expect(again.me).toMatchObject({ state: 'AVAILABLE', attemptsUsed: 1, attemptsLeft: 2, bestPercent: 43 });

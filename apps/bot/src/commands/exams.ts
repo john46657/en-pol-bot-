@@ -222,7 +222,7 @@ function reviewReply(v: AttemptView, cfg: GuildConfig | null): Reply {
 
 export function resultReply(v: AttemptView, cfg: GuildConfig | null, note?: string): Reply {
   if (v.status === 'VOIDED') return { ephemeral: true, panel: true, embeds: [b(cfg, { title: `📝 ${clip(v.title, 200)} – annulliert`, description: `Dieser Versuch wurde annulliert${v.voided?.reason ? `: ${plain(v.voided.reason)}` : ''}. Er zählt nicht als Versuch.` }, 'warning')] };
-  if (v.status === 'SUBMITTED' || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg, { title: `⏳ ${clip(v.title, 200)} – abgegeben`, description: `${note ? `${note}\n\n` : ''}Deine Antworten sind gespeichert. Einige Fragen bewertet ein Prüfer – du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
+  if (v.status === 'SUBMITTED' || !v.result) return { ephemeral: true, panel: true, embeds: [b(cfg, { title: `⏳ ${clip(v.title, 200)} – abgegeben`, description: `${note ? `${note}\n\n` : ''}Deine Antworten sind gespeichert. Ein Prüfer bewertet deine Abgabe – du bekommst das Ergebnis, sobald es feststeht (\`/pruefung ergebnisse\`).` })] };
   const r = v.result;
   const head = r.passed ? '✅ Bestanden' : '❌ Nicht bestanden';
   const score = r.percent !== undefined && r.percent !== null ? ` – **${r.percent} %** (${pts(r.score)} von ${pts(r.maxScore)} Punkten, nötig: ${v.passPercent} %)` : '';

@@ -270,7 +270,11 @@ export class HrExamService {
     return { saved: true };
   }
 
-  /** Abgeben: automatische Bewertung oder „wartet auf Prüfer“ (dann werden die Prüfer benachrichtigt). */
+  /**
+   * Abgeben: der Versuch wartet IMMER auf einen Prüfer („bestanden“ entscheidet nie das System).
+   * `autoGrade` bedeutet nur noch: Punkte werden dem Prüfer als Vorschlag angezeigt (`auto` je Frage in `view`)
+   * und beim Bestätigen ohne eigene Punkte übernommen (siehe `grade`).
+   */
   async submit(actor: Actor, attemptId: string, answers: Record<string, unknown>, forced = false) {
     const a = await this.prisma.hrExamAttempt.findUnique({ where: { id: attemptId }, include: { exam: true, personnel: { select: { userId: true, user: { select: { displayName: true } } } } } });
     if (!a || (!forced && a.personnel.userId !== actor.userId)) throw new AppError('NOT_FOUND', 'Versuch nicht gefunden.');
@@ -278,16 +282,11 @@ export class HrExamService {
     // nach Ablauf der Zeit zählt nur, was rechtzeitig zwischengespeichert wurde
     const final = this.cleanAnswers(this.timedOut(a.startedAt, a.exam.timeLimitMin) ? (a.answers as Record<string, unknown>) : answers, a.questionIds);
     const qs = this.questionsOf(a, a.exam);
-    const scores = qs.map((q) => gradeAnswer(q, final[q.id]));
     const maxScore = qs.reduce((n, q) => n + q.points, 0);
-    const auto = a.exam.autoGrade && scores.every((s) => s !== null);
-    const score = round(scores.reduce<number>((n, s) => n + (s ?? 0), 0));
-    const passed = auto ? maxScore > 0 && (score / maxScore) * 100 >= a.exam.passPercent : null;
-    const questionScores = Object.fromEntries(qs.map((q, i) => [q.id, scores[i] ?? 0]));
-    await this.prisma.hrExamAttempt.update({ where: { id: attemptId }, data: { answers: final, submittedAt: new Date(), status: auto ? 'GRADED' : 'SUBMITTED', maxScore, ...(auto ? { score, passed, gradedAt: new Date(), questionScores } : {}) } });
-    await this.core.audit.record(actor, { action: forced ? 'exam.timeout' : 'exam.submit', module: 'exam', entityType: 'HrExamAttempt', entityId: attemptId, after: auto ? { score, maxScore, passed } : { waiting: true } });
-    if (auto) await this.afterGrade(attemptId, false);
-    else if (a.exam.notifyExaminers) {
+    await this.prisma.hrExamAttempt.update({ where: { id: attemptId }, data: { answers: final, submittedAt: new Date(), status: 'SUBMITTED', maxScore } });
+    await this.core.audit.record(actor, { action: forced ? 'exam.timeout' : 'exam.submit', module: 'exam', entityType: 'HrExamAttempt', entityId: attemptId, after: { waiting: true } });
+    // Bei Prüfungen mit Punktvorschlag rechnete früher niemand mit Prüferarbeit – deshalb dort immer benachrichtigen
+    if (a.exam.notifyExaminers || a.exam.autoGrade) {
       const who = a.personnel.user.displayName;
       const examiners = a.exam.examinerIds.filter((id) => id !== a.personnel.userId);
       if (examiners.length) await this.prisma.notification.createMany({ data: examiners.map((userId) => ({ userId, type: 'PERSONNEL', title: `📝 Zu bewerten: ${a.exam.title}`.slice(0, 200), body: `${who} hat die Prüfung abgegeben.`, entityType: 'HrExamAttempt', entityId: attemptId })) });
