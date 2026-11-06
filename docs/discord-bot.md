@@ -105,6 +105,7 @@ BOT_API_TOKEN=<64 Hex-Zeichen>      # API + Bot
 DISCORD_TOKEN=<Token aus Schritt 1> # nur Bot
 DISCORD_GUILD_ID=<Server-ID>        # optional – Commands kommen automatisch auf jeden Server des Bots
 BOT_BACKUP_DIR=/var/backups/en-polizei-bot  # optional – Bot-Sicherungen, AUSSERHALB des Bot-Ordners (Standard: ~/.en-polizei-bot/backups)
+COMMAND_COOLDOWN_SECONDS=3          # optional – Wartezeit je Nutzer und Slash-Befehl (0 = aus, max. 60); begrenzt nur die Bot-Nutzung
 ```
 - **Lokal testen:** `DISCORD_TOKEN=… DISCORD_GUILD_ID=… pnpm dev:all` startet den Bot automatisch mit (mit einem festen Entwicklungs-Geheimnis; nur lokal verwenden).
 - **Auf dem VPS:** Werte in `.env` eintragen (`BOT_API_TOKEN` erzeugt `setup-server.sh` schon), dann
