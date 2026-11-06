@@ -108,12 +108,12 @@ let WelcomeService = class WelcomeService {
         const f = await this.media.welcomeBanner(id);
         return { mime: f.mime, name: f.name, data: f.data.toString('base64') };
     }
-    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln. Fehler eines Bereichs stoppen die anderen nicht. */
+    /** Vom Bot: Mitglied hat den Server verlassen → offene Bewerbungen und Tickets nach Einstellung behandeln (Bewerbungen werden dabei nie abgelehnt, nur gemeldet). Fehler eines Bereichs stoppen die anderen nicht. */
     async memberLeft(guildId, discordId) {
         const safe = (label, p, empty) => p.catch((e) => { this.log.warn(`member left (${label}): ${e.message}`); return empty; });
         const [applications, qualifications, tickets] = await Promise.all([
-            safe('applications', this.applications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
-            safe('qualifications', this.qualifications.memberLeft(guildId, discordId), { denied: 0, withdrawn: 0 }),
+            safe('applications', this.applications.memberLeft(guildId, discordId), { flagged: 0, withdrawn: 0 }),
+            safe('qualifications', this.qualifications.memberLeft(guildId, discordId), { flagged: 0, withdrawn: 0 }),
             safe('tickets', this.tickets.memberLeft(guildId, discordId), { closed: 0 }),
         ]);
         return { applications, qualifications, tickets };

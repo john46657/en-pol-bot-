@@ -1,5 +1,6 @@
 import { ApplicationBansService } from '../application-bans/application-bans.service';
 import { Prisma } from '@prisma/client';
+import { NotifyService } from '../notifications/notify.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, Actor } from '../audit/audit.service';
 import { DiscordService } from '../discord/discord.service';
@@ -25,7 +26,8 @@ export declare class QualificationsService {
     private readonly discord;
     private readonly roblox;
     private readonly bans;
-    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService, bans: ApplicationBansService);
+    private readonly notify;
+    constructor(prisma: PrismaService, audit: AuditService, discord: DiscordService, roblox: RobloxService, bans: ApplicationBansService, notify: NotifyService);
     /** Einstellungen eines Servers (`@<guildId>`) – ohne eigene gilt die gemeinsame Grundeinstellung. */
     private keyOf;
     private read;
@@ -428,7 +430,7 @@ export declare class QualificationsService {
     }[]>;
     /** „Action On User Leave“: offene Bewerbungen einer Person, die den Discord-Server verlassen hat (Einstellung je Einheit). */
     memberLeft(guildId: string, discordId: string): Promise<{
-        denied: number;
+        flagged: number;
         withdrawn: number;
     }>;
     decide(actor: Actor, id: string, status: 'ACCEPTED' | 'REJECTED', reason?: string): Promise<{

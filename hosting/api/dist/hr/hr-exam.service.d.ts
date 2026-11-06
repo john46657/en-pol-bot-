@@ -402,7 +402,11 @@ export declare class HrExamService {
     } | {
         saved: boolean;
     }>;
-    /** Abgeben: automatische Bewertung oder „wartet auf Prüfer“ (dann werden die Prüfer benachrichtigt). */
+    /**
+     * Abgeben: der Versuch wartet IMMER auf einen Prüfer („bestanden“ entscheidet nie das System).
+     * `autoGrade` bedeutet nur noch: Punkte werden dem Prüfer als Vorschlag angezeigt (`auto` je Frage in `view`)
+     * und beim Bestätigen ohne eigene Punkte übernommen (siehe `grade`).
+     */
     submit(actor: Actor, attemptId: string, answers: Record<string, unknown>, forced?: boolean): Promise<{
         id: string;
         examId: string;
