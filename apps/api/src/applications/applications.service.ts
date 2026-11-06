@@ -183,16 +183,23 @@ export class ApplicationsService {
     return hireEvents.accepted(actor, { applicationId: a.id, number: a.number, kind: 'police', discordId: a.discordId, name: a.discordName || a.robloxUsername, robloxUsername: a.robloxUsername, robloxUserId: a.robloxUserId });
   }
 
-  /** „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat. */
+  /**
+   * „Action On User Leave“ der Polizei-Bewerbung: offene Bewerbungen einer Person, die den Discord-Server verlassen hat.
+   * Ablehnen entscheidet nie das System: die Einstellung „ablehnen“ (`DENY`) benachrichtigt nur die Prüfer (`flagged`),
+   * die Bewerbung bleibt offen. „Zurückziehen“ (`WITHDRAW`) ist keine Entscheidung über die Person und bleibt erhalten.
+   */
   async memberLeft(guildId: string, discordId: string) {
-    const open = await this.prisma.application.findMany({ where: { discordId, status: { in: OPEN_STATUSES }, OR: [{ guildId }, { guildId: null }] }, select: { id: true, guildId: true } });
-    let denied = 0, withdrawn = 0;
+    const open = await this.prisma.application.findMany({ where: { discordId, status: { in: OPEN_STATUSES }, OR: [{ guildId }, { guildId: null }] }, select: { id: true, guildId: true, number: true, robloxUsername: true } });
+    let flagged = 0, withdrawn = 0;
     for (const a of open) {
       const action = (await this.police(a.guildId)).settings.onLeave;
-      if (action === 'DENY') await this.discordDecide(LEFT_ACTOR, a.id, 'REJECTED', LEFT_REASON).then(() => denied++, () => undefined);
-      else if (action === 'WITHDRAW') await this.transition(LEFT_ACTOR, a.id, 'WITHDRAWN', LEFT_REASON).then(() => withdrawn++, () => undefined);
+      if (action === 'DENY') {
+        await this.notify.notifyPermission('applications.review', { type: 'APPLICATION', title: `🚪 Bewerber hat den Server verlassen: ${a.number}`, body: `${a.robloxUsername} – die Bewerbung ist weiter offen und wartet auf eure Entscheidung.`, entityType: 'Application', entityId: a.id }, { guildId: a.guildId });
+        await this.audit.record(LEFT_ACTOR, { action: 'application.member_left', module: 'applications', entityType: 'Application', entityId: a.id, reason: LEFT_REASON });
+        flagged++;
+      } else if (action === 'WITHDRAW') await this.transition(LEFT_ACTOR, a.id, 'WITHDRAWN', LEFT_REASON).then(() => withdrawn++, () => undefined);
     }
-    return { denied, withdrawn };
+    return { flagged, withdrawn };
   }
 
   async list(p: PageQuery, status?: string, guildId?: string, order: 'newest' | 'oldest' = 'newest') {

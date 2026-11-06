@@ -94,7 +94,7 @@ describe('welcome banner', () => {
 });
 
 describe('action on user leave', () => {
-  it('denies or withdraws open applications as configured; other people and servers stay untouched', async () => {
+  it('never denies on leave: DENY only notifies the deciders, WITHDRAW withdraws; other people and servers stay untouched', async () => {
     const admin = (await login(app, 'wel_admin')).agent;
     // eigene, vollständige Einrichtung (andere Testdateien ändern die gemeinsame)
     const units = DEFAULT_CONFIG.units.map((u) => ({ ...u, enabled: true, settings: { ...u.settings, cooldownMinutes: 0, onLeave: u.key === 'sek' ? 'DENY' : u.key === 'flugstaffel' ? 'WITHDRAW' : 'DENY' } }));
@@ -111,16 +111,18 @@ describe('action on user leave', () => {
 
     const r = await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: GUILD, discordId: LEAVER });
     expect(r.status).toBe(200);
-    expect(r.body).toEqual({ applications: { denied: 0, withdrawn: 1 }, qualifications: { denied: 1, withdrawn: 1 }, tickets: { closed: 0 } });
+    expect(r.body).toEqual({ applications: { flagged: 0, withdrawn: 1 }, qualifications: { flagged: 1, withdrawn: 1 }, tickets: { closed: 0 } });
     const q = await prisma.qualificationApplication.findMany({ where: { discordId: { in: [LEAVER, STAYER] } }, select: { unit: true, discordId: true, guildId: true, status: true, decisionReason: true } });
     const st = (unit: string, d = LEAVER, g = GUILD) => q.find((x) => x.unit === unit && x.discordId === d && x.guildId === g)?.status;
-    expect([st('sek'), st('flugstaffel'), st('sek', STAYER), st('ausbilder', LEAVER, OTHER)]).toEqual(['REJECTED', 'WITHDRAWN', 'OPEN', 'OPEN']);
-    expect(q.find((x) => x.unit === 'sek' && x.discordId === LEAVER)?.decisionReason).toBe('Hat den Discord-Server verlassen.');
+    expect([st('sek'), st('flugstaffel'), st('sek', STAYER), st('ausbilder', LEAVER, OTHER)]).toEqual(['OPEN', 'WITHDRAWN', 'OPEN', 'OPEN']);
+    expect(q.find((x) => x.unit === 'flugstaffel' && x.discordId === LEAVER)?.decisionReason).toBe('Hat den Discord-Server verlassen.');
     expect((await prisma.application.findFirstOrThrow({ where: { number: pol.body.number } })).status).toBe('WITHDRAWN');
-    // abgelehnt → Entscheidungs-DM wie bei einer normalen Ablehnung
-    expect(await prisma.discordOutbox.count({ where: { type: 'qualification.decided', payload: { path: ['discordId'], equals: LEAVER } } })).toBe(1);
-    // zweiter Austritt ändert nichts mehr
-    expect((await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: GUILD, discordId: LEAVER })).body.qualifications).toEqual({ denied: 0, withdrawn: 0 });
+    // keine Ablehnung → keine Entscheidungs-DM; stattdessen Hinweis im Audit (Entscheidung bleibt beim Team)
+    expect(await prisma.discordOutbox.count({ where: { type: 'qualification.decided', payload: { path: ['discordId'], equals: LEAVER } } })).toBe(0);
+    const sekId = (await prisma.qualificationApplication.findFirstOrThrow({ where: { unit: 'sek', discordId: LEAVER, guildId: GUILD } })).id;
+    expect(await prisma.auditLog.count({ where: { action: 'qualifications.application.member_left', entityId: sekId } })).toBe(1);
+    // zweiter Austritt: nichts mehr zurückzuziehen, offene Bewerbung wird erneut gemeldet (bleibt offen)
+    expect((await http().post('/api/v1/bot/member-left').set(bot()).send({ guildId: GUILD, discordId: LEAVER })).body.qualifications).toEqual({ flagged: 1, withdrawn: 0 });
     expect((await http().post('/api/v1/bot/member-left').send({ guildId: GUILD, discordId: LEAVER })).status).toBe(401);
   });
 
