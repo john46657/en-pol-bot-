@@ -18,7 +18,7 @@ const date = z.string().date();
 const reason = z.object({ reason: z.string().trim().max(1000).optional() });
 
 // ───────────── Personal ─────────────
-const overviewQ = z.object({ q: z.string().max(80).optional(), status: z.string().max(32).optional(), rank: z.string().max(64).optional(), department: z.string().max(64).optional(), state: z.enum(['active', 'inactive', 'absent']).optional() });
+const overviewQ = z.object({ q: z.string().max(80).optional(), status: z.string().max(32).optional(), rank: z.string().max(64).optional(), department: z.string().max(64).optional(), state: z.enum(['active', 'inactive', 'absent', 'former']).optional() });
 const createP = z.object({ userId: uuid.optional(), discordId: z.string().regex(/^\d{15,25}$/).optional(), name: z.string().max(64).optional(), rank: z.string().max(64).nullable().optional(), department: z.string().max(64).nullable().optional(), status: z.string().max(32).optional(), joinDate: date.optional(), callsign: z.string().max(16).nullable().optional() });
 const updateP = z.object({ department: z.string().max(64).nullable().optional(), office: z.string().max(64).nullable().optional(), status: z.string().max(32).optional(), joinDate: date.optional(), callsign: z.string().max(16).nullable().optional(), rank: z.string().max(64).nullable().optional(), rankSince: date.optional() });
 const record = z.object({ type: z.enum(RECORD_TYPES), summary: z.string().trim().min(2).max(300), details: z.string().max(5000).optional(), category: z.string().max(60).optional(), severity: z.string().max(32).optional(), expiresAt: z.string().datetime({ offset: true }).nullable().optional(), awardId: uuid.optional(), attachments: z.array(uuid).max(10).optional() });
