@@ -149,7 +149,9 @@ let DiscordOAuthService = class DiscordOAuthService {
         if (!user) {
             // Registrierung: erlaubt, wenn einer der Server, die Zugang geben, sie erlaubt (ohne Server: Grundwert)
             const signup = granted.length ? granted.some((g) => (policy.byGuild[g] ?? base).signup) : base.signup;
-            if (!signup && !owner)
+            // Discord-Admins (Administrator/Besitzer) eines Servers, der Discord-Admins zulässt, kommen auch bei gesperrter Registrierung rein
+            const guildAdmin = member && member !== 'unknown' ? (member.admin ?? []).some((g) => member.checked.includes(g) && (policy.byGuild[g] ?? base).guildAdmins) : false;
+            if (!signup && !owner && !guildAdmin)
                 throw new DiscordLoginFailure('no_account');
             user = await this.createUser(du, meta);
         }
