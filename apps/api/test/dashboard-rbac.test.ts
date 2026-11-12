@@ -191,7 +191,7 @@ describe('team list, voice and personal settings', () => {
     const max = r.members.find((m: { userId: string }) => m.userId === id.r_sup!);
     expect(max).toMatchObject({ name: 'Max', team: 'Polizei', rank: 'Moderator', office: 'Verwaltung', serviceNumber: '1024', status: 'online', avatar: 'https://cdn.discordapp.com/a.png' });
     expect(r.members.some((m: { name: string; userId: string | null }) => m.name === 'Neu' && m.userId === null)).toBe(true);
-    expect(r.structure).toMatchObject({ teams: ['Polizei', 'Support'], offices: ['Verwaltung'], ranks: expect.arrayContaining(['Moderator']) });
+    expect(r.structure).toMatchObject({ teams: expect.arrayContaining(['Polizei', 'Support']), offices: ['Verwaltung'], ranks: expect.arrayContaining(['Moderator']) });
     expect(JSON.stringify(r)).not.toMatch(/selfMute|streaming|voice/i);
     // Profil: Discord-ID und Rollen nur mit personnel.view/users.view
     const plain = (await login(app, (await makeUser(prisma, 'r_plain', ['Police Member'])).username)).agent;

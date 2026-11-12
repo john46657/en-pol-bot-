@@ -36,6 +36,20 @@ services:
       BOT_API_TOKEN: ${BOT_API_TOKEN:-}
       # Backup-Center: Verschlüsselung der Daten-Backups (64 Hex-Zeichen, openssl rand -hex 32)
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+      # KI-Bewerbungsprüfung (optional, leer = aus); Schlüssel nur in .env auf dem Server
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_MODEL: ${AI_MODEL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+      AI_REVIEW_DAILY_LIMIT: ${AI_REVIEW_DAILY_LIMIT:-}
+      AI_REVIEW_MAX_CONCURRENT: ${AI_REVIEW_MAX_CONCURRENT:-}
+      AI_REVIEW_TIMEOUT_MS: ${AI_REVIEW_TIMEOUT_MS:-}
+      AI_REVIEW_MAX_RETRIES: ${AI_REVIEW_MAX_RETRIES:-}
+      AI_REVIEW_MAX_INPUT_CHARS: ${AI_REVIEW_MAX_INPUT_CHARS:-}
     volumes:
       - uploads:/app/uploads
 

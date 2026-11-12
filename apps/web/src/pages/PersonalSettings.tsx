@@ -17,7 +17,7 @@ import { PasswordCard, SessionsCard } from '../components/AccountSecurity';
 const ACCENT_PRESETS = ['#5865F2', '#7289DA', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
 /** Benachrichtigungsarten, die man für sich ausblenden kann. */
 const NOTIFICATION_TYPES: [string, string][] = [
-  ['APPLICATION', '🔔 Neue Bewerbung'], ['TICKET_CLAIMED', '🎫 Ticket übernommen'], ['TEAM_CHANGE', '👥 Teamänderung'], ['MESSAGE', '📢 Neue Nachricht (Ankündigung)'],
+  ['APPLICATION', '🔔 Neue Bewerbung'], ['AI_REVIEW', '🤖 KI-Bewerbungsprüfung'], ['TICKET_CLAIMED', '🎫 Ticket übernommen'], ['TEAM_CHANGE', '👥 Teamänderung'], ['MESSAGE', '📢 Neue Nachricht (Ankündigung)'],
   ['SYSTEM', '⚠️ Systemhinweis'], ['TEAMCHANCE', '📣 Team-Chance geöffnet'],
   ['QUALIFICATION', '🏅 Qualifikationen'], ['TICKET_ISSUED', '🧾 Strafzettel'], ['PERSONNEL', '🪪 Dienstgrad / Personal'],
   ['INCIDENT_ASSIGNMENT', '🚨 Einsatz zugewiesen'], ['REPORT_REVIEW', '📄 Bericht zur Prüfung'], ['COMPLAINT_ASSIGNMENT', '⚖️ Beschwerde zugewiesen'],

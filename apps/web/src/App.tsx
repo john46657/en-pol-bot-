@@ -33,6 +33,7 @@ const LegalCodes = lazy(() => import('./pages/admin/LegalCodes').then((m) => ({ 
 const Shifts = lazy(() => import('./pages/admin/Shifts').then((m) => ({ default: m.Shifts })));
 const Warnings = lazy(() => import('./pages/hr/Warnings').then((m) => ({ default: m.Warnings })));
 const Backups = lazy(() => import('./pages/admin/Backups').then((m) => ({ default: m.Backups })));
+const SystemStatus = lazy(() => import('./pages/admin/SystemStatus').then((m) => ({ default: m.SystemStatus })));
 const Logging = lazy(() => import('./pages/admin/Logging').then((m) => ({ default: m.Logging })));
 const ServerLinks = lazy(() => import('./pages/admin/ServerLinks').then((m) => ({ default: m.ServerLinks })));
 const MultiServer = lazy(() => import('./pages/admin/MultiServer').then((m) => ({ default: m.MultiServer })));
@@ -295,6 +296,7 @@ export function App() {
           <Route path="admin/servers" element={<Guard perm="settings.view" area="dashboard.settings.view"><ServerLinks /></Guard>} />
           <Route path="admin/multi-server" element={<Guard perm="servers.view" area="dashboard.settings.view"><MultiServer /></Guard>} />
           <Route path="admin/backups" element={<Guard perm="backup.view|settings.manage" area="dashboard.settings.view"><Backups /></Guard>} />
+          <Route path="admin/system" element={<Guard perm="settings.view" area="dashboard.settings.view"><SystemStatus /></Guard>} />
           <Route path="admin/logging" element={<Guard perm="settings.view" area="dashboard.settings.view"><Logging /></Guard>} />
           <Route path="message-builder" element={<Guard perm="messagebuilder.view"><MessageBuilder /></Guard>} />
           <Route path="embed-builder" element={<Navigate to="/message-builder" replace />} />

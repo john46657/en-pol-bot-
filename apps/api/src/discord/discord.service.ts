@@ -179,7 +179,10 @@ export class DiscordService {
     await this.prisma.systemSetting.upsert({ where: { key: `bot.state.${key}` }, create: { key: `bot.state.${key}`, value: v }, update: { value: v } });
   }
 
+  /** Zeitpunkt der letzten Abfrage durch den Discord-Bot (Systemstatus: „Bot verbunden?“). Nur im Speicher dieses Prozesses. */
+  lastBotPollAt: Date | null = null;
   pending(limit: number) {
+    this.lastBotPollAt = new Date();
     return this.prisma.discordOutbox.findMany({ where: { sentAt: null, attempts: { lt: 5 } }, orderBy: { createdAt: 'asc' }, take: limit });
   }
 
