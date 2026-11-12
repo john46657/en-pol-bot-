@@ -22,12 +22,15 @@ export interface Opt { i: number; text: string }
 export interface AttemptQuestion {
   id: string; type: ExamQuestionType; text: string; image: string | null; points: number; partial: boolean; options: Opt[]; matches: Opt[];
   earned?: number | null; correctAnswer?: boolean; correct?: string[]; gaps?: string[][]; tolerance?: number; explanation?: string | null; auto?: number | null;
+  topic?: string | null; difficulty?: string; caseKind?: string | null;
+  /** Kriterienkatalog (Prüfer; Teilnehmer erst nach der Bewertung bei Einsicht mit Lösungen) und vergebene Punkte je Kriterium */
+  rubric?: { id: string; label: string; points: number }[]; rubricAwarded?: Record<string, number> | null;
 }
 export interface AttemptView {
   id: string; examId: string; title: string; description: string | null; instructions: string | null; status: ExamAttemptStatus; startedAt: string; submittedAt: string | null; serverNow: string;
   deadline: string | null; timeLimitMin: number | null; passPercent: number; layout: ExamLayout; reviewMode: ExamReviewMode; name: string; rank: string | null; owner: boolean; grader: boolean;
   answers: Record<string, unknown> | null; flagged: string[]; questions: AttemptQuestion[];
-  result: { score?: number | null; maxScore?: number | null; percent?: number | null; passed: boolean | null; feedback: string | null } | null;
+  result: { score?: number | null; maxScore?: number | null; percent?: number | null; passed: boolean | null; feedback: string | null; weakTopics?: string[] } | null;
   gradedBy: string | null; gradedAt: string | null; voided: { reason: string | null; at: string | null; by: string | null } | null;
 }
 export interface AttemptRow {
@@ -103,7 +106,7 @@ export function QuestionInput({ q, value, onChange, disabled }: { q: AttemptQues
     </div>
   );
   if (q.type === 'YESNO') return <div className="flex flex-wrap gap-2">{(['ja', 'nein'] as const).map((v) => <label key={v} className={`${on(single === v)} min-w-28 justify-center`}><input type="radio" name={name} disabled={disabled} checked={single === v} onChange={() => onChange(v)} />{v === 'ja' ? 'Ja' : 'Nein'}</label>)}</div>;
-  if (q.type === 'TEXT') return <div className="grid gap-1"><Textarea aria-label="Deine Antwort" rows={5} maxLength={4000} disabled={disabled} value={single} onChange={(e) => onChange(e.target.value)} placeholder="Deine Antwort …" /><span className="text-right text-xs text-muted">{single.length} / 4000</span></div>;
+  if (q.type === 'TEXT' || q.type === 'CASE') return <div className="grid gap-1"><Textarea aria-label="Deine Antwort" rows={5} maxLength={4000} disabled={disabled} value={single} onChange={(e) => onChange(e.target.value)} placeholder="Deine Antwort …" /><span className="text-right text-xs text-muted">{single.length} / 4000</span></div>;
   if (q.type === 'NUMBER') return <Input aria-label="Deine Antwort (Zahl)" inputMode="decimal" className="max-w-xs" disabled={disabled} value={single} onChange={(e) => onChange(e.target.value.replace(/[^0-9,.\- ]/g, ''))} placeholder="Zahl eingeben" />;
   if (q.type === 'ORDER') {
     const order = multi.length === q.options.length ? multi : q.options.map((o) => String(o.i));
@@ -176,6 +179,13 @@ export function AnswerReview({ q, answer }: { q: AttemptQuestion; answer: unknow
       return <p className="text-sm">Antwort: <b>{yn(a[0] ?? '')}</b>{sol && <> · richtig: <b>{yn(q.correct![0] ?? '')}</b></>}</p>;
     case 'NUMBER':
       return <p className="text-sm">Antwort: <b>{a[0] || '—'}</b>{sol && <> · richtig: <b>{q.correct![0]}</b>{q.tolerance ? ` (± ${q.tolerance})` : ''}</>}</p>;
+    case 'CASE':
+      return (
+        <div className="grid gap-1 text-sm">
+          <p className="whitespace-pre-wrap rounded border border-line bg-panel-2 p-2">{a[0] || <span className="text-muted">— keine Antwort —</span>}</p>
+          {q.rubric?.length ? <ul className="grid gap-0.5 text-xs">{q.rubric.map((r) => <li key={r.id} className="flex justify-between gap-2"><span>{r.label}</span><span className="tabular-nums text-muted">{q.rubricAwarded ? `${q.rubricAwarded[r.id] ?? 0} / ${r.points}` : `${r.points} P.`}</span></li>)}</ul> : <p className="text-xs text-muted">Bewertung durch Prüfer anhand des Kriterienkatalogs</p>}
+        </div>
+      );
     case 'TEXT':
       return (
         <div className="grid gap-1 text-sm">

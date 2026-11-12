@@ -34,3 +34,6 @@ export * from './timezones';
 export * from './access-levels';
 export * from './extension4';
 export * from './administration';
+export * from './quality';
+export * from './forecast';
+export * from './cases';

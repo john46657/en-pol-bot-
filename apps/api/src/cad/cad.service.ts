@@ -14,6 +14,7 @@ import { CadNotifyService } from './cad-notify.service';
 import type { ErlcPlayer, ErlcSnapshot } from './erlc.service';
 import { LocksService } from '../locks/locks.service';
 import { FleetService } from '../fleet/fleet.service';
+import { QualityService } from '../quality/quality.service';
 
 /** Wer handelt und von welchem Discord-Server (Bot) bzw. mit welchem gewählten Server (Dashboard). */
 export type CadActor = Actor & { guildId?: string | null; discordId?: string | null };
@@ -53,7 +54,7 @@ export class CadService {
   constructor(
     private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly rt: RealtimeService,
     private readonly timeline: TimelineService, private readonly cfg: CadConfigService, private readonly notify: CadNotifyService, private readonly locks: LocksService,
-    private readonly fleet: FleetService,
+    private readonly fleet: FleetService, private readonly quality: QualityService,
   ) {}
 
   // ───────── Hilfen ─────────
@@ -73,7 +74,10 @@ export class CadService {
     // ohne Abschlusszeit (ältere Daten) zählt die letzte Änderung
     const rows = await this.prisma.incident.findMany({ where: { status: { in: closed }, OR: [{ closedAt: { lt: before } }, { closedAt: null, updatedAt: { lt: before } }] }, select: { id: true } });
     if (!rows.length) return 0;
-    const ids = rows.map((r) => r.id);
+    // Einsätze, die mit einem Vorgang verknüpft sind, bleiben erhalten (Vorgangsakte muss nachvollziehbar bleiben)
+    const linked = new Set((await this.prisma.caseLink.findMany({ where: { entityType: 'INCIDENT', entityId: { in: rows.map((r) => r.id) }, removedAt: null }, select: { entityId: true } })).map((l) => l.entityId));
+    const ids = rows.map((r) => r.id).filter((id) => !linked.has(id));
+    if (!ids.length) return 0;
     // Kennzahlen bleiben für die Statistik (ältere Einsätze ohne Eintrag werden hier nachgetragen)
     await this.prisma.$transaction((tx) => this.archiveStats(tx, ids, true));
     await this.prisma.$transaction([
@@ -286,6 +290,8 @@ export class CadService {
     if (!inc) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');
     if (inc.status === status) return inc;
     await this.assertStatusAllowed(actor, cfg, inc.status, status);
+    // Pflichtangaben vor dem Abschluss (nur wenn unter Qualitätsprüfer → Einstellungen aktiviert); Abbrechen (Fehlalarm) bleibt immer möglich
+    if (st.closed && status !== 'CANCELLED' && !cfg.incidentStatuses.find((x) => x.key === inc.status)?.closed) await this.quality.assertIncidentClosable(id);
     const after = await this.prisma.$transaction(async (tx) => {
       const row = await tx.incident.update({ where: { id }, data: { status, closedAt: st.closed ? new Date() : null, version: { increment: 1 } } });
       if (st.closed) {
@@ -777,12 +783,36 @@ export class CadService {
       // Nur Polizei-Leitstelle: Sheriffs erscheinen nicht auf der Karte
       for (const p of snap.players) if (p.team?.toLowerCase() !== 'sheriff') players.push({ ...p, serverId: s.id, staff: (!!p.permission && p.permission !== 'Normal') || staffNames.has(p.name.toLowerCase()) });
     }
+    // Verknüpfte Vorgänge (direkt aus der Karte öffnen) – nur mit Leserecht auf Vorgänge
+    const casesAllowed = await this.perms.has(actor.userId!, 'cases.view');
+    const links = casesAllowed ? await this.prisma.caseLink.findMany({ where: { removedAt: null, OR: [{ entityType: 'INCIDENT', entityId: { in: incidents.map((i) => i.id) } }, { entityType: 'CALL', entityId: { in: calls.map((c) => c.id) } }] }, select: { entityType: true, entityId: true, case: { select: { id: true, number: true, title: true, status: true } } } }) : [];
+    const casesOf = (type: string, id: string) => links.filter((l) => l.entityType === type && l.entityId === id).map((l) => l.case);
+    const staleHours = (await this.quality.config()).staleIncidentHours;
+    const lastSync = new Map(servers.map((s) => [s.id, s.status === 'CONNECTED' ? s.lastSyncAt : null]));
+    const now = Date.now();
+    const placedCalls = calls.map((c) => {
+      const p = placeCall(c, objects);
+      // Notruf fehlt im letzten erfolgreichen Abruf → in ER:LC nicht mehr gemeldet (bleibt sichtbar, aber als veraltet gekennzeichnet).
+      // lastSeenAt wird bei jedem Abruf NACH lastSyncAt gesetzt – älter als der letzte Abruf heißt: dort nicht mehr enthalten.
+      const synced = lastSync.get(c.serverId);
+      // Ohne lastSeenAt (Altbestand vor dieser Funktion) ist es unbekannt – dann wird nichts behauptet.
+      const notReported = !!synced && !!c.lastSeenAt && c.lastSeenAt.getTime() < synced.getTime();
+      const positionSource = p.mapX === null ? 'NONE' : p.mapX !== c.mapX || p.mapZ !== c.mapZ ? 'POI' : c.positionSource;
+      return { ...p, positionSource, notReported, cases: casesOf('CALL', c.id) };
+    });
+    const withIncidentMeta = incidents.map((i) => ({ ...i, stale: staleHours > 0 && now - i.updatedAt.getTime() > staleHours * 3_600_000, cases: casesOf('INCIDENT', i.id) }));
     return {
-      incidents: incidents.filter((i) => i.mapX !== null && i.mapZ !== null),
+      incidents: withIncidentMeta.filter((i) => i.mapX !== null && i.mapZ !== null),
       // ältere Notrufe mit Position außerhalb der Karte: POI zum Ortsnamen, sonst ohne Marker
-      calls: calls.map((c) => placeCall(c, objects)).filter((c) => c.mapX !== null && c.mapZ !== null),
+      calls: placedCalls.filter((c) => c.mapX !== null && c.mapZ !== null),
       units: units.filter((u) => u.position), objects, players, vehicles,
       stale: servers.some((s) => s.status !== 'CONNECTED'),
+      erlc: servers.map((s) => ({ id: s.id, name: s.name, status: s.status, lastSyncAt: s.lastSyncAt })),
+      // Ohne genaue Position: nie raten, sondern ausdrücklich auflisten
+      unplaced: {
+        incidents: withIncidentMeta.filter((i) => i.mapX === null || i.mapZ === null).map((i) => ({ id: i.id, number: i.number, title: i.title, priority: i.priority, status: i.status, type: i.type, location: i.location, cases: i.cases })),
+        calls: placedCalls.filter((c) => c.mapX === null || c.mapZ === null).map((c) => ({ id: c.id, callNumber: c.callNumber, description: c.description, positionDescriptor: c.positionDescriptor, status: c.status, startedAt: c.startedAt, notReported: c.notReported, cases: c.cases })),
+      },
     };
   }
 }

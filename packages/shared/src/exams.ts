@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 // ───────────── Prüfungen: Fragen, Bewertung, Einstellungen ─────────────
 
-export const EXAM_QUESTION_TYPES = ['SINGLE', 'MULTI', 'YESNO', 'TEXT', 'NUMBER', 'ORDER', 'MATCH', 'GAP'] as const;
+export const EXAM_QUESTION_TYPES = ['SINGLE', 'MULTI', 'YESNO', 'TEXT', 'NUMBER', 'ORDER', 'MATCH', 'GAP', 'CASE'] as const;
 export type ExamQuestionType = (typeof EXAM_QUESTION_TYPES)[number];
 export const EXAM_QUESTION_TYPE_LABEL: Record<ExamQuestionType, string> = {
-  SINGLE: 'Single Choice', MULTI: 'Multiple Choice', YESNO: 'Ja/Nein', TEXT: 'Freitext', NUMBER: 'Zahl', ORDER: 'Reihenfolge', MATCH: 'Zuordnung', GAP: 'Lückentext',
+  SINGLE: 'Single Choice', MULTI: 'Multiple Choice', YESNO: 'Ja/Nein', TEXT: 'Freitext', NUMBER: 'Zahl', ORDER: 'Reihenfolge', MATCH: 'Zuordnung', GAP: 'Lückentext', CASE: 'Fallbeispiel',
 };
 export const EXAM_QUESTION_TYPE_HINT: Record<ExamQuestionType, string> = {
   SINGLE: 'Genau eine Antwort ist richtig.', MULTI: 'Mehrere Antworten können richtig sein.', YESNO: 'Ja oder Nein.',
@@ -13,7 +13,24 @@ export const EXAM_QUESTION_TYPE_HINT: Record<ExamQuestionType, string> = {
   ORDER: 'Einträge in die richtige Reihenfolge bringen. Im Editor in der richtigen Reihenfolge eintragen – sie werden beim Versuch gemischt.',
   MATCH: 'Jedem Begriff links das passende Gegenstück rechts zuordnen. Im Editor jeweils als richtiges Paar eintragen.',
   GAP: 'Lücken im Text mit {{Antwort}} markieren, Alternativen mit | trennen, z. B. „Innerorts gilt {{50|fünfzig}} km/h“.',
+  CASE: 'Fiktives Fallbeispiel mit offener Antwort. Bewertet wird von Hand anhand des Kriterienkatalogs.',
 };
+
+// ───────────── Themen, Schwierigkeit, Fallbeispiele ─────────────
+
+export const EXAM_DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD'] as const;
+export type ExamDifficulty = (typeof EXAM_DIFFICULTIES)[number];
+export const EXAM_DIFFICULTY_LABEL: Record<ExamDifficulty, string> = { EASY: 'Leicht', MEDIUM: 'Mittel', HARD: 'Schwer' };
+/** Fallbeispiel-Arten. Verkehrsunfall und Leitstellenübung wurden bewusst entfernt und dürfen nicht wieder eingeführt werden. */
+export const EXAM_CASE_KINDS = ['TRAFFIC_STOP', 'ARREST', 'LEADERSHIP', 'OTHER'] as const;
+export type ExamCaseKind = (typeof EXAM_CASE_KINDS)[number];
+export const EXAM_CASE_KIND_LABEL: Record<ExamCaseKind, string> = { TRAFFIC_STOP: 'Verkehrskontrolle', ARREST: 'Festnahme', LEADERSHIP: 'Führungsaufgabe', OTHER: 'Sonstiges' };
+/** Entfernte Aufgaben – Themen/Kategorien mit diesen Namen lehnt der Server ab. */
+export const EXAM_REMOVED_TASKS = /verkehrsunfall|unfallaufnahme|leitstellen-?\s?(ü|ue)bung/i;
+export const isRemovedExamTask = (text: string | null | undefined) => !!text && EXAM_REMOVED_TASKS.test(text);
+
+export const rubricItemSchema = z.object({ id: z.string().min(1).max(40), label: z.string().trim().min(1).max(300), points: z.number().min(0).max(100) });
+export type RubricItem = z.infer<typeof rubricItemSchema>;
 /** Typen, bei denen die Antwortmöglichkeiten gemischt werden können. */
 export const EXAM_SHUFFLE_TYPES: readonly ExamQuestionType[] = ['SINGLE', 'MULTI', 'ORDER', 'MATCH'];
 
@@ -34,8 +51,73 @@ export const questionSchema = z.object({
   explanation: z.string().max(2000).nullable().default(null),
   /** optionales Bild (nur https) */
   image: z.string().max(500).regex(/^https:\/\//i, 'Bild-Link muss mit https:// beginnen').nullable().default(null),
+  /** Thema (z. B. „Verkehrskontrolle“, „Festnahme“, „Rechtsgrundlagen“) – für Zufallsauswahl und Wiederholung schwacher Themen */
+  topic: z.string().trim().max(60).nullable().default(null),
+  difficulty: z.enum(EXAM_DIFFICULTIES).default('MEDIUM'),
+  /** Fallbeispiel-Art (nur CASE) */
+  caseKind: z.enum(EXAM_CASE_KINDS).nullable().default(null),
+  /** Kriterienkatalog für die manuelle Bewertung (Freitext ohne Stichworte und Fallbeispiele) */
+  rubric: z.array(rubricItemSchema).max(20).default([]),
 });
 export type Question = z.infer<typeof questionSchema>;
+
+/** Zufällige Zusammenstellung: je Regel `count` Fragen mit passendem Thema/Schwierigkeit (leer = beliebig). */
+export const drawRuleSchema = z.object({ topic: z.string().trim().max(60).nullable().default(null), difficulty: z.enum(EXAM_DIFFICULTIES).nullable().default(null), count: z.number().int().min(1).max(200) });
+export type DrawRule = z.infer<typeof drawRuleSchema>;
+
+/**
+ * Fragen nach Regeln ziehen. Bevorzugt Fragen aus `prefer` (schwache Themen der Person), sonst zufällig (`rand(n)` → 0..n-1).
+ * Keine Frage wird doppelt gezogen. Reichen die Fragen für eine Regel nicht, wird genommen, was da ist (`missing` zählt den Rest).
+ */
+export function drawQuestions(all: Question[], rules: DrawRule[], prefer: readonly string[], rand: (n: number) => number) {
+  const used = new Set<string>();
+  const shuffle = <T>(a: T[]) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = rand(i + 1); [r[i], r[j]] = [r[j]!, r[i]!]; } return r; };
+  const weak = new Set(prefer.map((t) => t.toLowerCase()));
+  let missing = 0;
+  for (const rule of rules) {
+    const fits = all.filter((q) => !used.has(q.id) && (!rule.topic || (q.topic ?? '').toLowerCase() === rule.topic.toLowerCase()) && (!rule.difficulty || q.difficulty === rule.difficulty));
+    const mixed = shuffle(fits);
+    const ordered = [...mixed.filter((q) => weak.has((q.topic ?? '').toLowerCase())), ...mixed.filter((q) => !weak.has((q.topic ?? '').toLowerCase()))];
+    const take = ordered.slice(0, rule.count);
+    take.forEach((q) => used.add(q.id));
+    missing += rule.count - take.length;
+  }
+  return { questions: all.filter((q) => used.has(q.id)), missing };
+}
+
+/**
+ * Schwache Themen eines bewerteten Versuchs: Themen, in denen weniger als `passPercent` der Punkte erreicht wurden.
+ * Fragen ohne Thema zählen nicht.
+ */
+export function weakTopicsOf(questions: Question[], scores: Record<string, number>, passPercent: number): string[] {
+  const by = new Map<string, { got: number; max: number }>();
+  for (const q of questions) {
+    if (!q.topic || q.points <= 0) continue;
+    const e = by.get(q.topic) ?? { got: 0, max: 0 };
+    e.got += scores[q.id] ?? 0; e.max += q.points;
+    by.set(q.topic, e);
+  }
+  return [...by].filter(([, v]) => v.max > 0 && (v.got / v.max) * 100 < passPercent).map(([t]) => t).sort((a, b) => a.localeCompare(b, 'de'));
+}
+
+/** Punkte aus dem Kriterienkatalog: Summe der vergebenen Kriterien, höchstens die Punkte der Frage. */
+export function rubricScore(q: Pick<Question, 'points' | 'rubric'>, awarded: Record<string, number>): number {
+  const sum = q.rubric.reduce((n, r) => n + Math.max(0, Math.min(r.points, awarded[r.id] ?? 0)), 0);
+  return Math.round(Math.min(q.points, sum) * 100) / 100;
+}
+
+/** Fiktive Fallbeispiele als Vorlage (nur erlaubte Aufgaben: Verkehrskontrolle, Festnahme, Führungsaufgabe). */
+export const EXAM_CASE_TEMPLATES: { caseKind: Exclude<ExamCaseKind, 'OTHER'>; topic: string; text: string; points: number; rubric: { label: string; points: number }[] }[] = [
+  { caseKind: 'TRAFFIC_STOP', topic: 'Verkehrskontrolle', points: 10,
+    text: 'Fiktiver Fall: Du hältst nachts auf der Hauptstraße einen Pkw an, der ohne Licht fährt. Der Fahrer wirkt nervös und greift wiederholt ins Handschuhfach. Beschreibe dein Vorgehen von der Anhaltung bis zum Abschluss der Kontrolle.',
+    rubric: [{ label: 'Sichere Anhaltung (Position, Licht, Funkmeldung an die Leitstelle)', points: 2 }, { label: 'Eigensicherung bei verdächtigen Bewegungen', points: 3 }, { label: 'Korrekte Kontrolle der Papiere und Abfrage im MDT', points: 2 }, { label: 'Angemessene Maßnahme (Verwarnung/Bußgeld) mit Begründung', points: 2 }, { label: 'Dokumentation im Bericht', points: 1 }] },
+  { caseKind: 'ARREST', topic: 'Festnahme', points: 10,
+    text: 'Fiktiver Fall: Bei einer Fahndung triffst du die gesuchte Person vor einem Geschäft an. Sie leistet passiven Widerstand. Beschreibe Festnahme, Belehrung und die anschließenden Schritte.',
+    rubric: [{ label: 'Identität und Fahndungstreffer sicher bestätigt', points: 2 }, { label: 'Verhältnismäßige Zwangsmittel und Eigensicherung', points: 3 }, { label: 'Vollständige Belehrung', points: 2 }, { label: 'Durchsuchung und Transport korrekt', points: 2 }, { label: 'Fahndung erledigt und Bericht verknüpft', points: 1 }] },
+  { caseKind: 'LEADERSHIP', topic: 'Führungsaufgabe', points: 10,
+    text: 'Fiktiver Fall: Als Schichtleitung hast du drei Einheiten im Dienst, zwei parallele Einsätze mit hoher Priorität und einen neuen Notruf. Beschreibe, wie du priorisierst, Einheiten verteilst und die Kommunikation führst.',
+    rubric: [{ label: 'Nachvollziehbare Priorisierung nach Gefahr und Dringlichkeit', points: 3 }, { label: 'Sinnvolle Verteilung der Einheiten, Nachforderung bei Bedarf', points: 3 }, { label: 'Klare Funkkommunikation und Lagemeldungen', points: 2 }, { label: 'Dokumentation und Übergabe', points: 2 }] },
+];
 
 /** Gespeicherte Fragen lesen (ältere Einträge ohne neue Felder bekommen die Standardwerte, kaputte fallen weg). */
 export function parseQuestions(raw: unknown): Question[] {
@@ -84,6 +166,8 @@ export function gradeAnswer(q: Question, a: unknown): number | null {
   const partial = q.partial ?? false;
   const score = (hits: number, total: number) => (total <= 0 ? 0 : partial ? round(pts * Math.max(0, Math.min(1, hits / total))) : hits >= total ? pts : 0);
   switch (q.type) {
+    case 'CASE':
+      return null;
     case 'TEXT': {
       if (!q.correct.length) return null;
       const t = norm(a);
@@ -136,6 +220,11 @@ export function questionProblems(q: Question, label: string): string[] {
     if (opts.length < 2) out.push(`${label}: mindestens 2 Paare`);
     if (opts.some((o) => !o.trim()) || (q.matches ?? []).some((o) => !o.trim()) || (q.matches ?? []).length !== opts.length) out.push(`${label}: jedes Paar braucht beide Seiten`);
   }
+  if (q.type === 'CASE') {
+    if (!q.rubric.length) out.push(`${label}: Fallbeispiel braucht einen Kriterienkatalog`);
+    else if (q.rubric.reduce((n, r) => n + r.points, 0) < q.points) out.push(`${label}: die Kriterien ergeben weniger Punkte als die Frage hat`);
+  }
+  if (isRemovedExamTask(q.topic)) out.push(`${label}: das Thema „${q.topic}“ wurde entfernt und darf nicht wieder verwendet werden`);
   if (q.type === 'GAP') {
     const gaps = gapAnswers(q.text);
     if (!gaps.length) out.push(`${label}: mindestens eine Lücke {{…}} im Text`);
@@ -164,7 +253,10 @@ export const examSchema = z.object({
   instructions: z.string().max(4000).nullable().default(null),
   category: z.string().trim().max(60).nullable().default(null),
   questions: z.array(questionSchema).max(200).default([]),
-  questionCount: z.number().int().min(0).max(200).default(0), passPercent: z.number().int().min(1).max(100).default(70), timeLimitMin: z.number().int().min(1).max(600).nullable().default(null),
+  questionCount: z.number().int().min(0).max(200).default(0),
+  /** Zufällige Zusammenstellung nach Thema/Schwierigkeit (leer = `questionCount` bzw. alle Fragen) */
+  drawRules: z.array(drawRuleSchema).max(30).default([]),
+  passPercent: z.number().int().min(1).max(100).default(70), timeLimitMin: z.number().int().min(1).max(600).nullable().default(null),
   maxAttempts: z.number().int().min(1).max(50).default(3), retryHours: z.number().int().min(0).max(24 * 90).default(24),
   autoGrade: z.boolean().default(true), showResult: z.boolean().default(true), reviewMode: z.enum(EXAM_REVIEW_MODES).default('ANSWERS'), layout: z.enum(EXAM_LAYOUTS).default('PAGED'),
   shuffleQuestions: z.boolean().default(false), shuffleOptions: z.boolean().default(false),
@@ -182,9 +274,15 @@ export const examSchema = z.object({
 export type ExamInput = z.infer<typeof examSchema>;
 
 /** Alle Probleme einer Prüfung (Editor zeigt sie an, Server lehnt ab). */
-export function examProblems(e: Pick<ExamInput, 'title' | 'questions' | 'questionCount'>): string[] {
+export function examProblems(e: Pick<ExamInput, 'title' | 'questions' | 'questionCount'> & { category?: string | null; drawRules?: DrawRule[] }): string[] {
   const out: string[] = [];
   if (!e.title.trim()) out.push('Titel fehlt');
+  if (isRemovedExamTask(e.title) || isRemovedExamTask(e.category)) out.push('Verkehrsunfall und Leitstellenübung wurden entfernt und dürfen nicht wieder eingeführt werden');
+  for (const r of e.drawRules ?? []) {
+    if (isRemovedExamTask(r.topic)) out.push(`Ziehregel: das Thema „${r.topic}“ wurde entfernt`);
+    const n = e.questions.filter((q) => (!r.topic || (q.topic ?? '').toLowerCase() === r.topic.toLowerCase()) && (!r.difficulty || q.difficulty === r.difficulty)).length;
+    if (n < r.count) out.push(`Ziehregel ${r.topic ?? 'alle Themen'}/${r.difficulty ? EXAM_DIFFICULTY_LABEL[r.difficulty] : 'jede Schwierigkeit'}: nur ${n} passende Fragen für ${r.count} gewünschte`);
+  }
   const ids = e.questions.map((q) => q.id);
   if (new Set(ids).size !== ids.length) out.push('Fragen-IDs müssen eindeutig sein');
   e.questions.forEach((q, i) => out.push(...questionProblems(q, `Frage ${i + 1}`)));

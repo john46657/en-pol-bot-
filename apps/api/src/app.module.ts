@@ -75,6 +75,11 @@ import { CalendarModule } from './calendar/calendar.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { DocumentsModule } from './documents/documents.module';
 import { WorkspaceModule } from './workspace/workspace.controller';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { QualityModule } from './quality/quality.module';
+import { CasesModule } from './cases/cases.module';
+import { SituationModule } from './situation/situation.module';
+import { ForecastModule } from './forecast/forecast.module';
 
 @Module({
   imports: [
@@ -82,6 +87,7 @@ import { WorkspaceModule } from './workspace/workspace.controller';
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, HelpModule, OrgModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, WantedModule,
     PersonnelModule, DutyModule, RemindersModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerLinksModule, MultiServerModule, MultiServerRestoreModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule, ShiftPlanModule, CalendarModule, AnnouncementsModule, DocumentsModule, WorkspaceModule, SystemStatusModule,
+    IntegrationsModule, QualityModule, CasesModule, SituationModule, ForecastModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [
