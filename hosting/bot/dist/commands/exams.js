@@ -39,6 +39,7 @@ function criteriaText(q) {
         ORDER: q.partial ? 'Teilpunkte je Eintrag an der richtigen Stelle' : 'volle Punkte nur bei komplett richtiger Reihenfolge',
         MATCH: q.partial ? 'Teilpunkte je richtiger Zuordnung' : 'volle Punkte nur, wenn alle Zuordnungen stimmen',
         GAP: q.partial ? 'Teilpunkte je richtig gefüllter Lücke' : 'volle Punkte nur, wenn alle Lücken stimmen',
+        CASE: 'Fallbeispiel: Bewertung durch Prüfer nach Kriterienkatalog',
     };
     return `${p} · ${how[q.type]}`;
 }
@@ -71,6 +72,7 @@ function solutionText(q) {
         case 'ORDER': return [...q.options].sort((x, y) => x.i - y.i).map((o) => o.text).join(' → ');
         case 'MATCH': return [...q.options].sort((x, y) => x.i - y.i).map((o) => `${o.text} → ${q.matches.find((m) => m.i === o.i)?.text ?? '?'}`).join(' · ');
         case 'GAP': return (q.gaps ?? []).map((g, n) => `Lücke ${n + 1}: ${g.join(' | ')}`).join(' · ');
+        case 'CASE': return 'Fallbeispiel – Bewertung durch Prüfer nach Kriterienkatalog (Dashboard)';
     }
 }
 // ───────────── Ablauf: Frage anzeigen ─────────────
@@ -124,7 +126,8 @@ function answerModal(v, idx) {
     const id = `exam:m:${v.id}:${idx}`;
     const title = (0, format_1.clip)(`Frage ${idx + 1}`, 45);
     switch (q.type) {
-        case 'TEXT': return { modal: { id, title, fields: [{ id: 'a', label: 'Deine Antwort', paragraph: true, required: true, maxLength: 4000, value: a[0] ?? '' }] } };
+        case 'TEXT':
+        case 'CASE': return { modal: { id, title, fields: [{ id: 'a', label: 'Deine Antwort', paragraph: true, required: true, maxLength: 4000, value: a[0] ?? '' }] } };
         case 'NUMBER': return { modal: { id, title, fields: [{ id: 'a', label: 'Deine Antwort (Zahl)', required: true, maxLength: 40, value: a[0] ?? '', placeholder: 'z. B. 50 oder 2,5' }] } };
         case 'GAP': {
             const n = gapCount(q.text);
@@ -148,7 +151,8 @@ function answerModal(v, idx) {
 function parseModalAnswer(q, f) {
     const letter = (s, max) => { const p = LETTERS.indexOf(s.trim().toUpperCase()); return p >= 0 && p < max ? p : -1; };
     switch (q.type) {
-        case 'TEXT': return (f.a ?? '').trim() ? { value: f.a.trim().slice(0, 4000) } : { error: 'Bitte eine Antwort eingeben.' };
+        case 'TEXT':
+        case 'CASE': return (f.a ?? '').trim() ? { value: f.a.trim().slice(0, 4000) } : { error: 'Bitte eine Antwort eingeben.' };
         case 'NUMBER': {
             const s = (f.a ?? '').trim();
             return /^-?\d+(?:[.,]\d+)?$/.test(s.replace(/\s/g, '')) ? { value: s.replace(/\s/g, '') } : { error: 'Bitte eine Zahl eingeben (z. B. 50 oder 2,5).' };

@@ -6,6 +6,7 @@ import { AuditService, Actor } from '../audit/audit.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { PageQuery } from '../common/pagination';
 import { LocksService } from '../locks/locks.service';
+import { QualityService } from '../quality/quality.service';
 export declare class DispatchService {
     private readonly prisma;
     private readonly audit;
@@ -13,7 +14,8 @@ export declare class DispatchService {
     private readonly rt;
     private readonly discord;
     private readonly locks;
-    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, rt: RealtimeService, discord: DiscordService, locks: LocksService);
+    private readonly quality;
+    constructor(prisma: PrismaService, audit: AuditService, timeline: TimelineService, rt: RealtimeService, discord: DiscordService, locks: LocksService, quality: QualityService);
     listUnits(): import("@prisma/client").Prisma.PrismaPromise<({
         members: {
             userId: string;

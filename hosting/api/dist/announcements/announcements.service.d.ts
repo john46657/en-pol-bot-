@@ -148,7 +148,7 @@ export declare const announcementBody: z.ZodObject<{
     recurrence: z.ZodDefault<z.ZodEnum<["NONE", "DAILY", "WEEKLY", "MONTHLY"]>>;
     templateName: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    type: "GENERAL" | "TRAINING" | "SYSTEM" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
+    type: "SYSTEM" | "GENERAL" | "TRAINING" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
     audience: "SERVER" | "ROLES" | "DEPARTMENTS";
     audienceRoleIds: string[];
     content: {
@@ -176,7 +176,7 @@ export declare const announcementBody: z.ZodObject<{
     scheduledAt?: Date | null | undefined;
     templateName?: string | null | undefined;
 }, {
-    type: "GENERAL" | "TRAINING" | "SYSTEM" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
+    type: "SYSTEM" | "GENERAL" | "TRAINING" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
     content: {
         title: string;
         description: string;
@@ -214,7 +214,7 @@ export declare const announceConfigSchema: z.ZodObject<{
 export type AnnouncementInput = z.infer<typeof announcementBody>;
 /** Vorlagen je Art (Startwerte im Editor) – keine Lesebestätigung, keine Abstimmung. */
 export declare const ANNOUNCEMENT_TEMPLATES: {
-    type: "GENERAL" | "TRAINING" | "SYSTEM" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
+    type: "SYSTEM" | "GENERAL" | "TRAINING" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
     name: string;
     content: {
         title: string;

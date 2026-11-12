@@ -34,7 +34,8 @@ const KEY = 'backup.config';
 /** Flüchtige Daten (Sitzungen, Bot-Warteschlange, Sperren, Einmal-Codes), die Discord-Backups und das Backup-Manifest selbst gehören nicht in ein Daten-Backup. */
 const SKIP = new Set(['Session', 'DiscordOutbox', 'EditLock', 'DiscordLinkCode', 'RobloxVerifyCode', 'RobloxOAuthState', 'DiscordBackup', 'BackupRecord']);
 /** Beim Einspielen unangetastet: Audit-Log und Wochenarchive sind unveränderlich (nur anhängen) und bleiben vollständig erhalten. */
-const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive']);
+// Protokolle/Momentaufnahmen bleiben bei einer Wiederherstellung erhalten (Lageberichte sind per Trigger unveränderlich)
+const KEEP_ON_RESTORE = new Set(['AuditLog', 'DutyWeekArchive', 'SituationReport', 'BackupRun', 'IntegrationEvent']);
 /**
  * Bewusst entfernte Tabellen: ältere Backups enthalten sie noch – beim Einspielen werden sie übersprungen und die Zeilen,
  * die die zugehörige Migration ebenfalls gelöscht hat, herausgefiltert (sonst kämen z. B. gelöschte Rechte zurück).
@@ -516,7 +517,8 @@ let BackupService = class BackupService {
                 for (const m of order) {
                     const list = parentsFirst(m, (body.tables[m.name] ?? []).filter((r) => !REMOVED_ROWS[m.name]?.(r)));
                     const fields = new Map(m.fields.filter((f) => f.kind === 'scalar' || f.kind === 'enum').map((f) => [f.name, f]));
-                    const data = list.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => fields.has(k)).map(([k, v]) => [k, v === null && fields.get(k).type === 'Json' ? client_1.Prisma.DbNull : v])));
+                    // NULL in Listenspalten (z. B. aus der SQL-Sicherung vor Migrationen) → leere Liste wie bei Prisma
+                    const data = list.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => fields.has(k)).map(([k, v]) => [k, v === null && fields.get(k).isList ? [] : v === null && fields.get(k).type === 'Json' ? client_1.Prisma.DbNull : v])));
                     for (let i = 0; i < data.length; i += 500)
                         await db[delegate(m.name)].createMany({ data: data.slice(i, i + 500) });
                     rows += data.length;
@@ -531,6 +533,10 @@ let BackupService = class BackupService {
                     const weeks = (body.tables.DutyWeekArchive ?? []);
                     for (let i = 0; i < weeks.length; i += 500)
                         await tx.dutyWeekArchive.createMany({ data: weeks.slice(i, i + 500), skipDuplicates: true });
+                    // ebenso Lageberichte: fehlende ergänzen, vorhandene bleiben unverändert
+                    const lage = (body.tables.SituationReport ?? []);
+                    for (let i = 0; i < lage.length; i += 500)
+                        await tx.situationReport.createMany({ data: lage.slice(i, i + 500), skipDuplicates: true });
                 }
             }, { timeout: 10 * 60_000, maxWait: 30_000 }));
         }

@@ -23,6 +23,7 @@ const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
 const locks_service_1 = require("../locks/locks.service");
+const quality_service_1 = require("../quality/quality.service");
 const stable = (v) => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
 const hashContent = (c) => (0, node_crypto_1.createHash)('sha256').update(stable(c)).digest('hex');
 exports.hashContent = hashContent;
@@ -32,12 +33,14 @@ let ReportsService = class ReportsService {
     timeline;
     perms;
     locks;
-    constructor(prisma, audit, timeline, perms, locks) {
+    quality;
+    constructor(prisma, audit, timeline, perms, locks, quality) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.perms = perms;
         this.locks = locks;
+        this.quality = quality;
     }
     /** Autoren sehen eigene Berichte; reports.review/approve-Inhaber sehen alle. Verhindert, dass fremde Entwürfe auftauchen. */
     async canSeeAll(userId) { return (await this.perms.has(userId, 'reports.review')) || (await this.perms.has(userId, 'reports.approve')); }
@@ -101,6 +104,9 @@ let ReportsService = class ReportsService {
     }
     async transition(actor, id, to, reason) {
         const userId = actor.userId;
+        // Qualitätsprüfung vor dem Einreichen (nur wenn unter Qualitätsprüfer → Einstellungen aktiviert)
+        if (to === 'SUBMITTED')
+            await this.quality.assertReportSubmittable(actor, id);
         return this.prisma.$transaction(async (tx) => {
             const r = await tx.report.findUnique({ where: { id } });
             if (!r || !(await this.visible(userId, r)))
@@ -123,6 +129,6 @@ let ReportsService = class ReportsService {
 exports.ReportsService = ReportsService;
 exports.ReportsService = ReportsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, permission_service_1.PermissionService, locks_service_1.LocksService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, permission_service_1.PermissionService, locks_service_1.LocksService, quality_service_1.QualityService])
 ], ReportsService);
 //# sourceMappingURL=reports.service.js.map

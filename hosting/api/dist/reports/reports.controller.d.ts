@@ -52,10 +52,10 @@ declare const listQ: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     pageSize: number;
-    status?: "REJECTED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "ARCHIVED" | "UNDER_REVIEW" | undefined;
+    status?: "REJECTED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ARCHIVED" | undefined;
     q?: string | undefined;
 }, {
-    status?: "REJECTED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "ARCHIVED" | "UNDER_REVIEW" | undefined;
+    status?: "REJECTED" | "APPROVED" | "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ARCHIVED" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;

@@ -13,6 +13,8 @@ exports.QualificationsService = void 0;
 exports.policePanelMessage = policePanelMessage;
 exports.qualiPanelMessage = qualiPanelMessage;
 const application_bans_service_1 = require("../application-bans/application-bans.service");
+const ai_provider_1 = require("../applications/ai-review/ai-provider");
+const application_events_1 = require("../common/application-events");
 const hire_events_1 = require("../common/hire-events");
 const guild_context_1 = require("../common/guild-context");
 const common_1 = require("@nestjs/common");
@@ -219,7 +221,9 @@ let QualificationsService = class QualificationsService {
             id: a.id, number: a.number, unitName: a.unitName, discordId: a.discordId, discordName: a.discordName, linkedName: user?.displayName ?? null, answers, pingRoleIds: unit.pingRoleIds, guildName: d.guildId ? (await this.discord.guilds()).find((g) => g.id === d.guildId)?.name ?? null : null,
             durationSec: a.durationSec, joinedAt: a.joinedAt?.toISOString() ?? null, createdAt: a.createdAt.toISOString(), dashboardUrl: (0, web_url_1.webUrl)(`/qualifications?id=${a.id}`),
             ...(unit.channelId ? { channelId: unit.channelId } : {}), ...(unit.settings.staffThreads ? { thread: true } : {}),
+            ...((0, ai_provider_1.aiConfigured)() ? { aiReview: true } : {}), // Button „KI-Prüfung“ (Schlüssel wird nie mitgeschickt)
         }, { always: !!unit.channelId });
+        application_events_1.applicationEvents.submitted({ kind: 'QUALIFICATION', id: a.id, number: a.number, guildId: a.guildId, channelKey: 'qualifications', channelId: unit.channelId ?? null });
         const roles = (0, decision_1.submitRoles)(unit.settings);
         if (roles.add.length || roles.remove.length)
             await this.discord.enqueue('qualifications', 'member.roles', { discordId: d.discordId, ...roles, reason: `Bewerbung ${a.number}` }, { always: true });
@@ -241,6 +245,7 @@ let QualificationsService = class QualificationsService {
     async remove(actor, id) {
         const a = await this.get(id);
         await this.prisma.$transaction(async (tx) => {
+            await tx.applicationAiReview.deleteMany({ where: { kind: 'QUALIFICATION', applicationId: id } }); // KI-Prüfungen gehören zur Bewerbung
             await tx.qualificationApplication.delete({ where: { id } });
             await this.audit.record(actor, { action: 'qualifications.application.delete', module: 'qualifications', entityType: 'QualificationApplication', entityId: id, before: { number: a.number, unit: a.unitName, status: a.status, discordId: a.discordId, discordName: a.discordName } }, tx);
         });

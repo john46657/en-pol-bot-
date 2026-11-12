@@ -89,7 +89,7 @@ exports.COMMANDS = [
                             { name: 'Dienst & Leitstelle', value: '`/shift manage` `/shift active` `/shift admin` `/shift leaderboard` `/dienst` `/dienststunden` `/abmeldung` `/leave manage` `/leave liste` `/funk` `/funkcode` `/funkantrag` `/funkstatus`' },
                             { name: 'Erfassen', value: '`/dienstbericht` `/dienstbericht liste`' },
                             { name: 'Dienstplanung & Verwaltung', value: '`/schichtplan anzeigen|meine|uebersicht|anmelden|abmelden|melden` `/termine liste|anmelden|absagen` `/antrag befoerderung|versetzung|status|antworten|zurueckziehen` `/dokument` `/benachrichtigungen dm:`' },
-                            { name: 'Leitung & Team', value: '`/ausbildung` `/verwarnen` `/funkfreigabe` `/teamliste` `/dienstpanel` `/teamchance` `/roblox`' },
+                            { name: 'Leitung & Team', value: '`/lage` `/vorgang` `/ausbildung` `/verwarnen` `/funkfreigabe` `/teamliste` `/dienstpanel` `/teamchance` `/roblox`' },
                             { name: 'Ausbildung & Prüfungen', value: '`/pruefung liste` `/pruefung ergebnisse` `/pruefung ausbildungen` · Ausbilder: `/pruefung verwalten` `/pruefung bewerten`' },
                             { name: 'Administration', value: '`/setup` (Einrichtung) `/system status` `/system diagnose` `/system integrations` `/backup status` `/backup erstellen` `/backup wiederherstellen` `/botprofil name|avatar|status`' },
                             { name: 'Support-Tickets', value: '`/support` öffnet ein Ticket (Team: `/support mitglied:@…` für jemand anderen). Team im Ticket-Kanal: `/ticket` (claim, unclaim, schliessen, anfrage, weiterleiten, hinzufuegen, entfernen, umbenennen, erinnern, notiz, automatik, oeffnen). Ticket-Panels, Kategorien, Fragen und Buttons werden im Dashboard eingerichtet und von dort in Discord gesendet.' },
@@ -213,6 +213,52 @@ exports.COMMANDS = [
     ...reminders_1.REMINDER_COMMANDS,
     ...extension4_1.EXTENSION4_COMMANDS,
     ...administration_1.ADMINISTRATION_COMMANDS,
+    // Lage und Vorgänge (Premium-Funktionen)
+    {
+        name: 'lage', description: 'Lageübersicht (nur Führung): Personal, Einsätze, Fahndungen, Berichte, Störungen',
+        async run(c) {
+            try {
+                const o = await c.api.asUser(c.discordId, 'GET', '/situation');
+                const open = o.tasks.items.filter((t) => t.count > 0);
+                return { ephemeral: true, embeds: [{ title: '🧭 Lage', color: o.critical.length ? format_1.COLORS.danger : format_1.COLORS.info, description: o.critical.length ? (0, format_1.clip)(o.critical.slice(0, 8).map((x) => `⚠️ ${(0, format_1.plain)(x.text)}`).join('\n'), 2000) : 'Keine kritischen Vorgänge.', fields: [
+                                { name: 'Personal', value: `${o.officers.onDuty} im Dienst · ${o.officers.available} ohne Einheit`, inline: true },
+                                { name: 'Einsätze', value: `${o.incidents.total} aktiv · ${o.incidents.unassigned} ohne Einheit`, inline: true },
+                                { name: 'Einheiten', value: `${o.units.assigned.length} im Einsatz / ${o.units.total}`, inline: true },
+                                { name: 'Fahndungen', value: `${o.wanted.total} aktiv · ${o.wanted.hitsToReview} Treffer zu prüfen`, inline: true },
+                                { name: 'Berichte', value: `${o.reports.incomplete.length} unvollständig`, inline: true },
+                                { name: 'Störungen', value: (0, format_1.clip)(o.disruptions.items.map((d) => `${(0, format_1.plain)(d.sourceName ?? d.source)}: ${(0, format_1.plain)(d.message)}`).join('\n') || 'keine', 1024) },
+                                { name: 'Offene Aufgaben', value: (0, format_1.clip)(open.map((t) => `${(0, format_1.plain)(t.label)}: ${t.count}`).join('\n') || 'keine', 1024) },
+                            ], footer: `Datenstand ${new Date(o.generatedAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} · nur erfasste Daten` }] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
+    {
+        name: 'vorgang', description: 'Zeigt einen Vorgang (Vorgangs- oder Einsatznummer)',
+        options: [{ name: 'nummer', description: 'z. B. V-2026-00001 oder Einsatznummer E-2026-00012', type: 'string', required: true, maxLength: 40 }],
+        async run(c) {
+            try {
+                const n = str(c, 'nummer');
+                const byCase = await c.api.asUser(c.discordId, 'GET', `/cases?q=${q(n)}&pageSize=10`);
+                let hit = byCase.items.find((x) => String(x.number).toLowerCase() === n.toLowerCase());
+                if (!hit)
+                    hit = (await c.api.asUser(c.discordId, 'GET', `/cases?incidentNumber=${q(n)}&pageSize=10`)).items[0];
+                if (!hit)
+                    return (0, format_1.errorReply)(`Kein Vorgang zu „${(0, format_1.plain)(n)}“ gefunden.`);
+                const d = await c.api.asUser(c.discordId, 'GET', `/cases/${hit.id}`);
+                return { ephemeral: true, embeds: [{ title: (0, format_1.clip)(`🗂️ ${d.number} — ${(0, format_1.plain)(d.title)}`, 256), color: format_1.COLORS.info, fields: [
+                                { name: 'Status', value: (0, format_1.plain)(d.statusLabel), inline: true },
+                                { name: `Verknüpft (${d.links.length})`, value: (0, format_1.clip)(d.links.map((l) => `• ${(0, format_1.plain)(l.typeLabel)}: ${(0, format_1.plain)(l.label)}`).join('\n') || '—', 1024) },
+                                { name: 'Letzte Ereignisse', value: (0, format_1.clip)(d.events.slice(-6).map((e) => `• ${(0, format_1.plain)(e.text)}`).join('\n') || '—', 1024) },
+                            ] }] };
+            }
+            catch (e) {
+                return (0, errors_1.mapError)(e);
+            }
+        },
+    },
 ];
 const byName = (n) => exports.COMMANDS.find((c) => c.name === n);
 exports.byName = byName;
