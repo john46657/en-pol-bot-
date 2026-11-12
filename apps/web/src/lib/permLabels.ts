@@ -9,6 +9,8 @@ export const MODULE_LABELS: Record<string, string> = {
   messagebuilder: '✉️ Embed Builder',
   radiowhitelist: '🎙️ Funk-Whitelist',
   qualification: '🎖️ Qualifikationsregister', org: '🏛️ Organigramm', backup: '💾 Backup-Center', help: '❓ Hilfe-Center',
+  situation: '🧭 Lageassistent', career: '🧾 Beamtenlaufbahn', cases: '🗂️ Vorgänge', quality: '🔎 Qualitätsprüfer', forecast: '📈 Personalprognose',
+  integrations: '🩺 Systemstatus & API',
 };
 /** Lesbarer Name eines Rechte-Bereichs (Präfix). */
 export const labelForArea = (area: string) => MODULE_LABELS[area] ?? area;
@@ -39,6 +41,7 @@ export const ACTION_LABELS: Record<string, string> = {
   channels: 'Kanäle wählen', webhooks: 'Webhooks verwalten', retry: 'erneut versuchen', edit_others: 'Nachrichten anderer bearbeiten',
   grant: 'freischalten/verlängern', suspend: 'sperren/entsperren', remove: 'entziehen/entfernen', requests: 'Anträge bearbeiten', roles: 'Rollen(-regeln) bearbeiten',
   integration: 'Integration/Zugangsdaten', logs: 'Änderungsprotokoll ansehen',
+  exception: 'begründete Ausnahmen dokumentieren',
 };
 
 export const permLabel = (key: string) => {

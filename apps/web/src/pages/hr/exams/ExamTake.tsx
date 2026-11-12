@@ -278,6 +278,7 @@ function ResultHero({ v }: { v: AttemptView }) {
       </div>
       {r.percent != null && <Meter value={r.percent} pass={v.passPercent} label={`Ergebnis ${r.percent} Prozent`} />}
       {r.feedback && <p className="whitespace-pre-wrap rounded-md bg-panel/60 p-3 text-sm"><span className="font-medium">Rückmeldung: </span>{r.feedback}</p>}
+      {!!r.weakTopics?.length && <p className="rounded-md bg-panel/60 p-3 text-sm"><span className="font-medium">Zum Wiederholen markiert: </span>{r.weakTopics.join(', ')} <span className="text-xs text-muted">– beim nächsten Versuch werden Fragen zu diesen Themen bevorzugt.</span></p>}
     </div>
   );
 }
@@ -326,6 +327,13 @@ function GradeView({ v, onDone }: { v: AttemptView; onDone: (v: AttemptView) => 
   const answers = v.answers ?? {};
   const [scores, setScores] = useState<Record<string, number>>(() => Object.fromEntries(v.questions.map((q) => [q.id, q.earned ?? q.auto ?? 0])));
   const [feedback, setFeedback] = useState(v.result?.feedback ?? '');
+  /** Kriterienkatalog: vergebene Punkte je Kriterium; die Summe ergibt die Punkte der Frage */
+  const [criteria, setCriteria] = useState<Record<string, Record<string, number>>>(() => Object.fromEntries(v.questions.filter((q) => q.rubric?.length && q.rubricAwarded).map((q) => [q.id, q.rubricAwarded!])));
+  const setCriterion = (qid: string, points: number, rid: string, value: number) => {
+    const next = { ...criteria, [qid]: { ...(criteria[qid] ?? {}), [rid]: value } };
+    setCriteria(next);
+    setScores((sc) => ({ ...sc, [qid]: Math.min(points, Object.values(next[qid]!).reduce((a, b) => a + b, 0)) }));
+  };
   const [err, setErr] = useState<string>();
   const [voiding, setVoiding] = useState(false);
   const [reason, setReason] = useState('');
@@ -334,7 +342,7 @@ function GradeView({ v, onDone }: { v: AttemptView; onDone: (v: AttemptView) => 
   const p = max ? Math.round((total / max) * 100) : 0;
   const editable = v.status === 'SUBMITTED' || v.status === 'GRADED';
   const grade = useMutation({
-    mutationFn: () => api<AttemptView>(`/hr/attempts/${v.id}/grade`, { method: 'POST', body: { scores, ...(feedback.trim() ? { feedback: feedback.trim() } : {}) } }),
+    mutationFn: () => api<AttemptView>(`/hr/attempts/${v.id}/grade`, { method: 'POST', body: { scores, ...(Object.keys(criteria).length ? { criteria } : {}), ...(feedback.trim() ? { feedback: feedback.trim() } : {}) } }),
     onSuccess: (r) => { setErr(undefined); onDone(r); },
     onError: (e) => setErr(errText(e)),
   });
@@ -372,7 +380,23 @@ function GradeView({ v, onDone }: { v: AttemptView; onDone: (v: AttemptView) => 
                 </div>
               </div>
               <QuestionImage src={q.image} />
-              <AnswerReview q={q} answer={answers[q.id]} />
+              <AnswerReview q={{ ...q, rubric: undefined }} answer={answers[q.id]} />
+              {q.rubric && q.rubric.length > 0 && (
+                <fieldset className="grid gap-1 rounded-md border border-line p-2 text-sm">
+                  <legend className="px-1 text-xs text-muted">Kriterienkatalog{q.topic ? ` · Thema: ${q.topic}` : ''}</legend>
+                  {q.rubric.map((r) => {
+                    const val = criteria[q.id]?.[r.id] ?? 0;
+                    return (
+                      <label key={r.id} className="flex items-center gap-2">
+                        <input type="checkbox" disabled={!editable} checked={val >= r.points && r.points > 0} onChange={(e) => setCriterion(q.id, q.points, r.id, e.target.checked ? r.points : 0)} aria-label={`Kriterium erfüllt: ${r.label}`} />
+                        <span className="min-w-0 flex-1">{r.label}</span>
+                        <Input aria-label={`Punkte für Kriterium ${r.label}`} type="number" min={0} max={r.points} step={0.5} className="w-16 py-0.5" disabled={!editable} value={val} onChange={(e) => setCriterion(q.id, q.points, r.id, Math.max(0, Math.min(r.points, Number(e.target.value) || 0)))} />
+                        <span className="text-xs text-muted">/ {r.points}</span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              )}
               {q.explanation && <p className="text-xs text-muted">💡 {q.explanation}</p>}
             </li>
           );

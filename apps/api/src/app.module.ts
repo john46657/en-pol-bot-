@@ -32,6 +32,7 @@ import { ApplicationsModule } from './applications/applications.module';
 import { ApplicationBansModule } from './application-bans/application-bans.module';
 import { AcademyModule } from './academy/academy.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SystemStatusModule } from './system-status/system-status.module';
 import { SearchModule } from './search/search.module';
 import { CommunicationModule } from './communication/communication.module';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -74,13 +75,19 @@ import { CalendarModule } from './calendar/calendar.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { DocumentsModule } from './documents/documents.module';
 import { WorkspaceModule } from './workspace/workspace.controller';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { QualityModule } from './quality/quality.module';
+import { CasesModule } from './cases/cases.module';
+import { SituationModule } from './situation/situation.module';
+import { ForecastModule } from './forecast/forecast.module';
 
 @Module({
   imports: [
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: process.env.NODE_ENV === 'test' ? 10_000 : loadEnv().RATE_LIMIT }], errorMessage: 'Zu viele Anfragen – bitte kurz warten.' }),
     DiscoveryModule, PrismaModule, AuthzModule, AuditModule, AuthModule, UsersModule, HelpModule, OrgModule, PersonsModule, VehiclesModule, TicketsModule,
     DispatchModule, ReportsModule, ComplaintsModule, WantedModule,
-    PersonnelModule, DutyModule, RemindersModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerLinksModule, MultiServerModule, MultiServerRestoreModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule, ShiftPlanModule, CalendarModule, AnnouncementsModule, DocumentsModule, WorkspaceModule,
+    PersonnelModule, DutyModule, RemindersModule, ApplicationsModule, ApplicationBansModule, AcademyModule, NotificationsModule, SearchModule, CommunicationModule, AnalyticsModule, RealtimeModule, AdminModule, ExportModule, MediaModule, StudioModule, DiscordModule, DangerModule, RadioModule, SekModule, QualificationsModule, SupportTicketsModule, LeaveModule, RosterModule, MeModule, RadioCodesModule, TeamChanceModule, CadModule, MdtModule, FleetModule, LocksModule, WorkflowsModule, WelcomeModule, VoiceSupportModule, EmbedsModule, MessageBuilderModule, ServerLinksModule, MultiServerModule, MultiServerRestoreModule, LoggingModule, BackupModule, VerificationModule, PanelsModule, DutyReportsModule, HrModule, ShiftPlanModule, CalendarModule, AnnouncementsModule, DocumentsModule, WorkspaceModule, SystemStatusModule,
+    IntegrationsModule, QualityModule, CasesModule, SituationModule, ForecastModule,
   ],
   controllers: [HealthController, AuditController],
   providers: [

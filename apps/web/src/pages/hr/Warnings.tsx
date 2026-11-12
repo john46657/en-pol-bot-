@@ -28,7 +28,7 @@ export function Warnings() {
       <PageHeader title="⚠️ Verwarnungen" subtitle={`Zähler je Person: aktive Verwarnungen / Grenze (${limit}). Neue Verwarnungen erscheinen – falls eingestellt – im Verwarnungs-Kanal in Discord; auch per /verwarnen.`}
         actions={can('warning.create') ? <Button onClick={() => setCreating(true)}><Plus size={16} className="mr-1" />Verwarnen</Button> : undefined} />
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="flex overflow-hidden rounded-md border border-line text-sm" role="group" aria-label="Filter">{STATES.map(([k, l]) => <button key={k} type="button" aria-pressed={state === k} onClick={() => setState(k)} className={`px-3 py-1.5 ${state === k ? 'bg-primary text-white' : 'hover:bg-panel-2'}`}>{l}</button>)}</div>
+        <div className="flex overflow-hidden rounded-md border border-line text-sm" role="group" aria-label="Filter">{STATES.map(([k, l]) => <button key={k} type="button" aria-pressed={state === k} onClick={() => setState(k)} className={`px-3 py-1.5 ${state === k ? 'bg-primary text-primary-fg' : 'hover:bg-panel-2'}`}>{l}</button>)}</div>
         <div className="w-full sm:w-72"><Input aria-label="Suche" placeholder="🔍 Name oder Grund…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
       </div>
       {revoke.error && <p role="alert" className="mb-2 text-sm text-danger">{errText(revoke.error)}</p>}

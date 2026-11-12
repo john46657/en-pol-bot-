@@ -1,17 +1,14 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, BarChart3, BookOpen, Car, ClipboardList, FileText, Fingerprint, LayoutDashboard, Map as MapIcon, Menu, Monitor, Phone, Radio, RadioTower, RefreshCw, ScrollText, Settings, Siren, Smartphone, Tablet, Truck, Users, UsersRound, X, type LucideIcon } from 'lucide-react';
+import { Suspense, useEffect, useState } from 'react';
+import { Link, Outlet, useNavigate } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Activity, BarChart3, Car, ClipboardList, FileText, Fingerprint, LayoutDashboard, Map as MapIcon, Phone, Radio, RadioTower, ScrollText, Settings, Smartphone, Tablet, Truck, Users, UsersRound, type LucideIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { useAppearance } from '../../lib/prefs';
 import { useCadConfig, useCadLive, useCadPrefs, type CadMapData, type CadOverview } from '../../lib/cad';
 import { MiniMap } from './MiniMap';
 import { onRealtime } from '../../lib/realtime';
-import { ConfirmHost, Input, SkeletonRows } from '../../components/ui';
-import { SaveStatus } from '../../components/SaveStatus';
-import { NotificationCenter } from '../../components/NotificationCenter';
-import { Toasts } from '../../components/Toasts';
+import { Input, SkeletonRows } from '../../components/ui';
+import { TabBar } from '../../components/AppShell';
 
 interface CadNavItem { to: string; label: string; icon: LucideIcon; perm?: string; end?: boolean; external?: boolean }
 /**
@@ -48,94 +45,47 @@ export const CAD_NAV: { group: string; items: CadNavItem[] }[] = [
   ] },
 ];
 
-function CadSidebar({ onPick }: { onPick?: () => void }) {
+/** Darf der Benutzer den CAD-Punkt sehen? (Einstellungen auch mit Karten-/ER:LC-/Allgemein-Recht) */
+const useCadAllowed = () => {
   const { can } = useAuth();
-  const allowed = (i: CadNavItem) => !i.perm || can(i.perm) || (i.to === '/cad/settings' && (can('cad.manage_map') || can('cad.manage_erlc') || can('settings.manage')));
-  return (
-    <nav aria-label="CAD" className="flex-1 overflow-y-auto px-2 py-3">
-      {CAD_NAV.map((g) => {
-        const items = g.items.filter(allowed);
-        if (!items.length) return null;
-        return (
-          <div key={g.group} className="mb-4">
-            <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">{g.group}</p>
-            {items.map((i) => (
-              <NavLink key={i.to} to={i.to} end={i.end} onClick={onPick}
-                className={({ isActive }) => `flex items-center gap-2.5 rounded-md border-l-2 px-3 py-1.5 text-sm ${isActive && !i.external ? 'border-primary bg-primary/15 text-fg' : 'border-transparent text-muted hover:bg-panel-2 hover:text-fg'}`}>
-                <i.icon size={16} aria-hidden />{i.label}{i.external && <span className="ml-auto text-[10px]" aria-label="öffnet das Dashboard">↗</span>}
-              </NavLink>
-            ))}
-          </div>
-        );
-      })}
-    </nav>
-  );
-}
-
-const cadTitle = (path: string) => CAD_NAV.flatMap((g) => g.items).filter((i) => !i.external).sort((a, b) => b.to.length - a.to.length).find((i) => (i.end ? path === i.to : path.startsWith(i.to)))?.label ?? 'Leitstelle';
+  return (i: CadNavItem) => !i.perm || can(i.perm) || (i.to === '/cad/settings' && (can('cad.manage_map') || can('cad.manage_erlc') || can('settings.manage')));
+};
 
 /**
- * CAD-Leitstelle als eigene Vollbild-Oberfläche (wie das MDT). Gleiche Anmeldung und Rechte wie das Dashboard –
- * „Zum Dashboard“ oben rechts führt zurück, im Dashboard öffnet „Leitstelle“ diese Ansicht.
+ * CAD-Leitstelle als Bereich im Dashboard-Rahmen (gleiches Menü, gleiche Kopfzeile wie überall): Unterseiten als Reiter,
+ * Schnellabfrage, ER:LC-Hinweis und Notruf-Alarm. Personen/Fahrzeuge/Berichte stehen im Hauptmenü unter „Akten“.
  */
 export function CadLayout() {
-  const { user, can } = useAuth();
-  useAppearance();
-  const loc = useLocation();
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const allowed = useCadAllowed();
   useCadLive();
   // Hinweis bei ER:LC-Ausfall – das CAD selbst läuft weiter
   const ov = useQuery({ queryKey: ['cad-overview'], queryFn: () => api<CadOverview>('/cad/overview'), refetchInterval: 5_000 });
   const down = (ov.data?.erlc ?? []).filter((s) => s.status !== 'CONNECTED' && s.status !== 'DISABLED');
-  const initials = (user?.displayName ?? '?').split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
-  const brand: ReactNode = (
-    <div className="flex flex-col items-center gap-1 border-b border-line px-3 py-4 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-primary/60 bg-primary/10"><Siren size={28} className="text-primary" aria-hidden /></span>
-      <span className="text-sm font-semibold">CAD-Leitstelle</span>
-    </div>
-  );
-  const me = (
-    <div className="flex items-center gap-2 border-t border-line p-3">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary/20 text-xs font-bold text-primary">{initials}</span>
-      <div className="min-w-0 text-xs"><p className="truncate font-medium">{user?.displayName}</p><p className="truncate text-muted">{user?.roles[0] ?? '—'}</p></div>
-    </div>
-  );
+  const tabs = CAD_NAV.flatMap((g) => g.items).filter((i) => !i.external && allowed(i)).map((i) => ({ to: i.to, label: i.label, end: i.end }));
   return (
-    <div className="flex h-dvh overflow-hidden bg-bg text-fg">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-panel lg:flex">{brand}<CadSidebar />{me}</aside>
-      {open && (
-        <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setOpen(false)}>
-          <aside className="flex h-full w-64 max-w-[85vw] flex-col bg-panel" onClick={(e) => e.stopPropagation()}>{brand}<CadSidebar onPick={() => setOpen(false)} />{me}</aside>
+    <>
+      <TabBar label="Leitstelle" tabs={tabs} />
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <CadQuickSearch />
+        <LiveClock />
+      </div>
+      {down.length > 0 && (
+        <div role="status" className="mb-3 flex items-start gap-3 rounded-[10px] border border-warning bg-[color-mix(in_srgb,var(--color-warning)_12%,var(--color-panel))] px-4 py-3 text-sm">
+          <span aria-hidden className="mt-1 size-2 shrink-0 rounded-[2px] bg-warning" />
+          <span><b className="font-semibold">ER:LC momentan nicht erreichbar oder eingeschränkt</b> ({down.map((s) => s.name).join(', ')}). Bereits vorhandene CAD-Daten bleiben sichtbar.</span>
         </div>
       )}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-panel px-2 sm:px-4">
-          <button type="button" className="rounded-md p-2 hover:bg-panel-2 lg:hidden" aria-label="Menü öffnen" onClick={() => setOpen(true)}><Menu size={18} /></button>
-          <h1 className="truncate text-base font-semibold">{cadTitle(loc.pathname)}</h1>
-          <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <SaveStatus />
-            <NotificationCenter />
-            <button type="button" className="rounded-md p-2 text-muted hover:bg-panel-2 hover:text-fg" aria-label="Aktualisieren" title="Aktualisieren" onClick={() => void qc.invalidateQueries()}><RefreshCw size={16} /></button>
-            <Link to="/mdt" className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs hover:bg-panel-2" title="Polizei-MDT öffnen"><Monitor size={14} aria-hidden /><span className="hidden sm:inline">MDT</span></Link>
-            {can('dashboard.view') && <Link to="/dashboard" className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs hover:bg-panel-2" title="Zurück zum Dashboard"><BookOpen size={14} aria-hidden /><span className="hidden sm:inline">Zum Dashboard</span><X size={14} className="sm:hidden" aria-hidden /></Link>}
-          </div>
-        </header>
-        <main id="main" className="min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
-          <CadQuickSearch />
-          {down.length > 0 && (
-            <div role="status" className="mb-3 rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
-              ⚠️ ER:LC-API momentan nicht erreichbar oder eingeschränkt ({down.map((s) => s.name).join(', ')}). Bereits vorhandene CAD-Daten bleiben sichtbar.
-            </div>
-          )}
-          <Suspense fallback={<SkeletonRows />}><Outlet /></Suspense>
-          <CallAlert />
-          <ConfirmHost />
-        </main>
-        <Toasts />
-      </div>
-    </div>
+      <Suspense fallback={<SkeletonRows />}><Outlet /></Suspense>
+      <CallAlert />
+    </>
   );
+}
+
+/** Leitstellen-Uhr (Mono, Sekunden). */
+function LiveClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+  return <time className="ml-auto font-mono text-2xl font-semibold tabular-nums" dateTime={now.toISOString()} aria-label="Uhrzeit">{now.toLocaleTimeString('de-DE')}</time>;
 }
 
 interface SearchHit { type: string; id: string; label: string; sub?: string }
@@ -153,8 +103,8 @@ function CadQuickSearch() {
   const hits = (q.data ?? []).filter((h) => (h.type === 'person' && persons) || (h.type === 'vehicle' && vehicles));
   const go = (h: SearchHit) => { setOpen(false); setTerm(''); nav(h.type === 'person' ? `/persons/${h.id}` : `/vehicles/${h.id}`); };
   return (
-    <div className="relative mb-3 max-w-md">
-      <Input type="search" aria-label="Person oder Fahrzeug suchen" placeholder={`🔎 ${[persons && 'Person (Roblox-Name/-ID)', vehicles && 'Kennzeichen'].filter(Boolean).join(' oder ')} suchen…`} value={term}
+    <div className="relative w-full max-w-md">
+      <Input type="search" aria-label="Person oder Fahrzeug suchen" className="font-mono placeholder:font-sans" placeholder={`${[persons && 'Person (Roblox-Name/-ID)', vehicles && 'Kennzeichen'].filter(Boolean).join(' oder ')} abfragen`} value={term}
         onChange={(e) => { setTerm(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={(e) => { if (e.key === 'Enter' && hits[0]) go(hits[0]); if (e.key === 'Escape') setOpen(false); }} />
       {open && debounced.length >= 2 && (
@@ -214,7 +164,7 @@ function CallAlert() {
         const where = call?.positionDescriptor ?? inc?.location ?? null;
         const mapTo = `/cad/map?${a.kind === 'call' ? 'call' : 'incident'}=${a.id}`;
         return (
-          <div key={a.id} className={`space-y-2 rounded-lg border p-3 text-sm text-white shadow-xl ${a.kind === 'call' ? 'border-danger/50 bg-danger/90' : 'border-warning/50 bg-[#7c2d12]/95'}`}>
+          <div key={a.id} className={`space-y-2 rounded-lg border-2 p-3 text-sm text-fg shadow-xl ${a.kind === 'call' ? 'border-danger bg-[color-mix(in_srgb,var(--color-danger)_18%,var(--color-panel))]' : 'border-warning bg-[color-mix(in_srgb,var(--color-warning)_18%,var(--color-panel))]'}`}>
             <div className="flex items-center gap-2">
               <span className="min-w-0 flex-1"><b className="block truncate">{title}</b>{where && <span className="block truncate text-xs opacity-90">📍 {where}</span>}</span>
               <button type="button" aria-label={sound ? 'Ton aus' : 'Ton an'} title={sound ? 'Ton aus' : 'Ton an'} onClick={() => set({ sound: !sound })}>{sound ? '🔔' : '🔕'}</button>
@@ -222,8 +172,8 @@ function CallAlert() {
             </div>
             {pos ? <MiniMap cfg={cfg} x={pos.x} z={pos.z} to={mapTo} height={120} emoji={a.kind === 'call' ? '🚨' : '📋'} /> : map.isFetched && <p className="text-xs opacity-90">Keine Kartenposition gemeldet.</p>}
             <div className="flex gap-1">
-              <Link className="rounded bg-white/20 px-2 py-0.5 hover:bg-white/30" to={a.kind === 'call' ? `/cad/calls?id=${a.id}` : `/cad/incidents?id=${a.id}`} onClick={() => close(a.id)}>Öffnen</Link>
-              {pos && <Link className="rounded bg-white/20 px-2 py-0.5 hover:bg-white/30" to={mapTo} onClick={() => close(a.id)}>🗺️ Karte</Link>}
+              <Link className="rounded border border-line-strong bg-panel px-2 py-0.5 font-medium hover:bg-panel-2" to={a.kind === 'call' ? `/cad/calls?id=${a.id}` : `/cad/incidents?id=${a.id}`} onClick={() => close(a.id)}>Öffnen</Link>
+              {pos && <Link className="rounded border border-line-strong bg-panel px-2 py-0.5 font-medium hover:bg-panel-2" to={mapTo} onClick={() => close(a.id)}>🗺️ Karte</Link>}
             </div>
           </div>
         );

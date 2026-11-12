@@ -66,7 +66,7 @@ export function CadMdt() {
               {!u.incidents.length ? <p className="py-3 text-center text-sm text-muted">Kein aktueller Einsatzauftrag.</p> : u.incidents.map((i) => (
                 <article key={i.id} className="mb-3 rounded-md border border-line p-3 last:mb-0" aria-label={`Einsatz ${i.number}`}>
                   <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="text-base"><b>{i.number}</b> · {i.title}</h3>
+                    <h3 className="text-base"><b className="font-mono">{i.number}</b> · {i.title}</h3>
                     <span className="flex gap-2 text-xs"><span>{optLabel(cfg.priorities, i.priority)}</span><span className="text-muted">{optLabel(cfg.incidentStatuses, i.status)}</span></span>
                   </header>
                   <dl className="mb-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
@@ -106,7 +106,7 @@ export function CadMdt() {
           )}
           <Card title="📻 Funkmeldungen">{d.radio.length ? <ul className="max-h-72 space-y-1 overflow-auto text-sm">{d.radio.map((r) => <li key={r.id}><span className="text-xs text-muted">{ago(r.createdAt)}</span> {r.callsign && <b>{r.callsign}: </b>}{r.text}</li>)}</ul> : <p className="text-sm text-muted">Keine Funkmeldungen.</p>}</Card>
           <Card title="🔔 Letzte Benachrichtigungen">{d.notifications.length ? <ul className="space-y-1 text-sm">{d.notifications.map((n) => <li key={n.id} className={n.readAt ? 'text-muted' : ''}><span className="text-xs text-muted">{ago(n.createdAt)}</span> {n.title}</li>)}</ul> : <p className="text-sm text-muted">Keine Benachrichtigungen.</p>}</Card>
-          <Card title="🗂️ Einsatzhistorie">{d.history.length ? <ul className="space-y-1 text-sm">{d.history.map((h) => <li key={h.incidentId}><b>{h.number}</b> · {h.type ? optLabel(cfg.incidentTypes, h.type) : 'Einsatz'} · <span className="text-muted">{optLabel(cfg.incidentStatuses, h.status)} {fmt(h.closedAt)}</span></li>)}</ul> : <p className="text-sm text-muted">Noch keine abgeschlossenen Einsätze.</p>}</Card>
+          <Card title="🗂️ Einsatzhistorie">{d.history.length ? <ul className="space-y-1 text-sm">{d.history.map((h) => <li key={h.incidentId}><b className="font-mono">{h.number}</b> · {h.type ? optLabel(cfg.incidentTypes, h.type) : 'Einsatz'} · <span className="text-muted">{optLabel(cfg.incidentStatuses, h.status)} {fmt(h.closedAt)}</span></li>)}</ul> : <p className="text-sm text-muted">Noch keine abgeschlossenen Einsätze.</p>}</Card>
         </div>
       </div>
       <VehicleDetail id={vehicle} onClose={() => setVehicle(null)} />
@@ -130,11 +130,11 @@ function SnapshotView({ s }: { s: Snapshot }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Section title="🚨 Offene Einsätze" n={s.incidents.length + s.confidentialIncidents}>
-        {s.incidents.length ? <ul className="space-y-1 text-sm">{s.incidents.map((i) => <li key={i.id}><Link className="hover:underline" to={`/cad/incidents?id=${i.id}`}><b>{i.number}</b> · {i.title}</Link> <span className="text-xs text-muted">{i.priority} · {i.status}{i.location ? ` · ${i.location}` : ''}{i.units.length ? ` · ${i.units.join(', ')}` : ''}</span></li>)}</ul> : none}
+        {s.incidents.length ? <ul className="space-y-1 text-sm">{s.incidents.map((i) => <li key={i.id}><Link className="hover:underline" to={`/cad/incidents?id=${i.id}`}><b className="font-mono">{i.number}</b> · {i.title}</Link> <span className="text-xs text-muted">{i.priority} · {i.status}{i.location ? ` · ${i.location}` : ''}{i.units.length ? ` · ${i.units.join(', ')}` : ''}</span></li>)}</ul> : none}
         {s.confidentialIncidents > 0 && <p className="mt-1 text-xs text-muted">🔒 dazu {s.confidentialIncidents} vertrauliche(r) Einsatz/Einsätze</p>}
       </Section>
       <Section title="🚓 Einheiten im Dienst" n={s.units.length}>
-        {s.units.length ? <ul className="space-y-1 text-sm">{s.units.map((u) => <li key={u.id}><b>{u.callsign}</b> <span className="text-muted">{u.status}</span>{u.incident && <> · {u.incident}</>}</li>)}</ul> : none}
+        {s.units.length ? <ul className="space-y-1 text-sm">{s.units.map((u) => <li key={u.id}><b className="font-mono">{u.callsign}</b> <span className="text-muted">{u.status}</span>{u.incident && <> · {u.incident}</>}</li>)}</ul> : none}
       </Section>
       <Section title="📞 Offene Notrufe ohne Einsatz" n={s.calls.length}>
         {s.calls.length ? <ul className="space-y-1 text-sm">{s.calls.map((c) => <li key={c.id}><b>#{c.callNumber}</b> {c.description ?? ''} <span className="text-xs text-muted">{c.location ?? ''} · {ago(c.startedAt)}</span></li>)}</ul> : none}

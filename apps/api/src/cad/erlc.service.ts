@@ -16,6 +16,7 @@ import { decryptSecret, encryptSecret } from './erlc-crypto';
 import { FleetService } from '../fleet/fleet.service';
 import { CadNotifyService } from './cad-notify.service';
 import { ErlcWantedService } from './erlc-wanted.service';
+import { MonitorService } from '../integrations/monitor.service';
 
 /** Öffentlicher Ed25519-Schlüssel von PRC für Event-Webhooks (https://apidocs.erlc.gg/event-webhooks). */
 const PRC_WEBHOOK_KEY = 'MCowBQYDK2VwAyEAjSICb9pp0kHizGQtdG8ySWsDChfGqi+gyFCttigBNOA=';
@@ -119,7 +120,7 @@ export class ErlcService {
   private webhookKey: KeyObject;
   private readonly seen = new Map<string, number>();
 
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService, private readonly wanted: ErlcWantedService) {
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly perms: PermissionService, private readonly realtime: RealtimeService, private readonly notify: CadNotifyService, private readonly records: ErlcSyncService, private readonly fleet: FleetService, private readonly wanted: ErlcWantedService, private readonly monitor: MonitorService) {
     this.client = new ErlcClient();
     this.webhookKey = createPublicKey({ key: Buffer.from(process.env.ERLC_WEBHOOK_PUBLIC_KEY || PRC_WEBHOOK_KEY, 'base64'), format: 'der', type: 'spki' });
   }
@@ -227,6 +228,7 @@ export class ErlcService {
       if (!key) {
         r.paused = true;
         await this.prisma.erlcServer.update({ where: { id }, data: { status: 'ERROR', lastError: 'Gespeicherter Server-Key kann nicht entschlüsselt werden (Geheimnis geändert?). Bitte Key neu eintragen.', lastErrorAt: new Date() } });
+        await this.monitor.failure('ERLC', id, s.name, null, 'Gespeicherter Server-Key kann nicht entschlüsselt werden – bitte neu eintragen.', undefined, true);
         return { ok: false, status: 'ERROR', message: 'Server-Key kann nicht entschlüsselt werden.' };
       }
       const include = ERLC_FEATURES.map((f) => (s.features.includes(f) ? INCLUDE[f] : undefined)).filter((x): x is string => !!x);
@@ -238,7 +240,10 @@ export class ErlcService {
         // Backoff: Retry-After einhalten, sonst wachsend bis max. 5 Minuten – keine Endlosschleife im Sekundentakt
         const backoff = Math.min(MAX_BACKOFF_MS, s.pollSeconds * 1000 * 2 ** Math.min(r.failures, 6));
         r.nextDue = Date.now() + Math.max(res.retryAfterMs ?? 0, st.status === 'OFFLINE' && !res.network ? s.pollSeconds * 2000 : backoff);
-        await this.prisma.erlcServer.update({ where: { id }, data: { status: st.status, lastError: st.message, lastErrorAt: new Date(), latencyMs: res.latencyMs || null, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
+        // Fehlerserie dauerhaft speichern (übersteht Neustarts) – Grundlage für Alarme bei anhaltenden Störungen
+        await this.prisma.erlcServer.update({ where: { id }, data: { status: st.status, lastError: st.message, lastErrorAt: new Date(), latencyMs: res.latencyMs || null, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue, failureCount: { increment: 1 }, failingSince: s.failingSince ?? new Date() } });
+        // „Server leer/offline“ ist kein technischer Fehler der Anbindung
+        if (st.status !== 'OFFLINE' || res.network) await this.monitor.failure('ERLC', id, s.name, null, st.message, { status: res.status, code: res.code ?? null, retryAfterMs: res.retryAfterMs ?? null, network: !!res.network });
         if (s.status !== st.status) this.realtime.publish('cad', 'erlc.status', { serverId: id, status: st.status });
         if (manual || s.status !== st.status) this.log.warn(`server ${s.name}: ${st.message}`);
         // Server laut API leer/offline → alle Aufenthalte sind beendet. Bei Netzwerk-/API-Fehlern bleiben die Sitzungen (keine Doppeltreffer danach).
@@ -250,13 +255,23 @@ export class ErlcService {
       const prev = (s.snapshot ?? null) as ErlcSnapshot | null;
       const snap = normalizeSnapshot(res.data, s.features);
       if (prev?.webhookEvents) snap.webhookEvents = prev.webhookEvents;
-      await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap as unknown as Prisma.InputJsonValue, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue } });
-      if (snap.emergencyCalls) await this.syncCalls(s, snap.emergencyCalls, 'API');
+      await this.prisma.erlcServer.update({ where: { id }, data: { status: 'CONNECTED', lastSyncAt: new Date(), latencyMs: res.latencyMs, snapshot: snap as unknown as Prisma.InputJsonValue, rateLimit: this.client.rate(id) as unknown as Prisma.InputJsonValue, failureCount: 0, failingSince: null } });
+      await this.monitor.recovered('ERLC', id);
+      /*
+       * Verarbeitungsschritte einzeln abgesichert: scheitert einer (z. B. Datenbank kurz weg), laufen die anderen weiter und der Fehler wird
+       * protokolliert. Alle Schritte sind idempotent – beim nächsten erfolgreichen Abruf wird der aktuelle Stand erneut verarbeitet und die
+       * Störung als behoben markiert. Doppelte Notrufe/Treffer verhindern die eindeutigen Schlüssel der Schritte selbst.
+       */
+      const step = async (name: string, fn: () => Promise<unknown>) => {
+        try { await fn(); await this.monitor.recovered('ERLC_STEP', id, name); }
+        catch (e) { this.log.error(`${s.name} · ${name}: ${e instanceof Error ? e.message : e}`); await this.monitor.failure('ERLC_STEP', id, s.name, name, e instanceof Error ? e.message : String(e)); }
+      };
+      if (snap.emergencyCalls) await step('Notrufe', () => this.syncCalls(s, snap.emergencyCalls!, 'API'));
       // Fahndungsabgleich VOR der Personen-Übernahme: deren Namens-Zuordnung darf keinen „bestätigten“ Treffer erzeugen
-      await this.wanted.check(s, snap);
-      await this.learnPostals(snap.players ?? []);
-      await this.records.sync(id, snap, s.guildId); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
-      await this.fleet.sync(id, snap, manual).catch((e: Error) => this.log.error(`Polizeifahrzeuge: ${e.message}`)); // Live-Polizeifahrzeuge abgleichen
+      await step('Fahndungsabgleich', () => this.wanted.check(s, snap));
+      await step('Kartenkalibrierung', () => this.learnPostals(snap.players ?? []));
+      await step('Personen/Fahrzeuge', () => this.records.sync(id, snap, s.guildId)); // Personen + Fahrzeuge ins System übernehmen (Akten-Bereich des Discord-Servers)
+      await step('Polizeifahrzeuge', () => this.fleet.sync(id, snap, manual)); // Live-Polizeifahrzeuge abgleichen
       this.realtime.publish('cad', 'erlc.snapshot', { serverId: id });
       return { ok: true, status: 'CONNECTED', latencyMs: res.latencyMs };
     } finally { r.inFlight = false; }
@@ -277,6 +292,7 @@ export class ErlcService {
     const calKey = `erlc.callCalibration.${s.id}`;
     let pairs: CallCalibrationPair[] | null = null;
     const loadPairs = async () => (pairs ??= (((await this.prisma.systemSetting.findUnique({ where: { key: calKey } }))?.value as { pairs?: CallCalibrationPair[] } | null)?.pairs ?? []));
+    const seenAt = new Date();
     for (const c of calls) {
       if (!c.callNumber || !c.startedAt) continue;
       // Nur Notrufe an die Polizei (Sheriff, Feuerwehr, DOT gehören nicht in diese Leitstelle)
@@ -284,7 +300,11 @@ export class ErlcService {
       const startedAt = new Date(c.startedAt * 1000);
       // gleiche Notrufnummer kurz zuvor/danach (Webhook ohne exakte Startzeit, danach der normale Abruf) = derselbe Notruf
       const exists = await this.prisma.erlcEmergencyCall.findFirst({ where: { serverId: s.id, callNumber: c.callNumber, startedAt: { gte: new Date(startedAt.getTime() - 30 * 60_000), lte: new Date(startedAt.getTime() + 30 * 60_000) } } });
-      if (exists) continue;
+      if (exists) {
+        // noch in der API gemeldet → aktuell (fehlt er später, gilt er als nicht mehr gemeldet)
+        if (source === 'API') await this.prisma.erlcEmergencyCall.update({ where: { id: exists.id }, data: { lastSeenAt: seenAt } });
+        continue;
+      }
       try {
         /*
          * Position des Notrufs, in dieser Reihenfolge: 1. Standort des Anrufers (ER:LC liefert ihn im dokumentierten Kartensystem),
@@ -294,12 +314,19 @@ export class ErlcService {
         const hasPos = c.x !== null && c.z !== null && Number.isFinite(c.x) && Number.isFinite(c.z);
         if (fb && hasPos) await this.learnCallPosition(calKey, await loadPairs(), { px: c.x!, pz: c.z!, cx: fb.x, cz: fb.z });
         pois ??= await this.prisma.cadMapObject.findMany({ where: { kind: 'POI', OR: [{ serverId: recordSpace(s.guildId) ?? null }, { serverId: null }] }, select: { name: true, x: true, z: true } });
-        const poi = fb ? null : poiForPlace(c.positionDescriptor, pois) ?? postalPosition(c.positionDescriptor);
+        const namedPoi = fb ? null : poiForPlace(c.positionDescriptor, pois);
+        const postal = fb || namedPoi ? null : postalPosition(c.positionDescriptor);
+        const poi = namedPoi ?? postal;
         const cal = !fb && !poi && hasPos ? fitCallCalibration(await loadPairs()) : null;
         const learned = cal ? applyCallCalibration(cal, c.x!, c.z!) : null;
-        const pos = fb ? { x: fb.x, z: fb.z } : poi ? { x: poi.x!, z: poi.z! } : learned && onErlcMap(learned.x, learned.z) ? learned : hasPos && onErlcMap(c.x, c.z) ? { x: c.x!, z: c.z! } : null;
+        const [pos, positionSource] = fb ? [{ x: fb.x, z: fb.z }, 'CALLER'] as const
+          : namedPoi ? [{ x: namedPoi.x!, z: namedPoi.z! }, 'POI'] as const
+          : postal ? [{ x: postal.x, z: postal.z }, 'POSTAL'] as const
+          : learned && onErlcMap(learned.x, learned.z) ? [learned, 'CALIBRATED'] as const
+          : hasPos && onErlcMap(c.x, c.z) ? [{ x: c.x!, z: c.z! }, 'API'] as const
+          : [null, 'NONE'] as const;
         const where = c.positionDescriptor ?? (fb ? [fb.street, fb.postal && `PLZ ${fb.postal}`].filter(Boolean).join(' · ') || null : null);
-        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: pos?.x ?? null, mapZ: pos?.z ?? null, startedAt, source } });
+        const row = await this.prisma.erlcEmergencyCall.create({ data: { serverId: s.id, callNumber: c.callNumber, team: c.team, callerRobloxId: c.caller, description: c.description, positionDescriptor: where, mapX: pos?.x ?? null, mapZ: pos?.z ?? null, positionSource, lastSeenAt: source === 'API' ? seenAt : null, startedAt, source } });
         created++;
         await this.notify.emit('call.received', { id: row.id, callNumber: row.callNumber, team: row.team, description: row.description, location: row.positionDescriptor, server: s.name, startedAt: row.startedAt.toISOString(), mapUrl: webUrl(`/cad/map?call=${row.id}`), dashboardUrl: webUrl(`/cad/calls?id=${row.id}`) }, s.guildId);
       } catch (e) {

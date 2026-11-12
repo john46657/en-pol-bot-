@@ -13,6 +13,7 @@ import { Avatar } from '../../components/TeamRoster';
 import { SaveStatus } from '../../components/SaveStatus';
 import { ActivityTab, DocumentsTab, NotesTab, QualificationsTab, ServiceTab, useFileSummary } from './PersonnelFileExt';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, fmt, Input, Modal, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea, type Tone } from '../../components/ui';
+import { CareerTab, ProgressTab } from '../premium/Career';
 import { RankLabel } from './PersonnelOverview';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : null);
@@ -110,6 +111,8 @@ export function PersonnelFile() {
     ['Vermerke', !!ext.data?.permissions.notes],
     ['Dokumente', !!ext.data?.permissions.documents],
     ['Aktivitäten', !!ext.data?.permissions.activity],
+    ['Laufbahn', can('career.view')],
+    ['Prüfungsfortschritt', can('exam.view')],
   ];
   const visible = tabs.filter(([, ok]) => ok).map(([t]) => t);
   const active = visible.includes(tab) ? tab : visible[0] ?? '';
@@ -170,6 +173,8 @@ export function PersonnelFile() {
       {ext.data && active === 'Vermerke' && <NotesTab s={ext.data} personnelId={p.id} />}
       {ext.data && active === 'Dokumente' && <DocumentsTab s={ext.data} personnelId={p.id} />}
       {ext.data && active === 'Aktivitäten' && <ActivityTab personnelId={p.id} />}
+      {active === 'Laufbahn' && <CareerTab personnelId={p.id} />}
+      {active === 'Prüfungsfortschritt' && <ProgressTab personnelId={p.id} />}
       {active !== 'Übersicht' && !visible.includes('Übersicht') && editCard}
 
       <ConfirmDialog open={del} danger title="Personalakte löschen" busy={remove.isPending} confirmLabel="Endgültig löschen" onClose={() => setDel(false)} onConfirm={() => remove.mutate()}

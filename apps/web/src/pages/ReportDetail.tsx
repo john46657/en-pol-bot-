@@ -8,6 +8,8 @@ import { useAuth } from '../lib/auth';
 import { Button, Card, ErrorState, fmt, Field, PageHeader, Select, SkeletonRows, StatusBadge, statusLabel, Tabs, Textarea, Input, Modal } from '../components/ui';
 import { Timeline, type TimelineItem } from '../components/Timeline';
 import { LockBanner, useEditLock } from '../lib/locks';
+import { CasesFor } from './premium/Cases';
+import { QualityPanel } from './premium/Quality';
 
 interface Version { id: string; version: number; changeSummary: string; content: { body?: string }; contentHash: string; createdAt: string; authorId: string }
 interface ReportData { report: { id: string; number: string; type: string; title: string; status: string; authorId: string; version: number; versions: Version[] }; timeline: TimelineItem[] }
@@ -48,6 +50,7 @@ export function ReportDetail() {
           {r.status === 'APPROVED' && can('reports.archive') && <Button variant="secondary" onClick={() => act.mutate({ path: '/archive' })}>Archivieren</Button>}
         </>} />
       {err && !editing && !reject && <div role="alert" className="mb-3 rounded border border-danger/40 bg-danger/10 p-2 text-sm text-danger">{err.message} {err.requestId && <span className="text-xs opacity-70">Anfrage-ID: {err.requestId}</span>}</div>}
+      <div className="mb-3 grid gap-2 print:hidden"><CasesFor type="REPORT" id={r.id} /><QualityPanel key={`${r.id}-${r.version}`} target="REPORT" id={r.id} /></div>
       <Tabs tabs={['Inhalt', 'Versionen', 'Verlauf']} active={tab} onChange={setTab} />
       <div className="mt-4">
         {tab === 'Inhalt' && <Card className="print:border-0"><p className="whitespace-pre-wrap text-sm">{latest.content.body ?? JSON.stringify(latest.content, null, 2)}</p></Card>}

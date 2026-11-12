@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { ChevronDown, Trash2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, aiCheck, type AiCheckResult, type FormField } from '@enrp/shared';
 import { useAutosaveDraft } from '../lib/autosave';
@@ -14,6 +14,7 @@ import { ago } from '../lib/cad';
 import { FormQuestionsEditor } from '../components/FormQuestionsEditor';
 import { ApplicationSettingsEditor, withDefaults, type AppCommon } from '../components/ApplicationSettings';
 import { PanelSendBox } from '../components/PanelSendBox';
+import { AiReviewPanel, AiReviewSettingsCard } from '../components/AiReviewPanel';
 import { fromDraft, newUnit, toDraft, UnitsEditor, unitsComplete, type DraftUnit, type Unit } from '../components/UnitsEditor';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, fmt, Input, PageHeader, Select, SkeletonRows, StatusBadge, Tabs, Textarea } from '../components/ui';
 
@@ -43,8 +44,9 @@ export function Applications() {
   const manage = can('qualifications.manage'), decideAllowed = can('applications.decide');
   const tabs = ['Bewerbungen', ...(manage ? ['Einrichtung'] : [])];
   const [tab, setTab] = useState('Bewerbungen');
-  const [status, setStatus] = useState('OPEN');
-  const [q, setQ] = useState('');
+  const [params] = useSearchParams();
+  const [status, setStatus] = useState(() => (params.get('q') ? '' : 'OPEN')); // per Link: auch schon entschiedene finden
+  const [q, setQ] = useState(() => params.get('q') ?? ''); // Link aus Discord: ?q=<Nummer>
   const [page, setPage] = useState(1);
   const [order, setOrder] = useState<'newest' | 'oldest'>('newest');
   const [pageSize, setPageSize] = useState(20);
@@ -58,6 +60,9 @@ export function Applications() {
   // angefangene Bewerbungen: nur bei „Offen“/„Alle“, regelmäßig aktualisiert (Fortschritt Frage für Frage)
   const showProgress = status === 'OPEN' || status === '';
   const progress = useQuery({ queryKey: ['applications-progress', type, q, server], queryFn: () => api<ProgressRow[]>('/applications/in-progress', { query: { type: type || undefined, q: q.trim() || undefined, guildId: server } }), enabled: tab === 'Bewerbungen' && showProgress, refetchInterval: 30_000 });
+  // Link aus Discord (?q=<Nummer>): genau ein Treffer → gleich aufgeklappt
+  const linked = params.get('q');
+  useEffect(() => { const one = list.data?.items.length === 1 ? list.data.items[0] : undefined; if (linked && one && one.number === linked) setExpanded((cur) => new Set(cur).add(one.id)); }, [linked, list.data]);
   const refresh = () => { setErr(undefined); void qc.invalidateQueries({ queryKey: ['applications-cards'] }); };
   const decide = useMutation({
     mutationFn: (v: { row: InboxRow; status: 'ACCEPTED' | 'REJECTED'; reason?: string }) => v.row.kind === 'police'
@@ -71,6 +76,8 @@ export function Applications() {
   });
   const canDelete = (r: InboxRow) => can(r.kind === 'police' ? 'applications.delete' : 'qualifications.delete');
   const canDecideRow = (r: InboxRow) => (r.kind === 'police' ? decideAllowed : can('qualifications.decide'));
+  /** KI-Prüfung: Prüfer der Polizei-Bewerbung bzw. wer über Einheiten-Bewerbungen entscheiden darf */
+  const canAiReview = (r: InboxRow) => can(r.kind === 'police' ? 'applications.review' : 'qualifications.decide');
   const pages = list.data ? Math.max(1, Math.ceil(list.data.total / list.data.pageSize)) : 1;
 
   return (
@@ -118,6 +125,7 @@ export function Applications() {
                           {ai.reasons.length > 0 ? <ul className="mt-1 list-disc pl-5 text-xs text-fg">{ai.reasons.map((x) => <li key={x}>{x}</li>)}</ul> : <p className="text-xs">Keine Auffälligkeiten gefunden.</p>}
                           <p className="mt-1 text-xs text-muted">{AI_CHECK_HINT}</p>
                         </div>
+                        {canAiReview(a) && <AiReviewPanel kind={a.kind} id={a.id} />}
                         <p className="mb-2 text-sm font-semibold">Antworten</p>
                         <ol className="grid gap-2 text-sm">{a.answers.map((x, i) => (
                           <li key={i}><p className="text-xs text-muted">{i + 1}. {x.label}{ai.flagged.includes(i) && <span className="ml-1 text-warning" title="KI-typische Formulierung oder Formatierung">🤖</span>}</p><p className="whitespace-pre-wrap rounded-md bg-panel-2 p-2">{x.value || '—'}</p></li>
@@ -236,6 +244,7 @@ function PoliceSetup() {
           <div><Button variant="secondary" disabled={extra.length >= 24} onClick={() => setExtra([...extra, newUnit('apply')])}>Bewerbungsart hinzufügen</Button></div>
         </div>
       </Card>
+      <AiReviewSettingsCard />
       <Card title="Bewerbungs-Einstellungen Polizei">
         <ApplicationSettingsEditor value={common} onChange={(p) => setCommon({ ...common, ...p })} name={name} onName={setName}
           pendingHint="Neue Bewerbungen werden hier gepostet (leer = Bewerbungs-Kanal aus den Einstellungen)."

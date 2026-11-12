@@ -10,6 +10,7 @@ import { CadNotifyService } from './cad-notify.service';
 import type { ErlcPlayer } from './erlc.service';
 import { LocksService } from '../locks/locks.service';
 import { FleetService } from '../fleet/fleet.service';
+import { QualityService } from '../quality/quality.service';
 /** Wer handelt und von welchem Discord-Server (Bot) bzw. mit welchem gewählten Server (Dashboard). */
 export type CadActor = Actor & {
     guildId?: string | null;
@@ -99,7 +100,8 @@ export declare class CadService {
     private readonly notify;
     private readonly locks;
     private readonly fleet;
-    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService, locks: LocksService, fleet: FleetService);
+    private readonly quality;
+    constructor(prisma: PrismaService, audit: AuditService, perms: PermissionService, rt: RealtimeService, timeline: TimelineService, cfg: CadConfigService, notify: CadNotifyService, locks: LocksService, fleet: FleetService, quality: QualityService);
     private label;
     /**
      * Beendete Einsätze (Status mit „closed“, z. B. Abgeschlossen/Abgebrochen) werden einen Tag nach Abschluss gelöscht.
@@ -191,6 +193,8 @@ export declare class CadService {
             callerName: string | null;
             positionDescriptor: string | null;
             claimedById: string | null;
+            positionSource: string | null;
+            lastSeenAt: Date | null;
         }[];
         names: {
             [k: string]: string;
@@ -709,6 +713,8 @@ export declare class CadService {
         callerName: string | null;
         positionDescriptor: string | null;
         claimedById: string | null;
+        positionSource: string | null;
+        lastSeenAt: Date | null;
     }[]>;
     callAction(actor: CadActor, id: string, action: 'claim' | 'close' | 'reopen'): Promise<{
         serverId: string;
@@ -728,6 +734,8 @@ export declare class CadService {
         callerName: string | null;
         positionDescriptor: string | null;
         claimedById: string | null;
+        positionSource: string | null;
+        lastSeenAt: Date | null;
     }>;
     /** Notruf → Einsatz (Position, Ort und Beschreibung werden übernommen; die Verknüpfung bleibt gespeichert). */
     incidentFromCall(actor: CadActor, callId: string, d: Partial<IncidentInput>): Promise<{
@@ -1071,6 +1079,8 @@ export declare class CadService {
             callerName: string | null;
             positionDescriptor: string | null;
             claimedById: string | null;
+            positionSource: string | null;
+            lastSeenAt: Date | null;
         }[];
         radio: {
             authorName: string | null;
@@ -1106,6 +1116,13 @@ export declare class CadService {
     /** Kartendaten: Einsätze, Notrufe, Einheiten, Spieler/Staff/Fahrzeuge (live), eigene POIs/Zonen. */
     mapData(actor: CadActor): Promise<{
         incidents: {
+            stale: boolean;
+            cases: {
+                number: string;
+                id: string;
+                status: string;
+                title: string;
+            }[];
             calls: {
                 id: string;
                 incidentId: string | null;
@@ -1151,6 +1168,14 @@ export declare class CadService {
             restrictRoleIds: string[];
         }[];
         calls: {
+            positionSource: string | null;
+            notReported: boolean;
+            cases: {
+                number: string;
+                id: string;
+                status: string;
+                title: string;
+            }[];
             incident: {
                 number: string;
                 id: string;
@@ -1177,6 +1202,7 @@ export declare class CadService {
             callerName: string | null;
             positionDescriptor: string | null;
             claimedById: string | null;
+            lastSeenAt: Date | null;
         }[];
         units: {
             crew: {
@@ -1286,5 +1312,43 @@ export declare class CadService {
             uncertain: boolean;
         }[];
         stale: boolean;
+        erlc: {
+            id: string;
+            name: string;
+            status: string;
+            lastSyncAt: Date | null;
+        }[];
+        unplaced: {
+            incidents: {
+                id: string;
+                number: string;
+                title: string;
+                priority: string;
+                status: string;
+                type: string | null;
+                location: string | null;
+                cases: {
+                    number: string;
+                    id: string;
+                    status: string;
+                    title: string;
+                }[];
+            }[];
+            calls: {
+                id: string;
+                callNumber: number;
+                description: string | null;
+                positionDescriptor: string | null;
+                status: string;
+                startedAt: Date;
+                notReported: boolean;
+                cases: {
+                    number: string;
+                    id: string;
+                    status: string;
+                    title: string;
+                }[];
+            }[];
+        };
     }>;
 }

@@ -203,6 +203,10 @@ describe('login with Discord', () => {
     discord.user = { id: '222222222222222222', username: 'newbie', global_name: null };
     discord.members.set('222222222222222222', []);
     expect((await discordLogin()).location).toMatch(/discord=no_account$/);
+    // Discord-Admins des Servers kommen trotz gesperrter Registrierung rein
+    discord.user = { id: '222222222222222223', username: 'serveradmin', global_name: null };
+    discord.members.set('222222222222222223', [ROLE_ADMIN]);
+    expect((await discordLogin()).location).not.toMatch(/discord=no_account$/);
     discord.user = prev;
   });
 

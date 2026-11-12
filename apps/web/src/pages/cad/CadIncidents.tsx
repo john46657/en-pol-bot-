@@ -9,6 +9,9 @@ import { postalPosition } from '@enrp/shared';
 import { MiniMap } from './MiniMap';
 import { LockBanner, useEditLock } from '../../lib/locks';
 import { Button, Card, EmptyState, ErrorState, Field, Input, Modal, PageHeader, Select, SkeletonRows, Textarea } from '../../components/ui';
+import { IncidentCard } from '../../components/ops';
+import { CasesFor } from '../premium/Cases';
+import { QualityPanel } from '../premium/Quality';
 
 export interface IncidentDraft { restrictRoleIds?: string[]; title?: string; type?: string; keyword?: string; priority?: string; status?: string; location?: string; description?: string; involved?: string; requiredUnits?: string; internalNotes?: string; mapX?: number | null; mapZ?: number | null }
 
@@ -17,7 +20,8 @@ const errText = (e: unknown) => (e instanceof ApiError ? `${e.message}${Array.is
 /** Farbiger Chip für Priorität/Status (Farbe aus den CAD-Einstellungen, Text immer dabei). */
 export function OptChip({ list, value }: { list: CadConfig['priorities']; value: string | null | undefined }) {
   const c = optColor(list, value) ?? '#64748b';
-  return <span className="inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[11px] font-medium" style={{ background: `${c}26`, color: c, border: `1px solid ${c}55` }}>{optLabel(list, value)}</span>;
+  // Design-System: Text in Vordergrundfarbe (in hell und dunkel lesbar, egal welche Farbe eingestellt ist), Farbe als Rand + Hinterlegung
+  return <span className="inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-xs font-semibold text-fg" style={{ background: `${c}1f`, borderColor: c }}>{optLabel(list, value)}</span>;
 }
 
 /** Einsatz anlegen/bearbeiten. `callId`: aus einem ER:LC-Notruf erstellen (Verknüpfung bleibt gespeichert). */
@@ -103,24 +107,16 @@ export function CadIncidents() {
       <div className="grid gap-3 xl:grid-cols-5">
         <Card className="xl:col-span-2">
           <div className="mb-2 flex w-full items-center gap-2">
-            <div className="flex shrink-0 overflow-hidden rounded-md border border-line text-xs" role="group" aria-label="Filter">{(['active', 'all'] as const).map((k) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => setScope(k)} className={`px-2.5 py-1.5 ${scope === k ? 'bg-primary text-white' : 'hover:bg-panel-2'}`}>{k === 'active' ? 'Aktive' : 'Alle'}</button>)}</div>
+            <div className="flex shrink-0 overflow-hidden rounded-md border border-line text-xs" role="group" aria-label="Filter">{(['active', 'all'] as const).map((k) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => setScope(k)} className={`px-2.5 py-1.5 ${scope === k ? 'bg-primary text-primary-fg' : 'hover:bg-panel-2'}`}>{k === 'active' ? 'Aktive' : 'Alle'}</button>)}</div>
             <Input aria-label="Suche" className="min-w-0 flex-1 py-1.5 text-xs" placeholder="🔍 Nummer, Titel, Stichwort, Ort…" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           {!!rows.length && <p className="mb-1 text-xs text-muted">{rows.length} {rows.length === 1 ? 'Einsatz' : 'Einsätze'}{fav.size ? ' · ⭐ Favoriten oben' : ''}</p>}
 
           {list.isLoading ? <SkeletonRows /> : list.error ? <ErrorState error={list.error} /> : !rows.length ? <EmptyState text="Keine Einsätze." /> : (
-            <ul className="divide-y divide-line">{rows.map((i) => (
-              <li key={i.id} className={`flex items-start gap-2 rounded-md border-l-4 px-2 py-2 ${selected === i.id ? 'bg-primary/10' : 'hover:bg-panel-2/50'}`} style={{ borderLeftColor: optColor(cfg.priorities, i.priority) ?? '#64748b' }}>
-                <button aria-label={fav.has(i.id) ? 'Favorit entfernen' : 'Als Favorit merken'} onClick={() => toggleFav(i.id)} className={`mt-0.5 ${fav.has(i.id) ? 'text-warning' : 'text-muted'}`}><Star size={14} fill={fav.has(i.id) ? 'currentColor' : 'none'} /></button>
-                <button className="min-w-0 flex-1 text-left" onClick={() => setSp({ id: i.id })}>
-                  <p className="truncate text-sm font-medium">{i.restrictRoleIds?.length ? '🔒 ' : ''}<span className="text-muted">{i.number}</span> · {i.title}</p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted">
-                    <OptChip list={cfg.priorities} value={i.priority} /><OptChip list={cfg.incidentStatuses} value={i.status} />
-                    {(i.keyword || i.type) && <span>{i.keyword ?? optLabel(cfg.incidentTypes, i.type)}</span>}
-                    <span className="truncate">📍 {i.location ?? 'ohne Ort'}</span>
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-muted">{ago(i.createdAt)}{i.units.filter((u) => !u.clearedAt).length ? ` · 🚓 ${i.units.filter((u) => !u.clearedAt).map((u) => u.unit.callsign).join(', ')}` : ' · keine Einheit'}</p>
-                </button>
+            <ul className="grid gap-2">{rows.map((i) => (
+              <li key={i.id} className="relative">
+                <IncidentCard inc={i} cfg={cfg} active={selected === i.id} onSelect={() => setSp({ id: i.id })} />
+                <button type="button" aria-label={fav.has(i.id) ? 'Favorit entfernen' : 'Als Favorit merken'} onClick={() => toggleFav(i.id)} className={`absolute bottom-3 right-3 grid size-7 place-items-center rounded hover:bg-panel-2 ${fav.has(i.id) ? 'text-warning' : 'text-muted'}`}><Star size={14} fill={fav.has(i.id) ? 'currentColor' : 'none'} /></button>
               </li>))}</ul>
           )}
         </Card>
@@ -179,7 +175,7 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
             })}</div></div>
           )}
           <div><p className="mb-1 text-xs font-medium text-muted">Einheiten</p>
-            <ul className="space-y-1 text-sm">{active.map((u) => <li key={u.unitId} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1"><span className="flex items-center gap-2"><b>{u.unit.callsign}</b><OptChip list={cfg.unitStatuses} value={u.unit.status} /><span className="text-xs text-muted">seit {ago(u.assignedAt).replace('vor ', '')}</span></span>{can('cad.assign_unit') && <Button size="sm" variant="ghost" onClick={() => clear.mutate(u.unitId)}>lösen</Button>}</li>)}{!active.length && <li className="text-muted">keine</li>}</ul>
+            <ul className="space-y-1 text-sm">{active.map((u) => <li key={u.unitId} className="flex items-center justify-between gap-2 rounded border border-line px-2 py-1"><span className="flex items-center gap-2"><b className="font-mono">{u.unit.callsign}</b><OptChip list={cfg.unitStatuses} value={u.unit.status} /><span className="text-xs text-muted">seit {ago(u.assignedAt).replace('vor ', '')}</span></span>{can('cad.assign_unit') && <Button size="sm" variant="ghost" onClick={() => clear.mutate(u.unitId)}>lösen</Button>}</li>)}{!active.length && <li className="text-muted">keine</li>}</ul>
             {can('cad.assign_unit') && !st?.closed && free.length > 0 && (
               <div className="mt-2"><p className="mb-1 text-[11px] text-muted">Zuweisen (ein Klick):</p><div className="flex flex-wrap gap-1">{free.map((u) => (
                 <button key={u.id} type="button" disabled={assign.isPending} onClick={() => assign.mutate(u.id)} title={`${optLabel(cfg.unitStatuses, u.status)}${u.current ? ` – gerade in ${u.current.number}` : ''}`}
@@ -190,6 +186,8 @@ export function IncidentDetail({ id, cfg }: { id: string; cfg: CadConfig }) {
           </div>
         </div>
       </div>
+      <div className="mt-3"><CasesFor type="INCIDENT" id={i.id} /></div>
+      <div className="mt-3"><QualityPanel target="INCIDENT" id={i.id} /></div>
       <h3 className="mb-1 mt-4 text-sm font-semibold">Einsatzchronik</h3>
       <ol className="max-h-80 space-y-1 overflow-auto text-sm">{i.log.map((l) => <li key={l.id} className="flex gap-2"><span className="w-12 shrink-0 text-xs text-muted">{new Date(l.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span><span aria-hidden>{KIND[l.kind] ?? '•'}</span><span className="min-w-0 flex-1">{l.text}{l.authorId && i.names[l.authorId] ? <span className="text-xs text-muted"> – {i.names[l.authorId]}</span> : null}</span></li>)}</ol>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">

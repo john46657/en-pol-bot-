@@ -26,11 +26,12 @@ const hr_training_service_1 = require("./hr-training.service");
 const hr_exam_service_1 = require("./hr-exam.service");
 const service_numbers_service_1 = require("./service-numbers.service");
 const hr_training_sessions_service_1 = require("./hr-training-sessions.service");
+const hr_career_service_1 = require("./hr-career.service");
 const uuid = zod_1.z.string().uuid();
 const date = zod_1.z.string().date();
 const reason = zod_1.z.object({ reason: zod_1.z.string().trim().max(1000).optional() });
 // ───────────── Personal ─────────────
-const overviewQ = zod_1.z.object({ q: zod_1.z.string().max(80).optional(), status: zod_1.z.string().max(32).optional(), rank: zod_1.z.string().max(64).optional(), department: zod_1.z.string().max(64).optional(), state: zod_1.z.enum(['active', 'inactive', 'absent']).optional() });
+const overviewQ = zod_1.z.object({ q: zod_1.z.string().max(80).optional(), status: zod_1.z.string().max(32).optional(), rank: zod_1.z.string().max(64).optional(), department: zod_1.z.string().max(64).optional(), state: zod_1.z.enum(['active', 'inactive', 'absent', 'former']).optional() });
 const createP = zod_1.z.object({ userId: uuid.optional(), discordId: zod_1.z.string().regex(/^\d{15,25}$/).optional(), name: zod_1.z.string().max(64).optional(), rank: zod_1.z.string().max(64).nullable().optional(), department: zod_1.z.string().max(64).nullable().optional(), status: zod_1.z.string().max(32).optional(), joinDate: date.optional(), callsign: zod_1.z.string().max(16).nullable().optional() });
 const updateP = zod_1.z.object({ department: zod_1.z.string().max(64).nullable().optional(), office: zod_1.z.string().max(64).nullable().optional(), status: zod_1.z.string().max(32).optional(), joinDate: date.optional(), callsign: zod_1.z.string().max(16).nullable().optional(), rank: zod_1.z.string().max(64).nullable().optional(), rankSince: date.optional() });
 const record = zod_1.z.object({ type: zod_1.z.enum(hr_people_service_1.RECORD_TYPES), summary: zod_1.z.string().trim().min(2).max(300), details: zod_1.z.string().max(5000).optional(), category: zod_1.z.string().max(60).optional(), severity: zod_1.z.string().max(32).optional(), expiresAt: zod_1.z.string().datetime({ offset: true }).nullable().optional(), awardId: uuid.optional(), attachments: zod_1.z.array(uuid).max(10).optional() });
@@ -38,9 +39,11 @@ const editRecord = zod_1.z.object({ summary: zod_1.z.string().trim().min(2).max(
 let HrController = class HrController {
     core;
     people;
-    constructor(core, people) {
+    careers;
+    constructor(core, people, careers) {
         this.core = core;
         this.people = people;
+        this.careers = careers;
     }
     config() { return this.core.config(); }
     /** Abwesenheitsarten für den Abmeldeantrag (alle im Dashboard). */
@@ -49,6 +52,8 @@ let HrController = class HrController {
     overview(a, q) { return this.people.overview(a, q); }
     create(a, b) { return this.people.create(a, b); }
     profile(a, id) { return this.people.profile(a, id); }
+    /** Digitale Beamtenlaufbahn: chronologische Personalhistorie mit Beförderungsvoraussetzungen */
+    career(a, id) { return this.careers.career(a, id); }
     update(a, id, b) { return this.people.update(a, id, b); }
     remove(a, id) { return this.people.remove(a, id); }
     /** Verwarnungen (Übersicht) und Verwarnen über Discord (/verwarnen). */
@@ -116,6 +121,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], HrController.prototype, "profile", null);
+__decorate([
+    (0, common_1.Get)('people/:id/career'),
+    (0, decorators_1.RequirePermission)('career.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "career", null);
 __decorate([
     (0, common_1.Patch)('people/:id'),
     (0, decorators_1.RequirePermission)('personnel.edit'),
@@ -244,7 +258,7 @@ __decorate([
 exports.HrController = HrController = __decorate([
     (0, swagger_1.ApiTags)('hr'),
     (0, common_1.Controller)('hr'),
-    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService])
+    __metadata("design:paramtypes", [hr_core_service_1.HrCoreService, hr_people_service_1.HrPeopleService, hr_career_service_1.HrCareerService])
 ], HrController);
 // ───────────── Beförderungen & Versetzungen ─────────────
 const kind = zod_1.z.enum(['PROMOTION', 'TRANSFER']);
@@ -492,7 +506,7 @@ exports.HrTrainingController = HrTrainingController = __decorate([
 ], HrTrainingController);
 // ───────────── Prüfungen ─────────────
 const answersBody = zod_1.z.object({ answers: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.unknown()), flagged: zod_1.z.array(zod_1.z.string().max(40)).max(200).optional() });
-const gradeBody = zod_1.z.object({ scores: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.number().min(0).max(100)), feedback: zod_1.z.string().max(2000).optional() });
+const gradeBody = zod_1.z.object({ scores: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.number().min(0).max(100)), criteria: zod_1.z.record(zod_1.z.string().max(40), zod_1.z.record(zod_1.z.string().max(40), zod_1.z.number().min(0).max(100))).optional(), feedback: zod_1.z.string().max(2000).optional() });
 const examPost = zod_1.z.object({ channelId: zod_1.z.string().regex(/^\d{15,25}$/, 'Bitte einen Discord-Kanal wählen.'), pingRoleIds: zod_1.z.array(zod_1.z.string().regex(/^\d{15,25}$/)).max(10).default([]), message: zod_1.z.string().trim().max(1500).optional() });
 const attemptsQ = zod_1.z.object({ examId: uuid.optional(), status: zod_1.z.enum(shared_1.EXAM_ATTEMPT_STATUSES).optional() });
 let HrExamController = class HrExamController {
@@ -514,6 +528,9 @@ let HrExamController = class HrExamController {
     answers(a, id, b) { return this.s.saveAnswers(a, id, b.answers, b.flagged); }
     submit(a, id, b) { return this.s.submit(a, id, b.answers); }
     grade(a, id, b) { return this.s.grade(a, id, b); }
+    /** Ausbildungs- und Prüfungsfortschritt eines Beamten (Personalakte) bzw. der eigene */
+    progress(id) { return this.s.progress(id); }
+    myProgress(a) { return this.s.myProgress(a); }
     void(a, id, b) { return this.s.void(a, id, b.reason); }
 };
 exports.HrExamController = HrExamController;
@@ -652,6 +669,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, void 0]),
     __metadata("design:returntype", void 0)
 ], HrExamController.prototype, "grade", null);
+__decorate([
+    (0, common_1.Get)('people/:id/exam-progress'),
+    (0, decorators_1.RequirePermission)('personnel.view', 'exam.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "progress", null);
+__decorate([
+    (0, common_1.Get)('me/exam-progress'),
+    (0, decorators_1.RequirePermission)('exam.view'),
+    __param(0, (0, decorators_1.CurrentActor)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HrExamController.prototype, "myProgress", null);
 __decorate([
     (0, common_1.Post)('attempts/:id/void'),
     (0, common_1.HttpCode)(200),

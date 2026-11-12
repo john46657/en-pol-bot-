@@ -8,8 +8,10 @@ import { AppError } from '../common/errors';
 import { HrCoreService } from './hr-core.service';
 import { DiscordLiveService } from '../discord/discord-live.service';
 
-export interface OverviewFilter { q?: string; status?: string; rank?: string; department?: string; state?: 'active' | 'inactive' | 'absent' }
-const INACTIVE = ['RESIGNED', 'TERMINATED', 'INACTIVE'];
+export interface OverviewFilter { q?: string; status?: string; rank?: string; department?: string; state?: 'active' | 'inactive' | 'absent' | 'former' }
+/** Ehemalige (ausgetreten/entlassen, z. B. automatisch beim Verlassen des Discord-Servers): Akte bleibt, steht aber nicht mehr in der Liste. */
+export const FORMER = ['RESIGNED', 'TERMINATED'];
+const INACTIVE = [...FORMER, 'INACTIVE'];
 export const RECORD_TYPES = ['NOTE', 'WARNING', 'AWARD', 'RECOMMENDATION'] as const;
 export type RecordType = (typeof RECORD_TYPES)[number];
 
@@ -32,7 +34,8 @@ export class HrPeopleService {
     const now = new Date();
     const where: Prisma.PersonnelWhereInput = {
       ...(f.status ? { employmentStatus: f.status } : {}), ...(f.rank ? { rank: f.rank } : {}), ...(f.department ? { team: f.department } : {}),
-      ...(f.state === 'active' ? { employmentStatus: { notIn: INACTIVE } } : f.state === 'inactive' ? { employmentStatus: { in: INACTIVE } } : {}),
+      ...(f.state === 'active' ? { employmentStatus: { notIn: INACTIVE } } : f.state === 'inactive' ? { employmentStatus: 'INACTIVE' } : f.state === 'former' ? { employmentStatus: { in: FORMER } } : {}),
+      ...(!f.status && (!f.state || f.state === 'absent') ? { NOT: { employmentStatus: { in: FORMER } } } : {}),
       ...(f.state === 'absent' ? { user: { leaveRequests: { some: { status: 'APPROVED', startsAt: { lte: now }, endsAt: { gte: now } } } } } : {}),
     };
     const links = new Map((await this.prisma.discordLink.findMany()).map((l) => [l.userId, l.discordId]));

@@ -13,7 +13,7 @@ const cx = (...c: (string | false | undefined)[]) => twMerge(c.filter(Boolean).j
 
 export function Button({ variant = 'primary', size = 'md', className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'plain'; size?: 'sm' | 'md' }) {
   // plain: Farben kommen komplett aus className (z. B. Discord-Grün/-Rot)
-  const v = { plain: '', primary: 'bg-primary text-primary-fg hover:brightness-110', secondary: 'bg-panel-2 text-fg border border-line hover:bg-line/50', danger: 'bg-danger text-white hover:brightness-110', ghost: 'text-muted hover:text-fg hover:bg-panel-2' }[variant];
+  const v = { plain: '', primary: 'bg-primary text-primary-fg hover:brightness-110', secondary: 'bg-panel text-fg border border-line-strong hover:bg-panel-2', danger: 'bg-danger text-danger-fg hover:brightness-110', ghost: 'text-muted hover:text-fg hover:bg-panel-2' }[variant];
   return <button type="button" {...p} className={cx('inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition disabled:opacity-50 disabled:cursor-not-allowed', size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-2 text-sm', v, className)} />;
 }
 
@@ -29,7 +29,7 @@ export function Card({ title, actions, children, className }: { title?: ReactNod
 const TONES = { neutral: 'bg-panel-2 text-muted border-line', info: 'bg-info/15 text-info border-info/30', success: 'bg-success/15 text-success border-success/30', warning: 'bg-warning/15 text-warning border-warning/30', danger: 'bg-danger/15 text-danger border-danger/30', primary: 'bg-primary/15 text-primary border-primary/30' } as const;
 export type Tone = keyof typeof TONES;
 export function Badge({ tone = 'neutral', children, icon }: { tone?: Tone; children: ReactNode; icon?: string }) {
-  return <span className={cx('inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide', TONES[tone])}>{icon && <span aria-hidden>{icon}</span>}{children}</span>;
+  return <span className={cx('inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs font-semibold', TONES[tone])}>{icon && <span aria-hidden>{icon}</span>}{children}</span>;
 }
 
 /** Status wird immer als Text (nicht nur als Farbe) ausgegeben. */
@@ -55,14 +55,14 @@ export const Field = ({ label, error, children, hint }: { label: string; error?:
   const id = useId();
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="text-xs font-medium text-muted">{label}</label>
+      <label htmlFor={id} className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</label>
       {children(id)}
       {hint && !error && <p className="text-xs text-muted">{hint}</p>}
       {error && <p role="alert" className="text-xs text-danger">{error}</p>}
     </div>
   );
 };
-const inputCls = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-sm placeholder:text-muted/60 focus:border-primary';
+const inputCls = 'w-full rounded-md border border-line-strong bg-panel-2 px-3 py-2 text-sm placeholder:text-muted focus:border-primary';
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(({ className, ...p }, ref) => <input ref={ref} {...p} className={cx(inputCls, className)} />);
 Input.displayName = 'Input';
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className, ...p }, ref) => <textarea ref={ref} rows={4} {...p} className={cx(inputCls, className)} />);

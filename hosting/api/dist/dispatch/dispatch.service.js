@@ -23,6 +23,7 @@ const numbering_1 = require("../common/numbering");
 const transition_1 = require("../common/transition");
 const pagination_1 = require("../common/pagination");
 const locks_service_1 = require("../locks/locks.service");
+const quality_service_1 = require("../quality/quality.service");
 const OPEN = ['CLOSED', 'CANCELLED'];
 let DispatchService = class DispatchService {
     prisma;
@@ -31,13 +32,15 @@ let DispatchService = class DispatchService {
     rt;
     discord;
     locks;
-    constructor(prisma, audit, timeline, rt, discord, locks) {
+    quality;
+    constructor(prisma, audit, timeline, rt, discord, locks, quality) {
         this.prisma = prisma;
         this.audit = audit;
         this.timeline = timeline;
         this.rt = rt;
         this.discord = discord;
         this.locks = locks;
+        this.quality = quality;
     }
     // ---- Units ----
     listUnits() { return this.prisma.unit.findMany({ include: { members: true }, orderBy: { callsign: 'asc' } }); }
@@ -137,6 +140,9 @@ let DispatchService = class DispatchService {
         });
     }
     async setStatus(actor, id, to, note) {
+        // Pflichtangaben vor dem Abschluss (nur wenn im Qualitätsprüfer aktiviert); Abbrechen bleibt immer möglich
+        if (to === 'CLOSED')
+            await this.quality.assertIncidentClosable(id);
         return this.prisma.$transaction(async (tx) => {
             const inc = await tx.incident.findUnique({ where: { id } });
             if (!inc)
@@ -187,6 +193,6 @@ let DispatchService = class DispatchService {
 exports.DispatchService = DispatchService;
 exports.DispatchService = DispatchService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, locks_service_1.LocksService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, audit_service_1.AuditService, timeline_service_1.TimelineService, realtime_service_1.RealtimeService, discord_service_1.DiscordService, locks_service_1.LocksService, quality_service_1.QualityService])
 ], DispatchService);
 //# sourceMappingURL=dispatch.service.js.map

@@ -11,12 +11,13 @@ import { makeNumber } from '../common/numbering';
 import { nextStatus } from '../common/transition';
 import { PageQuery, pageResult, skipTake } from '../common/pagination';
 import { LocksService } from '../locks/locks.service';
+import { QualityService } from '../quality/quality.service';
 
 const OPEN = ['CLOSED', 'CANCELLED'];
 
 @Injectable()
 export class DispatchService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly locks: LocksService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly timeline: TimelineService, private readonly rt: RealtimeService, private readonly discord: DiscordService, private readonly locks: LocksService, private readonly quality: QualityService) {}
 
   // ---- Units ----
   listUnits() { return this.prisma.unit.findMany({ include: { members: true }, orderBy: { callsign: 'asc' } }); }
@@ -118,6 +119,8 @@ export class DispatchService {
   }
 
   async setStatus(actor: Actor, id: string, to: DispatchStatus, note?: string) {
+    // Pflichtangaben vor dem Abschluss (nur wenn im Qualitätsprüfer aktiviert); Abbrechen bleibt immer möglich
+    if (to === 'CLOSED') await this.quality.assertIncidentClosable(id);
     return this.prisma.$transaction(async (tx) => {
       const inc = await tx.incident.findUnique({ where: { id } });
       if (!inc) throw new AppError('NOT_FOUND', 'Einsatz nicht gefunden.');

@@ -42,9 +42,9 @@ export declare class TicketTranscriptService {
             createdAt: Date;
             version: number;
             trigger: string;
-            lastError: string | null;
-            text: string;
             data: Prisma.JsonValue | null;
+            text: string;
+            lastError: string | null;
             createdByName: string | null;
             creatorId: string;
             creatorName: string;
@@ -74,9 +74,9 @@ export declare class TicketTranscriptService {
         createdAt: Date;
         version: number;
         trigger: string;
-        lastError: string | null;
-        text: string;
         data: Prisma.JsonValue | null;
+        text: string;
+        lastError: string | null;
         createdByName: string | null;
         creatorId: string;
         creatorName: string;

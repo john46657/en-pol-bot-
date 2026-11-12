@@ -85,7 +85,7 @@ declare const previewBody: z.ZodObject<Pick<{
     recurrence: z.ZodDefault<z.ZodEnum<["NONE", "DAILY", "WEEKLY", "MONTHLY"]>>;
     templateName: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "type" | "content" | "mentionRoleIds">, "strip", z.ZodTypeAny, {
-    type: "GENERAL" | "TRAINING" | "SYSTEM" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
+    type: "SYSTEM" | "GENERAL" | "TRAINING" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
     content: {
         links: {
             label: string;
@@ -106,7 +106,7 @@ declare const previewBody: z.ZodObject<Pick<{
     };
     mentionRoleIds: string[];
 }, {
-    type: "GENERAL" | "TRAINING" | "SYSTEM" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
+    type: "SYSTEM" | "GENERAL" | "TRAINING" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
     content: {
         title: string;
         description: string;
@@ -168,7 +168,7 @@ export declare class AnnouncementsController {
         templateName: string | null;
     }[]>;
     templates(): {
-        type: "GENERAL" | "TRAINING" | "SYSTEM" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
+        type: "SYSTEM" | "GENERAL" | "TRAINING" | "MEETING" | "DIRECTIVE" | "MAINTENANCE";
         name: string;
         content: {
             title: string;

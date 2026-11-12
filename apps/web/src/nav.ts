@@ -1,5 +1,5 @@
 import { moduleOfPermission, OFF_MODULES } from '@enrp/shared';
-import { CalendarDays, CircleHelp, Network, FolderOpen, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarDays, Compass, FolderKanban, ShieldCheck, TrendingUp, CircleHelp, Network, FolderOpen, ScrollText, GraduationCap, PanelTop, MapPinned, RadioTower, Palette, CalendarOff, LifeBuoy, Monitor, BarChart3, Car, ClipboardList, FileText, Fingerprint, Flag, LayoutDashboard, Settings, UserCheck, Users, Wrench, type LucideIcon } from 'lucide-react';
 
 /** Reiter eines zusammengefassten Menüpunkts: eigene Seite mit eigenem Recht. */
 export interface NavTab { path: string; label: string; perm?: string; area?: string }
@@ -9,38 +9,41 @@ export interface NavTab { path: string; label: string; perm?: string; area?: str
  * zum ersten erlaubten Reiter, oben auf der Seite erscheint die Reiterleiste.
  */
 export interface NavItem { path: string; label: string; icon: LucideIcon; perm?: string; area?: string; tabs?: NavTab[]; group: Group; /** Suchbegriffe für die Menüsuche (zusätzlich zu Name und Reitern). */ keywords?: string }
-export type Group = 'Operations' | 'Records' | 'Organisation' | 'Administration' | 'Account';
+export type Group = 'Einsatz' | 'Akten' | 'Personal' | 'Service' | 'Verwaltung' | 'Konto';
 
 const grp = (label: string, icon: LucideIcon, group: Group, tabs: NavTab[]): NavItem => ({ path: tabs[0]!.path, label, icon, group, tabs });
 
 export const NAV: NavItem[] = [
-  { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Operations', keywords: 'bürger haftbefehl' },
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Operations' },
-  grp('Leitstelle', MapPinned, 'Operations', [
+  { path: '/dashboard', label: 'Startseite', icon: LayoutDashboard, perm: 'dashboard.view', group: 'Einsatz', keywords: 'dashboard übersicht widgets lage' },
+  { path: '/situation', label: 'Lageassistent', icon: Compass, perm: 'situation.view', group: 'Einsatz', keywords: 'lage lagebericht führung' },
+  grp('Leitstelle', MapPinned, 'Einsatz', [
     { path: '/cad', label: 'CAD-Leitstelle', perm: 'cad.view', area: 'dashboard.cad.view' },
     { path: '/incidents', label: 'Einsätze', perm: 'incidents.view' },
     { path: '/admin/danger-level', label: 'Gefahrenstatus', perm: 'settings.manage', area: 'dashboard.settings.view' },
   ]),
-  grp('Team', Users, 'Operations', [
+  { path: '/mdt', label: 'MDT', icon: Monitor, perm: 'dashboard.view', group: 'Einsatz', keywords: 'bürger haftbefehl' },
+  grp('Team', Users, 'Einsatz', [
     { path: '/team', label: 'Team', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/teamlist', label: 'Teamliste', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/staff-lists', label: 'Staff-Liste (Discord)', perm: 'team.view', area: 'dashboard.team.view' },
     { path: '/offices', label: 'Büros', perm: 'team.view', area: 'dashboard.offices.view' },
     { path: '/admin/shifts', label: 'Schichten', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
-  grp('Funk', RadioTower, 'Operations', [
+  grp('Funk', RadioTower, 'Einsatz', [
     { path: '/radio-codes', label: 'Funk-Codes', perm: 'radio.view', area: 'dashboard.radio.view' },
     { path: '/radio-whitelist', label: 'Funk-Whitelist', perm: 'radiowhitelist.view' },
   ]),
-  { path: '/support-tickets', label: 'Support-Tickets', icon: LifeBuoy, perm: 'ticket.view', area: 'dashboard.tickets.view', group: 'Operations' },
-  { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Records' },
-  { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Records' },
-  grp('Berichte', FileText, 'Records', [
+  { path: '/support-tickets', label: 'Support-Tickets', icon: LifeBuoy, perm: 'ticket.view', area: 'dashboard.tickets.view', group: 'Service' },
+  { path: '/persons', label: 'Personen', icon: Fingerprint, perm: 'persons.view', group: 'Akten' },
+  { path: '/vehicles', label: 'Fahrzeuge', icon: Car, perm: 'vehicles.view', group: 'Akten' },
+  grp('Berichte', FileText, 'Akten', [
     { path: '/duty-reports', label: 'Tages-/Wochenberichte', perm: 'dutyreports.view' },
     { path: '/admin/legal-codes', label: 'Tatbestände', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
-  { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Records' },
-  grp('Personal', UserCheck, 'Organisation', [
+  { path: '/wanted', label: 'Fahndungen', icon: Flag, perm: 'wanted.view', group: 'Akten' },
+  { path: '/cases', label: 'Vorgänge', icon: FolderKanban, perm: 'cases.view', group: 'Akten', keywords: 'vorgangsnummer verknüpfung akte' },
+  { path: '/quality', label: 'Qualitätsprüfer', icon: ShieldCheck, perm: 'quality.view', group: 'Akten', keywords: 'pflichtfelder prüfung vollständigkeit' },
+  grp('Personal', UserCheck, 'Personal', [
     { path: '/personnel', label: 'Personal', perm: 'personnel.view' },
     { path: '/personnel/unit', label: 'Meine Einheit', perm: 'personnel.view_unit' },
     { path: '/qualification-registry', label: 'Qualifikationen', perm: 'qualification.view|qualification.manage' },
@@ -50,41 +53,42 @@ export const NAV: NavItem[] = [
     { path: '/service-numbers', label: 'Dienstnummern', perm: 'dienstnummer.view' },
     { path: '/admin/personnel', label: 'Einstellungen', perm: 'personnel.view', area: 'dashboard.settings.view' },
   ]),
-  grp('Ausbildung', GraduationCap, 'Organisation', [
+  grp('Ausbildung', GraduationCap, 'Personal', [
     { path: '/trainings', label: 'Ausbildungen & Prüfungen', perm: 'training.view|exam.view' },
     { path: '/training/materials', label: 'Lernmaterial', perm: 'training.view' },
     { path: '/training/practical', label: 'Praktische Prüfungen', perm: 'exam.view|exam.conduct' },
     { path: '/academy', label: 'Akademie', perm: 'academy.view' },
   ]),
-  grp('Bewerbungen', ClipboardList, 'Organisation', [
+  grp('Bewerbungen', ClipboardList, 'Personal', [
     { path: '/applications', label: 'Bewerbungen', perm: 'applications.view', area: 'dashboard.applications.view' },
     { path: '/application-bans', label: 'Sperren', perm: 'applications.view', area: 'dashboard.applications.view' },
     { path: '/qualifications', label: 'Qualifikationen', perm: 'qualifications.view', area: 'dashboard.applications.view' },
     { path: '/teamchance', label: 'Team-Chance', perm: 'teamchance.view', area: 'dashboard.teamchance.view' },
   ]),
-  grp('Dienstplanung', CalendarDays, 'Organisation', [
+  grp('Dienstplanung', CalendarDays, 'Personal', [
     { path: '/shiftplan', label: 'Schichtplan', perm: 'shiftplan.view' },
     { path: '/calendar', label: 'Kalender', perm: 'calendar.view' },
     { path: '/meetings', label: 'Besprechungen', perm: 'meetings.view' },
   ]),
-  grp('Abmeldungen', CalendarOff, 'Organisation', [
+  grp('Abmeldungen', CalendarOff, 'Personal', [
     { path: '/leave', label: 'Abmeldungen', perm: 'leave.request' },
     { path: '/admin/leave', label: 'Einstellungen', perm: 'settings.view', area: 'dashboard.settings.view' },
   ]),
-  { path: '/org', label: 'Organigramm', icon: Network, perm: 'org.view', group: 'Organisation', keywords: 'abteilung dienstgruppe führung struktur' },
-  { path: '/help', label: 'Hilfe-Center', icon: CircleHelp, perm: 'help.view', group: 'Organisation', keywords: 'faq anleitung wissen hilfe' },
-  grp('Statistiken', BarChart3, 'Organisation', [
+  { path: '/org', label: 'Organigramm', icon: Network, perm: 'org.view', group: 'Personal', keywords: 'abteilung dienstgruppe führung struktur' },
+  { path: '/forecast', label: 'Personalprognose', icon: TrendingUp, perm: 'forecast.view', group: 'Personal', keywords: 'bedarf schichtplanung besetzung' },
+  { path: '/help', label: 'Hilfe-Center', icon: CircleHelp, perm: 'help.view', group: 'Service', keywords: 'faq anleitung wissen hilfe' },
+  grp('Statistiken', BarChart3, 'Service', [
     { path: '/statistics', label: 'Statistik & Ranglisten', perm: 'dashboard.view' },
     { path: '/analytics', label: 'Einsatz-Statistik', perm: 'analytics.view' },
   ]),
-  { path: '/documents', label: 'Dokumente', icon: FolderOpen, perm: 'documents.view', group: 'Organisation', keywords: 'dienstanweisung regelwerk richtlinie vorlage' },
-  grp('Benutzer & Rollen', Users, 'Administration', [
+  { path: '/documents', label: 'Dokumente', icon: FolderOpen, perm: 'documents.view', group: 'Service', keywords: 'dienstanweisung regelwerk richtlinie vorlage' },
+  grp('Benutzer & Rollen', Users, 'Verwaltung', [
     { path: '/admin/users', label: 'Benutzer', perm: 'users.view', area: 'dashboard.settings.view' },
     { path: '/admin/roles', label: 'Rollen & Rechte', perm: 'roles.view', area: 'dashboard.settings.view' },
     { path: '/admin/access-matrix', label: 'Berechtigungsmatrix', perm: 'roles.view', area: 'dashboard.settings.view' },
   ]),
-  { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Administration', keywords: 'allgemein discord kanäle anmeldung' },
-  grp('Discord-Nachrichten', PanelTop, 'Administration', [
+  { path: '/admin/settings', label: 'Einstellungen', icon: Settings, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Verwaltung', keywords: 'allgemein discord kanäle anmeldung' },
+  grp('Discord-Nachrichten', PanelTop, 'Verwaltung', [
     { path: '/admin/embeds', label: 'Embeds', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/form-panels', label: 'Formular-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/info-panels', label: 'Info-Panels', perm: 'settings.view', area: 'dashboard.settings.view' },
@@ -92,13 +96,15 @@ export const NAV: NavItem[] = [
     { path: '/message-builder', label: 'Embed Builder', perm: 'messagebuilder.view' },
     { path: '/announcements', label: 'Ankündigungen', perm: 'announce.view' },
   ]),
-  grp('Protokolle', ScrollText, 'Administration', [
+  grp('Protokolle', ScrollText, 'Verwaltung', [
     { path: '/admin/audit', label: 'Audit-Logs', perm: 'audit.view', area: 'dashboard.logs.view' },
     { path: '/admin/logging', label: 'Logging (Discord)', perm: 'settings.view', area: 'dashboard.settings.view' },
     { path: '/admin/backups', label: 'Backup-Center', perm: 'backup.view|settings.manage', area: 'dashboard.settings.view' },
+    { path: '/admin/integrations', label: 'API-Überwachung', perm: 'integrations.view' },
   ]),
-  { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Administration' },
-  { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Account', keywords: 'design profil 2fa favoriten' },
+  { path: '/admin/system', label: 'Systemstatus', icon: Activity, perm: 'settings.view', area: 'dashboard.settings.view', group: 'Verwaltung', keywords: 'diagnose verbindung bot datenbank ki backup integrationen' },
+  { path: '/admin/studio', label: 'Studio', icon: Wrench, perm: 'studio.view', area: 'dashboard.settings.view', group: 'Verwaltung' },
+  { path: '/me/settings', label: 'Persönlich', icon: Palette, perm: 'dashboard.view', group: 'Konto', keywords: 'design profil 2fa favoriten' },
 ];
 type Can = (p: string) => boolean;
 /** Sichtbar = Modul-Recht und (falls gesetzt) Bereichs-Recht. Nur Komfort – die API prüft selbst. */
@@ -116,7 +122,7 @@ export const isActive = (n: NavItem, pathname: string) => (n.tabs ? n.tabs.map((
 export const navFor = (items: NavItem[], path: string) => items.find((n) => n.path === path || n.tabs?.some((t) => t.path === path));
 /** Zusammengefasster Menüpunkt, zu dem die aktuelle Seite gehört (für die Reiterleiste). */
 export const sectionFor = (pathname: string) => NAV.find((n) => n.tabs && isActive(n, pathname));
-export const GROUPS = ['Operations', 'Records', 'Organisation', 'Administration', 'Account'] as const satisfies readonly Group[];
+export const GROUPS = ['Einsatz', 'Akten', 'Personal', 'Service', 'Verwaltung', 'Konto'] as const satisfies readonly Group[];
 
 const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 /** Menüsuche: Treffer im Namen, in Suchbegriffen oder in einem Reiter. Liefert das Ziel (bei Reiter-Treffer direkt den Reiter). */
@@ -133,6 +139,7 @@ export function searchNav(items: NavItem[], q: string, can: Can): { item: NavIte
 }
 
 /** Deutsche Gruppennamen. Menünamen sind direkt deutsch; das Dashboard ist vollständig deutsch. */
-const DE: Record<string, string> = { Operations: 'Betrieb', Records: 'Akten', Organisation: 'Organisation', Administration: 'Verwaltung', Account: 'Konto' };
+// Ältere gespeicherte Werte (z. B. eingeklappte Gruppen) nutzten englische Schlüssel
+const DE: Record<string, string> = { Operations: 'Einsatz', Records: 'Akten', Organisation: 'Personal', Administration: 'Verwaltung', Account: 'Konto' };
 // `lang` bleibt aus Kompatibilitätsgründen – es wird immer Deutsch ausgegeben.
 export const tr = (text: string, _lang?: string) => DE[text] ?? text;

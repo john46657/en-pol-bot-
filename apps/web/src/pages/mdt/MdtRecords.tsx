@@ -72,7 +72,7 @@ export function MdtVehicles() {
               </button> : <p className="text-sm text-muted">Kein Halter erfasst.</p>}
             </section>
             {detail.data.wanted && <section><h4 className="mb-1 text-sm font-semibold">Fahndungen</h4>{detail.data.wanted.length ? <ul className="space-y-1 text-sm">{detail.data.wanted.map((w) => <li key={w.id} className="flex flex-wrap items-center gap-2">{w.reason}<PriorityBadge priority={w.priority} /><StatusBadge status={w.status} /></li>)}</ul> : <p className="text-sm text-muted">Keine.</p>}</section>}
-            <section><h4 className="mb-1 text-sm font-semibold">Einsätze</h4>{detail.data.incidents.length ? <ul className="space-y-1 text-sm">{detail.data.incidents.map((i) => <li key={i.id}><Link className="hover:underline" to={`/mdt/incidents/${i.id}`}><b>{i.number}</b> · {i.title}</Link></li>)}</ul> : <p className="text-sm text-muted">Keine.</p>}</section>
+            <section><h4 className="mb-1 text-sm font-semibold">Einsätze</h4>{detail.data.incidents.length ? <ul className="space-y-1 text-sm">{detail.data.incidents.map((i) => <li key={i.id}><Link className="hover:underline" to={`/mdt/incidents/${i.id}`}><b className="font-mono">{i.number}</b> · {i.title}</Link></li>)}</ul> : <p className="text-sm text-muted">Keine.</p>}</section>
             {v.notes && <section><h4 className="mb-1 text-sm font-semibold">Notizen</h4><p className="whitespace-pre-wrap text-sm">{v.notes}</p></section>}
           </div>
         )}

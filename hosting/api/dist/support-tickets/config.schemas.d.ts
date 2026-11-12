@@ -1348,19 +1348,19 @@ export declare const statusSchema: z.ZodEffects<z.ZodObject<{
     emoji: z.ZodDefault<z.ZodString>;
     color: z.ZodDefault<z.ZodNumber>;
     position: z.ZodDefault<z.ZodNumber>;
-    kind: z.ZodDefault<z.ZodEnum<["OPEN" | "CLOSED" | "ARCHIVED", ...("OPEN" | "CLOSED" | "ARCHIVED")[]]>>;
+    kind: z.ZodDefault<z.ZodEnum<["OPEN" | "ARCHIVED" | "CLOSED", ...("OPEN" | "ARCHIVED" | "CLOSED")[]]>>;
     isDefault: z.ZodDefault<z.ZodBoolean>;
     isClaimed: z.ZodDefault<z.ZodBoolean>;
     isEscalation: z.ZodDefault<z.ZodBoolean>;
     isClose: z.ZodDefault<z.ZodBoolean>;
     /** feste Bedeutung im Lebenszyklus (je Bedeutung höchstens ein Status) */
-    key: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodEnum<["OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED", ...("OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED")[]]>, z.ZodNull]>>, "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null, "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined>;
+    key: z.ZodEffects<z.ZodOptional<z.ZodUnion<[z.ZodEnum<["OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED", ...("OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED")[]]>, z.ZodNull]>>, "OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null, "OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined>;
 }, "strip", z.ZodTypeAny, {
     color: number;
     name: string;
-    kind: "OPEN" | "CLOSED" | "ARCHIVED";
+    kind: "OPEN" | "ARCHIVED" | "CLOSED";
     position: number;
-    key: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null;
+    key: "OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null;
     emoji: string;
     isDefault: boolean;
     isClaimed: boolean;
@@ -1369,9 +1369,9 @@ export declare const statusSchema: z.ZodEffects<z.ZodObject<{
 }, {
     name: string;
     color?: number | undefined;
-    kind?: "OPEN" | "CLOSED" | "ARCHIVED" | undefined;
+    kind?: "OPEN" | "ARCHIVED" | "CLOSED" | undefined;
     position?: number | undefined;
-    key?: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined;
+    key?: "OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined;
     emoji?: string | undefined;
     isDefault?: boolean | undefined;
     isClaimed?: boolean | undefined;
@@ -1380,9 +1380,9 @@ export declare const statusSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     color: number;
     name: string;
-    kind: "OPEN" | "CLOSED" | "ARCHIVED";
+    kind: "OPEN" | "ARCHIVED" | "CLOSED";
     position: number;
-    key: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null;
+    key: "OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null;
     emoji: string;
     isDefault: boolean;
     isClaimed: boolean;
@@ -1391,9 +1391,9 @@ export declare const statusSchema: z.ZodEffects<z.ZodObject<{
 }, {
     name: string;
     color?: number | undefined;
-    kind?: "OPEN" | "CLOSED" | "ARCHIVED" | undefined;
+    kind?: "OPEN" | "ARCHIVED" | "CLOSED" | undefined;
     position?: number | undefined;
-    key?: "OPEN" | "CLAIMED" | "CLOSED" | "ARCHIVED" | "RESOLVED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined;
+    key?: "OPEN" | "RESOLVED" | "ARCHIVED" | "CLAIMED" | "CLOSED" | "IN_PROGRESS" | "WAITING_USER" | "WAITING_INTERNAL" | "ESCALATED" | null | undefined;
     emoji?: string | undefined;
     isDefault?: boolean | undefined;
     isClaimed?: boolean | undefined;

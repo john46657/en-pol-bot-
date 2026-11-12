@@ -282,7 +282,7 @@ declare const listQ: z.ZodObject<{
     priorityId?: string | undefined;
     departmentId?: string | undefined;
     q?: string | undefined;
-    queue?: "unassigned" | "in_progress" | "waiting" | "overdue" | undefined;
+    queue?: "waiting" | "unassigned" | "in_progress" | "overdue" | undefined;
     from?: Date | undefined;
     creator?: string | undefined;
     to?: Date | undefined;
@@ -299,7 +299,7 @@ declare const listQ: z.ZodObject<{
     page?: number | undefined;
     pageSize?: number | undefined;
     q?: string | undefined;
-    queue?: "unassigned" | "in_progress" | "waiting" | "overdue" | undefined;
+    queue?: "waiting" | "unassigned" | "in_progress" | "overdue" | undefined;
     from?: Date | undefined;
     creator?: string | undefined;
     to?: Date | undefined;

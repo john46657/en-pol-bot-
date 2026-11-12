@@ -86,6 +86,18 @@ export const PERMISSION_CATALOG = {
    * bearbeiten, edit_others = auch Nachrichten anderer Nutzer (und per Link geladene) bearbeiten.
    */
   messagebuilder: ['view', 'create', 'templates_create', 'templates_edit', 'templates_delete', 'send', 'history', 'channels', 'webhooks', 'roles', 'edit', 'edit_others'],
+  /** Lageassistent: view = Lageübersicht ansehen, create = Lageberichte erzeugen und speichern */
+  situation: ['view', 'create'],
+  /** Digitale Beamtenlaufbahn: chronologische Personalhistorie einsehen (Beförderungen, Versetzungen, Prüfungen, Dienstzeiten …) */
+  career: ['view'],
+  /** Vorgangsverknüpfung: view = Vorgänge und Verknüpfungen sehen, manage = Vorgänge anlegen, Datensätze verknüpfen/lösen, Duplikate prüfen */
+  cases: ['view', 'manage'],
+  /** Qualitätsprüfer: view = Prüfungen ausführen und Ergebnisse sehen, exception = begründete Ausnahmen dokumentieren, manage = Prüfregeln/Pflicht vor Abschluss einstellen */
+  quality: ['view', 'exception', 'manage'],
+  /** Personalbedarfs- und Aktivitätsprognose (sensible Personaldaten, nur Führungskräfte) */
+  forecast: ['view'],
+  /** Technische Überwachung: view = API-/Synchronisierungsstatus und Störungen, manage = Störungen quittieren, Wiederholung anstoßen, Alarmschwellen */
+  integrations: ['view', 'manage'],
 } as const;
 
 type Catalog = typeof PERMISSION_CATALOG;

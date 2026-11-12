@@ -43,8 +43,18 @@ export interface ErlcSnapshot {
   killLogs?: { killed: string; killer: string; timestamp: number }[]; commandLogs?: { player: string; command: string; timestamp: number }[]; webhookEvents?: { at: string; summary: string }[];
 }
 export interface CadMapObject { id: string; kind: 'POI' | 'ZONE'; name: string; description: string | null; category: string | null; layer: string; icon: string | null; color: string | null; x: number | null; z: number | null; points: [number, number][] | null; roleIds: string[]; incidentType: string | null; autoAction: string | null }
+/** Verknüpfte Vorgänge (nur mit Recht cases.view) und Aktualität für die Karte. */
+export interface MapCaseRef { id: string; number: string; title: string; status: string }
 export interface CadMapData {
-  incidents: CadIncidentRow[]; calls: CadCallRow[]; units: CadUnitRow[]; objects: CadMapObject[];
+  incidents: (CadIncidentRow & { stale?: boolean; cases?: MapCaseRef[] })[];
+  calls: (CadCallRow & { positionSource?: string | null; notReported?: boolean; cases?: MapCaseRef[] })[];
+  units: CadUnitRow[]; objects: CadMapObject[];
+  /** Ohne genaue Position – werden nicht geraten, sondern aufgelistet */
+  unplaced?: {
+    incidents: { id: string; number: string; title: string; priority: string; status: string; type: string | null; location: string | null; cases: MapCaseRef[] }[];
+    calls: { id: string; callNumber: number; description: string | null; positionDescriptor: string | null; status: string; startedAt: string; notReported: boolean; cases: MapCaseRef[] }[];
+  };
+  erlc?: { id: string; name: string; status: string; lastSyncAt: string | null }[];
   players: (ErlcPlayer & { serverId: string; staff: boolean })[];
   /** Polizeifahrzeuge an der Position ihres Besitzers (ER:LC liefert keine Fahrzeugposition). */
   vehicles: { id: string; name: string; owner: string; plate: string | null; colorHex: string | null; colorName: string | null; x: number; z: number; serverId: string; positionHint: string; category: string | null; icon: string | null; unit: string | null; uncertain: boolean }[]; stale: boolean;

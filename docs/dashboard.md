@@ -26,11 +26,16 @@
 - Teamliste, Voice-Widget, Team-Aktivität, Support-Tickets und Bewerbungen zeigen nur den gewählten Server.
 - Einstellungen je Server: Teams, Büros, Dienstgrade, Organisationsname, Akzentfarbe, Kanäle und die Konfiguration aller Module (`<key>@<serverId>`). Ohne eigenen Wert gelten die Standardwerte, **nicht** die Werte anderer Server.
 
+## Rahmen (Design „Leitstelle & MDT“)
+- **Ein Rahmen für alles:** Dashboard, Leitstelle (`/cad`) und MDT (`/mdt`) nutzen dieselbe Menüleiste und Kopfzeile – kein Wechsel mehr zwischen drei Oberflächen. Leitstelle und MDT zeigen ihre Unterseiten als Reiter über dem Inhalt, ebenso alle zusammengefassten Menüpunkte (z. B. Personal › Beförderungen).
+- **Kopfzeile:** Bereich und Seite, globale Suche (Strg+K), aktueller **Gefahrenstatus** (in der eingestellten Farbe; mit `settings.manage` ein Klick zur Einstellung), **eigener Dienst** mit Dauer (ein Klick beginnt/beendet den Dienst; bei mehreren Schicht-Arten führt er zur Teamseite), Speicherstatus, Discord-Verknüpfung, Benachrichtigungen, Abmelden.
+- **Farben und Schrift** aus dem Design-System (Dunkel/Hell, IBM Plex Sans/Mono, lokal ausgeliefert). Daten, die gefunkt oder abgetippt werden (Einsatznummern, Funkrufnamen, Kennzeichen), stehen in Mono.
+
 ## Menü (Seitenleiste)
-- **Gruppen** Betrieb · Akten · Organisation · Verwaltung · Konto – jede Gruppe lässt sich einklappen (pro Benutzer gespeichert); die Gruppe der geöffneten Seite bleibt offen.
+- **Gruppen** Einsatz · Akten · Personal · Service · Verwaltung · Konto – jede Gruppe lässt sich einklappen (pro Benutzer gespeichert); die Gruppe der geöffneten Seite bleibt offen.
 - **Menüsuche** oben in der Leiste (Taste `/`): findet Menüpunkte auch über ihre Reiter (z. B. „Beförderungen“ → Personal › Beförderungen) und Suchbegriffe; Enter öffnet den ersten Treffer.
-- **Zähler offener Vorgänge** (gelb): offene Tickets, Bewerbungen, Abmeldungen, Berichte zur Prüfung, Beförderungsanträge – nur für Benutzer mit dem jeweiligen Bearbeitungsrecht, Aktualisierung jede Minute.
-- **Handy** (< 768 px): feste Schnellleiste unten (Favoriten zuerst, sonst Dashboard/Leitstelle/Personen/MDT) + „Menü“. **Tablet** (768–1023 px): Symbolleiste mit Gruppen-Trennern, ☰ öffnet das Menü mit Beschriftungen.
+- **Zähler offener Vorgänge**: offene ER:LC-Notrufe an der Leitstelle (rot), offene Tickets, Bewerbungen, Abmeldungen, Berichte zur Prüfung, Beförderungsanträge – nur für Benutzer mit dem jeweiligen Bearbeitungsrecht, Aktualisierung jede Minute.
+- **Handy** (< 768 px): feste Schnellleiste unten (Favoriten zuerst, sonst Startseite/Leitstelle/MDT/Personen) + „Menü“. **Tablet** (768–1023 px): Symbolleiste mit Gruppen-Trennern, ☰ öffnet das Menü mit Beschriftungen.
 - Seitenköpfe zeigen das Symbol des Menüpunkts; Bestätigungen erscheinen als eigener Dialog (kein Browser-Popup); jede Seite lässt sich drucken bzw. als PDF speichern (nur Inhalt, hell).
 
 ## Listen, Akten, Export
@@ -44,8 +49,10 @@
 ## Persönliche Einstellungen (Menü → Persönlich)
 Nur für einen selbst, je Benutzer (Discord-Konto) in der Datenbank – auf PC und Handy gleich: Hell/Dunkel/System, Akzentfarbe, Hintergrund (Farbe, Verlauf, Bild per https-Link), Kartenstil (voll/Glas/Rahmen), Transparenz, Eckenradius, Schatten, Glow, Animationen, Sidebar-Größe und einklappen, Schriftgröße, kompakt/komfortabel, Sprache (Datumsanzeige), Zeitzone, Datumsformat, Benachrichtigungsarten, Favoriten (auch per ☆ im Menü), Schnellaktionen, Teamlisten-Ansicht und -Filter, Voice-Widget.
 
-## Startseite aus Widgets
-„Dashboard bearbeiten“: Widgets hinzufügen, entfernen, per Drag & Drop verschieben, Größe (klein/mittel/groß/ganze Breite), minimieren, ausblenden. Mehrere persönliche Layouts (Vorlagen Standard, Tickets, Team; eigene anlegen, umbenennen, löschen) und Umschalten oben. Widgets: Statistiken, Schnellzugriff, Favoriten, Benachrichtigungen, offene/meine Tickets, Ticket-Aktivität, Bewerbungen, Teamliste, Voice, Team-Aktivitäten, Büros, Dienstgrade, Einsätze, Leitstelle, Einheiten, Fahndungen, Berichte – jeweils nur mit den nötigen Rechten. Recht zum Anpassen: `dashboard.customize`.
+## Startseite: Lage + Widgets
+Oben die **Lage** (ohne Einstellung, je nach Rechten): Kennzahlen (offene Einsätze, Einheiten im Dienst, offene Notrufe, eigene Aufgaben), offene Einsätze nach Priorität, Einheiten mit Funkstatus, „Für dich zu erledigen“ (gleiche Zähler wie im Menü) und „Mein Dienst“. Die Leitstellen-Teile brauchen `cad.view` + `dashboard.cad.view`.
+
+Darunter **Meine Widgets** – „Dashboard bearbeiten“: Widgets hinzufügen, entfernen, per Drag & Drop verschieben, Größe (klein/mittel/groß/ganze Breite), minimieren, ausblenden. Mehrere persönliche Layouts (Vorlagen Standard, Tickets, Team; eigene anlegen, umbenennen, löschen) und Umschalten oben. Widgets: Statistiken, Schnellzugriff, Favoriten, Benachrichtigungen, offene/meine Tickets, Ticket-Aktivität, Bewerbungen, Teamliste, Voice, Team-Aktivitäten, Büros, Dienstgrade, Einsätze, Leitstelle, Einheiten, Fahndungen, Berichte – jeweils nur mit den nötigen Rechten. Recht zum Anpassen: `dashboard.customize`.
 
 ## Teamliste (Menü → Teamliste, Widget „👥 Teamliste“)
 - Aus den Discord-Teamrollen (Zugangsrollen + mit Dashboard-Rollen verknüpfte Rollen) und den Personalakten: Avatar, Name, Team, Dienstgrad, Online-Status, Büro, Dienstnummer, Beitritt. **Keine Voice-Daten.**

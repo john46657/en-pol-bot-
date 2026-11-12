@@ -158,6 +158,8 @@ export declare class DiscordService {
     hasTrackedMessage(key: string): Promise<boolean>;
     getState(key: string): Promise<unknown>;
     setState(key: string, value: unknown): Promise<void>;
+    /** Zeitpunkt der letzten Abfrage durch den Discord-Bot (Systemstatus: „Bot verbunden?“). Nur im Speicher dieses Prozesses. */
+    lastBotPollAt: Date | null;
     pending(limit: number): Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;

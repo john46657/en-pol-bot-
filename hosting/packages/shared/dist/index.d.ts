@@ -88,6 +88,18 @@ declare const PERMISSION_CATALOG: {
      * bearbeiten, edit_others = auch Nachrichten anderer Nutzer (und per Link geladene) bearbeiten.
      */
     readonly messagebuilder: readonly ["view", "create", "templates_create", "templates_edit", "templates_delete", "send", "history", "channels", "webhooks", "roles", "edit", "edit_others"];
+    /** Lageassistent: view = Lageübersicht ansehen, create = Lageberichte erzeugen und speichern */
+    readonly situation: readonly ["view", "create"];
+    /** Digitale Beamtenlaufbahn: chronologische Personalhistorie einsehen (Beförderungen, Versetzungen, Prüfungen, Dienstzeiten …) */
+    readonly career: readonly ["view"];
+    /** Vorgangsverknüpfung: view = Vorgänge und Verknüpfungen sehen, manage = Vorgänge anlegen, Datensätze verknüpfen/lösen, Duplikate prüfen */
+    readonly cases: readonly ["view", "manage"];
+    /** Qualitätsprüfer: view = Prüfungen ausführen und Ergebnisse sehen, exception = begründete Ausnahmen dokumentieren, manage = Prüfregeln/Pflicht vor Abschluss einstellen */
+    readonly quality: readonly ["view", "exception", "manage"];
+    /** Personalbedarfs- und Aktivitätsprognose (sensible Personaldaten, nur Führungskräfte) */
+    readonly forecast: readonly ["view"];
+    /** Technische Überwachung: view = API-/Synchronisierungsstatus und Störungen, manage = Störungen quittieren, Wiederholung anstoßen, Alarmschwellen */
+    readonly integrations: readonly ["view", "manage"];
 };
 type Catalog = typeof PERMISSION_CATALOG;
 type PermissionKey = {
@@ -1779,7 +1791,7 @@ declare const MODULES: readonly [{
     readonly name: "Grundsystem";
     readonly description: "Dashboard, Benutzer, Rollen & Rechte, Einstellungen, Audit, Server";
     readonly system: true;
-    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "notifications", "backup", "help"];
+    readonly permissionPrefixes: ["dashboard", "settings", "users", "roles", "audit", "studio", "analytics", "servers", "modules", "notifications", "backup", "help", "situation", "integrations"];
 }, {
     readonly key: "cad";
     readonly name: "CAD-Leitstelle";
@@ -1798,8 +1810,8 @@ declare const MODULES: readonly [{
 }, {
     readonly key: "reports";
     readonly name: "Berichte";
-    readonly description: "Einsatzberichte, Tages-/Wochenberichte";
-    readonly permissionPrefixes: ["reports", "dutyreports"];
+    readonly description: "Einsatzberichte, Tages-/Wochenberichte, Vorgänge, Qualitätsprüfung";
+    readonly permissionPrefixes: ["reports", "dutyreports", "cases", "quality"];
 }, {
     readonly key: "shift_logs";
     readonly name: "Shift Logs";
@@ -1814,7 +1826,7 @@ declare const MODULES: readonly [{
     readonly key: "personnel";
     readonly name: "Personal";
     readonly description: "Personalakte, Beförderungen, Ausbildung, Abmeldungen, Dienstnummern";
-    readonly permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave", "qualification"];
+    readonly permissionPrefixes: ["personnel", "promotion", "transfer", "training", "exam", "warning", "awards", "dienstnummer", "leave", "qualification", "career", "forecast"];
 }, {
     readonly key: "org";
     readonly name: "Organigramm";
@@ -2952,15 +2964,39 @@ declare const DN_VARIABLES: readonly ["{user}", "{name}", "{dienstnummer}", "{ra
 /** Platzhalter füllen (DM, Nickname, Ankündigungen). Unbekannte Platzhalter bleiben stehen. */
 declare function fillTemplate(tpl: string, vars: Record<string, string | null | undefined>): string;
 
-declare const EXAM_QUESTION_TYPES: readonly ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"];
+declare const EXAM_QUESTION_TYPES: readonly ["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP", "CASE"];
 type ExamQuestionType = (typeof EXAM_QUESTION_TYPES)[number];
 declare const EXAM_QUESTION_TYPE_LABEL: Record<ExamQuestionType, string>;
 declare const EXAM_QUESTION_TYPE_HINT: Record<ExamQuestionType, string>;
+declare const EXAM_DIFFICULTIES: readonly ["EASY", "MEDIUM", "HARD"];
+type ExamDifficulty = (typeof EXAM_DIFFICULTIES)[number];
+declare const EXAM_DIFFICULTY_LABEL: Record<ExamDifficulty, string>;
+/** Fallbeispiel-Arten. Verkehrsunfall und Leitstellenübung wurden bewusst entfernt und dürfen nicht wieder eingeführt werden. */
+declare const EXAM_CASE_KINDS: readonly ["TRAFFIC_STOP", "ARREST", "LEADERSHIP", "OTHER"];
+type ExamCaseKind = (typeof EXAM_CASE_KINDS)[number];
+declare const EXAM_CASE_KIND_LABEL: Record<ExamCaseKind, string>;
+/** Entfernte Aufgaben – Themen/Kategorien mit diesen Namen lehnt der Server ab. */
+declare const EXAM_REMOVED_TASKS: RegExp;
+declare const isRemovedExamTask: (text: string | null | undefined) => boolean;
+declare const rubricItemSchema: z.ZodObject<{
+    id: z.ZodString;
+    label: z.ZodString;
+    points: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    id: string;
+    points: number;
+}, {
+    label: string;
+    id: string;
+    points: number;
+}>;
+type RubricItem = z.infer<typeof rubricItemSchema>;
 /** Typen, bei denen die Antwortmöglichkeiten gemischt werden können. */
 declare const EXAM_SHUFFLE_TYPES: readonly ExamQuestionType[];
 declare const questionSchema: z.ZodObject<{
     id: z.ZodString;
-    type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"]>;
+    type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP", "CASE"]>;
     text: z.ZodString;
     /** Antwortmöglichkeiten (Choice), Einträge in richtiger Reihenfolge (ORDER) oder linke Seite (MATCH) */
     options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -2977,32 +3013,128 @@ declare const questionSchema: z.ZodObject<{
     explanation: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     /** optionales Bild (nur https) */
     image: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    /** Thema (z. B. „Verkehrskontrolle“, „Festnahme“, „Rechtsgrundlagen“) – für Zufallsauswahl und Wiederholung schwacher Themen */
+    topic: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    difficulty: z.ZodDefault<z.ZodEnum<["EASY", "MEDIUM", "HARD"]>>;
+    /** Fallbeispiel-Art (nur CASE) */
+    caseKind: z.ZodDefault<z.ZodNullable<z.ZodEnum<["TRAFFIC_STOP", "ARREST", "LEADERSHIP", "OTHER"]>>>;
+    /** Kriterienkatalog für die manuelle Bewertung (Freitext ohne Stichworte und Fallbeispiele) */
+    rubric: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        label: z.ZodString;
+        points: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        id: string;
+        points: number;
+    }, {
+        label: string;
+        id: string;
+        points: number;
+    }>, "many">>;
 }, "strip", z.ZodTypeAny, {
     options: string[];
-    type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+    type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
     text: string;
     id: string;
     image: string | null;
     partial: boolean;
+    points: number;
     matches: string[];
     correct: string[];
-    points: number;
     tolerance: number;
     explanation: string | null;
+    topic: string | null;
+    difficulty: "MEDIUM" | "EASY" | "HARD";
+    caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+    rubric: {
+        label: string;
+        id: string;
+        points: number;
+    }[];
 }, {
-    type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+    type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
     text: string;
     id: string;
     options?: string[] | undefined;
     image?: string | null | undefined;
     partial?: boolean | undefined;
+    points?: number | undefined;
     matches?: string[] | undefined;
     correct?: string[] | undefined;
-    points?: number | undefined;
     tolerance?: number | undefined;
     explanation?: string | null | undefined;
+    topic?: string | null | undefined;
+    difficulty?: "MEDIUM" | "EASY" | "HARD" | undefined;
+    caseKind?: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null | undefined;
+    rubric?: {
+        label: string;
+        id: string;
+        points: number;
+    }[] | undefined;
 }>;
 type Question = z.infer<typeof questionSchema>;
+/** Zufällige Zusammenstellung: je Regel `count` Fragen mit passendem Thema/Schwierigkeit (leer = beliebig). */
+declare const drawRuleSchema: z.ZodObject<{
+    topic: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    difficulty: z.ZodDefault<z.ZodNullable<z.ZodEnum<["EASY", "MEDIUM", "HARD"]>>>;
+    count: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    topic: string | null;
+    difficulty: "MEDIUM" | "EASY" | "HARD" | null;
+    count: number;
+}, {
+    count: number;
+    topic?: string | null | undefined;
+    difficulty?: "MEDIUM" | "EASY" | "HARD" | null | undefined;
+}>;
+type DrawRule = z.infer<typeof drawRuleSchema>;
+/**
+ * Fragen nach Regeln ziehen. Bevorzugt Fragen aus `prefer` (schwache Themen der Person), sonst zufällig (`rand(n)` → 0..n-1).
+ * Keine Frage wird doppelt gezogen. Reichen die Fragen für eine Regel nicht, wird genommen, was da ist (`missing` zählt den Rest).
+ */
+declare function drawQuestions(all: Question[], rules: DrawRule[], prefer: readonly string[], rand: (n: number) => number): {
+    questions: {
+        options: string[];
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
+        text: string;
+        id: string;
+        image: string | null;
+        partial: boolean;
+        points: number;
+        matches: string[];
+        correct: string[];
+        tolerance: number;
+        explanation: string | null;
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD";
+        caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+        rubric: {
+            label: string;
+            id: string;
+            points: number;
+        }[];
+    }[];
+    missing: number;
+};
+/**
+ * Schwache Themen eines bewerteten Versuchs: Themen, in denen weniger als `passPercent` der Punkte erreicht wurden.
+ * Fragen ohne Thema zählen nicht.
+ */
+declare function weakTopicsOf(questions: Question[], scores: Record<string, number>, passPercent: number): string[];
+/** Punkte aus dem Kriterienkatalog: Summe der vergebenen Kriterien, höchstens die Punkte der Frage. */
+declare function rubricScore(q: Pick<Question, 'points' | 'rubric'>, awarded: Record<string, number>): number;
+/** Fiktive Fallbeispiele als Vorlage (nur erlaubte Aufgaben: Verkehrskontrolle, Festnahme, Führungsaufgabe). */
+declare const EXAM_CASE_TEMPLATES: {
+    caseKind: Exclude<ExamCaseKind, 'OTHER'>;
+    topic: string;
+    text: string;
+    points: number;
+    rubric: {
+        label: string;
+        points: number;
+    }[];
+}[];
 /** Gespeicherte Fragen lesen (ältere Einträge ohne neue Felder bekommen die Standardwerte, kaputte fallen weg). */
 declare function parseQuestions(raw: unknown): Question[];
 /** Akzeptierte Antworten je Lücke („{{50|fünfzig}}“ → ['50', 'fünfzig']). */
@@ -3039,7 +3171,7 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     category: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     questions: z.ZodDefault<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
-        type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP"]>;
+        type: z.ZodEnum<["SINGLE", "MULTI", "YESNO", "TEXT", "NUMBER", "ORDER", "MATCH", "GAP", "CASE"]>;
         text: z.ZodString;
         /** Antwortmöglichkeiten (Choice), Einträge in richtiger Reihenfolge (ORDER) oder linke Seite (MATCH) */
         options: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -3056,32 +3188,81 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
         explanation: z.ZodDefault<z.ZodNullable<z.ZodString>>;
         /** optionales Bild (nur https) */
         image: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        /** Thema (z. B. „Verkehrskontrolle“, „Festnahme“, „Rechtsgrundlagen“) – für Zufallsauswahl und Wiederholung schwacher Themen */
+        topic: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        difficulty: z.ZodDefault<z.ZodEnum<["EASY", "MEDIUM", "HARD"]>>;
+        /** Fallbeispiel-Art (nur CASE) */
+        caseKind: z.ZodDefault<z.ZodNullable<z.ZodEnum<["TRAFFIC_STOP", "ARREST", "LEADERSHIP", "OTHER"]>>>;
+        /** Kriterienkatalog für die manuelle Bewertung (Freitext ohne Stichworte und Fallbeispiele) */
+        rubric: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            label: z.ZodString;
+            points: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            label: string;
+            id: string;
+            points: number;
+        }, {
+            label: string;
+            id: string;
+            points: number;
+        }>, "many">>;
     }, "strip", z.ZodTypeAny, {
         options: string[];
-        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
         text: string;
         id: string;
         image: string | null;
         partial: boolean;
+        points: number;
         matches: string[];
         correct: string[];
-        points: number;
         tolerance: number;
         explanation: string | null;
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD";
+        caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+        rubric: {
+            label: string;
+            id: string;
+            points: number;
+        }[];
     }, {
-        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
         text: string;
         id: string;
         options?: string[] | undefined;
         image?: string | null | undefined;
         partial?: boolean | undefined;
+        points?: number | undefined;
         matches?: string[] | undefined;
         correct?: string[] | undefined;
-        points?: number | undefined;
         tolerance?: number | undefined;
         explanation?: string | null | undefined;
+        topic?: string | null | undefined;
+        difficulty?: "MEDIUM" | "EASY" | "HARD" | undefined;
+        caseKind?: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null | undefined;
+        rubric?: {
+            label: string;
+            id: string;
+            points: number;
+        }[] | undefined;
     }>, "many">>;
     questionCount: z.ZodDefault<z.ZodNumber>;
+    /** Zufällige Zusammenstellung nach Thema/Schwierigkeit (leer = `questionCount` bzw. alle Fragen) */
+    drawRules: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        topic: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+        difficulty: z.ZodDefault<z.ZodNullable<z.ZodEnum<["EASY", "MEDIUM", "HARD"]>>>;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD" | null;
+        count: number;
+    }, {
+        count: number;
+        topic?: string | null | undefined;
+        difficulty?: "MEDIUM" | "EASY" | "HARD" | null | undefined;
+    }>, "many">>;
     passPercent: z.ZodDefault<z.ZodNumber>;
     timeLimitMin: z.ZodDefault<z.ZodNullable<z.ZodNumber>>;
     maxAttempts: z.ZodDefault<z.ZodNumber>;
@@ -3112,18 +3293,31 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     instructions: string | null;
     questions: {
         options: string[];
-        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
         text: string;
         id: string;
         image: string | null;
         partial: boolean;
+        points: number;
         matches: string[];
         correct: string[];
-        points: number;
         tolerance: number;
         explanation: string | null;
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD";
+        caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+        rubric: {
+            label: string;
+            id: string;
+            points: number;
+        }[];
     }[];
     questionCount: number;
+    drawRules: {
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD" | null;
+        count: number;
+    }[];
     passPercent: number;
     timeLimitMin: number | null;
     maxAttempts: number;
@@ -3148,19 +3342,32 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     layout?: "LIST" | "PAGED" | undefined;
     instructions?: string | null | undefined;
     questions?: {
-        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
         text: string;
         id: string;
         options?: string[] | undefined;
         image?: string | null | undefined;
         partial?: boolean | undefined;
+        points?: number | undefined;
         matches?: string[] | undefined;
         correct?: string[] | undefined;
-        points?: number | undefined;
         tolerance?: number | undefined;
         explanation?: string | null | undefined;
+        topic?: string | null | undefined;
+        difficulty?: "MEDIUM" | "EASY" | "HARD" | undefined;
+        caseKind?: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null | undefined;
+        rubric?: {
+            label: string;
+            id: string;
+            points: number;
+        }[] | undefined;
     }[] | undefined;
     questionCount?: number | undefined;
+    drawRules?: {
+        count: number;
+        topic?: string | null | undefined;
+        difficulty?: "MEDIUM" | "EASY" | "HARD" | null | undefined;
+    }[] | undefined;
     passPercent?: number | undefined;
     timeLimitMin?: number | null | undefined;
     maxAttempts?: number | undefined;
@@ -3186,18 +3393,31 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     instructions: string | null;
     questions: {
         options: string[];
-        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
         text: string;
         id: string;
         image: string | null;
         partial: boolean;
+        points: number;
         matches: string[];
         correct: string[];
-        points: number;
         tolerance: number;
         explanation: string | null;
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD";
+        caseKind: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null;
+        rubric: {
+            label: string;
+            id: string;
+            points: number;
+        }[];
     }[];
     questionCount: number;
+    drawRules: {
+        topic: string | null;
+        difficulty: "MEDIUM" | "EASY" | "HARD" | null;
+        count: number;
+    }[];
     passPercent: number;
     timeLimitMin: number | null;
     maxAttempts: number;
@@ -3222,19 +3442,32 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
     layout?: "LIST" | "PAGED" | undefined;
     instructions?: string | null | undefined;
     questions?: {
-        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP";
+        type: "YESNO" | "MULTI" | "NUMBER" | "TEXT" | "SINGLE" | "ORDER" | "MATCH" | "GAP" | "CASE";
         text: string;
         id: string;
         options?: string[] | undefined;
         image?: string | null | undefined;
         partial?: boolean | undefined;
+        points?: number | undefined;
         matches?: string[] | undefined;
         correct?: string[] | undefined;
-        points?: number | undefined;
         tolerance?: number | undefined;
         explanation?: string | null | undefined;
+        topic?: string | null | undefined;
+        difficulty?: "MEDIUM" | "EASY" | "HARD" | undefined;
+        caseKind?: "ARREST" | "OTHER" | "TRAFFIC_STOP" | "LEADERSHIP" | null | undefined;
+        rubric?: {
+            label: string;
+            id: string;
+            points: number;
+        }[] | undefined;
     }[] | undefined;
     questionCount?: number | undefined;
+    drawRules?: {
+        count: number;
+        topic?: string | null | undefined;
+        difficulty?: "MEDIUM" | "EASY" | "HARD" | null | undefined;
+    }[] | undefined;
     passPercent?: number | undefined;
     timeLimitMin?: number | null | undefined;
     maxAttempts?: number | undefined;
@@ -3254,7 +3487,10 @@ declare const examSchema: z.ZodEffects<z.ZodObject<{
 }>;
 type ExamInput = z.infer<typeof examSchema>;
 /** Alle Probleme einer Prüfung (Editor zeigt sie an, Server lehnt ab). */
-declare function examProblems(e: Pick<ExamInput, 'title' | 'questions' | 'questionCount'>): string[];
+declare function examProblems(e: Pick<ExamInput, 'title' | 'questions' | 'questionCount'> & {
+    category?: string | null;
+    drawRules?: DrawRule[];
+}): string[];
 /** Austauschformat für Import/Export einer Prüfung als JSON-Datei. */
 declare const EXAM_EXPORT_FORMAT = "enrp.exam";
 declare const examExportSchema: z.ZodObject<{
@@ -7104,6 +7340,321 @@ declare const ticketDayKey: (d: Date, timeZone: string) => string;
 declare function ticketWeekKey(d: Date, timeZone: string): string;
 
 /**
+ * KI-Bewerbungsprüfung (echte KI, z. B. Google Gemini): bewertet eine vorhandene Bewerbung anhand der tatsächlich gestellten
+ * Fragen und der im Dashboard hinterlegten RP-Regeln/Auswahlkriterien. Nur Entscheidungshilfe – die KI nimmt nie an, lehnt
+ * nie ab und ändert keinen Status. Hier liegt alles, was API, Bot und Dashboard gemeinsam brauchen: Kriterien, Prompt,
+ * Ergebnis-Schema mit strenger Prüfung und das Entfernen personenbezogener Angaben vor dem Versand.
+ */
+/** Die zehn Prüfkriterien (Reihenfolge = Anzeige). */
+declare const AI_REVIEW_CRITERIA: readonly [{
+    readonly key: "vollstaendigkeit";
+    readonly label: "Vollständigkeit der Bewerbung";
+}, {
+    readonly key: "regelverstaendnis";
+    readonly label: "Verständnis der Roleplay-Regeln";
+}, {
+    readonly key: "antwortqualitaet";
+    readonly label: "Qualität und Nachvollziehbarkeit der Antworten";
+}, {
+    readonly key: "situationsverhalten";
+    readonly label: "Verhalten in beschriebenen Situationen";
+}, {
+    readonly key: "dienstverstaendnis";
+    readonly label: "Verständnis der Aufgaben und Verantwortung im Polizeidienst";
+}, {
+    readonly key: "widersprueche";
+    readonly label: "Widersprüche zwischen Antworten";
+}, {
+    readonly key: "unklare_angaben";
+    readonly label: "Fehlende oder unklare Angaben";
+}, {
+    readonly key: "kommunikation";
+    readonly label: "Verständlichkeit der Kommunikation";
+}, {
+    readonly key: "rueckfragen";
+    readonly label: "Sinnvolle Rückfragen für ein Bewerbungsgespräch";
+}, {
+    readonly key: "auswahlkriterien";
+    readonly label: "Übereinstimmung mit den konfigurierten Auswahlkriterien";
+}];
+type AiReviewCriterion = (typeof AI_REVIEW_CRITERIA)[number]['key'];
+declare const AI_REVIEW_RATINGS: readonly ["gut", "ausreichend", "mangelhaft", "nicht_beurteilbar"];
+type AiReviewRating = (typeof AI_REVIEW_RATINGS)[number];
+declare const AI_REVIEW_RATING_LABEL: Record<AiReviewRating, string>;
+declare const AI_REVIEW_OVERALL: readonly ["stark", "solide", "schwach", "nicht_beurteilbar"];
+type AiReviewOverall = (typeof AI_REVIEW_OVERALL)[number];
+declare const AI_REVIEW_OVERALL_LABEL: Record<AiReviewOverall, string>;
+/** Empfehlung für den nächsten Prüfschritt – nie eine Entscheidung. */
+declare const AI_REVIEW_RECOMMENDATIONS: readonly ["geeignet", "rueckfragen_noetig", "manuelle_pruefung"];
+type AiReviewRecommendation = (typeof AI_REVIEW_RECOMMENDATIONS)[number];
+declare const AI_REVIEW_RECOMMENDATION_LABEL: Record<AiReviewRecommendation, string>;
+declare const AI_REVIEW_DISCLAIMER = "KI-Entscheidungshilfe \u2013 kein Urteil. Der Richtwert ist keine objektive Bewertung und keine Erfolgswahrscheinlichkeit; die Entscheidung trifft immer ein Mensch.";
+/** Geprüftes Ergebnis, wie es gespeichert und angezeigt wird. */
+declare const aiReviewResultSchema: z.ZodObject<{
+    gesamt: z.ZodObject<{
+        einstufung: z.ZodEnum<["stark", "solide", "schwach", "nicht_beurteilbar"]>;
+        /** Richtwert 0–10; null = nicht beurteilbar */
+        punkte: z.ZodEffects<z.ZodNullable<z.ZodNumber>, number | null, unknown>;
+        begruendung: z.ZodEffects<z.ZodString, string, unknown>;
+    }, "strip", z.ZodTypeAny, {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte: number | null;
+        begruendung: string;
+    }, {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte?: unknown;
+        begruendung?: unknown;
+    }>;
+    kriterien: z.ZodArray<z.ZodObject<{
+        kriterium: z.ZodEnum<["kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien", ...("kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien")[]]>;
+        bewertung: z.ZodEnum<["gut", "ausreichend", "mangelhaft", "nicht_beurteilbar"]>;
+        begruendung: z.ZodEffects<z.ZodString, string, unknown>;
+    }, "strip", z.ZodTypeAny, {
+        begruendung: string;
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+    }, {
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+        begruendung?: unknown;
+    }>, "many">;
+    staerken: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    schwaechen: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    fehlende_angaben: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    widersprueche: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    rueckfragen: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    unsicherheiten: z.ZodEffects<z.ZodArray<z.ZodString, "many">, string[], unknown>;
+    empfehlung: z.ZodEnum<["geeignet", "rueckfragen_noetig", "manuelle_pruefung"]>;
+    empfehlung_begruendung: z.ZodEffects<z.ZodString, string, unknown>;
+}, "strip", z.ZodTypeAny, {
+    widersprueche: string[];
+    rueckfragen: string[];
+    gesamt: {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte: number | null;
+        begruendung: string;
+    };
+    kriterien: {
+        begruendung: string;
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+    }[];
+    staerken: string[];
+    schwaechen: string[];
+    fehlende_angaben: string[];
+    unsicherheiten: string[];
+    empfehlung: "geeignet" | "rueckfragen_noetig" | "manuelle_pruefung";
+    empfehlung_begruendung: string;
+}, {
+    gesamt: {
+        einstufung: "nicht_beurteilbar" | "stark" | "solide" | "schwach";
+        punkte?: unknown;
+        begruendung?: unknown;
+    };
+    kriterien: {
+        kriterium: "kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien";
+        bewertung: "gut" | "ausreichend" | "mangelhaft" | "nicht_beurteilbar";
+        begruendung?: unknown;
+    }[];
+    empfehlung: "geeignet" | "rueckfragen_noetig" | "manuelle_pruefung";
+    widersprueche?: unknown;
+    rueckfragen?: unknown;
+    staerken?: unknown;
+    schwaechen?: unknown;
+    fehlende_angaben?: unknown;
+    unsicherheiten?: unknown;
+    empfehlung_begruendung?: unknown;
+}>;
+type AiReviewResult = z.infer<typeof aiReviewResultSchema>;
+/**
+ * Antworttext der KI prüfen. Ungültiges JSON, fehlende Gesamtbewertung oder Empfehlung → Fehler (nichts wird gespeichert).
+ * Kriterien, die fehlen oder unbekannt sind, werden ausdrücklich als „nicht beurteilbar“ ergänzt bzw. verworfen.
+ */
+declare function parseAiReview(raw: string): {
+    ok: true;
+    result: AiReviewResult;
+} | {
+    ok: false;
+    error: string;
+};
+declare const aiReviewSettingsSchema: z.ZodObject<{
+    /** KI-Prüfung auf diesem Server anbieten */
+    enabled: z.ZodDefault<z.ZodBoolean>;
+    /**
+     * Neue Bewerbungen (Dashboard/Web und Discord) automatisch im Hintergrund analysieren. Begrenzt durch Tageslimit und
+     * gleichzeitige Analysen; ein Ausfall des KI-Dienstes stört die Bewerbung nie. Bestehende Einstellungen ohne das Feld → an.
+     */
+    auto: z.ZodDefault<z.ZodBoolean>;
+    /** Geltende RP-Regeln (Auszug) – ohne Regeln bewertet die KI das Regelverständnis ausdrücklich als „nicht beurteilbar“ */
+    rules: z.ZodDefault<z.ZodString>;
+    /** Auswahlkriterien des Teams – ohne Kriterien „nicht beurteilbar“ */
+    criteria: z.ZodDefault<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    enabled: boolean;
+    criteria: string;
+    auto: boolean;
+    rules: string;
+}, {
+    enabled?: boolean | undefined;
+    criteria?: string | undefined;
+    auto?: boolean | undefined;
+    rules?: string | undefined;
+}>;
+type AiReviewSettings = z.infer<typeof aiReviewSettingsSchema>;
+/** Entfernt Kontaktdaten und Kennungen aus Freitext (E-Mail, Telefon, Links, Discord-IDs/Erwähnungen, IP-Adressen). */
+declare function redactPersonalData(s: string): string;
+interface AiReviewInput {
+    /** Name der Bewerbung (z. B. „EN Polizei“, „SEK“) */
+    typeName: string;
+    answers: {
+        question: string;
+        answer: string;
+    }[];
+    settings?: Partial<AiReviewSettings>;
+}
+interface AiReviewPrompt {
+    system: string;
+    user: string;
+    chars: number;
+    truncated: boolean;
+    omitted: number;
+}
+declare const AI_REVIEW_SYSTEM_PROMPT: string;
+/** Baut die Anfrage: nur Fragen + Antworten (ohne Namen/IDs), Kontaktdaten entfernt, Länge begrenzt. */
+declare function buildAiReviewPrompt(input: AiReviewInput, limits?: {
+    maxChars?: number;
+    maxAnswerChars?: number;
+}): AiReviewPrompt;
+/**
+ * Stabiler Text, aus dem der „Fingerabdruck“ einer Bewerbung (Hash) berechnet wird: ändert sich eine Antwort oder eine
+ * hinterlegte Regel, gilt ein gespeichertes Ergebnis als möglicherweise veraltet.
+ */
+declare function aiReviewFingerprintSource(input: AiReviewInput): string;
+/** Antwort-Schema für Gemini (`generationConfig.responseSchema`, OpenAPI-Teilmenge). Geprüft wird trotzdem serverseitig. */
+declare const AI_REVIEW_RESPONSE_SCHEMA: {
+    readonly type: "OBJECT";
+    readonly properties: {
+        readonly gesamt: {
+            readonly type: "OBJECT";
+            readonly properties: {
+                readonly einstufung: {
+                    readonly type: "STRING";
+                    readonly enum: readonly ["stark", "solide", "schwach", "nicht_beurteilbar"];
+                };
+                readonly punkte: {
+                    readonly type: "INTEGER";
+                    readonly nullable: true;
+                };
+                readonly begruendung: {
+                    readonly type: "STRING";
+                };
+            };
+            readonly required: readonly ["einstufung", "punkte", "begruendung"];
+        };
+        readonly kriterien: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "OBJECT";
+                readonly properties: {
+                    readonly kriterium: {
+                        readonly type: "STRING";
+                        readonly enum: readonly ["kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien", ...("kommunikation" | "vollstaendigkeit" | "regelverstaendnis" | "antwortqualitaet" | "situationsverhalten" | "dienstverstaendnis" | "widersprueche" | "unklare_angaben" | "rueckfragen" | "auswahlkriterien")[]];
+                    };
+                    readonly bewertung: {
+                        readonly type: "STRING";
+                        readonly enum: readonly ["gut", "ausreichend", "mangelhaft", "nicht_beurteilbar"];
+                    };
+                    readonly begruendung: {
+                        readonly type: "STRING";
+                    };
+                };
+                readonly required: readonly ["kriterium", "bewertung", "begruendung"];
+            };
+        };
+        readonly staerken: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly schwaechen: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly fehlende_angaben: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly widersprueche: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly rueckfragen: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly unsicherheiten: {
+            readonly type: "ARRAY";
+            readonly items: {
+                readonly type: "STRING";
+            };
+        };
+        readonly empfehlung: {
+            readonly type: "STRING";
+            readonly enum: readonly ["geeignet", "rueckfragen_noetig", "manuelle_pruefung"];
+        };
+        readonly empfehlung_begruendung: {
+            readonly type: "STRING";
+        };
+    };
+    readonly required: readonly ["gesamt", "kriterien", "staerken", "schwaechen", "fehlende_angaben", "widersprueche", "rueckfragen", "unsicherheiten", "empfehlung", "empfehlung_begruendung"];
+};
+/**
+ * Unterstützte KI-Anbieter (modular, Auswahl über `AI_PROVIDER` auf dem Server). Alle außer Gemini sprechen die
+ * OpenAI-kompatible Chat-Completions-Schnittstelle. Kostenlose Stufen gibt es bei mehreren Anbietern – dauerhaft garantiert ist das nicht.
+ */
+declare const AI_PROVIDERS: readonly ["gemini", "groq", "openrouter", "mistral", "ollama"];
+type AiProviderName = (typeof AI_PROVIDERS)[number];
+declare const AI_PROVIDER_LABEL: Record<AiProviderName, string>;
+/** Herkunft einer Analyse: Dashboard-Klick, Discord-Button oder automatisch bei neuer Bewerbung. */
+type AiReviewVia = 'WEB' | 'DISCORD' | 'AUTO';
+declare const AI_REVIEW_VIA_LABEL: Record<AiReviewVia, string>;
+type AiReviewStatus = 'RUNNING' | 'DONE' | 'FAILED';
+interface AiReviewView {
+    id: string;
+    status: AiReviewStatus;
+    result: AiReviewResult | null;
+    error: string | null;
+    provider: string;
+    model: string | null;
+    requestedByName: string | null;
+    via: AiReviewVia;
+    createdAt: string;
+    finishedAt: string | null;
+    truncated: boolean;
+}
+interface AiReviewState {
+    /** KI-Schlüssel auf dem Server hinterlegt und Prüfung auf diesem Server eingeschaltet */
+    available: boolean;
+    /** Grund, warum nicht verfügbar */
+    reason: string | null;
+    /** neuestes Ergebnis (laufend, fertig oder fehlgeschlagen) */
+    review: AiReviewView | null;
+    /** letztes erfolgreiches Ergebnis (bleibt sichtbar, wenn eine neue Analyse fehlschlägt) */
+    lastDone: AiReviewView | null;
+    /** Bewerbung oder Regeln seit dem letzten erfolgreichen Ergebnis geändert */
+    stale: boolean;
+}
+
+/**
  * Persönliche Erinnerungen (`/remind-me in what dm`): Zeitangabe prüfen, DM-Option als Wahrheitswert auswerten,
  * Verschieben um 10 Minuten, 30 Minuten, 1 Stunde oder 1 Tag. Gemeinsam für Bot und API.
  */
@@ -7915,4 +8466,212 @@ declare function rankRows<T extends {
 /** CSV mit Semikolon (Excel, deutsch); Formeln werden entschärft (CSV-Injection). */
 declare function toCsv(header: readonly string[], rows: readonly (readonly (string | number | null | undefined)[])[]): string;
 
-export { ACCESS_AREAS, ACCESS_LEVELS, ACCESS_LEVEL_LABEL, AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, ALL_PERMISSIONS, ANNOUNCEMENT_RECURRENCE, ANNOUNCEMENT_STATUSES, ANNOUNCEMENT_TYPES, ANNOUNCEMENT_TYPE_INFO, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AccessArea, type AccessLevel, type AccessLevelState, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AnnouncementContent, type AnnouncementType, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_CONFIG_TABLES, BACKUP_FREQUENCIES, BACKUP_MODULE_GROUPS, BACKUP_PARTS, BACKUP_PART_LABEL, BACKUP_SCOPES, BACKUP_SCOPE_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupFrequency, type BackupModuleKey, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSchedule, type BackupScope, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DOCUMENT_ACCESS, DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABEL, DOCUMENT_MAX_BYTES, DOCUMENT_MIME_TYPES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessageJson, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DocumentAccess, type DocumentCategory, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVENT_CATEGORIES, EVENT_CATEGORY_LABEL, EVENT_STATUSES, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EventCategory, type ExamAttemptStatus, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, type FromJsonOptions, HELP_ARTICLE_KINDS, HELP_ARTICLE_KIND_LABEL, HELP_ARTICLE_STATUSES, HELP_ARTICLE_STATUS_LABEL, HR_EVENTS, HR_EVENT_LABEL, type HelpArticleInput, type HrConfig, type HrEvent, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, type JsonError, type JsonParseResult, LEADERBOARD_METRICS, LEARNING_KINDS, LEARNING_KIND_LABEL, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOCKOUT_CRITICAL, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LeaderboardMetric, type LearningMaterialInput, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MAX_MENTION_ROLES, MAX_OCCURRENCES, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_EXAMPLE_TEMPLATES, MB_LIMITS, MB_TEMPLATE_EXPORT_FORMAT, MEETING_TASK_STATUSES, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbExampleTemplate, type MbField, type MbInteractive, type MbIssue, type MbJsonIssue, type MbJsonResult, type MbMessage, type MbRow, type MbSelectOption, type MbTemplateExport, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NOTIFICATION_EVENTS, NO_TICKET_BUTTON, type NotificationChannel, type NotificationEventDef, type NotificationPrefs, OFF_MODULES, ORG_TIME_ZONE, ORG_UNIT_KINDS, ORG_UNIT_KIND_LABEL, type OrgNodeLike, type OrgTree, type OrgUnitInput, type OrgUnitKind, PARTICIPANT_STATUSES, PARTICIPANT_STATUS_LABEL, PERIOD_LABEL, PERMISSION_CATALOG, PERSONNEL_DOCUMENT_KINDS, PERSONNEL_DOCUMENT_KIND_LABEL, PERSONNEL_NOTE_CATEGORIES, PLANNED_SHIFT_STATUSES, PLANNED_SHIFT_STATUS_LABEL, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type ParticipantStatus, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PlannedShiftStatus, type PostalCalibration, type PostalSample, type PracticalCriterion, type PracticalExamInput, type PracticalScores, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUALIFICATION_SOURCES, QUALIFICATION_SOURCE_LABEL, QUALIFICATION_STATUSES, QUALIFICATION_STATUS_LABEL, QUESTION_TYPES, type QualificationDefInput, type QualificationSource, type QualificationStatus, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, RECURRENCE_FREQS, REMINDER_CHOICES, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type RecurrenceFreq, type RecurrenceRule, type ReportField, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, STATUS_KINDS, STATUS_LABEL, STAT_PERIODS, type SlaInput, type StaffList, type StaffMember, type StatPeriod, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accessDiff, accessLevelGrants, accessLevelOf, accountAge, activeFields, ageOf, aiCheck, announcementMessage, applyAccessLevel, applyCallCalibration, applyPanelParts, areaActions, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, backupScheduleSchema, buildOrgTree, can, canDelegate, canRespond, canSeeDocument, canTransition, checkAnswer, checkStatusChange, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, compareStaffing, conditionMatches, coverage, csvCell, customIdsOf, dangerLevelOf, defaultTicketButtons, deliveryFor, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, dueReminders, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveQualificationStatus, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, examExportSchema, examProblems, examSchema, expandRecurrence, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, helpArticleSchema, helpCategorySchema, helpSlug, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isBackupDue, isCatalogPermission, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, learningMaterialSchema, lineCol, loadLevel, localDate, localMidnight, localParts, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbFromDiscordJson, mbId, mbMessageSchema, mbParseJsonText, mbRowSchema, mbSelectOptionSchema, mbSummary, mbTemplateExportSchema, mbToDiscordJson, mbToDiscordJsonText, mdtConfigSchema, median, minutesWithin, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextRecurrence, nextWeekStart, normalizeField, normalizeRating, notificationEvent, notifyRuleSchema, onErlcMap, orgAncestors, orgDescendants, orgUnitSchema, orgWouldCycle, overlaps, panelFieldSchema, panelUnits, parseAutomation, parseBool, parseCsv, parseFormDate, parseJsonWithPosition, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, passedReminders, percentile, periodEnd, periodLabel, periodRange, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, practicalCriterionSchema, practicalExamSchema, qualiPanelParts, qualificationDefSchema, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankRows, rankSchema, ratingLabel, ratingTone, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, scorePractical, severitySchema, slaState, splitGaps, staffListSchema, staffSectionSchema, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, toCsv, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults, zonedTime };
+/**
+ * Automatischer Qualitätsprüfer für Berichte, Fahndungen und Einsätze. Reine Regeln ohne Datenbank: der Server lädt die
+ * Datensätze und übergibt sie hier. Die Regeln melden nur, was fehlt oder sich widerspricht – sie ergänzen nie Inhalte und
+ * ändern nichts. Korrigieren muss immer ein Mensch.
+ */
+declare const QUALITY_TARGETS: readonly ["REPORT", "WANTED", "INCIDENT"];
+type QualityTarget = (typeof QUALITY_TARGETS)[number];
+declare const QUALITY_TARGET_LABEL: Record<QualityTarget, string>;
+interface QualityFinding {
+    /** stabiler Schlüssel der Regel (für Ausnahmen), z. B. `report.incident_missing` */
+    code: string;
+    level: 'ERROR' | 'WARNING';
+    /** betroffenes Feld (für die Markierung im Formular) */
+    field: string;
+    message: string;
+    /** konkreter Korrekturhinweis */
+    hint: string;
+}
+declare const qualityConfigSchema: z.ZodObject<{
+    /** Bericht erst einreichen, wenn keine Fehler (ohne dokumentierte Ausnahme) offen sind */
+    enforceReportSubmit: z.ZodDefault<z.ZodBoolean>;
+    /** Einsatz erst abschließen, wenn keine Fehler (ohne dokumentierte Ausnahme) offen sind */
+    enforceIncidentClose: z.ZodDefault<z.ZodBoolean>;
+    /** Mindestlänge des Berichtstexts (Zeichen) – kürzer = Warnung */
+    reportMinLength: z.ZodDefault<z.ZodNumber>;
+    /** Berichtsarten, die eine Einsatznummer brauchen */
+    reportTypesRequiringIncident: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    /** Mindestlänge der Fahndungsbeschreibung (Zeichen) – kürzer = Warnung */
+    wantedMinDescription: z.ZodDefault<z.ZodNumber>;
+    /** Abgeschlossener Einsatz ohne Bericht: aus, Warnung oder Fehler */
+    incidentReportRequired: z.ZodDefault<z.ZodEnum<["OFF", "WARNING", "ERROR"]>>;
+    /** Entwurf gilt nach so vielen Stunden als liegen geblieben (0 = aus) */
+    staleDraftHours: z.ZodDefault<z.ZodNumber>;
+    /** Offener Einsatz ohne Änderung nach so vielen Stunden (0 = aus) */
+    staleIncidentHours: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    enforceReportSubmit: boolean;
+    enforceIncidentClose: boolean;
+    reportMinLength: number;
+    reportTypesRequiringIncident: string[];
+    wantedMinDescription: number;
+    incidentReportRequired: "ERROR" | "WARNING" | "OFF";
+    staleDraftHours: number;
+    staleIncidentHours: number;
+}, {
+    enforceReportSubmit?: boolean | undefined;
+    enforceIncidentClose?: boolean | undefined;
+    reportMinLength?: number | undefined;
+    reportTypesRequiringIncident?: string[] | undefined;
+    wantedMinDescription?: number | undefined;
+    incidentReportRequired?: "ERROR" | "WARNING" | "OFF" | undefined;
+    staleDraftHours?: number | undefined;
+    staleIncidentHours?: number | undefined;
+}>;
+type QualityConfig = z.infer<typeof qualityConfigSchema>;
+/** Uhrzeit-Spannen, deren Ende vor dem Beginn liegt (mögliche Verwechslung – oder über Mitternacht). */
+declare function contradictoryTimeSpans(text: string): string[];
+/** Einsatznummern im Text (Präfix-Jahr-Nummer, z. B. E-2026-00421). */
+declare const incidentNumbersIn: (text: string, prefix?: string) => string[];
+interface ReportInput {
+    type: string;
+    title: string;
+    body: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+    incidentId: string | null;
+    /** verknüpfter Einsatz; `null` = Verknüpfung zeigt ins Leere (gelöscht, anderer Server) */
+    incident: {
+        number: string;
+        createdAt: Date;
+        closedAt: Date | null;
+    } | null;
+    /** im Text genannte Einsatznummern, die es nicht gibt */
+    unknownNumbers: string[];
+}
+declare function checkReport(r: ReportInput, cfg: QualityConfig, now?: Date): QualityFinding[];
+interface WantedInput {
+    reason: string;
+    description: string | null;
+    priority: string;
+    status: string;
+    createdAt: Date;
+    expiresAt: Date | null;
+    personId: string | null;
+    vehicleId: string | null;
+    /** verknüpfte Person; `null` = Verknüpfung zeigt ins Leere */
+    person: {
+        robloxUserId: string | null;
+    } | null;
+    vehicle: {
+        plate: string;
+    } | null;
+}
+declare function checkWanted(w: WantedInput, cfg: QualityConfig, now?: Date): QualityFinding[];
+interface IncidentInput {
+    number: string | null;
+    title: string;
+    description: string | null;
+    location: string | null;
+    type: string | null;
+    priority: string;
+    status: string;
+    closed: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    closedAt: Date | null;
+    mapX: number | null;
+    mapZ: number | null;
+    /** Einheiten, die je zugewiesen waren */
+    unitsEver: number;
+    /** Berichte, die auf den Einsatz verweisen */
+    reports: number;
+}
+declare function checkIncident(i: IncidentInput, cfg: QualityConfig, now?: Date): QualityFinding[];
+/** Ergebnis mit dokumentierten Ausnahmen: Fehler mit Ausnahme blockieren nicht mehr, bleiben aber sichtbar. */
+declare function splitFindings<E extends {
+    code: string;
+}>(findings: QualityFinding[], exceptions: E[]): {
+    errors: QualityFinding[];
+    warnings: QualityFinding[];
+    excepted: {
+        exception: E;
+        /** stabiler Schlüssel der Regel (für Ausnahmen), z. B. `report.incident_missing` */
+        code: string;
+        level: "ERROR" | "WARNING";
+        /** betroffenes Feld (für die Markierung im Formular) */
+        field: string;
+        message: string;
+        /** konkreter Korrekturhinweis */
+        hint: string;
+    }[];
+    ok: boolean;
+};
+
+interface Span {
+    start: Date;
+    end: Date;
+}
+type Confidence = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+declare const CONFIDENCE_LABEL: Record<Confidence, string>;
+/** Aussagekraft nach Anzahl Wochen mit Daten und Anzahl Einzelwerte. */
+declare function confidenceFor(weeksWithData: number, samples: number): {
+    level: Confidence;
+    reason: string;
+};
+/**
+ * Durchschnittliche Besetzung je Wochentag (0 = Montag) und Stunde (lokale Zeit): Summe der Dienstminuten in diesem
+ * Zeitfenster ÷ (60 × Anzahl dieser Wochentag-Stunden im Zeitraum). `samples` = Anzahl der Stunden-Fenster im Zeitraum.
+ */
+declare function staffingHeatmap(spans: Span[], from: Date, to: Date, timeZone?: string): {
+    avg: (number | null)[][];
+    slots: number[][];
+};
+/** Lineare Regression über gleichmäßig verteilte Werte (Index = Zeit). */
+declare function linearTrend(values: number[]): {
+    slope: number;
+    intercept: number;
+    r2: number;
+} | null;
+/**
+ * Schätzung der nächsten `steps` Werte: Mittel der letzten Werte plus Trend (nie negativ). Ohne mindestens 3 Werte keine Schätzung.
+ * `range` = einfache Unsicherheit (± Standardabweichung der letzten Werte).
+ */
+declare function estimateNext(values: number[], steps?: number): {
+    value: number;
+    low: number;
+    high: number;
+}[] | null;
+/** Auffällige Veränderungen: Werte, die mehr als `z` Standardabweichungen vom Mittel der vorherigen Werte abweichen (mind. 4 Vorwerte). */
+declare function anomalies(series: {
+    label: string;
+    value: number;
+}[], z?: number): {
+    label: string;
+    value: number;
+    expected: number;
+    direction: "up" | "down";
+}[];
+/**
+ * Zeitfenster mit geringer Besetzung: Stunden, in denen im Mittel weniger als `minStaff` Beamte im Dienst waren,
+ * zusammengefasst zu zusammenhängenden Blöcken je Wochentag. Fenster ohne Messung (kein Zeitraum) werden nicht gemeldet.
+ */
+declare function lowStaffingWindows(avg: (number | null)[][], minStaff: number): {
+    weekday: number;
+    day: string;
+    from: number;
+    to: number;
+    avg: number;
+}[];
+
+/**
+ * Intelligente Vorgangsverknüpfung: ein Vorgang (eindeutige Vorgangsnummer) bündelt Datensätze aus den bestehenden Modulen.
+ * Verknüpft wird nur ausdrücklich (durch eine berechtigte Person) – nie automatisch über ähnliche Namen.
+ */
+declare const CASE_LINK_TYPES: readonly ["INCIDENT", "CALL", "REPORT", "WANTED", "PERSON", "VEHICLE", "TICKET", "COMPLAINT", "UNIT", "OFFICER", "HR_REQUEST", "PERSONNEL_RECORD"];
+type CaseLinkType = (typeof CASE_LINK_TYPES)[number];
+declare const CASE_LINK_LABEL: Record<CaseLinkType, string>;
+/** Recht, das zum Ansehen der Details eines verknüpften Datensatzes nötig ist (ohne Recht: nur „Verknüpfung vorhanden“). */
+declare const CASE_LINK_VIEW_PERMISSION: Record<CaseLinkType, string>;
+/** Rolle eines Datensatzes im Vorgang (frei wählbar, Vorschläge). */
+declare const CASE_LINK_ROLES: readonly ["BETEILIGT", "TATVERDÄCHTIG", "ZEUGE", "GESCHÄDIGT", "EINGESETZT", "BEZUG"];
+declare const CASE_STATUSES: readonly ["OPEN", "IN_PROGRESS", "CLOSED"];
+type CaseStatus = (typeof CASE_STATUSES)[number];
+declare const CASE_STATUS_LABEL: Record<CaseStatus, string>;
+/** Ähnlichkeit zweier Titel (Jaccard über Wörter ab 3 Zeichen) – nur für VORSCHLÄGE, nie für automatisches Zusammenführen. */
+declare function titleSimilarity(a: string, b: string): number;
+
+export { ACCESS_AREAS, ACCESS_LEVELS, ACCESS_LEVEL_LABEL, AI_CHECK_HINT, AI_CHECK_LEVEL_LABEL, AI_PROVIDERS, AI_PROVIDER_LABEL, AI_REVIEW_CRITERIA, AI_REVIEW_DISCLAIMER, AI_REVIEW_OVERALL, AI_REVIEW_OVERALL_LABEL, AI_REVIEW_RATINGS, AI_REVIEW_RATING_LABEL, AI_REVIEW_RECOMMENDATIONS, AI_REVIEW_RECOMMENDATION_LABEL, AI_REVIEW_RESPONSE_SCHEMA, AI_REVIEW_SYSTEM_PROMPT, AI_REVIEW_VIA_LABEL, ALL_PERMISSIONS, ANNOUNCEMENT_RECURRENCE, ANNOUNCEMENT_STATUSES, ANNOUNCEMENT_TYPES, ANNOUNCEMENT_TYPE_INFO, APPLICATION_STATUSES, APPLICATION_TRANSITIONS, APPLICATION_VARIABLES, AREA_PERMISSIONS, AUTOMATION_KEYS, AUTOMATION_LABELS, AUTOMATION_SOURCES, type AccessArea, type AccessLevel, type AccessLevelState, type AiCheckAnswer, type AiCheckLevel, type AiCheckResult, type AiProviderName, type AiReviewCriterion, type AiReviewInput, type AiReviewOverall, type AiReviewPrompt, type AiReviewRating, type AiReviewRecommendation, type AiReviewResult, type AiReviewSettings, type AiReviewState, type AiReviewStatus, type AiReviewVia, type AiReviewView, type AnnouncementContent, type AnnouncementType, type AnswerCheck, type ApplicationPanelConfig, type ApplicationPanelKind, type ApplicationPanelParts, type ApplicationStatus, type ApplicationVars, type AutomationSource, BACKUP_CONFIG_TABLES, BACKUP_FREQUENCIES, BACKUP_MODULE_GROUPS, BACKUP_PARTS, BACKUP_PART_LABEL, BACKUP_SCOPES, BACKUP_SCOPE_LABEL, BOT_COMMAND_MODULES, type BackupChannel, type BackupConfig, type BackupFrequency, type BackupModuleKey, type BackupOverwrite, type BackupPart, type BackupRestoreResult, type BackupRole, type BackupSchedule, type BackupScope, type BackupSettings, type ButtonStyleName, CAD_EVENTS, CAD_EVENT_LABELS, CAD_EVENT_SEND_TYPE, CAD_FEEDBACK, CAD_FEEDBACK_KEYS, CAD_LINK_ACTIONS, CAD_LINK_LABELS, CAD_LINK_SEND_TYPES, CAD_WIDGETS, CAD_WIDGET_LABELS, CAPACITY_ACTIONS, CASE_LINK_LABEL, CASE_LINK_ROLES, CASE_LINK_TYPES, CASE_LINK_VIEW_PERMISSION, CASE_STATUSES, CASE_STATUS_LABEL, CLAIM_MODES, CLOSE_REASON_MODES, CLOSE_REASON_SOURCES, CLOSE_REQUEST_APPROVERS, COMPLAINT_STATUSES, COMPLAINT_TRANSITIONS, CONFIDENCE_LABEL, type CadConfig, type CadEvent, type CadFeedbackKey, type CadField, type CadLayer, type CadMapConfig, type CadMarkerStyle, type CadOption, type CadRoute, type CadStatusOption, type CadUnitType, type CallCalibration, type CallCalibrationPair, type CapacityAction, type CaseLinkType, type CaseStatus, type ClaimMode, type CloseReasonMode, type CloseReasonSource, type CloseRequestApprovers, type ComplaintStatus, type ComponentButton, type ComponentSelect, type Confidence, DEFAULT_APPLICATION_MESSAGES, DEFAULT_AUTOMATION, DEFAULT_CAD_CONFIG, DEFAULT_DANGER_CONFIG, DEFAULT_FLEET_CONFIG, DEFAULT_HR_CONFIG, DEFAULT_MDT_CONFIG, DEFAULT_RADIO_ROLE_RULES, DEFAULT_TICKET_REF_PREFIX, DEFAULT_TIME_ZONE, DEFAULT_VERIFY_CONFIG, DEFAULT_WELCOME_CONFIG, DISCORD_LIMITS, DISPATCH_STATUSES, DISPATCH_TRANSITIONS, DN_STATUSES, DN_STATUS_LABEL, DN_VARIABLES, DOCUMENT_ACCESS, DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABEL, DOCUMENT_MAX_BYTES, DOCUMENT_MIME_TYPES, DRIVER_HINT, DRIVER_STATES, DUTY_STATUSES, type DangerConfig, type DangerLevelDef, type DiscordBackupData, type DiscordMessageJson, type DiscordMessagePayload, type DispatchStatus, type DnSettings, type DnStatus, type DocumentAccess, type DocumentCategory, type DrawRule, type DriverState, type DutySpan, type DutyStatus, ERLC_BUILTIN_MAP, ERLC_DEFAULT_BLOCKED, ERLC_DEFAULT_CRITICAL, ERLC_FEATURES, ERLC_FEATURE_LABELS, ERLC_MAP_SIZE, ERLC_POLL_OPTIONS, ERLC_POSTALS, ERLC_STATUSES, ERLC_STATUS_LABEL, EVENT_CATEGORIES, EVENT_CATEGORY_LABEL, EVENT_STATUSES, EXAM_ATTEMPT_STATUSES, EXAM_ATTEMPT_STATUS_LABEL, EXAM_CASE_KINDS, EXAM_CASE_KIND_LABEL, EXAM_CASE_TEMPLATES, EXAM_DIFFICULTIES, EXAM_DIFFICULTY_LABEL, EXAM_EXPORT_FORMAT, EXAM_LAYOUTS, EXAM_LAYOUT_LABEL, EXAM_QUESTION_TYPES, EXAM_QUESTION_TYPE_HINT, EXAM_QUESTION_TYPE_LABEL, EXAM_REMOVED_TASKS, EXAM_REVIEW_LABEL, EXAM_REVIEW_MODES, EXAM_SHUFFLE_TYPES, type Effect, type EmbedSpec, type ErlcFeature, type ErlcStatus, type EventCategory, type ExamAttemptStatus, type ExamCaseKind, type ExamDifficulty, type ExamInput, type ExamLayout, type ExamQuestionType, type ExamReviewMode, FORM_FIELDS_PER_MODAL, FORM_FILE_TYPES, FORM_MAX_FILE_BYTES, FORM_PANEL_VARIABLES, FORM_QUESTION_TYPES, type Field, type FleetConfig, type FleetInternalInput, type FleetModelInput, type FormAnswer, type FormField, type FormFile, type FormModalField, type FormModalSpec, type FormOption, type FormOptions, type FormPanel, type FormQuestionType, type FormRawValue, type FromJsonOptions, HELP_ARTICLE_KINDS, HELP_ARTICLE_KIND_LABEL, HELP_ARTICLE_STATUSES, HELP_ARTICLE_STATUS_LABEL, HR_EVENTS, HR_EVENT_LABEL, type HelpArticleInput, type HrConfig, type HrEvent, type IncidentInput, type InfoOption, type InfoPanel, InvalidTransitionError, JOIN_LOG_TOLERANCE_MS, type JsonError, type JsonParseResult, LEADERBOARD_METRICS, LEARNING_KINDS, LEARNING_KIND_LABEL, LEGACY_DANGER, LOAD_DOT, LOAD_LABEL, LOAD_WARN_RATIO, LOCKOUT_CRITICAL, LOG_CATEGORIES, LOG_DEFAULT_OFF, LOG_TYPES, type LeaderboardMetric, type LearningMaterialInput, type LoadLevel, type LogCategoryKey, type LoggingConfig, MAX_FORM_OPTIONS, MAX_FORM_QUESTIONS, MAX_MENTION_ROLES, MAX_OCCURRENCES, MB_BUTTON_STYLES, MB_DEFAULT_CATEGORIES, MB_EXAMPLE_TEMPLATES, MB_LIMITS, MB_TEMPLATE_EXPORT_FORMAT, MEETING_TASK_STATUSES, MODULES, MODULE_KEYS, MUSIC_TRACKS, type MbAction, type MbButton, type MbButtonStyle, type MbChannelBotPerms, type MbDocumentData, type MbEmbed, type MbExampleTemplate, type MbField, type MbInteractive, type MbIssue, type MbJsonIssue, type MbJsonResult, type MbMessage, type MbRow, type MbSelectOption, type MbTemplateExport, type MbValidateOptions, type MdtConfig, type MessageSpec, type ModuleDef, type ModuleKey, NOTIFICATION_EVENTS, NO_TICKET_BUTTON, type NotificationChannel, type NotificationEventDef, type NotificationPrefs, OFF_MODULES, ORG_TIME_ZONE, ORG_UNIT_KINDS, ORG_UNIT_KIND_LABEL, type OrgNodeLike, type OrgTree, type OrgUnitInput, type OrgUnitKind, PARTICIPANT_STATUSES, PARTICIPANT_STATUS_LABEL, PERIOD_LABEL, PERMISSION_CATALOG, PERSONNEL_DOCUMENT_KINDS, PERSONNEL_DOCUMENT_KIND_LABEL, PERSONNEL_NOTE_CATEGORIES, PLANNED_SHIFT_STATUSES, PLANNED_SHIFT_STATUS_LABEL, POLICE_APPLICATION_KEY, POSITION_HINT, PRIORITIES, PRIORITY_LABEL, PROFILE_FIELDS, PROFILE_FIELD_LABEL, PROFILE_SECTIONS, PROFILE_SECTION_LABEL, type PanelUnit, type ParticipantStatus, type PermissionContext, type PermissionGrant, type PermissionKey, type PersonDetails, type PlannedShiftStatus, type PostalCalibration, type PostalSample, type PracticalCriterion, type PracticalExamInput, type PracticalScores, type PresenceRow, type Priority, type ProfileSection, type PromotionCheck, QUALIFICATION_SOURCES, QUALIFICATION_SOURCE_LABEL, QUALIFICATION_STATUSES, QUALIFICATION_STATUS_LABEL, QUALITY_TARGETS, QUALITY_TARGET_LABEL, QUESTION_TYPES, type QualificationDefInput, type QualificationSource, type QualificationStatus, type QualityConfig, type QualityFinding, type QualityTarget, type Question, type QuestionType, RADIO_CSV_COLUMNS, RADIO_GRANT_SOURCES, RADIO_GRANT_SOURCE_LABEL, RADIO_GRANT_STATUSES, RADIO_GRANT_STATUS_LABEL, RATING_SCALE_MAX, RATING_SCALE_MIN, RECURRENCE_FREQS, REMINDER_CHOICES, REMINDER_MAX_MS, REMINDER_MAX_PENDING, REMINDER_MIN_MS, REMINDER_SNOOZE, REMINDER_SNOOZE_MINUTES, REMINDER_TEXT_MAX, REPORT_FIELD_TYPES, REPORT_STATUSES, REPORT_STATUS_LABEL, REPORT_TRANSITIONS, REPORT_TYPES, REQUEST_STATUSES, REQUEST_STATUS_DEFAULT, REQUIREMENT_LABEL, REQUIREMENT_TYPES, ROBLOX_NAME, ROBLOX_VERIFICATION_STATUSES, type RadioGrantSource, type RadioGrantState, type RadioGrantStatus, type RadioRoleRules, type RangeInput, type RankInput, type RecurrenceFreq, type RecurrenceRule, type ReportField, type ReportInput, type ReportStatus, type ReportTemplate, type ReportType, type ReportView, type RequestStatus, type Requirement, type RequirementResult, type RequirementType, type Resolution, type ResolutionSource, type RobloxVerificationStatus, type RoleSyncAction, type RoleSyncGrant, type RubricItem, STATUS_KINDS, STATUS_LABEL, STAT_PERIODS, type SlaInput, type Span, type StaffList, type StaffMember, type StatPeriod, type StatusChangeVia, type StatusKind, type StatusRef, type SupportTime, TICKET_ACTIONS, TICKET_ACTION_KEYS, TICKET_PLACEHOLDERS, TICKET_STATUSES, TICKET_STATUS_KEYS, TICKET_TRANSITIONS, type TicketAction, type TicketAutomation, type TicketButtonConfig, type TicketEffect, type TicketQuestion, type TicketStatus, type TicketStatusKey, type TicketVars, type TransitionMap, UNIT_STATUSES, type UnitStatus, VERIFY_NICK_VARS, VOICE_CASE_STATUS, type VerifyBind, type VerifyConfig, type VerifyNickVars, type VerifyPanel, type VoiceSupportRoom, WANTED_HIT_STATUSES, WANTED_HIT_STATUS_LABELS, WANTED_MATCH_LABELS, WANTED_MATCH_TYPES, WANTED_STATUSES, WANTED_TRANSITIONS, WARNING_TEMPLATE, WARNING_VARIABLES, WEEKDAYS, WEEK_COUNTED_STATUSES, WEEK_TIMEZONE, WELCOME_VARIABLES, WORKFLOW_ACTION_LABELS, WORKFLOW_OPS, WORKFLOW_OP_LABELS, WORKFLOW_TRIGGERS, type WantedHitStatus, type WantedInput, type WantedMatch, type WantedMatchPlayer, type WantedMatchSubject, type WantedMatchType, type WantedStatus, type WeekSpan, type WelcomeConfig, type WelcomeMember, type WelcomeMessageDef, type WorkflowAction, type WorkflowCondition, type WorkflowOp, type WorkflowTrigger, YES_NO, absenceTypeSchema, accessDiff, accessLevelGrants, accessLevelOf, accountAge, activeFields, ageOf, aiCheck, aiReviewFingerprintSource, aiReviewResultSchema, aiReviewSettingsSchema, announcementMessage, anomalies, applyAccessLevel, applyCallCalibration, applyPanelParts, areaActions, areaGrantsFor, assertTransition, automationActive, awardDefSchema, backupConfigSchema, backupScheduleSchema, buildAiReviewPrompt, buildOrgTree, can, canDelegate, canRespond, canSeeDocument, canTransition, checkAnswer, checkIncident, checkReport, checkStatusChange, checkWanted, cleanReportValues, cloneWithNewIds, closeRequestComplete, commandsForServer, compareStaffing, conditionMatches, confidenceFor, contradictoryTimeSpans, coverage, csvCell, customIdsOf, dangerLevelOf, defaultTicketButtons, deliveryFor, departmentSchema, describeDiscordError, diffPresence, dnSettingsSchema, drawQuestions, drawRuleSchema, dueReminders, dutyTimeText, effectiveAutomation, effectivePermissions, effectiveQualificationStatus, effectiveRadioStatus, embedChars, emptyMbDocument, emptyMbEmbed, emptyMbMessage, estimateNext, examExportSchema, examProblems, examSchema, expandRecurrence, fieldOptions, fieldValue, fillTemplate, fitCallCalibration, fitPostalCalibration, fleetConfigSchema, fleetInternalSchema, fleetModelSchema, formModal, formPanelMessage, formPanelResult, formPanelSchema, formatMinutes, formatReminderDuration, formatServiceNumber, freeFieldKey, gameToPixel, gapAnswers, gradeAnswer, grantMatches, hasErrors, helpArticleSchema, helpCategorySchema, helpSlug, hexColor, hireMappingSchema, hrConfigSchema, hrStatusSchema, incidentNumbersIn, infoOptionEmbed, infoOptionSchema, infoPanelMessage, infoPanelSchema, interactiveComponents, isAnswered, isBackupDue, isCatalogPermission, isDutyTimeField, isHttpUrl, isInputQuestion, isPermissionKey, isRadioAuthorized, isRadioRoleOnly, isRemovedExamTask, isRobloxField, isSupportOpen, isTimeZone, isValidEmoji, isValidRobloxUserId, isoWeek, learningMaterialSchema, lineCol, linearTrend, loadLevel, localDate, localMidnight, localParts, localTime, logCategoryOf, logChannelFor, logTypeLabel, loggingConfigSchema, lowStaffingWindows, maskGaps, matchWantedPlayer, matchingBinds, mbActionSchema, mbButtonSchema, mbDocumentDataSchema, mbEmbedSchema, mbFieldSchema, mbFromDiscordJson, mbId, mbMessageSchema, mbParseJsonText, mbRowSchema, mbSelectOptionSchema, mbSummary, mbTemplateExportSchema, mbToDiscordJson, mbToDiscordJsonText, mdtConfigSchema, median, minutesWithin, missingBotPerms, moduleDef, moduleDependencyError, moduleOfPermission, newVoiceRoom, nextRecurrence, nextWeekStart, normalizeField, normalizeRating, notificationEvent, notifyRuleSchema, onErlcMap, orgAncestors, orgDescendants, orgUnitSchema, orgWouldCycle, overlaps, panelFieldSchema, panelUnits, parseAiReview, parseAutomation, parseBool, parseCsv, parseFormDate, parseJsonWithPosition, parsePlayer, parseQuestions, parseReminderDuration, parseTicketRef, passedReminders, percentile, periodEnd, periodLabel, periodRange, periodStart, personDetailsSchema, pixelToGame, planFormSteps, playerKey, poiForPlace, policeReportFields, postalMatchRate, postalPosition, practicalCriterionSchema, practicalExamSchema, qualiPanelParts, qualificationDefSchema, qualityConfigSchema, questionProblems, questionSchema, radioRoleSyncAction, rangeSchema, rankRows, rankSchema, ratingLabel, ratingTone, redactPersonalData, renderApplicationText, renderPanelTemplate, renderStaffList, renderTemplate, renderTicketText, renderVerifyNickname, renderWelcomeText, reportFieldSchema, reportMessage, reportTemplateSchema, requestStatusDefSchema, requirementSchema, resolvePermission, rolesMatch, rubricItemSchema, rubricScore, scorePractical, severitySchema, slaState, splitFindings, splitGaps, staffListSchema, staffSectionSchema, staffingHeatmap, stageSchema, statusLabel, statusPermission, ticketButtonsOf, ticketChannelName, ticketDayKey, ticketNumber, ticketRef, ticketWeekKey, timeZones, titleSimilarity, toCsv, toDiscordPayload, toPartialEmoji, triggerMatches, validateField, validateForm, validateMbDocument, validateMbMessage, verifyActions, weakTopicsOf, weekIso, weekKey, weekLabel, weekStartOf, weekTotals, weekdayHour, withHrDefaults, zonedTime };

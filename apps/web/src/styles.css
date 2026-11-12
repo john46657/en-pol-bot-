@@ -1,21 +1,40 @@
 @import 'tailwindcss';
 
+/*
+ * Farben, Schriften und Formen aus dem Design-System „Leitstelle & MDT“.
+ * Dunkel = Standard (Leitstellenbetrieb), Hell = :root[data-theme='light'] weiter unten.
+ * Alle Textfarben erreichen auf bg/panel/panel-2 mindestens 4.5:1, line-strong und Fokus mindestens 3:1.
+ */
 @theme {
-  --color-bg: #0b0e14;
+  --color-bg: #0b1118;
   /* Höhe der Handy-Schnellleiste unten (inkl. Home-Indikator) */
   --spacing-bottombar: calc(3.5rem + env(safe-area-inset-bottom));
-  --color-panel: #131823;
-  --color-panel-2: #1a2130;
-  --color-line: #263044;
-  --color-fg: #e6eaf2;
-  --color-muted: #8b97ad;
-  --color-primary: #3b82f6;
-  --color-primary-fg: #ffffff;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #06b6d4;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-panel: #121a24;
+  --color-panel-2: #1a2431;
+  --color-line: #263243;
+  /* Rand von Bedienelementen (Eingabefelder, Sekundär-Buttons) */
+  --color-line-strong: #5a6b82;
+  --color-fg: #e6edf5;
+  --color-muted: #97a5b7;
+  /* Polizeiblau; wird durch eine eigene Akzentfarbe (Studio/Persönlich) ersetzt */
+  --color-primary: #4c8dff;
+  --color-primary-fg: #04101f;
+  /* Bereit / Funkstatus 1–2 */
+  --color-success: #3fd08f;
+  --color-success-fg: #03190f;
+  /* Prio 2, Sprechwunsch, Hinweise – heller als danger, damit beide auch ohne Farbsehen unterscheidbar bleiben */
+  --color-warning: #ffb72b;
+  --color-warning-fg: #1e1400;
+  /* Notruf, Prio 1, Funkstatus 0, Fahndungstreffer */
+  --color-danger: #ff6363;
+  --color-danger-fg: #1f0505;
+  /* Cyan: Bewegung / Anfahrt (Funkstatus 3) */
+  --color-info: #38c6dc;
+  /* Nicht einsatzbereit, außer Dienst */
+  --color-offline: #7a889b;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Daten, die abgelesen oder gefunkt werden: Einsatznummern, Kennzeichen, Funkrufnamen, Aktenzeichen */
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 html, body, #root { height: 100%; }
@@ -23,9 +42,16 @@ body { background: var(--app-bg, var(--color-bg)); color: var(--color-fg); font-
 
 /* ---- Persönliches Design (Einstellungen → Persönlich); gilt nur im eigenen Browser für den eigenen Benutzer ---- */
 :root[data-theme='light'] {
-  --color-bg: #f3f5f9; --color-panel: #ffffff; --color-panel-2: #eef1f6; --color-line: #d7dde8;
-  --color-fg: #111827; --color-muted: #5b6474; --color-primary-fg: #ffffff;
+  --color-bg: #eef1f5; --color-panel: #ffffff; --color-panel-2: #e4e9f0; --color-line: #d3dae3; --color-line-strong: #7d8a9c;
+  --color-fg: #0f1924; --color-muted: #4f5d6f; --color-primary: #0b4fb3; --color-primary-fg: #ffffff;
+  /* Signalfarben dunkler, damit sie als Text auf hellem Grund lesbar bleiben */
+  --color-success: #0d7347; --color-success-fg: #ffffff;
+  --color-warning: #8f5b00; --color-warning-fg: #ffffff;
+  --color-danger: #b42318; --color-danger-fg: #ffffff;
+  --color-info: #0b6a80; --color-offline: #6a7686;
 }
+/* Zahlen in Uhren, Zählern und Tabellen springen nicht */
+.font-mono, time, .tabular-nums { font-variant-numeric: tabular-nums; }
 .card { border-radius: var(--card-radius, 8px); box-shadow: var(--card-shadow, none); background: color-mix(in srgb, var(--color-panel) var(--card-alpha, 100%), transparent); }
 :root[data-card-style='glass'] .card { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: color-mix(in srgb, var(--color-panel) min(var(--card-alpha, 100%), 70%), transparent); }
 :root[data-card-style='outline'] .card { background: transparent; }
