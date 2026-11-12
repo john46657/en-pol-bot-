@@ -1,0 +1,18 @@
+{
+  "name": "bewerbungs-bot",
+  "version": "1.0.0",
+  "description": "Eigenständiger Discord-Bot für Bewerbungen – mit Dashboard (Discord-Login), Fragen per DM oder Browser, Annehmen/Ablehnen, Rollen, Sperren, KI-Checker und Statistik.",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "engines": { "node": ">=18.17" },
+  "scripts": {
+    "start": "node src/index.js",
+    "demo": "node src/demo.js",
+    "test": "node --test test/core.test.js test/flow-web.test.js test/bot.test.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.0",
+    "express": "^4.21.2"
+  }
+}

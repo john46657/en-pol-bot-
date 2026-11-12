@@ -4,6 +4,8 @@
 >
 > 🤖 **Nur der Bot:** `bot.py` + `bot.js` im Hauptverzeichnis sind der fertig gebaute Discord-Bot (`bot.js` wird aus `apps/bot` mit `pnpm bundle:bot` erzeugt – nicht von Hand ändern). Startbefehl: `python3 bot.py` oder `node bot.js`; Einstellungen in einer `.env` (Vorlage: `apps/bot`-Doku in [docs/discord-bot.md](docs/discord-bot.md)).
 
+> 📋 **Eigenständiger Bewerbungs-Bot** (nur Bewerbungen, mit Dashboard, für jeden Discord-Server): [bewerbungs-bot/README.md](bewerbungs-bot/README.md)
+
 > 📦 **Der frühere Python-Bot** (Emden RP Bot) ist entfernt (Git-Historie); seine Funktionen sind portiert. Übersicht: [docs/migration-vom-alten-bot.md](docs/migration-vom-alten-bot.md).
 
 Police CAD / MDT / Dispatch for Emergency Response: Liberty County (Roblox). Police and dispatch only.
