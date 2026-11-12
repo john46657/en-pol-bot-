@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
 import { useAuth } from './auth';
 import { pendingBody, queueSave } from './autosave';
-import { accentHex, useStudio } from './studio';
+import { ACCENTS, accentHex, useStudio } from './studio';
 
 /** Persönliche Einstellungen (nur für einen selbst, je Benutzer in der Datenbank – auf jedem Gerät gleich). */
 export interface Preferences {
@@ -164,8 +164,14 @@ export function useApplyPrefs(p: Preferences, studioAccent: string) {
     const dark = light !== null ? !light : p.theme === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : p.theme !== 'light';
     root.dataset.theme = dark ? 'dark' : 'light';
     const accent = p.accent ?? studioAccent;
-    root.style.setProperty('--color-primary', accent);
-    root.style.setProperty('--color-primary-fg', readableOn(accent)); // z. B. Weiß als Akzent → dunkle Schrift
+    if (accent.toLowerCase() === ACCENTS.blue!.toLowerCase()) {
+      // Standard-Blau → Polizeiblau aus dem Design-System, je Theme abgestimmt (styles.css: hell dunkler, dunkel heller)
+      root.style.removeProperty('--color-primary');
+      root.style.removeProperty('--color-primary-fg');
+    } else {
+      root.style.setProperty('--color-primary', accent);
+      root.style.setProperty('--color-primary-fg', readableOn(accent)); // z. B. Weiß als Akzent → dunkle Schrift
+    }
     root.style.setProperty('--card-radius', `${p.radius}px`);
     root.style.setProperty('--radius-lg', `${p.radius}px`);
     root.style.setProperty('--card-alpha', `${100 - p.transparency}%`);

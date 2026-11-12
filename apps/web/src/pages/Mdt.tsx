@@ -53,34 +53,31 @@ export function Mdt() {
 
   return (
     <>
-      <PageHeader title="MDT" subtitle={`Mobiles Datenterminal — ${user?.displayName}`} />
+      <PageHeader title="MDT" subtitle={`Mobiles Datenterminal — ${user?.displayName}`}
+        actions={quick.map((a) => <Button key={a.key} variant="secondary" onClick={() => setAction(a)}><a.icon size={15} aria-hidden />{a.label}</Button>)} />
       <Card className="mb-4">
-        <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Suchbereich">
-          <Button size="sm" variant={mode === 'all' ? 'primary' : 'secondary'} onClick={() => setMode('all')}>Alles</Button>
-          {canPerson && <Button size="sm" variant={mode === 'person' ? 'primary' : 'secondary'} onClick={() => setMode('person')}><Fingerprint size={13} />Person suchen</Button>}
-          {canVehicle && <Button size="sm" variant={mode === 'vehicle' ? 'primary' : 'secondary'} onClick={() => setMode('vehicle')}><Car size={13} />Fahrzeug suchen</Button>}
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className="inline-flex gap-0.5 rounded-md bg-panel-2 p-[3px]" role="group" aria-label="Abfrage-Art">
+            {([['all', 'Alles', null], ...(canPerson ? [['person', 'Person', Fingerprint]] : []), ...(canVehicle ? [['vehicle', 'Fahrzeug', Car]] : [])] as [typeof mode, string, LucideIcon | null][]).map(([k, label, Icon]) => (
+              <button key={k} type="button" aria-pressed={mode === k} onClick={() => setMode(k)}
+                className={`inline-flex h-8 items-center gap-1.5 rounded px-3 text-[13px] font-semibold ${mode === k ? 'bg-panel text-fg shadow-[inset_0_0_0_1px_var(--color-line)]' : 'text-muted hover:text-fg'}`}>{Icon && <Icon size={14} aria-hidden />}{label}</button>
+            ))}
+          </div>
+          <p className="text-xs text-muted">Es werden nur Datensätze angezeigt, die du sehen darfst.</p>
         </div>
-        <Input ref={input} aria-label="MDT-Suche" placeholder={mode === 'vehicle' ? 'Kennzeichen, z. B. LC 1001' : mode === 'person' ? 'Roblox-Benutzername oder Roblox-ID' : 'Roblox-Name oder -ID, Kennzeichen, I-/R-/T-/C-/CASE-/E-Nummer…'} value={term}
+        <Input ref={input} className="h-11 font-mono text-[15px] placeholder:font-sans" aria-label="MDT-Suche" placeholder={mode === 'vehicle' ? 'Kennzeichen, z. B. LC 1001' : mode === 'person' ? 'Roblox-Benutzername oder Roblox-ID' : 'Roblox-Name oder -ID, Kennzeichen, I-/R-/T-/C-/CASE-/E-Nummer…'} value={term}
           onChange={(e) => setTerm(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) nav(hitPath(results[0])); }} />
         <div className="mt-3" aria-live="polite">
           {q.length >= 2 && mode !== 'vehicle' && <RobloxCard term={q} />}
-          {q.length < 2 ? <p className="text-xs text-muted">Mindestens 2 Zeichen eingeben. Es werden nur Datensätze angezeigt, die du sehen darfst.</p>
+          {q.length < 2 ? <p className="text-xs text-muted">Mindestens 2 Zeichen eingeben, Enter öffnet den ersten Treffer.</p>
             : search.isLoading ? <SkeletonRows rows={2} /> : search.error ? <ErrorState error={search.error} onRetry={() => void search.refetch()} />
             : !results.length ? <EmptyState text="Keine passenden Datensätze im System." /> : (
-              <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={hitPath(h)} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-panel-2"><Badge>{TYPE_LABELS[h.type] ?? h.type}</Badge><span className="font-medium">{h.label}</span>{h.sub && <span className="min-w-0 truncate text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
+              <ul className="grid gap-1 md:grid-cols-2">{results.map((h) => <li key={`${h.type}${h.id}`}><Link to={hitPath(h)} className="flex items-center gap-3 rounded-md border border-line px-3 py-2 hover:bg-panel-2"><Badge>{TYPE_LABELS[h.type] ?? h.type}</Badge><span className="font-semibold">{h.label}</span>{h.sub && <span className="min-w-0 truncate font-mono text-xs text-muted">{h.sub}</span>}</Link></li>)}</ul>
             )}
         </div>
       </Card>
 
       <MdtDutyPanel />
-      <Card title="Schnellaktionen" className="mb-4">
-        {quick.length === 0 ? <p className="text-sm text-muted">Für deine Rolle sind keine Anlege-Aktionen verfügbar.</p> : (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {quick.map((a) => <Button key={a.key} variant="secondary" className="justify-start" onClick={() => setAction(a)}><a.icon size={15} aria-hidden />{a.label}</Button>)}
-          </div>
-        )}
-      </Card>
-
       <div className="grid gap-4 lg:grid-cols-3">
         {can('wanted.view') && (
           <Card title="Fahndungen" actions={<Link to="/wanted" className="text-xs text-primary hover:underline">Alle anzeigen</Link>}>

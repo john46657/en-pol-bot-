@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode; resetKey?: s
       <div role="alert" className="mx-auto max-w-lg py-16 text-center">
         <h1 className="text-lg font-semibold">{chunk ? 'Neue Version verfügbar' : 'Diese Seite konnte nicht angezeigt werden'}</h1>
         <p className="mt-1 text-sm text-muted">{chunk ? 'Die Oberfläche wurde aktualisiert. Bitte lade die Seite neu.' : 'Beim Anzeigen ist ein Fehler aufgetreten. Lade die Seite neu – wenn es wieder passiert, schicke die Meldung unten an die Administration.'}</p>
-        {!chunk && <pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-black/20 p-3 text-left text-xs text-muted">{String((error as Error)?.message ?? error)}</pre>}
+        {!chunk && <pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap rounded border border-line bg-panel-2 p-3 text-left font-mono text-xs text-muted">{String((error as Error)?.message ?? error)}</pre>}
         <Button className="mt-4" onClick={() => window.location.reload()}>Neu laden</Button>
       </div>
     );

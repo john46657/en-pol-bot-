@@ -66,7 +66,7 @@ describe('permission-aware navigation', () => {
     render(wrap(<AuthProvider><Routes><Route element={<AppShell />}><Route index element={<p>home</p>} /></Route></Routes></AuthProvider>));
     const menu = within(await screen.findByRole('navigation', { name: 'Hauptmenü' }));
     expect(await menu.findByRole('link', { name: /Personen/ })).toBeInTheDocument(); // Menü standardmäßig Deutsch
-    expect(menu.getByRole('link', { name: /Dashboard/ })).toBeInTheDocument();
+    expect(menu.getByRole('link', { name: /Startseite/ })).toBeInTheDocument();
     expect(menu.queryByRole('link', { name: /Audit/ })).not.toBeInTheDocument();
     expect(menu.queryByRole('link', { name: /^Personal$/ })).not.toBeInTheDocument();
     expect(menu.queryByRole('link', { name: /Rollen/ })).not.toBeInTheDocument();

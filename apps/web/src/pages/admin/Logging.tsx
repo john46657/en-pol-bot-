@@ -95,7 +95,7 @@ export function Logging() {
                     <div className="flex overflow-hidden rounded border border-line text-xs" role="group" aria-label={`${t.label}: Einstellung`}>
                       {(['inherit', 'own', 'off'] as const).map((k) => (
                         <button key={k} type="button" disabled={!manage} aria-pressed={st.kind === k} onClick={() => setType(t.action, k === 'inherit' ? (t.defaultOff ? 'on' : null) : k === 'off' ? 'off' : (cfg.categories[c.key] ?? null))}
-                          className={`px-2 py-1 ${st.kind === k ? 'bg-primary text-white' : 'hover:bg-panel-2'}`}>{k === 'inherit' ? 'Kategorie' : k === 'own' ? 'Eigener Kanal' : 'Aus'}</button>
+                          className={`px-2 py-1 ${st.kind === k ? 'bg-primary text-primary-fg' : 'hover:bg-panel-2'}`}>{k === 'inherit' ? 'Kategorie' : k === 'own' ? 'Eigener Kanal' : 'Aus'}</button>
                       ))}
                     </div>
                     {st.kind === 'own' && <div className="w-full sm:w-60"><ChannelPicker ariaLabel={`${t.label}: eigener Kanal`} disabled={!manage} value={st.channel} onChange={(v) => setType(t.action, v)} /></div>}

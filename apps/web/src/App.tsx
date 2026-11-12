@@ -183,44 +183,43 @@ export function App() {
         <Route path="/nutzungsbedingungen" element={<Terms />} />
         {/* Online-Transkript: eigene Seite (auch für Ticket-Ersteller ohne Team-Rechte); Zugriff prüft das System bei jedem Abruf */}
         <Route path="/transcript/:ref" element={<Guard><TranscriptView /></Guard>} />
-        {/* Polizei-MDT: eigene Vollbild-Oberfläche, gleiche Anmeldung wie das Dashboard */}
-        <Route path="mdt" element={<Guard perm="dashboard.view"><MdtShell /></Guard>}>
-          <Route index element={<Mdt />} />
-          <Route path="unit" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
-          <Route path="citizens" element={<Guard perm="persons.view"><MdtCitizens /></Guard>} />
-          <Route path="vehicles" element={<Guard perm="vehicles.view"><MdtVehicles /></Guard>} />
-          <Route path="warrants" element={<Guard perm="wanted.view"><MdtWarrants /></Guard>} />
-          <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
-          <Route path="reports" element={list({ ...R.reports, detailPath: (r) => `/mdt/reports/${r.id}` }, 'reports.view')} />
-          <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
-          <Route path="incidents" element={list({ ...R.incidents, detailPath: (r) => `/mdt/incidents/${r.id}` }, 'incidents.view')} />
-          <Route path="incidents/:id" element={<Guard perm="incidents.view"><RecordPage cfg={{ ...R.records.incidents!, back: '/mdt/incidents' }} /></Guard>} />
-          <Route path="roster" element={<Guard perm="team.view"><TeamList /></Guard>} />
-          <Route path="officers" element={list(R.personnel, 'personnel.view')} />
-          <Route path="personnel" element={<Guard perm="team.view"><MdtPersonnel /></Guard>} />
-          <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
-        </Route>
-        {/* CAD-Leitstelle: ebenfalls eigene Vollbild-Oberfläche */}
-        <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>
-          <Route index element={<Guard perm="cad.view"><CadDashboard /></Guard>} />
-          <Route path="tablet" element={<Guard perm="cad.view"><CadTablet /></Guard>} />
-          <Route path="incidents" element={<Guard perm="cad.view"><CadIncidents /></Guard>} />
-          <Route path="map" element={<Guard perm="cad.view"><CadMapPage /></Guard>} />
-          <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
-          <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
-          <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
-          <Route path="mdt" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
-          <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
-          <Route path="handover" element={<Guard perm="cad.view"><CadHandover /></Guard>} />
-          <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
-          <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
-          <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
-          <Route path="personnel" element={<Guard perm="cad.view"><MdtPersonnel title="🧭 Qualifikationen & Führung" /></Guard>} />
-          <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
-          <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
-          <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
-        </Route>
         <Route element={<Guard><AppShell /></Guard>}>
+          {/* Polizei-MDT und CAD-Leitstelle: Bereiche im gemeinsamen Rahmen, Unterseiten als Reiter */}
+          <Route path="mdt" element={<Guard perm="dashboard.view"><MdtShell /></Guard>}>
+            <Route index element={<Mdt />} />
+            <Route path="unit" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
+            <Route path="citizens" element={<Guard perm="persons.view"><MdtCitizens /></Guard>} />
+            <Route path="vehicles" element={<Guard perm="vehicles.view"><MdtVehicles /></Guard>} />
+            <Route path="warrants" element={<Guard perm="wanted.view"><MdtWarrants /></Guard>} />
+            <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
+            <Route path="reports" element={list({ ...R.reports, detailPath: (r) => `/mdt/reports/${r.id}` }, 'reports.view')} />
+            <Route path="reports/:id" element={<Guard perm="reports.view"><ReportDetail /></Guard>} />
+            <Route path="incidents" element={list({ ...R.incidents, detailPath: (r) => `/mdt/incidents/${r.id}` }, 'incidents.view')} />
+            <Route path="incidents/:id" element={<Guard perm="incidents.view"><RecordPage cfg={{ ...R.records.incidents!, back: '/mdt/incidents' }} /></Guard>} />
+            <Route path="roster" element={<Guard perm="team.view"><TeamList /></Guard>} />
+            <Route path="officers" element={list(R.personnel, 'personnel.view')} />
+            <Route path="personnel" element={<Guard perm="team.view"><MdtPersonnel /></Guard>} />
+            <Route path="settings" element={<Guard perm="settings.manage"><MdtSettings /></Guard>} />
+          </Route>
+          <Route path="cad" element={<Guard perm="cad.view" area="dashboard.cad.view"><CadLayout /></Guard>}>
+            <Route index element={<Guard perm="cad.view"><CadDashboard /></Guard>} />
+            <Route path="tablet" element={<Guard perm="cad.view"><CadTablet /></Guard>} />
+            <Route path="incidents" element={<Guard perm="cad.view"><CadIncidents /></Guard>} />
+            <Route path="map" element={<Guard perm="cad.view"><CadMapPage /></Guard>} />
+            <Route path="units" element={<Guard perm="cad.view"><CadUnits /></Guard>} />
+            <Route path="radio" element={<Guard perm="cad.view"><CadRadio /></Guard>} />
+            <Route path="calls" element={<Guard perm="cad.view"><CadCalls /></Guard>} />
+            <Route path="mdt" element={<Guard perm="cad.view"><CadMdt /></Guard>} />
+            <Route path="fleet" element={<Guard perm="fleet.view"><FleetPage /></Guard>} />
+            <Route path="handover" element={<Guard perm="cad.view"><CadHandover /></Guard>} />
+            <Route path="stats" element={<Guard perm="cad.view_stats"><CadStats /></Guard>} />
+            <Route path="erlc" element={<Guard perm="cad.view_erlc"><ErlcLive /></Guard>} />
+            <Route path="team" element={<Guard perm="cad.view"><CadTeam /></Guard>} />
+            <Route path="personnel" element={<Guard perm="cad.view"><MdtPersonnel title="🧭 Qualifikationen & Führung" /></Guard>} />
+            <Route path="cross-server" element={<Guard perm="cad.view"><CadCrossServer /></Guard>} />
+            <Route path="logs" element={<Guard perm="cad.view_logs"><CadLogs /></Guard>} />
+            <Route path="settings" element={<Guard perm="cad.view"><CadSettings /></Guard>} />
+          </Route>
           <Route index element={<Home />} />
           <Route path="servers" element={<ServerOverview />} />
           <Route path="dashboard" element={<Guard perm="dashboard.view"><Dashboard /></Guard>} />
